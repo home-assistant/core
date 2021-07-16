@@ -94,15 +94,18 @@ class BasePlatform(Entity):
         self._lazy_error_count = entry[CONF_LAZY_ERROR]
         self._lazy_errors = self._lazy_error_count
 
-        self._scan_group = entry[CONF_SCAN_GROUP]
+        self._scan_group = entry.get(CONF_SCAN_GROUP)
         self._unique_id = f"modbus_{hub._config_name}_{self._slave}_{self._input_type}_{self._address}"
+
+    def init_update_listeners(self):
+        """Initialize update listeners."""
         if (
             self._slave
             and self._input_type
             and self._address is not None
             and self._scan_group is not None
         ):
-            hub.register_update_listener(
+            self._hub.register_update_listener(
                 self._scan_group,
                 self._slave,
                 self._input_type,
@@ -133,6 +136,7 @@ class BasePlatform(Entity):
     
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
+        self.init_update_listeners()
         if self._scan_interval > 0 and self._scan_group is None:
             async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
@@ -295,13 +299,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             ][0]
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self.command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
-            hub.register_update_listener(
-                self._scan_group,
-                self._slave,
-                self._verify_type,
-                self._verify_address,
-                self.update,
-            )
+            if self._scan_group is not None:
+                hub.register_update_listener(
+                    self._scan_group,
+                    self._slave,
+                    self._verify_type,
+                    self._verify_address,
+                    self.update,
+                )
         else:
             self._verify_active = False
 

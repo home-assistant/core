@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_COVERS,
     CONF_NAME,
     STATE_CLOSED,
@@ -31,12 +32,14 @@ from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
+    CONF_ADDRESS_CLOSE,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
+    CONF_VERIFY,
 )
 from .modbus import ModbusHub
 
@@ -87,21 +90,63 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         # Intermediate states are not supported in such a setup.
         if self._input_type == CALL_TYPE_COIL:
             self._write_type = CALL_TYPE_WRITE_COIL
-            self._write_address = self._address
+            self._write_address_open = self._address
+            self._write_address_close = config.get(CONF_ADDRESS_CLOSE, self._address)
             if self._status_register is None:
                 self._state_closed = False
                 self._state_open = True
-                self._state_closing = None
-                self._state_opening = None
+                if self._write_address_open != self._write_address_close:
+                    # If we configured two coil addressed we can identity closing and opening state,
+                    # but not final state closed or open as we might stop the closing or opening process
+                    self._state_closing = -1
+                    self._state_opening = -2
+
+                    self._address_open = self._write_address_open
+                    self._address_close = self._write_address_close
+                else:
+                    self._state_closing = None
+                    self._state_opening = None
         else:
             # If we read cover status from the main register (i.e., an optional
             # status register is not specified), we need to make sure the register_type
             # is set to "holding".
             self._write_type = CALL_TYPE_WRITE_REGISTER
-            self._write_address = self._address
+            self._write_address_open = self._address
+            self._write_address_close = self._address
+            self._address_open = self._address
+            self._address_close = self._address
+
         if self._status_register:
-            self._address = self._status_register
+            self._address_open = self._status_register
+            self._address_close = self._status_register
             self._input_type = self._status_register_type
+        elif CONF_VERIFY in config:
+            self._address_open = config[CONF_VERIFY].get(CONF_ADDRESS)
+            self._address_close = config[CONF_VERIFY].get(
+                CONF_ADDRESS_CLOSE, config[CONF_VERIFY].get(CONF_ADDRESS)
+            )
+
+    def init_update_listeners(self):
+        """Initialize update listeners."""
+        # override default behaviour as we register based on the verify address
+        if self._slave and self._input_type and self._scan_group is not None:
+            if self._address_open is not None:
+                self._hub.register_update_listener(
+                    self._scan_group,
+                    self._slave,
+                    self._input_type,
+                    self._address_open,
+                    self.update,
+                )
+
+            if self._address_close is not None:
+                self._hub.register_update_listener(
+                    self._scan_group,
+                    self._slave,
+                    self._input_type,
+                    self._address_close,
+                    self.update,
+                )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -125,30 +170,81 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        result = await self._hub.async_pymodbus_call(
-            self._slave, self._write_address, self._state_open, self._write_type
-        )
+        if (
+            self._write_type == CALL_TYPE_WRITE_COIL
+            and self._write_address_close != self._write_address_open
+        ):
+            # If we use two different coils to control up and down, we need to ensure not both coils
+            # get On state at the same time, therefore we use value not stored in state object
+            # Write inverted state to opposite coil
+            await self._hub.async_pymodbus_call(
+                self._slave, self._write_address_close, False, self._write_type
+            )
+            result = await self._hub.async_pymodbus_call(
+                self._slave, self._write_address_open, True, self._write_type
+            )
+        else:
+            result = await self._hub.async_pymodbus_call(
+                self._slave,
+                self._write_address_open,
+                self._state_open,
+                self._write_type,
+            )
         self._attr_available = result is not None
         await self.async_update()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        result = await self._hub.async_pymodbus_call(
-            self._slave, self._write_address, self._state_closed, self._write_type
-        )
+        if (
+            self._write_type == CALL_TYPE_WRITE_COIL
+            and self._write_address_close != self._write_address_open
+        ):
+            # If we use two different coils to control up and down, we need to ensure not both coils
+            # get On state at the same time, therefore we use value not stored in state object
+            # Write inverted state to opposite coil
+            await self._hub.async_pymodbus_call(
+                self._slave, self._write_address_open, False, self._write_type
+            )
+            result = await self._hub.async_pymodbus_call(
+                self._slave, self._write_address_close, True, self._write_type
+            )
+        else:
+            result = await self._hub.async_pymodbus_call(
+                self._slave,
+                self._write_address_close,
+                self._state_closed,
+                self._write_type,
+            )
         self._attr_available = result is not None
         await self.async_update()
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def async_stop_cover(self, **kwargs):
+        """Stop the cover."""
+        if (
+            self._write_type == CALL_TYPE_WRITE_COIL
+            and self._write_address_close != self._write_address_open
+        ):
+            # Stop is only possible if cover is configured with two coil addresses
+            await self._hub.async_pymodbus_call(
+                self._slave, self._write_address_open, False, self._write_type
+            )
+            result = await self._hub.async_pymodbus_call(
+                self._slave, self._write_address_close, False, self._write_type
+            )
+            self._attr_available = result is not None
+        await self.async_update()
+
+    async def async_update(self, now=None):
         """Update the state of the cover."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        # do not allow multiple active calls to the same platform
         if self._call_active:
             return
         self._call_active = True
+        start_address = min(self._address_open, self._address_close)
+        end_address = min(self._address_open, self._address_close)
         result = await self._hub.async_pymodbus_call(
-            self._slave, self._address, 1, self._input_type
+            self._slave, start_address, end_address - start_address, self._input_type
         )
         self._call_active = False
         self.update(result, self._slave, self._input_type, 0)
@@ -173,7 +269,27 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 address,
                 result.bits,
             )
-            self._set_attr_state(bool(result.bits[address] & 1))
+            if self._address_open != self._address_close:
+                # Get min_address of open and close, address will be relative to this address
+                start_address = min(self._address_open, self._address_close)
+                opening = bool(
+                    result.bits[address + (self._address_open - start_address)] & 1
+                )
+                closing = bool(
+                    result.bits[address + (self._address_close - start_address)] & 1
+                )
+                if opening:
+                    self.update_value(self._state_opening)
+                elif closing:
+                    self.update_value(self._state_closing)
+                else:
+                    # we assume either closed or closing based on previous statue
+                    if self._value == self._state_opening:
+                        self.update_value(self._state_open)
+                    elif self._value == self._state_closing:
+                        self.update_value(self._state_closed)
+            else:
+                self._set_attr_state(bool(result.bits[address] & 1))
         else:
             _LOGGER.debug(
                 "update cover slave=%s, input_type=%s, address=%s -> result=%s",
