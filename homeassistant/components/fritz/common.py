@@ -322,7 +322,7 @@ class FritzDeviceBase(Entity):
     async def async_on_demand_update(self) -> None:
         """Update state."""
         await self.async_process_update()
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
