@@ -574,7 +574,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
 
     async def async_process_update(self) -> None:
         """Update device."""
-        if not self._mac:
+        if not self._mac or not self.ip_address:
             return
 
         wan_disable_info = await async_service_call_action(
