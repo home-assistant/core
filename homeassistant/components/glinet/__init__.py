@@ -13,7 +13,6 @@ PLATFORMS = ["device_tracker"]
 
 async def async_setup(hass, config):
     """Set up the GLinet integration."""
-    print("async setup called")
     conf = config.get(DOMAIN)
     if conf is None:
         return True
@@ -51,19 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id][DATA_GLINET] = router
-    print(entry.unique_id)
 
-    print("about to call hass.config_entries.async_setup_platforms(entry, PLATFORMS)")
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     hass.config_entries
-    print(hass.config_entries.async_entries(DOMAIN)[0].as_dict())
-    print("called hass.config_entries.async_setup_platforms(entry, PLATFORMS)")
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    print("async_unload_entry")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

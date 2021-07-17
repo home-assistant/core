@@ -54,8 +54,6 @@ class ClientDevInfo:
     def update(self, dev_info: dict = None, consider_home=0):
         """Update connected device info."""
         # TODO actually cause this function to run by configuring some devices to track
-        print("actually using consider home")
-        print(consider_home)
         now: datetime = dt_util.utcnow()
         if dev_info:
             if not self._name:
@@ -121,8 +119,6 @@ class GLinetRouter:
 
         self._options: dict = {}
         self._options.update(entry.options)
-        print("printing entry.options")
-        print(entry.options)
 
     async def setup(self) -> None:
         """Set up a GL-inet router."""
@@ -145,17 +141,8 @@ class GLinetRouter:
         ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
             entity_registry, self._entry.entry_id
         )
-        print("printing entity reg")
-        print(entity_registry)
-        print("self._entry.entry_id")
-        print(self._entry.entry_id)
-        print("printing track entries")
-        print(track_entries)
-        print("unique id")
-        print(self._entry.unique_id)
 
         for entry in track_entries:
-            print(entry)
             if entry.domain == TRACKER_DOMAIN:
                 self._devices[entry.unique_id] = ClientDevInfo(
                     entry.unique_id, entry.original_name
@@ -178,8 +165,6 @@ class GLinetRouter:
 
         _LOGGER.debug("Checking client connect to GL-inet router %s", self._host)
         try:
-            # TODO ensure the output of gli_py has the right data structure
-            print("asking router for clients")
             wrt_devices = await self._api.async_connected_clients()
         except OSError as exc:
             if not self._connect_error:
@@ -225,8 +210,6 @@ class GLinetRouter:
         """Update router options."""
         req_reload = False
         self._options.update(new_options)
-        print("new_options")
-        print(new_options)
         return req_reload
 
     @callback
@@ -273,9 +256,6 @@ class GLinetRouter:
 
 def get_api(conf) -> GLinet:
     """Get the GLinet API."""
-    # print("conf handed to get_api")
-    # print(conf)
-    # TODO validate token works
     if CONF_API_TOKEN in conf:
         return GLinet(
             sync=False,

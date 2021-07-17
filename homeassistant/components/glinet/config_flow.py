@@ -49,7 +49,6 @@ class TestingHub:
         try:
             res = await self.router.router_model()
             self.router_model = res["model"]
-            # print(self.router_model)
             return True
         except ConnectionError:
             _LOGGER.error(
@@ -67,11 +66,9 @@ class TestingHub:
         try:
             await self.router.async_login(password)
             res = await self.router.router_mac()
-            print(res)
             self.router_mac = res["factorymac"]
         except ConnectionRefusedError:
             _LOGGER.error("Failed to authenticate with Gl-inet router during testing")
-        # print(self.router.logged_in)
         return self.router.logged_in
 
 
@@ -113,43 +110,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GL-inet."""
 
     VERSION = 1
-    # print("ConfigFlow Called")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        # print(
-        #    "ConfigFlow.async_step_user() Called -----------------------------------------------"
-        # )
         if user_input is None:
             user_input = {}
-            # print("no user input -----------------------------------------------")
-            # print("just added")
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
             )
 
         errors = {}
-        # print("about to try -----------------------------------------------")
         try:
             info = await validate_input(self.hass, user_input)
-            # print("success -----------------------------------------------")
         except CannotConnect:
             errors["base"] = "cannot_connect"
-            # print("cannot connect -----------------------------------------------")
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-            # print("cannot auth -----------------------------------------------")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
-            # print("cannot other -----------------------------------------------")
         else:
-            print("else -----------------------------------------------")
-            # print(info)
-            print(info["mac"])
             unique_id: str = format_mac(info["mac"])
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
