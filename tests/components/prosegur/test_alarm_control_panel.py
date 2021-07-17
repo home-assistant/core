@@ -55,11 +55,6 @@ async def test_entity_registry(hass, mock_auth, mock_status):
     # Prosegur alarm device unique_id is the contract id associated to the alarm account
     assert entry.unique_id == CONTRACT
 
-
-async def test_attributes(hass, mock_auth, mock_status):
-    """Test the alarm control panel attributes are correct."""
-    await setup_platform(hass, ALARM_DOMAIN)
-
     await hass.async_block_till_done()
 
     state = hass.states.get(PROSEGUR_ALARM_ENTITY)
