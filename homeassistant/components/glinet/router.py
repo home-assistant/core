@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import Callable
 
 from gli_py import GLinet
 
@@ -12,11 +13,16 @@ from homeassistant.components.device_tracker.const import (
     DOMAIN as TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.core import HomeAssistant  # callback,CALLBACK_TYPE
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import (  # callback,CALLBACK_TYPE
+    CALLBACK_TYPE,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.event import async_track_time_interval
 
 # from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -36,24 +42,30 @@ SCAN_INTERVAL = timedelta(seconds=30)
 class ClientDevInfo:
     """Representation of a device connected to the router."""
 
-    def __init__(self, mac, name=None):
+    def __init__(self, mac: str, name=None):
         """Initialize a connected device."""
-        self._mac = mac
-        self._name = name
-        self._ip_address = None
-        self._last_activity = None
-        self._connected = False
+        self._mac: str = mac
+        self._name: str | None = name
+        self._ip_address: str | None = None
+        self._last_activity: datetime = dt_util.utcnow() - timedelta(days=1)
+        self._connected: bool = False
 
-    def update(self, dev_info=None, consider_home=0):
+    def update(self, dev_info: dict = None, consider_home=0):
         """Update connected device info."""
+        # TODO actually cause this function to run by configuring some devices to track
+        print("actually using consider home")
+        print(consider_home)
         now: datetime = dt_util.utcnow()
         if dev_info:
             if not self._name:
                 pass  # TODO access device name - GLinet usus '*' if unknown
-                # self._name = dev_info.name or self._mac.replace(":", "_")
-            # self._ip_address = dev_info.ip
-            # self._last_activity = now
-            # self._connected = dev_info.online
+                if dev_info["name"] == "*":
+                    self._name = self._mac.replace(":", "_")
+                else:
+                    self._name = dev_info["name"]
+            self._ip_address = dev_info["ip"]
+            self._last_activity = now
+            self._connected = dev_info["online"]
 
         # a device might not actually be online but we want to consider it home
         elif self._connected:
@@ -104,9 +116,12 @@ class GLinetRouter:
         # self._devices should
         self._devices: dict[str, ClientDevInfo] = {}
         self._connected_devices: int = 0
+        self._on_close: list[Callable] = []
 
         self._options: dict = {}
         self._options.update(entry.options)
+        print("printing entry.options")
+        print(entry.options)
 
     async def setup(self) -> None:
         """Set up a GL-inet router."""
@@ -129,8 +144,14 @@ class GLinetRouter:
                 entity_registry, self._entry.entry_id
             )
         )
-
+        print("printing entity reg")
+        print(entity_registry)
+        print("self._entry.entry_id")
+        print(self._entry.entry_id)
+        print("printing track entries")
+        print(track_entries)
         for entry in track_entries:
+            print(entry)
             if entry.domain == TRACKER_DOMAIN:
                 self._devices[entry.unique_id] = ClientDevInfo(
                     entry.unique_id, entry.original_name
@@ -139,9 +160,9 @@ class GLinetRouter:
         # Update devices
         await self.update_devices()
 
-        # self.async_on_close(
-        #    async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
-        # )
+        self.async_on_close(
+            async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
+        )
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all AsusWrt platforms."""
@@ -154,7 +175,9 @@ class GLinetRouter:
         _LOGGER.debug("Checking client connect to GL-inet router %s", self._host)
         try:
             # TODO ensure the output of gli_py has the right data structure
-            wrt_devices = await self._api.connected_clients()
+            print("asking router for clients")
+            wrt_devices = await self._api.async_connected_clients()
+            print(wrt_devices["e4:aa:ea:4b:29:f7"])
         except OSError as exc:
             if not self._connect_error:
                 self._connect_error = True
@@ -197,7 +220,14 @@ class GLinetRouter:
         """Update router options."""
         req_reload = False
         self._options.update(new_options)
+        print("new_options")
+        print(new_options)
         return req_reload
+
+    @callback
+    def async_on_close(self, func: CALLBACK_TYPE) -> None:
+        """Add a function to call when router is closed."""
+        self._on_close.append(func)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -236,9 +266,24 @@ class GLinetRouter:
         return self._api
 
 
-# should this be async?
 def get_api(conf) -> GLinet:
     """Get the GLinet API."""
-    return GLinet(
-        conf[CONF_PASSWORD], base_url=conf[CONF_HOST] + "/cgi-bin/api/", sync=False
-    )
+    # print("conf handed to get_api")
+    # print(conf)
+    # TODO validate token works
+    if CONF_API_TOKEN in conf:
+        return GLinet(
+            sync=False,
+            token=conf[CONF_API_TOKEN],
+            base_url=conf[CONF_HOST] + "/cgi-bin/api/",
+        )
+    if CONF_PASSWORD in conf:
+        router = GLinet(sync=False, base_url=conf[CONF_HOST] + "/cgi-bin/api/")
+        # this is synchronous code, ergh
+        router.login(conf[CONF_PASSWORD])
+        return router
+    else:
+        _LOGGER.error(
+            "Error setting up GL-inet router, no auth details found in configuration"
+        )
+        raise ConfigEntryAuthFailed

@@ -12,21 +12,23 @@ from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
+
+# from homeassistant.helpers import config_validation as cv
+
 
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host", default="http://192.168.8.1"): cv.url,
-        vol.Required("password", default="goodlife"): str,
+        vol.Required(CONF_HOST, default="http://192.168.8.1"): str,
+        vol.Required(CONF_PASSWORD, default="goodlife"): str,
     }
 )
 
@@ -37,28 +39,34 @@ class TestingHub:
     def __init__(self, host: str) -> None:
         """Initialize."""
         self.host: str = host
-        self.router: GLinet = GLinet(
-            "", base_url=self.host + "/cgi-bin/api/", sync=False, auto_auth=False
-        )
+        self.router: GLinet = GLinet(base_url=self.host + "/cgi-bin/api/", sync=False)
         self.router_model: str = ""
 
     async def connect(self) -> bool:
         """Test if we can communicate with the host."""
         try:
-            self.router_model = await self.router.router_model()
+            res = await self.router.router_model()
+            self.router_model = res["model"]
+            # print(self.router_model)
             return True
         except ConnectionError:
             _LOGGER.error(
                 "Failed to connect to %s, is it really a GL-inet router?", self.host
+            )
+        except TypeError:
+            _LOGGER.error(
+                "Failed to parse router response to %s, is it the right firmware version?",
+                self.host,
             )
         return False
 
     async def authenticate(self, password: str) -> bool:
         """Test if we can authenticate with the host."""
         try:
-            await self.router.login(password)
+            await self.router.async_login(password)
         except ConnectionRefusedError:
             _LOGGER.error("Failed to authenticate with Gl-inet router during testing")
+        # print(self.router.logged_in)
         return self.router.logged_in
 
 
@@ -89,40 +97,63 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"GL-inet": "GL-inet " + hub.router_model}
+    return {
+        "title": "GL-inet " + hub.router_model,
+        "data": {CONF_HOST: data[CONF_HOST], CONF_API_TOKEN: hub.router.token},
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GL-inet."""
 
     VERSION = 1
+    # print("ConfigFlow Called")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        # print(
+        #    "ConfigFlow.async_step_user() Called -----------------------------------------------"
+        # )
         if user_input is None:
+            user_input = {}
+            # print("no user input -----------------------------------------------")
+            # print("just added")
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
             )
 
         errors = {}
-
+        # print("about to try -----------------------------------------------")
         try:
             info = await validate_input(self.hass, user_input)
+            # print("success -----------------------------------------------")
         except CannotConnect:
             errors["base"] = "cannot_connect"
+            # print("cannot connect -----------------------------------------------")
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+            # print("cannot auth -----------------------------------------------")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+            # print("cannot other -----------------------------------------------")
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            # print("else -----------------------------------------------")
+            # print(info)
+            return self.async_create_entry(title=info["title"], data=info["data"])
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -141,6 +172,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_CONSIDER_HOME,
+                    description="Seconds to wait before considering away",
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
