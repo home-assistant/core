@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -34,6 +34,20 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_user(user_input=config)
 
+    async def async_step_reauth(self, user_input=None):
+        """Handle initiation of re-authentication with Yale."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -54,7 +68,6 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     step_id="user",
                     data_schema=DATA_SCHEMA,
                     errors={"base": "invalid_auth"},
-                    description_placeholders={},
                 )
 
             await self.async_set_unique_id(username)
@@ -75,11 +88,3 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate host is already configured."""

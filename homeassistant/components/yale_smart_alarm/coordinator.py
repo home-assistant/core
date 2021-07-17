@@ -5,14 +5,8 @@ from datetime import timedelta
 
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_LOCKED,
-    STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -23,7 +17,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     """A Yale Data Update Coordinator."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the Verisure hub."""
+        """Initialize the Yale hub."""
         self.entry = entry
         self.yale = None
 
@@ -42,49 +36,52 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
         locks = []
         door_windows = []
 
-        for lock in updates["cycle"]["data"]["device_status"]:
-            if lock["type"] == "device_type.door_lock":
-                state = lock["status1"]
-                lock_status_str = lock["minigw_lock_status"]
-                if lock_status_str != "":
-                    lock_status = int(lock_status_str, 16)
-                    closed = (lock_status & 16) == 16
-                    locked = (lock_status & 1) == 1
-                    if closed is True and locked is True:
-                        state = STATE_LOCKED
-                    elif closed is True and locked is False:
-                        state = STATE_UNLOCKED
-                    elif not closed:
-                        state = STATE_UNLOCKED
-                elif "device_status.lock" in state:
-                    state = STATE_LOCKED
-                elif "device_status.unlock" in state:
-                    state = STATE_UNLOCKED
-                else:
-                    state = STATE_UNAVAILABLE
-                lock["_state"] = state
-                locks.append(lock)
+        locks_list = (
+            lock
+            for lock in updates["cycle"]["data"]["device_status"]
+            if lock["type"] == "device_type.door_lock"
+        )
 
-        for door_window in updates["cycle"]["data"]["device_status"]:
-            if door_window["type"] == "device_type.door_contact":
-                state = door_window["status1"]
-                if "device_status.dc_close" in state:
-                    state = "closed"
-                elif "device_status.dc_open" in state:
-                    state = "open"
-                else:
-                    state = STATE_UNAVAILABLE
-                door_window["_state"] = state
-                door_windows.append(door_window)
+        for lock in locks_list:
+            state = lock["status1"]
+            lock_status_str = lock["minigw_lock_status"]
+            if lock_status_str != "":
+                lock_status = int(lock_status_str, 16)
+                closed = (lock_status & 16) == 16
+                locked = (lock_status & 1) == 1
+                if closed is True and locked is True:
+                    state = "locked"
+                elif closed is True and locked is False:
+                    state = "unlocked"
+                elif not closed:
+                    state = "unlocked"
+            elif "device_status.lock" in state:
+                state = "locked"
+            elif "device_status.unlock" in state:
+                state = "unlocked"
+            else:
+                state = "unavailable"
+            lock["_state"] = state
+            locks.append(lock)
+        LOGGER.debug("locks: %s", locks)
 
-        debug = {
-            "alarm": updates["arm_status"],
-            "locks": locks,
-            "door_windows": door_windows,
-            "status": updates["status"],
-            "online": updates["online"],
-        }
-        LOGGER.debug("Coordinator output: %s", debug)
+        dorr_window_list = (
+            door_window
+            for door_window in updates["cycle"]["data"]["device_status"]
+            if door_window["type"] == "device_type.door_contact"
+        )
+
+        for door_window in dorr_window_list:
+            state = door_window["status1"]
+            if "device_status.dc_close" in state:
+                state = "closed"
+            elif "device_status.dc_open" in state:
+                state = "open"
+            else:
+                state = "unavailable"
+            door_window["_state"] = state
+            door_windows.append(door_window)
+
         return {
             "alarm": updates["arm_status"],
             "locks": locks,
@@ -109,7 +106,13 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
         except AuthenticationError as error:
             LOGGER.error("Authentication failed. Check credentials %s", error)
-            raise
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data=self.entry.data,
+                )
+            )
 
         return {
             "arm_status": arm_status,

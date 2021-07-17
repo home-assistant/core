@@ -1,14 +1,10 @@
 """The yale_smart_alarm component."""
 from __future__ import annotations
 
-import asyncio
-
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import YaleDataUpdateCoordinator
-
-PLATFORMS = ["alarm_control_panel"]
 
 
 async def async_setup_entry(hass, entry):
@@ -18,7 +14,7 @@ async def async_setup_entry(hass, entry):
 
     coordinator = YaleDataUpdateCoordinator(hass, entry=entry)
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
@@ -26,10 +22,7 @@ async def async_setup_entry(hass, entry):
         "coordinator": coordinator,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     LOGGER.debug("Loaded entry for %s", title)
 
@@ -39,14 +32,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     title = entry.title
     if unload_ok:

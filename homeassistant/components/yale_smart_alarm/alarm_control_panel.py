@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Yale configuration from YAML."""
     LOGGER.warning(
-        "Loading Yale Alarm via platform setup is depreciated; Please remove it from your configuration"
+        "Loading Yale Alarm via platform setup is deprecated; Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -80,18 +80,16 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        self.entry_id = self.coordinator.entry.entry_id
-        return str(self.entry_id)
+        return str(self.coordinator.entry.entry_id)  # type: ignore[attr-defined]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        self.identifier = self.coordinator.entry.data[CONF_USERNAME]
         return {
             ATTR_NAME: self.name,
             ATTR_MANUFACTURER: MANUFACTURER,
             ATTR_MODEL: MODEL,
-            ATTR_IDENTIFIERS: {(DOMAIN, self.identifier)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.entry.data[CONF_USERNAME])},  # type: ignore[attr-defined]
         }
 
     @property

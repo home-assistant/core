@@ -29,6 +29,8 @@ LOGGER = logging.getLogger(__name__)
 ATTR_ONLINE = "online"
 ATTR_STATUS = "status"
 
+PLATFORMS = ["alarm_control_panel"]
+
 STATE_MAP = {
     YALE_STATE_DISARM: STATE_ALARM_DISARMED,
     YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
