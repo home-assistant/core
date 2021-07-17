@@ -41,9 +41,8 @@ class NeatoHub:
 
         _LOGGER.debug("Adding user unique_id to previous config entry")
 
-        unique_id = await self._hass.async_add_executor_job(
-            lambda: self.my_neato.unique_id
-        )
-        await self._hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+        await self._hass.async_add_executor_job(self.my_neato.refresh_userdata)
+        unique_id = self.my_neato.unique_id
+        self._hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
         return unique_id
