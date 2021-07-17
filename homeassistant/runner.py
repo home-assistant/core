@@ -73,16 +73,6 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         loop.set_default_executor = warn_use(  # type: ignore
             loop.set_default_executor, "sets default executor on the event loop"
         )
-
-        # Shut down executor when we shut down loop
-        orig_close = loop.close
-
-        def close() -> None:
-            executor.logged_shutdown()
-            orig_close()
-
-        loop.close = close  # type: ignore
-
         return loop
 
 

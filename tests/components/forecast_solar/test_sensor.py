@@ -70,7 +70,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_highest_peak_time_today"
-    assert state.state == "2021-06-27 13:00:00+00:00"
+    assert state.state == "2021-06-27T13:00:00+00:00"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Highest Power Peak Time - Today"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
@@ -82,7 +82,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_highest_peak_time_tomorrow"
-    assert state.state == "2021-06-27 14:00:00+00:00"
+    assert state.state == "2021-06-27T14:00:00+00:00"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Highest Power Peak Time - Tomorrow"
     )

@@ -4,7 +4,12 @@ import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEGREE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEGREE,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -30,7 +35,9 @@ def discover_sensors(topic, payload):
             unit = TEMP_FAHRENHEIT
         else:
             unit = TEMP_CELSIUS
-        return ArwnSensor(topic, name, "temp", unit)
+        return ArwnSensor(
+            topic, name, "temp", unit, device_class=DEVICE_CLASS_TEMPERATURE
+        )
     if domain == "moisture":
         name = f"{parts[2]} Moisture"
         return ArwnSensor(topic, name, "moisture", unit, "mdi:water-percent")
@@ -119,21 +126,21 @@ class ArwnSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, topic, name, state_key, units, icon=None):
+    def __init__(self, topic, name, state_key, units, icon=None, device_class=None):
         """Initialize the sensor."""
-        self.hass = None
         self.entity_id = _slug(name)
-        self._state_key = state_key
         self._attr_name = name
         # This mqtt topic for the sensor which is its uid
         self._attr_unique_id = topic
+        self._state_key = state_key
         self._attr_unit_of_measurement = units
         self._attr_icon = icon
+        self._attr_device_class = device_class
 
     def set_event(self, event):
         """Update the sensor with the most recent event."""
-        event = {}
-        event.update(event)
-        self._attr_state = event.get(self._state_key, None)
-        self._attr_extra_state_attributes = event
+        ev = {}
+        ev.update(event)
+        self._attr_extra_state_attributes = ev
+        self._attr_state = ev.get(self._state_key, None)
         self.async_write_ha_state()

@@ -2,7 +2,12 @@
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 
 from . import (
     CONF_SENSORS,
@@ -172,10 +177,11 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         return None
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
         if "bed_temp" in self._sensor:
-            return "mdi:thermometer"
+            return DEVICE_CLASS_TEMPERATURE
+        return None
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -334,6 +340,6 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         return TEMP_FAHRENHEIT
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:thermometer"
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TEMPERATURE

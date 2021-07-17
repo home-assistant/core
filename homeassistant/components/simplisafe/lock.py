@@ -35,13 +35,8 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     def __init__(self, simplisafe, system, lock):
         """Initialize."""
         super().__init__(simplisafe, system, lock.name, serial=lock.serial)
-        self._lock = lock
-        self._is_locked = None
 
-    @property
-    def is_locked(self):
-        """Return true if the lock is locked."""
-        return self._is_locked
+        self._lock = lock
 
     async def async_lock(self, **kwargs):
         """Lock the lock."""
@@ -51,7 +46,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
 
-        self._is_locked = True
+        self._attr_is_locked = True
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
@@ -62,13 +57,13 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return
 
-        self._is_locked = False
+        self._attr_is_locked = False
         self.async_write_ha_state()
 
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,
                 ATTR_JAMMED: self._lock.state == LockStates.jammed,
@@ -76,4 +71,4 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             }
         )
 
-        self._is_locked = self._lock.state == LockStates.locked
+        self._attr_is_locked = self._lock.state == LockStates.locked

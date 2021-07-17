@@ -59,6 +59,7 @@ class RepetierSensor(SensorEntity):
         self._printer_id = printer_id
         self._sensor_type = sensor_type
         self._state = None
+        self._attr_device_class = SENSOR_TYPES[self._sensor_type][4]
 
     @property
     def available(self) -> bool:

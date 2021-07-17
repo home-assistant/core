@@ -1,15 +1,15 @@
 """Support for Ambient Weather Station Service."""
+from __future__ import annotations
 
 from aioambient import Client
 from aioambient.errors import WebsocketError
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DOMAIN as BINARY_SENSOR,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
@@ -32,7 +32,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -291,44 +291,13 @@ SENSOR_TYPES = {
     TYPE_YEARLYRAININ: ("Yearly Rain", "in", SENSOR, None),
 }
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_APP_KEY): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass, config):
-    """Set up the Ambient PWS integration."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-
-    if DOMAIN not in config:
-        return True
-    conf = config[DOMAIN]
-
-    # Store config for use during entry setup:
-    hass.data[DOMAIN][DATA_CONFIG] = conf
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_API_KEY: conf[CONF_API_KEY], CONF_APP_KEY: conf[CONF_APP_KEY]},
-        )
-    )
-
-    return True
-
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Ambient PWS as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
+
     if not config_entry.unique_id:
         hass.config_entries.async_update_entry(
             config_entry, unique_id=config_entry.data[CONF_APP_KEY]
@@ -363,7 +332,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload an Ambient PWS config entry."""
     ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
@@ -371,7 +340,7 @@ async def async_unload_entry(hass, config_entry):
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
 
@@ -395,19 +364,21 @@ async def async_migrate_entry(hass, config_entry):
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(self, hass, config_entry, client):
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, client: Client
+    ) -> None:
         """Initialize."""
         self._config_entry = config_entry
         self._entry_setup_complete = False
         self._hass = hass
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
-        self.stations = {}
+        self.stations: dict[str, dict] = {}
 
-    async def _attempt_connect(self):
+    async def _attempt_connect(self) -> None:
         """Attempt to connect to the socket (retrying later on fail)."""
 
-        async def connect(timestamp=None):
+        async def connect(timestamp: int | None = None):
             """Connect."""
             await self.client.websocket.connect()
 
@@ -418,14 +389,14 @@ class AmbientStation:
             self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
             async_call_later(self._hass, self._ws_reconnect_delay, connect)
 
-    async def ws_connect(self):
+    async def ws_connect(self) -> None:
         """Register handlers and connect to the websocket."""
 
-        def on_connect():
+        def on_connect() -> None:
             """Define a handler to fire when the websocket is connected."""
             LOGGER.info("Connected to websocket")
 
-        def on_data(data):
+        def on_data(data: dict) -> None:
             """Define a handler to fire when the data is received."""
             mac_address = data["macAddress"]
             if data != self.stations[mac_address][ATTR_LAST_DATA]:
@@ -435,11 +406,11 @@ class AmbientStation:
                     self._hass, f"ambient_station_data_update_{mac_address}"
                 )
 
-        def on_disconnect():
+        def on_disconnect() -> None:
             """Define a handler to fire when the websocket is disconnected."""
             LOGGER.info("Disconnected from websocket")
 
-        def on_subscribed(data):
+        def on_subscribed(data: dict) -> None:
             """Define a handler to fire when the subscription is set."""
             for station in data["devices"]:
                 if station["macAddress"] in self.stations:
@@ -480,7 +451,7 @@ class AmbientStation:
 
         await self._attempt_connect()
 
-    async def ws_disconnect(self):
+    async def ws_disconnect(self) -> None:
         """Disconnect from the websocket."""
         await self.client.websocket.disconnect()
 
@@ -489,8 +460,14 @@ class AmbientWeatherEntity(Entity):
     """Define a base Ambient PWS entity."""
 
     def __init__(
-        self, ambient, mac_address, station_name, sensor_type, sensor_name, device_class
-    ):
+        self,
+        ambient: AmbientStation,
+        mac_address: str,
+        station_name: str,
+        sensor_type: str,
+        sensor_name: str,
+        device_class: str | None,
+    ) -> None:
         """Initialize the sensor."""
         self._ambient = ambient
         self._attr_device_class = device_class
@@ -505,11 +482,11 @@ class AmbientWeatherEntity(Entity):
         self._mac_address = mac_address
         self._sensor_type = sensor_type
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         @callback
-        def update():
+        def update() -> None:
             """Update the state."""
             if self._sensor_type == TYPE_SOLARRADIATION_LX:
                 self._attr_available = (
@@ -538,6 +515,6 @@ class AmbientWeatherEntity(Entity):
         self.update_from_latest_data()
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         raise NotImplementedError

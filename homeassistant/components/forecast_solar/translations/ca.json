@@ -24,7 +24,7 @@
                     "declination": "Inclinaci\u00f3 (0 = horitzontal, 90 = vertical)",
                     "modules power": "Pot\u00e8ncia m\u00e0xima total dels panells solars"
                 },
-                "description": "Aquests valors permeten ajustar els resultats de Solar.Forecast. Consulta la documentaci\u00f3 si tens dubtes en algun camp."
+                "description": "Aquests valors permeten ajustar els resultats de Solar.Forecast. Consulta la documentaci\u00f3 si tens dubtes sobre algun camp."
             }
         }
     }

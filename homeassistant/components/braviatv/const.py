@@ -1,13 +1,17 @@
 """Constants for Bravia TV integration."""
-ATTR_CID = "cid"
-ATTR_MAC = "macAddr"
-ATTR_MANUFACTURER = "Sony"
-ATTR_MODEL = "model"
+from __future__ import annotations
 
-CONF_IGNORED_SOURCES = "ignored_sources"
+from typing import Final
 
-BRAVIA_CONFIG_FILE = "bravia.conf"
-CLIENTID_PREFIX = "HomeAssistant"
-DEFAULT_NAME = f"{ATTR_MANUFACTURER} Bravia TV"
-DOMAIN = "braviatv"
-NICKNAME = "Home Assistant"
+ATTR_CID: Final = "cid"
+ATTR_MAC: Final = "macAddr"
+ATTR_MANUFACTURER: Final = "Sony"
+ATTR_MODEL: Final = "model"
+
+CONF_IGNORED_SOURCES: Final = "ignored_sources"
+
+BRAVIA_CONFIG_FILE: Final = "bravia.conf"
+CLIENTID_PREFIX: Final = "HomeAssistant"
+DEFAULT_NAME: Final = f"{ATTR_MANUFACTURER} Bravia TV"
+DOMAIN: Final = "braviatv"
+NICKNAME: Final = "Home Assistant"

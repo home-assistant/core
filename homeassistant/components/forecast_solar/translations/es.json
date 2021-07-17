@@ -1,0 +1,9 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "description": "Estos valores permiten ajustar el resultado de Solar.Forecast. Consulte la documentaci\u00f3n si un campo no est\u00e1 claro."
+            }
+        }
+    }
+}

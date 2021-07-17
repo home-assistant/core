@@ -250,8 +250,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if update_tasks:
                 await asyncio.wait(update_tasks)
 
-        for plug_service in SERVICE_TO_METHOD:
-            schema = SERVICE_TO_METHOD[plug_service].get("schema", SERVICE_SCHEMA)
+        for plug_service, method in SERVICE_TO_METHOD.items():
+            schema = method[plug_service].get("schema", SERVICE_SCHEMA)
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )

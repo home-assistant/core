@@ -63,35 +63,22 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     """Representation of a network infrastructure device."""
 
+    _attr_icon = DEFAULT_ICON
+
     def __init__(self, entry, coordinator, tile):
         """Initialize."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_name = tile.name
+        self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{tile.uuid}"
         self._entry = entry
         self._tile = tile
 
     @property
     def available(self):
         """Return if entity is available."""
-        return self.coordinator.last_update_success and not self._tile.dead
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the device.
-
-        Percentage from 0-100.
-        """
-        return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return DEFAULT_ICON
+        return super().available and not self._tile.dead
 
     @property
     def location_accuracy(self):
@@ -112,16 +99,6 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
         return self._tile.longitude
 
     @property
-    def name(self):
-        """Return the name."""
-        return self._tile.name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._entry.data[CONF_USERNAME]}_{self._tile.uuid}"
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
@@ -135,7 +112,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     @callback
     def _update_from_latest_data(self):
         """Update the entity from the latest data."""
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_ALTITUDE: self._tile.altitude,
                 ATTR_IS_LOST: self._tile.lost,

@@ -152,6 +152,8 @@ async def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -170,7 +172,7 @@ class Alert(ToggleEntity):
     ):
         """Initialize the alert."""
         self.hass = hass
-        self._name = name
+        self._attr_name = name
         self._alert_state = state
         self._skip_first = skip_first
         self._data = data
@@ -204,16 +206,6 @@ class Alert(ToggleEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the alert."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Home Assistant need not poll these entities."""
-        return False
-
-    @property
     def state(self):
         """Return the alert status."""
         if self._firing:
@@ -235,7 +227,7 @@ class Alert(ToggleEntity):
 
     async def begin_alerting(self):
         """Begin the alert procedures."""
-        _LOGGER.debug("Beginning Alert: %s", self._name)
+        _LOGGER.debug("Beginning Alert: %s", self._attr_name)
         self._ack = False
         self._firing = True
         self._next_delay = 0
@@ -249,7 +241,7 @@ class Alert(ToggleEntity):
 
     async def end_alerting(self):
         """End the alert procedures."""
-        _LOGGER.debug("Ending Alert: %s", self._name)
+        _LOGGER.debug("Ending Alert: %s", self._attr_name)
         self._cancel()
         self._ack = False
         self._firing = False
@@ -272,13 +264,13 @@ class Alert(ToggleEntity):
             return
 
         if not self._ack:
-            _LOGGER.info("Alerting: %s", self._name)
+            _LOGGER.info("Alerting: %s", self._attr_name)
             self._send_done_message = True
 
             if self._message_template is not None:
                 message = self._message_template.async_render(parse_result=False)
             else:
-                message = self._name
+                message = self._attr_name
 
             await self._send_notification_message(message)
         await self._schedule_notify()
@@ -314,13 +306,13 @@ class Alert(ToggleEntity):
 
     async def async_turn_on(self, **kwargs):
         """Async Unacknowledge alert."""
-        _LOGGER.debug("Reset Alert: %s", self._name)
+        _LOGGER.debug("Reset Alert: %s", self._attr_name)
         self._ack = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Async Acknowledge alert."""
-        _LOGGER.debug("Acknowledged Alert: %s", self._name)
+        _LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
         self._ack = True
         self.async_write_ha_state()
 

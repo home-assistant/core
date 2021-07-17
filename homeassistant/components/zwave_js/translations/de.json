@@ -51,6 +51,13 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Wert des Konfigurationsparameters {subtype}",
+            "node_status": "Status des Knotens",
+            "value": "Aktueller Wert eines Z-Wave-Wertes"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Die Discovery-Informationen des Z-Wave JS-Add-On konnten nicht abgerufen werden.",
