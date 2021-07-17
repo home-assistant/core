@@ -71,8 +71,10 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
             self._state = remote_rpi_gpio.read_input(self._button)
             self.schedule_update_ha_state()
 
-        self._button.when_released = read_gpio
-        self._button.when_pressed = read_gpio
+        #        self._button.when_released = read_gpio
+        #        self._button.when_pressed = read_gpio
+        self._button.when_deactivated = read_gpio
+        self._button.when_activated = read_gpio
 
     @property
     def should_poll(self):
