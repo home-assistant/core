@@ -29,12 +29,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         await hass.data[DOMAIN][entry.entry_id].login()
 
-    except ConnectionRefusedError:
+    except ConnectionRefusedError as error:
         _LOGGER.error("Configured credential are invalid, please reconfigure")
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed from error
     except ConnectionError as error:
         _LOGGER.error("Could not connect with Prosegur backend: %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

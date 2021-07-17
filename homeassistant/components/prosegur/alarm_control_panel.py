@@ -37,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class ProsegurAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Prosegur alarm status."""
 
-    def __init__(self, contract: str, auth: Auth):
+    def __init__(self, contract: str, auth: Auth) -> None:
         """Initialize the Prosegur alarm panel."""
         self._attr_state = None
         self._changed_by = None

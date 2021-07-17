@@ -6,6 +6,7 @@ from pyprosegur.installation import Installation
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
@@ -50,6 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    entry: ConfigEntry
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
