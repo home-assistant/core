@@ -60,6 +60,9 @@
         "trigger_type": {
             "event.notification.entry_control": "Ha enviat una notificaci\u00f3 de control d'entrada",
             "event.notification.notification": "Ha enviat una notificaci\u00f3",
+            "event.value_notification.basic": "Esdeveniment CC b\u00e0sic a {subtype}",
+            "event.value_notification.central_scene": "Acci\u00f3 d'escena central a {subtype}",
+            "event.value_notification.scene_activation": "Activaci\u00f3 d'escena a {subtype}",
             "state.node_status": "L'estat del node ha canviat"
         }
     },
