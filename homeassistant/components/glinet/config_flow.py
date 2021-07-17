@@ -16,6 +16,7 @@ from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
@@ -149,7 +150,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             print("else -----------------------------------------------")
             # print(info)
             print(info["mac"])
-            await self.async_set_unique_id(info["mac"])
+            unique_id: str = format_mac(info["mac"])
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=info["data"])
 

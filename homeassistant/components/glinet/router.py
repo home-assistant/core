@@ -174,7 +174,7 @@ class GLinetRouter:
 
     async def update_devices(self) -> None:
         """Update AsusWrt devices tracker."""
-        # new_device = False
+        new_device = False
 
         _LOGGER.debug("Checking client connect to GL-inet router %s", self._host)
         try:
@@ -205,17 +205,19 @@ class GLinetRouter:
             dev_info = wrt_devices.get(device_mac)
             device.update(dev_info, consider_home)
 
-        # for device_mac, dev_info in wrt_devices.items():
-        #    if device_mac in self._devices:
-        #        continue
-        #    if not dev_info.name:
-        #        continue
-        #    new_device = True
-        #    device = ClientDevInfo(device_mac)
-        #    device.update(dev_info)
-        #    self._devices[device_mac] = device
+        for device_mac, dev_info in wrt_devices.items():
+            if device_mac in self._devices:
+                continue
+            if not dev_info["name"]:
+                continue
+            new_device = True
+            device = ClientDevInfo(device_mac)
+            device.update(dev_info)
+            self._devices[device_mac] = device
 
         async_dispatcher_send(self.hass, self.signal_device_update)
+        if new_device:
+            async_dispatcher_send(self.hass, self.signal_device_new)
 
         self._connected_devices = len(wrt_devices)
 
