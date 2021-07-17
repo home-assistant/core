@@ -114,7 +114,7 @@ adext==0.4.2
 adguardhome==0.5.0
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.1
+advantage_air==0.2.5
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -1022,7 +1022,7 @@ nettigo-air-monitor==1.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.9
+nexia==0.9.10
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0

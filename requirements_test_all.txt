@@ -57,7 +57,7 @@ adext==0.4.2
 adguardhome==0.5.0
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.1
+advantage_air==0.2.5
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -576,7 +576,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
-nexia==0.9.9
+nexia==0.9.10
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
