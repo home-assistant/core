@@ -41,6 +41,7 @@ class TestingHub:
         self.host: str = host
         self.router: GLinet = GLinet(base_url=self.host + "/cgi-bin/api/", sync=False)
         self.router_model: str = ""
+        self.router_mac: str = ""
 
     async def connect(self) -> bool:
         """Test if we can communicate with the host."""
@@ -64,6 +65,9 @@ class TestingHub:
         """Test if we can authenticate with the host."""
         try:
             await self.router.async_login(password)
+            res = await self.router.router_mac()
+            print(res)
+            self.router_mac = res["factorymac"]
         except ConnectionRefusedError:
             _LOGGER.error("Failed to authenticate with Gl-inet router during testing")
         # print(self.router.logged_in)
@@ -99,6 +103,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # Return info that you want to store in the config entry.
     return {
         "title": "GL-inet " + hub.router_model,
+        "mac": hub.router_mac,
         "data": {CONF_HOST: data[CONF_HOST], CONF_API_TOKEN: hub.router.token},
     }
 
@@ -141,8 +146,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             # print("cannot other -----------------------------------------------")
         else:
-            # print("else -----------------------------------------------")
+            print("else -----------------------------------------------")
             # print(info)
+            print(info["mac"])
+            await self.async_set_unique_id(info["mac"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=info["data"])
 
         return self.async_show_form(
@@ -172,7 +180,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_CONSIDER_HOME,
-                    description="Seconds to wait before considering away",
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),

@@ -22,6 +22,7 @@ from homeassistant.core import (  # callback,CALLBACK_TYPE
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_track_time_interval
 
 # from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -139,10 +140,10 @@ class GLinetRouter:
             raise ConfigEntryNotReady from exc
 
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        track_entries = (
-            self.hass.helpers.entity_registry.async_entries_for_config_entry(
-                entity_registry, self._entry.entry_id
-            )
+        track_entries: list[
+            RegistryEntry
+        ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
+            entity_registry, self._entry.entry_id
         )
         print("printing entity reg")
         print(entity_registry)
@@ -150,6 +151,9 @@ class GLinetRouter:
         print(self._entry.entry_id)
         print("printing track entries")
         print(track_entries)
+        print("unique id")
+        print(self._entry.unique_id)
+
         for entry in track_entries:
             print(entry)
             if entry.domain == TRACKER_DOMAIN:
@@ -177,7 +181,6 @@ class GLinetRouter:
             # TODO ensure the output of gli_py has the right data structure
             print("asking router for clients")
             wrt_devices = await self._api.async_connected_clients()
-            print(wrt_devices["e4:aa:ea:4b:29:f7"])
         except OSError as exc:
             if not self._connect_error:
                 self._connect_error = True

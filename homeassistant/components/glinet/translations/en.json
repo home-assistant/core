@@ -12,10 +12,19 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
+                    "password": "Password"
                 }
             }
+        }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "title": "GL-inet Options",
+            "data": {
+              "consider_home": "Seconds to wait before considering a device away"
+            }
+          }
         }
     },
     "title": "GL-inet"
