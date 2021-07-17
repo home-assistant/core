@@ -36,13 +36,12 @@ class NeatoHub:
     async def async_update_entry_unique_id(self, entry) -> str:
         """Update entry for unique_id."""
 
-        if entry.unique_id is not None:
-            return entry.unique_id
-
-        _LOGGER.debug("Adding user unique_id to previous config entry")
-
         await self._hass.async_add_executor_job(self.my_neato.refresh_userdata)
         unique_id = self.my_neato.unique_id
-        self._hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
+        if entry.unique_id == unique_id:
+            return unique_id
+
+        _LOGGER.debug("Updating user unique_id for previous config entry")
+        self._hass.config_entries.async_update_entry(entry, unique_id=unique_id)
         return unique_id
