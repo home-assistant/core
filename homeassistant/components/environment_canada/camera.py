@@ -1,4 +1,5 @@
 """Support for the Environment Canada radar imagery."""
+import asyncio
 import datetime
 
 from env_canada import ECRadar
@@ -20,6 +21,9 @@ CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = "station"
 CONF_LOOP = "loop"
 CONF_PRECIP_TYPE = "precip_type"
+CONF_RADIUS = "radius"
+CONF_RADAR_OPACITY = "radar_opacity"
+CONF_LEGEND = "legend"
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
@@ -31,6 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
         vol.Optional(CONF_PRECIP_TYPE): vol.In(["RAIN", "SNOW"]),
+        vol.Optional(CONF_RADIUS, default=200): cv.positive_int,
+        vol.Optional(CONF_RADAR_OPACITY, default=65): cv.positive_int,
+        vol.Optional(CONF_LEGEND, default=True): cv.boolean,
     }
 )
 
@@ -38,16 +45,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada camera."""
 
+    kwargs = {
+        "precip_type": config.get(CONF_PRECIP_TYPE),
+        "radius": config.get(CONF_RADIUS),
+        "radar_opacity": config.get(CONF_RADAR_OPACITY),
+        "legend": config.get(CONF_LEGEND),
+    }
+
     if config.get(CONF_STATION):
-        radar_object = ECRadar(
-            station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
-        )
+        kwargs["station_id"] = config[CONF_STATION]
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        radar_object = ECRadar(
-            coordinates=(lat, lon), precip_type=config.get(CONF_PRECIP_TYPE)
-        )
+        kwargs["coordinates"] = (lat, lon)
+
+    radar_object = ECRadar(**kwargs)
 
     add_devices(
         [ECCamera(radar_object, config.get(CONF_NAME), config[CONF_LOOP])], True
@@ -89,7 +101,7 @@ class ECCamera(Camera):
     def update(self):
         """Update radar image."""
         if self.is_loop:
-            self.image = self.radar_object.get_loop()
+            self.image = asyncio.run(self.radar_object.get_loop())
         else:
-            self.image = self.radar_object.get_latest_frame()
+            self.image = asyncio.run(self.radar_object.get_latest_frame())
         self.timestamp = self.radar_object.timestamp
