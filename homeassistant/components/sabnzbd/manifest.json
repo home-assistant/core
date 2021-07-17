@@ -3,8 +3,9 @@
   "name": "SABnzbd",
   "documentation": "https://www.home-assistant.io/integrations/sabnzbd",
   "requirements": ["pysabnzbd==1.1.0"],
-  "dependencies": ["configurator"],
+  "dependencies": [],
   "after_dependencies": ["discovery"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "config_flow": true
 }

@@ -990,6 +990,9 @@ pyrituals==0.0.6
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
+# homeassistant.components.sabnzbd
+pysabnzbd==1.1.0
+
 # homeassistant.components.serial
 # homeassistant.components.zha
 pyserial-asyncio==0.5

@@ -2,19 +2,26 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_SABNZBD, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED
+from . import DOMAIN, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED, SabnzbdApiData
+from ...config_entries import ConfigEntry
+from ...core import HomeAssistant
+from ...helpers.entity_platform import AddEntitiesCallback
+from .const import KEY_API, KEY_NAME
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SABnzbd sensors."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up a Sabnzbd sensor entry."""
 
-    sab_api_data = hass.data[DATA_SABNZBD]
-    sensors = sab_api_data.sensors
-    client_name = sab_api_data.name
+    sab_api = hass.data[DOMAIN][config_entry.entry_id][KEY_API]
+    client_name = hass.data[DOMAIN][config_entry.entry_id][KEY_NAME]
+    sab_api_data = SabnzbdApiData(sab_api)
+
     async_add_entities(
-        [SabnzbdSensor(sensor, sab_api_data, client_name) for sensor in sensors]
+        [SabnzbdSensor(sensor, sab_api_data, client_name) for sensor in SENSOR_TYPES]
     )
 
 
