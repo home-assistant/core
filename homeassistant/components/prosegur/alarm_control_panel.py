@@ -19,6 +19,13 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+STATE_MAPPING = {
+    Status.DISARMED: STATE_ALARM_DISARMED,
+    Status.ARMED: STATE_ALARM_ARMED_AWAY,
+    Status.PARTIALLY: STATE_ALARM_ARMED_HOME,
+    Status.ERROR_PARTIALLY: STATE_ALARM_ARMED_HOME,
+}
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Prosegur alarm control panel platform."""
@@ -32,32 +39,16 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
 
     def __init__(self, contract: str, auth: Auth):
         """Initialize the Prosegur alarm panel."""
-        self._state = None
+        self._attr_state = None
         self._changed_by = None
 
         self._installation = None
         self.contract = contract
         self._auth = auth
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"contract {self.contract}"
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return the unique identifier of the alarm installation."""
-        return self.contract
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
+        self._attr_name = f"contract {self.contract}"
+        self._attr_unique_id = self.contract
+        self._attr_supported_features = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
 
     async def async_update(self):
         """Update alarm status."""
@@ -66,14 +57,10 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
             self._installation = await Installation.retrieve(self._auth)
         except ConnectionError as err:
             _LOGGER.error(err)
+            self._attr_state = None
             return
 
-        if self._installation.status == Status.DISARMED:
-            self._state = STATE_ALARM_DISARMED
-        elif self._installation.status == Status.ARMED:
-            self._state = STATE_ALARM_ARMED_AWAY
-        elif self._installation.status == Status.PARTIALLY:
-            self._state = STATE_ALARM_ARMED_HOME
+        self._attr_state = STATE_MAPPING.get(self._installation.status)
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

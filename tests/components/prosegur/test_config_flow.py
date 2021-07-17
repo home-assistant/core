@@ -1,7 +1,10 @@
 """Test the Prosegur Alarm config flow."""
 from unittest.mock import MagicMock, patch
 
+from pytest import mark
+
 from homeassistant import config_entries, setup
+from homeassistant.components.prosegur.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.prosegur.const import DOMAIN
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
@@ -17,15 +20,12 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    install = MagicMock()
+    install.contract = "123"
+
     with patch(
-        "homeassistant.components.prosegur.config_flow.validate_input",
-        return_value={
-            "title": "Name of the device",
-            "contract": "123",
-            "username": "test-username",
-            "password": "test-password",
-            "country": "PT",
-        },
+        "homeassistant.components.prosegur.config_flow.Installation.retrieve",
+        return_value=install,
     ), patch(
         "homeassistant.components.prosegur.async_setup_entry",
         return_value=True,
@@ -41,7 +41,7 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Contract 123"
     assert result2["data"] == {
         "contract": "123",
         "username": "test-username",
@@ -197,3 +197,51 @@ async def test_reauth_flow(hass):
 
     assert len(mock_installation.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@mark.parametrize(
+    "exception, base_error",
+    [
+        (CannotConnect, "cannot_connect"),
+        (InvalidAuth, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reauth_flow_error(hass, exception, base_error):
+    """Test a reauthentication flow with errors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "country": "PT",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    with patch(
+        "homeassistant.components.prosegur.config_flow.Installation.retrieve",
+        side_effect=exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "new_password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"]["base"] == base_error

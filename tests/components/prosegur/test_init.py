@@ -1,5 +1,5 @@
 """Tests prosegur setup."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from pytest import mark
 
@@ -59,8 +59,16 @@ async def test_unload_entry(hass, aioclient_mock):
     )
     config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    install = MagicMock()
+    install.contract = "123"
 
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.prosegur.config_flow.Installation.retrieve",
+        return_value=install,
+    ):
 
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)

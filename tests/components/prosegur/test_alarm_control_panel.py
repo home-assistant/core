@@ -1,6 +1,6 @@
 """Tests for the Prosegur alarm control panel device."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pyprosegur.installation import Status
 from pytest import fixture, mark
@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_component
 
@@ -24,23 +25,28 @@ from .common import CONTRACT, setup_platform
 PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{CONTRACT}"
 
 
-@fixture(params=[s.value for s in Status])
-def mock_auth(request, aioclient_mock):
-    """Setups authentication and initial info."""
-    aioclient_mock.post(
-        "https://smart.prosegur.com/smart-server/ws/access/login",
-        json={"data": {"token": "123456789"}},
-    )
-    aioclient_mock.get(
-        "https://smart.prosegur.com/smart-server/ws/installation",
-        json={
-            "data": [{"installationId": "1234abcd", "status": request.param}],
-            "result": {"code": 200},
-        },
-    )
+@fixture
+def mock_auth():
+    """Setups authentication."""
+
+    with patch("pyprosegur.auth.Auth.login", return_value=True):
+        yield
 
 
-async def test_entity_registry(hass, mock_auth):
+@fixture(params=list(Status))
+def mock_status(request):
+    """Mock the status of the alarm."""
+
+    install = AsyncMock()
+    install.contract = "123"
+    install.installationId = "1234abcd"
+    install.status = request.param
+
+    with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
+        yield
+
+
+async def test_entity_registry(hass, mock_auth, mock_status):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, ALARM_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -50,7 +56,7 @@ async def test_entity_registry(hass, mock_auth):
     assert entry.unique_id == CONTRACT
 
 
-async def test_attributes(hass, aioclient_mock, mock_auth):
+async def test_attributes(hass, mock_auth, mock_status):
     """Test the alarm control panel attributes are correct."""
     await setup_platform(hass, ALARM_DOMAIN)
 
@@ -62,51 +68,58 @@ async def test_attributes(hass, aioclient_mock, mock_auth):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
 
 
+async def test_connection_error(hass, mock_auth):
+    """Test the alarm control panel when connection can't be made to the cloud service."""
+
+    install = AsyncMock()
+    install.arm = AsyncMock(return_value=False)
+    install.arm_partially = AsyncMock(return_value=True)
+    install.disarm = AsyncMock(return_value=True)
+    install.status = Status.ARMED
+
+    with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
+
+        await setup_platform(hass, ALARM_DOMAIN)
+
+        await hass.async_block_till_done()
+
+    with patch(
+        "pyprosegur.installation.Installation.retrieve", side_effect=ConnectionError
+    ):
+
+        await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
+
+        state = hass.states.get(PROSEGUR_ALARM_ENTITY)
+        assert state.state == STATE_UNKNOWN
+
+
 @mark.parametrize(
     "code, alarm_service, alarm_state",
     [
-        ("AT", SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
-        ("AP", SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
-        ("DA", SERVICE_ALARM_DISARM, STATE_ALARM_DISARMED),
+        (Status.ARMED, SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (Status.PARTIALLY, SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
+        (Status.DISARMED, SERVICE_ALARM_DISARM, STATE_ALARM_DISARMED),
     ],
 )
-async def test_arm(hass, aioclient_mock, mock_auth, code, alarm_service, alarm_state):
+async def test_arm(hass, mock_auth, code, alarm_service, alarm_state):
     """Test the alarm control panel can be set to away."""
 
-    await setup_platform(hass, ALARM_DOMAIN)
+    install = AsyncMock()
+    install.arm = AsyncMock(return_value=False)
+    install.arm_partially = AsyncMock(return_value=True)
+    install.disarm = AsyncMock(return_value=True)
+    install.status = code
 
-    aioclient_mock.put(
-        "https://smart.prosegur.com/smart-server/ws/installation/1234abcd/status",
-    )
-    await hass.services.async_call(
-        ALARM_DOMAIN,
-        alarm_service,
-        {ATTR_ENTITY_ID: PROSEGUR_ALARM_ENTITY},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
+        await setup_platform(hass, ALARM_DOMAIN)
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        "https://smart.prosegur.com/smart-server/ws/installation",
-        json={
-            "data": [{"installationId": "1234abcd", "status": code}],
-            "result": {"code": 200},
-        },
-    )
-    await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
-    await hass.async_block_till_done()
-
-    assert len(aioclient_mock.mock_calls) == 1
-    state = hass.states.get(PROSEGUR_ALARM_ENTITY)
-    assert state.state == alarm_state
-
-    with patch(
-        "pyprosegur.installation.Installation.retrieve",
-        side_effect=ConnectionError("mocked error"),
-    ):
-        await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            alarm_service,
+            {ATTR_ENTITY_ID: PROSEGUR_ALARM_ENTITY},
+            blocking=True,
+        )
         await hass.async_block_till_done()
-        assert len(aioclient_mock.mock_calls) == 1
+
         state = hass.states.get(PROSEGUR_ALARM_ENTITY)
         assert state.state == alarm_state
