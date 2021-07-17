@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Secreto de la API",
+                    "currencies": "Saldo de la cuenta Monedas",
+                    "exchange_rates": "Tipos de cambio"
+                },
+                "description": "Por favor, introduce los detalles de tu clave API tal y como te la ha proporcionado Coinbase.",
+                "title": "Detalles de la clave API de Coinbase"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "currency_unavaliable": "La API de Coinbase no proporciona uno o m\u00e1s de los saldos de divisas solicitados.",
+            "exchange_rate_unavaliable": "Coinbase no proporciona uno o m\u00e1s de los tipos de cambio solicitados."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Saldos de la cartera para informar.",
+                    "exchange_base": "Moneda base para sensores de tipo de cambio.",
+                    "exchange_rate_currencies": "Tipos de cambio a informar."
+                },
+                "description": "Ajustar las opciones de Coinbase"
+            }
+        }
+    }
+}
