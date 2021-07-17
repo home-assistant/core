@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_call_later
 
@@ -270,6 +271,7 @@ class ModbusHub:
                 self.hass, self._config_delay, self.async_end_delay
             )
 
+    @callback
     def async_end_delay(self, args):
         """End startup delay."""
         self._async_cancel_listener = None
