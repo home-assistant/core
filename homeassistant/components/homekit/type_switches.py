@@ -130,13 +130,16 @@ class Switch(HomeAccessory):
         if self.activate_only and not value:
             _LOGGER.debug("%s: Ignoring turn_off call", self.entity_id)
             return
+
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._domain == "script":
-            service = f"script.{self._object_id}"
+            service = self._object_id
+            params = {}
         elif self._domain == "automation":
-            service = "automation.trigger"
+            service = "trigger"
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+
         self.async_call_service(self._domain, service, params)
 
         if self.activate_only:
