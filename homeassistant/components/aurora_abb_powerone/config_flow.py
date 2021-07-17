@@ -55,12 +55,27 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    _comportslist = None
-    _defaultcomport = None
 
     def __init__(self):
         """Initialise the config flow."""
         self.config = None
+        self._comportslist = None
+        self._defaultcomport = None
+
+    def scan_comports(self):
+        """Find and store available com ports for the GUI dropdown."""
+        comports = serial.tools.list_ports.comports(include_links=True)
+        comportslist = []
+        for port in comports:
+            comportslist.append(port.device)
+            _LOGGER.debug("COM port option: %s", port.device)
+        if len(comportslist) > 0:
+            self._comportslist = comportslist
+            self._defaultcomport = comportslist[0]
+        else:
+            _LOGGER.warning(
+                "No com ports found.  Need a valid RS485 device to communicate"
+            )
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
@@ -82,20 +97,9 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if self._comportslist is None:
-            comports = serial.tools.list_ports.comports(include_links=True)
-            comportslist = []
-            for port in comports:
-                comportslist.append(port.device)
-                _LOGGER.debug("COM port option: %s", port.device)
-            if len(comportslist) > 0:
-                defaultcomport = comportslist[0]
-            else:
-                _LOGGER.warning(
-                    "No com ports found.  Need a valid RS485 device to communicate"
-                )
+            self.scan_comports()
+            if self._defaultcomport is None:
                 return self.async_abort(reason="no_serial_ports")
-            self._comportslist = comportslist
-            self._defaultcomport = defaultcomport
 
         # Handle the initial step.
         if user_input is not None:
