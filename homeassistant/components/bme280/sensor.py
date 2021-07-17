@@ -147,6 +147,7 @@ class BME280Sensor(SensorEntity):
         self.temp_unit = temp_unit
         self.type = sensor_type
         self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     async def async_update(self):
         """Get the latest data from the BME280 and update the states."""
