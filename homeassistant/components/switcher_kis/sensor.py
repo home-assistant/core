@@ -56,7 +56,7 @@ TIME_SENSORS = {
         name="Remaining Time",
         icon="mdi:av-timer",
     ),
-    "auto_shutdown": AttributeDescription(
+    "auto_off_set": AttributeDescription(
         name="Auto Shutdown",
         icon="mdi:progress-clock",
         default_enabled=False,
@@ -79,15 +79,13 @@ async def async_setup_entry(
         """Add sensors from Switcher device."""
         if wrapper.data.device_type.category == DeviceCategory.POWER_PLUG:
             async_add_entities(
-                SwitcherSensorEntity(wrapper, attribute, POWER_PLUG_SENSORS[attribute])
-                for attribute in POWER_PLUG_SENSORS
+                SwitcherSensorEntity(wrapper, attribute, info)
+                for attribute, info in POWER_PLUG_SENSORS.items()
             )
         elif wrapper.data.device_type.category == DeviceCategory.WATER_HEATER:
             async_add_entities(
-                SwitcherSensorEntity(
-                    wrapper, attribute, WATER_HEATER_SENSORS[attribute]
-                )
-                for attribute in WATER_HEATER_SENSORS
+                SwitcherSensorEntity(wrapper, attribute, info)
+                for attribute, info in WATER_HEATER_SENSORS.items()
             )
 
     config_entry.async_on_unload(

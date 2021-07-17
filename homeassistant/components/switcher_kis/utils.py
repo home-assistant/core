@@ -32,7 +32,7 @@ async def async_stop_bridge(hass: HomeAssistant) -> None:
         hass.data[DOMAIN].pop(DATA_BRIDGE)
 
 
-async def async_discover_devices(hass: HomeAssistant) -> dict[str, SwitcherBase]:
+async def async_discover_devices() -> dict[str, SwitcherBase]:
     """Discover Switcher devices."""
     _LOGGER.debug("Starting discovery")
     discovered_devices = {}
@@ -45,9 +45,10 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SwitcherBase]
 
         discovered_devices[device.device_id] = device
 
-    await async_start_bridge(hass, on_device_data_callback)
+    bridge = SwitcherBridge(on_device_data_callback)
+    await bridge.start()
     await asyncio.sleep(DISCOVERY_TIME_SEC)
-    await async_stop_bridge(hass)
+    await bridge.stop()
 
     _LOGGER.debug("Finished discovery, discovered devices: %s", len(discovered_devices))
     return discovered_devices

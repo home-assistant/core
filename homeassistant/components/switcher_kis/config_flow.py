@@ -31,7 +31,7 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.hass.data.setdefault(DOMAIN, {})
         if DATA_DISCOVERY not in self.hass.data[DOMAIN]:
             self.hass.data[DOMAIN][DATA_DISCOVERY] = self.hass.async_create_task(
-                async_discover_devices(self.hass)
+                async_discover_devices()
             )
 
         return self.async_show_form(step_id="confirm")

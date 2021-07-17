@@ -21,9 +21,15 @@ from .consts import DUMMY_SWITCHER_DEVICES, YAML_CONFIG
 from tests.common import async_fire_time_changed
 
 
-async def test_async_setup_yaml_config(hass) -> None:
+@pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
+async def test_async_setup_yaml_config(hass, mock_bridge) -> None:
     """Test setup started by configuration from YAML."""
     assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert mock_bridge.is_running is True
+    assert len(hass.data[DOMAIN]) == 2
+    assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
 
 
 @pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)

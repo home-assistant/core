@@ -133,7 +133,7 @@ class SwitcherDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.hass = hass
         self.entry = entry
-        self.data: SwitcherBase = device
+        self.data = device
 
     async def _async_update_data(self) -> None:
         """Mark device offline if no data."""

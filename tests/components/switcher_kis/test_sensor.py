@@ -54,7 +54,7 @@ async def test_sensor_disabled(hass, mock_bridge):
 
     registry = er.async_get(hass)
     device = DUMMY_WATER_HEATER_DEVICE
-    unique_id = f"{device.device_id}-{device.mac_address}-auto_shutdown"
+    unique_id = f"{device.device_id}-{device.mac_address}-auto_off_set"
     entity_id = f"sensor.{slugify(device.name)}_auto_shutdown"
     entry = registry.async_get(entity_id)
 
