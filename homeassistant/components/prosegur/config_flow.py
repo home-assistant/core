@@ -77,6 +77,55 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_reauth(self, data):
+        """Handle initiation of re-authentication with Prosegur."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Handle re-authentication with Prosegur."""
+        errors = {}
+
+        if user_input:
+            try:
+                user_input[CONF_COUNTRY] = self.entry.data[CONF_COUNTRY]
+                await validate_input(self.hass, user_input)
+
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception as exception:  # pylint: disable=broad-except
+                _LOGGER.exception(exception)
+                errors["base"] = "unknown"
+            else:
+                data = self.entry.data.copy()
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **data,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=self.entry.data[CONF_USERNAME]
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
