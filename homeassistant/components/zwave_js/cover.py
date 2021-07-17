@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import BarrierState
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
@@ -28,15 +29,6 @@ from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
-
-BARRIER_TARGET_CLOSE = 0
-BARRIER_TARGET_OPEN = 255
-
-BARRIER_STATE_CLOSED = 0
-BARRIER_STATE_CLOSING = 252
-BARRIER_STATE_STOPPED = 253
-BARRIER_STATE_OPENING = 254
-BARRIER_STATE_OPEN = 255
 
 
 async def async_setup_entry(
@@ -172,14 +164,14 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         """Return if the cover is opening or not."""
         if self.info.primary_value.value is None:
             return None
-        return bool(self.info.primary_value.value == BARRIER_STATE_OPENING)
+        return bool(self.info.primary_value.value == BarrierState.OPENING)
 
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         if self.info.primary_value.value is None:
             return None
-        return bool(self.info.primary_value.value == BARRIER_STATE_CLOSING)
+        return bool(self.info.primary_value.value == BarrierState.CLOSING)
 
     @property
     def is_closed(self) -> bool | None:
@@ -190,15 +182,15 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         # issuing an open cover command. Return None in this case which
         # produces an unknown state and allows it to be resolved with an open
         # command.
-        if self.info.primary_value.value == BARRIER_STATE_STOPPED:
+        if self.info.primary_value.value == BarrierState.STOPPED:
             return None
 
-        return bool(self.info.primary_value.value == BARRIER_STATE_CLOSED)
+        return bool(self.info.primary_value.value == BarrierState.CLOSED)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
-        await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_OPEN)
+        await self.info.node.async_set_value(self._target_state, BarrierState.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
-        await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_CLOSE)
+        await self.info.node.async_set_value(self._target_state, BarrierState.CLOSED)
