@@ -9,7 +9,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "If you need help with the configuration please see the documentation: https://www.home-assistant.io/integrations/honeywell/.\n\nAdditional sensors (e.g. Honeywell Wireless Outdoor Sensor) will be enabled by default.",
+                "description": "Please enter the credentials used to log into mytotalconnectcomfort.com.",
                 "title": "Honeywell Total Connect Comfort (US)"
             }
         }
