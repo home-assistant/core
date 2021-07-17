@@ -16,6 +16,8 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -40,7 +42,6 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    DATA_TYPE_CUSTOM,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
@@ -63,37 +64,6 @@ async def async_setup_platform(
     entities = []
     for entity in discovery_info[CONF_CLIMATES]:
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-        count = entity[CONF_COUNT]
-        data_type = entity[CONF_DATA_TYPE]
-        name = entity[CONF_NAME]
-        structure = entity[CONF_STRUCTURE]
-
-        if data_type != DATA_TYPE_CUSTOM:
-            try:
-                structure = f">{DEFAULT_STRUCT_FORMAT[data_type][count]}"
-            except KeyError:
-                _LOGGER.error(
-                    "Climate %s: Unable to find a data type matching count value %s, try a custom type",
-                    name,
-                    count,
-                )
-                continue
-
-        try:
-            size = struct.calcsize(structure)
-        except struct.error as err:
-            _LOGGER.error("Error in sensor %s structure: %s", name, err)
-            continue
-
-        if count * 2 != size:
-            _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
-                size,
-                count,
-            )
-            continue
-
-        entity[CONF_STRUCTURE] = structure
         entities.append(ModbusThermostat(hub, entity))
 
     async_add_entities(entities)
@@ -167,6 +137,11 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         return TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
 
     @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        return PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
+
+    @property
     def min_temp(self):
         """Return the minimum temperature."""
         return self._min_temp
@@ -189,7 +164,8 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
         byte_string = struct.pack(self._structure, target_temperature)
-        register_value = struct.unpack(">h", byte_string[0:2])[0]
+        struct_string = f">{DEFAULT_STRUCT_FORMAT[self._data_type]}"
+        register_value = struct.unpack(struct_string, byte_string)[0]
         result = await self._hub.async_pymodbus_call(
             self._slave,
             self._target_temperature_register,
@@ -218,13 +194,18 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         """Update Target & Current Temperature."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
+
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
         self._target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
         self._current_temperature = await self._async_read_register(
             self._input_type, self._address
         )
-
+        self._call_active = False
         self.async_write_ha_state()
 
     async def _async_read_register(self, register_type, register) -> float | None:

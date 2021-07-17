@@ -30,6 +30,7 @@ from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subs
 from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 SERVICE_TO_STRING = {
@@ -135,22 +136,24 @@ PLATFORM_SCHEMA_STATE = (
 
 
 async def async_setup_entity_state(
-    config, async_add_entities, config_entry, discovery_data
+    hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a State MQTT Vacuum."""
-    async_add_entities([MqttStateVacuum(config, config_entry, discovery_data)])
+    async_add_entities([MqttStateVacuum(hass, config, config_entry, discovery_data)])
 
 
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
         self._state = None
         self._state_attrs = {}
         self._fan_speed_list = []
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():

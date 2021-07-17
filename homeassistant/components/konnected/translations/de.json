@@ -11,11 +11,11 @@
         },
         "step": {
             "confirm": {
-                "description": "Modell: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nSie k\u00f6nnen das I / O - und Bedienfeldverhalten in den Einstellungen der verbundenen Alarmzentrale konfigurieren.",
+                "description": "Modell: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nDu kannst das I / O - und Bedienfeldverhalten in den Einstellungen der verbundenen Alarmzentrale konfigurieren.",
                 "title": "Konnected Device Bereit"
             },
             "import_confirm": {
-                "description": "Ein Konnected Alarm Panel mit der ID {id} wurde in configuration.yaml entdeckt. Mit diesem Ablauf k\u00f6nnen Sie ihn in einen Konfigurationseintrag importieren.",
+                "description": "Ein Konnected Alarm Panel mit der ID {id} wurde in configuration.yaml entdeckt. Mit diesem Ablauf kannst du ihn in einen Konfigurationseintrag importieren.",
                 "title": "Importieren von Konnected Ger\u00e4t"
             },
             "user": {
@@ -23,7 +23,7 @@
                     "host": "IP-Adresse",
                     "port": "Port"
                 },
-                "description": "Bitte geben Sie die Hostinformationen f\u00fcr Ihr Konnected Panel ein."
+                "description": "Bitte gib die Hostinformationen f\u00fcr dein Konnected Panel ein."
             }
         }
     },
@@ -39,12 +39,12 @@
         "step": {
             "options_binary": {
                 "data": {
-                    "inverse": "Invertieren Sie den \u00d6ffnungs- / Schlie\u00dfzustand",
+                    "inverse": "Invertiere den \u00d6ffnungs- / Schlie\u00dfzustand",
                     "name": "Name (optional)",
                     "type": "Bin\u00e4rer Sensortyp"
                 },
                 "description": "Bitte w\u00e4hle die Optionen f\u00fcr den an {zone} angeschlossenen Bin\u00e4rsensor",
-                "title": "Konfigurieren Sie den Bin\u00e4rsensor"
+                "title": "Konfiguriere den Bin\u00e4rsensor"
             },
             "options_digital": {
                 "data": {
@@ -53,7 +53,7 @@
                     "type": "Sensortyp"
                 },
                 "description": "Bitte w\u00e4hle die Optionen f\u00fcr den an {zone} angeschlossenen digitalen Sensor aus",
-                "title": "Konfigurieren Sie den digitalen Sensor"
+                "title": "Konfiguriere den digitalen Sensor"
             },
             "options_io": {
                 "data": {
@@ -66,7 +66,7 @@
                     "7": "Zone 7",
                     "out": "OUT"
                 },
-                "description": "Es wurde ein {model} bei {host} entdeckt. W\u00e4hlen Sie unten die Basiskonfiguration der einzelnen E / A aus. Je nach E / A k\u00f6nnen bin\u00e4re Sensoren (Kontakte \u00f6ffnen / schlie\u00dfen), digitale Sensoren (dht und ds18b20) oder umschaltbare Ausg\u00e4nge verwendet werden. In den n\u00e4chsten Schritten k\u00f6nnen Sie detaillierte Optionen konfigurieren.",
+                "description": "Es wurde ein {model} bei {host} entdeckt. W\u00e4hle unten die Basiskonfiguration der einzelnen E / A aus. Je nach E / A k\u00f6nnen bin\u00e4re Sensoren (Kontakte \u00f6ffnen / schlie\u00dfen), digitale Sensoren (dht und ds18b20) oder umschaltbare Ausg\u00e4nge verwendet werden. In den n\u00e4chsten Schritten kannst du detaillierte Optionen konfigurieren.",
                 "title": "Konfigurieren von I/O"
             },
             "options_io_ext": {
@@ -80,30 +80,30 @@
                     "alarm2_out2": "OUT2/ALARM2",
                     "out1": "OUT1"
                 },
-                "description": "W\u00e4hlen Sie unten die Konfiguration der verbleibenden E / A. In den n\u00e4chsten Schritten k\u00f6nnen Sie detaillierte Optionen konfigurieren.",
-                "title": "Konfigurieren Sie Erweiterte I/O"
+                "description": "W\u00e4hle unten die Konfiguration der verbleibenden E / A. In den n\u00e4chsten Schritten kannst du detaillierte Optionen konfigurieren.",
+                "title": "Konfiguriere Erweiterte I/O"
             },
             "options_misc": {
                 "data": {
                     "api_host": "API-Host-URL \u00fcberschreiben (optional)",
                     "blink": "LED Panel blinkt beim senden von Status\u00e4nderungen",
-                    "discovery": "Reagieren auf Suchanfragen in Ihrem Netzwerk",
-                    "override_api_host": "\u00dcberschreiben Sie die Standard-Host-Panel-URL der Home Assistant-API"
+                    "discovery": "Reagieren auf Suchanfragen in deinem Netzwerk",
+                    "override_api_host": "\u00dcberschreibe die Standard-Host-Panel-URL der Home Assistant-API"
                 },
-                "description": "Bitte w\u00e4hlen Sie das gew\u00fcnschte Verhalten f\u00fcr Ihr Panel",
+                "description": "Bitte w\u00e4hle das gew\u00fcnschte Verhalten f\u00fcr dein Panel",
                 "title": "Sonstiges konfigurieren"
             },
             "options_switch": {
                 "data": {
                     "activation": "Ausgabe, wenn eingeschaltet",
                     "momentary": "Impulsdauer (ms) (optional)",
-                    "more_states": "Konfigurieren Sie zus\u00e4tzliche Zust\u00e4nde f\u00fcr diese Zone",
+                    "more_states": "Konfiguriere zus\u00e4tzliche Zust\u00e4nde f\u00fcr diese Zone",
                     "name": "Name (optional)",
                     "pause": "Pause zwischen Impulsen (ms) (optional)",
                     "repeat": "Mal wiederholen (-1 = unendlich) (optional)"
                 },
                 "description": "Bitte w\u00e4hlen die Ausgabeoptionen f\u00fcr {zone} : Status {state}",
-                "title": "Konfigurieren Sie den schaltbaren Ausgang"
+                "title": "Konfiguriere den schaltbaren Ausgang"
             }
         }
     }

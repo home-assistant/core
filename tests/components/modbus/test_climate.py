@@ -14,9 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+from .conftest import ReadResult, base_test, prepare_service_update
 
-from tests.common import mock_restore_cache
+CLIMATE_NAME = "test_climate"
+ENTITY_ID = f"{CLIMATE_DOMAIN}.{CLIMATE_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -25,7 +26,7 @@ from tests.common import mock_restore_cache
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: "test_climate",
+                    CONF_NAME: CLIMATE_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -35,7 +36,7 @@ from tests.common import mock_restore_cache
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: "test_climate",
+                    CONF_NAME: CLIMATE_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -62,18 +63,18 @@ async def test_config_climate(hass, mock_modbus):
 )
 async def test_temperature_climate(hass, regs, expected):
     """Run test for given config."""
-    climate_name = "modbus_test_climate"
+    CLIMATE_NAME = "modbus_test_climate"
     return
     state = await base_test(
         hass,
         {
-            CONF_NAME: climate_name,
+            CONF_NAME: CLIMATE_NAME,
             CONF_SLAVE: 1,
             CONF_TARGET_TEMP: 117,
             CONF_ADDRESS: 117,
             CONF_COUNT: 2,
         },
-        climate_name,
+        CLIMATE_NAME,
         CLIMATE_DOMAIN,
         CONF_CLIMATES,
         None,
@@ -88,11 +89,10 @@ async def test_temperature_climate(hass, regs, expected):
 async def test_service_climate_update(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
 
-    entity_id = "climate.test"
     config = {
         CONF_CLIMATES: [
             {
-                CONF_NAME: "test",
+                CONF_NAME: CLIMATE_NAME,
                 CONF_TARGET_TEMP: 117,
                 CONF_ADDRESS: 117,
                 CONF_SLAVE: 10,
@@ -105,37 +105,36 @@ async def test_service_climate_update(hass, mock_pymodbus):
         config,
     )
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == "auto"
+    assert hass.states.get(ENTITY_ID).state == "auto"
 
 
-async def test_restore_state_climate(hass):
+test_value = State(ENTITY_ID, 35)
+test_value.attributes = {ATTR_TEMPERATURE: 37}
+
+
+@pytest.mark.parametrize(
+    "mock_test_state",
+    [(test_value,)],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: CLIMATE_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                }
+            ],
+        },
+    ],
+)
+async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
-
-    climate_name = "test_climate"
-    test_temp = 37
-    entity_id = f"{CLIMATE_DOMAIN}.{climate_name}"
-    test_value = State(entity_id, 35)
-    test_value.attributes = {ATTR_TEMPERATURE: test_temp}
-    config_sensor = {
-        CONF_NAME: climate_name,
-        CONF_TARGET_TEMP: 117,
-        CONF_ADDRESS: 117,
-    }
-    mock_restore_cache(
-        hass,
-        (test_value,),
-    )
-    await base_config_test(
-        hass,
-        config_sensor,
-        climate_name,
-        CLIMATE_DOMAIN,
-        CONF_CLIMATES,
-        None,
-        method_discovery=True,
-    )
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state.state == HVAC_MODE_AUTO
-    assert state.attributes[ATTR_TEMPERATURE] == test_temp
+    assert state.attributes[ATTR_TEMPERATURE] == 37

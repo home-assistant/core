@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN
+from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN, MANUFACTURER, MODEL
 
 
 def format_condition(condition):
@@ -51,6 +51,17 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     def unique_id(self):
         """Return the unique id of the sensor."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
+            "name": self.coordinator.name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "entry_type": "service",
+        }
 
     @property
     def condition(self):

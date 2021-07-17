@@ -38,6 +38,8 @@ class DeconzScene(Scene):
         self._scene = scene
         self.gateway = gateway
 
+        self._attr_name = scene.full_name
+
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self.gateway.deconz_ids[self.entity_id] = self._scene.deconz_id
@@ -50,8 +52,3 @@ class DeconzScene(Scene):
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self._scene.async_set_state({})
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene.full_name

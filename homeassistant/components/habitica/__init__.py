@@ -19,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ATTR_ARGS,
+    ATTR_DATA,
     ATTR_PATH,
     CONF_API_USER,
     DEFAULT_URL,
@@ -111,7 +112,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_api_call(call):
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
-        api = hass.data[DOMAIN].get(name)
+        entries = hass.config_entries.async_entries(DOMAIN)
+        api = None
+        for entry in entries:
+            if entry.data[CONF_NAME] == name:
+                api = hass.data[DOMAIN].get(entry.entry_id)
+                break
         if api is None:
             _LOGGER.error("API_CALL: User '%s' not configured", name)
             return
@@ -126,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         kwargs = call.data.get(ATTR_ARGS, {})
         data = await api(**kwargs)
         hass.bus.async_fire(
-            EVENT_API_CALL_SUCCESS, {"name": name, "path": path, "data": data}
+            EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
 
     data = hass.data.setdefault(DOMAIN, {})

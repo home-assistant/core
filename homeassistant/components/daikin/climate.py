@@ -9,6 +9,10 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -58,6 +62,12 @@ DAIKIN_TO_HA_STATE = {
     "hot": HVAC_MODE_HEAT,
     "auto": HVAC_MODE_HEAT_COOL,
     "off": HVAC_MODE_OFF,
+}
+
+HA_STATE_TO_CURRENT_HVAC = {
+    HVAC_MODE_COOL: CURRENT_HVAC_COOL,
+    HVAC_MODE_HEAT: CURRENT_HVAC_HEAT,
+    HVAC_MODE_OFF: CURRENT_HVAC_OFF,
 }
 
 HA_PRESET_TO_DAIKIN = {
@@ -187,6 +197,18 @@ class DaikinClimate(ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         await self._set(kwargs)
+
+    @property
+    def hvac_action(self):
+        """Return the current state."""
+        ret = HA_STATE_TO_CURRENT_HVAC.get(self.hvac_mode)
+        if (
+            ret in (CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT)
+            and self._api.device.support_compressor_frequency
+            and self._api.device.compressor_frequency == 0
+        ):
+            return CURRENT_HVAC_IDLE
+        return ret
 
     @property
     def hvac_mode(self):

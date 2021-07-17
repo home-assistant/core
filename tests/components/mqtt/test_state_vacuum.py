@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components import vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from homeassistant.components.mqtt.vacuum import CONF_SCHEMA, schema_state as mqttvacuum
+from homeassistant.components.mqtt.vacuum.const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_state import SERVICE_TO_STRING
 from homeassistant.components.vacuum import (
@@ -52,6 +53,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -356,6 +358,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2, MQTT_VACUUM_ATTRIBUTES_BLOCKED
     )
 
 

@@ -4,6 +4,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    ATTR_STATUS,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
@@ -26,6 +27,7 @@ from .. import subscription
 from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 SERVICE_TO_STRING = {
@@ -96,6 +98,10 @@ DEFAULT_PAYLOAD_TURN_ON = "turn_on"
 DEFAULT_RETAIN = False
 DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES, SERVICE_TO_STRING)
 
+MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED = MQTT_VACUUM_ATTRIBUTES_BLOCKED | frozenset(
+    {ATTR_STATUS}
+)
+
 PLATFORM_SCHEMA_LEGACY = (
     mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
@@ -151,16 +157,18 @@ PLATFORM_SCHEMA_LEGACY = (
 
 
 async def async_setup_entity_legacy(
-    config, async_add_entities, config_entry, discovery_data
+    hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Vacuum Legacy."""
-    async_add_entities([MqttVacuum(config, config_entry, discovery_data)])
+    async_add_entities([MqttVacuum(hass, config, config_entry, discovery_data)])
 
 
 class MqttVacuum(MqttEntity, VacuumEntity):
     """Representation of a MQTT-controlled legacy vacuum."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
         self._cleaning = False
         self._charging = False
@@ -171,7 +179,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._fan_speed = "unknown"
         self._fan_speed_list = []
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():

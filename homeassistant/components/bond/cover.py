@@ -38,27 +38,19 @@ async def async_setup_entry(
 class BondCover(BondEntity, CoverEntity):
     """Representation of a Bond cover."""
 
+    _attr_device_class = DEVICE_CLASS_SHADE
+
     def __init__(
         self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
     ) -> None:
         """Create HA entity representing Bond cover."""
         super().__init__(hub, device, bpup_subs)
 
-        self._closed: bool | None = None
-
     def _apply_state(self, state: dict) -> None:
         cover_open = state.get("open")
-        self._closed = True if cover_open == 0 else False if cover_open == 1 else None
-
-    @property
-    def device_class(self) -> str | None:
-        """Get device class."""
-        return DEVICE_CLASS_SHADE
-
-    @property
-    def is_closed(self) -> bool | None:
-        """Return if the cover is closed or not."""
-        return self._closed
+        self._attr_is_closed = (
+            True if cover_open == 0 else False if cover_open == 1 else None
+        )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

@@ -9,10 +9,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Opcion\u00e1lis lista az ismert hosztokr\u00f3l, ha az mDNS felder\u00edt\u00e9s nem m\u0171k\u00f6dik."
+                    "known_hosts": "Ismert hosztok"
                 },
                 "description": "K\u00e9rj\u00fck, add meg a Google Cast konfigur\u00e1ci\u00f3t.",
-                "title": "Google Cast"
+                "title": "Google Cast konfigur\u00e1ci\u00f3"
             },
             "confirm": {
                 "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?"

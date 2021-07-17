@@ -40,6 +40,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,61 +113,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([remote], False)
 
 
-class BroadlinkRemote(RemoteEntity, RestoreEntity):
+class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     """Representation of a Broadlink remote."""
 
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
-        self._device = device
+        super().__init__(device)
         self._coordinator = device.update_manager.coordinator
         self._code_storage = codes
         self._flag_storage = flags
         self._storage_loaded = False
         self._codes = {}
         self._flags = defaultdict(int)
-        self._state = True
         self._lock = asyncio.Lock()
 
-    @property
-    def name(self):
-        """Return the name of the remote."""
-        return f"{self._device.name} Remote"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the remote."""
-        return self._device.unique_id
-
-    @property
-    def is_on(self):
-        """Return True if the remote is on."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return True if the remote is available."""
-        return self._device.update_manager.available
-
-    @property
-    def should_poll(self):
-        """Return True if the remote has to be polled for state."""
-        return False
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "manufacturer": self._device.api.manufacturer,
-            "model": self._device.api.model,
-            "name": self._device.name,
-            "sw_version": self._device.fw_version,
-        }
+        self._attr_name = f"{self._device.name} Remote"
+        self._attr_is_on = True
+        self._attr_supported_features = SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
+        self._attr_unique_id = self._device.unique_id
 
     def _extract_codes(self, commands, device=None):
         """Extract a list of codes.
@@ -224,7 +188,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
-        self._state = state is None or state.state != STATE_OFF
+        self._attr_is_on = state is None or state.state != STATE_OFF
 
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
@@ -236,12 +200,12 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the remote."""
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the remote."""
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     async def _async_load_storage(self):
@@ -262,7 +226,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         delay = kwargs[ATTR_DELAY_SECS]
         service = f"{RM_DOMAIN}.{SERVICE_SEND_COMMAND}"
 
-        if not self._state:
+        if not self._attr_is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
@@ -317,7 +281,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         toggle = kwargs[ATTR_ALTERNATIVE]
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
 
-        if not self._state:
+        if not self._attr_is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
@@ -475,7 +439,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         device = kwargs[ATTR_DEVICE]
         service = f"{RM_DOMAIN}.{SERVICE_DELETE_COMMAND}"
 
-        if not self._state:
+        if not self._attr_is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off",
                 service,

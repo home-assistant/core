@@ -92,18 +92,8 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             entry, coordinators, "valve", "Valve Controller", None, "mdi:water"
         )
 
+        self._attr_is_on = True
         self._client = client
-        self._is_on = True
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return self.coordinators[API_VALVE_STATUS].last_update_success
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if the valve is open."""
-        return self._is_on
 
     async def _async_continue_entity_setup(self):
         """Register API interest (and related tasks) when the entity is added."""
@@ -112,14 +102,15 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        self._is_on = self.coordinators[API_VALVE_STATUS].data["state"] in (
+        self._attr_available = self.coordinators[API_VALVE_STATUS].last_update_success
+        self._attr_is_on = self.coordinators[API_VALVE_STATUS].data["state"] in (
             "start_opening",
             "opening",
             "finish_opening",
             "opened",
         )
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_AVG_CURRENT: self.coordinators[API_VALVE_STATUS].data[
                     "average_current"
@@ -215,7 +206,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while closing the valve: %s", err)
             return
 
-        self._is_on = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -227,5 +218,5 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while opening the valve: %s", err)
             return
 
-        self._is_on = True
+        self._attr_is_on = True
         self.async_write_ha_state()

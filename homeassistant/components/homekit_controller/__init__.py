@@ -219,8 +219,10 @@ async def async_setup(hass, config):
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
 
-    zeroconf_instance = await zeroconf.async_get_instance(hass)
-    hass.data[CONTROLLER] = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
+    async_zeroconf_instance = await zeroconf.async_get_async_instance(hass)
+    hass.data[CONTROLLER] = aiohomekit.Controller(
+        async_zeroconf_instance=async_zeroconf_instance
+    )
     hass.data[KNOWN_DEVICES] = {}
     hass.data[TRIGGERS] = {}
 

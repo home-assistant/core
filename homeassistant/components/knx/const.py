@@ -26,18 +26,19 @@ DOMAIN: Final = "knx"
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
 
-CONF_KNX_ROUTING: Final = "routing"
-CONF_KNX_TUNNELING: Final = "tunneling"
-CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
 CONF_INVERT: Final = "invert"
 CONF_KNX_EXPOSE: Final = "expose"
+CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
+CONF_KNX_ROUTING: Final = "routing"
+CONF_KNX_TUNNELING: Final = "tunneling"
+CONF_RESET_AFTER: Final = "reset_after"
+CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
-CONF_RESET_AFTER: Final = "reset_after"
 
 ATTR_COUNTER: Final = "counter"
-ATTR_SOURCE: Final = "source"
 ATTR_LAST_KNX_UPDATE: Final = "last_knx_update"
+ATTR_SOURCE: Final = "source"
 
 
 class ColorTempModes(Enum):
@@ -56,7 +57,9 @@ class SupportedPlatforms(Enum):
     FAN = "fan"
     LIGHT = "light"
     NOTIFY = "notify"
+    NUMBER = "number"
     SCENE = "scene"
+    SELECT = "select"
     SENSOR = "sensor"
     SWITCH = "switch"
     WEATHER = "weather"
