@@ -83,7 +83,7 @@ def slugify(text: str, *, separator: str = "_") -> str:
     """Slugify a given text."""
     if text == "":
         return ""
-    slug: str = unicode_slug.slugify(text, separator=separator)
+    slug = unicode_slug.slugify(text, separator=separator)
     return "unknown" if slug == "" else slug
 
 
