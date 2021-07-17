@@ -114,11 +114,7 @@ from .const import (
     MODBUS_DOMAIN as DOMAIN,
 )
 from .modbus import async_modbus_setup
-from .validators import (
-    number_validator,
-    scan_interval_validator,
-    sensor_schema_validator,
-)
+from .validators import number_validator, scan_interval_validator, struct_validator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -289,12 +285,12 @@ MODBUS_SCHEMA = vol.Schema(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
         vol.Optional(CONF_CLIMATES): vol.All(
-            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, sensor_schema_validator)]
+            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, struct_validator)]
         ),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, sensor_schema_validator)]
+            cv.ensure_list, [vol.All(SENSOR_SCHEMA, struct_validator)]
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),

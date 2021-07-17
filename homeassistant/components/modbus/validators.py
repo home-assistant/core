@@ -59,7 +59,7 @@ old_data_types = {
 }
 
 
-def sensor_schema_validator(config):
+def struct_validator(config):
     """Sensor schema validator."""
 
     data_type = config[CONF_DATA_TYPE]
