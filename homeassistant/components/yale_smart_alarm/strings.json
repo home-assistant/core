@@ -14,6 +14,14 @@
           "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
           "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
+          "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
+        }
       }
     }
   }

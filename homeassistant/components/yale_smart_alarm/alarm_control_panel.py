@@ -36,6 +36,7 @@ from .const import (
     MODEL,
     STATE_MAP,
 )
+from .coordinator import YaleDataUpdateCoordinator
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -72,24 +73,30 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
+    coordinator: YaleDataUpdateCoordinator
+
+    _attr_name = coordinator.entry.data[CONF_NAME]
+    _attr_entry_id = coordinator.entry.entry_id
+    _attr_identifier = coordinator.entry.data[CONF_USERNAME]
+
     @property
     def name(self):
         """Return the name of the device."""
-        return self.coordinator.entry.data[CONF_NAME]
+        return str(self._attr_name)
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        return str(self.coordinator.entry.entry_id)  # type: ignore[attr-defined]
+        return self._attr_entry_id
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return {
-            ATTR_NAME: self.name,
+            ATTR_NAME: str(self._attr_name),
             ATTR_MANUFACTURER: MANUFACTURER,
             ATTR_MODEL: MODEL,
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.entry.data[CONF_USERNAME])},  # type: ignore[attr-defined]
+            ATTR_IDENTIFIERS: {(DOMAIN, self._attr_identifier)},
         }
 
     @property

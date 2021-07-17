@@ -26,6 +26,8 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    entry: config_entries.ConfigEntry
+
     async def async_step_import(self, config: dict):
         """Import a configuration from config.yaml."""
 
@@ -41,12 +43,45 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(self, user_input=None):
         """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
-        return await self.async_step_user()
+        errors = {}
+
+        if user_input is not None:
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+            name = user_input.get(CONF_NAME, DEFAULT_NAME)
+            area = user_input.get(CONF_AREA_ID, DEFAULT_AREA_ID)
+
+            try:
+                await self.hass.async_add_executor_job(
+                    YaleSmartAlarmClient, username, password
+                )
+            except AuthenticationError as error:
+                LOGGER.error("Authentication failed. Check credentials %s", error)
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=DATA_SCHEMA,
+                    errors={"base": "invalid_auth"},
+                )
+
+            existing_entry = await self.async_set_unique_id(username)
+            if existing_entry:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                        CONF_NAME: name,
+                        CONF_AREA_ID: area,
+                    },
+                )
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

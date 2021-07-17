@@ -20,7 +20,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the Yale hub."""
         self.entry = entry
         self.yale = None
-
         super().__init__(
             hass,
             LOGGER,
