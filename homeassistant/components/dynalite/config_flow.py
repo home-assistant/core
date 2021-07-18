@@ -25,7 +25,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = import_info[CONF_HOST]
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == host:
-                if entry.data != import_info:
+                if dict(entry.data) != import_info:
                     self.hass.config_entries.async_update_entry(entry, data=import_info)
                 return self.async_abort(reason="already_configured")
         # New entry
