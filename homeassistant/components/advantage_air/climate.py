@@ -105,11 +105,6 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
         if self._ac.get("myAutoModeEnabled"):
             self._attr_hvac_modes = AC_HVAC_MODES + [HVAC_MODE_AUTO]
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self._update_callback()
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
-
     @callback
     def _update_callback(self) -> None:
         """Load data from integration."""
@@ -163,11 +158,6 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
         )
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self._update_callback()
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
     @callback
     def _update_callback(self) -> None:
