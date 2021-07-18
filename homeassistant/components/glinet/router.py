@@ -150,9 +150,6 @@ class GLinetRouter:
                     entry.unique_id, entry.original_name
                 )
 
-        if self._token_error:
-            await self.renew_token()
-
         # Update devices
         await self.update_devices()
 
@@ -186,6 +183,8 @@ class GLinetRouter:
 
         _LOGGER.debug("Checking client connect to GL-inet router %s", self._host)
         try:
+            if self._token_error:
+                await self.renew_token()
             wrt_devices = await self._api.async_connected_clients()
         except TimeoutError as exc:
             if not self._connect_error:
