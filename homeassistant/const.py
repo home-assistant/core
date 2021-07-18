@@ -414,6 +414,7 @@ ENERGY_KILO_WATT_HOUR: Final[UnitEnergyT] = UnitEnergyT(UnitT("kWh"))
 ELECTRICAL_CURRENT_MILLIAMPERE: Final[UnitT] = UnitT("mA")
 ELECTRICAL_CURRENT_AMPERE: Final[UnitT] = UnitT("A")
 ELECTRICAL_VOLT_AMPERE: Final[UnitT] = UnitT("VA")
+ELECTRIC_POTENTIAL_MILLIVOLT: Final[UnitT] = UnitT("mV")
 
 # Degree units
 DEGREE: Final[UnitT] = UnitT("°")
