@@ -53,6 +53,7 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UnitTemperatureT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -248,7 +249,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
-    def temperature_unit(self) -> str:
+    def temperature_unit(self) -> UnitTemperatureT:
         """Return the unit of measurement used by the platform."""
         if (
             self._unit_value

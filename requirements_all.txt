@@ -114,7 +114,7 @@ adext==0.4.2
 adguardhome==0.5.0
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.1
+advantage_air==0.2.5
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -639,9 +639,6 @@ freesms==0.2.0
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection==1.4.2
 
-# homeassistant.components.fritz
-fritzprofiles==0.6.1
-
 # homeassistant.components.google_translate
 gTTS==2.2.3
 
@@ -715,7 +712,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.11.7
+greeclimate==0.11.8
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -1018,7 +1015,7 @@ nettigo-air-monitor==1.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.9
+nexia==0.9.10
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1771,7 +1768,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.52
+pysonos==0.0.53
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2208,7 +2205,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.6.0
+surepy==0.7.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
