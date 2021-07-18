@@ -56,17 +56,14 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-timeto{action}'
         )
 
-    @property
-    def state(self):
-        """Return the current value."""
-        return self._ac[self._time_key]
-
-    @property
-    def icon(self):
-        """Return a representative icon of the timer."""
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
+        self._attr_state = self._ac[self._time_key]
+        self._attr_icon = "mdi:timer-off-outline"
         if self._ac[self._time_key] > 0:
-            return "mdi:timer-outline"
-        return "mdi:timer-off-outline"
+            self._attr_icon = "mdi:timer-outline"
+        self.async_write_ha_state()
 
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
@@ -86,10 +83,6 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
         )
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
     @callback
     def _update_callback(self) -> None:
@@ -115,10 +108,6 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
         )
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
     @callback
     def _update_callback(self) -> None:
