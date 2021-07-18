@@ -10,31 +10,13 @@ from pyclimacell.const import CURRENT
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    ATTR_NAME,
-    CONF_API_VERSION,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_VERSION, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
-from .const import (
-    ATTR_FIELD,
-    ATTR_IS_METRIC_CHECK,
-    ATTR_METRIC_CONVERSION,
-    ATTR_SCALE,
-    ATTR_VALUE_MAP,
-    CC_SENSOR_TYPES,
-    CC_V3_SENSOR_TYPES,
-    DOMAIN,
-)
+from .const import CC_SENSOR_TYPES, CC_V3_SENSOR_TYPES, DOMAIN, ClimaCellSensorMetadata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,12 +51,12 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         config_entry: ConfigEntry,
         coordinator: ClimaCellDataUpdateCoordinator,
         api_version: int,
-        sensor_type: dict[str, str | float],
+        sensor_type: ClimaCellSensorMetadata,
     ) -> None:
         """Initialize ClimaCell Sensor Entity."""
         super().__init__(config_entry, coordinator, api_version)
         self.sensor_type = sensor_type
-        self._attr_device_class = self.sensor_type.get(ATTR_DEVICE_CLASS)
+        self._attr_device_class = self.sensor_type.device_class
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -84,12 +66,12 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return f"{self._config_entry.data[CONF_NAME]} - {self.sensor_type[ATTR_NAME]}"
+        return f"{self._config_entry.data[CONF_NAME]} - {self.sensor_type.name}"
 
     @property
     def unique_id(self) -> str:
         """Return the unique id of the entity."""
-        return f"{self._config_entry.unique_id}_{slugify(self.sensor_type[ATTR_NAME])}"
+        return f"{self._config_entry.unique_id}_{slugify(self.sensor_type.name)}"
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -99,17 +81,11 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if CONF_UNIT_OF_MEASUREMENT in self.sensor_type:
-            return self.sensor_type[CONF_UNIT_OF_MEASUREMENT]
-
-        if (
-            CONF_UNIT_SYSTEM_IMPERIAL in self.sensor_type
-            and CONF_UNIT_SYSTEM_METRIC in self.sensor_type
-        ):
+        if self.sensor_type.unit_imperial is not None:
             return (
-                self.sensor_type[CONF_UNIT_SYSTEM_METRIC]
+                self.sensor_type.unit_metric
                 if self.hass.config.units.is_metric
-                else self.sensor_type[CONF_UNIT_SYSTEM_IMPERIAL]
+                else self.sensor_type.unit_imperial
             )
 
         return None
@@ -123,27 +99,22 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
     def state(self) -> str | int | float | None:
         """Return the state."""
         state = self._state
-        if state and ATTR_SCALE in self.sensor_type:
-            state *= self.sensor_type[ATTR_SCALE]
-
         if (
             state is not None
-            and CONF_UNIT_SYSTEM_IMPERIAL in self.sensor_type
-            and CONF_UNIT_SYSTEM_METRIC in self.sensor_type
-            and ATTR_METRIC_CONVERSION in self.sensor_type
-            and ATTR_IS_METRIC_CHECK in self.sensor_type
-            and self.hass.config.units.is_metric
-            == self.sensor_type[ATTR_IS_METRIC_CHECK]
+            and self.sensor_type.unit_imperial is not None
+            and self.sensor_type.metric_conversion != 1.0
+            and self.sensor_type.is_metric_check is not None
+            and self.hass.config.units.is_metric == self.sensor_type.is_metric_check
         ):
-            conversion = self.sensor_type[ATTR_METRIC_CONVERSION]
+            conversion = self.sensor_type.metric_conversion
             # When conversion is a callable, we assume it's a single input function
             if callable(conversion):
                 return round(conversion(state), 4)
 
             return round(state * conversion, 4)
 
-        if ATTR_VALUE_MAP in self.sensor_type and state is not None:
-            return self.sensor_type[ATTR_VALUE_MAP](state).name.lower()
+        if self.sensor_type.value_map is not None and state is not None:
+            return self.sensor_type.value_map(state).name.lower()
 
         return state
 
@@ -154,7 +125,7 @@ class ClimaCellSensorEntity(BaseClimaCellSensorEntity):
     @property
     def _state(self) -> str | int | float | None:
         """Return the raw state."""
-        return self._get_current_property(self.sensor_type[ATTR_FIELD])
+        return self._get_current_property(self.sensor_type.field)
 
 
 class ClimaCellV3SensorEntity(BaseClimaCellSensorEntity):
@@ -164,5 +135,5 @@ class ClimaCellV3SensorEntity(BaseClimaCellSensorEntity):
     def _state(self) -> str | int | float | None:
         """Return the raw state."""
         return self._get_cc_value(
-            self.coordinator.data[CURRENT], self.sensor_type[ATTR_FIELD]
+            self.coordinator.data[CURRENT], self.sensor_type.field
         )
