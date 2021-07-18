@@ -679,6 +679,13 @@ class HomeKit:
             state = entity_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
+            if acc is None:
+                _LOGGER.error(
+                    "HomeKit %s cannot startup: entity not supported: %s",
+                    self._name,
+                    self._filter.config,
+                )
+                return False
         else:
             self.bridge = HomeBridge(self.hass, self.driver, self._name)
             for state in entity_states:
