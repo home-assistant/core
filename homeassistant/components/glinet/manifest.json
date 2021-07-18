@@ -7,7 +7,7 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": [],
+  "dependencies": ["network", "http"],
   "dhcp": [{ "hostname": "*gl-inet*" }, { "macaddress": "9483C4*" }],
   "codeowners": ["@HarvsG"],
   "iot_class": "local_polling"
