@@ -1,6 +1,7 @@
 """Helpers for LCN component."""
 from __future__ import annotations
 
+import asyncio
 import re
 from typing import Tuple, Type, Union, cast
 
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -93,9 +95,7 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
 
 
 def generate_unique_id(
-    entry_id: str,
-    address: AddressType,
-    domain_config: tuple[str, str] | None = None,
+    entry_id: str, address: AddressType, domain_config: tuple[str, str] | None = None,
 ) -> str:
     """Generate a unique_id from the given parameters."""
     unique_id = entry_id
@@ -207,6 +207,104 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
                 data[host_name][CONF_ENTITIES].append(entity_config)
 
     return list(data.values())
+
+
+async def async_register_lcn_host_device(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Register LCN host for given config_entry in device registry."""
+    device_registry = await dr.async_get_registry(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="Issendorff",
+        name=config_entry.title,
+        model="PCHK",
+    )
+
+
+async def async_register_lcn_address_devices(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Register LCN modules and groups defined in config_entry as devices in device registry.
+
+    The name of all given device_connections is collected and the devices
+    are updated.
+    """
+    device_registry = await dr.async_get_registry(hass)
+
+    host_identifiers = (DOMAIN, config_entry.entry_id)
+
+    for device_config in config_entry.data[CONF_DEVICES]:
+        address = device_config[CONF_ADDRESS]
+        device_name = device_config[CONF_NAME]
+        identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
+
+        if device_config[CONF_ADDRESS][2]:  # is group
+            device_model = f"group (g{address[0]:03d}{address[1]:03d})"
+            sw_version = None
+        else:  # is module
+            device_model = f"module (m{address[0]:03d}{address[1]:03d})"
+            sw_version = f"{device_config[CONF_SOFTWARE_SERIAL]:06X}"
+
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers=identifiers,
+            via_device=host_identifiers,
+            manufacturer="Issendorff",
+            sw_version=sw_version,
+            name=device_name,
+            model=device_model,
+        )
+
+
+async def async_update_device_config(
+    device_connection: DeviceConnectionType, device_config: ConfigType
+) -> None:
+    """Fill missing values in device_config with infos from LCN bus."""
+    is_group = device_config[CONF_ADDRESS][2]
+
+    # fetch serial info if device is module
+    if not is_group:  # is module
+        await device_connection.serial_known
+        if device_config[CONF_HARDWARE_SERIAL] == -1:
+            device_config[CONF_HARDWARE_SERIAL] = device_connection.hardware_serial
+        if device_config[CONF_SOFTWARE_SERIAL] == -1:
+            device_config[CONF_SOFTWARE_SERIAL] = device_connection.software_serial
+        if device_config[CONF_HARDWARE_TYPE] == -1:
+            device_config[CONF_HARDWARE_TYPE] = device_connection.hardware_type.value
+
+    # fetch name if device is module
+    if device_config[CONF_NAME] == "":
+        device_name = ""
+        if not is_group:
+            device_name = await device_connection.request_name()
+        if is_group or device_name == "":
+            module_type = "Group" if is_group else "Module"
+            device_name = (
+                f"{module_type} "
+                f"{device_config[CONF_ADDRESS][0]:03d}/"
+                f"{device_config[CONF_ADDRESS][1]:03d}"
+            )
+        device_config[CONF_NAME] = device_name
+
+
+async def async_update_config_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Fill missing values in config_entry with infos from LCN bus."""
+    coros = []
+    for device_config in config_entry.data[CONF_DEVICES]:
+        device_connection = get_device_connection(
+            hass, device_config[CONF_ADDRESS], config_entry
+        )
+        coros.append(async_update_device_config(device_connection, device_config))
+
+    await asyncio.gather(*coros)
+
+    # schedule config_entry for save
+    hass.config_entries.async_update_entry(config_entry)
 
 
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
