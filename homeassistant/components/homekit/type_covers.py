@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
+    SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
 )
@@ -53,6 +54,8 @@ from .const import (
     HK_POSITION_GOING_TO_MAX,
     HK_POSITION_GOING_TO_MIN,
     HK_POSITION_STOPPED,
+    PROP_MAX_VALUE,
+    PROP_MIN_VALUE,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW,
     SERV_WINDOW_COVERING,
@@ -273,10 +276,19 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
+        if self.features & SUPPORT_SET_POSITION:
+            self.char_current_position = self.serv_cover.configure_char(
+                CHAR_CURRENT_POSITION, value=0
+            )
+        else:
+            # If its tilt only we lock the position state to 100 (open)
+            # since its required by homekit
+            self.char_current_position = self.serv_cover.configure_char(
+                CHAR_CURRENT_POSITION,
+                value=100,
+                properties={PROP_MIN_VALUE: 100, PROP_MAX_VALUE: 100},
+            )
 
-        self.char_current_position = self.serv_cover.configure_char(
-            CHAR_CURRENT_POSITION, value=0
-        )
         self.char_target_position = self.serv_cover.configure_char(
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
         )
@@ -326,32 +338,6 @@ class WindowCovering(OpeningDevice):
     """Generate a WindowCovering accessory for a cover entity.
 
     The entity must support: set_cover_position.
-    """
-
-    def __init__(self, *args):
-        """Initialize a WindowCovering accessory object."""
-        super().__init__(
-            *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
-        )
-
-
-@TYPES.register("WindowTiltOnly")
-class WindowTiltOnly(OpeningDeviceBase):
-    """Generate a WindowTiltOnly accessory for a cover entity with DEVICE_CLASS_WINDOW.
-
-    The entity must have flags: SUPPORT_SET_TILT_POSITION.
-    """
-
-    def __init__(self, *args):
-        """Initialize a Window accessory object."""
-        super().__init__(*args, category=CATEGORY_WINDOW, service=SERV_WINDOW)
-
-
-@TYPES.register("WindowCoveringTiltOnly")
-class WindowCoveringTiltOnly(OpeningDeviceBase):
-    """Generate a WindowCoveringTiltOnly accessory for a cover entity.
-
-    The entity must have flags: SUPPORT_SET_TILT_POSITION.
     """
 
     def __init__(self, *args):
