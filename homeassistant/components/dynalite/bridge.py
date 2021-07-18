@@ -27,9 +27,8 @@ class DynaliteBridge:
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the system based on host parameter."""
         self.hass = hass
-        self.area = {}
-        self.async_add_devices = {}
-        self.waiting_devices = {}
+        self.async_add_devices: dict[str, Callable] = {}
+        self.waiting_devices: dict[str, list[str]] = {}
         self.host = config[CONF_HOST]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
