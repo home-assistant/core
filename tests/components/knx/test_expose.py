@@ -1,18 +1,12 @@
-"""Test knx expose."""
-
-
+"""Test KNX expose."""
 from homeassistant.components.knx import CONF_KNX_EXPOSE, KNX_ADDRESS
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
 
-from . import setup_knx_integration
 
-
-async def test_binary_expose(hass, knx_ip_interface_mock):
-    """Test that a binary expose sends only telegrams on state change."""
+async def test_binary_expose(hass, knx):
+    """Test a binary expose to only send telegrams on state change."""
     entity_id = "fake.entity"
-    await setup_knx_integration(
-        hass,
-        knx_ip_interface_mock,
+    await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {
                 CONF_TYPE: "binary",
@@ -24,37 +18,23 @@ async def test_binary_expose(hass, knx_ip_interface_mock):
     assert not hass.states.async_all()
 
     # Change state to on
-    knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {})
-    await hass.async_block_till_done()
-    assert (
-        knx_ip_interface_mock.send_telegram.call_count == 1
-    ), "Expected telegram for state change"
+    await knx.assert_write("1/1/8", True)
 
     # Change attribute; keep state
-    knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {"brightness": 180})
-    await hass.async_block_till_done()
-    assert (
-        knx_ip_interface_mock.send_telegram.call_count == 0
-    ), "Expected no telegram; state not changed"
+    await knx.assert_telegram_count(0)
 
     # Change attribute and state
-    knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "off", {"brightness": 0})
-    await hass.async_block_till_done()
-    assert (
-        knx_ip_interface_mock.send_telegram.call_count == 1
-    ), "Expected telegram for state change"
+    await knx.assert_write("1/1/8", False)
 
 
-async def test_expose_attribute(hass, knx_ip_interface_mock):
-    """Test that an expose sends only telegrams on attribute change."""
+async def test_expose_attribute(hass, knx):
+    """Test an expose to only send telegrams on attribute change."""
     entity_id = "fake.entity"
     attribute = "fake_attribute"
-    await setup_knx_integration(
-        hass,
-        knx_ip_interface_mock,
+    await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {
                 CONF_TYPE: "percentU8",
@@ -66,26 +46,22 @@ async def test_expose_attribute(hass, knx_ip_interface_mock):
     )
     assert not hass.states.async_all()
 
-    # Change state to on; no attribute
-    knx_ip_interface_mock.reset_mock()
+    # Change state to "on"; no attribute
     hass.states.async_set(entity_id, "on", {})
-    await hass.async_block_till_done()
-    assert knx_ip_interface_mock.send_telegram.call_count == 0
+    await knx.assert_telegram_count(0)
 
     # Change attribute; keep state
-    knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {attribute: 1})
-    await hass.async_block_till_done()
-    assert knx_ip_interface_mock.send_telegram.call_count == 1
+    await knx.assert_write("1/1/8", (1,))
 
     # Change state keep attribute
-    knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "off", {attribute: 1})
-    await hass.async_block_till_done()
-    assert knx_ip_interface_mock.send_telegram.call_count == 0
+    await knx.assert_telegram_count(0)
 
     # Change state and attribute
-    knx_ip_interface_mock.reset_mock()
     hass.states.async_set(entity_id, "on", {attribute: 0})
-    await hass.async_block_till_done()
-    assert knx_ip_interface_mock.send_telegram.call_count == 1
+    await knx.assert_write("1/1/8", (0,))
+
+    # Change state to "off"; no attribute
+    hass.states.async_set(entity_id, "off", {})
+    await knx.assert_telegram_count(0)
