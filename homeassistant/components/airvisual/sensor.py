@@ -115,20 +115,20 @@ STATE_POLLUTANT_LABEL_P1 = "p1"
 STATE_POLLUTANT_LABEL_P2 = "p2"
 STATE_POLLUTANT_LABEL_S2 = "s2"
 
-STATE_LEVEL_GOOD = "good"
-STATE_LEVEL_MODERATE = "moderate"
-STATE_LEVEL_UNHEALTHY_SENSITIVE = "unhealthy_sensitive"
-STATE_LEVEL_UNHEALTHY = "unhealthy"
-STATE_LEVEL_VERY_UNHEALTHY = "very_unhealthy"
-STATE_LEVEL_HAZARDOUS = "hazardous"
+STATE_POLLUTANT_LEVEL_GOOD = "good"
+STATE_POLLUTANT_LEVEL_MODERATE = "moderate"
+STATE_POLLUTANT_LEVEL_UNHEALTHY_SENSITIVE = "unhealthy_sensitive"
+STATE_POLLUTANT_LEVEL_UNHEALTHY = "unhealthy"
+STATE_POLLUTANT_LEVEL_VERY_UNHEALTHY = "very_unhealthy"
+STATE_POLLUTANT_LEVEL_HAZARDOUS = "hazardous"
 
 POLLUTANT_LEVELS = {
-    (0, 50): (STATE_LEVEL_GOOD, "mdi:emoticon-excited"),
-    (51, 100): (STATE_LEVEL_MODERATE, "mdi:emoticon-happy"),
-    (101, 150): (STATE_LEVEL_UNHEALTHY_SENSITIVE, "mdi:emoticon-neutral"),
-    (151, 200): (STATE_LEVEL_UNHEALTHY, "mdi:emoticon-sad"),
-    (201, 300): (STATE_LEVEL_VERY_UNHEALTHY, "mdi:emoticon-dead"),
-    (301, 1000): (STATE_LEVEL_HAZARDOUS, "mdi:biohazard"),
+    (0, 50): (STATE_POLLUTANT_LEVEL_GOOD, "mdi:emoticon-excited"),
+    (51, 100): (STATE_POLLUTANT_LEVEL_MODERATE, "mdi:emoticon-happy"),
+    (101, 150): (STATE_POLLUTANT_LEVEL_UNHEALTHY_SENSITIVE, "mdi:emoticon-neutral"),
+    (151, 200): (STATE_POLLUTANT_LEVEL_UNHEALTHY, "mdi:emoticon-sad"),
+    (201, 300): (STATE_POLLUTANT_LEVEL_VERY_UNHEALTHY, "mdi:emoticon-dead"),
+    (301, 1000): (STATE_POLLUTANT_LEVEL_HAZARDOUS, "mdi:biohazard"),
 }
 
 POLLUTANT_UNITS = {
