@@ -863,7 +863,7 @@ async def test_if_scene_activation_value_notification_fires(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "event.value_notification.scene_activation - "
+                                "event.value_notification.scene_activation2 - "
                                 "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
