@@ -276,13 +276,12 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
+        self.char_current_position = self.serv_cover.configure_char(
+            CHAR_CURRENT_POSITION, value=0
+        )
+        target_args = {"value": 0}
         if self.features & SUPPORT_SET_POSITION:
-            self.char_current_position = self.serv_cover.configure_char(
-                CHAR_CURRENT_POSITION, value=0
-            )
-            self.char_target_position = self.serv_cover.configure_char(
-                CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
-            )
+            target_args["setter_callback"] = self.move_cover
         else:
             # If its tilt only we lock the position state to 0 (closed)
             # since CHAR_CURRENT_POSITION/CHAR_TARGET_POSITION are required
@@ -291,19 +290,11 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
                 "%s does not support setting position, current position will be locked to closed.",
                 self.entity_id,
             )
-            self.char_current_position = self.serv_cover.configure_char(
-                CHAR_CURRENT_POSITION,
-                value=0,
-            )
-            self.char_target_position = self.serv_cover.configure_char(
-                CHAR_TARGET_POSITION,
-                value=0,
-                properties={
-                    PROP_MIN_VALUE: 0,
-                    PROP_MAX_VALUE: 0,
-                },
-            )
+            target_args["properties"] = {PROP_MIN_VALUE: 0, PROP_MAX_VALUE: 0}
 
+        self.char_target_position = self.serv_cover.configure_char(
+            CHAR_TARGET_POSITION, **target_args
+        )
         self.char_position_state = self.serv_cover.configure_char(
             CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
