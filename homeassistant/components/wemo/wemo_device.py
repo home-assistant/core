@@ -83,7 +83,7 @@ async def async_register_device(
             await hass.async_add_executor_job(wemo.ensure_long_press_virtual_device)
         # Temporarily handling all exceptions for #52996 & pywemo/pywemo/issues/276
         # Replace this with `except: PyWeMoException` after upstream has been fixed.
-        except:  # noqa: E722  pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.warning(
                 "Failed to enable long press support for device: %s", wemo.name
             )
