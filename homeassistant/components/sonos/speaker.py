@@ -11,13 +11,13 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
-from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
-from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
-from pysonos.events_base import Event as SonosEvent, SubscriptionBase
-from pysonos.exceptions import SoCoException
-from pysonos.music_library import MusicLibrary
-from pysonos.plugins.sharelink import ShareLinkPlugin
-from pysonos.snapshot import Snapshot
+from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
+from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
+from soco.events_base import Event as SonosEvent, SubscriptionBase
+from soco.exceptions import SoCoException
+from soco.music_library import MusicLibrary
+from soco.plugins.sharelink import ShareLinkPlugin
+from soco.snapshot import Snapshot
 
 from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN

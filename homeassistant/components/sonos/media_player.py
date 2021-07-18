@@ -6,8 +6,8 @@ import logging
 from typing import Any
 import urllib.parse
 
-from pysonos import alarms
-from pysonos.core import (
+from soco import alarms
+from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
     PLAY_MODE_BY_MEANING,

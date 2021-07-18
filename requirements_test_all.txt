@@ -1015,9 +1015,6 @@ pysmartthings==0.7.6
 # homeassistant.components.soma
 pysoma==0.0.10
 
-# homeassistant.components.sonos
-pysonos==0.0.53
-
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
@@ -1174,6 +1171,9 @@ smarthab==0.21
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.15
+
+# homeassistant.components.sonos
+soco==0.23.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
