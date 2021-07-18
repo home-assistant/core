@@ -5,6 +5,7 @@ from homeassistant.const import (
     TEMP_KELVIN,
     TEMPERATURE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitTemperatureT,
 )
 
 
@@ -37,7 +38,10 @@ def celsius_to_kelvin(celsius: float, interval: bool = False) -> float:
 
 
 def convert(
-    temperature: float, from_unit: str, to_unit: str, interval: bool = False
+    temperature: float,
+    from_unit: UnitTemperatureT,
+    to_unit: UnitTemperatureT,
+    interval: bool = False,
 ) -> float:
     """Convert a temperature from one unit to another."""
     if from_unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT, TEMP_KELVIN):

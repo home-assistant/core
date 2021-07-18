@@ -1564,7 +1564,7 @@ pylitterbot==2021.3.1
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.10.0
+pylutron-caseta==0.11.0
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -2212,7 +2212,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.6.0
+surepy==0.7.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
