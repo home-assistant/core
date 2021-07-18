@@ -294,14 +294,15 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             self.char_current_position = self.serv_cover.configure_char(
                 CHAR_CURRENT_POSITION,
                 value=100,
+            )
+            self.char_target_position = self.serv_cover.configure_char(
+                CHAR_TARGET_POSITION,
+                value=100,
                 properties={
                     PROP_MIN_VALUE: 100,
                     PROP_MAX_VALUE: 100,
                     PROP_MIN_STEP: 100,
                 },
-            )
-            self.char_target_position = self.serv_cover.configure_char(
-                CHAR_TARGET_POSITION, value=100
             )
 
         self.char_position_state = self.serv_cover.configure_char(
