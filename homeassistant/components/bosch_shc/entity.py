@@ -20,11 +20,26 @@ async def async_remove_devices(hass, entity, entry_id):
 class SHCEntity(Entity):
     """Representation of a SHC base entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize the generic SHC device."""
         self._device = device
-        self._parent_id = parent_id
         self._entry_id = entry_id
+        self._attr_name = device.name
+        self._attr_unique_id = device.serial
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, device.id)},
+            "name": device.name,
+            "manufacturer": device.manufacturer,
+            "model": device.device_model,
+            "via_device": (
+                DOMAIN,
+                device.parent_device_id
+                if device.parent_device_id is not None
+                else parent_id,
+            ),
+        }
 
     async def async_added_to_hass(self):
         """Subscribe to SHC events."""
@@ -51,42 +66,6 @@ class SHCEntity(Entity):
         self._device.unsubscribe_callback(self.entity_id)
 
     @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        return self._device.serial
-
-    @property
-    def name(self):
-        """Name of the entity."""
-        return self._device.name
-
-    @property
-    def device_id(self):
-        """Device id of the entity."""
-        return self._device.id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "name": self._device.name,
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.device_model,
-            "via_device": (
-                DOMAIN,
-                self._device.parent_device_id
-                if self._device.parent_device_id is not None
-                else self._parent_id,
-            ),
-        }
-
-    @property
     def available(self):
         """Return false if status is unavailable."""
         return self._device.status == "AVAILABLE"
-
-    @property
-    def should_poll(self):
-        """Report polling mode. SHC Entity is communicating via long polling."""
-        return False
