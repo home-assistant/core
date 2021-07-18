@@ -47,7 +47,6 @@ from .const import (
     CONF_STOPBITS,
     CONF_TCP,
     CONF_UDP,
-    CONNECT_RETRY,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
@@ -192,7 +191,6 @@ class ModbusHub:
         # generic configuration
         self._client = None
         self._async_cancel_listener = None
-        self._async_cancel_connect_listener = None
         self._in_error = False
         self._lock = asyncio.Lock()
         self.hass = hass
@@ -258,11 +256,8 @@ class ModbusHub:
         """Try to connect, and retry if needed."""
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                err = f"{self._config_name} connect failed, retry in {CONNECT_RETRY} seconds"
+                err = f"{self._config_name} connect failed, retry in pymodbus"
                 self._log_error(err, error_state=False)
-                self._async_cancel_connect_listener = async_call_later(
-                    self.hass, CONNECT_RETRY, self.async_connect_task
-                )
                 return
 
         # Start counting down to allow modbus requests.
@@ -291,9 +286,6 @@ class ModbusHub:
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
-        if self._async_cancel_connect_listener:
-            self._async_cancel_connect_listener()
-            self._async_cancel_connect_listener = None
 
         async with self._lock:
             return await self.hass.async_add_executor_job(self._pymodbus_close)
