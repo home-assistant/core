@@ -77,15 +77,18 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "No com ports found.  Need a valid RS485 device to communicate"
             )
 
-    async def async_step_import(self, conf: dict):
+    async def async_step_import(self, config: dict):
         """Import a configuration from config.yaml."""
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="already_setup")
 
+        conf = {}
         conf[ATTR_SERIAL_NUMBER] = "sn_unknown_yaml"
         conf[ATTR_MODEL] = "model_unknown_yaml"
         conf[ATTR_FIRMWARE] = "fw_unknown_yaml"
-        conf[CONF_PORT] = conf["device"]
+        conf[CONF_PORT] = config["device"]
+        conf[CONF_ADDRESS] = config["address"]
+        # config["name"] from yaml is ignored.
 
         await self.async_set_unique_id(self.flow_id)
         self._abort_if_unique_id_configured()
