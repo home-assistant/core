@@ -151,7 +151,7 @@ class GLinetRouter:
                 )
 
         if self._token_error:
-            self.renew_token()
+            await self.renew_token()
 
         # Update devices
         await self.update_devices()
