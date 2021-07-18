@@ -8,6 +8,7 @@ import pypck
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_DOMAIN,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
@@ -153,14 +154,14 @@ class LcnEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        unique_device_id = generate_unique_id(
-            (
-                self.device_connection.seg_id,
-                self.device_connection.addr_id,
-                self.device_connection.is_group,
-            )
+        address = (
+            self.device_connection.seg_id,
+            self.device_connection.addr_id,
+            self.device_connection.is_group,
         )
-        return f"{self.entry_id}-{unique_device_id}-{self.config[CONF_RESOURCE]}"
+        domain_config = (self.config[CONF_DOMAIN], self.config[CONF_RESOURCE])
+
+        return generate_unique_id(self.entry_id, address, domain_config)
 
     @property
     def should_poll(self) -> bool:

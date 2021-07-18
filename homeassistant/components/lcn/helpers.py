@@ -92,10 +92,19 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     raise ValueError("Unknown domain")
 
 
-def generate_unique_id(address: AddressType) -> str:
+def generate_unique_id(
+    entry_id: str,
+    address: AddressType,
+    domain_config: tuple[str, str] | None = None,
+) -> str:
     """Generate a unique_id from the given parameters."""
+    unique_id = entry_id
     is_group = "g" if address[2] else "m"
-    return f"{is_group}{address[0]:03d}{address[1]:03d}"
+    unique_id += f"-{is_group}{address[0]:03d}{address[1]:03d}"
+    if domain_config:
+        domain_name, resource = domain_config
+        unique_id += f"-{domain_name}-{resource}".lower()
+    return unique_id
 
 
 def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
