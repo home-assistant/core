@@ -166,6 +166,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
+        self._update_callback()
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
     @callback
