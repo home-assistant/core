@@ -151,11 +151,14 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
     _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_icon = "mdi:thermometer"
+    _attr_entity_registry_enabled_default = False
 
-    @property
-    def entity_registry_enabled_default(self):
-        """Disable this sensor by default."""
-        return False
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Cover Class."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
 
     @property
     def name(self):
@@ -163,21 +166,6 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
         return f'{self._zone["name"]} Temperature'
 
     @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
-
-    @property
     def state(self):
         """Return the current value of the measured temperature."""
         return self._zone["measuredTemp"]
-
-    @property
-    def state_class(self):
-        """State class of sensor."""
-        return STATE_CLASS_MEASUREMENT
-
-    @property
-    def icon(self):
-        """Return a representative icon."""
-        return "mdi:thermometer"
