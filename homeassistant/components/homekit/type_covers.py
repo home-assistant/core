@@ -286,7 +286,8 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             )
         else:
             # If its tilt only we lock the position state to 100 (open)
-            # since its required by homekit
+            # since CHAR_CURRENT_POSITION/CHAR_TARGET_POSITION are required
+            # by homekit, but really don't exist.
             _LOGGER.debug(
                 "%s does not support setting position, current position will be locked to open.",
                 self.entity_id,
@@ -301,7 +302,6 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
                 properties={
                     PROP_MIN_VALUE: 100,
                     PROP_MAX_VALUE: 100,
-                    PROP_MIN_STEP: 100,
                 },
             )
 
