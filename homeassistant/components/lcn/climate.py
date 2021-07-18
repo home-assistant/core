@@ -18,6 +18,8 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     UnitTemperatureT,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -111,7 +113,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
     def temperature_unit(self) -> UnitTemperatureT:
         """Return the unit of measurement."""
         # Config schema only allows for: TEMP_CELSIUS and TEMP_FAHRENHEIT
-        return cast(UnitTemperatureT, self.unit.value)
+        if self.unit == pypck.lcn_defs.VarUnit.FAHRENHEIT:
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self) -> float | None:
