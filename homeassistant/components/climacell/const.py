@@ -1,10 +1,10 @@
 """Constants for the ClimaCell integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Callable
 
-from attr import dataclass
 from pyclimacell.const import (
     DAILY,
     HOURLY,
@@ -164,7 +164,7 @@ class ClimaCellSensorMetadata:
     device_class: str | None = None
     value_map: IntEnum | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Post initialization."""
         if (self.unit_imperial or self.unit_metric) is not None and None in (
             self.unit_imperial,
