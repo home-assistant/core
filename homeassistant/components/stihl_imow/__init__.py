@@ -101,17 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=intervall_seconds),
     )
 
-    # hass.data[DOMAIN][entry.entry_id] = {
-    #     "mower": entry.data["mower"][0],
-    #     "credentials": entry.data["user_input"],
-    #     "api": imow_api,
-    #     "language": lang,
-    #     "polling_interval": intervall_seconds
-    #     if intervall_seconds >= 120
-    #     else API_UPDATE_INTERVALL_SECONDS,
-    # }
-
-    #
     # Fetch initial data so we have data when entities subscribe
     #
     # If the refresh fails, async_config_entry_first_refresh will
