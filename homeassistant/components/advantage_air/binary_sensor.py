@@ -67,7 +67,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     @callback
     def _update_callback(self) -> None:
         """Load data from integration."""
-        self._attr_is_on = self._ac["motion"]
+        self._attr_is_on = self._zone["motion"]
         self.async_write_ha_state()
 
 
