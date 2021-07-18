@@ -102,7 +102,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {
         "title": "GL-inet " + hub.router_model,
         "mac": hub.router_mac,
-        "data": {CONF_HOST: data[CONF_HOST], CONF_API_TOKEN: hub.router.token},
+        "data": {
+            CONF_HOST: data[CONF_HOST],
+            CONF_API_TOKEN: hub.router.token,
+            CONF_PASSWORD: data[CONF_PASSWORD],
+        },
     }
 
 

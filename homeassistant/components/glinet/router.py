@@ -6,7 +6,7 @@ import logging
 from typing import Callable
 
 from gli_py import GLinet
-from gli_py.error_handling import NonZeroResponse
+from gli_py.error_handling import NonZeroResponse, TokenError
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
@@ -113,6 +113,7 @@ class GLinetRouter:
         # self._model = "GL-inet router"
         # self._sw_v = None
         self._connect_error: bool = False
+        self._token_error: bool = False
         # self._devices should
         self._devices: dict[str, ClientDevInfo] = {}
         self._connected_devices: int = 0
@@ -149,12 +150,27 @@ class GLinetRouter:
                     entry.unique_id, entry.original_name
                 )
 
+        if self._token_error:
+            self.renew_token()
+
         # Update devices
         await self.update_devices()
 
         self.async_on_close(
             async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
         )
+
+    async def renew_token(self):
+        """Attempt to get a new token."""
+        try:
+            await self._api.async_login(self._entry.data[CONF_PASSWORD])
+            self._entry.data[CONF_API_TOKEN] = self._api.token
+        except Exception as exc:
+            _LOGGER.error(
+                "GL-inet %s failed to renew the token, have you changed your router password?: %s",
+                self._host,
+                exc,
+            )
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all AsusWrt platforms."""
@@ -172,6 +188,16 @@ class GLinetRouter:
                 self._connect_error = True
             _LOGGER.error(
                 "GL-inet router %s did not respond in time: %s",
+                self._host,
+                exc,
+            )
+            return
+        except TokenError as exc:
+            self._token_error = True
+            if not self._connect_error:
+                self._connect_error = True
+            _LOGGER.warning(
+                "GL-inet router %s token was refused %s, will try to re-autheticate",
                 self._host,
                 exc,
             )
@@ -194,6 +220,9 @@ class GLinetRouter:
                 exc,
             )
             return
+        if self._token_error:
+            self._token_error = False
+            _LOGGER.info("Gl-inet %s token is now renewed", self._host)
 
         if self._connect_error:
             self._connect_error = False
