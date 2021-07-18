@@ -335,6 +335,32 @@ class WindowCovering(OpeningDevice):
         )
 
 
+@TYPES.register("WindowTiltOnly")
+class WindowTiltOnly(OpeningDeviceBase):
+    """Generate a WindowTiltOnly accessory for a cover entity with DEVICE_CLASS_WINDOW.
+
+    The entity must have flags: SUPPORT_SET_TILT_POSITION.
+    """
+
+    def __init__(self, *args):
+        """Initialize a Window accessory object."""
+        super().__init__(*args, category=CATEGORY_WINDOW, service=SERV_WINDOW)
+
+
+@TYPES.register("WindowCoveringTiltOnly")
+class WindowCoveringTiltOnly(OpeningDeviceBase):
+    """Generate a WindowCoveringTiltOnly accessory for a cover entity.
+
+    The entity must have flags: SUPPORT_SET_TILT_POSITION.
+    """
+
+    def __init__(self, *args):
+        """Initialize a WindowCovering accessory object."""
+        super().__init__(
+            *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
+        )
+
+
 @TYPES.register("WindowCoveringBasic")
 class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
     """Generate a Window accessory for a cover entity.
