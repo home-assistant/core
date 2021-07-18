@@ -2,6 +2,7 @@
 import logging
 
 from bimmer_connected.const import SERVICE_ALL_TRIPS, SERVICE_LAST_TRIP, SERVICE_STATUS
+from bimmer_connected.state import ChargingState
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
@@ -18,6 +19,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
+from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
@@ -508,8 +510,9 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
             self._attr_name = f"{vehicle.name} {attribute}"
             self._attr_unique_id = f"{vehicle.vin}-{attribute}"
         self._attribute_info = attribute_info
-        enabled_default = attribute_info.get(attribute, [None, None, None, True])[3]
-        self._attr_extra_state_attributes = enabled_default
+        self._attr_entity_registry_enabled_default = attribute_info.get(
+            attribute, [None, None, None, True]
+        )[3]
         self._attr_device_class = attribute_info.get(
             attribute, [None, None, None, None]
         )[1]
@@ -559,3 +562,14 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                 self._attr_state = dt_util.parse_datetime(date_str).isoformat()
             else:
                 self._attr_state = getattr(vehicle_all_trips, self._attribute)
+
+        vehicle_state = self._vehicle.state
+        charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
+
+        if self._attribute == "charging_level_hv":
+            self._attr_icon = icon_for_battery_level(
+                battery_level=vehicle_state.charging_level_hv, charging=charging_state
+            )
+        self._attr_icon = self._attribute_info.get(
+            self._attribute, [None, None, None, None]
+        )[0]
