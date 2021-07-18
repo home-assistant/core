@@ -271,13 +271,13 @@ class AsusWrtRouter:
         )
 
     async def update_all(self, now: datetime | None = None) -> None:
-        """Update all AsusWrt platforms."""
+        """Update all Gl-inet platforms."""
         await self.update_devices()
 
     async def update_devices(self) -> None:
-        """Update AsusWrt devices tracker."""
+        """Update Gl-inet devices tracker."""
         new_device = False
-        _LOGGER.debug("Checking devices for ASUS router %s", self._host)
+        _LOGGER.debug("Checking devices for Gl-inet router %s", self._host)
         try:
             wrt_devices = await self._api.async_get_connected_devices()
         except OSError as exc:

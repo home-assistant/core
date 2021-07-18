@@ -6,6 +6,7 @@ import logging
 from typing import Callable
 
 from gli_py import GLinet
+from gli_py.error_handling import NonZeroResponse
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
@@ -160,17 +161,35 @@ class GLinetRouter:
         await self.update_devices()
 
     async def update_devices(self) -> None:
-        """Update AsusWrt devices tracker."""
+        """Update Gl-inet devices tracker."""
         new_device = False
 
         _LOGGER.debug("Checking client connect to GL-inet router %s", self._host)
         try:
             wrt_devices = await self._api.async_connected_clients()
-        except OSError as exc:
+        except TimeoutError as exc:
             if not self._connect_error:
                 self._connect_error = True
             _LOGGER.error(
-                "Error connecting to GL-inet router %s for device update: %s",
+                "GL-inet router %s did not respond in time: %s",
+                self._host,
+                exc,
+            )
+            return
+        except NonZeroResponse as exc:
+            if not self._connect_error:
+                self._connect_error = True
+            _LOGGER.error(
+                "GL-inet router %s responded, but with an error code: %s",
+                self._host,
+                exc,
+            )
+            return
+        except Exception as exc:
+            if not self._connect_error:
+                self._connect_error = True
+            _LOGGER.error(
+                "GL-inet router %s responded with an unexpected error: %s",
                 self._host,
                 exc,
             )
@@ -178,7 +197,7 @@ class GLinetRouter:
 
         if self._connect_error:
             self._connect_error = False
-            _LOGGER.info("Reconnected to ASUS router %s", self._host)
+            _LOGGER.info("Reconnected to Gl-inet router %s", self._host)
 
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
