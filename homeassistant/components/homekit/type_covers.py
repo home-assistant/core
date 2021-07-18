@@ -55,7 +55,6 @@ from .const import (
     HK_POSITION_GOING_TO_MIN,
     HK_POSITION_STOPPED,
     PROP_MAX_VALUE,
-    PROP_MIN_STEP,
     PROP_MIN_VALUE,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW,
@@ -285,23 +284,23 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
                 CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
             )
         else:
-            # If its tilt only we lock the position state to 100 (open)
+            # If its tilt only we lock the position state to 0 (closed)
             # since CHAR_CURRENT_POSITION/CHAR_TARGET_POSITION are required
             # by homekit, but really don't exist.
             _LOGGER.debug(
-                "%s does not support setting position, current position will be locked to open.",
+                "%s does not support setting position, current position will be locked to closed.",
                 self.entity_id,
             )
             self.char_current_position = self.serv_cover.configure_char(
                 CHAR_CURRENT_POSITION,
-                value=100,
+                value=0,
             )
             self.char_target_position = self.serv_cover.configure_char(
                 CHAR_TARGET_POSITION,
-                value=100,
+                value=0,
                 properties={
-                    PROP_MIN_VALUE: 100,
-                    PROP_MAX_VALUE: 100,
+                    PROP_MIN_VALUE: 0,
+                    PROP_MAX_VALUE: 0,
                 },
             )
 
