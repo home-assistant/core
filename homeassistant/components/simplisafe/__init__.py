@@ -3,7 +3,11 @@ import asyncio
 from uuid import UUID
 
 from simplipy import get_api
-from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
+from simplipy.errors import (
+    EndpointUnavailableError,
+    InvalidCredentialsError,
+    SimplipyError,
+)
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
@@ -372,7 +376,7 @@ class SimpliSafe:
             if isinstance(result, InvalidCredentialsError):
                 raise ConfigEntryAuthFailed("Invalid credentials") from result
 
-            if isinstance(result, EndpointUnavailable):
+            if isinstance(result, EndpointUnavailableError):
                 # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):
