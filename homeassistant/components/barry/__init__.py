@@ -8,10 +8,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import DOMAIN
 
-PLATFORMS = [
-    "sensor",
-]
-
+PLATFORMS = ["sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,4 +43,11 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    for component in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, component)
     return True

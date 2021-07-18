@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, PRICE_CODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Barry sensor."""
-    barry_connection = hass.data.get(DOMAIN)
-    price_code = hass.data.get("price_code")
+    barry_connection = hass.data[DOMAIN]
+    price_code = hass.data[PRICE_CODE]
     async_add_entities([BarrySensor(barry_connection, price_code)], True)
 
 

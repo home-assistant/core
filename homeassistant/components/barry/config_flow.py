@@ -1,23 +1,20 @@
 """Adds config flow for Barry integration."""
 # pylint: disable=attribute-defined-outside-init
+import asyncio
+
 from pybarry import Barry, InvalidToken
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN, PRICE_CODE
 
 
 class BarryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Barry integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    async def async_step_import(self, import_info):
-        """Set the config entry up from yaml."""
-        return await self.async_step_user(import_info)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -35,7 +32,10 @@ class BarryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             errors = {}
             try:
-                barry_connection.get_all_metering_points(check_token=True)
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None, barry_connection.get_all_metering_points, True
+                )
             except InvalidToken:
                 errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
             except Exception:  # pylint: disable=broad-except
@@ -69,7 +69,7 @@ class BarryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for mpid, code in mpids:
                 if mpid == selected_meter:
                     price_code = code
-            self.hass.data["price_code"] = price_code
+            self.hass.data[PRICE_CODE] = price_code
 
             unique_id = str(selected_meter) + "_spot_price"
             await self.async_set_unique_id(unique_id)
@@ -79,7 +79,7 @@ class BarryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title="Barry",
                 data={
                     CONF_ACCESS_TOKEN: self.init_info.access_token,
-                    "price_code": price_code,
+                    PRICE_CODE: price_code,
                 },
             )
 
