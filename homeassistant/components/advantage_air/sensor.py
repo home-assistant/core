@@ -49,7 +49,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
 
     def __init__(self, instance, ac_key, action):
         """Initialize the Advantage Air timer control."""
-        super().__init__(instance, ac_key, action)
+        super().__init__(instance, ac_key)
         self._time_key = f"countDownTo{action}"
         self._attr_name = f'{self._ac["name"]} Time To {action}'
         self._attr_unique_id = (
