@@ -280,18 +280,24 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             self.char_current_position = self.serv_cover.configure_char(
                 CHAR_CURRENT_POSITION, value=0
             )
+            self.char_target_position = self.serv_cover.configure_char(
+                CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
+            )
         else:
             # If its tilt only we lock the position state to 100 (open)
             # since its required by homekit
+            _LOGGER.debug(
+                "%s does not support setting position, current position will be locked to open."
+            )
             self.char_current_position = self.serv_cover.configure_char(
                 CHAR_CURRENT_POSITION,
                 value=100,
                 properties={PROP_MIN_VALUE: 100, PROP_MAX_VALUE: 100},
             )
+            self.char_target_position = self.serv_cover.configure_char(
+                CHAR_TARGET_POSITION, value=100
+            )
 
-        self.char_target_position = self.serv_cover.configure_char(
-            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
-        )
         self.char_position_state = self.serv_cover.configure_char(
             CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
