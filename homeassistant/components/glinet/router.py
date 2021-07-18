@@ -165,6 +165,10 @@ class GLinetRouter:
         try:
             await self._api.async_login(self._entry.data[CONF_PASSWORD])
             self._entry.data[CONF_API_TOKEN] = self._api.token
+            _LOGGER.warning(
+                "GL-inet router %s token was renewed",
+                self._host,
+            )
         except Exception as exc:
             _LOGGER.error(
                 "GL-inet %s failed to renew the token, have you changed your router password?: %s",
@@ -197,7 +201,7 @@ class GLinetRouter:
             if not self._connect_error:
                 self._connect_error = True
             _LOGGER.warning(
-                "GL-inet router %s token was refused %s, will try to re-autheticate",
+                "GL-inet router %s token was refused %s, will try to re-autheticate before next poll",
                 self._host,
                 exc,
             )
