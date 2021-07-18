@@ -157,16 +157,13 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
 
     async def async_added_to_hass(self):
         """Call when the switch is added to hass."""
-        if self.is_on is None:
-            state = await self.async_get_last_state()
-            self._attr_is_on = state is not None and state.state == STATE_ON
+        state = await self.async_get_last_state()
+        self._attr_is_on = state is not None and state.state == STATE_ON
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
         """Update the switch."""
         await self._coordinator.async_request_refresh()
-        state = await self.async_get_last_state()
-        self._attr_is_on = state is not None and state.state == STATE_ON
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
@@ -235,6 +232,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Initialize the switch."""
         super().__init__(device, *args, **kwargs)
         self._attr_is_on = self._coordinator.data["pwr"]
+        self._attr_current_power_w = self._coordinator.data.get("power")
 
     @callback
     def update_data(self):
