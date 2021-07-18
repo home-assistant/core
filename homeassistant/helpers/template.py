@@ -43,7 +43,11 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity_registry, location as loc_helper
+from homeassistant.helpers import (
+    device_registry,
+    entity_registry,
+    location as loc_helper,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -909,6 +913,20 @@ def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
+def device_attr(hass: HomeAssistant, device_id: str, attr: str) -> Any:
+    """Get the device specific attribute."""
+    device_reg = device_registry.async_get(hass)
+    device = device_reg.async_get(device_id)
+    if device is None or not hasattr(device, attr):
+        return None
+    return getattr(device, attr)
+
+
+def is_device_attr(hass: HomeAssistant, device_id: str, attr: str, value: Any) -> bool:
+    """Test if a device's attribute is a specific value."""
+    return bool(device_attr(hass, device_id, attr) == value)
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1486,6 +1504,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_entities"] = hassfunction(device_entities)
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
+        self.globals["device_attr"] = hassfunction(device_attr)
+        self.globals["is_device_attr"] = hassfunction(is_device_attr)
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -1507,6 +1528,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "states",
                 "utcnow",
                 "now",
+                "device_attr",
+                "is_device_attr",
             ]
             hass_filters = ["closest", "expand"]
             for glob in hass_globals:
