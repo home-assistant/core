@@ -400,7 +400,7 @@ google-nest-sdm==0.2.12
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==0.11.7
+greeclimate==0.11.8
 
 # homeassistant.components.growatt_server
 growattServer==1.0.1
@@ -1153,7 +1153,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.1
+simplisafe-python==11.0.2
 
 # homeassistant.components.slack
 slackclient==2.5.0

@@ -712,7 +712,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.11.7
+greeclimate==0.11.8
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -2104,7 +2104,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.1
+simplisafe-python==11.0.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0

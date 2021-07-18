@@ -437,13 +437,18 @@ omit =
     homeassistant/components/hive/water_heater.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
-    homeassistant/components/home_connect/*
+    homeassistant/components/home_connect/__init__.py
+    homeassistant/components/home_connect/api.py
+    homeassistant/components/home_connect/binary_sensor.py
+    homeassistant/components/home_connect/entity.py
+    homeassistant/components/home_connect/light.py
+    homeassistant/components/home_connect/sensor.py
+    homeassistant/components/home_connect/switch.py
     homeassistant/components/homematic/*
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
     homeassistant/components/homematic/notify.py
     homeassistant/components/home_plus_control/api.py
-    homeassistant/components/home_plus_control/helpers.py
     homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py

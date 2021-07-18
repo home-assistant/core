@@ -1,4 +1,6 @@
 """Config flow for HomeKit integration."""
+from __future__ import annotations
+
 import asyncio
 import random
 import re
@@ -110,18 +112,19 @@ _EMPTY_ENTITY_FILTER = {
 }
 
 
-async def _async_name_to_domain_map(hass: HomeAssistant):
-    """Create a mapping of domain names to the domain."""
+async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
+    """Create a mapping of types of devices/entities HomeKit can support."""
     integrations = await asyncio.gather(
         *[async_get_integration(hass, domain) for domain in SUPPORTED_DOMAINS],
         return_exceptions=True,
     )
-    return {
+    name_to_type_map = {
         domain: domain
         if isinstance(integrations[idx], Exception)
         else integrations[idx].name
         for idx, domain in enumerate(SUPPORTED_DOMAINS)
     }
+    return name_to_type_map
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -143,14 +146,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.hk_data[CONF_HOMEKIT_MODE] = HOMEKIT_MODE_BRIDGE
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
-        name_to_domain_map = await _async_name_to_domain_map(self.hass)
+        name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_INCLUDE_DOMAINS, default=default_domains
-                    ): cv.multi_select(name_to_domain_map),
+                    ): cv.multi_select(name_to_type_map),
                 }
             ),
         )
@@ -454,7 +457,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
             domains.extend(_domains_set_from_entities(include_entities))
-        name_to_domain_map = await _async_name_to_domain_map(self.hass)
+        name_to_type_map = await _async_name_to_type_map(self.hass)
 
         return self.async_show_form(
             step_id="init",
@@ -466,7 +469,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_DOMAINS,
                         default=domains,
-                    ): cv.multi_select(name_to_domain_map),
+                    ): cv.multi_select(name_to_type_map),
                 }
             ),
         )
