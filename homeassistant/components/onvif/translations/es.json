@@ -19,6 +19,13 @@
                 "title": "Configurar la autenticaci\u00f3n"
             },
             "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
                 "title": "Configurar dispositivo ONVIF"
             },
             "configure_profile": {
