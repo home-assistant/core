@@ -174,7 +174,7 @@ class Control4Entity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._idx
+        return str(self._idx)
 
     @property
     def device_info(self):

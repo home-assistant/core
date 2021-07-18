@@ -124,9 +124,9 @@ async def async_setup_entry(
                 item_coordinator,
                 item_name,
                 item_id,
-                item_device_name,
-                item_manufacturer,
-                item_model,
+                str(item_device_name),
+                str(item_manufacturer),
+                str(item_model),
                 item_parent_id,
                 item_is_dimmer,
             )
