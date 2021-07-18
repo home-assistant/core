@@ -54,8 +54,8 @@ class BasePlatform(Entity):
         self._device_class = entry.get(CONF_DEVICE_CLASS)
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value = None
+        self._available = True
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
-        self._available = self._scan_interval == 0 or self._scan_interval > 1000
         self._call_active = False
 
     @abstractmethod

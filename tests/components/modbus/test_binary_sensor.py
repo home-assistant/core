@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     STATE_OFF,
     STATE_ON,
@@ -145,7 +144,6 @@ async def test_service_binary_sensor_update(hass, mock_pymodbus):
                 {
                     CONF_NAME: SENSOR_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },

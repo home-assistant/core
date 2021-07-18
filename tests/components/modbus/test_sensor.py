@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
-    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -579,7 +578,6 @@ async def test_struct_sensor(hass, cfg, regs, expected):
                 {
                     CONF_NAME: SENSOR_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },

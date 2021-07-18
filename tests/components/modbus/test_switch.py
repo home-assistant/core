@@ -210,7 +210,6 @@ async def test_all_switch(hass, call_type, regs, verify, expected):
                 {
                     CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
-                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },
@@ -235,14 +234,12 @@ async def test_switch_service_turn(hass, caplog, mock_pymodbus):
                     CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 0,
                 },
                 {
                     CONF_NAME: f"{SWITCH_NAME}2",
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_VERIFY: {},
-                    CONF_SCAN_INTERVAL: 0,
                 },
             ],
         },

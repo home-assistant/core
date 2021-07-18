@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_LIGHTS,
     CONF_NAME,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_TYPE,
     STATE_OFF,
@@ -196,7 +195,6 @@ async def test_all_light(hass, call_type, regs, verify, expected):
                 {
                     CONF_NAME: LIGHT_NAME,
                     CONF_ADDRESS: 1234,
-                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },
@@ -220,14 +218,12 @@ async def test_light_service_turn(hass, caplog, mock_pymodbus):
                 {
                     CONF_NAME: LIGHT_NAME,
                     CONF_ADDRESS: 17,
-                    CONF_SCAN_INTERVAL: 0,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 },
                 {
                     CONF_NAME: f"{LIGHT_NAME}2",
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {},
                 },
             ],
