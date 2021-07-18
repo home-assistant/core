@@ -913,18 +913,20 @@ def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def device_attr(hass: HomeAssistant, device_id: str, attr: str) -> Any:
+def device_attr(hass: HomeAssistant, device_id: str, attr_name: str) -> Any:
     """Get the device specific attribute."""
     device_reg = device_registry.async_get(hass)
     device = device_reg.async_get(device_id)
-    if device is None or not hasattr(device, attr):
+    if device is None or not hasattr(device, attr_name):
         return None
-    return getattr(device, attr)
+    return getattr(device, attr_name)
 
 
-def is_device_attr(hass: HomeAssistant, device_id: str, attr: str, value: Any) -> bool:
+def is_device_attr(
+    hass: HomeAssistant, device_id: str, attr_name: str, attr_value: Any
+) -> bool:
     """Test if a device's attribute is a specific value."""
-    return bool(device_attr(hass, device_id, attr) == value)
+    return bool(device_attr(hass, device_id, attr_name) == attr_value)
 
 
 def closest(hass, *args):
