@@ -439,7 +439,6 @@ omit =
     homeassistant/components/homematic/cover.py
     homeassistant/components/homematic/notify.py
     homeassistant/components/home_plus_control/api.py
-    homeassistant/components/home_plus_control/helpers.py
     homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
