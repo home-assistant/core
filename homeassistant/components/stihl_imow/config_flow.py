@@ -19,8 +19,13 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     API_DEFAULT_LANGUAGE,
     API_UPDATE_INTERVALL_SECONDS,
+    ATTR_IMOW,
     CONF_API_TOKEN,
     CONF_API_TOKEN_EXPIRE_TIME,
+    CONF_ATTR_EMAIL,
+    CONF_ATTR_LANGUAGE,
+    CONF_ATTR_PASSWORD,
+    CONF_ATTR_POLLING_INTERVALL,
     CONF_ENTRY_TITLE,
     CONF_MOWER,
     CONF_MOWER_IDENTIFIER,
@@ -28,9 +33,10 @@ from .const import (
     CONF_MOWER_NAME,
     CONF_MOWER_STATE,
     CONF_MOWER_VERSION,
+    CONF_USER_INPUT,
     DOMAIN,
-    LANGUAGES,
 )
+from .maps import LANGUAGES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,15 +50,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA
     with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
 
     # If your PyPI package is not built with async, pass your methods
     # to the executor:
     session = async_get_clientsession(hass)
 
     imow = IMowApi(
-        email=data["email"],
-        password=data["password"],
+        email=data[CONF_ATTR_EMAIL],
+        password=data[CONF_ATTR_PASSWORD],
         aiohttp_session=session,
     )
     try:
@@ -73,7 +78,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     mowers = []
     for mower in await imow.receive_mowers():
         mowers_state = dict(mower.__dict__)
-        del mowers_state["imow"]
+        del mowers_state[ATTR_IMOW]
         mowers.append(
             {
                 CONF_MOWER_NAME: mower.name,
@@ -87,25 +92,25 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {
         CONF_API_TOKEN: token,
         CONF_API_TOKEN_EXPIRE_TIME: datetime.datetime.timestamp(expire_time),
-        "user_input": data,
+        CONF_USER_INPUT: data,
         CONF_MOWER: mowers,
     }
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("email"): cv.string,
-        vol.Required("password"): cv.string,
+        vol.Required(CONF_ATTR_EMAIL): cv.string,
+        vol.Required(CONF_ATTR_PASSWORD): cv.string,
     },
 )
 STEP_ADVANCED = vol.Schema(
     {
-        vol.Optional("language", default=API_DEFAULT_LANGUAGE): vol.In(
+        vol.Optional(CONF_ATTR_LANGUAGE, default=API_DEFAULT_LANGUAGE): vol.In(
             [e.value for e in LANGUAGES]
         ),
-        vol.Optional("polling_interval", default=API_UPDATE_INTERVALL_SECONDS): vol.In(
-            [20, 30, 60, 120, 300]
-        ),
+        vol.Optional(
+            CONF_ATTR_POLLING_INTERVALL, default=API_UPDATE_INTERVALL_SECONDS
+        ): vol.In([20, 30, 60, 120, 300]),
     }
 )
 
@@ -171,8 +176,8 @@ class StihlImowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            self.language = LANGUAGES(user_input["language"]).name
-            self.polling_interval = user_input["polling_interval"]
+            self.language = LANGUAGES(user_input[CONF_ATTR_LANGUAGE]).name
+            self.polling_interval = user_input[CONF_ATTR_POLLING_INTERVALL]
 
         except CannotConnect:
             errors["base"] = "cannot_connect"
@@ -182,8 +187,8 @@ class StihlImowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            self.data["language"] = self.language
-            self.data["polling_interval"] = self.polling_interval
+            self.data[CONF_ATTR_LANGUAGE] = self.language
+            self.data[CONF_ATTR_POLLING_INTERVALL] = self.polling_interval
             return self.async_create_entry(title=CONF_ENTRY_TITLE, data=self.data)
 
         return self.async_show_form(

@@ -5,10 +5,10 @@ from imow.common.mowerstate import MowerState
 
 from homeassistant import config_entries, core
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import STATE_OFF
 
 from . import extract_properties_by_type
-from ...const import STATE_OFF
-from .const import DOMAIN
+from .const import ATTR_COORDINATOR, ATTR_LONG, ATTR_SHORT, DOMAIN
 from .entity import ImowBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,9 +21,9 @@ async def async_setup_entry(
 ):
     """Add sensors for passed config_entry in HA."""
     config = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATOR]
 
-    mower_state: MowerState = config["coordinator"].data
+    mower_state: MowerState = config[ATTR_COORDINATOR].data
 
     entities, device = extract_properties_by_type(
         mower_state, bool, negotiate=True  # all, but bool
@@ -46,9 +46,10 @@ class ImowSensorEntity(ImowBaseEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         if self.property_name == "machineState":
+
             return {
-                "short": self.mowerstate.stateMessage["short"],
-                "long": self.mowerstate.stateMessage["long"],
+                ATTR_SHORT: self.mowerstate.stateMessage[ATTR_SHORT],
+                ATTR_LONG: self.mowerstate.stateMessage[ATTR_LONG],
             }
 
     @property

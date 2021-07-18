@@ -1,9 +1,20 @@
 """BaseEntity for iMow Sensors."""
 from imow.common.mowerstate import MowerState
 
+from homeassistant.const import ATTR_MANUFACTURER
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    ATTR_ICON,
+    ATTR_ID,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_PICTURE,
+    ATTR_SW_VERSION,
+    ATTR_TYPE,
+    ATTR_UOM,
+    DOMAIN,
+)
 from .maps import IMOW_SENSORS_MAP
 
 
@@ -47,36 +58,35 @@ class ImowBaseEntity(CoordinatorEntity):
                 # within a specific domain
                 (
                     DOMAIN,
-                    self.key_device_infos["id"],
+                    self.key_device_infos[ATTR_ID],
                 ),
             },
-            "name": self.key_device_infos["name"],
-            "manufacturer": self.key_device_infos["manufacturer"],
-            "model": self.key_device_infos["model"],
-            "sw_version": self.key_device_infos["sw_version"],
+            ATTR_NAME: self.key_device_infos[ATTR_NAME],
+            ATTR_MANUFACTURER: self.key_device_infos[ATTR_MANUFACTURER],
+            ATTR_MODEL: self.key_device_infos[ATTR_MODEL],
+            ATTR_SW_VERSION: self.key_device_infos[ATTR_SW_VERSION],
         }
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-
         if self.property_name in IMOW_SENSORS_MAP:
-            if IMOW_SENSORS_MAP[self.property_name]["type"]:
-                return IMOW_SENSORS_MAP[self.property_name]["type"]
+            if IMOW_SENSORS_MAP[self.property_name][ATTR_TYPE]:
+                return IMOW_SENSORS_MAP[self.property_name][ATTR_TYPE]
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self.property_name in IMOW_SENSORS_MAP:
-            if IMOW_SENSORS_MAP[self.property_name]["uom"]:
-                return IMOW_SENSORS_MAP[self.property_name]["uom"]
+            if IMOW_SENSORS_MAP[self.property_name][ATTR_UOM]:
+                return IMOW_SENSORS_MAP[self.property_name][ATTR_UOM]
 
     @property
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
         if (
             self.property_name in IMOW_SENSORS_MAP
-            and IMOW_SENSORS_MAP[self.property_name]["picture"]
+            and IMOW_SENSORS_MAP[self.property_name][ATTR_PICTURE]
         ):
             if self.mowerstate.mowerImageThumbnailUrl:
                 return self.mowerstate.mowerImageThumbnailUrl
@@ -84,16 +94,22 @@ class ImowBaseEntity(CoordinatorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self.key_device_infos['name']} {self.cleaned_property_name}"
+        return f"{self.key_device_infos[ATTR_NAME]} {self.cleaned_property_name}"
 
     @property
     def unique_id(self):
         """Return the unique ID of the sensor."""
-        return f"{self.key_device_infos['id']}_{self.idx}_{self.property_name}"
+        return (
+            f"{self.key_device_infos[ATTR_ID]}_" f"{self.idx}_" f"{self.property_name}"
+        )
 
     @property
     def icon(self):
         """Icon of the entity."""
         if self.property_name in IMOW_SENSORS_MAP:
-            return IMOW_SENSORS_MAP[self.property_name]["icon"]
+            return IMOW_SENSORS_MAP[self.property_name][ATTR_ICON]
         return self._attr_icon
+
+    async def async_update(self):
+        """Update the entity."""
+        await self.coordinator.async_request_refresh()
