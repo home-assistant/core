@@ -89,6 +89,35 @@ def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> float:
     return round(status.bytes_received / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
+
+def _retrieve_link_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
+    """Return upload link rate."""
+    return round(status.max_linked_bit_rate[0] / 1024, 1)  # type: ignore[no-any-return]
+
+
+def _retrieve_link_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
+    """Return download link rate."""
+    return round(status.max_linked_bit_rate[1] / 1024, 1)  # type: ignore[no-any-return]
+
+
+def _retrieve_link_noise_sent_state(status: FritzStatus, last_value: str) -> float:
+    """Return upload noise margin."""
+    return status.noise_margin[0]  # type: ignore[no-any-return]
+
+
+def _retrieve_link_noise_margin_received_state(status: FritzStatus, last_value: str) -> float:
+    """Return download noise margin."""
+    return status.noise_margin[1]  # type: ignore[no-any-return]
+
+def _retrieve_link_noise_margin_sent_state(status: FritzStatus, last_value: str) -> float:
+    """Return upload line attenuation."""
+    return status.attenuation[0]  # type: ignore[no-any-return]
+
+
+def _retrieve_link_noise_received_state(status: FritzStatus, last_value: str) -> float:
+    """Return download line attenuation."""
+    return status.attenuation[1]  # type: ignore[no-any-return]
+
 class SensorData(TypedDict, total=False):
     """Sensor data class."""
 
@@ -158,6 +187,42 @@ SENSOR_DATA = {
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
+    ),
+    "line_kb_s_sent": SensorData(
+        name="Line capacity kb/s sent",
+        unit_of_measurement="kb/s",
+        icon="mdi:upload",
+        state_provider=_retrieve_link_kb_s_sent_state
+    ),
+    "line_kb_s_received": SensorData(
+        name="Line capacity kb/s received",
+        unit_of_measurement="kb/s",
+        icon="mdi:download",
+        state_provider=_retrieve_link_kb_s_received_state,
+    ),
+    "line_noise_margin_sent": SensorData(
+        name="Line noise margin sent in dB",
+        unit_of_measurement="dB",
+        icon="mdi:upload",
+        state_provider=_retrieve_link_noise_margin_sent_state;
+    ),
+    "line_noise_margin_received": SensorData(
+        name="Line noise margin received in dB",
+        unit_of_measurement="dB",
+        icon="mdi:download",
+        state_provider=_retrieve_link_noise_margin_received_state,
+    ),
+        "line_attenuation_sent": SensorData(
+        name="Line power attenuation sent in dB",
+        unit_of_measurement="dB",
+        icon="mdi:upload",
+        state_provider=_retrieve_link_attenuation_sent_state;
+    ),
+    "line_attenuation_received": SensorData(
+        name="Line power received in dB",
+        unit_of_measurement="dB",
+        icon="mdi:download",
+        state_provider=_retrieve_link_attenuation_received_state,
     ),
 }
 
