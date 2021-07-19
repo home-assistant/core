@@ -45,7 +45,7 @@ echo [] > ~/../myConnHist.json
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais*
 # create db settings for pro
 if [ $ais_pro -gt 0 ]; then
-  echo '{ "dbShowLogbook": true, "dbShowHistory": true, "dbEngine": "MariaDB (local)", "dbDrive": "", "dbUrl": "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "127.0.0.1", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
+  echo '{ "dbShowLogbook": true, "dbShowHistory": true, "dbEngine": "PostgreSQL (local)", "dbDrive": "", "dbUrl": "postgresql:ais:dom@127.0.0.1/ha", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "127.0.0.1", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
 fi
 # 6. clear npm cache
 rm -rf /data/data/pl.sviete.dom/files/home/.npm/_cacache/*
@@ -108,27 +108,15 @@ rm /data/data/pl.sviete.dom/files/ais_setup_wizard_done
 if [ $ais_pro -gt 0 ]; then
   # 17. clean DB
   # # drop database ha
-  mysql -h localhost -u $(whoami) --execute="DROP DATABASE ha"
-  # # create database ha
-  mysql -h localhost -u $(whoami) --execute="CREATE DATABASE ha CHARACTER SET utf8;"
-  # mysql -u $(whoami) --execute="CREATE USER 'ais'@'localhost' IDENTIFIED  BY 'dom';"
-  mysql -h localhost -u $(whoami) --execute="GRANT ALL PRIVILEGES ON ha.* TO 'ais'@'localhost';"
-  # test
-  mysql -h localhost -u ais -pdom ha --execute="select 'DB TEST OK' as ais from dual;"
+  dropdb ha --force
+  createdb ha
+  psql -U ais -d ha -c "SELECT 'OK' as AIS_TEST;"
 fi
+
 
 # 17. rm temps
 rm -rf /data/data/pl.sviete.dom/files/home/dom/.temp
-# stop and start mysql afer this
 rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
-
-if [ $ais_pro -gt 0 ]; then
-  pm2 stop mysql
-  pm2 start mysql
-  pm2 save
-  # test
-  mysql -h localhost -u ais -pdom ha --execute="select 'DB TEST 2 OK' as ais from dual;"
-fi
 
 # 18. drop tunnel
 rm -rf ~/.cloudflared
