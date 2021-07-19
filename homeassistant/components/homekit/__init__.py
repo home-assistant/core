@@ -42,7 +42,6 @@ from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.util import get_local_ip
 
 from . import (  # noqa: F401
     type_cameras,
