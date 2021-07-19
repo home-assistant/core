@@ -193,7 +193,7 @@ async def async_setup_entry(  # noqa: C901
         SynologyDSMLoginInvalidException,
         SynologyDSMLoginPermissionDeniedException,
     ) as err:
-        if err.args[0]:
+        if err.args[0] and isinstance(err.args[0], dict):
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
