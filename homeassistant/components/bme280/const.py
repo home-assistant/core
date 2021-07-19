@@ -1,7 +1,12 @@
 """Constants for the BME280 component."""
 from datetime import timedelta
 
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+)
 
 # Common
 DOMAIN = "bme280"
@@ -21,9 +26,9 @@ SENSOR_TEMP = "temperature"
 SENSOR_HUMID = "humidity"
 SENSOR_PRESS = "pressure"
 SENSOR_TYPES = {
-    SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", PERCENTAGE],
-    SENSOR_PRESS: ["Pressure", "mb"],
+    SENSOR_TEMP: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_HUMID: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    SENSOR_PRESS: ["Pressure", "mb", DEVICE_CLASS_PRESSURE],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
