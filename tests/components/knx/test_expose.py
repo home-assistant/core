@@ -24,7 +24,7 @@ async def test_binary_expose(hass, knx):
 
     # Change attribute; keep state
     hass.states.async_set(entity_id, "on", {"brightness": 180})
-    await knx.assert_telegram_count(0)
+    await knx.assert_no_telegram()
 
     # Change attribute and state
     hass.states.async_set(entity_id, "off", {"brightness": 0})
