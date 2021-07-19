@@ -21,6 +21,7 @@
                 "title": "V\u00e1lassz HomematicIP hozz\u00e1f\u00e9r\u00e9si pontot"
             },
             "link": {
+                "description": "A HomematicIP regisztr\u00e1l\u00e1s\u00e1hoz a Home Assistant alkalmaz\u00e1sban nyomja meg a hozz\u00e1f\u00e9r\u00e9si pont k\u00e9k gombj\u00e1t \u00e9s a bek\u00fcld\u00e9s gombot. \n\n ! [A gomb helye a h\u00eddon] (/ static / images / config_flows / config_homematicip_cloud.png)",
                 "title": "Link Hozz\u00e1f\u00e9r\u00e9si pont"
             }
         }

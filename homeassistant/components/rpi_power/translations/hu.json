@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "no_devices_found": "Nem tal\u00e1lja az ehhez a komponenshez sz\u00fcks\u00e9ges rendszerszintet, gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy a rendszermag (kernel) friss, \u00e9s a hardver t\u00e1mogatott",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
         "step": {
