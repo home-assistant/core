@@ -493,7 +493,12 @@ class HomeKit:
             if acc.entity_id not in entity_ids:
                 return
             acc.async_stop()
-            if new_acc := self._async_create_single_accessory([acc.entity_id]):
+            if not (state := self.hass.states.get(acc.entity_id)):
+                _LOGGER.warning(
+                    "The underlying entity %s disappeared during reset.", acc.entity
+                )
+                return
+            if new_acc := self._async_create_single_accessory([state]):
                 self.driver.accessory = new_acc
                 self.driver.config_changed()
             return
