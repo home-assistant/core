@@ -14,16 +14,20 @@ class BroadlinkEntity(Entity):
     def __init__(self, device):
         """Initialize the device."""
         self._device = device
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device.unique_id)},
-            "connections": {(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
-            "manufacturer": device.api.manufacturer,
-            "model": device.api.model,
-            "name": device.name,
-            "sw_version": device.fw_version,
-        }
 
     @property
     def available(self):
         """Return True if the remote is available."""
         return self._device.update_manager.available
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._device.unique_id)},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device.mac_address)},
+            "manufacturer": self._device.api.manufacturer,
+            "model": self._device.api.model,
+            "name": self._device.name,
+            "sw_version": self._device.fw_version,
+        }
