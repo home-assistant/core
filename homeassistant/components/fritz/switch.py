@@ -561,11 +561,17 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         """Init Fritz profile."""
         super().__init__(fritzbox_tools, device)
         self._attr_is_on: bool = False
+        self._device_name = device.hostname
+
+    @property
+    def name(self) -> str:
+        """Return switch name."""
+        return f"{self._device_name} Internet Access"
 
     @property
     def unique_id(self) -> str:
         """Return device unique id."""
-        return f"{self._mac}_switch"
+        return f"{self._mac}_internet_access"
 
     @property
     def icon(self) -> str:
