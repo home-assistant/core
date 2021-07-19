@@ -234,7 +234,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
-        elif existing_entry:
+        if existing_entry:
             return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(title=host, data=config_data)
