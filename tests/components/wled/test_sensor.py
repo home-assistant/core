@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_BYTES,
-    ELECTRICAL_CURRENT_MILLIAMPERE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_UNKNOWN,
@@ -98,7 +98,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_LED_COUNT) == 30
     assert state.attributes.get(ATTR_MAX_POWER) == 850
     assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRICAL_CURRENT_MILLIAMPERE
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_MILLIAMPERE
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CURRENT
     assert state.state == "470"

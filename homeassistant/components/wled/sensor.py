@@ -10,7 +10,7 @@ from homeassistant.const import (
     DATA_BYTES,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
-    ELECTRICAL_CURRENT_MILLIAMPERE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
@@ -48,7 +48,7 @@ class WLEDEstimatedCurrentSensor(WLEDEntity, SensorEntity):
     """Defines a WLED estimated current sensor."""
 
     _attr_icon = "mdi:power"
-    _attr_unit_of_measurement = ELECTRICAL_CURRENT_MILLIAMPERE
+    _attr_unit_of_measurement = ELECTRIC_CURRENT_MILLIAMPERE
     _attr_device_class = DEVICE_CLASS_CURRENT
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
