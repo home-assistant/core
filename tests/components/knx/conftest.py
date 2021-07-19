@@ -85,7 +85,7 @@ class KNXTestKit:
     async def _assert_telegram(
         self,
         group_address: str,
-        payload: list[int | tuple[int, ...]] | None,
+        payload: int | tuple[int, ...] | None,
         apci_type: type[APCI],
     ) -> None:
         """Assert outgoing telegram. One by one in timely order."""
@@ -116,13 +116,13 @@ class KNXTestKit:
         await self._assert_telegram(group_address, None, GroupValueRead)
 
     async def assert_response(
-        self, group_address: str, payload: list[int | tuple[int, ...]]
+        self, group_address: str, payload: int | tuple[int, ...]
     ) -> None:
         """Assert outgoing GroupValueResponse telegram. One by one in timely order."""
         await self._assert_telegram(group_address, payload, GroupValueResponse)
 
     async def assert_write(
-        self, group_address: str, payload: list[int | tuple[int, ...]]
+        self, group_address: str, payload: int | tuple[int, ...]
     ) -> None:
         """Assert outgoing GroupValueWrite telegram. One by one in timely order."""
         await self._assert_telegram(group_address, payload, GroupValueWrite)
