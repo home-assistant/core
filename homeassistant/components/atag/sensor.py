@@ -37,14 +37,11 @@ class AtagSensor(AtagEntity, SensorEntity):
         """Initialize Atag sensor."""
         super().__init__(coordinator, SENSORS[sensor])
         self._attr_name = sensor
-        self._attr_icon = coordinator.data.report[self._id].icon
         if coordinator.data.report[self._id].sensorclass in [
             DEVICE_CLASS_PRESSURE,
             DEVICE_CLASS_TEMPERATURE,
         ]:
             self._attr_device_class = coordinator.data.report[self._id].sensorclass
-        else:
-            self._attr_device_class = None
         if coordinator.data.report[self._id].measure in [
             PRESSURE_BAR,
             TEMP_CELSIUS,
@@ -53,10 +50,13 @@ class AtagSensor(AtagEntity, SensorEntity):
             TIME_HOURS,
         ]:
             self._attr_unit_of_measurement = coordinator.data.report[self._id].measure
-        else:
-            self._attr_unit_of_measurement = None
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self.coordinator.data.report[self._id].state
+
+    @property
+    def icon(self):
+        """Return icon."""
+        return self.coordinator.data.report[self._id].icon
