@@ -55,7 +55,7 @@ VALVE_TYPE = {
 }
 
 
-ACTIVATE_ONLY_SWITCH_DOMAINS = {"automation", "scene", "script"}
+ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
 
 
 @TYPES.register("Outlet")
