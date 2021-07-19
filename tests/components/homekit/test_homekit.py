@@ -648,6 +648,7 @@ async def test_homekit_reset_accessories(hass, mock_zeroconf):
         await async_init_entry(hass, entry)
 
         acc_mock = MagicMock()
+        acc_mock.entity_id = entity_id
         aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: acc_mock}
         homekit.status = STATUS_RUNNING
@@ -663,6 +664,45 @@ async def test_homekit_reset_accessories(hass, mock_zeroconf):
         assert hk_driver_config_changed.call_count == 2
         assert mock_add_accessory.called
         homekit.status = STATUS_READY
+
+
+async def test_homekit_reset_accessories_not_supported(hass, mock_zeroconf):
+    """Test resetting HomeKit accessories with an unsupported entity."""
+    await async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "not_supported.demo"
+    hass.states.async_set("not_supported.demo", "on")
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
+        "pyhap.accessory.Bridge.add_accessory"
+    ) as mock_add_accessory, patch(
+        "pyhap.accessory_driver.AccessoryDriver.config_changed"
+    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ):
+        await async_init_entry(hass, entry)
+
+        acc_mock = MagicMock()
+        acc_mock.entity_id = entity_id
+        aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
+        homekit.bridge.accessories = {aid: acc_mock}
+        homekit.status = STATUS_RUNNING
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_HOMEKIT_RESET_ACCESSORY,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        assert hk_driver_config_changed.call_count == 2
+        assert not mock_add_accessory.called
+        assert len(homekit.bridge.accessories) == 0
+        homekit.status = STATUS_STOPPED
 
 
 async def test_homekit_reset_accessories_state_missing(hass, mock_zeroconf):
@@ -684,6 +724,7 @@ async def test_homekit_reset_accessories_state_missing(hass, mock_zeroconf):
         await async_init_entry(hass, entry)
 
         acc_mock = MagicMock()
+        acc_mock.entity_id = entity_id
         aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: acc_mock}
         homekit.status = STATUS_RUNNING
@@ -696,8 +737,108 @@ async def test_homekit_reset_accessories_state_missing(hass, mock_zeroconf):
         )
         await hass.async_block_till_done()
 
-        assert hk_driver_config_changed.call_count == 2
+        assert hk_driver_config_changed.call_count == 0
         assert not mock_add_accessory.called
+        homekit.status = STATUS_STOPPED
+
+
+async def test_homekit_reset_single_accessory(hass, mock_zeroconf):
+    """Test resetting HomeKit single accessory."""
+    await async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "light.demo"
+    hass.states.async_set("light.demo", "on")
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
+        "pyhap.accessory_driver.AccessoryDriver.config_changed"
+    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ):
+        await async_init_entry(hass, entry)
+
+        homekit.status = STATUS_RUNNING
+        acc_mock = MagicMock()
+        acc_mock.entity_id = entity_id
+        homekit.driver.accessory = acc_mock
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_HOMEKIT_RESET_ACCESSORY,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        assert hk_driver_config_changed.call_count == 1
+        homekit.status = STATUS_READY
+
+
+async def test_homekit_reset_single_accessory_unsupported(hass, mock_zeroconf):
+    """Test resetting HomeKit single accessory with an unsupported entity."""
+    await async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "not_supported.demo"
+    hass.states.async_set("not_supported.demo", "on")
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
+        "pyhap.accessory_driver.AccessoryDriver.config_changed"
+    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ):
+        await async_init_entry(hass, entry)
+
+        homekit.status = STATUS_RUNNING
+        acc_mock = MagicMock()
+        acc_mock.entity_id = entity_id
+        homekit.driver.accessory = acc_mock
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_HOMEKIT_RESET_ACCESSORY,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        assert hk_driver_config_changed.call_count == 0
+        homekit.status = STATUS_STOPPED
+
+
+async def test_homekit_reset_single_accessory_state_missing(hass, mock_zeroconf):
+    """Test resetting HomeKit single accessory when the state goes missing."""
+    await async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entity_id = "light.demo"
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
+        "pyhap.accessory_driver.AccessoryDriver.config_changed"
+    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ):
+        await async_init_entry(hass, entry)
+
+        homekit.status = STATUS_RUNNING
+        acc_mock = MagicMock()
+        homekit.driver.accessory = acc_mock
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_HOMEKIT_RESET_ACCESSORY,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        assert hk_driver_config_changed.call_count == 0
         homekit.status = STATUS_STOPPED
 
 
