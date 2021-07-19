@@ -15,12 +15,12 @@ from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -44,8 +44,20 @@ INVERTER_MODES = (
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_AC_voltage": ["gridvoltage", "Grid Voltage", VOLT, "mdi:current-ac", None],
-    "current_DC_voltage": ["dcvoltage", "DC Voltage", VOLT, "mdi:current-dc", None],
+    "current_AC_voltage": [
+        "gridvoltage",
+        "Grid Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        "mdi:current-ac",
+        None,
+    ],
+    "current_DC_voltage": [
+        "dcvoltage",
+        "DC Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        "mdi:current-dc",
+        None,
+    ],
     "current_frequency": [
         "gridfrequency",
         "Grid Frequency",
@@ -137,7 +149,7 @@ SENSOR_TYPES = {
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "mdi:solar-panel",
         None,
         None,

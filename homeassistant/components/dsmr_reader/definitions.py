@@ -8,9 +8,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
-    VOLT,
     VOLUME_CUBIC_METERS,
 )
 
@@ -112,19 +112,19 @@ DEFINITIONS = {
         "name": "Current voltage L1",
         "enable_default": True,
         "device_class": DEVICE_CLASS_VOLTAGE,
-        "unit": VOLT,
+        "unit": ELECTRIC_POTENTIAL_VOLT,
     },
     "dsmr/reading/phase_voltage_l2": {
         "name": "Current voltage L2",
         "enable_default": True,
         "device_class": DEVICE_CLASS_VOLTAGE,
-        "unit": VOLT,
+        "unit": ELECTRIC_POTENTIAL_VOLT,
     },
     "dsmr/reading/phase_voltage_l3": {
         "name": "Current voltage L3",
         "enable_default": True,
         "device_class": DEVICE_CLASS_VOLTAGE,
-        "unit": VOLT,
+        "unit": ELECTRIC_POTENTIAL_VOLT,
     },
     "dsmr/reading/phase_power_current_l1": {
         "name": "Phase power current L1",

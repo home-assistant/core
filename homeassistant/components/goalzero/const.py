@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -28,7 +29,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
-    VOLT,
 )
 
 ATTR_DEFAULT_ENABLED = "default_enabled"
@@ -101,7 +101,7 @@ SENSOR_DICT = {
     "volts": {
         ATTR_NAME: "Volts",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-        ATTR_UNIT_OF_MEASUREMENT: VOLT,
+        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
         ATTR_DEFAULT_ENABLED: False,
     },
     "socPercent": {

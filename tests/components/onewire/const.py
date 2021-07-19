@@ -15,13 +15,13 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_MBAR,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
-    VOLT,
 )
 
 MOCK_OWPROXY_DEVICES = {
@@ -347,7 +347,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unique_id": "/26.111111111111/VAD",
                 "injected_value": b"     2.97",
                 "result": "3.0",
-                "unit": VOLT,
+                "unit": ELECTRIC_POTENTIAL_VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
                 "disabled": True,
             },
@@ -356,7 +356,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unique_id": "/26.111111111111/VDD",
                 "injected_value": b"    4.74",
                 "result": "4.7",
-                "unit": VOLT,
+                "unit": ELECTRIC_POTENTIAL_VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
                 "disabled": True,
             },

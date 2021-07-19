@@ -22,13 +22,13 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_KILO_WATT,
     POWER_WATT,
     TEMP_CELSIUS,
-    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
@@ -84,7 +84,7 @@ INVERTER_SENSOR_TYPES = {
     ),
     "inverter_voltage_input_1": (
         "Input 1 voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vpv1",
         {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -102,7 +102,7 @@ INVERTER_SENSOR_TYPES = {
     ),
     "inverter_voltage_input_2": (
         "Input 2 voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vpv2",
         {"round": 1, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -120,7 +120,7 @@ INVERTER_SENSOR_TYPES = {
     ),
     "inverter_voltage_input_3": (
         "Input 3 voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vpv3",
         {"round": 1, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -144,7 +144,7 @@ INVERTER_SENSOR_TYPES = {
     ),
     "inverter_reactive_voltage": (
         "Reactive voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vacr",
         {"round": 1, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -280,13 +280,13 @@ STORAGE_SENSOR_TYPES = {
     ),
     "storage_grid_voltage": (
         "AC input voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vGrid",
         {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
     "storage_pv_charging_voltage": (
         "PV charging voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vpv",
         {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -298,7 +298,7 @@ STORAGE_SENSOR_TYPES = {
     ),
     "storage_output_voltage": (
         "Output voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "outPutVolt",
         {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -334,7 +334,7 @@ STORAGE_SENSOR_TYPES = {
     ),
     "storage_battery_voltage": (
         "Battery voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vBat",
         {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -398,19 +398,19 @@ MIX_SENSOR_TYPES = {
     ),
     "mix_battery_voltage": (
         "Battery voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vbat",
         {"device_class": DEVICE_CLASS_VOLTAGE},
     ),
     "mix_pv1_voltage": (
         "PV1 voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vpv1",
         {"device_class": DEVICE_CLASS_VOLTAGE},
     ),
     "mix_pv2_voltage": (
         "PV2 voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vpv2",
         {"device_class": DEVICE_CLASS_VOLTAGE},
     ),
@@ -490,7 +490,7 @@ MIX_SENSOR_TYPES = {
     ),
     "mix_grid_voltage": (
         "Grid voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "vAc1",
         {"device_class": DEVICE_CLASS_VOLTAGE},
     ),

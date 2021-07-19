@@ -27,6 +27,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_CENTIMETERS,
@@ -44,7 +45,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    VOLT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -152,7 +152,7 @@ SENSOR_UNIT_MAP = {
     hc.TEMP_CELSIUS: TEMP_CELSIUS,
     hc.TEMP_FAHRENHEIT: TEMP_FAHRENHEIT,
     hc.TEMP_KELVIN: TEMP_KELVIN,
-    hc.VOLT: VOLT,
+    hc.VOLT: ELECTRIC_POTENTIAL_VOLT,
 }
 
 

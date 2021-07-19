@@ -13,6 +13,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
@@ -24,7 +25,6 @@ from homeassistant.const import (
     SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    VOLT,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
@@ -59,7 +59,7 @@ SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
         "S_VIBRATION": [FREQUENCY_HERTZ, None, None],
         "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny", None],
     },
-    "V_VOLTAGE": [VOLT, "mdi:flash", None],
+    "V_VOLTAGE": [ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
     "V_CURRENT": [ELECTRIC_CURRENT_AMPERE, "mdi:flash-auto", None],
     "V_PH": ["pH", None, None],
     "V_ORP": [ELECTRIC_POTENTIAL_MILLIVOLT, None, None],

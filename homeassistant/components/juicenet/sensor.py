@@ -7,11 +7,11 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    VOLT,
 )
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
@@ -25,7 +25,7 @@ SENSOR_TYPES = {
         DEVICE_CLASS_TEMPERATURE,
         STATE_CLASS_MEASUREMENT,
     ],
-    "voltage": ["Voltage", VOLT, DEVICE_CLASS_VOLTAGE, None],
+    "voltage": ["Voltage", ELECTRIC_POTENTIAL_VOLT, DEVICE_CLASS_VOLTAGE, None],
     "amps": [
         "Amps",
         ELECTRIC_CURRENT_AMPERE,

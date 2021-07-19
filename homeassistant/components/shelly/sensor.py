@@ -5,12 +5,12 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    VOLT,
 )
 
 from .const import SHAIR_MAX_WORK_HOURS
@@ -72,7 +72,7 @@ SENSORS = {
     ),
     ("emeter", "voltage"): BlockAttributeDescription(
         name="Voltage",
-        unit=VOLT,
+        unit=ELECTRIC_POTENTIAL_VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
@@ -186,7 +186,7 @@ SENSORS = {
     ),
     ("adc", "adc"): BlockAttributeDescription(
         name="ADC",
-        unit=VOLT,
+        unit=ELECTRIC_POTENTIAL_VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,

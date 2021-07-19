@@ -404,7 +404,7 @@ POWER_KILO_WATT: Final = "kW"
 POWER_VOLT_AMPERE: Final = "VA"
 
 # Voltage units
-VOLT: Final = "V"
+ELECTRIC_POTENTIAL_VOLT: Final = "V"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"

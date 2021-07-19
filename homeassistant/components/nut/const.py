@@ -8,13 +8,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    VOLT,
 )
 
 DOMAIN = "nut"
@@ -121,15 +121,30 @@ SENSOR_TYPES = {
         None,
     ],
     "battery.charger.status": ["Charging Status", "", "mdi:information-outline", None],
-    "battery.voltage": ["Battery Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
-    "battery.voltage.nominal": [
-        "Nominal Battery Voltage",
-        VOLT,
+    "battery.voltage": [
+        "Battery Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
         None,
         DEVICE_CLASS_VOLTAGE,
     ],
-    "battery.voltage.low": ["Low Battery Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
-    "battery.voltage.high": ["High Battery Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "battery.voltage.nominal": [
+        "Nominal Battery Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
+    "battery.voltage.low": [
+        "Low Battery Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
+    "battery.voltage.high": [
+        "High Battery Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
     "battery.capacity": ["Battery Capacity", "Ah", "mdi:flash", None],
     "battery.current": [
         "Battery Current",
@@ -184,18 +199,33 @@ SENSOR_TYPES = {
         "mdi:information-outline",
         None,
     ],
-    "input.transfer.low": ["Low Voltage Transfer", VOLT, None, DEVICE_CLASS_VOLTAGE],
-    "input.transfer.high": ["High Voltage Transfer", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "input.transfer.low": [
+        "Low Voltage Transfer",
+        ELECTRIC_POTENTIAL_VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
+    "input.transfer.high": [
+        "High Voltage Transfer",
+        ELECTRIC_POTENTIAL_VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
     "input.transfer.reason": [
         "Voltage Transfer Reason",
         "",
         "mdi:information-outline",
         None,
     ],
-    "input.voltage": ["Input Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "input.voltage": [
+        "Input Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
     "input.voltage.nominal": [
         "Nominal Input Voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         None,
         DEVICE_CLASS_VOLTAGE,
     ],
@@ -219,10 +249,15 @@ SENSOR_TYPES = {
         "mdi:flash",
         None,
     ],
-    "output.voltage": ["Output Voltage", VOLT, None, DEVICE_CLASS_VOLTAGE],
+    "output.voltage": [
+        "Output Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        None,
+        DEVICE_CLASS_VOLTAGE,
+    ],
     "output.voltage.nominal": [
         "Nominal Output Voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         None,
         DEVICE_CLASS_VOLTAGE,
     ],
