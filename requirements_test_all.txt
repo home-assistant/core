@@ -546,7 +546,7 @@ millheater==0.5.0
 minio==4.0.9
 
 # homeassistant.components.motion_blinds
-motionblinds==0.5.3
+motionblinds==0.5.4
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.9
