@@ -13,7 +13,7 @@ from .const import DOMAIN
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Energy."""
     websocket_api.async_setup(hass)
-    frontend.async_register_built_in_panel(hass, DOMAIN, DOMAIN, "hass:flash")
+    frontend.async_register_built_in_panel(hass, DOMAIN, DOMAIN, "mdi:lightning-bolt")
 
     hass.async_create_task(
         discovery.async_load_platform(hass, "sensor", DOMAIN, {}, config)

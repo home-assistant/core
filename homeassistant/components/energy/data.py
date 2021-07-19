@@ -118,10 +118,10 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required("stat_energy_from"): str,
-            vol.Required("stat_cost"): vol.Any(None, str),
-            vol.Required("entity_energy_from"): vol.Any(None, str),
-            vol.Required("entity_energy_price"): vol.Any(None, str),
-            vol.Required("number_energy_price"): vol.Any(None, vol.Coerce(float)),
+            vol.Optional("stat_cost"): vol.Any(None, str),
+            vol.Optional("entity_energy_from"): vol.Any(None, str),
+            vol.Optional("entity_energy_price"): vol.Any(None, str),
+            vol.Optional("number_energy_price"): vol.Any(None, vol.Coerce(float)),
         }
     ),
     _flow_from_ensure_single_price,
@@ -131,10 +131,10 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
 FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("stat_energy_to"): str,
-        vol.Required("stat_compensation"): vol.Any(None, str),
-        vol.Required("entity_energy_to"): vol.Any(None, str),
-        vol.Required("entity_energy_price"): vol.Any(None, str),
-        vol.Required("number_energy_price"): vol.Any(None, vol.Coerce(float)),
+        vol.Optional("stat_compensation"): vol.Any(None, str),
+        vol.Optional("entity_energy_to"): vol.Any(None, str),
+        vol.Optional("entity_energy_price"): vol.Any(None, str),
+        vol.Optional("number_energy_price"): vol.Any(None, vol.Coerce(float)),
     }
 )
 

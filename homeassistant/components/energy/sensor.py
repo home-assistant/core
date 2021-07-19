@@ -102,7 +102,7 @@ async def _process_manager_data(
                 untyped_flow = cast(dict, flow)
 
                 # No need to create an entity if we already have a cost stat
-                if untyped_flow[adapter.total_money_key] is not None:
+                if untyped_flow.get(adapter.total_money_key) is not None:
                     continue
 
                 # This is unique among all flow_from's
@@ -110,9 +110,9 @@ async def _process_manager_data(
 
                 # Make sure the right data is there
                 # If the entity existed, we don't pop it from to_remove so it's removed
-                if untyped_flow[adapter.entity_energy_key] is None or (
-                    untyped_flow["entity_energy_price"] is None
-                    and untyped_flow["number_energy_price"] is None
+                if untyped_flow.get(adapter.entity_energy_key) is None or (
+                    untyped_flow.get("entity_energy_price") is None
+                    and untyped_flow.get("number_energy_price") is None
                 ):
                     continue
 
