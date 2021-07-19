@@ -162,7 +162,7 @@ def deflection_entities_list(
 
 
 def port_entities_list(
-    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str, local_ip: str
 ) -> list[FritzBoxPortSwitch]:
     """Get list of port forwarding entities."""
 
@@ -195,9 +195,6 @@ def port_entities_list(
         port_forwards_count,
     )
 
-    local_ip = fritzbox_tools.hass.loop.run_until_complete(
-        async_get_source_ip(fritzbox_tools.hass, target_ip=fritzbox_tools.host)
-    )
     _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
 
     for i in range(port_forwards_count):
@@ -293,12 +290,15 @@ def profile_entities_list(
 
 
 def all_entities_list(
-    fritzbox_tools: FritzBoxTools, device_friendly_name: str, data_fritz: FritzData
+    fritzbox_tools: FritzBoxTools,
+    device_friendly_name: str,
+    data_fritz: FritzData,
+    local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
-        *port_entities_list(fritzbox_tools, device_friendly_name),
+        *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
         *wifi_entities_list(fritzbox_tools, device_friendly_name),
         *profile_entities_list(fritzbox_tools, data_fritz),
     ]
@@ -314,8 +314,12 @@ async def async_setup_entry(
 
     _LOGGER.debug("Fritzbox services: %s", fritzbox_tools.connection.services)
 
+    local_ip = await async_get_source_ip(
+        fritzbox_tools.hass, target_ip=fritzbox_tools.host
+    )
+
     entities_list = await hass.async_add_executor_job(
-        all_entities_list, fritzbox_tools, entry.title, data_fritz
+        all_entities_list, fritzbox_tools, entry.title, data_fritz, local_ip
     )
 
     async_add_entities(entities_list)
