@@ -2423,7 +2423,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.32.1
+zeroconf==0.33.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.59
