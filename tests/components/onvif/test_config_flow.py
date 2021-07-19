@@ -41,6 +41,7 @@ def setup_mock_onvif_camera(
     with_h264=True,
     two_profiles=False,
     with_interfaces=True,
+    with_interfaces_not_implemented=False,
     with_serial=True,
 ):
     """Prepare mock onvif.ONVIFCamera."""
@@ -54,9 +55,14 @@ def setup_mock_onvif_camera(
     interface.Enabled = True
     interface.Info.HwAddress = MAC
 
-    devicemgmt.GetNetworkInterfaces = AsyncMock(
-        return_value=[interface] if with_interfaces else []
-    )
+    if with_interfaces_not_implemented:
+        devicemgmt.GetNetworkInterfaces = AsyncMock(
+            side_effect=Fault("not implemented")
+        )
+    else:
+        devicemgmt.GetNetworkInterfaces = AsyncMock(
+            return_value=[interface] if with_interfaces else []
+        )
 
     media_service = MagicMock()
 
@@ -137,7 +143,7 @@ async def setup_onvif_integration(
     options=None,
     unique_id=MAC,
     entry_id="1",
-    source="user",
+    source=config_entries.SOURCE_USER,
 ):
     """Create an ONVIF config entry."""
     if not config:
@@ -153,7 +159,6 @@ async def setup_onvif_integration(
         domain=config_flow.DOMAIN,
         source=source,
         data={**config},
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=options or {},
         entry_id=entry_id,
         unique_id=unique_id,
@@ -180,7 +185,7 @@ async def test_flow_discovered_devices(hass):
     """Test that config flow works for discovered devices."""
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -198,7 +203,7 @@ async def test_flow_discovered_devices(hass):
         setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"], user_input={"auto": True}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -210,7 +215,7 @@ async def test_flow_discovered_devices(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "auth"
+        assert result["step_id"] == "configure"
 
         with patch(
             "homeassistant.components.onvif.async_setup", return_value=True
@@ -245,7 +250,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
     await setup_onvif_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -263,7 +268,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
         setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"], user_input={"auto": True}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -276,7 +281,37 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "manual_input"
+        assert result["step_id"] == "configure"
+
+
+async def test_flow_discovered_no_device(hass):
+    """Test that config flow discovery no device."""
+    await setup_onvif_integration(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera, patch(
+        "homeassistant.components.onvif.config_flow.wsdiscovery"
+    ) as mock_discovery, patch(
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera)
+        mock_discovery.return_value = []
+        setup_mock_device(mock_device)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"auto": True}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "configure"
 
 
 async def test_flow_discovery_ignore_existing_and_abort(hass):
@@ -296,7 +331,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
     )
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -314,12 +349,12 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
         setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"], user_input={"auto": True}
         )
 
         # It should skip to manual entry if the only devices are already configured
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "manual_input"
+        assert result["step_id"] == "configure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -327,15 +362,6 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
                 config_flow.CONF_NAME: NAME,
                 config_flow.CONF_HOST: HOST,
                 config_flow.CONF_PORT: PORT,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "auth"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
                 config_flow.CONF_USERNAME: USERNAME,
                 config_flow.CONF_PASSWORD: PASSWORD,
             },
@@ -348,7 +374,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
 async def test_flow_manual_entry(hass):
     """Test that config flow works for discovered devices."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -368,23 +394,11 @@ async def test_flow_manual_entry(hass):
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={},
+            user_input={"auto": False},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "manual_input"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                config_flow.CONF_NAME: NAME,
-                config_flow.CONF_HOST: HOST,
-                config_flow.CONF_PORT: PORT,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "auth"
+        assert result["step_id"] == "configure"
 
         with patch(
             "homeassistant.components.onvif.async_setup", return_value=True
@@ -394,6 +408,9 @@ async def test_flow_manual_entry(hass):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={
+                    config_flow.CONF_NAME: NAME,
+                    config_flow.CONF_HOST: HOST,
+                    config_flow.CONF_PORT: PORT,
                     config_flow.CONF_USERNAME: USERNAME,
                     config_flow.CONF_PASSWORD: PASSWORD,
                 },
@@ -405,6 +422,47 @@ async def test_flow_manual_entry(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == f"{NAME} - {MAC}"
+        assert result["data"] == {
+            config_flow.CONF_NAME: NAME,
+            config_flow.CONF_HOST: HOST,
+            config_flow.CONF_PORT: PORT,
+            config_flow.CONF_USERNAME: USERNAME,
+            config_flow.CONF_PASSWORD: PASSWORD,
+        }
+
+
+async def test_flow_import_not_implemented(hass):
+    """Test that config flow uses Serial Number when no MAC available."""
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera, patch(
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device, patch(
+        "homeassistant.components.onvif.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onvif.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        setup_mock_onvif_camera(mock_onvif_camera, with_interfaces_not_implemented=True)
+        setup_mock_device(mock_device)
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                config_flow.CONF_NAME: NAME,
+                config_flow.CONF_HOST: HOST,
+                config_flow.CONF_PORT: PORT,
+                config_flow.CONF_USERNAME: USERNAME,
+                config_flow.CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == f"{NAME} - {SERIAL_NUMBER}"
         assert result["data"] == {
             config_flow.CONF_NAME: NAME,
             config_flow.CONF_HOST: HOST,
@@ -552,7 +610,7 @@ async def test_flow_import_onvif_auth_error(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "auth"
+        assert result["step_id"] == "configure"
         assert result["errors"]["base"] == "cannot_connect"
 
 

@@ -1,4 +1,6 @@
 """Platform for sensor integration."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
@@ -38,7 +40,8 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
         precision: int = 0,
-    ):
+        state_class: str | None = None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._user_id = user_id
@@ -49,6 +52,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._icon = icon
         self._precision = precision
+        self._attr_state_class = state_class
 
     @property
     def unique_id(self) -> str:

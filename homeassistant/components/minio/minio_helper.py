@@ -1,14 +1,13 @@
 """Minio helper methods."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 import json
 import logging
 from queue import Queue
 import re
 import threading
 import time
-from typing import Iterator
 from urllib.parse import unquote
 
 from minio import Minio
@@ -90,7 +89,7 @@ class MinioEventThread(threading.Thread):
         prefix: str,
         suffix: str,
         events: list[str],
-    ):
+    ) -> None:
         """Copy over all Minio client options."""
         super().__init__()
         self._queue = queue

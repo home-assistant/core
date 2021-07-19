@@ -35,8 +35,6 @@ async def test_form_source_user(hass):
         "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ), patch(
-        "homeassistant.components.powerwall.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.powerwall.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,7 +47,6 @@ async def test_form_source_user(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "My site"
     assert result2["data"] == VALID_CONFIG
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -162,7 +159,9 @@ async def test_already_configured_with_ignored(hass):
     """Test ignored entries do not break checking for existing entries."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -197,8 +196,6 @@ async def test_dhcp_discovery(hass):
         "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ), patch(
-        "homeassistant.components.powerwall.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.powerwall.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -211,7 +208,6 @@ async def test_dhcp_discovery(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Some site"
     assert result2["data"] == VALID_CONFIG
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -226,7 +222,7 @@ async def test_form_reauth(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=entry.data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -237,8 +233,6 @@ async def test_form_reauth(hass):
         "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ), patch(
-        "homeassistant.components.powerwall.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.powerwall.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -253,5 +247,4 @@ async def test_form_reauth(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

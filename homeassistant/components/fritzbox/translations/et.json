@@ -10,7 +10,7 @@
         "error": {
             "invalid_auth": "Tuvastamise viga"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

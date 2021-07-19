@@ -5,7 +5,6 @@ import random
 from unittest.mock import patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.components import group
@@ -19,7 +18,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -527,6 +526,33 @@ def test_timestamp_local(hass):
         )
 
 
+@pytest.mark.parametrize(
+    "input",
+    (
+        "2021-06-03 13:00:00.000000+00:00",
+        "1986-07-09T12:00:00Z",
+        "2016-10-19 15:22:05.588122+0100",
+        "2016-10-19",
+        "2021-01-01 00:00:01",
+        "invalid",
+    ),
+)
+def test_as_datetime(hass, input):
+    """Test converting a timestamp string to a date object."""
+    expected = dt_util.parse_datetime(input)
+    if expected is not None:
+        expected = str(expected)
+
+    assert (
+        template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+        == expected
+    )
+    assert (
+        template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+        == expected
+    )
+
+
 def test_as_local(hass):
     """Test converting time to local."""
 
@@ -763,7 +789,7 @@ def test_render_with_possible_json_value_non_string_value(hass):
         hass,
     )
     value = datetime(2019, 1, 18, 12, 13, 14)
-    expected = str(pytz.utc.localize(value))
+    expected = str(value.replace(tzinfo=dt_util.UTC))
     assert tpl.async_render_with_possible_json_value(value) == expected
 
 
@@ -1504,7 +1530,7 @@ async def test_device_entities(hass):
     # Test device without entities
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
     assert_result_info(info, [])
@@ -2473,7 +2499,7 @@ async def test_no_result_parsing(hass):
 
 
 async def test_is_static_still_ast_evals(hass):
-    """Test is_static still convers to native type."""
+    """Test is_static still converts to native type."""
     tpl = template.Template("[1, 2]", hass)
     assert tpl.is_static
     assert tpl.async_render() == [1, 2]

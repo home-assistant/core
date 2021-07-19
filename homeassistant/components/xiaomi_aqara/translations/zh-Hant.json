@@ -12,7 +12,7 @@
             "invalid_key": "\u7db2\u95dc\u5bc6\u9470\u7121\u6548",
             "invalid_mac": "\u7121\u6548\u7684 Mac \u4f4d\u5740"
         },
-        "flow_title": "\u5c0f\u7c73 Aqara \u7db2\u95dc\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {

@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import dataclasses
 from datetime import datetime
 import logging
-from typing import Awaitable, Callable
+from typing import Callable
 
 import aiohttp
 import async_timeout
@@ -215,6 +216,8 @@ async def async_check_can_reach_url(
         return "ok"
     except aiohttp.ClientError:
         data = {"type": "failed", "error": "unreachable"}
-        if more_info is not None:
-            data["more_info"] = more_info
-        return data
+    except asyncio.TimeoutError:
+        data = {"type": "failed", "error": "timeout"}
+    if more_info is not None:
+        data["more_info"] = more_info
+    return data

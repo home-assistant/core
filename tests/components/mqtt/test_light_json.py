@@ -93,6 +93,9 @@ from unittest.mock import call, patch
 import pytest
 
 from homeassistant.components import light
+from homeassistant.components.mqtt.light.schema_basic import (
+    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -121,6 +124,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -480,12 +484,12 @@ async def test_controlling_state_via_topic2(hass, mqtt_mock, caplog):
     assert state.attributes.get("color_mode") == "rgbww"
     assert state.attributes.get("color_temp") is None
     assert state.attributes.get("effect") == "colorloop"
-    assert state.attributes.get("hs_color") is None
-    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get("hs_color") == (20.552, 70.98)
+    assert state.attributes.get("rgb_color") == (255, 136, 74)
     assert state.attributes.get("rgbw_color") is None
     assert state.attributes.get("rgbww_color") == (255, 128, 64, 32, 16)
     assert state.attributes.get("white_value") is None
-    assert state.attributes.get("xy_color") is None
+    assert state.attributes.get("xy_color") == (0.571, 0.361)
 
     # Light turned off
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"OFF"}')
@@ -870,11 +874,11 @@ async def test_sending_mqtt_commands_and_optimistic2(hass, mqtt_mock):
     assert state.attributes["brightness"] == 75
     assert state.attributes["color_mode"] == "rgbw"
     assert state.attributes["rgbw_color"] == (255, 128, 0, 123)
-    assert "hs_color" not in state.attributes
-    assert "rgb_color" not in state.attributes
+    assert state.attributes["hs_color"] == (30.0, 67.451)
+    assert state.attributes["rgb_color"] == (255, 169, 83)
     assert "rgbww_color" not in state.attributes
     assert "white_value" not in state.attributes
-    assert "xy_color" not in state.attributes
+    assert state.attributes["xy_color"] == (0.526, 0.393)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator(
@@ -892,11 +896,11 @@ async def test_sending_mqtt_commands_and_optimistic2(hass, mqtt_mock):
     assert state.attributes["brightness"] == 75
     assert state.attributes["color_mode"] == "rgbww"
     assert state.attributes["rgbww_color"] == (255, 128, 0, 45, 32)
-    assert "hs_color" not in state.attributes
-    assert "rgb_color" not in state.attributes
+    assert state.attributes["hs_color"] == (29.872, 92.157)
+    assert state.attributes["rgb_color"] == (255, 137, 20)
     assert "rgbw_color" not in state.attributes
     assert "white_value" not in state.attributes
-    assert "xy_color" not in state.attributes
+    assert state.attributes["xy_color"] == (0.596, 0.382)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator(
@@ -945,6 +949,7 @@ async def test_sending_hs_color(hass, mqtt_mock):
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
                 "hs": True,
+                "white_value": True,
             }
         },
     )
@@ -1139,6 +1144,7 @@ async def test_sending_rgb_color_with_brightness(hass, mqtt_mock):
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
                 "rgb": True,
+                "white_value": True,
             }
         },
     )
@@ -1209,6 +1215,7 @@ async def test_sending_rgb_color_with_scaled_brightness(hass, mqtt_mock):
                 "brightness": True,
                 "brightness_scale": 100,
                 "rgb": True,
+                "white_value": True,
             }
         },
     )
@@ -1278,6 +1285,7 @@ async def test_sending_xy_color(hass, mqtt_mock):
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
                 "xy": True,
+                "white_value": True,
             }
         },
     )
@@ -1707,6 +1715,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, MQTT_LIGHT_ATTRIBUTES_BLOCKED
     )
 
 

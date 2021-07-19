@@ -1,16 +1,32 @@
 """Support for 1-Wire environment switches."""
+from __future__ import annotations
+
 import logging
 import os
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_TYPE_OWSERVER, DOMAIN, SWITCH_TYPE_LATCH, SWITCH_TYPE_PIO
-from .onewire_entities import OneWireProxyEntity
+from .model import DeviceComponentDescription
+from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
-DEVICE_SWITCHES = {
+DEVICE_SWITCHES: dict[str, list[DeviceComponentDescription]] = {
     # Family : { owfs path }
+    "05": [
+        {
+            "path": "PIO",
+            "name": "PIO",
+            "type": SWITCH_TYPE_PIO,
+            "default_disabled": True,
+        },
+    ],
     "12": [
         {
             "path": "PIO.A",
@@ -140,19 +156,26 @@ DEVICE_SWITCHES = {
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up 1-Wire platform."""
     # Only OWServer implementation works with switches
     if config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER:
-        onewirehub = hass.data[DOMAIN][config_entry.unique_id]
+        onewirehub = hass.data[DOMAIN][config_entry.entry_id]
 
         entities = await hass.async_add_executor_job(get_entities, onewirehub)
         async_add_entities(entities, True)
 
 
-def get_entities(onewirehub: OneWireHub):
+def get_entities(onewirehub: OneWireHub) -> list[OneWireBaseEntity]:
     """Get a list of entities."""
-    entities = []
+    if not onewirehub.devices:
+        return []
+
+    entities: list[OneWireBaseEntity] = []
 
     for device in onewirehub.devices:
         family = device["family"]
@@ -162,7 +185,7 @@ def get_entities(onewirehub: OneWireHub):
         if family not in DEVICE_SWITCHES:
             continue
 
-        device_info = {
+        device_info: DeviceInfo = {
             "identifiers": {(DOMAIN, device_id)},
             "manufacturer": "Maxim Integrated",
             "model": device_type,
@@ -190,14 +213,14 @@ class OneWireProxySwitch(OneWireProxyEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sensor is on."""
-        return self._state
+        return bool(self._state)
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._write_value_ownet(b"1")
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._write_value_ownet(b"0")

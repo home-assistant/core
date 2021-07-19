@@ -9,5 +9,10 @@
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a Wemo\uff1f"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo \u6309\u9215\u6309\u4e0b 2 \u79d2"
+        }
     }
 }

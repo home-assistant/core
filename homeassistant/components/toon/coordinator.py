@@ -27,7 +27,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
 
     def __init__(
         self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
-    ):
+    ) -> None:
         """Initialize global Toon data updater."""
         self.session = session
         self.entry = entry

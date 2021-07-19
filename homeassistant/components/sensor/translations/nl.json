@@ -13,7 +13,6 @@
             "is_pressure": "Huidige {entity_name} druk",
             "is_signal_strength": "Huidige {entity_name} signaalsterkte",
             "is_temperature": "Huidige {entity_name} temperatuur",
-            "is_timestamp": "Huidige {entity_name} tijdstip",
             "is_value": "Huidige {entity_name} waarde",
             "is_voltage": "Huidige {entity_name} spanning"
         },
@@ -30,7 +29,6 @@
             "pressure": "{entity_name} druk gewijzigd",
             "signal_strength": "{entity_name} signaalsterkte gewijzigd",
             "temperature": "{entity_name} temperatuur gewijzigd",
-            "timestamp": "{entity_name} tijdstip gewijzigd",
             "value": "{entity_name} waarde gewijzigd",
             "voltage": "{entity_name} voltage verandert"
         }

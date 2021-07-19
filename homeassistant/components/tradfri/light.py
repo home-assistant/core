@@ -116,7 +116,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
         if device.light_control.can_set_dimmer:
             _features |= SUPPORT_BRIGHTNESS
         if device.light_control.can_set_color:
-            _features |= SUPPORT_COLOR
+            _features |= SUPPORT_COLOR | SUPPORT_COLOR_TEMP
         if device.light_control.can_set_temp:
             _features |= SUPPORT_COLOR_TEMP
         self._features = _features
@@ -185,8 +185,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
         dimmer_command = None
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            if brightness > 254:
-                brightness = 254
+            brightness = min(brightness, 254)
             dimmer_data = {
                 ATTR_DIMMER: brightness,
                 ATTR_TRANSITION_TIME: transition_time,

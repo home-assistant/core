@@ -1,6 +1,5 @@
 {
     "config": {
-        "flow_title": "Nightscout",
         "step": {
             "user": {
                 "title": "Enter your Nightscout server information.",

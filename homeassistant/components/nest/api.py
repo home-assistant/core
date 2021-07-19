@@ -22,7 +22,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
         client_id: str,
         client_secret: str,
-    ):
+    ) -> None:
         """Initialize Google Nest Device Access auth."""
         super().__init__(websession, API_URL)
         self._oauth_session = oauth_session

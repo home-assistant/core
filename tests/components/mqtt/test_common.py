@@ -7,6 +7,7 @@ from unittest.mock import ANY, patch
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
+from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -24,7 +25,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
 }
 
 DEFAULT_CONFIG_DEVICE_INFO_MAC = {
-    "connections": [["mac", "02:5b:26:a8:dc:12"]],
+    "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
@@ -493,6 +494,34 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     assert state.attributes.get("val") == "100"
 
 
+async def help_test_setting_blocked_attribute_via_mqtt_json_message(
+    hass, mqtt_mock, domain, config, extra_blocked_attributes
+):
+    """Test the setting of blocked attribute via MQTT with JSON payload.
+
+    This is a test helper for the MqttAttributes mixin.
+    """
+    extra_blocked_attributes = extra_blocked_attributes or []
+
+    # Add JSON attributes settings to config
+    config = copy.deepcopy(config)
+    config[domain]["json_attributes_topic"] = "attr-topic"
+    data = json.dumps(config[domain])
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+    val = "abc123"
+
+    for attr in MQTT_ATTRIBUTES_BLOCKED:
+        async_fire_mqtt_message(hass, "attr-topic", json.dumps({attr: val}))
+        state = hass.states.get(f"{domain}.test")
+        assert state.attributes.get(attr) != val
+
+    for attr in extra_blocked_attributes:
+        async_fire_mqtt_message(hass, "attr-topic", json.dumps({attr: val}))
+        state = hass.states.get(f"{domain}.test")
+        assert state.attributes.get(attr) != val
+
+
 async def help_test_setting_attribute_with_template(hass, mqtt_mock, domain, config):
     """Test the setting of attribute via MQTT with JSON payload.
 
@@ -760,9 +789,11 @@ async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    device = registry.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
+    )
     assert device is not None
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"

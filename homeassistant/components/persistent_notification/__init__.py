@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Mapping, MutableMapping
 import logging
-from typing import Any, Mapping, MutableMapping
+from typing import Any
 
 import voluptuous as vol
 
@@ -79,11 +80,11 @@ def async_create(
     """Generate a notification."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_TITLE, title),
             (ATTR_MESSAGE, message),
             (ATTR_NOTIFICATION_ID, notification_id),
-        ]
+        )
         if value is not None
     }
 

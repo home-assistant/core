@@ -8,6 +8,7 @@ from homeassistant.components import automation, group, script, websocket_api
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers.entity import entity_sources as get_entity_sources
 
 DOMAIN = "search"
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ def websocket_search_related(hass, connection, msg):
         hass,
         device_registry.async_get(hass),
         entity_registry.async_get(hass),
+        get_entity_sources(hass),
     )
     connection.send_result(
         msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
@@ -69,11 +71,13 @@ class Searcher:
         hass: HomeAssistant,
         device_reg: device_registry.DeviceRegistry,
         entity_reg: entity_registry.EntityRegistry,
-    ):
+        entity_sources: "dict[str, dict[str, str]]",
+    ) -> None:
         """Search results."""
         self.hass = hass
         self._device_reg = device_reg
         self._entity_reg = entity_reg
+        self._sources = entity_sources
         self.results = defaultdict(set)
         self._to_resolve = deque()
 
@@ -184,6 +188,10 @@ class Searcher:
 
             if entity_entry.config_entry_id is not None:
                 self._add_or_resolve("config_entry", entity_entry.config_entry_id)
+        else:
+            source = self._sources.get(entity_id)
+            if source is not None and "config_entry" in source:
+                self._add_or_resolve("config_entry", source["config_entry"])
 
         domain = split_entity_id(entity_id)[0]
 

@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 MODULE_PATH = "homeassistant.components.slack.notify"
@@ -47,7 +47,7 @@ def filter_log_records(caplog: LogCaptureFixture) -> list[logging.LogRecord]:
     ]
 
 
-async def test_setup(hass: HomeAssistantType, caplog: LogCaptureFixture):
+async def test_setup(hass: HomeAssistant, caplog: LogCaptureFixture):
     """Test setup slack notify."""
     config = DEFAULT_CONFIG
 
@@ -68,7 +68,7 @@ async def test_setup(hass: HomeAssistantType, caplog: LogCaptureFixture):
         client.auth_test.assert_called_once_with()
 
 
-async def test_setup_clientError(hass: HomeAssistantType, caplog: LogCaptureFixture):
+async def test_setup_clientError(hass: HomeAssistant, caplog: LogCaptureFixture):
     """Test setup slack notify with aiohttp.ClientError exception."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config[notify.DOMAIN][0].update({CONF_USERNAME: "user", CONF_ICON: "icon"})
@@ -89,7 +89,7 @@ async def test_setup_clientError(hass: HomeAssistantType, caplog: LogCaptureFixt
         assert aiohttp.ClientError.__qualname__ in record.message
 
 
-async def test_setup_slackApiError(hass: HomeAssistantType, caplog: LogCaptureFixture):
+async def test_setup_slackApiError(hass: HomeAssistant, caplog: LogCaptureFixture):
     """Test setup slack notify with SlackApiError exception."""
     config = DEFAULT_CONFIG
 

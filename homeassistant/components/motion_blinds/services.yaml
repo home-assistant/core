@@ -1,14 +1,25 @@
 # Describes the format for available motion blinds services
 
 set_absolute_position:
+  name: Set absolute position
   description: "Set the absolute position of the cover."
+  target:
+    entity:
+      integration: motion_blinds
+      domain: cover
   fields:
-    entity_id:
-      description: Name of the motion blind cover entity to control.
-      example: "cover.TopDownBottomUp-Bottom-0001"
     absolute_position:
+      name: Absolute position
       description: Absolute position to move to.
-      example: 70
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 100
     width:
-      description: Optionally specify the width that is covered, only for TDBU Combined entities.
-      example: 30
+      name: Width
+      description: Specify the width that is covered, only for TDBU Combined entities.
+      selector:
+        number:
+          min: 1
+          max: 100

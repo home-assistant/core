@@ -1,7 +1,7 @@
 """Sensor platform for Advantage Air integration."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers import config_validation as cv, entity_platform
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(AdvantageAirZoneSignal(instance, ac_key, zone_key))
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {vol.Required("minutes"): cv.positive_int},
@@ -43,6 +43,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air timer control."""
+
+    _attr_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
 
     def __init__(self, instance, ac_key, action):
         """Initialize the Advantage Air timer control."""
@@ -66,11 +68,6 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         return self._ac[self._time_key]
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
-
-    @property
     def icon(self):
         """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
@@ -85,6 +82,9 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
 
 class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
+
+    _attr_unit_of_measurement = PERCENTAGE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
@@ -104,11 +104,6 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         return 0
 
     @property
-    def unit_of_measurement(self):
-        """Return the percent sign."""
-        return PERCENTAGE
-
-    @property
     def icon(self):
         """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
@@ -118,6 +113,9 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
 
 class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
+
+    _attr_unit_of_measurement = PERCENTAGE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
@@ -133,11 +131,6 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     def state(self):
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the percent sign."""
-        return PERCENTAGE
 
     @property
     def icon(self):

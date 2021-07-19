@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from pyclimacell.const import (
     CURRENT,
@@ -39,9 +40,9 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
@@ -97,9 +98,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -108,7 +109,7 @@ async def async_setup_entry(
     api_class = ClimaCellV3WeatherEntity if api_version == 3 else ClimaCellWeatherEntity
     entities = [
         api_class(config_entry, coordinator, api_version, forecast_type)
-        for forecast_type in [DAILY, HOURLY, NOWCAST]
+        for forecast_type in (DAILY, HOURLY, NOWCAST)
     ]
     async_add_entities(entities)
 
@@ -206,8 +207,6 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                 distance_convert(self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS), 4
             )
         cloud_cover = self.cloud_cover
-        if cloud_cover is not None:
-            cloud_cover /= 100
         return {
             ATTR_CLOUD_COVER: cloud_cover,
             ATTR_WIND_GUST: wind_gust,

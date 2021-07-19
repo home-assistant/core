@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from pyclimacell.const import CURRENT
 
@@ -11,6 +12,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
     ATTR_NAME,
     CONF_API_VERSION,
     CONF_NAME,
@@ -18,8 +20,8 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
@@ -27,6 +29,7 @@ from .const import (
     ATTR_FIELD,
     ATTR_IS_METRIC_CHECK,
     ATTR_METRIC_CONVERSION,
+    ATTR_SCALE,
     ATTR_VALUE_MAP,
     CC_SENSOR_TYPES,
     CC_V3_SENSOR_TYPES,
@@ -37,9 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -71,6 +74,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         """Initialize ClimaCell Sensor Entity."""
         super().__init__(config_entry, coordinator, api_version)
         self.sensor_type = sensor_type
+        self._attr_device_class = self.sensor_type.get(ATTR_DEVICE_CLASS)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -102,9 +106,11 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             CONF_UNIT_SYSTEM_IMPERIAL in self.sensor_type
             and CONF_UNIT_SYSTEM_METRIC in self.sensor_type
         ):
-            if self.hass.config.units.is_metric:
-                return self.sensor_type[CONF_UNIT_SYSTEM_METRIC]
-            return self.sensor_type[CONF_UNIT_SYSTEM_IMPERIAL]
+            return (
+                self.sensor_type[CONF_UNIT_SYSTEM_METRIC]
+                if self.hass.config.units.is_metric
+                else self.sensor_type[CONF_UNIT_SYSTEM_IMPERIAL]
+            )
 
         return None
 
@@ -116,8 +122,12 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
     @property
     def state(self) -> str | int | float | None:
         """Return the state."""
+        state = self._state
+        if state and ATTR_SCALE in self.sensor_type:
+            state *= self.sensor_type[ATTR_SCALE]
+
         if (
-            self._state is not None
+            state is not None
             and CONF_UNIT_SYSTEM_IMPERIAL in self.sensor_type
             and CONF_UNIT_SYSTEM_METRIC in self.sensor_type
             and ATTR_METRIC_CONVERSION in self.sensor_type
@@ -125,11 +135,17 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             and self.hass.config.units.is_metric
             == self.sensor_type[ATTR_IS_METRIC_CHECK]
         ):
-            return round(self._state * self.sensor_type[ATTR_METRIC_CONVERSION], 4)
+            conversion = self.sensor_type[ATTR_METRIC_CONVERSION]
+            # When conversion is a callable, we assume it's a single input function
+            if callable(conversion):
+                return round(conversion(state), 4)
 
-        if ATTR_VALUE_MAP in self.sensor_type:
-            return self.sensor_type[ATTR_VALUE_MAP](self._state).name.lower()
-        return self._state
+            return round(state * conversion, 4)
+
+        if ATTR_VALUE_MAP in self.sensor_type and state is not None:
+            return self.sensor_type[ATTR_VALUE_MAP](state).name.lower()
+
+        return state
 
 
 class ClimaCellSensorEntity(BaseClimaCellSensorEntity):

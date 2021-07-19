@@ -3,7 +3,7 @@
   "name": "Philips Hue",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",
-  "requirements": ["aiohue==2.1.0"],
+  "requirements": ["aiohue==2.5.1"],
   "ssdp": [
     {
       "manufacturer": "Royal Philips Electronics",
@@ -23,5 +23,5 @@
   },
   "codeowners": ["@balloob", "@frenck"],
   "quality_scale": "platinum",
-  "iot_class": "local_polling"
+  "iot_class": "local_push"
 }

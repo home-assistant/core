@@ -55,8 +55,6 @@ async def test_user_owserver(hass):
 
     # Valid server
     with patch("homeassistant.components.onewire.onewirehub.protocol.proxy",), patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -73,15 +71,12 @@ async def test_user_owserver(hass):
             CONF_PORT: 1234,
         }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_owserver_duplicate(hass):
     """Test OWServer flow."""
     with patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -111,7 +106,6 @@ async def test_user_owserver_duplicate(hass):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -151,8 +145,6 @@ async def test_user_sysbus(hass):
         "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=True,
     ), patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -168,15 +160,12 @@ async def test_user_sysbus(hass):
         CONF_MOUNT_DIR: "/sys/bus/directory",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_sysbus_duplicate(hass):
     """Test SysBus duplicate flow."""
     with patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -211,7 +200,6 @@ async def test_user_sysbus_duplicate(hass):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -222,8 +210,6 @@ async def test_import_sysbus(hass):
         "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=True,
     ), patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -239,7 +225,6 @@ async def test_import_sysbus(hass):
         CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -250,8 +235,6 @@ async def test_import_sysbus_with_mount_dir(hass):
         "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=True,
     ), patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -270,7 +253,6 @@ async def test_import_sysbus_with_mount_dir(hass):
         CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -278,8 +260,6 @@ async def test_import_owserver(hass):
     """Test import step."""
 
     with patch("homeassistant.components.onewire.onewirehub.protocol.proxy",), patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -299,7 +279,6 @@ async def test_import_owserver(hass):
         CONF_PORT: DEFAULT_OWSERVER_PORT,
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -307,8 +286,6 @@ async def test_import_owserver_with_port(hass):
     """Test import step."""
 
     with patch("homeassistant.components.onewire.onewirehub.protocol.proxy",), patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -329,7 +306,6 @@ async def test_import_owserver_with_port(hass):
         CONF_PORT: 1234,
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -337,8 +313,6 @@ async def test_import_owserver_duplicate(hass):
     """Test OWServer flow."""
     # Initialise with single entry
     with patch(
-        "homeassistant.components.onewire.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -358,5 +332,4 @@ async def test_import_owserver_duplicate(hass):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

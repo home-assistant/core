@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -18,7 +19,6 @@ DEFAULT_NAME = "KWB"
 MODE_SERIAL = 0
 MODE_TCP = 1
 
-CONF_TYPE = "type"
 CONF_RAW = "raw"
 
 SERIAL_SCHEMA = PLATFORM_SCHEMA.extend(

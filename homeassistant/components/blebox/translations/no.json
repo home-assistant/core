@@ -9,7 +9,7 @@
             "unknown": "Uventet feil",
             "unsupported_version": "BleBox-enheten har utdatert fastvare. Vennligst oppgrader den f\u00f8rst."
         },
-        "flow_title": "BleBox-enhet: {name} ({host})",
+        "flow_title": "{name} ( {host} )",
         "step": {
             "user": {
                 "data": {

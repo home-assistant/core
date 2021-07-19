@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Teenus on juba seadistatud"
+            "already_configured": "Teenus on juba seadistatud",
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "user": {

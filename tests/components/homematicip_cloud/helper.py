@@ -19,7 +19,7 @@ from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_MODEL_TYPE,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
@@ -76,7 +76,7 @@ class HomeFactory:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         mock_connection,
         hmip_config_entry: config_entries.ConfigEntry,
     ):

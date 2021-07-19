@@ -1,4 +1,6 @@
 """Support for water heater devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools as ft
 import logging
@@ -6,6 +8,7 @@ from typing import final
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -18,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -119,27 +123,46 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 class WaterHeaterEntity(Entity):
     """Base class for water heater entities."""
 
+    _attr_current_operation: str | None = None
+    _attr_current_temperature: float | None = None
+    _attr_is_away_mode_on: bool | None = None
+    _attr_max_temp: float
+    _attr_min_temp: float
+    _attr_operation_list: list[str] | None = None
+    _attr_precision: float
+    _attr_state: None = None
+    _attr_supported_features: int
+    _attr_target_temperature_high: float | None = None
+    _attr_target_temperature_low: float | None = None
+    _attr_target_temperature: float | None = None
+    _attr_temperature_unit: str
+
+    @final
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the current state."""
         return self.current_operation
 
     @property
-    def precision(self):
+    def precision(self) -> float:
         """Return the precision of the system."""
+        if hasattr(self, "_attr_precision"):
+            return self._attr_precision
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
@@ -206,44 +229,44 @@ class WaterHeaterEntity(Entity):
         return data
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        raise NotImplementedError
+        return self._attr_temperature_unit
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
-        return None
+        return self._attr_current_operation
 
     @property
-    def operation_list(self):
+    def operation_list(self) -> list[str] | None:
         """Return the list of available operation modes."""
-        return None
+        return self._attr_operation_list
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return None
+        return self._attr_current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return None
+        return self._attr_target_temperature
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        return None
+        return self._attr_target_temperature_high
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        return None
+        return self._attr_target_temperature_low
 
     @property
-    def is_away_mode_on(self):
+    def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
-        return None
+        return self._attr_is_away_mode_on
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -280,13 +303,10 @@ class WaterHeaterEntity(Entity):
         await self.hass.async_add_executor_job(self.turn_away_mode_off)
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        raise NotImplementedError()
-
-    @property
     def min_temp(self):
         """Return the minimum temperature."""
+        if hasattr(self, "_attr_min_temp"):
+            return self._attr_min_temp
         return convert_temperature(
             DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
@@ -294,6 +314,8 @@ class WaterHeaterEntity(Entity):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
+        if hasattr(self, "_attr_max_temp"):
+            return self._attr_max_temp
         return convert_temperature(
             DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )

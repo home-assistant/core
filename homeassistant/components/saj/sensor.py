@@ -1,11 +1,17 @@
 """SAJ solar inverter interface."""
+from __future__ import annotations
+
 from datetime import date
 import logging
 
 import pysaj
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -27,6 +33,7 @@ from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,6 +175,11 @@ class SAJsensor(SensorEntity):
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
         self._state = self._sensor.value
+
+        if pysaj_sensor.name in ("current_power", "total_yield", "temperature"):
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+        if pysaj_sensor.name == "total_yield":
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
 
     @property
     def name(self):

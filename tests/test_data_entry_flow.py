@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.util.decorator import Registry
 
 from tests.common import async_capture_events
@@ -121,7 +121,7 @@ async def test_show_form(manager):
             )
 
     form = await manager.async_init("test")
-    assert form["type"] == "form"
+    assert form["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert form["data_schema"] is schema
     assert form["errors"] == {"username": "Should be unique."}
 
@@ -182,7 +182,9 @@ async def test_discovery_init_flow(manager):
 
     data = {"id": "hello", "token": "secret"}
 
-    await manager.async_init("test", context={"source": "discovery"}, data=data)
+    await manager.async_init(
+        "test", context={"source": config_entries.SOURCE_DISCOVERY}, data=data
+    )
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 
@@ -191,7 +193,7 @@ async def test_discovery_init_flow(manager):
     assert entry["handler"] == "test"
     assert entry["title"] == "hello"
     assert entry["data"] == data
-    assert entry["source"] == "discovery"
+    assert entry["source"] == config_entries.SOURCE_DISCOVERY
 
 
 async def test_finish_callback_change_result_type(hass):
@@ -367,7 +369,7 @@ async def test_abort_flow_exception(manager):
             raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
 
     form = await manager.async_init("test")
-    assert form["type"] == "abort"
+    assert form["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert form["reason"] == "mock-reason"
     assert form["description_placeholders"] == {"placeholder": "yo"}
 

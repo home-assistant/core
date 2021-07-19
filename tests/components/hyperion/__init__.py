@@ -11,8 +11,8 @@ from homeassistant.components.hyperion import get_hyperion_unique_id
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
@@ -120,12 +120,12 @@ def create_mock_client() -> Mock:
 
 
 def add_test_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     data: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
-    config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
+    config_entry: MockConfigEntry = MockConfigEntry(
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
         data=data
@@ -137,12 +137,12 @@ def add_test_config_entry(
         unique_id=TEST_SYSINFO_ID,
         options=options or TEST_CONFIG_ENTRY_OPTIONS,
     )
-    config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
+    config_entry.add_to_hass(hass)
     return config_entry
 
 
 async def setup_test_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry | None = None,
     hyperion_client: Mock | None = None,
     options: dict[str, Any] | None = None,
@@ -173,7 +173,7 @@ def call_registered_callback(
 
 
 def register_test_entity(
-    hass: HomeAssistantType, domain: str, type_name: str, entity_id: str
+    hass: HomeAssistant, domain: str, type_name: str, entity_id: str
 ) -> None:
     """Register a test entity."""
     unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, TEST_INSTANCE, type_name)
@@ -187,3 +187,12 @@ def register_test_entity(
         suggested_object_id=entity_id,
         disabled_by=None,
     )
+
+
+async def async_call_registered_callback(
+    client: AsyncMock, key: str, *args: Any, **kwargs: Any
+) -> None:
+    """Call Hyperion entity callbacks that were registered with the client."""
+    for call in client.add_callbacks.call_args_list:
+        if key in call[0][0]:
+            await call[0][0][key](*args, **kwargs)

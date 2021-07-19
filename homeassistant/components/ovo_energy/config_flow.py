@@ -3,7 +3,6 @@ import aiohttp
 from ovoenergy.ovoenergy import OVOEnergy
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -19,7 +18,6 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a OVO Energy config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the flow."""

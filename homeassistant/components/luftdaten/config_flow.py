@@ -38,12 +38,10 @@ def duplicate_stations(hass):
     return {x for x in stations if stations.count(x) > 1}
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class LuftDatenFlowHandler(config_entries.ConfigFlow):
+class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Luftdaten config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @callback
     def _show_form(self, errors=None):
@@ -83,7 +81,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             return self._show_form({CONF_SENSOR_ID: "invalid_sensor"})
 
         available_sensors = [
-            x for x in luftdaten.values if luftdaten.values[x] is not None
+            x for x, x_values in luftdaten.values.items() if x_values is not None
         ]
 
         if available_sensors:
@@ -92,6 +90,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             )
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
+        user_input.update({CONF_SCAN_INTERVAL: scan_interval.total_seconds()})
 
         return self.async_create_entry(title=str(sensor_id), data=user_input)

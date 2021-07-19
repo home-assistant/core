@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "destination": "Bestemming",
+                    "name": "Naam",
                     "origin": "Vertrekpunt",
                     "region": "Regio"
                 },

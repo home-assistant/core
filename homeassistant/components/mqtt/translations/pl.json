@@ -62,7 +62,8 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT"
+                "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT",
+                "title": "Opcje brokera"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Flaga \"retain\" wiadomo\u015bci \"will\"",
                     "will_topic": "Temat wiadomo\u015bci \"will\""
                 },
-                "description": "Opcje MQTT"
+                "description": "Wykrywanie - je\u015bli wykrywanie jest w\u0142\u0105czone (zalecane), Home Assistant automatycznie wykryje urz\u0105dzenia i encje, kt\u00f3re publikuj\u0105 swoj\u0105 konfiguracj\u0119 w brokerze MQTT. Je\u015bli wykrywanie jest wy\u0142\u0105czone, ca\u0142\u0105 konfiguracj\u0119 nale\u017cy wykona\u0107 r\u0119cznie.\nWiadomo\u015b\u0107 Birth - wiadomo\u015b\u0107 Birth zostanie wys\u0142ana za ka\u017cdym razem, gdy Home Assistant (ponownie) po\u0142\u0105czy si\u0119 z brokerem MQTT.\nWiadomo\u015b\u0107 Will - wiadomo\u015b\u0107 Will b\u0119dzie wysy\u0142ana za ka\u017cdym razem, gdy Home Assistant utraci po\u0142\u0105czenie z brokerem, zar\u00f3wno w przypadku czystego (np. wy\u0142\u0105czenie Home Assistanta), jak i w przypadku nieczystego (np. zawieszenie Home Assistanta lub utrata po\u0142\u0105czenia sieciowego) roz\u0142\u0105czenia.",
+                "title": "Opcje MQTT"
             }
         }
     }

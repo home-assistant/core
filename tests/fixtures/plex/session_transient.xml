@@ -1,0 +1,13 @@
+<MediaContainer size="1">
+<Video addedAt="1619533889" duration="6000" genuineMediaAnalysis="1" guid="analyzed.prerolls://c1226b1fd517d6d7177ac8bebf24e0165e5feeb6" index="1" key="/library/metadata/203214" librarySectionID="-2" ratingKey="203214" sessionKey="95" summary="" thumb="/library/metadata/203214/thumb/1619533890" title="fancy_preroll" type="clip" updatedAt="1619533890" viewOffset="0">
+<Media audioProfile="lc" id="382629" origin="local" videoProfile="main" audioChannels="2" audioCodec="aac" bitrate="1886" container="mp4" duration="6016" height="404" optimizedForStreaming="1" protocol="dash" videoCodec="h264" videoFrameRate="60p" videoResolution="SD" width="720" selected="1">
+<Part audioProfile="lc" id="383067" videoProfile="main" bitrate="1886" container="mp4" duration="6016" height="404" optimizedForStreaming="1" protocol="dash" width="720" decision="transcode" selected="1">
+<Stream bitrate="1724" codec="h264" colorPrimaries="bt709" default="1" displayTitle="1080p (H.264)" extendedDisplayTitle="1080p (H.264)" frameRate="59.939999999999998" height="404" id="770091" language="English" languageCode="eng" streamType="1" width="720" decision="transcode" location="segments-video" />
+<Stream bitrate="162" bitrateMode="cbr" channels="2" codec="aac" default="1" displayTitle="English (AAC Stereo)" extendedDisplayTitle="English (AAC Stereo)" id="770092" language="English" languageCode="eng" selected="1" streamType="2" decision="transcode" location="segments-audio" />
+</Part>
+</Media>
+<Session bandwidth="1981" id="session_id_1" location="lan" />
+<User id="1" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=11111" title="User 1" />
+<Player address="1.2.3.11" device="SHIELD Android TV" deviceClass="stb" local="1" machineIdentifier="1234567890123456-com-plexapp-android" model="darcy" platform="Android" platformVersion="9" product="Plex for Android (TV)" profile="Android" protocolVersion="1" relayed="0" remotePublicAddress="10.20.30.40" secure="1" state="playing" title="SHIELD Android TV" userID="1" vendor="NVIDIA" version="8.9.2.21619" />
+</Video>
+</MediaContainer>

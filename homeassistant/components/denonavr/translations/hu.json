@@ -8,10 +8,20 @@
         "error": {
             "discovery_error": "Nem siker\u00fclt megtal\u00e1lni a Denon AVR h\u00e1l\u00f3zati er\u0151s\u00edt\u0151t"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "host": "IP c\u00edm"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_audyssey": "Friss\u00edtse az Audyssey be\u00e1ll\u00edt\u00e1sait"
                 }
             }
         }

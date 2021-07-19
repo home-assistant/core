@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         UpbLight(upb.devices[dev], unique_id, upb) for dev in upb.devices
     )
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_LIGHT_FADE_START, UPB_BRIGHTNESS_RATE_SCHEMA, "async_light_fade_start"

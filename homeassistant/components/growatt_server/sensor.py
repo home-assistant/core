@@ -8,6 +8,7 @@ import growattServer
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -32,11 +33,10 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
 
+from .const import CONF_PLANT_ID, DEFAULT_NAME, DEFAULT_PLANT_ID, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PLANT_ID = "plant_id"
-DEFAULT_PLANT_ID = "0"
-DEFAULT_NAME = "Growatt"
 SCAN_INTERVAL = datetime.timedelta(minutes=1)
 
 # Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
@@ -454,13 +454,13 @@ MIX_SENSOR_TYPES = {
     ),
     "mix_wattage_pv_1": (
         "PV1 Wattage",
-        POWER_WATT,
+        POWER_KILO_WATT,
         "pPv1",
         {"device_class": DEVICE_CLASS_POWER},
     ),
     "mix_wattage_pv_2": (
         "PV2 Wattage",
-        POWER_WATT,
+        POWER_KILO_WATT,
         "pPv2",
         {"device_class": DEVICE_CLASS_POWER},
     ),
@@ -558,17 +558,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Growatt sensor."""
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    plant_id = config[CONF_PLANT_ID]
-    name = config[CONF_NAME]
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up growatt server from yaml."""
+    if not hass.config_entries.async_entries(DOMAIN):
+        _LOGGER.warning(
+            "Loading Growatt via platform setup is deprecated."
+            "Please remove it from your configuration"
+        )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
 
-    api = growattServer.GrowattApi()
+
+def get_device_list(api, config):
+    """Retrieve the device list for the selected plant."""
+    plant_id = config[CONF_PLANT_ID]
 
     # Log in to api and fetch first plant if no plant id is defined.
-    login_response = api.login(username, password)
+    login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
     if not login_response["success"] and login_response["errCode"] == "102":
         _LOGGER.error("Username or Password may be incorrect!")
         return
@@ -579,6 +588,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Get a list of devices for specified plant to add sensors for.
     devices = api.device_list(plant_id)
+    return [devices, plant_id]
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Growatt sensor."""
+    config = config_entry.data
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    name = config[CONF_NAME]
+
+    api = growattServer.GrowattApi()
+
+    devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
+
     entities = []
     probe = GrowattData(api, username, password, plant_id, "total")
     for sensor in TOTAL_SENSOR_TYPES:
@@ -616,7 +639,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class GrowattInverter(SensorEntity):
@@ -715,9 +738,7 @@ class GrowattData:
                     self.device_id, self.plant_id
                 )
 
-                mix_detail = self.api.mix_detail(
-                    self.device_id, self.plant_id, date=datetime.datetime.now()
-                )
+                mix_detail = self.api.mix_detail(self.device_id, self.plant_id)
                 # Get the chart data and work out the time of the last entry, use this as the last time data was published to the Growatt Server
                 mix_chart_entries = mix_detail["chartData"]
                 sorted_keys = sorted(mix_chart_entries)

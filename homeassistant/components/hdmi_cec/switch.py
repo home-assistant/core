@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import ATTR_NEW, CecEntity
 
@@ -55,11 +55,6 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._state == STATE_ON
-
-    @property
-    def is_standby(self):
-        """Return true if device is in standby."""
-        return self._state == STATE_OFF or self._state == STATE_STANDBY
 
     @property
     def state(self) -> str:

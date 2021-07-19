@@ -18,7 +18,7 @@ class DeviceInfo:
 
     device_brand = "Google Nest"
 
-    def __init__(self, device: Device):
+    def __init__(self, device: Device) -> None:
         """Initialize the DeviceInfo."""
         self._device = device
 

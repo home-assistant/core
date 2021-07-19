@@ -10,26 +10,44 @@ from homeassistant.components.frontend import (
     CONF_EXTRA_HTML_URL_ES5,
     CONF_JS_VERSION,
     CONF_THEMES,
+    DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import async_capture_events, async_fire_time_changed
 
-CONFIG_THEMES = {
-    DOMAIN: {
-        CONF_THEMES: {
-            "happy": {"primary-color": "red"},
-            "dark": {"primary-color": "black"},
-        }
-    }
+MOCK_THEMES = {
+    "happy": {"primary-color": "red", "app-header-background-color": "blue"},
+    "dark": {"primary-color": "black"},
+    "light_only": {
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+        },
+    },
+    "dark_only": {
+        "primary-color": "blue",
+        "modes": {
+            "dark": {"secondary-color": "white"},
+        },
+    },
+    "light_and_dark": {
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+            "dark": {"secondary-color": "white"},
+        },
+    },
 }
+
+CONFIG_THEMES = {DOMAIN: {CONF_THEMES: MOCK_THEMES}}
 
 
 @pytest.fixture
@@ -148,10 +166,7 @@ async def test_themes_api(hass, themes_ws_client):
 
     assert msg["result"]["default_theme"] == "default"
     assert msg["result"]["default_dark_theme"] is None
-    assert msg["result"]["themes"] == {
-        "happy": {"primary-color": "red"},
-        "dark": {"primary-color": "black"},
-    }
+    assert msg["result"]["themes"] == MOCK_THEMES
 
     # safe mode
     hass.config.safe_mode = True
@@ -282,6 +297,15 @@ async def test_themes_set_dark_theme(hass, themes_ws_client):
     msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_dark_theme"] is None
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "light_and_dark", "mode": "dark"}, blocking=True
+    )
+
+    await themes_ws_client.send_json({"id": 8, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
 async def test_themes_set_dark_theme_wrong_name(hass, frontend, themes_ws_client):
@@ -474,3 +498,25 @@ async def test_static_paths(hass, mock_http_client):
     )
     assert resp.status == 302
     assert resp.headers["location"] == "/profile"
+
+
+async def test_manifest_json(hass, frontend_themes, mock_http_client):
+    """Test for fetching manifest.json."""
+    resp = await mock_http_client.get("/manifest.json")
+    assert resp.status == HTTP_OK
+    assert "cache-control" not in resp.headers
+
+    json = await resp.json()
+    assert json["theme_color"] == DEFAULT_THEME_COLOR
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    resp = await mock_http_client.get("/manifest.json")
+    assert resp.status == HTTP_OK
+    assert "cache-control" not in resp.headers
+
+    json = await resp.json()
+    assert json["theme_color"] != DEFAULT_THEME_COLOR

@@ -230,7 +230,7 @@ def _parse_due_date(data: dict, gmt_string) -> datetime:
     """Parse the due date dict into a datetime object."""
     # Add time information to date only strings.
     if len(data["date"]) == 10:
-        data["date"] += "T00:00:00"
+        return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
     if dt.parse_datetime(data["date"]).tzinfo is None:
         data["date"] += gmt_string
     return dt.as_utc(dt.parse_datetime(data["date"]))

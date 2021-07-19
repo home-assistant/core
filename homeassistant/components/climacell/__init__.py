@@ -1,7 +1,6 @@
 """The ClimaCell integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from math import ceil
@@ -26,8 +25,9 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -79,9 +79,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
-def _set_update_interval(
-    hass: HomeAssistantType, current_entry: ConfigEntry
-) -> timedelta:
+def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> timedelta:
     """Recalculate update_interval based on existing ClimaCell instances and update them."""
     api_calls = 4 if current_entry.data[CONF_API_VERSION] == 3 else 2
     # We check how many ClimaCell configured instances are using the same API key and
@@ -111,19 +109,19 @@ def _set_update_interval(
     return interval
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     params = {}
     # If config entry options not set up, set them up
-    if not config_entry.options:
+    if not entry.options:
         params["options"] = {
             CONF_TIMESTEP: DEFAULT_TIMESTEP,
         }
     else:
         # Use valid timestep if it's invalid
-        timestep = config_entry.options[CONF_TIMESTEP]
+        timestep = entry.options[CONF_TIMESTEP]
         if timestep not in (1, 5, 15, 30):
             if timestep <= 2:
                 timestep = 1
@@ -133,56 +131,46 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
                 timestep = 15
             else:
                 timestep = 30
-            new_options = config_entry.options.copy()
+            new_options = entry.options.copy()
             new_options[CONF_TIMESTEP] = timestep
             params["options"] = new_options
     # Add API version if not found
-    if CONF_API_VERSION not in config_entry.data:
-        new_data = config_entry.data.copy()
+    if CONF_API_VERSION not in entry.data:
+        new_data = entry.data.copy()
         new_data[CONF_API_VERSION] = 3
         params["data"] = new_data
 
     if params:
-        hass.config_entries.async_update_entry(config_entry, **params)
+        hass.config_entries.async_update_entry(entry, **params)
 
-    api_class = ClimaCellV3 if config_entry.data[CONF_API_VERSION] == 3 else ClimaCellV4
+    api_class = ClimaCellV3 if entry.data[CONF_API_VERSION] == 3 else ClimaCellV4
     api = api_class(
-        config_entry.data[CONF_API_KEY],
-        config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
-        config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_LATITUDE, hass.config.latitude),
+        entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         session=async_get_clientsession(hass),
     )
 
     coordinator = ClimaCellDataUpdateCoordinator(
         hass,
-        config_entry,
+        entry,
         api,
-        _set_update_interval(hass, config_entry),
+        _set_update_interval(hass, entry),
     )
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -197,7 +185,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         api: ClimaCellV3 | ClimaCellV4,
         update_interval: timedelta,
@@ -235,10 +223,10 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                         CC_V3_ATTR_WIND_GUST,
                         CC_V3_ATTR_CLOUD_COVER,
                         CC_V3_ATTR_PRECIPITATION_TYPE,
-                        *[
+                        *(
                             sensor_type[ATTR_FIELD]
                             for sensor_type in CC_V3_SENSOR_TYPES
-                        ],
+                        ),
                     ]
                 )
                 data[FORECASTS][HOURLY] = await self._api.forecast_hourly(
@@ -295,7 +283,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                         CC_ATTR_WIND_GUST,
                         CC_ATTR_CLOUD_COVER,
                         CC_ATTR_PRECIPITATION_TYPE,
-                        *[sensor_type[ATTR_FIELD] for sensor_type in CC_SENSOR_TYPES],
+                        *(sensor_type[ATTR_FIELD] for sensor_type in CC_SENSOR_TYPES),
                     ],
                     [
                         CC_ATTR_TEMPERATURE_LOW,
@@ -371,7 +359,7 @@ class ClimaCellEntity(CoordinatorEntity):
         return ATTRIBUTION
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},

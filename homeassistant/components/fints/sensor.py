@@ -107,7 +107,7 @@ class FinTsClient:
     Use this class as Context Manager to get the FinTS3Client object.
     """
 
-    def __init__(self, credentials: BankCredentials, name: str):
+    def __init__(self, credentials: BankCredentials, name: str) -> None:
         """Initialize a FinTsClient."""
         self._credentials = credentials
         self.name = name

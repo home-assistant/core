@@ -10,7 +10,7 @@
             "otp_failed": "Totrinnsgodkjenning mislyktes, pr\u00f8v p\u00e5 nytt med en ny passord",
             "unknown": "Uventet feil"
         },
-        "flow_title": "",
+        "flow_title": "{name} ( {host} )",
         "step": {
             "2sa": {
                 "data": {

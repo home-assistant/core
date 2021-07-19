@@ -4,16 +4,15 @@ from .const import DOMAIN  # noqa: F401
 
 DEFAULT_NAME = "ipma"
 
+PLATFORMS = ["weather"]
 
-async def async_setup_entry(hass, config_entry):
+
+async def async_setup_entry(hass, entry):
     """Set up IPMA station as config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "weather")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

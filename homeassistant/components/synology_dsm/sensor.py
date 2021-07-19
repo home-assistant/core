@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,8 +14,9 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
@@ -30,23 +32,22 @@ from .const import (
     SYNO_API,
     TEMP_SENSORS_KEYS,
     UTILISATION_SENSORS,
+    EntityInfo,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS Sensor."""
 
     data = hass.data[DOMAIN][entry.unique_id]
-    api = data[SYNO_API]
+    api: SynoApi = data[SYNO_API]
     coordinator = data[COORDINATOR_CENTRAL]
 
-    entities = [
-        SynoDSMUtilSensor(
-            api, sensor_type, UTILISATION_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in UTILISATION_SENSORS
+    entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
+        SynoDSMUtilSensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in UTILISATION_SENSORS.items()
     ]
 
     # Handle all volumes
@@ -56,11 +57,11 @@ async def async_setup_entry(
                 SynoDSMStorageSensor(
                     api,
                     sensor_type,
-                    STORAGE_VOL_SENSORS[sensor_type],
+                    sensor,
                     coordinator,
                     volume,
                 )
-                for sensor_type in STORAGE_VOL_SENSORS
+                for sensor_type, sensor in STORAGE_VOL_SENSORS.items()
             ]
 
     # Handle all disks
@@ -70,18 +71,16 @@ async def async_setup_entry(
                 SynoDSMStorageSensor(
                     api,
                     sensor_type,
-                    STORAGE_DISK_SENSORS[sensor_type],
+                    sensor,
                     coordinator,
                     disk,
                 )
-                for sensor_type in STORAGE_DISK_SENSORS
+                for sensor_type, sensor in STORAGE_DISK_SENSORS.items()
             ]
 
     entities += [
-        SynoDSMInfoSensor(
-            api, sensor_type, INFORMATION_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in INFORMATION_SENSORS
+        SynoDSMInfoSensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in INFORMATION_SENSORS.items()
     ]
 
     async_add_entities(entities)
@@ -91,7 +90,7 @@ class SynoDSMSensor(SynologyDSMBaseEntity):
     """Mixin for sensor specific attributes."""
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self.entity_type in TEMP_SENSORS_KEYS:
             return self.hass.config.units.temperature_unit
@@ -102,7 +101,7 @@ class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
-    def state(self):
+    def state(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.utilisation, self.entity_type)
         if callable(attr):
@@ -134,7 +133,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity)
     """Representation a Synology Storage sensor."""
 
     @property
-    def state(self):
+    def state(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.storage, self.entity_type)(self._device_id)
         if attr is None:
@@ -158,16 +157,16 @@ class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, str],
-        coordinator: DataUpdateCoordinator,
-    ):
+        entity_info: EntityInfo,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+    ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""
         super().__init__(api, entity_type, entity_info, coordinator)
-        self._previous_uptime = None
-        self._last_boot = None
+        self._previous_uptime: str | None = None
+        self._last_boot: str | None = None
 
     @property
-    def state(self):
+    def state(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.information, self.entity_type)
         if attr is None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from bsblan import BSBLan, BSBLanError, Info, State
 
@@ -25,9 +25,11 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UnitTemperatureT,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -74,9 +76,9 @@ BSBLAN_TO_HA_PRESET = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSBLan device based on a config entry."""
     bsblan: BSBLan = hass.data[DOMAIN][entry.entry_id][DATA_BSBLAN_CLIENT]
@@ -92,14 +94,14 @@ class BSBLanClimate(ClimateEntity):
         entry_id: str,
         bsblan: BSBLan,
         info: Info,
-    ):
+    ) -> None:
         """Initialize BSBLan climate device."""
         self._current_temperature: float | None = None
         self._available = True
         self._hvac_mode: str | None = None
         self._target_temperature: float | None = None
         self._temperature_unit = None
-        self._preset_mode = None
+        self._preset_mode: str | None = None
         self._store_hvac_mode = None
         self._info: Info = info
         self.bsblan = bsblan
@@ -120,7 +122,7 @@ class BSBLanClimate(ClimateEntity):
         return self._info.device_identification
 
     @property
-    def temperature_unit(self) -> str:
+    def temperature_unit(self) -> UnitTemperatureT:
         """Return the unit of measurement which this thermostat uses."""
         if self._temperature_unit == "&deg;C":
             return TEMP_CELSIUS
@@ -231,7 +233,7 @@ class BSBLanClimate(ClimateEntity):
         self._temperature_unit = state.current_temperature.unit
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this BSBLan device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._info.device_identification)},

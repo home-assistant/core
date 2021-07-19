@@ -7,14 +7,14 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "DirecTV: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "data": {
                     "one": "eins",
                     "other": "andere"
                 },
-                "description": "M\u00f6chten Sie {name} einrichten?"
+                "description": "M\u00f6chtest du {name} einrichten?"
             },
             "user": {
                 "data": {

@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Logitech Squeezebox: {host}",
+    "flow_title": "{host}",
     "step": {
       "user": {
         "data": {

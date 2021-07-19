@@ -77,9 +77,69 @@ async def test_show_zeroconf_connection_error_form(hass):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
+async def test_show_zeroconf_connection_error_form_next_generation(hass):
+    """Test that the zeroconf confirmation form is served."""
+    with patch("pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=False):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={
+                "host": "1.2.3.4",
+                "port": 22,
+                CONF_HOSTNAME: "Smappee5001000212.local.",
+                "type": "_ssh._tcp.local.",
+                "name": "Smappee5001000212._ssh._tcp.local.",
+                "properties": {"_raw": {}},
+            },
+        )
+
+        assert result["description_placeholders"] == {CONF_SERIALNUMBER: "5001000212"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "zeroconf_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
 async def test_connection_error(hass):
     """Test we show user form on Smappee connection error."""
-    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None):
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["step_id"] == "environment"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"environment": ENV_LOCAL}
+        )
+        assert result["step_id"] == ENV_LOCAL
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
+        assert result["reason"] == "cannot_connect"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_user_local_connection_error(hass):
+    """Test we show user form on Smappee connection error in local next generation option."""
+    with patch("pysmappee.api.SmappeeLocalApi.logon", return_value=None), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
+    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=True), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.stop", return_value=True
+    ), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready", return_value=None
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -123,7 +183,7 @@ async def test_full_user_wrong_mdns(hass):
     """Test we abort user flow if unsupported mDNS name got resolved."""
     with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
         "pysmappee.api.SmappeeLocalApi.load_advanced_config",
-        return_value=[{"key": "mdnsHostName", "value": "Smappee5010000001"}],
+        return_value=[{"key": "mdnsHostName", "value": "Smappee5100000001"}],
     ), patch(
         "pysmappee.api.SmappeeLocalApi.load_command_control_config", return_value=[]
     ), patch(
@@ -464,3 +524,39 @@ async def test_full_user_local_flow(hass):
 
         entry = hass.config_entries.async_entries(DOMAIN)[0]
         assert entry.unique_id == "1006000212"
+
+
+async def test_full_zeroconf_flow_next_generation(hass):
+    """Test the full zeroconf flow."""
+    with patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
+    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=None,), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={
+                "host": "1.2.3.4",
+                "port": 22,
+                CONF_HOSTNAME: "Smappee5001000212.local.",
+                "type": "_ssh._tcp.local.",
+                "name": "Smappee5001000212._ssh._tcp.local.",
+                "properties": {"_raw": {}},
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "zeroconf_confirm"
+        assert result["description_placeholders"] == {CONF_SERIALNUMBER: "5001000212"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "smappee5001000212"
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert entry.unique_id == "5001000212"

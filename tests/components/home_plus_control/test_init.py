@@ -36,7 +36,7 @@ async def test_loading(hass, mock_config_entry):
         await hass.async_block_till_done()
 
     assert len(mock_check.mock_calls) == 1
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
 
 
 async def test_loading_with_no_config(hass, mock_config_entry):
@@ -44,7 +44,7 @@ async def test_loading_with_no_config(hass, mock_config_entry):
     mock_config_entry.add_to_hass(hass)
     await setup.async_setup_component(hass, DOMAIN, {})
     # Component setup fails because the oauth2 implementation could not be registered
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    assert mock_config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
 async def test_unloading(hass, mock_config_entry):
@@ -68,8 +68,8 @@ async def test_unloading(hass, mock_config_entry):
         await hass.async_block_till_done()
 
     assert len(mock_check.mock_calls) == 1
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
 
     # We now unload the entry
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert mock_config_entry.state is config_entries.ConfigEntryState.NOT_LOADED

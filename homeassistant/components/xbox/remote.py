@@ -1,7 +1,10 @@
 """Xbox Remote support."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import re
-from typing import Any, Iterable
+from typing import Any
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.smartglass.models import (

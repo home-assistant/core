@@ -7,7 +7,11 @@
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
+        "flow_title": "{model} {host}",
         "step": {
+            "discovery_confirm": {
+                "description": "\u00bfQuieres configurar {model} ({host})?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Dispositivo"

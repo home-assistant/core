@@ -15,9 +15,8 @@ from aiohttp.web_exceptions import (
 import attr
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
@@ -35,7 +34,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config):
+async def async_setup(hass: HomeAssistant, config):
     """Set up STT."""
     providers = {}
 
@@ -104,7 +103,7 @@ class SpeechResult:
 class Provider(ABC):
     """Represent a single STT provider."""
 
-    hass: HomeAssistantType | None = None
+    hass: HomeAssistant | None = None
     name: str | None = None
 
     @property

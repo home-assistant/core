@@ -32,7 +32,7 @@ FirmataPinType = Union[int, str]
 class FirmataBoard:
     """Manages a single Firmata board."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize the board."""
         self.config = config
         self.api = None

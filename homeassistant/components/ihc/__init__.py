@@ -18,9 +18,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_CONTROLLER_ID,
@@ -284,9 +284,7 @@ def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
             discovery.load_platform(hass, platform, DOMAIN, discovery_info, config)
 
 
-def autosetup_ihc_products(
-    hass: HomeAssistantType, config, ihc_controller, controller_id
-):
+def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controller_id):
     """Auto setup of IHC products from the IHC project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
@@ -343,7 +341,7 @@ def get_discovery_info(platform_setup, groups, controller_id):
     return discovery_data
 
 
-def setup_service_functions(hass: HomeAssistantType):
+def setup_service_functions(hass: HomeAssistant):
     """Set up the IHC service functions."""
 
     def _get_controller(call):

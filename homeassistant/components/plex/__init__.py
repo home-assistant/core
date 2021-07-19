@@ -1,5 +1,4 @@
 """Support to embed Plex."""
-import asyncio
 from functools import partial
 import logging
 
@@ -15,7 +14,7 @@ from plexwebsocket import (
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -108,7 +107,7 @@ async def async_setup_entry(hass, entry):
             entry, data={**entry.data, PLEX_SERVER_CONFIG: new_server_data}
         )
     except requests.exceptions.ConnectionError as error:
-        if entry.state != ENTRY_STATE_SETUP_RETRY:
+        if entry.state is not ConfigEntryState.SETUP_RETRY:
             _LOGGER.error(
                 "Plex server (%s) could not be reached: [%s]",
                 server_config[CONF_URL],
@@ -232,15 +231,11 @@ async def async_unload_entry(hass, entry):
     for unsub in dispatchers:
         unsub()
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-    await asyncio.gather(*tasks)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 
-    return True
+    return unload_ok
 
 
 async def async_options_updated(hass, entry):

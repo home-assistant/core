@@ -212,10 +212,10 @@ class AbstractConfig(ABC):
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
         res = await gather(
-            *[
+            *(
                 self.async_sync_entities(agent_user_id)
                 for agent_user_id in self._store.agent_user_ids
-            ]
+            )
         )
         return max(res, default=204)
 
@@ -364,7 +364,7 @@ class RequestData:
         source: str,
         request_id: str,
         devices: list[dict] | None,
-    ):
+    ) -> None:
         """Initialize the request data."""
         self.config = config
         self.source = source
@@ -388,7 +388,9 @@ def get_google_type(domain, device_class):
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
-    def __init__(self, hass: HomeAssistant, config: AbstractConfig, state: State):
+    def __init__(
+        self, hass: HomeAssistant, config: AbstractConfig, state: State
+    ) -> None:
         """Initialize a Google entity."""
         self.hass = hass
         self.config = config

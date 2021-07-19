@@ -22,13 +22,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
         for sensor_name in BINARY_SENSOR_DICT
     ]
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class YetiBinarySensor(YetiEntity, BinarySensorEntity):
     """Representation of a Goal Zero Yeti sensor."""
 
-    def __init__(self, api, coordinator, name, sensor_name, server_unique_id):
+    def __init__(
+        self,
+        api,
+        coordinator,
+        name,
+        sensor_name,
+        server_unique_id,
+    ):
         """Initialize a Goal Zero Yeti sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
 

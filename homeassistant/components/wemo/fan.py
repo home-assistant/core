@@ -75,13 +75,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
     await asyncio.gather(
-        *[
+        *(
             _discovered_wemo(device)
             for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
-        ]
+        )
     )
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     # This will call WemoHumidifier.set_humidity(target_humidity=VALUE)
     platform.async_register_entity_service(

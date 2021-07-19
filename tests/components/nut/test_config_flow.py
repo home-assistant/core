@@ -49,8 +49,6 @@ async def test_form_zeroconf(hass):
         "homeassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -70,7 +68,6 @@ async def test_form_zeroconf(hass):
         "username": "test-username",
     }
     assert result3["result"].unique_id is None
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -108,8 +105,6 @@ async def test_form_user_one_ups(hass):
         "homeassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -128,7 +123,6 @@ async def test_form_user_one_ups(hass):
         "resources": ["battery.voltage", "ups.status", "ups.status.display"],
         "username": "test-username",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -187,8 +181,6 @@ async def test_form_user_multiple_ups(hass):
         "homeassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -208,7 +200,6 @@ async def test_form_user_multiple_ups(hass):
         "resources": ["battery.voltage"],
         "username": "test-username",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 2
 
 
@@ -251,8 +242,6 @@ async def test_form_user_one_ups_with_ignored_entry(hass):
         "homeassistant.components.nut.PyNUTClient",
         return_value=mock_pynut,
     ), patch(
-        "homeassistant.components.nut.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -271,7 +260,6 @@ async def test_form_user_one_ups_with_ignored_entry(hass):
         "resources": ["battery.voltage", "ups.status", "ups.status.display"],
         "username": "test-username",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

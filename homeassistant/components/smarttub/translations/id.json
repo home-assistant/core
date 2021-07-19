@@ -5,10 +5,12 @@
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
-            "invalid_auth": "Autentikasi tidak valid",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "invalid_auth": "Autentikasi tidak valid"
         },
         "step": {
+            "reauth_confirm": {
+                "title": "Autentikasi Ulang Integrasi"
+            },
             "user": {
                 "data": {
                     "email": "Email",

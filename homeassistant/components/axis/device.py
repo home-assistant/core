@@ -12,7 +12,7 @@ from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.models import Message
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -57,8 +57,6 @@ class AxisNetworkDevice:
         self.api = None
         self.fw_version = None
         self.product_type = None
-
-        self.listeners = []
 
     @property
     def host(self):
@@ -190,14 +188,14 @@ class AxisNetworkDevice:
             status = {}
 
         if status.get("data", {}).get("status", {}).get("state") == "active":
-            self.listeners.append(
+            self.config_entry.async_on_unload(
                 await mqtt.async_subscribe(
                     hass, f"{self.api.vapix.serial_number}/#", self.mqtt_message
                 )
             )
 
     @callback
-    def mqtt_message(self, message: Message) -> None:
+    def mqtt_message(self, message: ReceiveMessage) -> None:
         """Receive Axis MQTT message."""
         self.disconnect_from_stream()
 
@@ -228,12 +226,12 @@ class AxisNetworkDevice:
 
         async def start_platforms():
             await asyncio.gather(
-                *[
+                *(
                     self.hass.config_entries.async_forward_entry_setup(
                         self.config_entry, platform
                     )
                     for platform in PLATFORMS
-                ]
+                )
             )
             if self.option_events:
                 self.api.stream.connection_status_callback.append(
@@ -266,23 +264,9 @@ class AxisNetworkDevice:
         """Reset this device to default state."""
         self.disconnect_from_stream()
 
-        unload_ok = all(
-            await asyncio.gather(
-                *[
-                    self.hass.config_entries.async_forward_entry_unload(
-                        self.config_entry, platform
-                    )
-                    for platform in PLATFORMS
-                ]
-            )
+        return await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
         )
-        if not unload_ok:
-            return False
-
-        for unsubscribe_listener in self.listeners:
-            unsubscribe_listener()
-
-        return True
 
 
 async def get_device(hass, host, port, username, password):

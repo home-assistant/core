@@ -80,6 +80,23 @@ def get_deprecated(
     return config.get(new_name, default)
 
 
+def deprecated_class(replacement: str) -> Any:
+    """Mark class as deprecated and provide a replacement class to be used instead."""
+
+    def deprecated_decorator(cls: Any) -> Any:
+        """Decorate class as deprecated."""
+
+        @functools.wraps(cls)
+        def deprecated_cls(*args: tuple, **kwargs: dict[str, Any]) -> Any:
+            """Wrap for the original class."""
+            _print_deprecation_warning(cls, replacement, "class")
+            return cls(*args, **kwargs)
+
+        return deprecated_cls
+
+    return deprecated_decorator
+
+
 def deprecated_function(replacement: str) -> Callable[..., Callable]:
     """Mark function as deprecated and provide a replacement function to be used instead."""
 
@@ -89,32 +106,39 @@ def deprecated_function(replacement: str) -> Callable[..., Callable]:
         @functools.wraps(func)
         def deprecated_func(*args: tuple, **kwargs: dict[str, Any]) -> Any:
             """Wrap for the original function."""
-            logger = logging.getLogger(func.__module__)
-            try:
-                _, integration, path = get_integration_frame()
-                if path == "custom_components/":
-                    logger.warning(
-                        "%s was called from %s, this is a deprecated function. Use %s instead, please report this to the maintainer of %s",
-                        func.__name__,
-                        integration,
-                        replacement,
-                        integration,
-                    )
-                else:
-                    logger.warning(
-                        "%s was called from %s, this is a deprecated function. Use %s instead",
-                        func.__name__,
-                        integration,
-                        replacement,
-                    )
-            except MissingIntegrationFrame:
-                logger.warning(
-                    "%s is a deprecated function. Use %s instead",
-                    func.__name__,
-                    replacement,
-                )
+            _print_deprecation_warning(func, replacement, "function")
             return func(*args, **kwargs)
 
         return deprecated_func
 
     return deprecated_decorator
+
+
+def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> None:
+    logger = logging.getLogger(obj.__module__)
+    try:
+        _, integration, path = get_integration_frame()
+        if path == "custom_components/":
+            logger.warning(
+                "%s was called from %s, this is a deprecated %s. Use %s instead, please report this to the maintainer of %s",
+                obj.__name__,
+                integration,
+                description,
+                replacement,
+                integration,
+            )
+        else:
+            logger.warning(
+                "%s was called from %s, this is a deprecated %s. Use %s instead",
+                obj.__name__,
+                integration,
+                description,
+                replacement,
+            )
+    except MissingIntegrationFrame:
+        logger.warning(
+            "%s is a deprecated %s. Use %s instead",
+            obj.__name__,
+            description,
+            replacement,
+        )

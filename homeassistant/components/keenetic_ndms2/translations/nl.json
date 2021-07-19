@@ -1,16 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is al geconfigureerd"
+            "already_configured": "Account is al geconfigureerd",
+            "no_udn": "SSDP-ontdekkingsinformatie heeft geen UDN",
+            "not_keenetic_ndms2": "Ontdekt item is geen Keenetic router"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
                     "username": "Gebruikersnaam"

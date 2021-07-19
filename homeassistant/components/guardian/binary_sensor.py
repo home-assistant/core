@@ -1,8 +1,6 @@
 """Binary sensors for the Elexa Guardian integration."""
 from __future__ import annotations
 
-from typing import Callable
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOISTURE,
@@ -12,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PairedSensorEntity, ValveControllerEntity
@@ -43,7 +42,7 @@ VALVE_CONTROLLER_SENSORS = [SENSOR_KIND_AP_INFO, SENSOR_KIND_LEAK_DETECTED]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
 
@@ -130,25 +129,15 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
         """Initialize."""
         super().__init__(entry, coordinator, kind, name, device_class, icon)
 
-        self._is_on = True
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if the binary sensor is on."""
-        return self._is_on
+        self._attr_is_on = True
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._is_on = self.coordinator.data["wet"]
+            self._attr_is_on = self.coordinator.data["wet"]
         elif self._kind == SENSOR_KIND_MOVED:
-            self._is_on = self.coordinator.data["moved"]
+            self._attr_is_on = self.coordinator.data["moved"]
 
 
 class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
@@ -166,23 +155,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
         """Initialize."""
         super().__init__(entry, coordinators, kind, name, device_class, icon)
 
-        self._is_on = True
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        if self._kind == SENSOR_KIND_AP_INFO:
-            return self.coordinators[API_WIFI_STATUS].last_update_success
-        if self._kind == SENSOR_KIND_LEAK_DETECTED:
-            return self.coordinators[
-                API_SYSTEM_ONBOARD_SENSOR_STATUS
-            ].last_update_success
-        return False
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if the binary sensor is on."""
-        return self._is_on
+        self._attr_is_on = True
 
     async def _async_continue_entity_setup(self) -> None:
         """Add an API listener."""
@@ -195,8 +168,13 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_AP_INFO:
-            self._is_on = self.coordinators[API_WIFI_STATUS].data["station_connected"]
-            self._attrs.update(
+            self._attr_available = self.coordinators[
+                API_WIFI_STATUS
+            ].last_update_success
+            self._attr_is_on = self.coordinators[API_WIFI_STATUS].data[
+                "station_connected"
+            ]
+            self._attr_extra_state_attributes.update(
                 {
                     ATTR_CONNECTED_CLIENTS: self.coordinators[API_WIFI_STATUS].data.get(
                         "ap_clients"
@@ -204,6 +182,9 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
                 }
             )
         elif self._kind == SENSOR_KIND_LEAK_DETECTED:
-            self._is_on = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
+            self._attr_available = self.coordinators[
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            ].last_update_success
+            self._attr_is_on = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
                 "wet"
             ]

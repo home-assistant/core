@@ -440,7 +440,7 @@ async def test_timeout_cancelled(hass, hass_client):
     respx.get("http://example.com").respond(text="not hello world")
 
     with patch(
-        "homeassistant.components.generic.camera.GenericCamera._async_camera_image",
+        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
         side_effect=asyncio.CancelledError(),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")

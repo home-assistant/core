@@ -115,6 +115,19 @@ async def test_ensure_config_exists_uses_existing_config(hass):
     assert content == ""
 
 
+async def test_ensure_existing_files_is_not_overwritten(hass):
+    """Test that calling async_create_default_config does not overwrite existing files."""
+    create_file(SECRET_PATH)
+
+    await config_util.async_create_default_config(hass)
+
+    with open(SECRET_PATH) as fp:
+        content = fp.read()
+
+    # File created with create_file are empty
+    assert content == ""
+
+
 def test_load_yaml_config_converts_empty_files_to_dict():
     """Test that loading an empty file returns an empty dict."""
     create_file(YAML_PATH)
@@ -205,7 +218,6 @@ def test_customize_dict_schema():
     values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
 
     for val in values:
-        print(val)
         with pytest.raises(MultipleInvalid):
             config_util.CUSTOMIZE_DICT_SCHEMA(val)
 
@@ -361,7 +373,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.time_zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.allowlist_external_dirs) == 3
@@ -392,7 +404,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
@@ -450,7 +462,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
@@ -480,7 +492,7 @@ async def test_loading_configuration(hass):
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
-    assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.allowlist_external_dirs) == 3
@@ -512,7 +524,7 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
@@ -780,7 +792,6 @@ async def test_merge_id_schema(hass):
     types = {
         "panel_custom": "list",
         "group": "dict",
-        "script": "dict",
         "input_boolean": "dict",
         "shell_command": "dict",
         "qwikswitch": "dict",

@@ -1,7 +1,10 @@
 """Define Guardian-specific utilities."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable
 from datetime import timedelta
-from typing import Awaitable, Callable
+from typing import Callable
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -26,7 +29,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         api_coro: Callable[..., Awaitable],
         api_lock: asyncio.Lock,
         valve_controller_uid: str,
-    ):
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,

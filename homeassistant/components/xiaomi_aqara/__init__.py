@@ -1,5 +1,4 @@
 """Support for Xiaomi Gateways."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -188,10 +187,7 @@ async def async_setup_entry(
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    for platform in platforms:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, platforms)
 
     return True
 
@@ -205,14 +201,7 @@ async def async_unload_entry(
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in platforms
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
         hass.data[DOMAIN][GATEWAYS_KEY].pop(entry.entry_id)
 

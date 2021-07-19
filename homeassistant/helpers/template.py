@@ -5,6 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
+from collections.abc import Generator, Iterable
 from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -16,14 +17,14 @@ from operator import attrgetter
 import random
 import re
 import sys
-from typing import Any, Generator, Iterable, cast
+from typing import Any, Callable, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 import jinja2
-from jinja2 import contextfilter, contextfunction
+from jinja2 import contextfunction, pass_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
-from jinja2.utils import Namespace  # type: ignore
+from jinja2.utils import Namespace
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -174,7 +175,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, *, render_result: str | None = None):
+    def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
 
@@ -193,31 +194,31 @@ RESULT_WRAPPERS: dict[type, type] = {
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
-def _true(arg: Any) -> bool:
+def _true(arg: str) -> bool:
     return True
 
 
-def _false(arg: Any) -> bool:
+def _false(arg: str) -> bool:
     return False
 
 
 class RenderInfo:
     """Holds information about a template render."""
 
-    def __init__(self, template):
+    def __init__(self, template: Template) -> None:
         """Initialise."""
         self.template = template
         # Will be set sensibly once frozen.
-        self.filter_lifecycle = _true
-        self.filter = _true
+        self.filter_lifecycle: Callable[[str], bool] = _true
+        self.filter: Callable[[str], bool] = _true
         self._result: str | None = None
         self.is_static = False
         self.exception: TemplateError | None = None
         self.all_states = False
         self.all_states_lifecycle = False
-        self.domains = set()
-        self.domains_lifecycle = set()
-        self.entities = set()
+        self.domains: collections.abc.Set[str] = set()
+        self.domains_lifecycle: collections.abc.Set[str] = set()
+        self.entities: collections.abc.Set[str] = set()
         self.rate_limit: timedelta | None = None
         self.has_time = False
 
@@ -491,7 +492,7 @@ class Template:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
 
-        render_info = RenderInfo(self)  # type: ignore[no-untyped-call]
+        render_info = RenderInfo(self)
 
         # pylint: disable=protected-access
         if self.is_static:
@@ -580,9 +581,8 @@ class Template:
         self._strict = strict
         env = self._env
 
-        self._compiled = cast(
-            jinja2.Template,
-            jinja2.Template.from_code(env, self._compiled_code, env.globals, None),
+        self._compiled = jinja2.Template.from_code(
+            env, self._compiled_code, env.globals, None
         )
 
         return self._compiled
@@ -856,6 +856,9 @@ def result_as_boolean(template_result: str | None) -> bool:
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
 
     """
+    if template_result is None:
+        return False
+
     try:
         # Import here, not at top-level to avoid circular import
         from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
@@ -1039,13 +1042,13 @@ def is_state(hass: HomeAssistant, entity_id: str, state: State) -> bool:
     return state_obj is not None and state_obj.state == state
 
 
-def is_state_attr(hass, entity_id, name, value):
+def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
     """Test if a state's attribute is a specific value."""
     attr = state_attr(hass, entity_id, name)
     return attr is not None and attr == value
 
 
-def state_attr(hass, entity_id, name):
+def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     """Get a specific attribute from a state."""
     state_obj = _get_state(hass, entity_id)
     if state_obj is not None:
@@ -1053,7 +1056,7 @@ def state_attr(hass, entity_id, name):
     return None
 
 
-def now(hass):
+def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
     render_info = hass.data.get(_RENDER_INFO)
     if render_info is not None:
@@ -1062,7 +1065,7 @@ def now(hass):
     return dt_util.now()
 
 
-def utcnow(hass):
+def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
     render_info = hass.data.get(_RENDER_INFO)
     if render_info is not None:
@@ -1312,7 +1315,7 @@ def to_json(value):
     return json.dumps(value)
 
 
-@contextfilter
+@pass_context
 def random_every_time(context, values):
     """Choose a random value.
 
@@ -1417,6 +1420,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan"] = arc_tangent
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
+        self.filters["as_datetime"] = dt_util.parse_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
@@ -1451,6 +1455,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
+        self.globals["as_datetime"] = dt_util.parse_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
@@ -1479,7 +1484,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return contextfunction(wrapper)
 
         self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = contextfilter(self.globals["device_entities"])
+        self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other
@@ -1511,9 +1516,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return
 
         self.globals["expand"] = hassfunction(expand)
-        self.filters["expand"] = contextfilter(self.globals["expand"])
+        self.filters["expand"] = pass_context(self.globals["expand"])
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = contextfilter(hassfunction(closest_filter))
+        self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_state"] = hassfunction(is_state)
         self.globals["is_state_attr"] = hassfunction(is_state_attr)

@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
@@ -20,7 +21,7 @@ def met_setup_fixture():
 async def test_show_config_form(hass):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -38,7 +39,7 @@ async def test_flow_with_home_location(hass):
     hass.config.elevation = 3
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -61,7 +62,7 @@ async def test_create_entry(hass):
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
     assert result["type"] == "create_entry"
@@ -89,7 +90,7 @@ async def test_flow_entry_already_exists(hass):
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
     assert result["type"] == "form"
@@ -136,7 +137,7 @@ async def test_import_step(hass):
         "track_home": True,
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=test_data
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=test_data
     )
 
     assert result["type"] == "create_entry"

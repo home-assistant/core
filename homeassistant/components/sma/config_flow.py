@@ -4,11 +4,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aiohttp
 import pysma
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -16,11 +15,11 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, GROUPS
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CUSTOM, CONF_GROUP, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,14 +35,10 @@ async def validate_input(
 
     sma = pysma.SMA(session, url, data[CONF_PASSWORD], group=data[CONF_GROUP])
 
-    if await sma.new_session() is False:
-        raise InvalidAuth
-
+    # new_session raises SmaAuthenticationException on failure
+    await sma.new_session()
     device_info = await sma.device_info()
     await sma.close_session()
-
-    if not device_info:
-        raise CannotRetrieveDeviceInfo
 
     return device_info
 
@@ -52,7 +47,6 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMA."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize."""
@@ -64,12 +58,11 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: vol.UNDEFINED,
             CONF_SENSORS: [],
             CONF_CUSTOM: {},
-            DEVICE_INFO: {},
         }
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """First step in config flow."""
         errors = {}
         if user_input is not None:
@@ -80,19 +73,19 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
             try:
-                self._data[DEVICE_INFO] = await validate_input(self.hass, user_input)
-            except aiohttp.ClientError:
+                device_info = await validate_input(self.hass, user_input)
+            except pysma.exceptions.SmaConnectionException:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except pysma.exceptions.SmaAuthenticationException:
                 errors["base"] = "invalid_auth"
-            except CannotRetrieveDeviceInfo:
+            except pysma.exceptions.SmaReadException:
                 errors["base"] = "cannot_retrieve_device_info"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(self._data[DEVICE_INFO]["serial"])
+                await self.async_set_unique_id(device_info["serial"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data
@@ -118,10 +111,9 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, import_config: dict[str, Any] | None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Import a config flow from configuration."""
         device_info = await validate_input(self.hass, import_config)
-        import_config[DEVICE_INFO] = device_info
 
         # If unique is configured import was already run
         # This means remap was already done, so we can abort
@@ -131,11 +123,3 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=import_config[CONF_HOST], data=import_config
         )
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class CannotRetrieveDeviceInfo(exceptions.HomeAssistantError):
-    """Error to indicate we cannot retrieve the device information."""

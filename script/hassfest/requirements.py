@@ -95,6 +95,9 @@ def validate_requirements(integration: Integration):
         integration_requirements.add(req)
         integration_packages.add(package)
 
+    if integration.disabled:
+        return
+
     install_ok = install_requirements(integration, integration_requirements)
 
     if not install_ok:

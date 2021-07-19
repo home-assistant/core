@@ -1,9 +1,15 @@
 search:
+  name: Search
   description: Emulates opening the search screen and entering the search keyword.
+  target:
+    entity:
+      integration: roku
+      domain: media_player
   fields:
-    entity_id:
-      description: The entities to search on.
-      example: "media_player.roku"
     keyword:
+      name: Keyword
       description: The keyword to search for.
+      required: true
       example: "Space Jam"
+      selector:
+        text:

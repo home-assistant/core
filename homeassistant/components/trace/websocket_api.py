@@ -57,7 +57,7 @@ def async_setup(hass: HomeAssistant) -> None:
     }
 )
 def websocket_trace_get(hass, connection, msg):
-    """Get an script or automation trace."""
+    """Get a script or automation trace."""
     key = (msg["domain"], msg["item_id"])
     run_id = msg["run_id"]
 
@@ -77,7 +77,7 @@ def websocket_trace_get(hass, connection, msg):
 
 
 def get_debug_traces(hass, key):
-    """Return a serializable list of debug traces for an script or automation."""
+    """Return a serializable list of debug traces for a script or automation."""
     traces = []
 
     for trace in hass.data[DATA_TRACE].get(key, {}).values():

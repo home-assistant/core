@@ -179,9 +179,9 @@ async def test_issur_melacha_sensor(
 ):
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
-    test_time = time_zone.localize(now)
+    test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = time_zone
+    hass.config.time_zone = tzname
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -214,7 +214,7 @@ async def test_issur_melacha_sensor(
                 [
                     latitude,
                     longitude,
-                    time_zone,
+                    tzname,
                     HDATE_DEFAULT_ALTITUDE,
                     diaspora,
                     "english",
@@ -270,9 +270,9 @@ async def test_issur_melacha_sensor_update(
 ):
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
-    test_time = time_zone.localize(now)
+    test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = time_zone
+    hass.config.time_zone = tzname
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 

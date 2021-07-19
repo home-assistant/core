@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "ScreenLogic {name}",
+        "flow_title": "{name}",
         "step": {
             "gateway_entry": {
                 "data": {

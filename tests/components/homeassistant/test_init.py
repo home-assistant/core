@@ -1,7 +1,6 @@
 """The tests for Core components."""
 # pylint: disable=protected-access
 import asyncio
-from datetime import timedelta
 import unittest
 from unittest.mock import Mock, patch
 
@@ -34,12 +33,10 @@ import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     async_capture_events,
-    async_fire_time_changed,
     async_mock_service,
     get_test_home_assistant,
     mock_registry,
@@ -526,7 +523,6 @@ async def test_restart_homeassistant(hass):
             blocking=True,
         )
         assert mock_check.called
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
         await hass.async_block_till_done()
         assert mock_restart.called
 
@@ -545,6 +541,5 @@ async def test_stop_homeassistant(hass):
             blocking=True,
         )
         assert not mock_check.called
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
         await hass.async_block_till_done()
         assert mock_restart.called

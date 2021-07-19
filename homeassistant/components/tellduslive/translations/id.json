@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Layanan sudah dikonfigurasi",
-            "authorize_url_fail": "Kesalahan tidak dikenal terjadi ketika menghasilkan URL otorisasi.",
             "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
             "unknown": "Kesalahan yang tidak diharapkan",
             "unknown_authorize_url_generation": "Kesalahan tidak dikenal ketika menghasilkan URL otorisasi."

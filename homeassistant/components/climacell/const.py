@@ -5,7 +5,9 @@ from pyclimacell.const import (
     NOWCAST,
     HealthConcernType,
     PollenIndex,
+    PrecipitationType,
     PrimaryPollutantType,
+    V3PollenIndex,
     WeatherCode,
 )
 
@@ -24,14 +26,34 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_NAME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
+from homeassistant.util.distance import convert as distance_convert
+from homeassistant.util.pressure import convert as pressure_convert
+from homeassistant.util.temperature import convert as temp_convert
 
 CONF_TIMESTEP = "timestep"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
@@ -42,7 +64,7 @@ DEFAULT_FORECAST_TYPE = DAILY
 DOMAIN = "climacell"
 ATTRIBUTION = "Powered by ClimaCell"
 
-MAX_REQUESTS_PER_DAY = 1000
+MAX_REQUESTS_PER_DAY = 500
 
 CLEAR_CONDITIONS = {"night": ATTR_CONDITION_CLEAR_NIGHT, "day": ATTR_CONDITION_SUNNY}
 
@@ -57,6 +79,7 @@ ATTR_FIELD = "field"
 ATTR_METRIC_CONVERSION = "metric_conversion"
 ATTR_VALUE_MAP = "value_map"
 ATTR_IS_METRIC_CHECK = "is_metric_check"
+ATTR_SCALE = "scale"
 
 # Additional attributes
 ATTR_WIND_GUST = "wind_gust"
@@ -125,12 +148,105 @@ CC_ATTR_POLLEN_TREE = "treeIndex"
 CC_ATTR_POLLEN_WEED = "weedIndex"
 CC_ATTR_POLLEN_GRASS = "grassIndex"
 CC_ATTR_FIRE_INDEX = "fireIndex"
+CC_ATTR_FEELS_LIKE = "temperatureApparent"
+CC_ATTR_DEW_POINT = "dewPoint"
+CC_ATTR_PRESSURE_SURFACE_LEVEL = "pressureSurfaceLevel"
+CC_ATTR_SOLAR_GHI = "solarGHI"
+CC_ATTR_CLOUD_BASE = "cloudBase"
+CC_ATTR_CLOUD_CEILING = "cloudCeiling"
 
 CC_SENSOR_TYPES = [
     {
+        ATTR_FIELD: CC_ATTR_FEELS_LIKE,
+        ATTR_NAME: "Feels Like",
+        CONF_UNIT_SYSTEM_IMPERIAL: TEMP_FAHRENHEIT,
+        CONF_UNIT_SYSTEM_METRIC: TEMP_CELSIUS,
+        ATTR_METRIC_CONVERSION: lambda val: temp_convert(
+            val, TEMP_FAHRENHEIT, TEMP_CELSIUS
+        ),
+        ATTR_IS_METRIC_CHECK: True,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_DEW_POINT,
+        ATTR_NAME: "Dew Point",
+        CONF_UNIT_SYSTEM_IMPERIAL: TEMP_FAHRENHEIT,
+        CONF_UNIT_SYSTEM_METRIC: TEMP_CELSIUS,
+        ATTR_METRIC_CONVERSION: lambda val: temp_convert(
+            val, TEMP_FAHRENHEIT, TEMP_CELSIUS
+        ),
+        ATTR_IS_METRIC_CHECK: True,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_PRESSURE_SURFACE_LEVEL,
+        ATTR_NAME: "Pressure (Surface Level)",
+        CONF_UNIT_SYSTEM_IMPERIAL: PRESSURE_INHG,
+        CONF_UNIT_SYSTEM_METRIC: PRESSURE_HPA,
+        ATTR_METRIC_CONVERSION: lambda val: pressure_convert(
+            val, PRESSURE_INHG, PRESSURE_HPA
+        ),
+        ATTR_IS_METRIC_CHECK: True,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_SOLAR_GHI,
+        ATTR_NAME: "Global Horizontal Irradiance",
+        CONF_UNIT_SYSTEM_IMPERIAL: IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
+        CONF_UNIT_SYSTEM_METRIC: IRRADIATION_WATTS_PER_SQUARE_METER,
+        ATTR_METRIC_CONVERSION: 3.15459,
+        ATTR_IS_METRIC_CHECK: True,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_CLOUD_BASE,
+        ATTR_NAME: "Cloud Base",
+        CONF_UNIT_SYSTEM_IMPERIAL: LENGTH_MILES,
+        CONF_UNIT_SYSTEM_METRIC: LENGTH_KILOMETERS,
+        ATTR_METRIC_CONVERSION: lambda val: distance_convert(
+            val, LENGTH_MILES, LENGTH_KILOMETERS
+        ),
+        ATTR_IS_METRIC_CHECK: True,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_CLOUD_CEILING,
+        ATTR_NAME: "Cloud Ceiling",
+        CONF_UNIT_SYSTEM_IMPERIAL: LENGTH_MILES,
+        CONF_UNIT_SYSTEM_METRIC: LENGTH_KILOMETERS,
+        ATTR_METRIC_CONVERSION: lambda val: distance_convert(
+            val, LENGTH_MILES, LENGTH_KILOMETERS
+        ),
+        ATTR_IS_METRIC_CHECK: True,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_CLOUD_COVER,
+        ATTR_NAME: "Cloud Cover",
+        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_WIND_GUST,
+        ATTR_NAME: "Wind Gust",
+        CONF_UNIT_SYSTEM_IMPERIAL: SPEED_MILES_PER_HOUR,
+        CONF_UNIT_SYSTEM_METRIC: SPEED_METERS_PER_SECOND,
+        ATTR_METRIC_CONVERSION: lambda val: distance_convert(
+            val, LENGTH_MILES, LENGTH_METERS
+        )
+        / 3600,
+        ATTR_IS_METRIC_CHECK: True,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_PRECIPITATION_TYPE,
+        ATTR_NAME: "Precipitation Type",
+        ATTR_VALUE_MAP: PrecipitationType,
+    },
+    {
+        ATTR_FIELD: CC_ATTR_OZONE,
+        ATTR_NAME: "Ozone",
+        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
+    },
+    {
         ATTR_FIELD: CC_ATTR_PARTICULATE_MATTER_25,
         ATTR_NAME: "Particulate Matter < 2.5 μm",
-        CONF_UNIT_SYSTEM_IMPERIAL: "μg/ft³",
+        CONF_UNIT_SYSTEM_IMPERIAL: CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
         ATTR_IS_METRIC_CHECK: True,
@@ -138,7 +254,7 @@ CC_SENSOR_TYPES = [
     {
         ATTR_FIELD: CC_ATTR_PARTICULATE_MATTER_10,
         ATTR_NAME: "Particulate Matter < 10 μm",
-        CONF_UNIT_SYSTEM_IMPERIAL: "μg/ft³",
+        CONF_UNIT_SYSTEM_IMPERIAL: CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
         CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
         ATTR_IS_METRIC_CHECK: True,
@@ -152,6 +268,7 @@ CC_SENSOR_TYPES = [
         ATTR_FIELD: CC_ATTR_CARBON_MONOXIDE,
         ATTR_NAME: "Carbon Monoxide",
         CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO,
     },
     {
         ATTR_FIELD: CC_ATTR_SULFUR_DIOXIDE,
@@ -262,11 +379,16 @@ CC_V3_ATTR_FIRE_INDEX = "fire_index"
 
 CC_V3_SENSOR_TYPES = [
     {
+        ATTR_FIELD: CC_V3_ATTR_OZONE,
+        ATTR_NAME: "Ozone",
+        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
+    },
+    {
         ATTR_FIELD: CC_V3_ATTR_PARTICULATE_MATTER_25,
         ATTR_NAME: "Particulate Matter < 2.5 μm",
         CONF_UNIT_SYSTEM_IMPERIAL: "μg/ft³",
         CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_METRIC_CONVERSION: 1 / (3.2808399 ** 3),
+        ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
         ATTR_IS_METRIC_CHECK: False,
     },
     {
@@ -274,7 +396,7 @@ CC_V3_SENSOR_TYPES = [
         ATTR_NAME: "Particulate Matter < 10 μm",
         CONF_UNIT_SYSTEM_IMPERIAL: "μg/ft³",
         CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_METRIC_CONVERSION: 1 / (3.2808399 ** 3),
+        ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
         ATTR_IS_METRIC_CHECK: False,
     },
     {
@@ -286,6 +408,7 @@ CC_V3_SENSOR_TYPES = [
         ATTR_FIELD: CC_V3_ATTR_CARBON_MONOXIDE,
         ATTR_NAME: "Carbon Monoxide",
         CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO,
     },
     {
         ATTR_FIELD: CC_V3_ATTR_SULFUR_DIOXIDE,
@@ -307,8 +430,20 @@ CC_V3_SENSOR_TYPES = [
         ATTR_FIELD: CC_V3_ATTR_CHINA_HEALTH_CONCERN,
         ATTR_NAME: "China MEP Health Concern",
     },
-    {ATTR_FIELD: CC_V3_ATTR_POLLEN_TREE, ATTR_NAME: "Tree Pollen Index"},
-    {ATTR_FIELD: CC_V3_ATTR_POLLEN_WEED, ATTR_NAME: "Weed Pollen Index"},
-    {ATTR_FIELD: CC_V3_ATTR_POLLEN_GRASS, ATTR_NAME: "Grass Pollen Index"},
+    {
+        ATTR_FIELD: CC_V3_ATTR_POLLEN_TREE,
+        ATTR_NAME: "Tree Pollen Index",
+        ATTR_VALUE_MAP: V3PollenIndex,
+    },
+    {
+        ATTR_FIELD: CC_V3_ATTR_POLLEN_WEED,
+        ATTR_NAME: "Weed Pollen Index",
+        ATTR_VALUE_MAP: V3PollenIndex,
+    },
+    {
+        ATTR_FIELD: CC_V3_ATTR_POLLEN_GRASS,
+        ATTR_NAME: "Grass Pollen Index",
+        ATTR_VALUE_MAP: V3PollenIndex,
+    },
     {ATTR_FIELD: CC_V3_ATTR_FIRE_INDEX, ATTR_NAME: "Fire Index"},
 ]

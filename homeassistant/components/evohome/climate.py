@@ -17,7 +17,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import PRECISION_TENTHS
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import (
@@ -75,7 +76,7 @@ STATE_ATTRS_ZONES = ["zoneId", "activeFaults", "setpointStatus", "temperatureSta
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Create the evohome Controller, and its Zones, if any."""
     if discovery_info is None:

@@ -41,7 +41,7 @@ class NetatmoSource(MediaSource):
 
     name: str = MANUFACTURER
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize Netatmo source."""
         super().__init__(DOMAIN)
         self.hass = hass
@@ -159,7 +159,7 @@ def async_parse_identifier(
     item: MediaSourceItem,
 ) -> tuple[str, str, int | None]:
     """Parse identifier."""
-    if not item.identifier:
+    if not item.identifier or "/" not in item.identifier:
         return "events", "", None
 
     source, path = item.identifier.lstrip("/").split("/", 1)

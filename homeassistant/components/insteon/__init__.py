@@ -96,7 +96,9 @@ async def async_setup_entry(hass, entry):
             _LOGGER.error("Could not connect to Insteon modem")
             raise ConfigEntryNotReady from exception
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
+    )
 
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0

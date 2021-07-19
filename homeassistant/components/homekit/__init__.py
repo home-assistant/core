@@ -8,7 +8,7 @@ from aiohttp import web
 from pyhap.const import STANDALONE_AID
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.components import network, zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_MOTION,
@@ -40,7 +40,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.util import get_local_ip
 
 from . import (  # noqa: F401
     type_cameras,
@@ -59,7 +58,7 @@ from . import (  # noqa: F401
 from .accessories import HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
@@ -95,7 +94,6 @@ from .const import (
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
     SHUTDOWN_TIMEOUT,
-    UNDO_UPDATE_LISTENER,
 )
 from .util import (
     accessory_friendly_name,
@@ -119,6 +117,8 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
+
+MDNS_TARGET_IP = "224.0.0.251"
 
 
 def _has_all_unique_names_and_ports(bridges):
@@ -232,7 +232,7 @@ def _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
     return False
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HomeKit from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
@@ -244,7 +244,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(CONF_IP_ADDRESS)
+    ip_address = conf.get(
+        CONF_IP_ADDRESS, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    )
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
     # exclude_accessory_mode is only used for config flow
     # to indicate that the config entry was setup after
@@ -276,12 +278,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.title,
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        HOMEKIT: homekit,
-        UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
-    }
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+    )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+    hass.data[DOMAIN][entry.entry_id] = {HOMEKIT: homekit}
 
     if hass.state == CoreState.running:
         await homekit.async_start()
@@ -298,12 +300,9 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     dismiss_setup_message(hass, entry.entry_id)
-
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
 
     if homekit.status == STATUS_RUNNING:
@@ -460,9 +459,8 @@ class HomeKit:
         self.bridge = None
         self.driver = None
 
-    def setup(self, zeroconf_instance):
+    def setup(self, async_zeroconf_instance):
         """Set up bridge and accessory driver."""
-        ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
         self.driver = HomeDriver(
@@ -471,11 +469,11 @@ class HomeKit:
             self._name,
             self._entry_title,
             loop=self.hass.loop,
-            address=ip_addr,
+            address=self._ip_address,
             port=self._port,
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
-            zeroconf_instance=zeroconf_instance,
+            async_zeroconf_instance=async_zeroconf_instance,
         )
 
         # If we do not load the mac address will be wrong
@@ -599,11 +597,12 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
-        zc_instance = await zeroconf.async_get_instance(self.hass)
-        await self.hass.async_add_executor_job(self.setup, zc_instance)
+        async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
+        await self.hass.async_add_executor_job(self.setup, async_zc_instance)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
-        await self._async_create_accessories()
+        if not await self._async_create_accessories():
+            return
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
@@ -670,16 +669,32 @@ class HomeKit:
         """Create the accessories."""
         entity_states = await self.async_configure_accessories()
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
+            if not entity_states:
+                _LOGGER.error(
+                    "HomeKit %s cannot startup: entity not available: %s",
+                    self._name,
+                    self._filter.config,
+                )
+                return False
             state = entity_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
+            if acc is None:
+                _LOGGER.error(
+                    "HomeKit %s cannot startup: entity not supported: %s",
+                    self._name,
+                    self._filter.config,
+                )
+                return False
         else:
             self.bridge = HomeBridge(self.hass, self.driver, self._name)
             for state in entity_states:
                 self.add_bridge_accessory(state)
             acc = self.bridge
 
-        await self.hass.async_add_executor_job(self.driver.add_accessory, acc)
+        # No need to load/persist as we do it in setup
+        self.driver.accessory = acc
+        return True
 
     async def async_stop(self, *args):
         """Stop the accessory driver."""
@@ -770,9 +785,9 @@ class HomeKit:
                 integration = await async_get_integration(
                     self.hass, ent_reg_ent.platform
                 )
-                ent_cfg[ATTR_INTERGRATION] = integration.name
+                ent_cfg[ATTR_INTEGRATION] = integration.name
             except IntegrationNotFound:
-                ent_cfg[ATTR_INTERGRATION] = ent_reg_ent.platform
+                ent_cfg[ATTR_INTEGRATION] = ent_reg_ent.platform
 
 
 class HomeKitPairingQRView(HomeAssistantView):

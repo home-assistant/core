@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
 import arrow
-import pytz
 from withings_api.common import (
     MeasureGetMeasResponse,
     NotifyAppli,
@@ -40,6 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -77,7 +77,7 @@ def new_profile_config(
             measuregrps=[],
             more=False,
             offset=0,
-            timezone=pytz.UTC,
+            timezone=dt_util.UTC,
             updatetime=arrow.get(12345),
         ),
         api_response_sleep_get_summary=api_response_sleep_get_summary
@@ -292,11 +292,9 @@ def get_config_entries_for_user_id(
 ) -> tuple[ConfigEntry]:
     """Get a list of config entries that apply to a specific withings user."""
     return tuple(
-        [
-            config_entry
-            for config_entry in hass.config_entries.async_entries(const.DOMAIN)
-            if config_entry.data.get("token", {}).get("userid") == user_id
-        ]
+        config_entry
+        for config_entry in hass.config_entries.async_entries(const.DOMAIN)
+        if config_entry.data.get("token", {}).get("userid") == user_id
     )
 
 

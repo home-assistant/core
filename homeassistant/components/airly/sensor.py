@@ -1,68 +1,57 @@
 """Support for the Airly sensor service."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+from typing import Any, cast
+
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AirlyDataUpdateCoordinator
 from .const import (
-    ATTR_API_HUMIDITY,
-    ATTR_API_PM1,
-    ATTR_API_PRESSURE,
-    ATTR_API_TEMPERATURE,
+    ATTR_ADVICE,
+    ATTR_API_ADVICE,
+    ATTR_API_CAQI,
+    ATTR_API_CAQI_DESCRIPTION,
+    ATTR_API_CAQI_LEVEL,
+    ATTR_API_PM10,
+    ATTR_API_PM25,
+    ATTR_DESCRIPTION,
     ATTR_LABEL,
+    ATTR_LEVEL,
+    ATTR_LIMIT,
+    ATTR_PERCENT,
     ATTR_UNIT,
+    ATTR_VALUE,
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
+    SENSOR_TYPES,
+    SUFFIX_LIMIT,
+    SUFFIX_PERCENT,
 )
 
 PARALLEL_UPDATES = 1
 
-SENSOR_TYPES = {
-    ATTR_API_PM1: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_LABEL: ATTR_API_PM1,
-        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    },
-    ATTR_API_HUMIDITY: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_API_HUMIDITY.capitalize(),
-        ATTR_UNIT: PERCENTAGE,
-    },
-    ATTR_API_PRESSURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_API_PRESSURE.capitalize(),
-        ATTR_UNIT: PRESSURE_HPA,
-    },
-    ATTR_API_TEMPERATURE: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_API_TEMPERATURE.capitalize(),
-        ATTR_UNIT: TEMP_CELSIUS,
-    },
-}
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Airly sensor entities based on a config entry."""
-    name = config_entry.data[CONF_NAME]
+    name = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
     for sensor in SENSOR_TYPES:
@@ -76,66 +65,67 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirlySensor(CoordinatorEntity, SensorEntity):
     """Define an Airly sensor."""
 
-    def __init__(self, coordinator, name, kind):
+    coordinator: AirlyDataUpdateCoordinator
+
+    def __init__(
+        self, coordinator: AirlyDataUpdateCoordinator, name: str, kind: str
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._name = name
+        self._description = description = SENSOR_TYPES[kind]
+        self._attr_device_class = description.get(ATTR_DEVICE_CLASS)
+        self._attr_icon = description.get(ATTR_ICON)
+        self._attr_name = f"{name} {description[ATTR_LABEL]}"
+        self._attr_state_class = description.get(ATTR_STATE_CLASS)
+        self._attr_unique_id = (
+            f"{coordinator.latitude}-{coordinator.longitude}-{kind.lower()}"
+        )
+        self._attr_unit_of_measurement = description.get(ATTR_UNIT)
+        self._attrs: dict[str, Any] = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.kind = kind
-        self._device_class = None
-        self._state = None
-        self._icon = None
-        self._unit_of_measurement = None
-        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def name(self):
-        """Return the name."""
-        return f"{self._name} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
-
-    @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state."""
-        self._state = self.coordinator.data[self.kind]
-        if self.kind in [ATTR_API_PM1, ATTR_API_PRESSURE]:
-            self._state = round(self._state)
-        if self.kind in [ATTR_API_TEMPERATURE, ATTR_API_HUMIDITY]:
-            self._state = round(self._state, 1)
-        return self._state
+        state = self.coordinator.data[self.kind]
+        return cast(StateType, self._description[ATTR_VALUE](state))
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
+        if self.kind == ATTR_API_CAQI:
+            self._attrs[ATTR_LEVEL] = self.coordinator.data[ATTR_API_CAQI_LEVEL]
+            self._attrs[ATTR_ADVICE] = self.coordinator.data[ATTR_API_ADVICE]
+            self._attrs[ATTR_DESCRIPTION] = self.coordinator.data[
+                ATTR_API_CAQI_DESCRIPTION
+            ]
+        if self.kind == ATTR_API_PM25:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_PM25}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_PM25}_{SUFFIX_PERCENT}"]
+            )
+        if self.kind == ATTR_API_PM10:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_PM10}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_PM10}_{SUFFIX_PERCENT}"]
+            )
         return self._attrs
 
     @property
-    def icon(self):
-        """Return the icon."""
-        self._icon = SENSOR_TYPES[self.kind][ATTR_ICON]
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device_class."""
-        return SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {
-                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
+                (
+                    DOMAIN,
+                    f"{self.coordinator.latitude}-{self.coordinator.longitude}",
+                )
             },
             "name": DEFAULT_NAME,
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.kind][ATTR_UNIT]

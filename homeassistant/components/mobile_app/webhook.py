@@ -33,7 +33,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_CREATED,
 )
-from homeassistant.core import EventOrigin
+from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
@@ -42,7 +42,6 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -145,7 +144,7 @@ def validate_schema(schema):
 
 
 async def handle_webhook(
-    hass: HomeAssistantType, webhook_id: str, request: Request
+    hass: HomeAssistant, webhook_id: str, request: Request
 ) -> Response:
     """Handle webhook callback."""
     if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
@@ -269,7 +268,7 @@ async def webhook_stream_camera(hass, config_entry, data):
             status=HTTP_BAD_REQUEST,
         )
 
-    resp = {"mjpeg_path": "/api/camera_proxy_stream/%s" % (camera.entity_id)}
+    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera.entity_id}"}
 
     if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
         try:

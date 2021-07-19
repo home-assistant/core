@@ -31,7 +31,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize flow instance."""
@@ -112,7 +111,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: node_name,
         }
@@ -151,7 +149,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if isinstance(radio_schema, vol.Schema):
             radio_schema = radio_schema.schema
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         source = self.context.get("source")
         for param, value in radio_schema.items():
             if param in SUPPORTED_PORT_SETTINGS:

@@ -115,6 +115,13 @@ SENSOR_PROCESS_DATA = [
         "format_round",
     ),
     (
+        "devices:local:pv3",
+        "P",
+        "DC3 Power",
+        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        "format_round",
+    ),
+    (
         "devices:local",
         "PV2Bat_P",
         "PV to Battery Power",
@@ -439,6 +446,46 @@ SENSOR_PROCESS_DATA = [
         "scb:statistic:EnergyFlow",
         "Statistic:EnergyPv2:Total",
         "Energy PV2 Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyPv3:Day",
+        "Energy PV3 Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyPv3:Month",
+        "Energy PV3 Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyPv3:Year",
+        "Energy PV3 Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyPv3:Total",
+        "Energy PV3 Total",
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,

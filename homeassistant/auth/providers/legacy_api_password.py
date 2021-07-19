@@ -12,7 +12,7 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -84,7 +84,7 @@ class LegacyLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle the step of the form."""
         errors = {}
 

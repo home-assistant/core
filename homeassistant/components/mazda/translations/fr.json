@@ -11,15 +11,6 @@
             "unknown": "Erreur inattendue"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "Email",
-                    "password": "Mot de passe",
-                    "region": "R\u00e9gion"
-                },
-                "description": "L'authentification a \u00e9chou\u00e9 pour les services connect\u00e9s Mazda. Veuillez saisir vos informations d'identification actuelles.",
-                "title": "Services connect\u00e9s Mazda - \u00c9chec de l'authentification"
-            },
             "user": {
                 "data": {
                     "email": "Email",

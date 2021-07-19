@@ -29,5 +29,14 @@
         "trigger_type": {
             "turn_on": "Device is requested to turn on"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Allow usage of data notification service."
+                }
+            }
+        }
     }
 }

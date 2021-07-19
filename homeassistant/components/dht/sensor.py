@@ -3,7 +3,8 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 
-import Adafruit_DHT  # pylint: disable=import-error
+import adafruit_dht
+import board
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -11,6 +12,8 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PIN,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
@@ -32,14 +35,24 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ["Temperature", None],
-    SENSOR_HUMIDITY: ["Humidity", PERCENTAGE],
+    SENSOR_TEMPERATURE: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_HUMIDITY: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
 }
+
+
+def validate_pin_input(value):
+    """Validate that the GPIO PIN is prefixed with a D."""
+    try:
+        int(value)
+        return f"D{value}"
+    except ValueError:
+        return value.upper()
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSOR): cv.string,
-        vol.Required(CONF_PIN): cv.string,
+        vol.Required(CONF_PIN): vol.All(cv.string, validate_pin_input),
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
@@ -58,22 +71,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
-        "AM2302": Adafruit_DHT.AM2302,
-        "DHT11": Adafruit_DHT.DHT11,
-        "DHT22": Adafruit_DHT.DHT22,
+        "AM2302": adafruit_dht.DHT22,
+        "DHT11": adafruit_dht.DHT11,
+        "DHT22": adafruit_dht.DHT22,
     }
     sensor = available_sensors.get(config[CONF_SENSOR])
     pin = config[CONF_PIN]
     temperature_offset = config[CONF_TEMPERATURE_OFFSET]
     humidity_offset = config[CONF_HUMIDITY_OFFSET]
+    name = config[CONF_NAME]
 
     if not sensor:
         _LOGGER.error("DHT sensor type is not supported")
         return False
 
-    data = DHTClient(Adafruit_DHT, sensor, pin)
+    data = DHTClient(sensor, pin, name)
     dev = []
-    name = config[CONF_NAME]
 
     with suppress(KeyError):
         for variable in config[CONF_MONITORED_CONDITIONS]:
@@ -113,6 +126,7 @@ class DHTSensor(SensorEntity):
         self.humidity_offset = humidity_offset
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):
@@ -157,18 +171,28 @@ class DHTSensor(SensorEntity):
 class DHTClient:
     """Get the latest data from the DHT sensor."""
 
-    def __init__(self, adafruit_dht, sensor, pin):
+    def __init__(self, sensor, pin, name):
         """Initialize the sensor."""
-        self.adafruit_dht = adafruit_dht
         self.sensor = sensor
-        self.pin = pin
+        self.pin = getattr(board, pin)
         self.data = {}
+        self.name = name
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the DHT sensor."""
-        humidity, temperature = self.adafruit_dht.read_retry(self.sensor, self.pin)
-        if temperature:
-            self.data[SENSOR_TEMPERATURE] = temperature
-        if humidity:
-            self.data[SENSOR_HUMIDITY] = humidity
+        dht = self.sensor(self.pin)
+        try:
+            temperature = dht.temperature
+            humidity = dht.humidity
+        except RuntimeError:
+            _LOGGER.debug("Unexpected value from DHT sensor: %s", self.name)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error updating DHT sensor: %s", self.name)
+        else:
+            if temperature:
+                self.data[SENSOR_TEMPERATURE] = temperature
+            if humidity:
+                self.data[SENSOR_HUMIDITY] = humidity
+        finally:
+            dht.exit()

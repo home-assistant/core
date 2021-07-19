@@ -4,7 +4,6 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "duplicate_entry": "Aquest amfitri\u00f3 ja ha estat afegit.",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },

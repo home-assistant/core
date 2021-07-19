@@ -8,7 +8,7 @@
             "syncthru_not_supported": "\u88dd\u7f6e\u4e0d\u652f\u63f4 SyncThru",
             "unknown_state": "\u5370\u8868\u6a5f\u72c0\u614b\u672a\u77e5\uff0c\u8acb\u78ba\u8a8d URL \u8207\u7db2\u8def\u9023\u7dda"
         },
-        "flow_title": "Samsung SyncThru \u5370\u8868\u6a5f\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

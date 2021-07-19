@@ -112,7 +112,7 @@ class PioneerDevice(MediaPlayerEntity):
         try:
             try:
                 telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-            except (ConnectionRefusedError, OSError):
+            except OSError:
                 _LOGGER.warning("Pioneer %s refused connection", self._name)
                 return
             telnet.write(command.encode("ASCII") + b"\r")
@@ -125,7 +125,7 @@ class PioneerDevice(MediaPlayerEntity):
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
-        except (ConnectionRefusedError, OSError):
+        except OSError:
             _LOGGER.warning("Pioneer %s refused connection", self._name)
             return False
 

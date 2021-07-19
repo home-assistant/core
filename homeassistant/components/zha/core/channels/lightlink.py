@@ -2,7 +2,7 @@
 import asyncio
 
 import zigpy.exceptions
-import zigpy.zcl.clusters.lightlink as lightlink
+from zigpy.zcl.clusters import lightlink
 
 from .. import registries
 from .base import ChannelStatus, ZigbeeChannel
@@ -12,6 +12,8 @@ from .base import ChannelStatus, ZigbeeChannel
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
 class LightLink(ZigbeeChannel):
     """Lightlink channel."""
+
+    BIND: bool = False
 
     async def async_configure(self) -> None:
         """Add Coordinator to LightLink group ."""

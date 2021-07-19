@@ -4,7 +4,6 @@ from __future__ import annotations
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
@@ -13,7 +12,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 
@@ -27,7 +26,7 @@ DEFAULT_NAME = "Blood Glucose"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]

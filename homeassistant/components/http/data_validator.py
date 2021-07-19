@@ -1,7 +1,10 @@
 """Decorator for view methods to help with data validation."""
+from __future__ import annotations
+
+from collections.abc import Awaitable
 from functools import wraps
 import logging
-from typing import Any, Awaitable, Callable
+from typing import Any, Callable
 
 from aiohttp import web
 import voluptuous as vol

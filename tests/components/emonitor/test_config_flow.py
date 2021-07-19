@@ -102,7 +102,7 @@ async def test_dhcp_can_confirm(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "emonitor",
                 IP_ADDRESS: "1.2.3.4",
@@ -146,7 +146,7 @@ async def test_dhcp_fails_to_connect(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "emonitor",
                 IP_ADDRESS: "1.2.3.4",
@@ -175,7 +175,7 @@ async def test_dhcp_already_exists(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "emonitor",
                 IP_ADDRESS: "1.2.3.4",

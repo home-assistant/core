@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
-            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "create_entry": {
             "default": "Autenticaci\u00f3 exitosa"
@@ -10,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3 Lyric ha de tornar a autenticar-se amb el teu compte.",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             }
         }
     }

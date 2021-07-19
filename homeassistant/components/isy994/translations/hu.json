@@ -8,7 +8,7 @@
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "Universal Devices ISY994 {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -24,6 +24,14 @@
             "init": {
                 "title": "ISY994 Be\u00e1ll\u00edt\u00e1sok"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY csatlakozik",
+            "host_reachable": "El\u00e9rhet\u0151 gazdag\u00e9p",
+            "last_heartbeat": "Utols\u00f3 sz\u00edvver\u00e9s ideje",
+            "websocket_status": "Esem\u00e9nySocket \u00e1llapota"
         }
     }
 }

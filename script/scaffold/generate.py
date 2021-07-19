@@ -67,10 +67,10 @@ def _append(path: Path, text):
     path.write_text(path.read_text() + text)
 
 
-def _custom_tasks(template, info) -> None:
+def _custom_tasks(template, info: Info) -> None:
     """Handle custom tasks for templates."""
     if template == "integration":
-        changes = {"codeowners": [info.codeowner]}
+        changes = {"codeowners": [info.codeowner], "iot_class": info.iot_class}
 
         if info.requirement:
             changes["requirements"] = [info.requirement]

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 import pysma
 import voluptuous as vol
@@ -19,6 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -31,10 +33,10 @@ from .const import (
     CONF_GROUP,
     CONF_KEY,
     CONF_UNIT,
-    DEVICE_INFO,
     DOMAIN,
     GROUPS,
     PYSMA_COORDINATOR,
+    PYSMA_DEVICE_INFO,
     PYSMA_SENSORS,
 )
 
@@ -44,8 +46,8 @@ _LOGGER = logging.getLogger(__name__)
 def _check_sensor_schema(conf: dict[str, Any]) -> dict[str, Any]:
     """Check sensors and attributes are valid."""
     try:
-        valid = [s.name for s in pysma.Sensors()]
-        valid += pysma.LEGACY_MAP.keys()
+        valid = [s.name for s in pysma.sensor.Sensors()]
+        valid += pysma.const.LEGACY_MAP.keys()
     except (ImportError, AttributeError):
         return conf
 
@@ -96,7 +98,7 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigEntry,
-    async_add_entities: Callable[[], Coroutine],
+    async_add_entities: AddEntitiesCallback,
     discovery_info=None,
 ) -> None:
     """Import the platform into a config entry."""
@@ -115,13 +117,14 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[], Coroutine],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMA sensors."""
     sma_data = hass.data[DOMAIN][config_entry.entry_id]
 
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
+    device_info = sma_data[PYSMA_DEVICE_INFO]
 
     entities = []
     for sensor in used_sensors:
@@ -129,7 +132,7 @@ async def async_setup_entry(
             SMAsensor(
                 coordinator,
                 config_entry.unique_id,
-                config_entry.data[DEVICE_INFO],
+                device_info,
                 sensor,
             )
         )
@@ -145,7 +148,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
         device_info: dict[str, Any],
-        pysma_sensor: pysma.Sensor,
+        pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -181,13 +184,17 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
+        if not self._device_info:
+            return None
+
         return {
             "identifiers": {(DOMAIN, self._config_entry_unique_id)},
             "name": self._device_info["name"],
             "manufacturer": self._device_info["manufacturer"],
             "model": self._device_info["type"],
+            "sw_version": self._device_info["sw_version"],
         }
 
     @property

@@ -1,7 +1,7 @@
 """Support for switches through the SmartThings cloud API."""
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from pysmartthings import Attribute, Capability
 

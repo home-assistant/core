@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Generator, Iterable
 import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable, Generator, Iterable
+from typing import Callable
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
@@ -27,6 +28,7 @@ BASE_PLATFORMS = {
     "air_quality",
     "alarm_control_panel",
     "binary_sensor",
+    "camera",
     "climate",
     "cover",
     "device_tracker",
@@ -39,6 +41,7 @@ BASE_PLATFORMS = {
     "notify",
     "remote",
     "scene",
+    "select",
     "sensor",
     "switch",
     "tts",
@@ -277,10 +280,10 @@ async def _async_setup_component(
         await hass.config_entries.flow.async_wait_init_flow_finish(domain)
 
         await asyncio.gather(
-            *[
+            *(
                 entry.async_setup(hass, integration=integration)
                 for entry in hass.config_entries.async_entries(domain)
-            ]
+            )
         )
 
         hass.config.components.add(domain)

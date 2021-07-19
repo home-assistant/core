@@ -11,15 +11,6 @@
             "unknown": "Error inesperat"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "Correu electr\u00f2nic",
-                    "password": "Contrasenya",
-                    "region": "Regi\u00f3"
-                },
-                "description": "Ha fallat l'autenticaci\u00f3 dels Serveis connectats de Mazda. Introdueix les teves credencials actuals.",
-                "title": "Serveis connectats de Mazda - Ha fallat l'autenticaci\u00f3"
-            },
             "user": {
                 "data": {
                     "email": "Correu electr\u00f2nic",

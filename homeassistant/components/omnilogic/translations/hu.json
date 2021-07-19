@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "pH-eltol\u00e1s (pozit\u00edv vagy negat\u00edv)",
                     "polling_interval": "Lek\u00e9rdez\u00e9si id\u0151k\u00f6z (m\u00e1sodpercben)"
                 }
             }

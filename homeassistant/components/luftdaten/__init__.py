@@ -12,8 +12,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    PRESSURE_PA,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -33,6 +36,8 @@ DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
 DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
+PLATFORMS = ["sensor"]
+
 SENSOR_HUMIDITY = "humidity"
 SENSOR_PM10 = "P1"
 SENSOR_PM2_5 = "P2"
@@ -43,19 +48,41 @@ SENSOR_TEMPERATURE = "temperature"
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 SENSORS = {
-    SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
-    SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", PERCENTAGE],
-    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_PA],
-    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_PA],
+    SENSOR_TEMPERATURE: [
+        "Temperature",
+        "mdi:thermometer",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    SENSOR_HUMIDITY: [
+        "Humidity",
+        "mdi:water-percent",
+        PERCENTAGE,
+        DEVICE_CLASS_HUMIDITY,
+    ],
+    SENSOR_PRESSURE: [
+        "Pressure",
+        "mdi:arrow-down-bold",
+        PRESSURE_HPA,
+        DEVICE_CLASS_PRESSURE,
+    ],
+    SENSOR_PRESSURE_AT_SEALEVEL: [
+        "Pressure at sealevel",
+        "mdi:download",
+        PRESSURE_HPA,
+        DEVICE_CLASS_PRESSURE,
+    ],
     SENSOR_PM10: [
         "PM10",
         "mdi:thought-bubble",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        None,
     ],
     SENSOR_PM2_5: [
         "PM2.5",
         "mdi:thought-bubble-outline",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        None,
     ],
 }
 
@@ -68,18 +95,21 @@ SENSOR_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_SENSOR_ID): cv.positive_int,
-                vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
+                    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -152,9 +182,7 @@ async def async_setup_entry(hass, config_entry):
     except LuftdatenError as err:
         raise ConfigEntryNotReady from err
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     async def refresh_sensors(event_time):
         """Refresh Luftdaten data."""
@@ -181,7 +209,7 @@ async def async_unload_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT].pop(config_entry.entry_id)
 
-    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class LuftDatenData:

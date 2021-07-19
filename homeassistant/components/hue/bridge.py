@@ -1,4 +1,6 @@
 """Code to handle a Hue bridge."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
@@ -21,6 +23,7 @@ from .const import (
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
+    DOMAIN,
     LOGGER,
 )
 from .errors import AuthenticationRequired, CannotConnect
@@ -29,6 +32,9 @@ from .sensor_base import SensorManager
 
 # How long should we sleep if the hub is busy
 HUB_BUSY_SLEEP = 0.5
+
+PLATFORMS = ["light", "binary_sensor", "sensor"]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -46,7 +52,7 @@ class HueBridge:
         # Jobs to be executed when API is reset.
         self.reset_jobs = []
         self.sensor_manager = None
-        self.unsub_config_entry_listener = None
+        self._update_callbacks = {}
 
     @property
     def host(self):
@@ -90,35 +96,27 @@ class HueBridge:
             return False
 
         except CannotConnect as err:
-            LOGGER.error("Error connecting to the Hue bridge at %s", host)
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                f"Error connecting to the Hue bridge at {host}"
+            ) from err
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unknown error connecting with Hue bridge at %s", host)
             return False
 
         self.api = bridge
-        self.sensor_manager = SensorManager(self)
+        if bridge.sensors is not None:
+            self.sensor_manager = SensorManager(self)
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(self.config_entry, "light")
-        )
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "binary_sensor"
-            )
-        )
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
-        )
+        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
+        hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         self.parallel_updates_semaphore = asyncio.Semaphore(
             3 if self.api.config.modelid == "BSB001" else 10
         )
 
-        self.unsub_config_entry_listener = self.config_entry.add_update_listener(
-            _update_listener
-        )
+        self.reset_jobs.append(self.config_entry.add_update_listener(_update_listener))
+        self.reset_jobs.append(asyncio.create_task(self._subscribe_events()).cancel)
 
         self.authorized = True
         return True
@@ -173,28 +171,25 @@ class HueBridge:
         while self.reset_jobs:
             self.reset_jobs.pop()()
 
-        if self.unsub_config_entry_listener is not None:
-            self.unsub_config_entry_listener()
+        self._update_callbacks = {}
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        results = await asyncio.gather(
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "light"
-            ),
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "binary_sensor"
-            ),
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "sensor"
-            ),
+        unload_success = await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
         )
 
-        # None and True are OK
-        return False not in results
+        if unload_success:
+            self.hass.data[DOMAIN].pop(self.config_entry.entry_id)
+
+        return unload_success
 
     async def hue_activate_scene(self, data, skip_reload=False, hide_warnings=False):
         """Service to call directly into bridge to set scenes."""
+        if self.api.scenes is None:
+            _LOGGER.warning("Hub %s does not support scenes", self.api.host)
+            return
+
         group_name = data[ATTR_GROUP_NAME]
         scene_name = data[ATTR_SCENE_NAME]
         transition = data.get(ATTR_TRANSITION)
@@ -247,6 +242,39 @@ class HueBridge:
         )
         self.authorized = False
         create_config_flow(self.hass, self.host)
+
+    async def _subscribe_events(self):
+        """Subscribe to Hue events."""
+        try:
+            async for updated_object in self.api.listen_events():
+                key = (updated_object.ITEM_TYPE, updated_object.id)
+
+                if key in self._update_callbacks:
+                    for callback in self._update_callbacks[key]:
+                        callback()
+
+        except GeneratorExit:
+            pass
+
+    @core.callback
+    def listen_updates(self, item_type, item_id, update_callback):
+        """Listen to updates."""
+        key = (item_type, item_id)
+        callbacks: list[core.CALLBACK_TYPE] | None = self._update_callbacks.get(key)
+
+        if callbacks is None:
+            callbacks = self._update_callbacks[key] = []
+
+        callbacks.append(update_callback)
+
+        @core.callback
+        def unsub():
+            try:
+                callbacks.remove(update_callback)
+            except ValueError:
+                pass
+
+        return unsub
 
 
 async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):

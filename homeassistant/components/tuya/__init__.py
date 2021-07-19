@@ -1,5 +1,4 @@
 """Support for Tuya Smart devices."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -11,10 +10,14 @@ from tuyaha.tuyaapi import (
     TuyaNetException,
     TuyaServerException,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PLATFORM,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -61,23 +64,9 @@ TUYA_TYPE_TO_HA = {
 }
 
 TUYA_TRACKER = "tuya_tracker"
+STOP_CANCEL = "stop_event_cancel"
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_COUNTRYCODE): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 def _update_discovery_interval(hass, interval):
@@ -104,21 +93,7 @@ def _update_query_interval(hass, interval):
         _LOGGER.warning(ex)
 
 
-async def async_setup(hass, config):
-    """Set up the Tuya integration."""
-
-    conf = config.get(DOMAIN)
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tuya platform."""
 
     tuya = TuyaApi()
@@ -139,8 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady() from exc
 
     except TuyaAPIRateLimitException as exc:
-        _LOGGER.error("Tuya login rate limited")
-        raise ConfigEntryNotReady() from exc
+        raise ConfigEntryNotReady("Tuya login rate limited") from exc
 
     except TuyaAPIException as exc:
         _LOGGER.error(
@@ -149,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         return False
 
-    hass.data[DOMAIN] = {
+    domain_data = hass.data[DOMAIN] = {
         TUYA_DATA: tuya,
         TUYA_DEVICES_CONF: entry.options.copy(),
         TUYA_TRACKER: None,
@@ -174,22 +148,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             dev_type = device.device_type()
             if (
                 dev_type in TUYA_TYPE_TO_HA
-                and device.object_id() not in hass.data[DOMAIN]["entities"]
+                and device.object_id() not in domain_data["entities"]
             ):
                 ha_type = TUYA_TYPE_TO_HA[dev_type]
                 if ha_type not in device_type_list:
                     device_type_list[ha_type] = []
                 device_type_list[ha_type].append(device.object_id())
-                hass.data[DOMAIN]["entities"][device.object_id()] = None
+                domain_data["entities"][device.object_id()] = None
 
         for ha_type, dev_ids in device_type_list.items():
             config_entries_key = f"{ha_type}.tuya"
-            if config_entries_key not in hass.data[DOMAIN][ENTRY_IS_SETUP]:
-                hass.data[DOMAIN]["pending"][ha_type] = dev_ids
+            if config_entries_key not in domain_data[ENTRY_IS_SETUP]:
+                domain_data["pending"][ha_type] = dev_ids
                 hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(entry, ha_type)
                 )
-                hass.data[DOMAIN][ENTRY_IS_SETUP].add(config_entries_key)
+                domain_data[ENTRY_IS_SETUP].add(config_entries_key)
             else:
                 async_dispatcher_send(hass, TUYA_DISCOVERY_NEW.format(ha_type), dev_ids)
 
@@ -212,13 +186,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         newlist_ids = []
         for device in device_list:
             newlist_ids.append(device.object_id())
-        for dev_id in list(hass.data[DOMAIN]["entities"]):
+        for dev_id in list(domain_data["entities"]):
             if dev_id not in newlist_ids:
                 async_dispatcher_send(hass, SIGNAL_DELETE_ENTITY, dev_id)
-                hass.data[DOMAIN]["entities"].pop(dev_id)
+                domain_data["entities"].pop(dev_id)
 
-    hass.data[DOMAIN][TUYA_TRACKER] = async_track_time_interval(
+    domain_data[TUYA_TRACKER] = async_track_time_interval(
         hass, async_poll_devices_update, timedelta(minutes=2)
+    )
+
+    @callback
+    def _async_cancel_tuya_tracker(event):
+        domain_data[TUYA_TRACKER]()  # pylint: disable=not-callable
+
+    domain_data[STOP_CANCEL] = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, _async_cancel_tuya_tracker
     )
 
     hass.services.async_register(
@@ -236,19 +218,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unloading the Tuya platforms."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(
-                    entry, platform.split(".", 1)[0]
-                )
-                for platform in hass.data[DOMAIN][ENTRY_IS_SETUP]
-            ]
-        )
-    )
+    domain_data = hass.data[DOMAIN]
+    platforms = [platform.split(".", 1)[0] for platform in domain_data[ENTRY_IS_SETUP]]
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
-        hass.data[DOMAIN]["listener"]()
-        hass.data[DOMAIN][TUYA_TRACKER]()
+        domain_data["listener"]()
+        domain_data[STOP_CANCEL]()
+        domain_data[TUYA_TRACKER]()
         hass.services.async_remove(DOMAIN, SERVICE_FORCE_UPDATE)
         hass.services.async_remove(DOMAIN, SERVICE_PULL_DEVICES)
         hass.data.pop(DOMAIN)

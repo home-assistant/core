@@ -33,8 +33,8 @@ from .errors import AuthenticationRequired, CannotConnect
 
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
-    """Return gateway with a matching bridge id."""
-    return hass.data[DECONZ_DOMAIN][config_entry.unique_id]
+    """Return gateway with a matching config entry ID."""
+    return hass.data[DECONZ_DOMAIN][config_entry.entry_id]
 
 
 class DeconzGateway:
@@ -53,7 +53,6 @@ class DeconzGateway:
         self.deconz_ids = {}
         self.entities = {}
         self.events = []
-        self.listeners = []
 
     @property
     def bridgeid(self) -> str:
@@ -176,12 +175,7 @@ class DeconzGateway:
         except AuthenticationRequired as err:
             raise ConfigEntryAuthFailed from err
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         await async_setup_events(self)
 
@@ -251,14 +245,9 @@ class DeconzGateway:
         self.api.async_connection_status_callback = None
         self.api.close()
 
-        for platform in PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform
-            )
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
+        await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
+        )
 
         async_unload_events(self)
 

@@ -30,7 +30,7 @@ async def test_flow_discovery(hass):
     """Test the flow works with basic discovery."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discover",
+        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[
             {
                 SL_GATEWAY_IP: "1.1.1.1",
@@ -74,7 +74,7 @@ async def test_flow_discover_none(hass):
     """Test when nothing is discovered."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discover",
+        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -90,7 +90,7 @@ async def test_flow_discover_error(hass):
     """Test when discovery errors."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discover",
+        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         side_effect=ScreenLogicError("Fake error"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -137,7 +137,7 @@ async def test_dhcp(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "dhcp"},
+        context={"source": config_entries.SOURCE_DHCP},
         data={
             HOSTNAME: "Pentair: 01-01-01",
             IP_ADDRESS: "1.1.1.1",
@@ -182,7 +182,7 @@ async def test_form_manual_entry(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.screenlogic.config_flow.discover",
+        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
         return_value=[
             {
                 SL_GATEWAY_IP: "1.1.1.1",
@@ -241,9 +241,13 @@ async def test_form_manual_entry(hass):
 
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
     with patch(
         "homeassistant.components.screenlogic.config_flow.login.create_socket",

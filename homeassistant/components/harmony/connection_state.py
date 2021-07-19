@@ -16,14 +16,14 @@ class ConnectionStateMixin:
         super().__init__()
         self._unsub_mark_disconnected = None
 
-    async def got_connected(self, _=None):
+    async def async_got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
         _LOGGER.debug("%s: connected to the HUB", self._name)
         self.async_write_ha_state()
 
         self._clear_disconnection_delay()
 
-    async def got_disconnected(self, _=None):
+    async def async_got_disconnected(self, _=None):
         """Notification that we're disconnected from the HUB."""
         _LOGGER.debug("%s: disconnected from the HUB", self._name)
         # We're going to wait for 10 seconds before announcing we're

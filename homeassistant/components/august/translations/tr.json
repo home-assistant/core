@@ -10,15 +10,6 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
-            "user": {
-                "data": {
-                    "login_method": "Giri\u015f Y\u00f6ntemi",
-                    "password": "Parola",
-                    "timeout": "Zaman a\u015f\u0131m\u0131 (saniye)",
-                    "username": "Kullan\u0131c\u0131 Ad\u0131"
-                },
-                "description": "Giri\u015f Y\u00f6ntemi 'e-posta' ise, Kullan\u0131c\u0131 Ad\u0131 e-posta adresidir. Giri\u015f Y\u00f6ntemi 'telefon' ise, Kullan\u0131c\u0131 Ad\u0131 '+ NNNNNNNNN' bi\u00e7imindeki telefon numaras\u0131d\u0131r."
-            },
             "validation": {
                 "data": {
                     "code": "Do\u011frulama kodu"

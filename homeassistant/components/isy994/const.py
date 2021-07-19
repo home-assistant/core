@@ -71,6 +71,8 @@ from homeassistant.const import (
     PRESSURE_MBAR,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    SOUND_PRESSURE_DB,
+    SOUND_PRESSURE_WEIGHTED_DBA,
     SPEED_INCHES_PER_DAY,
     SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
@@ -130,7 +132,7 @@ KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
 PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
-SUPPORTED_PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
+PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
@@ -184,6 +186,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 # Used for discovery
 UDN_UUID_PREFIX = "uuid:"
 ISY_URL_POSTFIX = "/desc"
+EVENTS_SUFFIX = "_ISYSUB"
 
 # Special Units of Measure
 UOM_ISYV4_DEGREES = "degrees"
@@ -340,8 +343,8 @@ UOM_FRIENDLY_NAME = {
     "8": VOLUME_CUBIC_METERS,
     "9": TIME_DAYS,
     "10": TIME_DAYS,
-    "12": "dB",
-    "13": "dB A",
+    "12": SOUND_PRESSURE_DB,
+    "13": SOUND_PRESSURE_WEIGHTED_DBA,
     "14": DEGREE,
     "16": "macroseismic",
     "17": TEMP_FAHRENHEIT,
@@ -352,7 +355,7 @@ UOM_FRIENDLY_NAME = {
     "22": "%RH",
     "23": PRESSURE_INHG,
     "24": SPEED_INCHES_PER_HOUR,
-    UOM_INDEX: "index",  # Index type. Use "node.formatted" for value
+    UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
     "28": MASS_KILOGRAMS,

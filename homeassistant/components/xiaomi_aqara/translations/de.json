@@ -12,7 +12,7 @@
             "invalid_key": "Ung\u00fcltiger Gateway-Schl\u00fcssel",
             "invalid_mac": "Ung\u00fcltige MAC-Adresse"
         },
-        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {

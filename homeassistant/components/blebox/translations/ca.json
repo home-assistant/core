@@ -9,7 +9,7 @@
             "unknown": "Error inesperat",
             "unsupported_version": "El dispositiu BleBox t\u00e9 un firmware obsolet. Primer actualitza'l."
         },
-        "flow_title": "Dispositiu BleBox: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
