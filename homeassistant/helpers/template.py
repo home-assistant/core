@@ -906,14 +906,14 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
-def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
+def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     """Get entity ids for entities tied to a device."""
     entity_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_device(entity_reg, device_id)
+    entries = entity_registry.async_entries_for_device(entity_reg, _device_id)
     return [entry.entity_id for entry in entries]
 
 
-def to_device_id(hass: HomeAssistant, entity_id: str) -> str | None:
+def device_id(hass: HomeAssistant, entity_id: str) -> str | None:
     """Get a device ID from an entity ID."""
     if not isinstance(entity_id, str) or "." not in entity_id:
         raise TemplateError(f"Must provide an entity ID, got {entity_id}")  # type: ignore
@@ -932,7 +932,7 @@ def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -
     device = None
     if (
         "." in device_or_entity_id
-        and (_device_id := to_device_id(hass, device_or_entity_id)) is not None
+        and (_device_id := device_id(hass, device_or_entity_id)) is not None
     ):
         device = device_reg.async_get(_device_id)
     elif "." not in device_or_entity_id:
@@ -1529,8 +1529,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_attr"] = hassfunction(device_attr)
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
 
-        self.globals["to_device_id"] = hassfunction(to_device_id)
-        self.filters["to_device_id"] = pass_context(self.globals["to_device_id"])
+        self.globals["device_id"] = hassfunction(device_id)
+        self.filters["device_id"] = pass_context(self.globals["device_id"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other
@@ -1555,7 +1555,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "now",
                 "device_attr",
                 "is_device_attr",
-                "to_device_id",
+                "device_id",
             ]
             hass_filters = ["closest", "expand", "device_id"]
             for glob in hass_globals:

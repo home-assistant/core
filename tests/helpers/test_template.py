@@ -1585,8 +1585,8 @@ async def test_device_entities(hass):
     assert info.rate_limit is None
 
 
-async def test_to_device_id(hass):
-    """Test to_device_id function."""
+async def test_device_id(hass):
+    """Test device_id function."""
     config_entry = MockConfigEntry(domain="light")
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
@@ -1602,25 +1602,25 @@ async def test_to_device_id(hass):
         "sensor", "test", "test_no_device", suggested_object_id="test"
     )
 
-    info = render_to_info(hass, "{{ 'sensor.fail' | to_device_id }}")
+    info = render_to_info(hass, "{{ 'sensor.fail' | device_id }}")
     assert_result_info(info, None)
     assert info.rate_limit is None
 
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ 56 | to_device_id }}")
+        info = render_to_info(hass, "{{ 56 | device_id }}")
         assert_result_info(info, None)
 
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ 'not_a_real_entity_id' | to_device_id }}")
+        info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
         assert_result_info(info, None)
 
     info = render_to_info(
-        hass, f"{{{{ to_device_id('{entity_entry_no_device.entity_id}') }}}}"
+        hass, f"{{{{ device_id('{entity_entry_no_device.entity_id}') }}}}"
     )
     assert_result_info(info, None)
     assert info.rate_limit is None
 
-    info = render_to_info(hass, f"{{{{ to_device_id('{entity_entry.entity_id}') }}}}")
+    info = render_to_info(hass, f"{{{{ device_id('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, device_entry.id)
     assert info.rate_limit is None
 
