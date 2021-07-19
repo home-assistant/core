@@ -249,10 +249,10 @@ class ModbusHub:
         for entry in self._pb_call.values():
             entry[ENTRY_FUNC] = getattr(self._client, entry[ENTRY_NAME])
 
-        await self.async_connect_task(None)
+        await self.async_connect_task()
         return True
 
-    async def async_connect_task(self, args):
+    async def async_connect_task(self):
         """Try to connect, and retry if needed."""
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
