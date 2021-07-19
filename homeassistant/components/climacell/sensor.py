@@ -79,7 +79,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         return {ATTR_ATTRIBUTION: self.attribution}
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def unit_of_measurement(self) -> UnitT | None:
         """Return the unit of measurement."""
         if self.sensor_type.unit_imperial is not None:
             return (
