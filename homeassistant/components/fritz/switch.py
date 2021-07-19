@@ -561,8 +561,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         """Init Fritz profile."""
         super().__init__(fritzbox_tools, device)
         self._attr_is_on: bool = False
-        self._device_name = device.hostname
-        self._name = f"{self._device_name} Internet Access"
+        self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_icon = "mdi:router-wireless-settings"
 
