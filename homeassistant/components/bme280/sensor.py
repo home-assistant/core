@@ -97,19 +97,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
             return
         sensor_update = partial(sensor.update, True)
-    await hass.async_add_executor_job(sensor_update)
+
+    async def async_update_data():
+        return await hass.async_add_executor_job(sensor_update)
+
     sensor_handler = BME280Handler(sensor, interface)
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN,
+        update_method=async_update_data,
+        update_interval=scan_interval,
+    )
     entities = []
     with suppress(KeyError):
         for condition in sensor_conf[CONF_MONITORED_CONDITIONS]:
             entities.append(
                 BME280Sensor(
-                    hass,
                     sensor_handler,
                     condition,
                     SENSOR_TYPES[condition][1],
                     name,
-                    scan_interval,
+                    coordinator,
                 )
             )
     async_add_entities(entities, True)
@@ -141,10 +150,9 @@ class BME280Handler:
 class BME280Sensor(CoordinatorEntity, SensorEntity):
     """Implementation of the BME280 sensor."""
 
-    def __init__(
-        self, hass, bme280_client, sensor_type, temp_unit, name, scan_interval
-    ):
+    def __init__(self, bme280_client, sensor_type, temp_unit, name, coordinator):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.bme280_client = bme280_client
@@ -152,15 +160,6 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        super().__init__(
-            DataUpdateCoordinator(
-                hass,
-                _LOGGER,
-                name=DOMAIN,
-                update_method=self.async_update,
-                update_interval=scan_interval,
-            )
-        )
 
     @property
     def name(self):
@@ -170,16 +169,6 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
-
-    async def async_update(self):
-        """Get the latest data from the BME280 and update the states."""
-        await self.hass.async_add_executor_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
                 temperature = round(self.bme280_client.sensor.temperature, 1)
@@ -192,3 +181,14 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
                 self._state = round(self.bme280_client.sensor.pressure, 1)
         else:
             _LOGGER.warning("Bad update of sensor.%s", self.name)
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of the sensor."""
+        return self._unit_of_measurement
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False if entity should not poll."""
+        return False
