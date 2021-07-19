@@ -55,7 +55,7 @@ VALVE_TYPE = {
 }
 
 
-ACTIVATE_ONLY_SWITCH_DOMAINS = {"automation", "scene", "script"}
+ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
 
 
 @TYPES.register("Outlet")
@@ -135,8 +135,6 @@ class Switch(HomeAccessory):
         if self._domain == "script":
             service = self._object_id
             params = {}
-        elif self._domain == "automation":
-            service = "trigger"
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
 
