@@ -6,6 +6,9 @@ from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
+from xknx.dpt import DPTArray, DPTBinary
+from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx.const import DOMAIN as KNX_DOMAIN
@@ -127,9 +130,53 @@ class KNXTestKit:
         """Assert outgoing GroupValueWrite telegram. One by one in timely order."""
         await self._assert_telegram(group_address, payload, GroupValueWrite)
 
+    ####################
+    # Incoming telegrams
+    ####################
+
+    async def _receive_telegram(self, group_address: str, payload: APCI) -> None:
+        """Inject incoming KNX telegram."""
+        self.xknx.telegrams.put_nowait(
+            Telegram(
+                destination_address=GroupAddress(group_address),
+                direction=TelegramDirection.INCOMING,
+                payload=payload,
+                source_address=IndividualAddress("1.2.3"),
+            )
+        )
+        await self.hass.async_block_till_done()
+
+    @staticmethod
+    def _payload_value(payload: int | tuple[int, ...]) -> DPTArray | DPTBinary:
+        """Prepare payload value for GroupValueWrite or GroupValueResponse."""
+        if isinstance(payload, int):
+            return DPTBinary(payload)
+        return DPTArray(payload)
+
+    async def receive_read(
+        self,
+        group_address: str,
+    ) -> None:
+        """Inject incoming GroupValueRead telegram."""
+        await self._receive_telegram(group_address, GroupValueRead())
+
+    async def receive_response(
+        self, group_address: str, payload: int | tuple[int, ...]
+    ) -> None:
+        """Inject incoming GroupValueResponse telegram."""
+        payload_value = self._payload_value(payload)
+        await self._receive_telegram(group_address, GroupValueResponse(payload_value))
+
+    async def receive_write(
+        self, group_address: str, payload: int | tuple[int, ...]
+    ) -> None:
+        """Inject incoming GroupValueWrite telegram."""
+        payload_value = self._payload_value(payload)
+        await self._receive_telegram(group_address, GroupValueWrite(payload_value))
+
 
 @pytest.fixture
-async def knx(hass):
+async def knx(request, hass):
     """Create a KNX TestKit instance."""
     knx_test_kit = KNXTestKit(hass)
     yield knx_test_kit
