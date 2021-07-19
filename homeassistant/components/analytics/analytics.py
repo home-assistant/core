@@ -171,10 +171,10 @@ class Analytics:
             ATTR_STATISTICS, False
         ):
             configured_integrations = await asyncio.gather(
-                *[
+                *(
                     async_get_integration(self.hass, domain)
                     for domain in async_get_loaded_integrations(self.hass)
-                ],
+                ),
                 return_exceptions=True,
             )
 
@@ -201,10 +201,10 @@ class Analytics:
 
             if supervisor_info is not None:
                 installed_addons = await asyncio.gather(
-                    *[
+                    *(
                         hassio.async_get_addon_info(self.hass, addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
-                    ]
+                    )
                 )
                 for addon in installed_addons:
                     addons.append(

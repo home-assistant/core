@@ -213,10 +213,10 @@ async def handle_devices_execute(hass, data, payload):
             executions[entity_id] = [execution]
 
     execute_results = await asyncio.gather(
-        *[
+        *(
             _entity_execute(entities[entity_id], data, execution)
             for entity_id, execution in executions.items()
-        ]
+        )
     )
 
     for entity_id, result in zip(executions, execute_results):

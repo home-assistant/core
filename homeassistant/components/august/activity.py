@@ -98,10 +98,10 @@ class ActivityStream(AugustSubscriberMixin):
     async def _async_update_device_activities(self, time):
         _LOGGER.debug("Start retrieving device activities")
         await asyncio.gather(
-            *[
+            *(
                 self._update_debounce[house_id].async_call()
                 for house_id in self._house_ids
-            ]
+            )
         )
         self._last_update_time = time
 
