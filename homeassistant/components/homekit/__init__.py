@@ -489,7 +489,13 @@ class HomeKit:
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
         if not self.bridge:
-            self.driver.config_changed()
+            acc = self.driver.accessory
+            if acc.entity_id not in entity_ids:
+                return
+            acc.async_stop()
+            if new_acc := self._async_create_single_accessory([acc.entity_id]):
+                self.driver.accessory = new_acc
+                self.driver.config_changed()
             return
 
         removed = []
@@ -514,7 +520,13 @@ class HomeKit:
         self.driver.config_changed()
 
         for acc in removed:
-            self.bridge.add_accessory(acc)
+            if state := self.hass.states.get(acc.entity_id):
+                self.add_bridge_accessory(state)
+            else:
+                _LOGGER.warning(
+                    "The underlying entity %s disappeared during reset.", acc.entity
+                )
+
         self.driver.config_changed()
 
     def add_bridge_accessory(self, state):
@@ -541,7 +553,7 @@ class HomeKit:
             )
 
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
-        conf = self._config.pop(state.entity_id, {})
+        conf = self._config.get(state.entity_id, {}).copy()
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
@@ -556,9 +568,10 @@ class HomeKit:
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
-        acc = None
-        if aid in self.bridge.accessories:
-            acc = self.bridge.accessories.pop(aid)
+        if aid not in self.bridge.accessories:
+            return None
+        acc = self.bridge.accessories.pop(aid)
+        acc.async_stop()
         return acc
 
     async def async_configure_accessories(self):
@@ -665,33 +678,45 @@ class HomeKit:
         for device_id in devices_to_purge:
             dev_reg.async_remove_device(device_id)
 
+    @callback
+    def _async_create_single_accessory(self, entity_states):
+        """Create a single HomeKit accessory (accessory mode)."""
+        if not entity_states:
+            _LOGGER.error(
+                "HomeKit %s cannot startup: entity not available: %s",
+                self._name,
+                self._filter.config,
+            )
+            return None
+        state = entity_states[0]
+        conf = self._config.get(state.entity_id, {}).copy()
+        acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
+        if acc is None:
+            _LOGGER.error(
+                "HomeKit %s cannot startup: entity not supported: %s",
+                self._name,
+                self._filter.config,
+            )
+        return acc
+
+    @callback
+    def _async_create_bridge_accessory(self, entity_states):
+        """Create a HomeKit bridge with accessories. (bridge mode)."""
+        self.bridge = HomeBridge(self.hass, self.driver, self._name)
+        for state in entity_states:
+            self.add_bridge_accessory(state)
+        return self.bridge
+
     async def _async_create_accessories(self):
         """Create the accessories."""
         entity_states = await self.async_configure_accessories()
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
-            if not entity_states:
-                _LOGGER.error(
-                    "HomeKit %s cannot startup: entity not available: %s",
-                    self._name,
-                    self._filter.config,
-                )
-                return False
-            state = entity_states[0]
-            conf = self._config.pop(state.entity_id, {})
-            acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
-            if acc is None:
-                _LOGGER.error(
-                    "HomeKit %s cannot startup: entity not supported: %s",
-                    self._name,
-                    self._filter.config,
-                )
-                return False
+            acc = self._async_create_single_accessory(entity_states)
         else:
-            self.bridge = HomeBridge(self.hass, self.driver, self._name)
-            for state in entity_states:
-                self.add_bridge_accessory(state)
-            acc = self.bridge
+            acc = self._async_create_bridge_accessory(entity_states)
 
+        if acc is None:
+            return False
         # No need to load/persist as we do it in setup
         self.driver.accessory = acc
         return True
