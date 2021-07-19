@@ -115,7 +115,7 @@ _EMPTY_ENTITY_FILTER = {
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     """Create a mapping of types of devices/entities HomeKit can support."""
     integrations = await asyncio.gather(
-        *[async_get_integration(hass, domain) for domain in SUPPORTED_DOMAINS],
+        *(async_get_integration(hass, domain) for domain in SUPPORTED_DOMAINS),
         return_exceptions=True,
     )
     name_to_type_map = {
