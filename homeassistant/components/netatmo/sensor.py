@@ -17,6 +17,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    SOUND_PRESSURE_DB,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -92,7 +93,7 @@ SENSOR_TYPES = {
         None,
         False,
     ],
-    "noise": ["Noise", "Noise", "dB", "mdi:volume-high", None, True],
+    "noise": ["Noise", "Noise", SOUND_PRESSURE_DB, "mdi:volume-high", None, True],
     "humidity": ["Humidity", "Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, True],
     "rain": ["Rain", "Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None, True],
     "sum_rain_1": [
