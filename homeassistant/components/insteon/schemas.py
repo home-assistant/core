@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from binascii import Error as HexError, unhexlify
-import re
 
 from pyinsteon.address import Address
 from pyinsteon.constants import HC_LOOKUP
