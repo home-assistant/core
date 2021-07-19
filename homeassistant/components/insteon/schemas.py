@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
-    INSTEON_ADDR_REGEX,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -41,6 +40,7 @@ from .const import (
     CONF_X10_ALL_UNITS_OFF,
     DOMAIN,
     HOUSECODES,
+    INSTEON_ADDR_REGEX,
     PORT_HUB_V1,
     PORT_HUB_V2,
     SRV_ALL_LINK_GROUP,
