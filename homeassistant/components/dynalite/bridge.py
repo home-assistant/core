@@ -16,6 +16,7 @@ from dynalite_devices_lib.dynalite_devices import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.types import MappingProxyType
 
 from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
@@ -24,7 +25,9 @@ from .convert_config import convert_config
 class DynaliteBridge:
     """Manages a single Dynalite bridge."""
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: dict[str, Any] | MappingProxyType[str, Any]
+    ) -> None:
         """Initialize the system based on host parameter."""
         self.hass = hass
         self.async_add_devices: dict[str, Callable] = {}
