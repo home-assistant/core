@@ -156,14 +156,10 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Cover Class."""
+        """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
+        self._attr_name = f'{self._zone["name"]} Temperature'
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} Temperature'
 
     @property
     def state(self):
