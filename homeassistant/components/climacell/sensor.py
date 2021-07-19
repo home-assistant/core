@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping
 import logging
-from typing import Any
 
 from pyclimacell.const import CURRENT
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_VERSION, CONF_NAME, UnitT
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_VERSION, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
@@ -37,7 +35,7 @@ async def async_setup_entry(
         api_class = ClimaCellSensorEntity
         sensor_types = CC_SENSOR_TYPES
     entities = [
-        api_class(config_entry, coordinator, api_version, sensor_type)
+        api_class(hass, config_entry, coordinator, api_version, sensor_type)
         for sensor_type in sensor_types
     ]
     async_add_entities(entities)
@@ -48,6 +46,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         coordinator: ClimaCellDataUpdateCoordinator,
         api_version: int,
@@ -57,36 +56,19 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         super().__init__(config_entry, coordinator, api_version)
         self.sensor_type = sensor_type
         self._attr_device_class = self.sensor_type.device_class
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"{self._config_entry.data[CONF_NAME]} - {self.sensor_type.name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the entity."""
-        return f"{self._config_entry.unique_id}_{slugify(self.sensor_type.name)}"
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        return {ATTR_ATTRIBUTION: self.attribution}
-
-    @property
-    def unit_of_measurement(self) -> UnitT | None:
-        """Return the unit of measurement."""
-        if self.sensor_type.unit_imperial is not None:
-            if self.hass.config.units.is_metric:
-                return self.sensor_type.unit_metric
-            return self.sensor_type.unit_imperial
-
-        return None
+        self._attr_entity_registry_enabled_default = False
+        self._attr_name = (
+            f"{self._config_entry.data[CONF_NAME]} - {self.sensor_type.name}"
+        )
+        self._attr_unique_id = (
+            f"{self._config_entry.unique_id}_{slugify(self.sensor_type.name)}"
+        )
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
+        self._attr_unit_of_measurement = (
+            self.sensor_type.unit_metric
+            if hass.config.units.is_metric
+            else self.sensor_type.unit_imperial
+        )
 
     @property
     @abstractmethod
