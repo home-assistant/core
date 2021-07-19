@@ -25,9 +25,7 @@ from .convert_config import convert_config
 class DynaliteBridge:
     """Manages a single Dynalite bridge."""
 
-    def __init__(
-        self, hass: HomeAssistant, config: dict[str, Any] | MappingProxyType[str, Any]
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config: MappingProxyType[str, Any]) -> None:
         """Initialize the system based on host parameter."""
         self.hass = hass
         self.async_add_devices: dict[str, Callable] = {}
