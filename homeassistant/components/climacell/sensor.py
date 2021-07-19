@@ -10,7 +10,7 @@ from pyclimacell.const import CURRENT
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_VERSION, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_VERSION, CONF_NAME, UnitT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
@@ -82,11 +82,9 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
     def unit_of_measurement(self) -> UnitT | None:
         """Return the unit of measurement."""
         if self.sensor_type.unit_imperial is not None:
-            return (
-                self.sensor_type.unit_metric
-                if self.hass.config.units.is_metric
-                else self.sensor_type.unit_imperial
-            )
+            if self.hass.config.units.is_metric:
+                return self.sensor_type.unit_metric
+            return self.sensor_type.unit_imperial
 
         return None
 
