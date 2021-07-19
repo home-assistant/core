@@ -365,7 +365,6 @@ homeassistant/components/openweathermap/* @fabaff @freekode @nzapponi
 homeassistant/components/opnsense/* @mtreinish
 homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
-homeassistant/components/overkiz/* @imicknl @vlebourl @tetienne
 homeassistant/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
 homeassistant/components/panel_custom/* @home-assistant/frontend
@@ -500,6 +499,7 @@ homeassistant/components/syslog/* @fabaff
 homeassistant/components/system_bridge/* @timmo001
 homeassistant/components/tado/* @michaelarnauts @bdraco @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
+homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery

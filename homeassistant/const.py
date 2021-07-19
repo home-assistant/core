@@ -470,6 +470,13 @@ PRESSURE_MBAR: Final[UnitPressureT] = UnitPressureT(UnitT("mbar"))
 PRESSURE_INHG: Final[UnitPressureT] = UnitPressureT(UnitT("inHg"))
 PRESSURE_PSI: Final[UnitPressureT] = UnitPressureT(UnitT("psi"))
 
+# Sound pressure units
+UnitSoundPressureT = NewType("UnitSoundPressureT", UnitT)
+SOUND_PRESSURE_DB: Final[UnitSoundPressureT] = UnitSoundPressureT(UnitT("dB"))
+SOUND_PRESSURE_WEIGHTED_DBA: Final[UnitSoundPressureT] = UnitSoundPressureT(
+    UnitT("dBa")
+)
+
 # Volume units
 UnitVolumeT = NewType("UnitVolumeT", UnitT)
 VOLUME_LITERS: Final[UnitVolumeT] = UnitVolumeT(UnitT("L"))
