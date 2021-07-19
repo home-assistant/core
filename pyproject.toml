@@ -155,7 +155,6 @@ good-names = [
 # no-self-use - little added value with too many false-positives
 # ---
 # Enable once current issues are fixed:
-# consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
 # consider-using-assignment-expr (Pylint CodeStyle extension)
 disable = [
     "format",
@@ -180,7 +179,6 @@ disable = [
     "wrong-import-order",
     "consider-using-f-string",
     "no-self-use",
-    "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
 ]
 enable = [
