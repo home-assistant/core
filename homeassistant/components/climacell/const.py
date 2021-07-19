@@ -166,10 +166,8 @@ class ClimaCellSensorMetadata:
 
     def __post_init__(self) -> None:
         """Post initialization."""
-        if (self.unit_imperial or self.unit_metric) is not None and None in (
-            self.unit_imperial,
-            self.unit_metric,
-        ):
+        units = (self.unit_imperial, self.unit_metric)
+        if any(u is not None for u in units) and any(u is None for u in units):
             raise RuntimeError(
                 "`unit_imperial` and `unit_metric` both need to be None or both need "
                 "to be defined."
