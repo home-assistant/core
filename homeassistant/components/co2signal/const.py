@@ -2,7 +2,6 @@
 
 
 DOMAIN = "co2signal"
-DEFAULT_NAME = "CO2 intensity"
 CONF_COUNTRY_CODE = "country_code"
 ATTRIBUTION = "Data provided by CO2signal"
 MSG_LOCATION = (

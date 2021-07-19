@@ -15,13 +15,13 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     CONF_TOKEN,
     ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
 
 from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
+from .util import get_extra_name
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=3)
@@ -37,24 +37,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CO2signal sensor."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config,
-        )
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=config,
     )
-
-    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the CO2signal sensor."""
+    name = "CO2 intensity"
+    if extra_name := get_extra_name(hass, entry.data):
+        name += f" - {extra_name}"
+
     async_add_entities(
         [
             CO2Sensor(
+                name,
                 entry.data,
                 entry_id=entry.entry_id,
             )
@@ -69,20 +70,10 @@ class CO2Sensor(SensorEntity):
     _attr_icon = "mdi:molecule-co2"
     _attr_unit_of_measurement = CO2_INTENSITY_UNIT
 
-    def __init__(self, config, entry_id):
+    def __init__(self, name, config, entry_id):
         """Initialize the sensor."""
-        self._token = config[CONF_API_KEY]
-        self._country_code = config.get(CONF_COUNTRY_CODE)
-        self._latitude = config.get(CONF_LATITUDE)
-        self._longitude = config.get(CONF_LONGITUDE)
-
-        if config.get(CONF_NAME) is not None:
-            self._attr_name = config[CONF_NAME]
-        elif self._country_code is not None:
-            self._attr_name = f"CO2 intensity - {self._country_code}"
-        else:
-            self._attr_name = f"CO2 intensity - {round(self._latitude, 2)}/{round(self._longitude, 2)}"
-
+        self._config = config
+        self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
@@ -94,16 +85,22 @@ class CO2Sensor(SensorEntity):
 
     def update(self):
         """Get the latest data and updates the states."""
-
         _LOGGER.debug("Update data for %s", self.name)
 
-        if self._country_code is not None:
-            data = CO2Signal.get_latest_carbon_intensity(
-                self._token, country_code=self._country_code
-            )
+        if CONF_COUNTRY_CODE in self._config:
+            kwargs = {"country_code": self._config[CONF_COUNTRY_CODE]}
+        elif CONF_LATITUDE in self._config:
+            kwargs = {
+                "latitude": self._config[CONF_LATITUDE],
+                "longitude": self._config[CONF_LONGITUDE],
+            }
         else:
-            data = CO2Signal.get_latest_carbon_intensity(
-                self._token, latitude=self._latitude, longitude=self._longitude
-            )
+            kwargs = {
+                "latitude": self.hass.config.latitude,
+                "longitude": self.hass.config.longitude,
+            }
 
-        self._attr_state = round(data, 2)
+        self._attr_state = round(
+            CO2Signal.get_latest_carbon_intensity(self._config[CONF_API_KEY], **kwargs),
+            2,
+        )
