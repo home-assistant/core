@@ -13,13 +13,13 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
     ELECTRICAL_CURRENT_AMPERE,
-    ELECTRICAL_VOLT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
     LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
     SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
@@ -65,7 +65,7 @@ SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
     "V_ORP": [ELECTRIC_POTENTIAL_MILLIVOLT, None, None],
     "V_EC": [CONDUCTIVITY, None, None],
     "V_VAR": ["var", None, None],
-    "V_VA": [ELECTRICAL_VOLT_AMPERE, None, None],
+    "V_VA": [POWER_VOLT_AMPERE, None, None],
 }
 
 

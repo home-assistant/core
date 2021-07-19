@@ -8,9 +8,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
-    ELECTRICAL_VOLT_AMPERE,
     FREQUENCY_HERTZ,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
@@ -80,8 +80,8 @@ SENSOR_TYPES = {
     "ups.display.language": ["Language", "", "mdi:information-outline", None],
     "ups.contacts": ["External Contacts", "", "mdi:information-outline", None],
     "ups.efficiency": ["Efficiency", PERCENTAGE, "mdi:gauge", None],
-    "ups.power": ["Current Apparent Power", ELECTRICAL_VOLT_AMPERE, "mdi:flash", None],
-    "ups.power.nominal": ["Nominal Power", ELECTRICAL_VOLT_AMPERE, "mdi:flash", None],
+    "ups.power": ["Current Apparent Power", POWER_VOLT_AMPERE, "mdi:flash", None],
+    "ups.power.nominal": ["Nominal Power", POWER_VOLT_AMPERE, "mdi:flash", None],
     "ups.realpower": [
         "Current Real Power",
         POWER_WATT,

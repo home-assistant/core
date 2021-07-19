@@ -401,6 +401,7 @@ ATTR_TEMPERATURE: Final = "temperature"
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
+POWER_VOLT_AMPERE: Final = "VA"
 
 # Voltage units
 VOLT: Final = "V"
@@ -412,7 +413,6 @@ ENERGY_KILO_WATT_HOUR: Final = "kWh"
 # Electrical units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
 ELECTRICAL_CURRENT_AMPERE: Final = "A"
-ELECTRICAL_VOLT_AMPERE: Final = "VA"
 ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
 
 # Degree units
