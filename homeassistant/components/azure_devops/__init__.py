@@ -85,9 +85,9 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
         """Return device information about this Azure DevOps instance."""
         return {
             "identifiers": {
-                (
+                (  # type: ignore
                     DOMAIN,
-                    self.organization,  # type: ignore
+                    self.organization,
                     self.project,
                 )
             },
