@@ -697,7 +697,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.12
+google-nest-sdm==0.3.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1377,7 +1377,7 @@ pydaikin==2.4.4
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==81
+pydeconz==82
 
 # homeassistant.components.delijn
 pydelijn==0.6.1

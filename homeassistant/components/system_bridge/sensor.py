@@ -48,10 +48,10 @@ async def async_setup_entry(
         BridgeCpuSpeedSensor(coordinator, bridge),
         BridgeCpuTemperatureSensor(coordinator, bridge),
         BridgeCpuVoltageSensor(coordinator, bridge),
-        *[
+        *(
             BridgeFilesystemSensor(coordinator, bridge, key)
             for key, _ in bridge.filesystem.fsSize.items()
-        ],
+        ),
         BridgeMemoryFreeSensor(coordinator, bridge),
         BridgeMemoryUsedSensor(coordinator, bridge),
         BridgeMemoryUsedPercentageSensor(coordinator, bridge),

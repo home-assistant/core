@@ -228,10 +228,10 @@ async def async_setup(hass, config):
 
     async def _async_stop_homekit_controller(event):
         await asyncio.gather(
-            *[
+            *(
                 connection.async_unload()
                 for connection in hass.data[KNOWN_DEVICES].values()
-            ]
+            )
         )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
