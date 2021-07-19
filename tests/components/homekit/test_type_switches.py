@@ -81,6 +81,7 @@ async def test_outlet_set_state(hass, hk_driver, events):
 @pytest.mark.parametrize(
     "entity_id, attrs",
     [
+        ("automation.test", {}),
         ("input_boolean.test", {}),
         ("remote.test", {}),
         ("switch.test", {}),
@@ -315,44 +316,6 @@ async def test_reset_switch(hass, hk_driver, events):
     assert acc.char_on.value is False
 
     call_turn_on = async_mock_service(hass, domain, "turn_on")
-    call_turn_off = async_mock_service(hass, domain, "turn_off")
-
-    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
-    await hass.async_block_till_done()
-    assert acc.char_on.value is True
-    assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] is None
-
-    future = dt_util.utcnow() + timedelta(seconds=1)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-    assert acc.char_on.value is False
-    assert len(events) == 1
-    assert not call_turn_off
-
-    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
-    await hass.async_block_till_done()
-    assert acc.char_on.value is False
-    assert len(events) == 1
-
-
-async def test_automation_switch(hass, hk_driver, events):
-    """Test if automation switch accessory is reset correctly."""
-    domain = "automation"
-    entity_id = "automation.test"
-
-    hass.states.async_set(entity_id, None)
-    await hass.async_block_till_done()
-    acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await acc.run()
-    await hass.async_block_till_done()
-
-    assert acc.activate_only is True
-    assert acc.char_on.value is False
-
-    call_turn_on = async_mock_service(hass, domain, "trigger")
     call_turn_off = async_mock_service(hass, domain, "turn_off")
 
     await hass.async_add_executor_job(acc.char_on.client_update_value, True)
