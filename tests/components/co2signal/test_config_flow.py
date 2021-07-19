@@ -1,6 +1,8 @@
 """Test the CO2 Signal config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries, setup
 from homeassistant.components.co2signal import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
@@ -8,6 +10,8 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
 from homeassistant.setup import async_setup_component
 
 from . import VALID_PAYLOAD
+
+from tests.common import MockConfigEntry
 
 
 async def test_form_home(hass: HomeAssistant) -> None:
@@ -129,7 +133,15 @@ async def test_form_country(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "err_str,err_code",
+    [
+        ("Invalid authentication credentials", "invalid_auth"),
+        ("API rate limit exceeded.", "api_ratelimit"),
+        ("Something else", "unknown"),
+    ],
+)
+async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,7 +149,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
-        side_effect=ValueError("Invalid authentication credentials"),
+        side_effect=ValueError(err_str),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -148,7 +160,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": err_code}
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -169,3 +181,75 @@ async def test_import(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == "45.99"
     assert state.name == "CO2 intensity"
+
+
+async def test_import_abort_existing_home(hass: HomeAssistant) -> None:
+    """Test we abort if home entry found."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(domain="co2signal", data={"api_key": "abcd"}).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ):
+        assert await async_setup_component(
+            hass, "sensor", {"sensor": {"platform": "co2signal", "token": "1234"}}
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries("co2signal")) == 1
+
+
+async def test_import_abort_existing_country(hass: HomeAssistant) -> None:
+    """Test we abort if existing country found."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(
+        domain="co2signal", data={"api_key": "abcd", "country_code": "nl"}
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "co2signal",
+                    "token": "1234",
+                    "country_code": "nl",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries("co2signal")) == 1
+
+
+async def test_import_abort_existing_coordinates(hass: HomeAssistant) -> None:
+    """Test we abort if existing coordinates found."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(
+        domain="co2signal", data={"api_key": "abcd", "latitude": 1, "longitude": 2}
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "co2signal",
+                    "token": "1234",
+                    "latitude": 1,
+                    "longitude": 2,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries("co2signal")) == 1
