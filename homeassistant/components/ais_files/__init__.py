@@ -435,9 +435,9 @@ class AisDbConfigView(HomeAssistantView):
                         + db_connection["dbUrl"]
                         + " selected for recording!"
                     )
-            elif db_connection["dbEngine"] == "MariaDB (local)":
+            elif db_connection["dbEngine"] == "PostgreSQL (local)":
                 db_connection["dbUrl"] = (
-                        "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4"
+                        "postgresql:ais:dom@127.0.0.1/ha"
                     )
                 db_connection["dbPassword"] = "dom"
                 db_connection["dbUser"] = "ais"
@@ -498,9 +498,9 @@ class AisDbConfigView(HomeAssistantView):
                 )
             except Exception as e:
                 _LOGGER.warning("Exception:" + str(e))
-                if db_connection["dbEngine"] == "MariaDB (local)":
-                    _LOGGER.warning("Install the MariaDB. See the instruction on AI-Speaker.com page.")
-                    error_info = "Problem z połączeniem do bazy. Sprawdź/wykonaj instalację bazy MariaDB. " \
+                if db_connection["dbEngine"] == "PostgreSQL (local)":
+                    _LOGGER.warning("Install the PostgreSQL. See the instruction on AI-Speaker.com page.")
+                    error_info = "Problem z połączeniem do bazy. Sprawdź/wykonaj instalację bazy PostgreSQL. " \
                                  "Szczegółowa instrukcja na stronie AI-Speaker.com. Komunikat błędu: " + str(e)
                 else:
                     error_info = "Błąd konfiguracji zapisu do bazy " + str(e)
