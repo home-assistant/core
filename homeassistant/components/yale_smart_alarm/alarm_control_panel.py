@@ -11,7 +11,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
@@ -20,10 +20,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -48,7 +49,12 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+):
     """Import Yale configuration from YAML."""
     LOGGER.warning(
         "Loading Yale Alarm via platform setup is deprecated; Please remove it from your configuration"
@@ -62,7 +68,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+):
     """Set up the alarm entry."""
 
     async_add_entities(
@@ -102,15 +110,12 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        return STATE_MAP.get(self.coordinator.data["alarm"], STATE_UNAVAILABLE)
+        return STATE_MAP.get(self.coordinator.data["alarm"], None) is not None
 
     @property
     def available(self):
         """Return if entity is available."""
-        return (
-            STATE_MAP.get(self.coordinator.data["alarm"], STATE_UNAVAILABLE)
-            != STATE_UNAVAILABLE
-        )
+        return STATE_MAP.get(self.coordinator.data["alarm"], None) is not None
 
     @property
     def code_arm_required(self):

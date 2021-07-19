@@ -1,22 +1,25 @@
 """The yale_smart_alarm component."""
 from __future__ import annotations
 
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import YaleDataUpdateCoordinator
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Yale from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     title = entry.title
 
     coordinator = YaleDataUpdateCoordinator(hass, entry=entry)
 
+    if not await hass.async_add_executor_job(coordinator.get_updates):
+        raise ConfigEntryAuthFailed
+
     await coordinator.async_config_entry_first_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
@@ -29,10 +32,10 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
 
-    unload_ok = hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     title = entry.title
     if unload_ok:

@@ -19,6 +19,13 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+DATA_SCHEMA_AUTH = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
+
 
 class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
@@ -48,8 +55,6 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            name = user_input.get(CONF_NAME, DEFAULT_NAME)
-            area = user_input.get(CONF_AREA_ID, DEFAULT_AREA_ID)
 
             try:
                 await self.hass.async_add_executor_job(
@@ -65,13 +70,13 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             existing_entry = await self.async_set_unique_id(username)
             if existing_entry:
+                data = self.entry.data.copy()
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
                     data={
+                        **data,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
-                        CONF_NAME: name,
-                        CONF_AREA_ID: area,
                     },
                 )
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -79,7 +84,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=DATA_SCHEMA,
+            data_schema=DATA_SCHEMA_AUTH,
             errors=errors,
         )
 
