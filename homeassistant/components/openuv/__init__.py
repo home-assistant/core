@@ -92,11 +92,11 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update_protection_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    for service, method in [
+    for service, method in (
         ("update_data", update_data),
         ("update_uv_index_data", update_uv_index_data),
         ("update_protection_data", update_protection_data),
-    ]:
+    ):
         hass.services.async_register(DOMAIN, service, method)
 
     return True

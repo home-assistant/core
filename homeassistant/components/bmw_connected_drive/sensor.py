@@ -451,12 +451,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         "chargecycle_range",
                         "total_electric_distance",
                     ):
-                        for attr in [
+                        for attr in (
                             "community_average",
                             "community_high",
                             "community_low",
                             "user_average",
-                        ]:
+                        ):
                             device = BMWConnectedDriveSensor(
                                 account,
                                 vehicle,
@@ -466,7 +466,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             )
                             entities.append(device)
                         if attribute_name == "chargecycle_range":
-                            for attr in ["user_current_charge_cycle", "user_high"]:
+                            for attr in ("user_current_charge_cycle", "user_high"):
                                 device = BMWConnectedDriveSensor(
                                     account,
                                     vehicle,
@@ -476,7 +476,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                 )
                                 entities.append(device)
                         if attribute_name == "total_electric_distance":
-                            for attr in ["user_total"]:
+                            for attr in ("user_total",):
                                 device = BMWConnectedDriveSensor(
                                     account,
                                     vehicle,
@@ -593,13 +593,13 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                 self._state = getattr(vehicle_last_trip, self._attribute)
         elif self._service == SERVICE_ALL_TRIPS:
             vehicle_all_trips = self._vehicle.state.all_trips
-            for attribute in [
+            for attribute in (
                 "average_combined_consumption",
                 "average_electric_consumption",
                 "average_recuperation",
                 "chargecycle_range",
                 "total_electric_distance",
-            ]:
+            ):
                 if self._attribute.startswith(f"{attribute}_"):
                     attr = getattr(vehicle_all_trips, attribute)
                     sub_attr = self._attribute.replace(f"{attribute}_", "")
