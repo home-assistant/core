@@ -913,20 +913,38 @@ def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def device_attr(hass: HomeAssistant, device_id: str, attr_name: str) -> Any:
+def to_device_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get a device ID from an entity ID."""
+    entity_reg = entity_registry.async_get(hass)
+    entity = entity_reg.async_get(entity_id)
+    if entity is None:
+        return None
+    return entity.device_id
+
+
+def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
     """Get the device specific attribute."""
     device_reg = device_registry.async_get(hass)
-    device = device_reg.async_get(device_id)
+    if not isinstance(device_or_entity_id, str):
+        raise TemplateError("Must provide a device or entity ID")
+    device = None
+    if (
+        "." in device_or_entity_id
+        and (device_id := to_device_id(hass, device_or_entity_id)) is not None
+    ):
+        device = device_reg.async_get(device_id)
+    elif "." not in device_or_entity_id:
+        device = device_reg.async_get(device_or_entity_id)
     if device is None or not hasattr(device, attr_name):
         return None
     return getattr(device, attr_name)
 
 
 def is_device_attr(
-    hass: HomeAssistant, device_id: str, attr_name: str, attr_value: Any
+    hass: HomeAssistant, device_or_entity_id: str, attr_name: str, attr_value: Any
 ) -> bool:
     """Test if a device's attribute is a specific value."""
-    return bool(device_attr(hass, device_id, attr_name) == attr_value)
+    return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
 
 
 def closest(hass, *args):
@@ -1509,6 +1527,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_attr"] = hassfunction(device_attr)
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
 
+        self.globals["to_device_id"] = hassfunction(to_device_id)
+        self.filters["to_device_id"] = pass_context(self.globals["to_device_id"])
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -1532,8 +1553,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "now",
                 "device_attr",
                 "is_device_attr",
+                "to_device_id",
             ]
-            hass_filters = ["closest", "expand"]
+            hass_filters = ["closest", "expand", "to_device_id"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
