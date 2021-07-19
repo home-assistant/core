@@ -351,7 +351,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
     """Register events and services for HomeKit."""
     hass.http.register_view(HomeKitPairingQRView)
 
-    def handle_homekit_reset_accessory(service):
+    async def async_handle_homekit_reset_accessory(service):
         """Handle start HomeKit service call."""
         for entry_id in hass.data[DOMAIN]:
             if HOMEKIT not in hass.data[DOMAIN][entry_id]:
@@ -365,12 +365,12 @@ def _async_register_events_and_services(hass: HomeAssistant):
                 continue
 
             entity_ids = service.data.get("entity_id")
-            homekit.reset_accessories(entity_ids)
+            await homekit.async_reset_accessories(entity_ids)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_HOMEKIT_RESET_ACCESSORY,
-        handle_homekit_reset_accessory,
+        async_handle_homekit_reset_accessory,
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
     )
 
@@ -486,14 +486,14 @@ class HomeKit:
 
         self.driver.persist()
 
-    def reset_accessories(self, entity_ids):
+    async def async_reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
         if not self.bridge:
-            self.reset_accessories_in_accessory_mode(entity_ids)
+            await self.async_reset_accessories_in_accessory_mode(entity_ids)
             return
-        self.reset_accessories_in_bridge_mode(entity_ids)
+        await self.async_reset_accessories_in_bridge_mode(entity_ids)
 
-    def reset_accessories_in_accessory_mode(self, entity_ids):
+    async def async_reset_accessories_in_accessory_mode(self, entity_ids):
         """Reset accessories in accessory mode."""
         acc = self.driver.accessory
         if acc.entity_id not in entity_ids:
@@ -506,9 +506,9 @@ class HomeKit:
             return
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
-            self.driver.config_changed()
+            await self.async_config_changed()
 
-    def reset_accessories_in_bridge_mode(self, entity_ids):
+    async def async_reset_accessories_in_bridge_mode(self, entity_ids):
         """Reset accessories in bridge mode."""
         new = []
         for entity_id in entity_ids:
@@ -532,10 +532,14 @@ class HomeKit:
             # No matched accessories, probably on another bridge
             return
 
-        self.driver.config_changed()
+        await self.async_config_changed()
         for state in new:
             self.add_bridge_accessory(state)
-        self.driver.config_changed()
+        await self.async_config_changed()
+
+    async def async_config_changed(self):
+        """Call config changed which writes out the new config to disk."""
+        await self.hass.async_add_executor_job(self.driver.config_changed)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
