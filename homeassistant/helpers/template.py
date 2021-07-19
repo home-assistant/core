@@ -913,7 +913,7 @@ def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def device_id(hass: HomeAssistant, entity_id: str) -> str | None:
+def to_device_id(hass: HomeAssistant, entity_id: str) -> str | None:
     """Get a device ID from an entity ID."""
     if not isinstance(entity_id, str) or "." not in entity_id:
         raise TemplateError(f"Must provide an entity ID, got {entity_id}")  # type: ignore
@@ -932,7 +932,7 @@ def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -
     device = None
     if (
         "." in device_or_entity_id
-        and (_device_id := device_id(hass, device_or_entity_id)) is not None
+        and (_device_id := to_device_id(hass, device_or_entity_id)) is not None
     ):
         device = device_reg.async_get(_device_id)
     elif "." not in device_or_entity_id:
@@ -1529,8 +1529,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_attr"] = hassfunction(device_attr)
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
 
-        self.globals["device_id"] = hassfunction(device_id)
-        self.filters["device_id"] = pass_context(self.globals["device_id"])
+        self.globals["to_device_id"] = hassfunction(to_device_id)
+        self.filters["to_device_id"] = pass_context(self.globals["to_device_id"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other
@@ -1555,7 +1555,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "now",
                 "device_attr",
                 "is_device_attr",
-                "device_id",
+                "to_device_id",
             ]
             hass_filters = ["closest", "expand", "device_id"]
             for glob in hass_globals:
