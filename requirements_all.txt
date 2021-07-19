@@ -772,7 +772,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.11.1
+holidays==0.11.2
 
 # homeassistant.components.frontend
 home-assistant-frontend==20210707.0
