@@ -47,6 +47,10 @@ async def test_expose_attribute(hass, knx):
     )
     assert not hass.states.async_all()
 
+    # Before init no response shall be sent
+    await knx.receive_read("1/1/8")
+    await knx.assert_telegram_count(0)
+
     # Change state to "on"; no attribute
     hass.states.async_set(entity_id, "on", {})
     await knx.assert_telegram_count(0)
@@ -54,6 +58,10 @@ async def test_expose_attribute(hass, knx):
     # Change attribute; keep state
     hass.states.async_set(entity_id, "on", {attribute: 1})
     await knx.assert_write("1/1/8", (1,))
+
+    # Read in between
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", (1,))
 
     # Change state keep attribute
     hass.states.async_set(entity_id, "off", {attribute: 1})
@@ -85,6 +93,10 @@ async def test_expose_attribute_with_default(hass, knx):
     )
     assert not hass.states.async_all()
 
+    # Before init default value shall be sent as response
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", (0,))
+
     # Change state to "on"; no attribute
     hass.states.async_set(entity_id, "on", {})
     await knx.assert_write("1/1/8", (0,))
@@ -100,6 +112,10 @@ async def test_expose_attribute_with_default(hass, knx):
     # Change state and attribute
     hass.states.async_set(entity_id, "on", {attribute: 3})
     await knx.assert_write("1/1/8", (3,))
+
+    # Read in between
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", (3,))
 
     # Change state to "off"; no attribute
     hass.states.async_set(entity_id, "off", {})
