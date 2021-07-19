@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
@@ -35,10 +35,18 @@ class KNXTestKit:
             mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
-        with patch("xknx.xknx.KNXIPInterface", return_value=knx_ip_interface_mock()):
+        def fish_xknx(*args, **kwargs):
+            """Get the XKNX object from the constructor call."""
+            self.xknx = args[0]
+            return DEFAULT
+
+        with patch(
+            "xknx.xknx.KNXIPInterface",
+            return_value=knx_ip_interface_mock(),
+            side_effect=fish_xknx,
+        ):
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
             await self.hass.async_block_till_done()
-            self.xknx = self.hass.data[KNX_DOMAIN].xknx
             # disable rate limiter for tests
             self.xknx.rate_limit = 0
 
