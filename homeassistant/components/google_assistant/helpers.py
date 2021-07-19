@@ -212,10 +212,10 @@ class AbstractConfig(ABC):
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
         res = await gather(
-            *[
+            *(
                 self.async_sync_entities(agent_user_id)
                 for agent_user_id in self._store.agent_user_ids
-            ]
+            )
         )
         return max(res, default=204)
 
