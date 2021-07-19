@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.const import (
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -133,13 +133,13 @@ SENSOR_TYPES = {
     "battery.capacity": ["Battery Capacity", "Ah", "mdi:flash", None],
     "battery.current": [
         "Battery Current",
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         "mdi:flash",
         None,
     ],
     "battery.current.total": [
         "Total Battery Current",
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         "mdi:flash",
         None,
     ],
@@ -212,10 +212,10 @@ SENSOR_TYPES = {
         "mdi:information-outline",
         None,
     ],
-    "output.current": ["Output Current", ELECTRICAL_CURRENT_AMPERE, "mdi:flash", None],
+    "output.current": ["Output Current", ELECTRIC_CURRENT_AMPERE, "mdi:flash", None],
     "output.current.nominal": [
         "Nominal Output Current",
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         "mdi:flash",
         None,
     ],

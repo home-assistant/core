@@ -6,7 +6,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -28,7 +28,7 @@ SENSOR_TYPES = {
     "voltage": ["Voltage", VOLT, DEVICE_CLASS_VOLTAGE, None],
     "amps": [
         "Amps",
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         DEVICE_CLASS_CURRENT,
         STATE_CLASS_MEASUREMENT,
     ],

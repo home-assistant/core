@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
     POWER_WATT,
@@ -113,7 +113,7 @@ SENSOR_TYPES = {
     "optimizer_current": [
         "optimizercurrent",
         "Average Optimizer Current",
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         "mdi:solar-panel",
         None,
         None,

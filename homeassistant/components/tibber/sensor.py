@@ -22,7 +22,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -144,19 +144,19 @@ RT_SENSOR_MAP: dict[str, TibberSensorMetadata] = {
     "currentL1": TibberSensorMetadata(
         "current L1",
         DEVICE_CLASS_CURRENT,
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         STATE_CLASS_MEASUREMENT,
     ),
     "currentL2": TibberSensorMetadata(
         "current L2",
         DEVICE_CLASS_CURRENT,
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         STATE_CLASS_MEASUREMENT,
     ),
     "currentL3": TibberSensorMetadata(
         "current L3",
         DEVICE_CLASS_CURRENT,
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         STATE_CLASS_MEASUREMENT,
     ),
     "signalStrength": TibberSensorMetadata(
