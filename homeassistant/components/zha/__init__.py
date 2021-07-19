@@ -145,10 +145,10 @@ async def async_unload_entry(hass, config_entry):
 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(
-        *[
+        *(
             hass.config_entries.async_forward_entry_unload(config_entry, platform)
             for platform in PLATFORMS
-        ]
+        )
     )
 
     hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()

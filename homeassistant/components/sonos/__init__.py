@@ -172,7 +172,7 @@ class SonosDiscoveryManager:
 
     async def _async_stop_event_listener(self, event: Event) -> None:
         await asyncio.gather(
-            *[speaker.async_unsubscribe() for speaker in self.data.discovered.values()],
+            *(speaker.async_unsubscribe() for speaker in self.data.discovered.values()),
             return_exceptions=True,
         )
         if events_asyncio.event_listener:
@@ -285,10 +285,10 @@ class SonosDiscoveryManager:
     async def setup_platforms_and_discovery(self):
         """Set up platforms and discovery."""
         await asyncio.gather(
-            *[
+            *(
                 self.hass.config_entries.async_forward_entry_setup(self.entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(
