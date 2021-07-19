@@ -167,6 +167,7 @@ class BaseLight(LogMixin, light.LightEntity):
         """Return the warmest color_temp that this light supports."""
         return self._max_mireds
 
+    @callback
     def set_level(self, value):
         """Set the brightness of this light between 0..254.
 
