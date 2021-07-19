@@ -123,7 +123,7 @@ async def async_setup_entry(
     alter_program_schema = {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
     alter_zone_schema = {vol.Required(CONF_ZONE_ID): cv.positive_int}
 
-    for service_name, schema, method in [
+    for service_name, schema, method in (
         ("disable_program", alter_program_schema, "async_disable_program"),
         ("disable_zone", alter_zone_schema, "async_disable_zone"),
         ("enable_program", alter_program_schema, "async_enable_program"),
@@ -156,7 +156,7 @@ async def async_setup_entry(
         ),
         ("stop_zone", {vol.Required(CONF_ZONE_ID): cv.positive_int}, "async_stop_zone"),
         ("unpause_watering", {}, "async_unpause_watering"),
-    ]:
+    ):
         platform.async_register_entity_service(service_name, schema, method)
 
     controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]

@@ -247,10 +247,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.debug("Adding weather sensors %s", entities)
         return entities
 
-    for data_class_name in [
+    for data_class_name in (
         WEATHERSTATION_DATA_CLASS_NAME,
         HOMECOACH_DATA_CLASS_NAME,
-    ]:
+    ):
         await data_handler.register_data_class(data_class_name, data_class_name, None)
         data_class = data_handler.data.get(data_class_name)
 

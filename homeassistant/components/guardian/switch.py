@@ -44,7 +44,7 @@ async def async_setup_entry(
     """Set up Guardian switches based on a config entry."""
     platform = entity_platform.async_get_current_platform()
 
-    for service_name, schema, method in [
+    for service_name, schema, method in (
         (SERVICE_DISABLE_AP, {}, "async_disable_ap"),
         (SERVICE_ENABLE_AP, {}, "async_enable_ap"),
         (SERVICE_PAIR_SENSOR, {vol.Required(CONF_UID): cv.string}, "async_pair_sensor"),
@@ -64,7 +64,7 @@ async def async_setup_entry(
             {vol.Required(CONF_UID): cv.string},
             "async_unpair_sensor",
         ),
-    ]:
+    ):
         platform.async_register_entity_service(service_name, schema, method)
 
     async_add_entities(

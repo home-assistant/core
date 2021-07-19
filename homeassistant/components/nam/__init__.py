@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Remove air_quality entities from registry if they exist
     ent_reg = entity_registry.async_get(hass)
-    for sensor_type in ["sds", ATTR_SDS011, ATTR_SPS30]:
+    for sensor_type in ("sds", ATTR_SDS011, ATTR_SPS30):
         unique_id = f"{coordinator.unique_id}-{sensor_type}"
         if entity_id := ent_reg.async_get_entity_id(
             AIR_QUALITY_PLATFORM, DOMAIN, unique_id

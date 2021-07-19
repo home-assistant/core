@@ -60,13 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up DataUpdateCoordinators for the valve controller:
     init_valve_controller_tasks = []
-    for api, api_coro in [
+    for api, api_coro in (
         (API_SENSOR_PAIR_DUMP, client.sensor.pair_dump),
         (API_SYSTEM_DIAGNOSTICS, client.system.diagnostics),
         (API_SYSTEM_ONBOARD_SENSOR_STATUS, client.system.onboard_sensor_status),
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
-    ]:
+    ):
         coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api
         ] = GuardianDataUpdateCoordinator(
