@@ -121,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if (cur_entry_type := _get_entry_type(entry.data)) != new_entry_type:
                 continue
 
-            if cur_entry_type == TYPE_USE_HOME and cur_entry_type == TYPE_USE_HOME:
+            if cur_entry_type == TYPE_USE_HOME and new_entry_type == TYPE_USE_HOME:
                 return self.async_abort(reason="already_configured")
 
             if (
