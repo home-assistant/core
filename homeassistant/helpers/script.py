@@ -599,7 +599,7 @@ class _ScriptRun:
         """Fire an event."""
         self._step_log(self._action.get(CONF_ALIAS, self._action[CONF_EVENT]))
         event_data = {}
-        for conf in [CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE]:
+        for conf in (CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE):
             if conf not in self._action:
                 continue
 

@@ -332,7 +332,7 @@ async def async_setup(hass, config):
             attribute_templ = data.get(attribute)
             if attribute_templ:
                 if any(
-                    isinstance(attribute_templ, vtype) for vtype in [float, int, str]
+                    isinstance(attribute_templ, vtype) for vtype in (float, int, str)
                 ):
                     data[attribute] = attribute_templ
                 else:
@@ -352,7 +352,7 @@ async def async_setup(hass, config):
 
         msgtype = service.service
         kwargs = dict(service.data)
-        for attribute in [
+        for attribute in (
             ATTR_MESSAGE,
             ATTR_TITLE,
             ATTR_URL,
@@ -360,7 +360,7 @@ async def async_setup(hass, config):
             ATTR_CAPTION,
             ATTR_LONGITUDE,
             ATTR_LATITUDE,
-        ]:
+        ):
             _render_template_attr(kwargs, attribute)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
