@@ -31,7 +31,9 @@
                 "data": {
                     "name": "\u00c9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1s neve (a m\u00f3dos\u00edt\u00e1s \u00fajraind\u00edt\u00e1st ig\u00e9nyel)",
                     "recipient": "SMS-\u00e9rtes\u00edt\u00e9s c\u00edmzettjei",
-                    "track_new_devices": "\u00daj eszk\u00f6z\u00f6k nyomk\u00f6vet\u00e9se"
+                    "track_new_devices": "\u00daj eszk\u00f6z\u00f6k nyomk\u00f6vet\u00e9se",
+                    "track_wired_clients": "Vezet\u00e9kes h\u00e1l\u00f3zati \u00fcgyfelek nyomon k\u00f6vet\u00e9se",
+                    "unauthenticated_mode": "Nem hiteles\u00edtett m\u00f3d (a v\u00e1ltoztat\u00e1shoz \u00fajrat\u00f6lt\u00e9sre van sz\u00fcks\u00e9g)"
                 }
             }
         }

@@ -30,8 +30,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("fibaro", "scene.py"),
     ("hangouts", "config_flow.py"),
     ("harmony", "config_flow.py"),
-    ("hisense_aehw4a1", "config_flow.py"),
-    ("home_connect", "config_flow.py"),
     ("huawei_lte", "config_flow.py"),
     ("ifttt", "config_flow.py"),
     ("ios", "config_flow.py"),

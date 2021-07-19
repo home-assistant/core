@@ -400,7 +400,7 @@ google-nest-sdm==0.2.12
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==0.11.7
+greeclimate==0.11.8
 
 # homeassistant.components.growatt_server
 growattServer==1.0.1
@@ -569,7 +569,7 @@ netdisco==2.9.0
 nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
-nexia==0.9.9
+nexia==0.9.10
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
@@ -874,7 +874,7 @@ pylitejet==0.3.0
 pylitterbot==2021.3.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.10.0
+pylutron-caseta==0.11.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1143,7 +1143,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.1
+simplisafe-python==11.0.2
 
 # homeassistant.components.slack
 slackclient==2.5.0
