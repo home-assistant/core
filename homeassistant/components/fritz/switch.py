@@ -562,21 +562,9 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         super().__init__(fritzbox_tools, device)
         self._attr_is_on: bool = False
         self._device_name = device.hostname
-
-    @property
-    def name(self) -> str:
-        """Return switch name."""
-        return f"{self._device_name} Internet Access"
-
-    @property
-    def unique_id(self) -> str:
-        """Return device unique id."""
-        return f"{self._mac}_internet_access"
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:router-wireless-settings"
+        self._name = f"{self._device_name} Internet Access"
+        self._attr_unique_id = f"{self._mac}_internet_access"
+        self._attr_icon = "mdi:router-wireless-settings"
 
     async def async_process_update(self) -> None:
         """Update device."""
