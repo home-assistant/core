@@ -18,11 +18,15 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
+    SynologyDSMLogin2SARequiredException,
+    SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
+    SynologyDSMLoginInvalidException,
+    SynologyDSMLoginPermissionDeniedException,
     SynologyDSMRequestException,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_HOST,
@@ -64,6 +68,8 @@ from .const import (
     ENTITY_ICON,
     ENTITY_NAME,
     ENTITY_UNIT,
+    EXCEPTION_DETAILS,
+    EXCEPTION_UNKNOWN,
     PLATFORMS,
     SERVICE_REBOOT,
     SERVICE_SHUTDOWN,
@@ -181,6 +187,32 @@ async def async_setup_entry(  # noqa: C901
     api = SynoApi(hass, entry)
     try:
         await api.async_setup()
+    except (
+        SynologyDSMLogin2SARequiredException,
+        SynologyDSMLoginDisabledAccountException,
+        SynologyDSMLoginInvalidException,
+        SynologyDSMLoginPermissionDeniedException,
+    ) as err:
+        if err.args[0]:
+            details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
+        else:
+            details = EXCEPTION_UNKNOWN
+        _LOGGER.debug(
+            "Reauthentication for DSM '%s' needed - reason: %s",
+            entry.unique_id,
+            details,
+        )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "data": {**entry.data},
+                    EXCEPTION_DETAILS: details,
+                },
+            )
+        )
+        return False
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
         _LOGGER.debug(
             "Unable to connect to DSM '%s' during setup: %s", entry.unique_id, err
