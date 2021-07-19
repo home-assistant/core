@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from binascii import Error as HexError, unhexlify
-import re
 
 from pyinsteon.address import Address
 from pyinsteon.constants import HC_LOOKUP
@@ -18,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
+    INSTEON_ADDR_REGEX,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -67,8 +67,7 @@ def set_default_port(schema: dict) -> dict:
 
 def insteon_address(value: str) -> str:
     """Validate an Insteon address."""
-    regex = re.compile(r"([A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2})$")
-    if not regex.match(value):
+    if not INSTEON_ADDR_REGEX.match(value):
         raise vol.Invalid("Invalid Insteon Address")
     return str(value).replace(".", "").lower()
 
