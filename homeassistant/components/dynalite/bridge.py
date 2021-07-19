@@ -1,6 +1,7 @@
 """Code to handle a Dynalite bridge."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any, Callable
 
 from dynalite_devices_lib.dynalite_devices import (
@@ -16,7 +17,6 @@ from dynalite_devices_lib.dynalite_devices import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.types import MappingProxyType
 
 from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
@@ -45,7 +45,7 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    def reload_config(self, config: dict[str, Any]) -> None:
+    def reload_config(self, config: MappingProxyType[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(convert_config(config))
