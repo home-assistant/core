@@ -91,13 +91,13 @@ class UnitSystem:
         """Initialize the unit system object."""
         errors: str = ", ".join(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
-            for unit, unit_type in [
+            for unit, unit_type in (
                 (temperature, TEMPERATURE),
                 (length, LENGTH),
                 (volume, VOLUME),
                 (mass, MASS),
                 (pressure, PRESSURE),
-            ]
+            )
             if not is_valid_unit(unit, unit_type)
         )
 

@@ -19,7 +19,25 @@
             }
         }
     },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Az \u00e9les\u00edt\u00e9si m\u0171veletekhez sz\u00fcks\u00e9ges k\u00f3d",
+            "alarm_failed_tries": "A riaszt\u00e1st kiv\u00e1lt\u00f3 egym\u00e1st k\u00f6vet\u0151 sikertelen k\u00f3dbejegyz\u00e9sek sz\u00e1ma",
+            "alarm_master_code": "A riaszt\u00f3 k\u00f6zpont(ok) mesterk\u00f3dja",
+            "title": "Riaszt\u00f3 vez\u00e9rl\u0151panel opci\u00f3k"
+        },
+        "zha_options": {
+            "consider_unavailable_battery": "Fontolja meg, hogy az akkumul\u00e1toros eszk\u00f6z\u00f6k (m\u00e1sodpercek m\u00falva) nem \u00e9rhet\u0151k el",
+            "consider_unavailable_mains": "Fontolja meg, hogy a h\u00e1l\u00f3zati t\u00e1pell\u00e1t\u00e1s\u00fa eszk\u00f6z\u00f6k (m\u00e1sodpercek m\u00falva) nem \u00e9rhet\u0151k el",
+            "default_light_transition": "Alap\u00e9rtelmezett f\u00e9ny-\u00e1tmeneti id\u0151 (m\u00e1sodpercben)",
+            "enable_identify_on_join": "Azonos\u00edt\u00f3 hat\u00e1s enged\u00e9lyez\u00e9se, amikor az eszk\u00f6z\u00f6k csatlakoznak a h\u00e1l\u00f3zathoz",
+            "title": "Glob\u00e1lis be\u00e1ll\u00edt\u00e1sok"
+        }
+    },
     "device_automation": {
+        "trigger_subtype": {
+            "turn_off": "Kikapcsol\u00e1s"
+        },
         "trigger_type": {
             "device_offline": "Eszk\u00f6z offline"
         }

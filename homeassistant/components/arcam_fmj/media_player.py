@@ -52,7 +52,7 @@ async def async_setup_entry(
                 State(client, zone),
                 config_entry.unique_id or config_entry.entry_id,
             )
-            for zone in [1, 2]
+            for zone in (1, 2)
         ],
         True,
     )

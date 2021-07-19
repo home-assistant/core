@@ -153,7 +153,7 @@ async def async_refresh_devices_service(gateway):
     await gateway.api.refresh_state()
     gateway.ignore_state_updates = False
 
-    for new_device_type in [NEW_GROUP, NEW_LIGHT, NEW_SCENE, NEW_SENSOR]:
+    for new_device_type in (NEW_GROUP, NEW_LIGHT, NEW_SCENE, NEW_SENSOR):
         gateway.async_add_device_callback(new_device_type, force=True)
 
 

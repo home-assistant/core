@@ -419,7 +419,7 @@ class Light(BaseLight, ZhaEntity):
             self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
-        refresh_interval = random.randint(*[x * 60 for x in self._REFRESH_INTERVAL])
+        refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
