@@ -1,7 +1,7 @@
 """Sensor platform for Advantage Air integration."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers import config_validation as cv, entity_platform
 
@@ -84,6 +84,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
     _attr_unit_of_measurement = PERCENTAGE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
@@ -114,6 +115,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
     _attr_unit_of_measurement = PERCENTAGE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
