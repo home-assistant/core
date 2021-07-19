@@ -1,94 +1,60 @@
 """Test Modem Caller ID integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from phone_modem import exceptions
 
 from homeassistant.components.modem_callerid.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
-from . import CONF_DATA, _create_mocked_modem, _patch_init_modem
+from . import CONF_DATA, _patch_init_modem
 
 from tests.common import MockConfigEntry
 
 
 async def test_setup_config(hass):
     """Test Modem Caller ID setup."""
-    config_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
     )
-    config_entry.add_to_hass(hass)
-    mocked_modem = await _create_mocked_modem()
+    entry.add_to_hass(hass)
+    mocked_modem = AsyncMock()
     with _patch_init_modem(mocked_modem):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.LOADED
 
 
 async def test_async_setup_entry_not_ready(hass):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
-    config_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
     )
-    config_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.modem_callerid.PhoneModem",
         side_effect=exceptions.SerialError(),
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_config_entry(hass):
     """Test unload."""
-    config_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
     )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.modem_callerid.async_setup_entry",
-        return_value=True,
-    ) as modem_setup:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    entry.add_to_hass(hass)
+    mocked_modem = AsyncMock()
+    with _patch_init_modem(mocked_modem):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
 
-        assert len(modem_setup.mock_calls) == 1
-        assert config_entry.state == ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=True
-    ) as unload:
-        assert await hass.config_entries.async_unload(config_entry.entry_id) is False
-        await hass.async_block_till_done()
-        assert unload.call_count == 1
-
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
-
-
-async def test_failed_unload_config_entry(hass):
-    """Test failed unload."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_DATA,
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.modem_callerid.async_setup_entry",
-        return_value=True,
-    ) as modem_setup:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert len(modem_setup.mock_calls) == 1
-        assert config_entry.state == ConfigEntryState.LOADED
-
-    with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=False
-    ) as unload:
-        assert await hass.config_entries.async_unload(config_entry.entry_id) is False
-        await hass.async_block_till_done()
-        assert unload.call_count == 1
-
-    assert config_entry.state == ConfigEntryState.LOADED

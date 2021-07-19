@@ -1,5 +1,5 @@
 """Test Modem Caller ID config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import phone_modem
 
@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import CONF_DATA, _create_mocked_modem, _patch_config_flow_modem
+from . import CONF_DATA, IMPORT_DATA, _patch_config_flow_modem
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +30,7 @@ def _patch_setup():
 
 async def test_flow_user(hass):
     """Test user initialized flow with duplicate device."""
-    mocked_modem = await _create_mocked_modem()
+    mocked_modem = AsyncMock()
     with _patch_config_flow_modem(mocked_modem), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -62,8 +62,7 @@ async def test_flow_user(hass):
 
 async def test_flow_user_error(hass):
     """Test user initialized flow with unreachable device."""
-    mocked_modem = await _create_mocked_modem(True)
-    with _patch_config_flow_modem(mocked_modem) as modemmock:
+    with _patch_config_flow_modem(AsyncMock()) as modemmock:
         modemmock.side_effect = phone_modem.exceptions.SerialError
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
@@ -75,16 +74,11 @@ async def test_flow_user_error(hass):
 
 async def test_flow_import(hass):
     """Test import step."""
-    mocked_modem = await _create_mocked_modem()
-    with _patch_config_flow_modem(mocked_modem), _patch_setup():
+    with _patch_config_flow_modem(AsyncMock()), _patch_setup():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_DATA,
-        )
+
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA

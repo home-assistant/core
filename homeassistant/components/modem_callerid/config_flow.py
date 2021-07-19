@@ -1,14 +1,11 @@
 """Config flow for Modem Caller ID integration."""
-from phone_modem import PhoneModem, exceptions
-import serial
+from phone_modem import PhoneModem
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
 
-from . import _LOGGER
-from .const import DEFAULT_DEVICE, DEFAULT_NAME
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_DEVICE, DEFAULT_NAME, DOMAIN, EXCEPTIONS
 
 DATA_SCHEMA = vol.Schema({"name": str, "device": str})
 
@@ -29,14 +26,8 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 api = PhoneModem()
                 await api.test(device)
 
-            except (
-                FileNotFoundError,
-                exceptions.SerialError,
-                serial.SerialException,
-                serial.serialutil.SerialException,
-            ):
+            except EXCEPTIONS:
                 errors["base"] = "cannot_connect"
-                _LOGGER.error("Unable to open port %s", device)
             else:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
@@ -57,9 +48,13 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, config):
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
+        if "sensor" in config:
+            for entry in config["sensor"]:
+                if CONF_DEVICE not in entry:
+                    config[CONF_DEVICE] = DEFAULT_DEVICE
 
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(config)

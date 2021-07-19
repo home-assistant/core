@@ -1,16 +1,13 @@
 """Tests for the Modem Caller ID integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.modem_callerid.const import DEFAULT_DEVICE
 from homeassistant.const import CONF_DEVICE
 
 CONF_DATA = {CONF_DEVICE: DEFAULT_DEVICE}
 
-
-async def _create_mocked_modem(raise_exception=False):
-    mocked_modem = AsyncMock()
-    return mocked_modem
+IMPORT_DATA = {"sensor": {"platform": "modem_callerid"}}
 
 
 def _patch_init_modem(mocked_modem):
