@@ -20,6 +20,7 @@
                 }
             },
             "user": {
+                "description": "K\u00e9rlek add meg a SmartThings [Personal Access Tokent]({token_url}), amit az [instrukci\u00f3k]({component_url}) alapj\u00e1n hozt\u00e1l l\u00e9tre.",
                 "title": "Callback URL meger\u0151s\u00edt\u00e9se"
             }
         }
