@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DISPATCH_DETECTION, DOMAIN
 
-PLATFORMS = ["fan"]
+PLATFORMS = ["fan", "light"]
 
 _LOGGER = logging.getLogger(__name__)
 

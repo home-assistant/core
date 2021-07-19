@@ -320,6 +320,7 @@ omit =
     homeassistant/components/fjaraskupan/__init__.py
     homeassistant/components/fjaraskupan/const.py
     homeassistant/components/fjaraskupan/fan.py
+    homeassistant/components/fjaraskupan/light.py
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
     homeassistant/components/flic/binary_sensor.py
