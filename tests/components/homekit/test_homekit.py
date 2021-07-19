@@ -644,6 +644,8 @@ async def test_homekit_reset_accessories(hass, mock_zeroconf):
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ), patch.object(
+        homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
 
@@ -682,6 +684,8 @@ async def test_homekit_reset_accessories_not_supported(hass, mock_zeroconf):
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ), patch.object(
+        homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
 
@@ -720,6 +724,8 @@ async def test_homekit_reset_accessories_state_missing(hass, mock_zeroconf):
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ), patch.object(
+        homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
 

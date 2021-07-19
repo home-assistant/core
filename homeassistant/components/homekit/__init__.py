@@ -120,6 +120,10 @@ PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
 MDNS_TARGET_IP = "224.0.0.251"
 
+_HOMEKIT_CONFIG_UPDATE_TIME = (
+    5  # number of seconds to wait for homekit to see the c# change
+)
+
 
 def _has_all_unique_names_and_ports(bridges):
     """Validate that each homekit bridge configured has a unique name."""
@@ -533,6 +537,7 @@ class HomeKit:
             return
 
         await self.async_config_changed()
+        await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         for state in new:
             self.add_bridge_accessory(state)
         await self.async_config_changed()
