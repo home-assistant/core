@@ -38,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     async_get_registry as get_dev_reg,
@@ -76,6 +77,9 @@ from .const import (
     UTILISATION_SENSORS,
     EntityInfo,
 )
+
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+
 
 ATTRIBUTION = "Data provided by Synology"
 
