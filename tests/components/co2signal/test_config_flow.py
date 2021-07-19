@@ -142,7 +142,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
     ],
 )
 async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> None:
-    """Test we handle invalid auth."""
+    """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -161,6 +161,50 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": err_code}
+
+
+async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
+    """Test we handle unexpected error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        side_effect=Exception("Boom"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "location": config_flow.TYPE_USE_HOME,
+                "api_key": "api_key",
+            },
+        )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
+    """Test we handle unexpected data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        return_value={"status": "error"},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "location": config_flow.TYPE_USE_HOME,
+                "api_key": "api_key",
+            },
+        )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_import(hass: HomeAssistant) -> None:
