@@ -1,4 +1,6 @@
 """The Control4 integration."""
+from __future__ import annotations
+
 import json
 import logging
 
@@ -149,9 +151,9 @@ class Control4Entity(CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
-        device_name: str,
-        device_manufacturer: str,
-        device_model: str,
+        device_name: str | None,
+        device_manufacturer: str | None,
+        device_model: str | None,
         device_id: int,
     ) -> None:
         """Initialize a Control4 entity."""

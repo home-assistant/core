@@ -1,4 +1,6 @@
 """Platform for Control4 Lights."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -124,9 +126,9 @@ async def async_setup_entry(
                 item_coordinator,
                 item_name,
                 item_id,
-                str(item_device_name),
-                str(item_manufacturer),
-                str(item_model),
+                item_device_name,
+                item_manufacturer,
+                item_model,
                 item_parent_id,
                 item_is_dimmer,
             )
@@ -145,9 +147,9 @@ class Control4Light(Control4Entity, LightEntity):
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
-        device_name: str,
-        device_manufacturer: str,
-        device_model: str,
+        device_name: str | None,
+        device_manufacturer: str | None,
+        device_model: str | None,
         device_id: int,
         is_dimmer: bool,
     ) -> None:
