@@ -489,49 +489,52 @@ class HomeKit:
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
         if not self.bridge:
-            acc = self.driver.accessory
-            if acc.entity_id not in entity_ids:
-                return
-            acc.async_stop()
-            if not (state := self.hass.states.get(acc.entity_id)):
-                _LOGGER.warning(
-                    "The underlying entity %s disappeared during reset.", acc.entity
-                )
-                return
-            if new_acc := self._async_create_single_accessory([state]):
-                self.driver.accessory = new_acc
-                self.driver.config_changed()
+            self.reset_accessories_in_accessory_mode(entity_ids)
             return
+        self.reset_accessories_in_bridge_mode(entity_ids)
 
-        removed = []
+    def reset_accessories_in_accessory_mode(self, entity_ids):
+        """Reset accessories in accessory mode."""
+        acc = self.driver.accessory
+        if acc.entity_id not in entity_ids:
+            return
+        acc.async_stop()
+        if not (state := self.hass.states.get(acc.entity_id)):
+            _LOGGER.warning(
+                "The underlying entity %s disappeared during reset", acc.entity
+            )
+            return
+        if new_acc := self._async_create_single_accessory([state]):
+            self.driver.accessory = new_acc
+            self.driver.config_changed()
+
+    def reset_accessories_in_bridge_mode(self, entity_ids):
+        """Reset accessories in bridge mode."""
+        new = []
         for entity_id in entity_ids:
             aid = self.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
             if aid not in self.bridge.accessories:
                 continue
-
             _LOGGER.info(
                 "HomeKit Bridge %s will reset accessory with linked entity_id %s",
                 self._name,
                 entity_id,
             )
-
             acc = self.remove_bridge_accessory(aid)
-            removed.append(acc)
+            if state := self.hass.states.get(acc.entity_id):
+                new.append(state)
+            else:
+                _LOGGER.warning(
+                    "The underlying entity %s disappeared during reset", acc.entity
+                )
 
-        if not removed:
+        if not new:
             # No matched accessories, probably on another bridge
             return
 
         self.driver.config_changed()
-
-        for acc in removed:
-            if state := self.hass.states.get(acc.entity_id):
-                self.add_bridge_accessory(state)
-            else:
-                _LOGGER.warning(
-                    "The underlying entity %s disappeared during reset.", acc.entity
-                )
-
+        for state in new:
+            self.add_bridge_accessory(state)
         self.driver.config_changed()
 
     def add_bridge_accessory(self, state):
@@ -573,10 +576,9 @@ class HomeKit:
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
-        if aid not in self.bridge.accessories:
-            return None
-        acc = self.bridge.accessories.pop(aid)
-        acc.async_stop()
+        acc = self.bridge.accessories.pop(aid, None)
+        if acc:
+            acc.async_stop()
         return acc
 
     async def async_configure_accessories(self):
