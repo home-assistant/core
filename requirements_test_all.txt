@@ -158,7 +158,7 @@ aiorecollect==1.0.5
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==1.2.3
+aioswitcher==2.0.4
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -394,7 +394,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.12
+google-nest-sdm==0.3.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -439,7 +439,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.11.1
+holidays==0.11.2
 
 # homeassistant.components.frontend
 home-assistant-frontend==20210707.0
@@ -588,7 +588,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.0
+numpy==1.21.1
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -765,7 +765,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==81
+pydeconz==82
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -874,7 +874,7 @@ pylitejet==0.3.0
 pylitterbot==2021.3.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.10.0
+pylutron-caseta==0.11.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1319,7 +1319,7 @@ yeelight==0.6.3
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.32.1
+zeroconf==0.33.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.59

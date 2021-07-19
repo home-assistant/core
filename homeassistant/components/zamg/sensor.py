@@ -283,7 +283,7 @@ def _get_zamg_stations():
             try:
                 stations[row["synnr"]] = tuple(
                     float(row[coord].replace(",", "."))
-                    for coord in ["breite_dezi", "länge_dezi"]
+                    for coord in ("breite_dezi", "länge_dezi")
                 )
             except KeyError:
                 _LOGGER.error("ZAMG schema changed again, cannot autodetect station")

@@ -16,5 +16,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_audyssey": "Friss\u00edtse az Audyssey be\u00e1ll\u00edt\u00e1sait"
+                }
+            }
+        }
     }
 }

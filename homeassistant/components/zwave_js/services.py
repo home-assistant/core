@@ -447,4 +447,4 @@ class ZWaveServices:
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        await asyncio.gather(*[node.async_ping() for node in nodes])
+        await asyncio.gather(*(node.async_ping() for node in nodes))

@@ -18,5 +18,10 @@
                 "title": "GIO\u015a (Lengyel K\u00f6rnyezetv\u00e9delmi F\u0151fel\u00fcgyel\u0151s\u00e9g)"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u00c9rje el a GIO\u015a szervert"
+        }
     }
 }
