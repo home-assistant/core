@@ -146,7 +146,6 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._attr_assumed_state = True
         self._attr_device_class = DEVICE_CLASS_SWITCH
         self._attr_name = f"{self._device.name} Switch"
-        self._attr_unique_id = self._device.unique_id
 
     @property
     def is_on(self):
@@ -215,6 +214,7 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
     def __init__(self, device):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
+        self._attr_unique_id = self._device.unique_id
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""

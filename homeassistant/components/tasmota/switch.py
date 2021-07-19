@@ -1,20 +1,33 @@
 """Support for Tasmota switches."""
+from typing import Any
+
+from hatasmota import relay as tasmota_relay
+from hatasmota.entity import TasmotaEntity as HATasmotaEntity
+from hatasmota.models import DiscoveryHashType
 
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaOnOffEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Tasmota switch dynamically through discovery."""
 
     @callback
-    def async_discover(tasmota_entity, discovery_hash):
+    def async_discover(
+        tasmota_entity: HATasmotaEntity, discovery_hash: DiscoveryHashType
+    ) -> None:
         """Discover and add a Tasmota switch."""
         async_add_entities(
             [
@@ -36,27 +49,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TasmotaSwitch(
     TasmotaAvailability,
     TasmotaDiscoveryUpdate,
+    TasmotaOnOffEntity,
     SwitchEntity,
 ):
     """Representation of a Tasmota switch."""
 
-    def __init__(self, **kwds):
-        """Initialize the Tasmota switch."""
-        self._state = False
+    _tasmota_entity: tasmota_relay.TasmotaRelay
 
-        super().__init__(
-            **kwds,
-        )
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._tasmota_entity.set_state(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._tasmota_entity.set_state(False)

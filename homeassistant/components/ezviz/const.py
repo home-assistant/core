@@ -34,7 +34,7 @@ SERVICE_DETECTION_SENSITIVITY = "set_alarm_detection_sensibility"
 EU_URL = "apiieu.ezvizlife.com"
 RUSSIA_URL = "apirus.ezvizru.com"
 DEFAULT_CAMERA_USERNAME = "admin"
-DEFAULT_RTSP_PORT = "554"
+DEFAULT_RTSP_PORT = 554
 DEFAULT_TIMEOUT = 25
 DEFAULT_FFMPEG_ARGUMENTS = ""
 

@@ -108,8 +108,8 @@ TEMPLATE_SCHEMA = vol.Schema({str: TEMPLATE_DATA_SCHEMA})
 def validate_area(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that template parameters are only used if area is using the relevant template."""
     conf_set = set()
-    for template in DEFAULT_TEMPLATES:
-        for conf in DEFAULT_TEMPLATES[template]:
+    for configs in DEFAULT_TEMPLATES.values():
+        for conf in configs:
             conf_set.add(conf)
     if config.get(CONF_TEMPLATE):
         for conf in DEFAULT_TEMPLATES[config[CONF_TEMPLATE]]:

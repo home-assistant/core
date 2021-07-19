@@ -12,6 +12,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
     ATTR_NAME,
     CONF_API_VERSION,
     CONF_NAME,
@@ -73,6 +74,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         """Initialize ClimaCell Sensor Entity."""
         super().__init__(config_entry, coordinator, api_version)
         self.sensor_type = sensor_type
+        self._attr_device_class = self.sensor_type.get(ATTR_DEVICE_CLASS)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

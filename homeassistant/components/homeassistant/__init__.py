@@ -248,10 +248,10 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C9
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_reload(config_entry_id)
                 for config_entry_id in reload_entries
-            ]
+            )
         )
 
     hass.helpers.service.async_register_admin_service(

@@ -20,7 +20,7 @@
                 "title": "Samsung TV"
             },
             "reauth_confirm": {
-                "description": "Akzeptieren Sie nach dem Absenden die Meldung auf {device}, das eine Autorisierung innerhalb von 30 Sekunden anfordert."
+                "description": "Akzeptiere nach dem Absenden die Meldung auf {device}, das eine Autorisierung innerhalb von 30 Sekunden anfordert."
             },
             "user": {
                 "data": {

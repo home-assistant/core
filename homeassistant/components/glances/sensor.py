@@ -25,9 +25,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                         name,
                         disk["mnt_point"],
-                        SENSOR_TYPES[sensor_type][1],
+                        sensor_details[1],
                         sensor_type,
-                        SENSOR_TYPES[sensor_type],
+                        sensor_details,
                     )
                 )
         elif sensor_details[0] == "sensors":
@@ -39,9 +39,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             client,
                             name,
                             sensor["label"],
-                            SENSOR_TYPES[sensor_type][1],
+                            sensor_details[1],
                             sensor_type,
-                            SENSOR_TYPES[sensor_type],
+                            sensor_details,
                         )
                     )
         elif client.api.data[sensor_details[0]]:
@@ -50,9 +50,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     client,
                     name,
                     "",
-                    SENSOR_TYPES[sensor_type][1],
+                    sensor_details[1],
                     sensor_type,
-                    SENSOR_TYPES[sensor_type],
+                    sensor_details,
                 )
             )
 
@@ -90,6 +90,11 @@ class GlancesSensor(SensorEntity):
     def unique_id(self):
         """Set unique_id for sensor."""
         return f"{self.glances_data.host}-{self.name}"
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self.sensor_details[4]
 
     @property
     def icon(self):

@@ -239,7 +239,7 @@ async def async_validate_actions_config(
 ) -> list[ConfigType]:
     """Validate a list of actions."""
     return await asyncio.gather(
-        *[async_validate_action_config(hass, action) for action in actions]
+        *(async_validate_action_config(hass, action) for action in actions)
     )
 
 
@@ -599,7 +599,7 @@ class _ScriptRun:
         """Fire an event."""
         self._step_log(self._action.get(CONF_ALIAS, self._action[CONF_EVENT]))
         event_data = {}
-        for conf in [CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE]:
+        for conf in (CONF_EVENT_DATA, CONF_EVENT_DATA_TEMPLATE):
             if conf not in self._action:
                 continue
 
@@ -880,10 +880,10 @@ async def _async_stop_scripts_after_shutdown(hass, point_in_time):
         names = ", ".join([script["instance"].name for script in running_scripts])
         _LOGGER.warning("Stopping scripts running too long after shutdown: %s", names)
         await asyncio.gather(
-            *[
+            *(
                 script["instance"].async_stop(update_state=False)
                 for script in running_scripts
-            ]
+            )
         )
 
 
@@ -902,7 +902,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         names = ", ".join([script["instance"].name for script in running_scripts])
         _LOGGER.debug("Stopping scripts running at shutdown: %s", names)
         await asyncio.gather(
-            *[script["instance"].async_stop() for script in running_scripts]
+            *(script["instance"].async_stop() for script in running_scripts)
         )
 
 

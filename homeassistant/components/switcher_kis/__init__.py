@@ -1,85 +1,181 @@
 """The Switcher integration."""
 from __future__ import annotations
 
-from asyncio import QueueEmpty, TimeoutError as Asyncio_TimeoutError, wait_for
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-from aioswitcher.bridge import SwitcherV2Bridge
+from aioswitcher.device import SwitcherBase
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry,
+    update_coordinator,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import EventType
 
 from .const import (
     CONF_DEVICE_PASSWORD,
     CONF_PHONE_ID,
     DATA_DEVICE,
+    DATA_DISCOVERY,
     DOMAIN,
-    SIGNAL_SWITCHER_DEVICE_UPDATE,
+    MAX_UPDATE_INTERVAL_SEC,
+    SIGNAL_DEVICE_ADD,
 )
+from .utils import async_start_bridge, async_stop_bridge
+
+PLATFORMS = ["switch", "sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PHONE_ID): cv.string,
-                vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Required(CONF_DEVICE_PASSWORD): cv.string,
-            }
-        )
-    },
+CCONFIG_SCHEMA = vol.Schema(
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_PHONE_ID): cv.string,
+                    vol.Required(CONF_DEVICE_ID): cv.string,
+                    vol.Required(CONF_DEVICE_PASSWORD): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the switcher component."""
-    phone_id = config[DOMAIN][CONF_PHONE_ID]
-    device_id = config[DOMAIN][CONF_DEVICE_ID]
-    device_password = config[DOMAIN][CONF_DEVICE_PASSWORD]
+    hass.data.setdefault(DOMAIN, {})
 
-    v2bridge = SwitcherV2Bridge(hass.loop, phone_id, device_id, device_password)
+    if DOMAIN not in config:
+        return True
 
-    await v2bridge.start()
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+        )
+    )
+    return True
 
-    async def async_stop_bridge(event: EventType) -> None:
-        """On Home Assistant stop, gracefully stop the bridge if running."""
-        await v2bridge.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_bridge)
-
-    try:
-        device_data = await wait_for(v2bridge.queue.get(), timeout=10.0)
-    except (Asyncio_TimeoutError, RuntimeError):
-        _LOGGER.exception("Failed to get response from device")
-        await v2bridge.stop()
-        return False
-    hass.data[DOMAIN] = {DATA_DEVICE: device_data}
-
-    hass.async_create_task(async_load_platform(hass, "switch", DOMAIN, {}, config))
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Switcher from a config entry."""
+    hass.data[DOMAIN][DATA_DEVICE] = {}
 
     @callback
-    def device_updates(timestamp: datetime | None) -> None:
-        """Use for updating the device data from the queue."""
-        if v2bridge.running:
-            try:
-                device_new_data = v2bridge.queue.get_nowait()
-                if device_new_data:
-                    async_dispatcher_send(
-                        hass, SIGNAL_SWITCHER_DEVICE_UPDATE, device_new_data
-                    )
-            except QueueEmpty:
-                pass
+    def on_device_data_callback(device: SwitcherBase) -> None:
+        """Use as a callback for device data."""
 
-    async_track_time_interval(hass, device_updates, timedelta(seconds=4))
+        # Existing device update device data
+        if device.device_id in hass.data[DOMAIN][DATA_DEVICE]:
+            wrapper: SwitcherDeviceWrapper = hass.data[DOMAIN][DATA_DEVICE][
+                device.device_id
+            ]
+            wrapper.async_set_updated_data(device)
+            return
+
+        # New device - create device
+        _LOGGER.info(
+            "Discovered Switcher device - id: %s, name: %s, type: %s (%s)",
+            device.device_id,
+            device.name,
+            device.device_type.value,
+            device.device_type.hex_rep,
+        )
+
+        wrapper = hass.data[DOMAIN][DATA_DEVICE][
+            device.device_id
+        ] = SwitcherDeviceWrapper(hass, entry, device)
+        hass.async_create_task(wrapper.async_setup())
+
+    async def platforms_setup_task() -> None:
+        # Must be ready before dispatcher is called
+        for platform in PLATFORMS:
+            await hass.config_entries.async_forward_entry_setup(entry, platform)
+
+        discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
+        if discovery_task is not None:
+            discovered_devices = await discovery_task
+            for device in discovered_devices.values():
+                on_device_data_callback(device)
+
+        await async_start_bridge(hass, on_device_data_callback)
+
+    hass.async_create_task(platforms_setup_task())
+
+    @callback
+    async def stop_bridge(event: Event) -> None:
+        await async_stop_bridge(hass)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
 
     return True
+
+
+class SwitcherDeviceWrapper(update_coordinator.DataUpdateCoordinator):
+    """Wrapper for a Switcher device with Home Assistant specific functions."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, device: SwitcherBase
+    ) -> None:
+        """Initialize the Switcher device wrapper."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=device.name,
+            update_interval=timedelta(seconds=MAX_UPDATE_INTERVAL_SEC),
+        )
+        self.hass = hass
+        self.entry = entry
+        self.data = device
+
+    async def _async_update_data(self) -> None:
+        """Mark device offline if no data."""
+        raise update_coordinator.UpdateFailed(
+            f"Device {self.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+        )
+
+    @property
+    def model(self) -> str:
+        """Switcher device model."""
+        return self.data.device_type.value  # type: ignore[no-any-return]
+
+    @property
+    def device_id(self) -> str:
+        """Switcher device id."""
+        return self.data.device_id  # type: ignore[no-any-return]
+
+    @property
+    def mac_address(self) -> str:
+        """Switcher device mac address."""
+        return self.data.mac_address  # type: ignore[no-any-return]
+
+    async def async_setup(self) -> None:
+        """Set up the wrapper."""
+        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg.async_get_or_create(
+            config_entry_id=self.entry.entry_id,
+            connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac_address)},
+            identifiers={(DOMAIN, self.device_id)},
+            manufacturer="Switcher",
+            name=self.name,
+            model=self.model,
+        )
+        async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADD, self)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    await async_stop_bridge(hass)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(DATA_DEVICE)
+
+    return unload_ok

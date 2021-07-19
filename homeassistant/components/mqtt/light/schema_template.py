@@ -37,6 +37,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
+from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +93,8 @@ async def async_setup_entity_template(
 
 class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT Template light."""
+
+    _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""

@@ -127,7 +127,7 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             and features & cover.SUPPORT_SET_POSITION
         ):
             a_type = "Window"
-        elif features & cover.SUPPORT_SET_POSITION:
+        elif features & (cover.SUPPORT_SET_POSITION | cover.SUPPORT_SET_TILT_POSITION):
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "WindowCoveringBasic"

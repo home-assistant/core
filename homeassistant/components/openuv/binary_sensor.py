@@ -27,9 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     binary_sensors = []
     for kind, attrs in BINARY_SENSORS.items():
         name, icon = attrs
-        binary_sensors.append(
-            OpenUvBinarySensor(openuv, kind, name, icon, entry.entry_id)
-        )
+        binary_sensors.append(OpenUvBinarySensor(openuv, kind, name, icon))
 
     async_add_entities(binary_sensors, True)
 
@@ -37,38 +35,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
-    def __init__(self, openuv, sensor_type, name, icon, entry_id):
+    def __init__(self, openuv, sensor_type, name, icon):
         """Initialize the sensor."""
-        super().__init__(openuv)
+        super().__init__(openuv, sensor_type)
 
-        self._async_unsub_dispatcher_connect = None
-        self._entry_id = entry_id
-        self._icon = icon
-        self._latitude = openuv.client.latitude
-        self._longitude = openuv.client.longitude
-        self._name = name
-        self._sensor_type = sensor_type
-        self._state = None
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._latitude}_{self._longitude}_{self._sensor_type}"
+        self._attr_icon = icon
+        self._attr_name = name
 
     @callback
     def update_from_latest_data(self):
@@ -76,10 +48,10 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
         data = self.openuv.data[DATA_PROTECTION_WINDOW]
 
         if not data:
-            self._available = False
+            self._attr_available = False
             return
 
-        self._available = True
+        self._attr_available = True
 
         for key in ("from_time", "to_time", "from_uv", "to_uv"):
             if not data.get(key):
@@ -87,12 +59,12 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
                 return
 
         if self._sensor_type == TYPE_PROTECTION_WINDOW:
-            self._state = (
+            self._attr_is_on = (
                 parse_datetime(data["from_time"])
                 <= utcnow()
                 <= parse_datetime(data["to_time"])
             )
-            self._attrs.update(
+            self._attr_extra_state_attributes.update(
                 {
                     ATTR_PROTECTION_WINDOW_ENDING_TIME: as_local(
                         parse_datetime(data["to_time"])

@@ -126,31 +126,15 @@ class PairedSensorSensor(PairedSensorEntity, SensorEntity):
         """Initialize."""
         super().__init__(entry, coordinator, kind, name, device_class, icon)
 
-        self._state = None
-        self._unit = unit
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def state(self) -> str:
-        """Return the sensor state."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
+        self._attr_unit_of_measurement = unit
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_BATTERY:
-            self._state = self.coordinator.data["battery"]
+            self._attr_state = self.coordinator.data["battery"]
         elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self.coordinator.data["temperature"]
+            self._attr_state = self.coordinator.data["temperature"]
 
 
 class ValveControllerSensor(ValveControllerEntity, SensorEntity):
@@ -169,29 +153,7 @@ class ValveControllerSensor(ValveControllerEntity, SensorEntity):
         """Initialize."""
         super().__init__(entry, coordinators, kind, name, device_class, icon)
 
-        self._state = None
-        self._unit = unit
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        if self._kind == SENSOR_KIND_TEMPERATURE:
-            return self.coordinators[
-                API_SYSTEM_ONBOARD_SENSOR_STATUS
-            ].last_update_success
-        if self._kind == SENSOR_KIND_UPTIME:
-            return self.coordinators[API_SYSTEM_DIAGNOSTICS].last_update_success
-        return False
-
-    @property
-    def state(self) -> str:
-        """Return the sensor state."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
+        self._attr_unit_of_measurement = unit
 
     async def _async_continue_entity_setup(self) -> None:
         """Register API interest (and related tasks) when the entity is added."""
@@ -202,8 +164,14 @@ class ValveControllerSensor(ValveControllerEntity, SensorEntity):
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
         if self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
+            self._attr_available = self.coordinators[
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            ].last_update_success
+            self._attr_state = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
                 "temperature"
             ]
         elif self._kind == SENSOR_KIND_UPTIME:
-            self._state = self.coordinators[API_SYSTEM_DIAGNOSTICS].data["uptime"]
+            self._attr_available = self.coordinators[
+                API_SYSTEM_DIAGNOSTICS
+            ].last_update_success
+            self._attr_state = self.coordinators[API_SYSTEM_DIAGNOSTICS].data["uptime"]

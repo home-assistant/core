@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -62,7 +62,7 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, f"{DOMAIN}_{config_entry.entry_id}_add_{LOCK_DOMAIN}", async_add_lock
         )
