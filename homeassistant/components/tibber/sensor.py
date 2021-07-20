@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
 from random import randrange
+from typing import NamedTuple
 
 import aiohttp
 
@@ -58,8 +58,7 @@ class ResetType(Enum):
     NEVER = "never"
 
 
-@dataclass
-class TibberSensorMetadata:
+class TibberSensorMetadata(NamedTuple):
     """Metadata for an individual Tibber sensor."""
 
     name: str
@@ -71,119 +70,121 @@ class TibberSensorMetadata:
 
 RT_SENSOR_MAP: dict[str, TibberSensorMetadata] = {
     "averagePower": TibberSensorMetadata(
-        "average power", DEVICE_CLASS_POWER, POWER_WATT
+        "average power", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
     ),
     "power": TibberSensorMetadata(
         "power",
-        DEVICE_CLASS_POWER,
-        POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        unit=POWER_WATT,
     ),
     "powerProduction": TibberSensorMetadata(
-        "power production", DEVICE_CLASS_POWER, POWER_WATT
+        "power production", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
     ),
-    "minPower": TibberSensorMetadata("min power", DEVICE_CLASS_POWER, POWER_WATT),
-    "maxPower": TibberSensorMetadata("max power", DEVICE_CLASS_POWER, POWER_WATT),
+    "minPower": TibberSensorMetadata(
+        "min power", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
+    ),
+    "maxPower": TibberSensorMetadata(
+        "max power", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
+    ),
     "accumulatedConsumption": TibberSensorMetadata(
         "accumulated consumption",
-        DEVICE_CLASS_ENERGY,
-        ENERGY_KILO_WATT_HOUR,
-        STATE_CLASS_MEASUREMENT,
-        ResetType.DAILY,
+        device_class=DEVICE_CLASS_ENERGY,
+        unit=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.DAILY,
     ),
     "accumulatedConsumptionLastHour": TibberSensorMetadata(
         "accumulated consumption current hour",
-        DEVICE_CLASS_ENERGY,
-        ENERGY_KILO_WATT_HOUR,
-        STATE_CLASS_MEASUREMENT,
-        ResetType.HOURLY,
+        device_class=DEVICE_CLASS_ENERGY,
+        unit=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.HOURLY,
     ),
     "accumulatedProduction": TibberSensorMetadata(
         "accumulated production",
-        DEVICE_CLASS_ENERGY,
-        ENERGY_KILO_WATT_HOUR,
-        STATE_CLASS_MEASUREMENT,
-        ResetType.DAILY,
+        device_class=DEVICE_CLASS_ENERGY,
+        unit=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.DAILY,
     ),
     "accumulatedProductionLastHour": TibberSensorMetadata(
         "accumulated production current hour",
-        DEVICE_CLASS_ENERGY,
-        ENERGY_KILO_WATT_HOUR,
-        STATE_CLASS_MEASUREMENT,
-        ResetType.HOURLY,
+        device_class=DEVICE_CLASS_ENERGY,
+        unit=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.HOURLY,
     ),
     "lastMeterConsumption": TibberSensorMetadata(
         "last meter consumption",
-        DEVICE_CLASS_ENERGY,
-        ENERGY_KILO_WATT_HOUR,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_ENERGY,
+        unit=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "lastMeterProduction": TibberSensorMetadata(
         "last meter production",
-        DEVICE_CLASS_ENERGY,
-        ENERGY_KILO_WATT_HOUR,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_ENERGY,
+        unit=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "voltagePhase1": TibberSensorMetadata(
         "voltage phase1",
-        DEVICE_CLASS_VOLTAGE,
-        ELECTRIC_POTENTIAL_VOLT,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        unit=ELECTRIC_POTENTIAL_VOLT,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "voltagePhase2": TibberSensorMetadata(
         "voltage phase2",
-        DEVICE_CLASS_VOLTAGE,
-        ELECTRIC_POTENTIAL_VOLT,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        unit=ELECTRIC_POTENTIAL_VOLT,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "voltagePhase3": TibberSensorMetadata(
         "voltage phase3",
-        DEVICE_CLASS_VOLTAGE,
-        ELECTRIC_POTENTIAL_VOLT,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        unit=ELECTRIC_POTENTIAL_VOLT,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "currentL1": TibberSensorMetadata(
         "current L1",
-        DEVICE_CLASS_CURRENT,
-        ELECTRIC_CURRENT_AMPERE,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_CURRENT,
+        unit=ELECTRIC_CURRENT_AMPERE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "currentL2": TibberSensorMetadata(
         "current L2",
-        DEVICE_CLASS_CURRENT,
-        ELECTRIC_CURRENT_AMPERE,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_CURRENT,
+        unit=ELECTRIC_CURRENT_AMPERE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "currentL3": TibberSensorMetadata(
         "current L3",
-        DEVICE_CLASS_CURRENT,
-        ELECTRIC_CURRENT_AMPERE,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_CURRENT,
+        unit=ELECTRIC_CURRENT_AMPERE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "signalStrength": TibberSensorMetadata(
         "signal strength",
-        DEVICE_CLASS_SIGNAL_STRENGTH,
-        SIGNAL_STRENGTH_DECIBELS,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        unit=SIGNAL_STRENGTH_DECIBELS,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "accumulatedReward": TibberSensorMetadata(
         "accumulated reward",
-        DEVICE_CLASS_MONETARY,
-        None,
-        STATE_CLASS_MEASUREMENT,
-        ResetType.DAILY,
+        device_class=DEVICE_CLASS_MONETARY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.DAILY,
     ),
     "accumulatedCost": TibberSensorMetadata(
         "accumulated cost",
-        DEVICE_CLASS_MONETARY,
-        None,
-        STATE_CLASS_MEASUREMENT,
-        ResetType.DAILY,
+        device_class=DEVICE_CLASS_MONETARY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.DAILY,
     ),
     "powerFactor": TibberSensorMetadata(
         "power factor",
-        DEVICE_CLASS_POWER_FACTOR,
-        PERCENTAGE,
-        STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_POWER_FACTOR,
+        unit=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
 
@@ -362,7 +363,7 @@ class TibberSensorRT(TibberSensor):
         self._attr_state = initial_state
         self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{metadata.name}"
 
-        if metadata.name in ["accumulated cost", "accumulated reward"]:
+        if metadata.name in ("accumulated cost", "accumulated reward"):
             self._attr_unit_of_measurement = tibber_home.currency
         else:
             self._attr_unit_of_measurement = metadata.unit
