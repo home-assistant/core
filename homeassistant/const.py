@@ -457,11 +457,8 @@ PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 
 # Sound pressure units
-UnitSoundPressureT = NewType("UnitSoundPressureT", UnitT)
-SOUND_PRESSURE_DB: Final[UnitSoundPressureT] = UnitSoundPressureT(UnitT("dB"))
-SOUND_PRESSURE_WEIGHTED_DBA: Final[UnitSoundPressureT] = UnitSoundPressureT(
-    UnitT("dBa")
-)
+SOUND_PRESSURE_DB: Final = "dB"
+SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
 
 # Volume units
 VOLUME_LITERS: Final = "L"
