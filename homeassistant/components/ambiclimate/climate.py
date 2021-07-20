@@ -146,24 +146,24 @@ class AmbiclimateEntity(ClimateEntity):
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
-        self._attr_unique_id = self._heater.device_id
-        self._attr_name = self._heater.name
+        self._attr_unique_id = heater.device_id
+        self._attr_name = heater.name
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Ambiclimate",
         }
-        self._attr_min_temp = self._heater.get_min_temp()
-        self._attr_max_temp = self._heater.get_max_temp()
+        self._attr_min_temp = heater.get_min_temp()
+        self._attr_max_temp = heater.get_max_temp()
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         await self._heater.set_target_temperature(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
             await self._heater.turn_on()
@@ -171,7 +171,7 @@ class AmbiclimateEntity(ClimateEntity):
         if hvac_mode == HVAC_MODE_OFF:
             await self._heater.turn_off()
 
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Retrieve latest state."""
         try:
             token_info = await self._heater.control.refresh_access_token()
