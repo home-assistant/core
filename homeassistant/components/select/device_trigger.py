@@ -22,8 +22,9 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -88,15 +89,16 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, Any]:
     """List trigger capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
-    if state is None:
-        return {}
+    try:
+        options = get_capability(hass, config[CONF_ENTITY_ID], ATTR_OPTIONS) or []
+    except HomeAssistantError:
+        options = []
 
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional(CONF_FROM): vol.In(state.attributes.get(ATTR_OPTIONS, [])),
-                vol.Optional(CONF_TO): vol.In(state.attributes.get(ATTR_OPTIONS, [])),
+                vol.Optional(CONF_FROM): vol.In(options),
+                vol.Optional(CONF_TO): vol.In(options),
                 vol.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )

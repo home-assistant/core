@@ -342,7 +342,7 @@ async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
     state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
     assert state.state == "9.0"
     state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "5.6"
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/tele/SENSOR", '{"ENERGY":{"ApparentPower":2.3}}'
@@ -350,9 +350,9 @@ async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
     state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
     assert state.state == "2.3"
     state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "9.0"
     state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "5.6"
 
     # Test polled state update
     async_fire_mqtt_message(
@@ -378,7 +378,7 @@ async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
     state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
     assert state.state == "9.0"
     state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "5.6"
 
     async_fire_mqtt_message(
         hass,
@@ -388,9 +388,9 @@ async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
     state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
     assert state.state == "2.3"
     state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "9.0"
     state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "5.6"
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])

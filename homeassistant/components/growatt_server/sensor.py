@@ -454,13 +454,13 @@ MIX_SENSOR_TYPES = {
     ),
     "mix_wattage_pv_1": (
         "PV1 Wattage",
-        POWER_WATT,
+        POWER_KILO_WATT,
         "pPv1",
         {"device_class": DEVICE_CLASS_POWER},
     ),
     "mix_wattage_pv_2": (
         "PV2 Wattage",
-        POWER_WATT,
+        POWER_KILO_WATT,
         "pPv2",
         {"device_class": DEVICE_CLASS_POWER},
     ),

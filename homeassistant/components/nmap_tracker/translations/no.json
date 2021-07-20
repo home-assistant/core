@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert"
+        },
+        "error": {
+            "invalid_hosts": "Ugyldige verter"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Nettverksadresser (kommaseparert) for \u00e5 ekskludere fra skanning",
+                    "home_interval": "Minimum antall minutter mellom skanninger av aktive enheter (lagre batteri)",
+                    "hosts": "Nettverksadresser (kommaseparert) for \u00e5 skanne",
+                    "scan_options": "R\u00e5 konfigurerbare skannealternativer for Nmap"
+                },
+                "description": "Konfigurer verter som skal skannes av Nmap. Nettverksadresse og ekskluderer kan v\u00e6re IP-adresser (192.168.1.1), IP-nettverk (192.168.0.0/24) eller IP-omr\u00e5der (192.168.1.0-32)."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Ugyldige verter"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Nettverksadresser (kommaseparert) for \u00e5 ekskludere fra skanning",
+                    "home_interval": "Minimum antall minutter mellom skanninger av aktive enheter (lagre batteri)",
+                    "hosts": "Nettverksadresser (kommaseparert) for \u00e5 skanne",
+                    "scan_options": "R\u00e5 konfigurerbare skannealternativer for Nmap"
+                },
+                "description": "Konfigurer verter som skal skannes av Nmap. Nettverksadresse og ekskluderer kan v\u00e6re IP-adresser (192.168.1.1), IP-nettverk (192.168.0.0/24) eller IP-omr\u00e5der (192.168.1.0-32)."
+            }
+        }
+    },
+    "title": "Sporing av Nmap"
+}

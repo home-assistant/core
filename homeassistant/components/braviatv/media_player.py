@@ -1,13 +1,9 @@
 """Support for interface with a Bravia TV."""
-import logging
+from __future__ import annotations
 
-import voluptuous as vol
+from typing import Final
 
-from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
-    PLATFORM_SCHEMA,
-    MediaPlayerEntity,
-)
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -21,30 +17,17 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PIN,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.json import load_json
 
-from .const import (
-    ATTR_MANUFACTURER,
-    BRAVIA_CONFIG_FILE,
-    BRAVIA_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from . import BraviaTVCoordinator
+from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
-SUPPORT_BRAVIA = (
+SUPPORT_BRAVIA: Final = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
@@ -58,50 +41,18 @@ SUPPORT_BRAVIA = (
     | SUPPORT_STOP
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Bravia TV platform."""
-    host = config[CONF_HOST]
-
-    bravia_config_file_path = hass.config.path(BRAVIA_CONFIG_FILE)
-    bravia_config = await hass.async_add_executor_job(
-        load_json, bravia_config_file_path
-    )
-    if not bravia_config:
-        _LOGGER.error(
-            "Configuration import failed, there is no bravia.conf file in the configuration folder"
-        )
-        return
-
-    while bravia_config:
-        # Import a configured TV
-        host_ip, host_config = bravia_config.popitem()
-        if host_ip == host:
-            pin = host_config[CONF_PIN]
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={CONF_HOST: host, CONF_PIN: pin},
-                )
-            )
-            return
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Bravia TV Media Player from a config_entry."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][BRAVIA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
-    device_info = {
+    assert unique_id is not None
+    device_info: DeviceInfo = {
         "identifiers": {(DOMAIN, unique_id)},
         "name": DEFAULT_NAME,
         "manufacturer": ATTR_MANUFACTURER,
@@ -116,126 +67,111 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
+    coordinator: BraviaTVCoordinator
     _attr_device_class = DEVICE_CLASS_TV
     _attr_supported_features = SUPPORT_BRAVIA
 
-    def __init__(self, coordinator, name, unique_id, device_info):
+    def __init__(
+        self,
+        coordinator: BraviaTVCoordinator,
+        name: str,
+        unique_id: str,
+        device_info: DeviceInfo,
+    ) -> None:
         """Initialize the entity."""
 
-        self._name = name
-        self._unique_id = unique_id
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_name = name
+        self._attr_unique_id = unique_id
 
         super().__init__(coordinator)
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         if self.coordinator.is_on:
             return STATE_PLAYING if self.coordinator.playing else STATE_PAUSED
         return STATE_OFF
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         return self.coordinator.source
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return self.coordinator.source_list
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self.coordinator.volume is not None:
-            return self.coordinator.volume / 100
-        return None
+        return self.coordinator.volume_level
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self.coordinator.muted
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        return_value = None
-        if self.coordinator.channel_name is not None:
-            return_value = self.coordinator.channel_name
-            if self.coordinator.program_name is not None:
-                return_value = f"{return_value}: {self.coordinator.program_name}"
-        return return_value
+        return self.coordinator.media_title
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         return self.coordinator.channel_name
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return self.coordinator.duration
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the device on."""
         await self.coordinator.async_turn_on()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the device off."""
         await self.coordinator.async_turn_off()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.async_set_volume_level(volume)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Send volume up command."""
         await self.coordinator.async_volume_up()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Send volume down command."""
         await self.coordinator.async_volume_down()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self.coordinator.async_volume_mute(mute)
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         await self.coordinator.async_select_source(source)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self.coordinator.async_media_play()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.coordinator.async_media_pause()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send media stop command to media player."""
         await self.coordinator.async_media_stop()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.async_media_next_track()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.async_media_previous_track()

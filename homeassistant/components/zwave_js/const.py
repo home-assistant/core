@@ -2,6 +2,8 @@
 import logging
 
 CONF_ADDON_DEVICE = "device"
+CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
+CONF_ADDON_LOG_LEVEL = "log_level"
 CONF_ADDON_NETWORK_KEY = "network_key"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_NETWORK_KEY = "network_key"
@@ -11,7 +13,6 @@ CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
-DATA_UNSUBSCRIBE = "unsubs"
 DATA_PLATFORM_SETUP = "platform_setup"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
@@ -43,6 +44,9 @@ ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
 
+ATTR_NODE = "node"
+ATTR_ZWAVE_VALUE = "zwave_value"
+
 # service constants
 ATTR_NODES = "nodes"
 
@@ -65,3 +69,7 @@ ATTR_BROADCAST = "broadcast"
 SERVICE_PING = "ping"
 
 ADDON_SLUG = "core_zwave_js"
+
+# Siren constants
+TONE_ID_DEFAULT = 255
+TONE_ID_OFF = 0

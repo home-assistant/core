@@ -43,15 +43,12 @@ async def async_setup_platform(
     if not discovery_info or not discovery_info["platform_config"]:
         return
     platform_config = discovery_info["platform_config"]
-    _async_migrate_unique_id(hass, platform_config)
-
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXLight(xknx, entity_config))
-
-    async_add_entities(entities)
+    _async_migrate_unique_id(hass, platform_config)
+    async_add_entities(
+        KNXLight(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 @callback
@@ -223,19 +220,21 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
 class KNXLight(KnxEntity, LightEntity):
     """Representation of a KNX light."""
 
+    _device: XknxLight
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX light."""
-        self._device: XknxLight
         super().__init__(_create_light(xknx, config))
-        self._unique_id = self._device_unique_id()
-        self._min_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
         self._max_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
-        self._min_mireds = color_util.color_temperature_kelvin_to_mired(
-            self._max_kelvin
-        )
-        self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+        self._min_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
+
+        self._attr_max_mireds = color_util.color_temperature_kelvin_to_mired(
             self._min_kelvin
         )
+        self._attr_min_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._max_kelvin
+        )
+        self._attr_unique_id = self._device_unique_id()
 
     def _device_unique_id(self) -> str:
         """Return unique id for this device."""
@@ -310,16 +309,6 @@ class KNXLight(KnxEntity, LightEntity):
                     + ((relative_ct / 255) * (self._max_kelvin - self._min_kelvin))
                 )
         return None
-
-    @property
-    def min_mireds(self) -> int:
-        """Return the coldest color temp this light supports in mireds."""
-        return self._min_mireds
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the warmest color temp this light supports in mireds."""
-        return self._max_mireds
 
     @property
     def color_mode(self) -> str | None:

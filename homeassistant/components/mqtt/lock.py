@@ -37,6 +37,13 @@ DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
 DEFAULT_STATE_LOCKED = "LOCKED"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
 
+MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        lock.ATTR_CHANGED_BY,
+        lock.ATTR_CODE_FORMAT,
+    }
+)
+
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -75,6 +82,8 @@ async def _async_setup_entity(
 
 class MqttLock(MqttEntity, LockEntity):
     """Representation of a lock that can be toggled using MQTT."""
+
+    _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the lock."""

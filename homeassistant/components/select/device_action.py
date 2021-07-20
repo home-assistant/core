@@ -12,9 +12,10 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_OPTION, ATTR_OPTIONS, CONF_OPTION, DOMAIN, SERVICE_SELECT_OPTION
@@ -65,16 +66,9 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, Any]:
     """List action capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
-    if state is None:
-        return {}
+    try:
+        options = get_capability(hass, config[CONF_ENTITY_ID], ATTR_OPTIONS) or []
+    except HomeAssistantError:
+        options = []
 
-    return {
-        "extra_fields": vol.Schema(
-            {
-                vol.Required(CONF_OPTION): vol.In(
-                    state.attributes.get(ATTR_OPTIONS, [])
-                ),
-            }
-        )
-    }
+    return {"extra_fields": vol.Schema({vol.Required(CONF_OPTION): vol.In(options)})}

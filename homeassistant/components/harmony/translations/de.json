@@ -10,15 +10,15 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
-                "title": "Richten Sie den Logitech Harmony Hub ein"
+                "description": "M\u00f6chtest du {name} ({host}) einrichten?",
+                "title": "Richte den Logitech Harmony Hub ein"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "name": "Hub-Name"
                 },
-                "title": "Richten Sie den Logitech Harmony Hub ein"
+                "title": "Richte den Logitech Harmony Hub ein"
             }
         }
     },
@@ -29,7 +29,7 @@
                     "activity": "Die Standardaktivit\u00e4t, die ausgef\u00fchrt werden soll, wenn keine angegeben ist.",
                     "delay_secs": "Die Verz\u00f6gerung zwischen dem Senden von Befehlen."
                 },
-                "description": "Passen Sie die Harmony Hub-Optionen an"
+                "description": "Passe die Harmony Hub-Optionen an"
             }
         }
     }

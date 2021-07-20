@@ -178,7 +178,7 @@ class AprsListenerThread(threading.Thread):
                     _LOGGER.warning(
                         "APRS message contained invalid posambiguity: %s", str(pos_amb)
                     )
-            for attr in [ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED]:
+            for attr in (ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED):
                 if attr in msg:
                     attrs[attr] = msg[attr]
 

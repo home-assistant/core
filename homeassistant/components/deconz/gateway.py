@@ -33,8 +33,8 @@ from .errors import AuthenticationRequired, CannotConnect
 
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
-    """Return gateway with a matching bridge id."""
-    return hass.data[DECONZ_DOMAIN][config_entry.unique_id]
+    """Return gateway with a matching config entry ID."""
+    return hass.data[DECONZ_DOMAIN][config_entry.entry_id]
 
 
 class DeconzGateway:

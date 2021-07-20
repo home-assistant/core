@@ -53,13 +53,14 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UnitTemperatureT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import convert_temperature
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
@@ -121,7 +122,7 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{CLIMATE_DOMAIN}",
@@ -248,7 +249,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
-    def temperature_unit(self) -> str:
+    def temperature_unit(self) -> UnitTemperatureT:
         """Return the unit of measurement used by the platform."""
         if (
             self._unit_value
@@ -469,15 +470,15 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if not self._current_mode:
-            # Thermostat(valve) with no support for setting a mode
-            raise ValueError(
-                f"Thermostat {self.entity_id} does not support setting a mode"
-            )
-        hvac_mode_value = self._hvac_modes.get(hvac_mode)
-        if hvac_mode_value is None:
+        hvac_mode_id = self._hvac_modes.get(hvac_mode)
+        if hvac_mode_id is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
-        await self.info.node.async_set_value(self._current_mode, hvac_mode_value)
+
+        if not self._current_mode:
+            # Thermostat(valve) has no support for setting a mode, so we make it a no-op
+            return
+
+        await self.info.node.async_set_value(self._current_mode, hvac_mode_id)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
