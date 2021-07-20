@@ -100,7 +100,7 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
             {
                 "type": "solar",
                 "stat_energy_from": "my_solar_production",
-                "stat_predicted_energy_from": "predicted_stat",
+                "config_entry_solar_forecast": "predicted_stat",
             },
         ],
         "device_consumption": [{"stat_consumption": "some_device_usage"}],
@@ -140,7 +140,7 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
             {
                 "type": "solar",
                 "stat_energy_from": "my_solar_production",
-                "stat_predicted_energy_from": None,
+                "config_entry_solar_forecast": None,
             },
         ],
     }

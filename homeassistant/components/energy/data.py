@@ -76,7 +76,7 @@ class SolarSourceType(TypedDict):
     type: Literal["solar"]
 
     stat_energy_from: str
-    stat_predicted_energy_from: str | None
+    config_entry_solar_forecast: str | None
 
 
 SourceType = Union[GridSourceType, SolarSourceType]
@@ -175,7 +175,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "solar",
         vol.Required("stat_energy_from"): str,
-        vol.Required("stat_predicted_energy_from"): vol.Any(str, None),
+        vol.Optional("config_entry_solar_forecast"): vol.Any(str, None),
     }
 )
 
@@ -184,9 +184,8 @@ def check_type_limits(value: list[SourceType]) -> list[SourceType]:
     """Validate that we don't have too many of certain types."""
     types = Counter([val["type"] for val in value])
 
-    for source_type, source_count in types.items():
-        if source_count > 1:
-            raise vol.Invalid(f"You cannot have more than 1 {source_type} source")
+    if types.get("grid", 0) > 1:
+        raise vol.Invalid("You cannot have more than 1 grid source")
 
     return value
 
