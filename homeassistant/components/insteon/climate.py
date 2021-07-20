@@ -24,7 +24,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UnitTemperatureT,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -90,7 +95,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return SUPPORTED_FEATURES
 
     @property
-    def temperature_unit(self) -> str:
+    def temperature_unit(self) -> UnitTemperatureT:
         """Return the unit of measurement."""
         if self._insteon_device.properties[CELSIUS].value:
             return TEMP_CELSIUS
