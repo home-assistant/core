@@ -256,7 +256,7 @@ class EnergyManager:
         if not self._update_listeners:
             return
 
-        await asyncio.gather(*[listener() for listener in self._update_listeners])
+        await asyncio.gather(*(listener() for listener in self._update_listeners))
 
     @callback
     def async_listen_updates(self, update_listener: Callable[[], Awaitable]) -> None:
