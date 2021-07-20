@@ -1,6 +1,7 @@
 """Support for Ambiclimate ac."""
 import asyncio
 import logging
+from typing import Any
 
 import ambiclimate
 import voluptuous as vol
