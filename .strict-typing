@@ -42,6 +42,7 @@ homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
 homeassistant.components.group.*
+homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.http.*
