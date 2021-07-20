@@ -10,6 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -28,7 +29,12 @@ SENSOR_TYPES = {
         None,
         DEVICE_CLASS_TEMPERATURE,
     ],
-    "orp": ["Oxydo Reduction Potential", "mV", "mdi:pool", None],
+    "orp": [
+        "Oxydo Reduction Potential",
+        ELECTRIC_POTENTIAL_MILLIVOLT,
+        "mdi:pool",
+        None,
+    ],
     "ph": ["pH", "", "mdi:pool", None],
     "tds": ["TDS", CONCENTRATION_PARTS_PER_MILLION, "mdi:pool", None],
     "battery": ["Battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
