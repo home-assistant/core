@@ -15,10 +15,9 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     LENGTH_YARD,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    UnitLengthT,
 )
 
-VALID_UNITS: tuple[UnitLengthT, ...] = (
+VALID_UNITS: tuple[str, ...] = (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     LENGTH_FEET,
@@ -29,7 +28,7 @@ VALID_UNITS: tuple[UnitLengthT, ...] = (
     LENGTH_YARD,
 )
 
-TO_METERS: dict[UnitLengthT, Callable[[float], float]] = {
+TO_METERS: dict[str, Callable[[float], float]] = {
     LENGTH_METERS: lambda meters: meters,
     LENGTH_MILES: lambda miles: miles * 1609.344,
     LENGTH_YARD: lambda yards: yards * 0.9144,
@@ -40,7 +39,7 @@ TO_METERS: dict[UnitLengthT, Callable[[float], float]] = {
     LENGTH_MILLIMETERS: lambda millimeters: millimeters * 0.001,
 }
 
-METERS_TO: dict[UnitLengthT, Callable[[float], float]] = {
+METERS_TO: dict[str, Callable[[float], float]] = {
     LENGTH_METERS: lambda meters: meters,
     LENGTH_MILES: lambda meters: meters * 0.000621371,
     LENGTH_YARD: lambda meters: meters * 1.09361,
@@ -52,7 +51,7 @@ METERS_TO: dict[UnitLengthT, Callable[[float], float]] = {
 }
 
 
-def convert(value: float, unit_1: UnitLengthT, unit_2: UnitLengthT) -> float:
+def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
     if unit_1 not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, LENGTH))

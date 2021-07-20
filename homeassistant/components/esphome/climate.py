@@ -65,7 +65,6 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
-    UnitTemperatureT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -167,7 +166,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return PRECISION_TENTHS
 
     @property
-    def temperature_unit(self) -> UnitTemperatureT:
+    def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return TEMP_CELSIUS
 
