@@ -350,7 +350,7 @@ class TibberSensorRT(TibberSensor):
 
     _attr_should_poll = False
 
-    def __init__(self, tibber_home, metadata, initial_state):
+    def __init__(self, tibber_home, metadata: TibberSensorMetadata, initial_state):
         """Initialize the sensor."""
         super().__init__(tibber_home)
         self._model = "Tibber Pulse"
