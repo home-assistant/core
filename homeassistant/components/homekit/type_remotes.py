@@ -153,12 +153,8 @@ class RemoteInputSelectAccessory(HomeAccessory):
             if self.char_input_source.value != index:
                 self.char_input_source.set_value(index)
         elif hk_state:
-            _LOGGER.warning(
-                "%s: Sources out of sync. Restart Home Assistant",
-                self.entity_id,
-            )
-            if self.char_input_source.value != 0:
-                self.char_input_source.set_value(0)
+            # Sources are out of sync, recreate the accessory
+            self.async_reset()
 
 
 @TYPES.register("ActivityRemote")
