@@ -156,7 +156,7 @@ class AirQualitySensor(HomeAccessory):
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
 
-    def init(self):
+    def create_services(self):
         """Initialize a AirQualitySensor accessory object."""
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
