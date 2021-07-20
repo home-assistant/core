@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 from datetime import timedelta
-from typing import Callable
+from typing import Any, Callable
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -42,7 +42,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._api_lock = api_lock
         self._client = client
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Execute a "locked" API request against the valve controller."""
         async with self._api_lock, self._client:
             try:
