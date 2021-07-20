@@ -126,7 +126,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(payload)
 
-            if payload not in self.options:
+            if payload not in self.options and payload != "None":
                 _LOGGER.error(
                     "Invalid option for %s: '%s' (valid options: %s)",
                     self.entity_id,
