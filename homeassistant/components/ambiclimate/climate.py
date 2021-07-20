@@ -163,7 +163,7 @@ class AmbiclimateEntity(ClimateEntity):
             return
         await self._heater.set_target_temperature(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
             await self._heater.turn_on()
