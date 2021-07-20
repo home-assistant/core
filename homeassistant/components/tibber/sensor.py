@@ -70,7 +70,9 @@ class TibberSensorMetadata(NamedTuple):
 
 RT_SENSOR_MAP: dict[str, TibberSensorMetadata] = {
     "averagePower": TibberSensorMetadata(
-        "average power", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
+        "average power",
+        device_class=DEVICE_CLASS_POWER,
+        unit=POWER_WATT,
     ),
     "power": TibberSensorMetadata(
         "power",
@@ -78,13 +80,19 @@ RT_SENSOR_MAP: dict[str, TibberSensorMetadata] = {
         unit=POWER_WATT,
     ),
     "powerProduction": TibberSensorMetadata(
-        "power production", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
+        "power production",
+        device_class=DEVICE_CLASS_POWER,
+        unit=POWER_WATT,
     ),
     "minPower": TibberSensorMetadata(
-        "min power", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
+        "min power",
+        device_class=DEVICE_CLASS_POWER,
+        unit=POWER_WATT,
     ),
     "maxPower": TibberSensorMetadata(
-        "max power", device_class=DEVICE_CLASS_POWER, unit=POWER_WATT
+        "max power",
+        device_class=DEVICE_CLASS_POWER,
+        unit=POWER_WATT,
     ),
     "accumulatedConsumption": TibberSensorMetadata(
         "accumulated consumption",
