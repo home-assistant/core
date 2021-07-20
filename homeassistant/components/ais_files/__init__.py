@@ -437,7 +437,7 @@ class AisDbConfigView(HomeAssistantView):
                     )
             elif db_connection["dbEngine"] == "PostgreSQL (local)":
                 db_connection["dbUrl"] = (
-                        "postgresql:ais:dom@127.0.0.1/ha"
+                        "postgresql://ais:dom@127.0.0.1/ha"
                     )
                 db_connection["dbPassword"] = "dom"
                 db_connection["dbUser"] = "ais"

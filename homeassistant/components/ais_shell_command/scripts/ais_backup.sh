@@ -45,7 +45,7 @@ echo [] > ~/../myConnHist.json
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais*
 # create db settings for pro
 if [ $ais_pro -gt 0 ]; then
-  echo '{ "dbShowLogbook": true, "dbShowHistory": true, "dbEngine": "PostgreSQL (local)", "dbDrive": "", "dbUrl": "postgresql:ais:dom@127.0.0.1/ha", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "127.0.0.1", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
+  echo '{ "dbShowLogbook": true, "dbShowHistory": true, "dbEngine": "PostgreSQL (local)", "dbDrive": "", "dbUrl": "postgresql://ais:dom@127.0.0.1/ha", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "127.0.0.1", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
 fi
 # 6. clear npm cache
 rm -rf /data/data/pl.sviete.dom/files/home/.npm/_cacache/*
