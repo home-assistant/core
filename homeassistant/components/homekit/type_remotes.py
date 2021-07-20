@@ -166,7 +166,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
             return
 
         _LOGGER.warning(
-            "%s: Source %s does not exist the source list",
+            "%s: Source %s does not exist the source list: %s",
             self.entity_id,
             source_name,
             possible_sources,
