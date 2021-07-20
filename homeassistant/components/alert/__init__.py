@@ -51,7 +51,7 @@ ALERT_SCHEMA = vol.Schema(
         vol.Required(CONF_REPEAT): vol.All(
             cv.ensure_list,
             [vol.Coerce(float)],
-            # Minimum delay is 1 second = 0.16 minutes
+            # Minimum delay is 1 second = 0.016 minutes
             [vol.Range(min=0.016)],
         ),
         vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
