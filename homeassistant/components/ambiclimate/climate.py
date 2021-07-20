@@ -156,7 +156,7 @@ class AmbiclimateEntity(ClimateEntity):
         self._attr_min_temp = heater.get_min_temp()
         self._attr_max_temp = heater.get_max_temp()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
