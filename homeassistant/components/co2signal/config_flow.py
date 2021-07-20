@@ -114,9 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             new_entry_type = TYPE_USE_HOME
 
-        for entry in self._async_current_entries(include_ignore=True):
-            if entry.source == config_entries.SOURCE_IGNORE:
-                continue
+        for entry in self._async_current_entries(include_ignore=False):
 
             if (cur_entry_type := _get_entry_type(entry.data)) != new_entry_type:
                 continue
