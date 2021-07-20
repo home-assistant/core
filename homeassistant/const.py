@@ -393,6 +393,7 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT: Final = "W"
@@ -546,6 +547,8 @@ DATA_PEBIBYTES: Final = "PiB"
 DATA_EXBIBYTES: Final = "EiB"
 DATA_ZEBIBYTES: Final = "ZiB"
 DATA_YOBIBYTES: Final = "YiB"
+
+# Data_rate units
 DATA_RATE_BITS_PER_SECOND: Final = "bit/s"
 DATA_RATE_KILOBITS_PER_SECOND: Final = "kbit/s"
 DATA_RATE_MEGABITS_PER_SECOND: Final = "Mbit/s"
@@ -557,6 +560,7 @@ DATA_RATE_GIGABYTES_PER_SECOND: Final = "GB/s"
 DATA_RATE_KIBIBYTES_PER_SECOND: Final = "KiB/s"
 DATA_RATE_MEBIBYTES_PER_SECOND: Final = "MiB/s"
 DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
+
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP: Final = "stop"
