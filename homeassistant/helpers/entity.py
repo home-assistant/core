@@ -290,7 +290,7 @@ class Entity(ABC):
         return None
 
     @property
-    def extra_state_attributes(self) -> MutableMapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
         Implemented by platform classes. Convention for attribute names
