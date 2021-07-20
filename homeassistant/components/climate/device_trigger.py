@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
     PERCENTAGE,
-    UnitT,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
@@ -173,7 +172,6 @@ async def async_get_trigger_capabilities(hass: HomeAssistant, config):
             )
         }
 
-    unit_of_measurement: UnitT
     if trigger_type == "current_temperature_changed":
         unit_of_measurement = hass.config.units.temperature_unit
     else:
