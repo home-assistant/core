@@ -258,7 +258,9 @@ class NestFlowHandler(
         )
 
     @callback
-    def _entry_from_tokens(self, title, flow, tokens) -> FlowResult:
+    def _entry_from_tokens(
+        self, title: str, flow: dict[str, Any], tokens: list[Any] | dict[Any, Any]
+    ) -> FlowResult:
         """Create an entry from tokens."""
         return self.async_create_entry(
             title=title, data={"tokens": tokens, "impl_domain": flow["domain"]}
