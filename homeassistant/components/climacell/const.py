@@ -51,7 +51,6 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UnitT,
 )
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
@@ -157,8 +156,8 @@ class ClimaCellSensorMetadata:
 
     field: str
     name: str
-    unit_imperial: UnitT | None = None
-    unit_metric: UnitT | None = None
+    unit_imperial: str | None = None
+    unit_metric: str | None = None
     metric_conversion: Callable | float = 1.0
     is_metric_check: bool | None = None
     device_class: str | None = None
