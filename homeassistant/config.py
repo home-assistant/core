@@ -511,7 +511,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     if any(
         k in config
-        for k in [
+        for k in (
             CONF_LATITUDE,
             CONF_LONGITUDE,
             CONF_NAME,
@@ -520,7 +520,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
-        ]
+        )
     ):
         hac.config_source = SOURCE_YAML
 

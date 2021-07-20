@@ -1,4 +1,6 @@
 """The Search integration."""
+from __future__ import annotations
+
 from collections import defaultdict, deque
 import logging
 
@@ -71,7 +73,7 @@ class Searcher:
         hass: HomeAssistant,
         device_reg: device_registry.DeviceRegistry,
         entity_reg: entity_registry.EntityRegistry,
-        entity_sources: "dict[str, dict[str, str]]",
+        entity_sources: dict[str, dict[str, str]],
     ) -> None:
         """Search results."""
         self.hass = hass

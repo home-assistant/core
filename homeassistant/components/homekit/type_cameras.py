@@ -451,7 +451,7 @@ class Camera(HomeAccessory, PyhapCamera):
             _LOGGER.info("[%s] Stream already stopped", session_id)
             return True
 
-        for shutdown_method in ["close", "kill"]:
+        for shutdown_method in ("close", "kill"):
             _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()

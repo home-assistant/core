@@ -114,7 +114,7 @@ adext==0.4.2
 adguardhome==0.5.0
 
 # homeassistant.components.advantage_air
-advantage_air==0.2.1
+advantage_air==0.2.5
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -236,7 +236,7 @@ aiorecollect==1.0.5
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==1.2.3
+aioswitcher==2.0.4
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -373,7 +373,7 @@ blebox_uniapi==1.3.3
 blinkpy==0.17.0
 
 # homeassistant.components.blinksticklight
-blinkstick==1.1.8
+blinkstick==1.2.0
 
 # homeassistant.components.blinkt
 # blinkt==0.1.0
@@ -639,9 +639,6 @@ freesms==0.2.0
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection==1.4.2
 
-# homeassistant.components.fritz
-fritzprofiles==0.6.1
-
 # homeassistant.components.google_translate
 gTTS==2.2.3
 
@@ -700,7 +697,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.12
+google-nest-sdm==0.3.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -715,7 +712,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.11.7
+greeclimate==0.11.8
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -775,7 +772,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.11.1
+holidays==0.11.2
 
 # homeassistant.components.frontend
 home-assistant-frontend==20210707.0
@@ -787,7 +784,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.6.3
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.13.1
+homematicip==1.0.1
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -1018,7 +1015,7 @@ nettigo-air-monitor==1.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.9
+nexia==0.9.10
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1052,7 +1049,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.0
+numpy==1.21.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1274,7 +1271,7 @@ pyRFXtrx==0.27.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.18.0
+pyTibber==0.19.0
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1373,7 +1370,7 @@ pydaikin==2.4.4
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==81
+pydeconz==82
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1557,7 +1554,7 @@ pylitterbot==2021.3.1
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.10.0
+pylutron-caseta==0.11.0
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -1771,7 +1768,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.52
+pysonos==0.0.53
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2100,7 +2097,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.1
+simplisafe-python==11.0.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2208,7 +2205,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.6.0
+surepy==0.7.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
@@ -2422,7 +2419,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.32.1
+zeroconf==0.33.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.59

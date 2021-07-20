@@ -1,6 +1,11 @@
 """Support for monitoring a Smappee energy sensor."""
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
+from homeassistant.const import (
+    DEVICE_CLASS_POWER,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+)
 
 from .const import DOMAIN
 
@@ -93,7 +98,7 @@ VOLTAGE_SENSORS = {
     "phase_voltages_a": [
         "Phase voltages - A",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_a",
         None,
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
@@ -101,7 +106,7 @@ VOLTAGE_SENSORS = {
     "phase_voltages_b": [
         "Phase voltages - B",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_b",
         None,
         ["TWO", "THREE_STAR", "THREE_DELTA"],
@@ -109,7 +114,7 @@ VOLTAGE_SENSORS = {
     "phase_voltages_c": [
         "Phase voltages - C",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_c",
         None,
         ["THREE_STAR"],
@@ -117,7 +122,7 @@ VOLTAGE_SENSORS = {
     "line_voltages_a": [
         "Line voltages - A",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_a",
         None,
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
@@ -125,7 +130,7 @@ VOLTAGE_SENSORS = {
     "line_voltages_b": [
         "Line voltages - B",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_b",
         None,
         ["TWO", "THREE_STAR", "THREE_DELTA"],
@@ -133,7 +138,7 @@ VOLTAGE_SENSORS = {
     "line_voltages_c": [
         "Line voltages - C",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_c",
         None,
         ["THREE_STAR", "THREE_DELTA"],

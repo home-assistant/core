@@ -18,6 +18,16 @@
                 },
                 "title": "Hiteles\u00edt\u00e9s konfigur\u00e1l\u00e1sa"
             },
+            "configure": {
+                "data": {
+                    "host": "Gazdag\u00e9p",
+                    "name": "N\u00e9v",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Konfigur\u00e1lja az ONVIF eszk\u00f6zt"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Hozzon l\u00e9tre kamera entit\u00e1st"
@@ -40,6 +50,9 @@
                 "title": "ONVIF eszk\u00f6z konfigur\u00e1l\u00e1sa"
             },
             "user": {
+                "data": {
+                    "auto": "Automatikus keres\u00e9s"
+                },
                 "description": "A k\u00fcld\u00e9s gombra kattintva olyan ONVIF-eszk\u00f6z\u00f6ket keres\u00fcnk a h\u00e1l\u00f3zat\u00e1ban, amelyek t\u00e1mogatj\u00e1k az S profilt.\n\nEgyes gy\u00e1rt\u00f3k alap\u00e9rtelmez\u00e9s szerint elkezdt\u00e9k letiltani az ONVIF-et. Ellen\u0151rizze, hogy az ONVIF enged\u00e9lyezve van-e a kamera konfigur\u00e1ci\u00f3j\u00e1ban."
             }
         }

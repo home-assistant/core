@@ -17,7 +17,9 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "away": "t\u00e1vol"
+            "away": "t\u00e1vol",
+            "hg": "fagyv\u00e9d\u0151",
+            "schedule": "\u00fctemez"
         },
         "trigger_type": {
             "alarm_started": "{entity_name} riaszt\u00e1st \u00e9szlelt",

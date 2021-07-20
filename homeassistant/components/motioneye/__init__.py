@@ -352,10 +352,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def setup_then_listen() -> None:
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         entry.async_on_unload(
             coordinator.async_add_listener(_async_process_motioneye_cameras)

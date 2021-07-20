@@ -155,7 +155,7 @@ async def async_get_component_strings(
             domains,
             await gather_with_concurrency(
                 MAX_LOAD_CONCURRENTLY,
-                *[async_get_integration(hass, domain) for domain in domains],
+                *(async_get_integration(hass, domain) for domain in domains),
             ),
         )
     )
@@ -234,10 +234,10 @@ class _TranslationCache:
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
         for translation_strings in await asyncio.gather(
-            *[
+            *(
                 async_get_component_strings(self.hass, lang, components)
                 for lang in languages
-            ]
+            )
         ):
             self._build_category_cache(language, components, translation_strings)
 

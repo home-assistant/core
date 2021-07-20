@@ -212,7 +212,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             pos_x = pos_state.get("point", {}).get("x")
             pos_y = pos_state.get("point", {}).get("y")
             theta = pos_state.get("theta")
-            if all(item is not None for item in [pos_x, pos_y, theta]):
+            if all(item is not None for item in (pos_x, pos_y, theta)):
                 position = f"({pos_x}, {pos_y}, {theta})"
             state_attrs[ATTR_POSITION] = position
 

@@ -257,7 +257,7 @@ class Scanner:
             EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
         )
         await asyncio.gather(
-            *[listener.async_start() for listener in self._ssdp_listeners]
+            *(listener.async_start() for listener in self._ssdp_listeners)
         )
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL

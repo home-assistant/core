@@ -100,7 +100,7 @@ class BSBLanClimate(ClimateEntity):
         self._hvac_mode: str | None = None
         self._target_temperature: float | None = None
         self._temperature_unit = None
-        self._preset_mode = None
+        self._preset_mode: str | None = None
         self._store_hvac_mode = None
         self._info: Info = info
         self.bsblan = bsblan

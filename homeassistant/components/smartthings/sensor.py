@@ -15,6 +15,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     MASS_KILOGRAMS,
@@ -22,7 +23,6 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    VOLT,
     VOLUME_CUBIC_METERS,
 )
 
@@ -254,7 +254,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.ultraviolet_index, "Ultraviolet Index", None, None)
     ],
     Capability.voltage_measurement: [
-        Map(Attribute.voltage, "Voltage Measurement", VOLT, None)
+        Map(Attribute.voltage, "Voltage Measurement", ELECTRIC_POTENTIAL_VOLT, None)
     ],
     Capability.washer_mode: [Map(Attribute.washer_mode, "Washer Mode", None, None)],
     Capability.washer_operating_state: [
