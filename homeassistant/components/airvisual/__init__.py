@@ -358,7 +358,7 @@ async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
