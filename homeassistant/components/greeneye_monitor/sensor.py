@@ -5,11 +5,11 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     CONF_TEMPERATURE_UNIT,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
-    VOLT,
 )
 
 from . import (
@@ -270,7 +270,7 @@ class VoltageSensor(GEMSensor):
     """Entity showing voltage."""
 
     _attr_icon = VOLTAGE_ICON
-    _attr_unit_of_measurement = VOLT
+    _attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
 
     def __init__(self, monitor_serial_number, number, name):
         """Construct the entity."""

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Awaitable, Iterable, Mapping
+from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -227,7 +227,7 @@ class Entity(ABC):
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool = True
-    _attr_extra_state_attributes: Mapping[str, Any] | None = None
+    _attr_extra_state_attributes: MutableMapping[str, Any] | None = None
     _attr_force_update: bool = False
     _attr_icon: str | None = None
     _attr_name: str | None = None

@@ -56,4 +56,4 @@ class YetiSensor(YetiEntity):
     def state(self):
         """Return the state."""
         if self.api.data:
-            return self.api.data[self._condition]
+            return self.api.data.get(self._condition)

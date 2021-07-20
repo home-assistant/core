@@ -3,9 +3,9 @@ from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntit
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_POWER,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    VOLT,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -174,7 +174,7 @@ class SenseActiveSensor(SensorEntity):
 class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
-    _attr_unit_of_measurement = VOLT
+    _attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
     _attr_should_poll = False

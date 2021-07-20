@@ -19,11 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOSTS,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
@@ -35,7 +31,6 @@ from .const import (
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLATFORMS,
-    SONOS_GROUP_UPDATE,
     SONOS_REBOOTED,
     SONOS_SEEN,
     UPNP_ST,
@@ -226,10 +221,6 @@ class SonosDiscoveryManager:
             DISCOVERY_INTERVAL.total_seconds(), self._manual_hosts
         )
 
-    @callback
-    def _async_signal_update_groups(self, _event):
-        async_dispatcher_send(self.hass, SONOS_GROUP_UPDATE)
-
     def _discovered_ip(self, ip_address):
         soco = _create_soco(ip_address, SoCoCreationSource.DISCOVERED)
         if soco and soco.is_visible:
@@ -288,11 +279,6 @@ class SonosDiscoveryManager:
             *(
                 self.hass.config_entries.async_forward_entry_setup(self.entry, platform)
                 for platform in PLATFORMS
-            )
-        )
-        self.entry.async_on_unload(
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self._async_signal_update_groups
             )
         )
         self.entry.async_on_unload(

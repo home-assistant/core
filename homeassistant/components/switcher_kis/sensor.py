@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRICAL_CURRENT_AMPERE, POWER_WATT
+from homeassistant.const import ELECTRIC_CURRENT_AMPERE, POWER_WATT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,7 +45,7 @@ POWER_SENSORS = {
     ),
     "electric_current": AttributeDescription(
         name="Electric Current",
-        unit=ELECTRICAL_CURRENT_AMPERE,
+        unit=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
