@@ -201,7 +201,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         websession = aiohttp_client.async_get_clientsession(hass)
         cloud_api = CloudAPI(config_entry.data[CONF_API_KEY], session=websession)
 
-        async def async_update_data():
+        async def async_update_data() -> dict[str, Any]:
             """Get new data from the API."""
             if CONF_CITY in config_entry.data:
                 api_coro = cloud_api.air_quality.city(
