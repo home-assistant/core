@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Callable
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
@@ -27,8 +28,8 @@ class SensorMetadata:
     icon: str
     unit: str
     device_class: str
-    value_fn: callable
-    enabled: callable
+    value_fn: Callable[[Any], float]
+    enabled: Callable[[Any], bool]
 
 
 ATA_SENSORS: dict[str, SensorMetadata] = {
