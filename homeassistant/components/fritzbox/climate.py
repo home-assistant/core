@@ -23,7 +23,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PRECISION_HALVES,
     TEMP_CELSIUS,
-    UnitTemperatureT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -98,7 +97,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         return self.device.present  # type: ignore [no-any-return]
 
     @property
-    def temperature_unit(self) -> UnitTemperatureT:
+    def temperature_unit(self) -> str:
         """Return the unit of measurement that is used."""
         return TEMP_CELSIUS
 

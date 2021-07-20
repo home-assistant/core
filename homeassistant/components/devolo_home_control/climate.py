@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitTemperatureT
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -105,7 +105,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def temperature_unit(self) -> UnitTemperatureT:
+    def temperature_unit(self) -> str:
         """Return the supported unit of temperature."""
         return TEMP_CELSIUS
 
