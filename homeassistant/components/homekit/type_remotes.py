@@ -165,7 +165,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
             self.async_reset()
             return
 
-        _LOGGER.warning(
+        _LOGGER.debug(
             "%s: Source %s does not exist the source list: %s",
             self.entity_id,
             source_name,
