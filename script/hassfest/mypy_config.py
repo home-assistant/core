@@ -113,7 +113,7 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.mullvad.*",
     "homeassistant.components.neato.*",
     "homeassistant.components.ness_alarm.*",
-    "homeassistant.components.nest.*",
+    "homeassistant.components.nest.legacy.*",
     "homeassistant.components.netatmo.*",
     "homeassistant.components.netio.*",
     "homeassistant.components.nightscout.*",
