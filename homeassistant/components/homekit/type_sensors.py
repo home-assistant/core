@@ -222,7 +222,8 @@ class PM25Sensor(AirQualitySensor):
     def async_update_state(self, new_state):
         """Update accessory after state change."""
         density = convert_to_float(new_state.state)
-        if density:
+        if not density:
+            return
             if self.char_density.value != density:
                 self.char_density.set_value(density)
                 _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
