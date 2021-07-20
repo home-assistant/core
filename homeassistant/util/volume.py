@@ -10,10 +10,9 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
-    UnitVolumeT,
 )
 
-VALID_UNITS: tuple[UnitVolumeT, ...] = (
+VALID_UNITS: tuple[str, ...] = (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
     VOLUME_GALLONS,
@@ -31,7 +30,7 @@ def __gallon_to_liter(gallon: float) -> float:
     return gallon * 3.785
 
 
-def convert(volume: float, from_unit: UnitVolumeT, to_unit: UnitVolumeT) -> float:
+def convert(volume: float, from_unit: str, to_unit: str) -> float:
     """Convert a temperature from one unit to another."""
     if from_unit not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, VOLUME))

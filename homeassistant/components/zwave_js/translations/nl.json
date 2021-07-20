@@ -56,6 +56,14 @@
             "config_parameter": "Config parameter {subtype} waarde",
             "node_status": "Knooppuntstatus",
             "value": "Huidige waarde van een Z-Wave-waarde"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Stuur een Entry Control melding",
+            "event.notification.notification": "Stuur een notificatie",
+            "event.value_notification.basic": "Basis CC-evenement op {subtype}",
+            "event.value_notification.central_scene": "Centrale Sc\u00e8ne actie op {subtype}",
+            "event.value_notification.scene_activation": "Sc\u00e8ne-activering op {subtype}",
+            "state.node_status": "Knooppuntstatus gewijzigd"
         }
     },
     "options": {
