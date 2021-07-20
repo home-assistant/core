@@ -173,3 +173,28 @@ async def test_form_unkown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_import_configuration(
+    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
+) -> None:
+    """Test we import existing configuration."""
+    config = {
+        "host": "1.1.1.1",
+        "port": 14999,
+        "name": "Anthem Av",
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        "host": "1.1.1.1",
+        "port": 14999,
+        "name": "Anthem Av",
+        "mac": "00:00:00:00:00:01",
+        "model": "MRX 520",
+    }

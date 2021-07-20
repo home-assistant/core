@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 
-import anthemav
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -16,7 +15,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
 )
@@ -53,32 +51,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up our socket to the AVR."""
     _LOGGER.warning(
-        "AnthemAV configuration is deprecated and will be removed in future release. The integration is available in the UI"
+        "AnthemAV configuration is deprecated and has been automatically imported. Please remove the integration from your configuration file"
     )
-
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    name = config.get(CONF_NAME)
-
-    _LOGGER.debug("Provisioning Anthem AVR device at %s:%d", host, port)
-
-    @callback
-    def async_anthemav_update_callback(message):
-        """Receive notification from transport that new data exists."""
-        _LOGGER.debug("Received update callback from AVR: %s", message)
-        async_dispatcher_send(hass, f"{ANTHEMAV_UDATE_SIGNAL}_{name}")
-
-    avr = await anthemav.Connection.create(
-        host=host, port=port, update_callback=async_anthemav_update_callback
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=config,
     )
-
-    device = AnthemAVR(avr, name, None, None)
-
-    _LOGGER.debug("dump_devicedata: %s", device.dump_avrdata)
-    _LOGGER.debug("dump_conndata: %s", avr.dump_conndata)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
-    async_add_entities([device])
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):

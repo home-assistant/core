@@ -114,6 +114,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
+
 
 class CannotReceiveDeviceInfo(HomeAssistantError):
     """Error to indicate we cannot get device information."""
