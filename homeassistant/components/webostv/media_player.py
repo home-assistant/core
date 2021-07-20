@@ -6,7 +6,7 @@ from functools import wraps
 import logging
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
-from websockets.exceptions import ConnectionClosed
+from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from homeassistant import util
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
@@ -24,18 +24,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.webostv.const import (
-    ATTR_PAYLOAD,
-    ATTR_SOUND_OUTPUT,
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DOMAIN,
-    LIVE_TV_APP_ID,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_CUSTOMIZE,
-    CONF_HOST,
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
@@ -44,6 +34,15 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
+
+from .const import (
+    ATTR_PAYLOAD,
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,23 +63,27 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the LG webOS Smart TV platform."""
+    unique_id = config_entry.unique_id
+    name = config_entry.data.get(CONF_NAME)
+    sources = config_entry.options.get(CONF_SOURCES)
+    turn_on_action = config_entry.options.get(CONF_ON_ACTION)
+    client = hass.data[DOMAIN][config_entry.entry_id]
+    on_script = (
+        Script(
+            hass,
+            [{"service": turn_on_action}],
+            name,
+            DOMAIN,
+        )
+        if turn_on_action
+        else None
+    )
 
-    if discovery_info is None:
-        return
-
-    host = discovery_info[CONF_HOST]
-    name = discovery_info[CONF_NAME]
-    customize = discovery_info[CONF_CUSTOMIZE]
-    turn_on_action = discovery_info.get(CONF_ON_ACTION)
-
-    client = hass.data[DOMAIN][host]["client"]
-    on_script = Script(hass, turn_on_action, name, DOMAIN) if turn_on_action else None
-
-    entity = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
-
-    async_add_entities([entity], update_before_add=False)
+    async_add_entities(
+        [LgWebOSMediaPlayerEntity(client, name, sources, unique_id, on_script)]
+    )
 
 
 def cmd(func):
@@ -115,12 +118,14 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
-    def __init__(self, client: WebOsClient, name: str, customize, on_script=None):
+    def __init__(
+        self, client: WebOsClient, name: str, sources, unique_id, on_script=None
+    ):
         """Initialize the webos device."""
         self._client = client
         self._name = name
-        self._unique_id = client.client_key
-        self._customize = customize
+        self._unique_id = unique_id
+        self._sources = sources
         self._on_script = on_script
 
         # Assume that the TV is not paused
@@ -165,7 +170,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Update list of sources from current source, apps, inputs and configured list."""
         source_list = self._source_list
         self._source_list = {}
-        conf_sources = self._customize[CONF_SOURCES]
+        conf_sources = self._sources
 
         found_live_tv = False
         for app in self._client.apps.values():
@@ -195,7 +200,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             ):
                 self._source_list[source["label"]] = source
 
-        # special handling of live tv since this might not appear in the app or input lists in some cases
+        # special handling of live tv since this might
+        # not appear in the app or input lists in some cases
         if not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
             if LIVE_TV_APP_ID == self._client.current_appId:
@@ -218,6 +224,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             with suppress(
                 OSError,
                 ConnectionClosed,
+                ConnectionClosedOK,
                 ConnectionRefusedError,
                 asyncio.TimeoutError,
                 asyncio.CancelledError,
@@ -315,6 +322,23 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             supported = supported | SUPPORT_TURN_ON
 
         return supported
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        if self._client.system_info is None and self.state == STATE_OFF:
+            return {
+                "identifiers": {(DOMAIN, self._unique_id)},
+            }
+        maj_v = self._client.software_info.get("major_ver")
+        min_v = self._client.software_info.get("minor_ver")
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "manufacturer": "LG",
+            "name": self._name,
+            "model": self._client.system_info.get("modelName"),
+            "sw_version": f"{maj_v}.{min_v}",
+        }
 
     @property
     def extra_state_attributes(self):
