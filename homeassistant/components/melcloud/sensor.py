@@ -117,7 +117,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             for mel_device in mel_devices[DEVICE_TYPE_ATW]
             for zone in mel_device.device.zones
             for measurement, metadata, in ATW_ZONE_SENSORS.items()
-            if metadata.enabled(mel_device)
+            if metadata.enabled(zone)
         ],
         True,
     )
