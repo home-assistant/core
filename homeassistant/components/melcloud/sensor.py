@@ -68,7 +68,7 @@ ATW_SENSORS: dict[str, SensorMetadata] = {
         lambda x: True,
     ),
 }
-ATW_ZONE_SENSORS = {
+ATW_ZONE_SENSORS: dict[str, SensorMetadata] = {
     "room_temperature": SensorMetadata(
         "Room Temperature",
         "mdi:thermometer",
