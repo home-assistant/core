@@ -33,8 +33,6 @@ from homeassistant.const import (
 
 ATTRIBUTION = "Data provided by Goal Zero"
 ATTR_DEFAULT_ENABLED = "default_enabled"
-ATTR_FIRMWARE_VERSION = "firmwareVersion"
-ATTR_FOREIGN_ACCESSORY = "foreignAcsry"
 
 CONF_IDENTIFIERS = "identifiers"
 CONF_MANUFACTURER = "manufacturer"
@@ -134,6 +132,14 @@ SENSOR_DICT = {
     "timestamp": {
         ATTR_NAME: "Total Run Time",
         ATTR_UNIT_OF_MEASUREMENT: TIME_SECONDS,
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "ssid": {
+        ATTR_NAME: "Wi-Fi SSID",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "ipAddr": {
+        ATTR_NAME: "IP Address",
         ATTR_DEFAULT_ENABLED: False,
     },
 }
