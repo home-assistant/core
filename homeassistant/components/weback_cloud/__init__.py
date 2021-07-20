@@ -14,7 +14,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hub = hass.data[DOMAIN][entry.entry_id] = WebackCloudHub(hass, entry.data)
     try:
         await hub.get_devices()
-    except (Exception,):
+    except (Exception,):  # pylint: disable=broad-except
         return False
     if hub.devices:
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)

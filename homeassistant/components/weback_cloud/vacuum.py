@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class WebackVacuum(VacuumEntity):
+class WebackVacuum(VacuumEntity):  # pylint: disable=too-many-public-methods
     """Weback Vacuums such as Neatsvor / Tesvor X500 and others."""
 
     def __init__(self, device: wb_vacuum.CleanRobot) -> None:
@@ -121,10 +121,6 @@ class WebackVacuum(VacuumEntity):
         """Return the status of the vacuum cleaner."""
         return self.device.state
 
-    def return_to_base(self, **kwargs):
-        """Set the vacuum cleaner to return to the dock."""
-        self.device.return_home()
-
     @property
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
@@ -156,6 +152,10 @@ class WebackVacuum(VacuumEntity):
     def device_state_attributes(self):
         """Return the device-specific state attributes of this vacuum."""
         return {"raw_state": self.device.current_mode}
+
+    def return_to_base(self, **kwargs):
+        """Set the vacuum cleaner to return to the dock."""
+        self.device.return_home()
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""

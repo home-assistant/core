@@ -1,7 +1,6 @@
 """Config flow for Weback Cloud Integration integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -9,10 +8,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_PASSWORD, CONF_PHONE_NUMBER, CONF_REGION, DOMAIN
-from .hub import WebackCloudHub
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (  # pylint: disable=relative-beyond-top-level
+    CONF_PASSWORD,
+    CONF_PHONE_NUMBER,
+    CONF_REGION,
+    DOMAIN,
+)
+from .hub import WebackCloudHub  # pylint: disable=relative-beyond-top-level
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -32,11 +34,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial configuration step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
         await self.async_set_unique_id(user_input[CONF_PHONE_NUMBER])
@@ -46,7 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await hub.authenticate()
-        except (Exception,):
+        except (Exception,):  # pylint: disable=broad-except
             errors["base"] = "invalid_auth"
         else:
             return self.async_create_entry(
