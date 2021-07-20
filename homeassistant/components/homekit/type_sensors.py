@@ -210,7 +210,7 @@ class PM10Sensor(AirQualitySensor):
 class PM25Sensor(AirQualitySensor):
     """Generate a PM25Sensor accessory as PM 2.5 sensor."""
 
-    def init(self):
+    def create_services(self):
         """Override the init function for PM 2.5 Sensor."""
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_PM25_DENSITY]
