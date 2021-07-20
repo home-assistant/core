@@ -171,7 +171,7 @@ class AmbiclimateEntity(ClimateEntity):
         if hvac_mode == HVAC_MODE_OFF:
             await self._heater.turn_off()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         try:
             token_info = await self._heater.control.refresh_access_token()
