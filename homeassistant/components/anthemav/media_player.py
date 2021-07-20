@@ -28,7 +28,14 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ANTHEMAV_UDATE_SIGNAL, CONF_MODEL, DEFAULT_PORT, DOMAIN, MANUFACTURER
+from .const import (
+    ANTHEMAV_UDATE_SIGNAL,
+    CONF_MODEL,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 DEVICE_CLASS_RECEIVER = "receiver"
 
@@ -37,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
