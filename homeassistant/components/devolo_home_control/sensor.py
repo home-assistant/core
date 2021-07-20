@@ -52,7 +52,7 @@ async def async_setup_entry(
         for device in gateway.devices.values():
             if hasattr(device, "consumption_property"):
                 for consumption in device.consumption_property:
-                    for consumption_type in ["current", "total"]:
+                    for consumption_type in ("current", "total"):
                         entities.append(
                             DevoloConsumptionEntity(
                                 homecontrol=gateway,

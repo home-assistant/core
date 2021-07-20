@@ -109,7 +109,7 @@ async def async_setup_entry(
     api_class = ClimaCellV3WeatherEntity if api_version == 3 else ClimaCellWeatherEntity
     entities = [
         api_class(config_entry, coordinator, api_version, forecast_type)
-        for forecast_type in [DAILY, HOURLY, NOWCAST]
+        for forecast_type in (DAILY, HOURLY, NOWCAST)
     ]
     async_add_entities(entities)
 

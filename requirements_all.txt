@@ -236,7 +236,7 @@ aiorecollect==1.0.5
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==1.2.3
+aioswitcher==2.0.4
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -772,7 +772,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.11.1
+holidays==0.11.2
 
 # homeassistant.components.frontend
 home-assistant-frontend==20210707.0
@@ -1049,7 +1049,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.0
+numpy==1.21.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1271,7 +1271,7 @@ pyRFXtrx==0.27.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.18.0
+pyTibber==0.19.0
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2419,7 +2419,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.33.0
+zeroconf==0.33.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.59

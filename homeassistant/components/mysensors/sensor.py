@@ -21,6 +21,7 @@ from homeassistant.const import (
     MASS_KILOGRAMS,
     PERCENTAGE,
     POWER_WATT,
+    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLT,
@@ -54,7 +55,7 @@ SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
     "V_FLOW": [LENGTH_METERS, "mdi:gauge", None],
     "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None, None],
     "V_LEVEL": {
-        "S_SOUND": ["dB", "mdi:volume-high", None],
+        "S_SOUND": [SOUND_PRESSURE_DB, "mdi:volume-high", None],
         "S_VIBRATION": [FREQUENCY_HERTZ, None, None],
         "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny", None],
     },

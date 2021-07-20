@@ -181,7 +181,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             # The device has two switchable channels (mains and a USB port).
             # A switch device per channel will be created.
-            for channel_usb in [True, False]:
+            for channel_usb in (True, False):
                 if channel_usb:
                     unique_id_ch = f"{unique_id}-USB"
                 else:
@@ -251,7 +251,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 await asyncio.wait(update_tasks)
 
         for plug_service, method in SERVICE_TO_METHOD.items():
-            schema = method[plug_service].get("schema", SERVICE_SCHEMA)
+            schema = method.get("schema", SERVICE_SCHEMA)
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )

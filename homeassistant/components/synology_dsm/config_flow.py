@@ -227,12 +227,6 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
     async def async_step_link(self, user_input: dict[str, Any]) -> FlowResult:
         """Link a config entry from discovery."""
         return await self.async_step_user(user_input)

@@ -509,13 +509,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def extra_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {}
-        for attr in [
+        for attr in (
             "media_content_rating",
             "media_library_title",
             "player_source",
             "media_summary",
             "username",
-        ]:
+        ):
             value = getattr(self, attr, None)
             if value:
                 attributes[attr] = value
