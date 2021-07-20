@@ -1,0 +1,22 @@
+{
+  "title": "Anthem A/V Receivers",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_receive_deviceinfo": "Failed to retreive MAC Address. Make sure the device is turned on",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
