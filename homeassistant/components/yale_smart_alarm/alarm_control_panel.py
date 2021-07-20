@@ -24,7 +24,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -51,10 +55,10 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> None:
     """Import Yale configuration from YAML."""
     LOGGER.warning(
         "Loading Yale Alarm via platform setup is deprecated; Please remove it from your configuration"
@@ -70,7 +74,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up the alarm entry."""
 
     async_add_entities(
@@ -110,12 +114,12 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        return STATE_MAP.get(self.coordinator.data["alarm"], None) is not None
+        return STATE_MAP.get(self.coordinator.data["alarm"])
 
     @property
     def available(self):
         """Return if entity is available."""
-        return STATE_MAP.get(self.coordinator.data["alarm"], None) is not None
+        return STATE_MAP.get(self.coordinator.data["alarm"]) is not None
 
     @property
     def code_arm_required(self):

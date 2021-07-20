@@ -70,11 +70,10 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             existing_entry = await self.async_set_unique_id(username)
             if existing_entry:
-                data = self.entry.data.copy()
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
                     data={
-                        **data,
+                        **self.entry.data,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
                     },

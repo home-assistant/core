@@ -18,7 +18,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Yale hub."""
-        self.entry: ConfigEntry = entry
+        self.entry = entry
         self.yale: YaleSmartAlarmClient | None = None
         super().__init__(
             hass,
@@ -39,6 +39,9 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             state = device["status1"]
             if device["type"] == "device_type.door_lock":
                 lock_status_str = device["minigw_lock_status"]
+                lock_status = int(str(lock_status_str or 0), 16)
+                closed = (lock_status & 16) == 16
+                locked = (lock_status & 1) == 1
                 if lock_status_str == "" and "device_status.lock" in state:
                     device["_state"] = "locked"
                     locks.append(device)
@@ -47,28 +50,41 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     device["_state"] = "unlocked"
                     locks.append(device)
                     continue
-                if lock_status_str != "" and (
-                    "device_status.lock" in state or "device_status.unlock" in state
+                if (
+                    lock_status_str != ""
+                    and (
+                        "device_status.lock" in state or "device_status.unlock" in state
+                    )
+                    and closed is True
+                    and locked is True
                 ):
-                    lock_status = int(lock_status_str, 16)
-                    closed = (lock_status & 16) == 16
-                    locked = (lock_status & 1) == 1
-                if closed is True and locked is True:
                     device["_state"] = "locked"
                     locks.append(device)
                     continue
-                if closed is True and locked is False:
+                if (
+                    lock_status_str != ""
+                    and (
+                        "device_status.lock" in state or "device_status.unlock" in state
+                    )
+                    and closed is True
+                    and locked is False
+                ):
                     device["_state"] = "unlocked"
                     locks.append(device)
                     continue
-                if not closed:
+                if (
+                    lock_status_str != ""
+                    and (
+                        "device_status.lock" in state or "device_status.unlock" in state
+                    )
+                    and not closed
+                ):
                     device["_state"] = "unlocked"
                     locks.append(device)
                     continue
                 device["_state"] = "unavailable"
                 locks.append(device)
                 continue
-
             if device["type"] == "device_type.door_contact":
                 if "device_status.dc_close" in state:
                     device["_state"] = "closed"
