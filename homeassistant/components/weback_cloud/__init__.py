@@ -1,11 +1,11 @@
 """The Weback Cloud Integration integration."""
 from __future__ import annotations
 
-from homeassistant.components.weback_cloud.const import DOMAIN, PLATFORMS
-from homeassistant.components.weback_cloud.exceptions import InvalidCredentials
-from homeassistant.components.weback_cloud.hub import WebackCloudHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN, PLATFORMS
+from .hub import WebackCloudHub
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -14,7 +14,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hub = hass.data[DOMAIN][entry.entry_id] = WebackCloudHub(hass, entry.data)
     try:
         await hub.get_devices()
-    except (Exception, InvalidCredentials):
+    except (Exception,):
         return False
     if hub.devices:
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)

@@ -15,7 +15,6 @@ from homeassistant.components.weback_cloud.const import (
     SUPPORTED_DEVICES,
     THING_NAME,
 )
-from homeassistant.components.weback_cloud.exceptions import InvalidCredentials
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +42,9 @@ class WebackCloudHub:
         self.weback_api = WebackApi(login, password)
         try:
             await self.hass.async_add_executor_job(self.weback_api.get_session)
-        except Exception as e:
-            raise InvalidCredentials(e)
+        except (Exception,) as ex:
+            _LOGGER.error("Error authenticating against Weback Cloud service: %s", ex)
+            raise ex
 
     async def get_devices(self) -> None:
         """Retrieve supported vacuums from Weback Cloud API."""
@@ -72,6 +72,6 @@ class WebackCloudHub:
                 )
                 _LOGGER.debug("Adding device: %s", vacuum.__dict__)
                 self.devices.append(vacuum)
-        except Exception as e:
-            _LOGGER.error("Error retrieving devices from Weback Cloud: %s", e)
-            raise InvalidCredentials(e)
+        except (Exception,) as ex:
+            _LOGGER.error("Error retrieving devices from Weback Cloud: %s", ex)
+            raise ex

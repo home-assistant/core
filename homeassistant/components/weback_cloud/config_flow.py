@@ -7,15 +7,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.weback_cloud.const import (
-    CONF_PASSWORD,
-    CONF_PHONE_NUMBER,
-    CONF_REGION,
-    DOMAIN,
-)
-from homeassistant.components.weback_cloud.exceptions import InvalidCredentials
-from homeassistant.components.weback_cloud.hub import WebackCloudHub
 from homeassistant.data_entry_flow import FlowResult
+
+from .const import CONF_PASSWORD, CONF_PHONE_NUMBER, CONF_REGION, DOMAIN
+from .hub import WebackCloudHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,12 +46,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await hub.authenticate()
-        except InvalidCredentials:
-            _LOGGER.error("Invalid credentials, cannot connect to Weback Cloud")
+        except (Exception,):
             errors["base"] = "invalid_auth"
-        except Exception as e:
-            _LOGGER.error("Unknown error occurred: %s", e)
-            errors["base"] = "unknown"
         else:
             return self.async_create_entry(
                 title=f"User: {user_input[CONF_REGION]}-{user_input[CONF_PHONE_NUMBER]}",

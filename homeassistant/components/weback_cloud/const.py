@@ -1,5 +1,5 @@
 """Constants for the Weback Cloud Integration integration."""
-from typing import Iterable
+from collections.abc import Iterable
 
 DOMAIN: str = "weback_cloud"
 PLATFORMS: Iterable[str] = ["vacuum"]

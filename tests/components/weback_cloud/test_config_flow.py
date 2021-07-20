@@ -27,8 +27,8 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
+                "region": "+49",
+                "phone_number": "015112345678",
                 "password": "test-password",
             },
         )
@@ -37,8 +37,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
+        "region": "+49",
+        "phone_number": "015112345678",
         "password": "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -57,8 +57,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
+                "region": "+49",
+                "phone_number": "015112345678",
                 "password": "test-password",
             },
         )
@@ -80,8 +80,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
+                "region": "+49",
+                "phone_number": "015112345678",
                 "password": "test-password",
             },
         )

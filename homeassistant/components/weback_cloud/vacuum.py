@@ -57,7 +57,7 @@ async def async_setup_entry(
 class WebackVacuum(VacuumEntity):
     """Weback Vacuums such as Neatsvor / Tesvor X500 and others."""
 
-    def __init__(self, device: wb_vacuum.CleanRobot):
+    def __init__(self, device: wb_vacuum.CleanRobot) -> None:
         """Initialize the Weback Vacuum."""
         self.device = device
         self.scan_interval = SCAN_INTERVAL
