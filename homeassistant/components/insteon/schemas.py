@@ -161,7 +161,7 @@ TRIGGER_SCENE_SCHEMA = vol.Schema(
 ADD_DEFAULT_LINKS_SCHEMA = vol.Schema({vol.Required(CONF_ENTITY_ID): cv.entity_id})
 
 
-def normalize_byte_entry_to_int(entry: [int, bytes, str]):
+def normalize_byte_entry_to_int(entry: int | bytes | str):
     """Format a hex entry value."""
     if isinstance(entry, int):
         if entry in range(0, 256):
