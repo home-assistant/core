@@ -1,8 +1,7 @@
 """Support for MelCloud device sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, NamedTuple
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
@@ -20,8 +19,7 @@ from . import MelCloudDevice
 from .const import DOMAIN
 
 
-@dataclass
-class SensorMetadata:
+class SensorMetadata(NamedTuple):
     """Metadata for an individual sensor."""
 
     measurement_name: str
@@ -35,63 +33,63 @@ class SensorMetadata:
 ATA_SENSORS: dict[str, SensorMetadata] = {
     "room_temperature": SensorMetadata(
         "Room Temperature",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        lambda x: x.device.room_temperature,
-        lambda x: True,
+        icon="mdi:thermometer",
+        unit=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda x: x.device.room_temperature,
+        enabled=lambda x: True,
     ),
     "energy": SensorMetadata(
         "Energy",
-        "mdi:factory",
-        ENERGY_KILO_WATT_HOUR,
-        DEVICE_CLASS_ENERGY,
-        lambda x: x.device.total_energy_consumed,
-        lambda x: x.device.has_energy_consumed_meter,
+        icon="mdi:factory",
+        unit=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        value_fn=lambda x: x.device.total_energy_consumed,
+        enabled=lambda x: x.device.has_energy_consumed_meter,
     ),
 }
 ATW_SENSORS: dict[str, SensorMetadata] = {
     "outside_temperature": SensorMetadata(
         "Room Outside",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        lambda x: x.device.outside_temperature,
-        lambda x: True,
+        icon="mdi:thermometer",
+        unit=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda x: x.device.outside_temperature,
+        enabled=lambda x: True,
     ),
     "tank_temperature": SensorMetadata(
         "Tank Temperature",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        lambda x: x.device.tank_temperature,
-        lambda x: True,
+        icon="mdi:thermometer",
+        unit=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda x: x.device.tank_temperature,
+        enabled=lambda x: True,
     ),
 }
 ATW_ZONE_SENSORS = {
     "room_temperature": SensorMetadata(
         "Room Temperature",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        lambda zone: zone.room_temperature,
-        lambda x: True,
+        icon="mdi:thermometer",
+        unit=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda zone: zone.room_temperature,
+        enabled=lambda x: True,
     ),
     "flow_temperature": SensorMetadata(
         "Flow Temperature",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        lambda zone: zone.flow_temperature,
-        lambda x: True,
+        icon="mdi:thermometer",
+        unit=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda zone: zone.flow_temperature,
+        enabled=lambda x: True,
     ),
     "return_temperature": SensorMetadata(
         "Flow Return Temperature",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        lambda zone: zone.return_temperature,
-        lambda x: True,
+        icon="mdi:thermometer",
+        unit=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        value_fn=lambda zone: zone.return_temperature,
+        enabled=lambda x: True,
     ),
 }
 
