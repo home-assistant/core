@@ -103,10 +103,9 @@ class AnthemAVR(MediaPlayerEntity):
         super().__init__()
         self.avr = avr
         self._attr_name = name
-        self._unique_id = macaddress
-        self._model = model
+        self._attr_unique_id = macaddress
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._unique_id)},
+            "identifiers": {(DOMAIN, macaddress)},
             "name": name,
             "manufacturer": MANUFACTURER,
             "model": model,
@@ -120,7 +119,7 @@ class AnthemAVR(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{ANTHEMAV_UDATE_SIGNAL}_{self._name}",
+                f"{ANTHEMAV_UDATE_SIGNAL}_{self._attr_name}",
                 self.async_write_ha_state,
             )
         )
