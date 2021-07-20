@@ -129,6 +129,12 @@ RT_SENSOR_MAP = {
         SIGNAL_STRENGTH_DECIBELS,
         STATE_CLASS_MEASUREMENT,
     ],
+    "accumulatedReward": [
+        "accumulated reward",
+        DEVICE_CLASS_MONETARY,
+        None,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "accumulatedCost": [
         "accumulated cost",
         DEVICE_CLASS_MONETARY,
@@ -330,6 +336,7 @@ class TibberSensorRT(TibberSensor):
             "accumulated consumption",
             "accumulated production",
             "accumulated cost",
+            "accumulated reward",
         ]:
             self._attr_last_reset = dt_util.as_utc(
                 dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -366,6 +373,7 @@ class TibberSensorRT(TibberSensor):
             "accumulated consumption",
             "accumulated production",
             "accumulated cost",
+            "accumulated reward",
         ]:
             self._attr_last_reset = dt_util.as_utc(
                 timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -422,7 +430,7 @@ class TibberRtDataHandler:
                 sensor_name, device_class, unit, state_class = RT_SENSOR_MAP[
                     sensor_type
                 ]
-                if sensor_type == "accumulatedCost":
+                if sensor_type in ["accumulatedCost", "accumulatedReward"]:
                     unit = self._tibber_home.currency
                 entity = TibberSensorRT(
                     self._tibber_home,
