@@ -23,7 +23,10 @@ ABILITY_STATE: Final = {True: "Enabled", False: "Disabled"}
 # Config flow
 CONF_USB: Final = "usb"
 CONF_USB_PATH: Final = "usb_path"
+CONF_USB_MANUAL_PATH: Final = "usb_manual_path"
 CONF_USE_CROWNSTONE_USB: Final = "use_crownstone_usb"
+CONF_REFRESH_LIST: Final = "Refresh List"
+CONF_MANUAL_PATH: Final = "Enter Manually"
 
 # Crownstone entity
 CROWNSTONE_INCLUDE_TYPES: Final = {

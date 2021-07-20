@@ -7,7 +7,7 @@
     "crownstone-cloud==1.4.5",
     "crownstone-sse==2.0.0",
     "crownstone-uart==2.0.0",
-    "numpy==1.20.2",
+    "numpy==1.21.1",
     "pyserial==3.5"
   ],
   "codeowners": [

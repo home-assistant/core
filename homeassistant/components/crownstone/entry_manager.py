@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from functools import partial
 import logging
 from typing import Any, cast
 
@@ -14,6 +13,7 @@ from crownstone_cloud.exceptions import (
 from crownstone_sse import CrownstoneSSEAsync
 from crownstone_uart import CrownstoneUart, UartEventBus
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
@@ -94,22 +94,31 @@ class CrownstoneEntryManager:
         # Check if a usb by-id exists, if not use cloud
         if self.config_entry.data[CONF_USB_PATH] is not None:
             port = await self.hass.async_add_executor_job(
-                partial(get_port, self.config_entry.data[CONF_USB_PATH])
+                get_port, self.config_entry.data[CONF_USB_PATH]
             )
             # port is None when Home Assistant is started without the USB plugged in,
             # but a setup exists
             if port is not None:
                 self.uart = CrownstoneUart()
                 # initialize USB, this waits for the usb to be initialized
-                # this usually takes less than a second, so cancel if it's taking too long
+                # this usually takes less than a second when the port is correct
                 try:
-                    await asyncio.wait_for(
-                        self.uart.initialize_usb(f"/dev/{port}"), timeout=5
-                    )
+                    await asyncio.wait_for(self.uart.initialize_usb(port), timeout=3)
                 except asyncio.TimeoutError:
-                    _LOGGER.warning(
-                        "Crownstone USB dongle failed to initialize on port /dev/%s",
-                        port,
+                    # remove usb path to make usb setup available from options
+                    entry_data = self.config_entry.data.copy()
+                    entry_data[CONF_USB_PATH] = None
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=entry_data
+                    )
+                    # show notification to ensure the user knows the cloud is now used
+                    persistent_notification.async_create(
+                        self.hass,
+                        f"Setup of Crownstone USB dongle was unsuccessful on port {port}.\n \
+                        Crownstone Cloud will be used to switch Crownstones.\n \
+                        Please check if your port is correct and setup the USB again from integration options.",
+                        "Crownstone",
+                        "crownstone_usb_dongle_setup",
                     )
 
         # Create listeners for SSE and UART

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
-            "usb_setup_successful": "Crownstone USB setup was successful.",
+            "usb_setup_complete": "Crownstone USB setup complete.",
             "usb_setup_unsuccessful": "Crownstone USB setup was unsuccessful."
         },
         "error": {
@@ -21,8 +21,15 @@
                 "data": {
                     "usb_path": "USB Device Path"
                 },
-                "description": "Select the serial port of the Crownstone USB dongle.\n\nLook for a device with name \"CP2104 USB to UART Bridge Controller\"",
+                "description": "Select the serial port of the Crownstone USB dongle.\n\nLook for a device with VID 10c4 and PID ea60.",
                 "title": "Crownstone USB dongle configuration"
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "USB Device Path"
+                },
+                "description": "Manually enter the path of a Crownstone USB dongle.",
+                "title": "Crownstone USB dongle manual path"
             },
             "user": {
                 "data": {

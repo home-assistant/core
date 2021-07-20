@@ -625,11 +625,13 @@ nuheat==0.3.0
 numato-gpio==0.10.0
 
 # homeassistant.components.compensation
-# homeassistant.components.crownstone
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
+numpy==1.21.1
+
+# homeassistant.components.crownstone
 numpy==1.21.1
 
 # homeassistant.components.google

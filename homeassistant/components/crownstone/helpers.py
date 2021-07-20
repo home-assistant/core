@@ -16,9 +16,14 @@ def get_serial_by_id(dev_path: str) -> str:
     return dev_path
 
 
-def get_port(by_id: str) -> str | None:
+def get_port(dev_path: str) -> str | None:
     """Get the port that the by-id link points to."""
+    # not a by-id link, but just given path
+    by_id = "/dev/serial/by-id"
+    if by_id not in dev_path:
+        return dev_path
+
     try:
-        return os.path.basename(os.readlink(by_id))
+        return f"/dev/{os.path.basename(os.readlink(dev_path))}"
     except FileNotFoundError:
         return None

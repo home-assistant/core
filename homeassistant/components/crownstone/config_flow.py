@@ -1,7 +1,7 @@
 """Flow handler for Crownstone."""
 from __future__ import annotations
 
-from typing import Any, Final, cast
+from typing import Any, cast
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
@@ -23,11 +23,16 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_USB, CONF_USB_PATH, CONF_USE_CROWNSTONE_USB
+from .const import (
+    CONF_MANUAL_PATH,
+    CONF_REFRESH_LIST,
+    CONF_USB,
+    CONF_USB_MANUAL_PATH,
+    CONF_USB_PATH,
+    CONF_USE_CROWNSTONE_USB,
+)
 from .const import DOMAIN  # pylint: disable=unused-import
 from .helpers import get_serial_by_id
-
-REFRESH_LIST: Final = "Refresh list"
 
 
 class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -111,21 +116,23 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input[CONF_USB]:
             return await self.async_step_usb_config()
 
-        return self.async_return_entry()
+        return self.async_finish_flow()
 
     async def async_step_usb_config(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Set up a Crownstone USB Dongle."""
-        # save outside of function in case of refresh
+        """Set up a Crownstone USB dongle."""
         list_of_ports = await self.hass.async_add_executor_job(
             serial.tools.list_ports.comports
         )
         ports_as_string = [
-            f"{p}" + f" - {p.manufacturer}" if p.manufacturer else ""
+            f"{p.device}"
+            + f" - {p.product}"
+            + f" - {format(p.vid, 'x')}:{format(p.pid, 'x')}"
             for p in list_of_ports
         ]
-        ports_as_string.append(REFRESH_LIST)
+        ports_as_string.append(CONF_REFRESH_LIST)
+        ports_as_string.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             if user_input.get(CONF_UNIQUE_ID) is not None:
@@ -134,8 +141,13 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if user_input.get(CONF_USB_PATH) is not None:
                 selection = user_input[CONF_USB_PATH]
+
+                # show a form with text field to enter manual path
+                if selection == CONF_MANUAL_PATH:
+                    return await self.async_step_usb_manual_config()
+
                 # user can refresh the list while in this step
-                if selection != REFRESH_LIST:
+                if selection != CONF_REFRESH_LIST:
                     # get serial-id info
                     port: ListPortInfo = list_of_ports[ports_as_string.index(selection)]
                     self.usb_path = await self.hass.async_add_executor_job(
@@ -144,27 +156,9 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
                     # check if we are updating an existing entry
                     if self.existing_entry_id is not None:
-                        existing_entry = self.hass.config_entries.async_get_entry(
-                            self.existing_entry_id
-                        )
-                        if existing_entry is not None:
-                            # copy instead of directly changing memory
-                            data = existing_entry.data.copy()
-                            data[CONF_USB_PATH] = self.usb_path
-                            # update entry & reload
-                            self.hass.config_entries.async_update_entry(
-                                existing_entry, data=data
-                            )
-                            await self.hass.config_entries.async_reload(
-                                existing_entry.entry_id
-                            )
-                            # this exits the flow immediately
-                            return self.async_abort(reason="usb_setup_successful")
+                        return await self.async_update_existing_entry_usb_path()
 
-                        # if we couldn't find the entry, which is unlikely
-                        return self.async_abort(reason="usb_setup_unsuccessful")
-
-                    return self.async_return_entry()
+                    return self.async_finish_flow()
 
         return self.async_show_form(
             step_id="usb_config",
@@ -173,7 +167,46 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    def async_return_entry(self) -> FlowResult:
+    async def async_step_usb_manual_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manually enter Crownstone USB dongle path."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="usb_manual_config",
+                data_schema=vol.Schema({vol.Required(CONF_USB_MANUAL_PATH): str}),
+            )
+
+        # get a /dev/serial/by-id symlink if available
+        self.usb_path = await self.hass.async_add_executor_job(
+            get_serial_by_id, user_input[CONF_USB_MANUAL_PATH]
+        )
+
+        # check if we are updating an existing entry
+        if self.existing_entry_id is not None:
+            return await self.async_update_existing_entry_usb_path()
+
+        return self.async_finish_flow()
+
+    async def async_update_existing_entry_usb_path(self) -> FlowResult:
+        """Update usb path of existing entry."""
+        existing_entry = self.hass.config_entries.async_get_entry(
+            str(self.existing_entry_id)
+        )
+        if existing_entry is not None:
+            # copy instead of directly changing memory
+            data = existing_entry.data.copy()
+            data[CONF_USB_PATH] = self.usb_path
+            # update entry & reload
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            # this exits the flow immediately
+            return self.async_abort(reason="usb_setup_complete")
+
+        # if we couldn't find the entry
+        return self.async_abort(reason="usb_setup_unsuccessful")
+
+    def async_finish_flow(self) -> FlowResult:
         """Create a new entry."""
         return self.async_create_entry(
             title=f"Account: {self.unique_id}",
