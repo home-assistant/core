@@ -150,7 +150,7 @@ class AirQualitySensor(HomeAccessory):
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
 
-        self.init()
+        self.create_services()
 
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
