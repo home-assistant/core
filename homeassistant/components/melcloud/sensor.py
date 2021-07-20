@@ -50,7 +50,7 @@ ATA_SENSORS: dict[str, SensorMetadata] = {
 }
 ATW_SENSORS: dict[str, SensorMetadata] = {
     "outside_temperature": SensorMetadata(
-        "Room Outside",
+        "Outside Temperature",
         icon="mdi:thermometer",
         unit=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
