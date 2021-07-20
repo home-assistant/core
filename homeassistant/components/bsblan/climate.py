@@ -25,7 +25,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UnitTemperatureT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -122,7 +121,7 @@ class BSBLanClimate(ClimateEntity):
         return self._info.device_identification
 
     @property
-    def temperature_unit(self) -> UnitTemperatureT:
+    def temperature_unit(self) -> str:
         """Return the unit of measurement which this thermostat uses."""
         if self._temperature_unit == "&deg;C":
             return TEMP_CELSIUS
