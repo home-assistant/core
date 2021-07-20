@@ -95,7 +95,9 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
 
 
 def generate_unique_id(
-    entry_id: str, address: AddressType, domain_config: tuple[str, str] | None = None,
+    entry_id: str,
+    address: AddressType,
+    domain_config: tuple[str, str] | None = None,
 ) -> str:
     """Generate a unique_id from the given parameters."""
     unique_id = entry_id
