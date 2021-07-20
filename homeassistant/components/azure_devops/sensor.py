@@ -97,7 +97,7 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             "mdi:pipe",
         )
 
-    async def _azure_devops_update(self) -> None:
+    async def _azure_devops_update(self) -> bool:
         """Update Azure DevOps entity."""
         try:
             build: DevOpsBuild = await self.client.get_build(
@@ -106,7 +106,7 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
         except aiohttp.ClientError as exception:
             _LOGGER.warning(exception)
             self._attr_available = False
-            return
+            return False
         self._attr_state = build.build_number
         self._attr_extra_state_attributes = {
             "definition_id": build.definition.id,
@@ -123,3 +123,4 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             "finish_time": build.finish_time,
         }
         self._attr_available = True
+        return True
