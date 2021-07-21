@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import MutableMapping
-from typing import Any, Awaitable, cast
+from collections.abc import Awaitable, MutableMapping
+from typing import Any, Callable, cast
 
 from aioguardian import Client
 
@@ -143,9 +143,11 @@ class PairedSensorManager:
 
         self._paired_uids.add(uid)
 
-        def get_paired_sensor_status_coro() -> Awaitable:
+        def get_paired_sensor_status_coro() -> Callable[..., Awaitable]:
             """Define a corotoune for the coordinator to use when getting status."""
-            return cast(Awaitable, self._client.sensor.paired_sensor_status(uid))
+            return cast(
+                Callable[..., Awaitable], self._client.sensor.paired_sensor_status(uid)
+            )
 
         coordinator = self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
             API_SENSOR_PAIRED_SENSOR_STATUS
@@ -153,7 +155,7 @@ class PairedSensorManager:
             self._hass,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
-            api_coro=get_paired_sensor_status_coro,
+            api_coro=get_paired_sensor_status_coro(),
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
