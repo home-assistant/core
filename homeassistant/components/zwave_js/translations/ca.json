@@ -51,6 +51,21 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Configura el valor del par\u00e0metre {subtype}",
+            "node_status": "Estat del node",
+            "value": "Valor actual d'un valor Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Ha enviat una notificaci\u00f3 de control d'entrada",
+            "event.notification.notification": "Ha enviat una notificaci\u00f3",
+            "event.value_notification.basic": "Esdeveniment CC b\u00e0sic a {subtype}",
+            "event.value_notification.central_scene": "Acci\u00f3 d'escena central a {subtype}",
+            "event.value_notification.scene_activation": "Activaci\u00f3 d'escena a {subtype}",
+            "state.node_status": "L'estat del node ha canviat"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "No s'ha pogut obtenir la informaci\u00f3 de descobriment del complement Z-Wave JS.",

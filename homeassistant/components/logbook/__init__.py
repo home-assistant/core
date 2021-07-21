@@ -574,10 +574,10 @@ def _apply_event_types_filter(hass, query, event_types):
 def _apply_event_entity_id_matchers(events_query, entity_ids):
     return events_query.filter(
         sqlalchemy.or_(
-            *[
+            *(
                 Events.event_data.contains(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
                 for entity_id in entity_ids
-            ]
+            )
         )
     )
 

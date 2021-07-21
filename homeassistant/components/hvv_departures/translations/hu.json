@@ -20,6 +20,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "offset": "Eltol\u00e1s (perc)"
+                },
                 "title": "Be\u00e1ll\u00edt\u00e1sok"
             }
         }

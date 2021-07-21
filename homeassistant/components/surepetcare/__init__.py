@@ -158,10 +158,10 @@ class SurePetcareAPI:
         # https://github.com/PyCQA/pylint/issues/2062
         # pylint: disable=no-member
         if state == LockState.UNLOCKED.name.lower():
-            await self.surepy.unlock(flap_id)
+            await self.surepy.sac.unlock(flap_id)
         elif state == LockState.LOCKED_IN.name.lower():
-            await self.surepy.lock_in(flap_id)
+            await self.surepy.sac.lock_in(flap_id)
         elif state == LockState.LOCKED_OUT.name.lower():
-            await self.surepy.lock_out(flap_id)
+            await self.surepy.sac.lock_out(flap_id)
         elif state == LockState.LOCKED_ALL.name.lower():
-            await self.surepy.lock(flap_id)
+            await self.surepy.sac.lock(flap_id)

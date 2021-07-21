@@ -136,7 +136,7 @@ def get_static_devices(config_data) -> SmartDevices:
     lights = []
     switches = []
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
+    for type_ in (CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER):
         for entry in config_data[type_]:
             host = entry["host"]
             try:

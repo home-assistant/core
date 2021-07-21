@@ -1,8 +1,7 @@
 """Notifications for Android TV notification service."""
-import base64
-import io
 import logging
 
+from notifications_android_tv import Notifications
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
@@ -14,115 +13,69 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, HTTP_OK, PERCENTAGE
+from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_TIMEOUT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    ATTR_COLOR,
+    ATTR_DURATION,
+    ATTR_FILE,
+    ATTR_FILE_AUTH,
+    ATTR_FILE_AUTH_DIGEST,
+    ATTR_FILE_PASSWORD,
+    ATTR_FILE_PATH,
+    ATTR_FILE_URL,
+    ATTR_FILE_USERNAME,
+    ATTR_FONTSIZE,
+    ATTR_INTERRUPT,
+    ATTR_POSITION,
+    ATTR_TRANSPARENCY,
+    CONF_COLOR,
+    CONF_DURATION,
+    CONF_FONTSIZE,
+    CONF_INTERRUPT,
+    CONF_POSITION,
+    CONF_TRANSPARENCY,
+    DEFAULT_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DURATION = "duration"
-CONF_FONTSIZE = "fontsize"
-CONF_POSITION = "position"
-CONF_TRANSPARENCY = "transparency"
-CONF_COLOR = "color"
-CONF_INTERRUPT = "interrupt"
-
-DEFAULT_DURATION = 5
-DEFAULT_FONTSIZE = "medium"
-DEFAULT_POSITION = "bottom-right"
-DEFAULT_TRANSPARENCY = "default"
-DEFAULT_COLOR = "grey"
-DEFAULT_INTERRUPT = False
-DEFAULT_TIMEOUT = 5
-DEFAULT_ICON = (
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApo"
-    "cMXEAAAAASUVORK5CYII="
-)
-
-ATTR_DURATION = "duration"
-ATTR_FONTSIZE = "fontsize"
-ATTR_POSITION = "position"
-ATTR_TRANSPARENCY = "transparency"
-ATTR_COLOR = "color"
-ATTR_BKGCOLOR = "bkgcolor"
-ATTR_INTERRUPT = "interrupt"
-ATTR_IMAGE = "filename2"
-ATTR_FILE = "file"
-# Attributes contained in file
-ATTR_FILE_URL = "url"
-ATTR_FILE_PATH = "path"
-ATTR_FILE_USERNAME = "username"
-ATTR_FILE_PASSWORD = "password"
-ATTR_FILE_AUTH = "auth"
-# Any other value or absence of 'auth' lead to basic authentication being used
-ATTR_FILE_AUTH_DIGEST = "digest"
-
-FONTSIZES = {"small": 1, "medium": 0, "large": 2, "max": 3}
-
-POSITIONS = {
-    "bottom-right": 0,
-    "bottom-left": 1,
-    "top-right": 2,
-    "top-left": 3,
-    "center": 4,
-}
-
-TRANSPARENCIES = {
-    "default": 0,
-    f"0{PERCENTAGE}": 1,
-    f"25{PERCENTAGE}": 2,
-    f"50{PERCENTAGE}": 3,
-    f"75{PERCENTAGE}": 4,
-    f"100{PERCENTAGE}": 5,
-}
-
-COLORS = {
-    "grey": "#607d8b",
-    "black": "#000000",
-    "indigo": "#303F9F",
-    "green": "#4CAF50",
-    "red": "#F44336",
-    "cyan": "#00BCD4",
-    "teal": "#009688",
-    "amber": "#FFC107",
-    "pink": "#E91E63",
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Coerce(int),
-        vol.Optional(CONF_FONTSIZE, default=DEFAULT_FONTSIZE): vol.In(FONTSIZES.keys()),
-        vol.Optional(CONF_POSITION, default=DEFAULT_POSITION): vol.In(POSITIONS.keys()),
-        vol.Optional(CONF_TRANSPARENCY, default=DEFAULT_TRANSPARENCY): vol.In(
-            TRANSPARENCIES.keys()
+# Deprecated in Home Assistant 2021.8
+PLATFORM_SCHEMA = cv.deprecated(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_DURATION): vol.Coerce(int),
+                vol.Optional(CONF_FONTSIZE): vol.In(Notifications.FONTSIZES.keys()),
+                vol.Optional(CONF_POSITION): vol.In(Notifications.POSITIONS.keys()),
+                vol.Optional(CONF_TRANSPARENCY): vol.In(
+                    Notifications.TRANSPARENCIES.keys()
+                ),
+                vol.Optional(CONF_COLOR): vol.In(Notifications.BKG_COLORS.keys()),
+                vol.Optional(CONF_TIMEOUT): vol.Coerce(int),
+                vol.Optional(CONF_INTERRUPT): cv.boolean,
+            }
         ),
-        vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): vol.In(COLORS.keys()),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-        vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
-    }
+    )
 )
 
 
-def get_service(hass, config, discovery_info=None):
-    """Get the Notifications for Android TV notification service."""
-    remoteip = config.get(CONF_HOST)
-    duration = config.get(CONF_DURATION)
-    fontsize = config.get(CONF_FONTSIZE)
-    position = config.get(CONF_POSITION)
-    transparency = config.get(CONF_TRANSPARENCY)
-    color = config.get(CONF_COLOR)
-    interrupt = config.get(CONF_INTERRUPT)
-    timeout = config.get(CONF_TIMEOUT)
-
+async def async_get_service(hass: HomeAssistant, config, discovery_info=None):
+    """Get the NFAndroidTV notification service."""
+    if discovery_info is not None:
+        notify = await hass.async_add_executor_job(
+            Notifications, discovery_info[CONF_HOST]
+        )
+        return NFAndroidTVNotificationService(
+            notify,
+            hass.config.is_allowed_path,
+        )
+    notify = await hass.async_add_executor_job(Notifications, config.get(CONF_HOST))
     return NFAndroidTVNotificationService(
-        remoteip,
-        duration,
-        fontsize,
-        position,
-        transparency,
-        color,
-        interrupt,
-        timeout,
+        notify,
         hass.config.is_allowed_path,
     )
 
@@ -132,116 +85,98 @@ class NFAndroidTVNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        remoteip,
-        duration,
-        fontsize,
-        position,
-        transparency,
-        color,
-        interrupt,
-        timeout,
+        notify: Notifications,
         is_allowed_path,
     ):
         """Initialize the service."""
-        self._target = f"http://{remoteip}:7676"
-        self._default_duration = duration
-        self._default_fontsize = fontsize
-        self._default_position = position
-        self._default_transparency = transparency
-        self._default_color = color
-        self._default_interrupt = interrupt
-        self._timeout = timeout
-        self._icon_file = io.BytesIO(base64.b64decode(DEFAULT_ICON))
+        self.notify = notify
         self.is_allowed_path = is_allowed_path
 
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
-        _LOGGER.debug("Sending notification to: %s", self._target)
-
-        payload = {
-            "filename": (
-                "icon.png",
-                self._icon_file,
-                "application/octet-stream",
-                {"Expires": "0"},
-            ),
-            "type": "0",
-            "title": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            "msg": message,
-            "duration": "%i" % self._default_duration,
-            "fontsize": "%i" % FONTSIZES.get(self._default_fontsize),
-            "position": "%i" % POSITIONS.get(self._default_position),
-            "bkgcolor": "%s" % COLORS.get(self._default_color),
-            "transparency": "%i" % TRANSPARENCIES.get(self._default_transparency),
-            "offset": "0",
-            "app": ATTR_TITLE_DEFAULT,
-            "force": "true",
-            "interrupt": "%i" % self._default_interrupt,
-        }
-
         data = kwargs.get(ATTR_DATA)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        duration = None
+        fontsize = None
+        position = None
+        transparency = None
+        bkgcolor = None
+        interrupt = None
+        icon = None
+        image_file = None
         if data:
             if ATTR_DURATION in data:
-                duration = data.get(ATTR_DURATION)
                 try:
-                    payload[ATTR_DURATION] = "%i" % int(duration)
+                    duration = int(data.get(ATTR_DURATION))
                 except ValueError:
-                    _LOGGER.warning("Invalid duration-value: %s", str(duration))
+                    _LOGGER.warning(
+                        "Invalid duration-value: %s", str(data.get(ATTR_DURATION))
+                    )
             if ATTR_FONTSIZE in data:
-                fontsize = data.get(ATTR_FONTSIZE)
-                if fontsize in FONTSIZES:
-                    payload[ATTR_FONTSIZE] = "%i" % FONTSIZES.get(fontsize)
+                if data.get(ATTR_FONTSIZE) in Notifications.FONTSIZES:
+                    fontsize = data.get(ATTR_FONTSIZE)
                 else:
-                    _LOGGER.warning("Invalid fontsize-value: %s", str(fontsize))
+                    _LOGGER.warning(
+                        "Invalid fontsize-value: %s", str(data.get(ATTR_FONTSIZE))
+                    )
             if ATTR_POSITION in data:
-                position = data.get(ATTR_POSITION)
-                if position in POSITIONS:
-                    payload[ATTR_POSITION] = "%i" % POSITIONS.get(position)
+                if data.get(ATTR_POSITION) in Notifications.POSITIONS:
+                    position = data.get(ATTR_POSITION)
                 else:
-                    _LOGGER.warning("Invalid position-value: %s", str(position))
+                    _LOGGER.warning(
+                        "Invalid position-value: %s", str(data.get(ATTR_POSITION))
+                    )
             if ATTR_TRANSPARENCY in data:
-                transparency = data.get(ATTR_TRANSPARENCY)
-                if transparency in TRANSPARENCIES:
-                    payload[ATTR_TRANSPARENCY] = "%i" % TRANSPARENCIES.get(transparency)
+                if data.get(ATTR_TRANSPARENCY) in Notifications.TRANSPARENCIES:
+                    transparency = data.get(ATTR_TRANSPARENCY)
                 else:
-                    _LOGGER.warning("Invalid transparency-value: %s", str(transparency))
+                    _LOGGER.warning(
+                        "Invalid transparency-value: %s",
+                        str(data.get(ATTR_TRANSPARENCY)),
+                    )
             if ATTR_COLOR in data:
-                color = data.get(ATTR_COLOR)
-                if color in COLORS:
-                    payload[ATTR_BKGCOLOR] = "%s" % COLORS.get(color)
+                if data.get(ATTR_COLOR) in Notifications.BKG_COLORS:
+                    bkgcolor = data.get(ATTR_COLOR)
                 else:
-                    _LOGGER.warning("Invalid color-value: %s", str(color))
+                    _LOGGER.warning(
+                        "Invalid color-value: %s", str(data.get(ATTR_COLOR))
+                    )
             if ATTR_INTERRUPT in data:
-                interrupt = data.get(ATTR_INTERRUPT)
                 try:
-                    payload[ATTR_INTERRUPT] = "%i" % cv.boolean(interrupt)
+                    interrupt = cv.boolean(data.get(ATTR_INTERRUPT))
                 except vol.Invalid:
-                    _LOGGER.warning("Invalid interrupt-value: %s", str(interrupt))
+                    _LOGGER.warning(
+                        "Invalid interrupt-value: %s", str(data.get(ATTR_INTERRUPT))
+                    )
             filedata = data.get(ATTR_FILE) if data else None
             if filedata is not None:
-                # Load from file or URL
-                file_as_bytes = self.load_file(
+                if ATTR_ICON in filedata:
+                    icon = self.load_file(
+                        url=filedata.get(ATTR_ICON),
+                        local_path=filedata.get(ATTR_FILE_PATH),
+                        username=filedata.get(ATTR_FILE_USERNAME),
+                        password=filedata.get(ATTR_FILE_PASSWORD),
+                        auth=filedata.get(ATTR_FILE_AUTH),
+                    )
+                image_file = self.load_file(
                     url=filedata.get(ATTR_FILE_URL),
                     local_path=filedata.get(ATTR_FILE_PATH),
                     username=filedata.get(ATTR_FILE_USERNAME),
                     password=filedata.get(ATTR_FILE_PASSWORD),
                     auth=filedata.get(ATTR_FILE_AUTH),
                 )
-                if file_as_bytes:
-                    payload[ATTR_IMAGE] = (
-                        "image",
-                        file_as_bytes,
-                        "application/octet-stream",
-                        {"Expires": "0"},
-                    )
-
-        try:
-            _LOGGER.debug("Payload: %s", str(payload))
-            response = requests.post(self._target, files=payload, timeout=self._timeout)
-            if response.status_code != HTTP_OK:
-                _LOGGER.error("Error sending message: %s", str(response))
-        except requests.exceptions.ConnectionError as err:
-            _LOGGER.error("Error communicating with %s: %s", self._target, str(err))
+        self.notify.send(
+            message,
+            title=title,
+            duration=duration,
+            fontsize=fontsize,
+            position=position,
+            bkgcolor=bkgcolor,
+            transparency=transparency,
+            interrupt=interrupt,
+            icon=icon,
+            image_file=image_file,
+        )
 
     def load_file(
         self, url=None, local_path=None, username=None, password=None, auth=None
@@ -266,7 +201,8 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if local_path is not None:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
-                    return open(local_path, "rb")  # pylint: disable=consider-using-with
+                    with open(local_path, "rb") as path_handle:
+                        return path_handle
                 _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")

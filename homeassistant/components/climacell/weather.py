@@ -109,7 +109,7 @@ async def async_setup_entry(
     api_class = ClimaCellV3WeatherEntity if api_version == 3 else ClimaCellWeatherEntity
     entities = [
         api_class(config_entry, coordinator, api_version, forecast_type)
-        for forecast_type in [DAILY, HOURLY, NOWCAST]
+        for forecast_type in (DAILY, HOURLY, NOWCAST)
     ]
     async_add_entities(entities)
 
@@ -207,8 +207,6 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                 distance_convert(self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS), 4
             )
         cloud_cover = self.cloud_cover
-        if cloud_cover is not None:
-            cloud_cover /= 100
         return {
             ATTR_CLOUD_COVER: cloud_cover,
             ATTR_WIND_GUST: wind_gust,

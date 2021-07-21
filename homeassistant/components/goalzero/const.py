@@ -20,7 +20,8 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -28,15 +29,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
-    VOLT,
 )
 
+ATTRIBUTION = "Data provided by Goal Zero"
 ATTR_DEFAULT_ENABLED = "default_enabled"
 
-CONF_IDENTIFIERS = "identifiers"
-CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
-CONF_SW_VERSION = "sw_version"
 DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
@@ -66,7 +63,7 @@ SENSOR_DICT = {
     "ampsIn": {
         ATTR_NAME: "Amps In",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-        ATTR_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
+        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -80,7 +77,7 @@ SENSOR_DICT = {
     "ampsOut": {
         ATTR_NAME: "Amps Out",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-        ATTR_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
+        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -101,7 +98,7 @@ SENSOR_DICT = {
     "volts": {
         ATTR_NAME: "Volts",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-        ATTR_UNIT_OF_MEASUREMENT: VOLT,
+        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
         ATTR_DEFAULT_ENABLED: False,
     },
     "socPercent": {
@@ -129,8 +126,16 @@ SENSOR_DICT = {
         ATTR_DEFAULT_ENABLED: True,
     },
     "timestamp": {
-        ATTR_NAME: "Up Time",
+        ATTR_NAME: "Total Run Time",
         ATTR_UNIT_OF_MEASUREMENT: TIME_SECONDS,
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "ssid": {
+        ATTR_NAME: "Wi-Fi SSID",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "ipAddr": {
+        ATTR_NAME: "IP Address",
         ATTR_DEFAULT_ENABLED: False,
     },
 }
