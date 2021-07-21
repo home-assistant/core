@@ -92,7 +92,7 @@ BASE_VALUE_NOTIFICATION_EVENT_SCHEMA = BASE_EVENT_SCHEMA.extend(
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
         vol.Required(ATTR_PROPERTY_KEY): vol.Any(None, int, str),
         vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
-        vol.Required(ATTR_VALUE): vol.Coerce(int),
+        vol.Optional(ATTR_VALUE): vol.Coerce(int),
         vol.Required(CONF_SUBTYPE): cv.string,
     }
 )
@@ -286,7 +286,8 @@ async def async_attach_trigger(
             copy_available_params(
                 config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
             )
-            event_data[ATTR_VALUE_RAW] = config[ATTR_VALUE]
+            if ATTR_VALUE in config:
+                event_data[ATTR_VALUE_RAW] = config[ATTR_VALUE]
         else:
             raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
@@ -366,6 +367,6 @@ async def async_get_trigger_capabilities(
                 vol.Range(min=value.metadata.min, max=value.metadata.max),
             )
 
-        return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
+        return {"extra_fields": vol.Schema({vol.Optional(ATTR_VALUE): value_schema})}
 
     return {}
