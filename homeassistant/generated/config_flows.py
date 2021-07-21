@@ -16,6 +16,7 @@ FLOWS = [
     "agent_dvr",
     "airly",
     "airnow",
+    "airtouch4",
     "airvisual",
     "alarmdecoder",
     "almond",

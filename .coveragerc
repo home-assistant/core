@@ -36,6 +36,9 @@ omit =
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
+    homeassistant/components/airtouch4/__init__.py
+    homeassistant/components/airtouch4/climate.py
+    homeassistant/components/airtouch4/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/*
