@@ -104,6 +104,9 @@ adafruit-circuitpython-dht==3.6.0
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==2.2.2
 
+# homeassistant.components.adax
+adax==0.0.1
+
 # homeassistant.components.androidtv
 adb-shell[async]==0.3.4
 
@@ -614,6 +617,9 @@ fitbit==0.3.1
 # homeassistant.components.fixer
 fixerio==1.0.0a0
 
+# homeassistant.components.flipr
+flipr-api==1.4.1
+
 # homeassistant.components.flux_led
 flux_led==0.22
 
@@ -1035,6 +1041,9 @@ niluclient==0.1.2
 
 # homeassistant.components.noaa_tides
 noaa-coops==0.1.8
+
+# homeassistant.components.nfandroidtv
+notifications-android-tv==0.1.2
 
 # homeassistant.components.notify_events
 notify-events==1.0.4

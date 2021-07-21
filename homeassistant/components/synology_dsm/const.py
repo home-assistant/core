@@ -37,6 +37,8 @@ COORDINATOR_CAMERAS = "coordinator_cameras"
 COORDINATOR_CENTRAL = "coordinator_central"
 COORDINATOR_SWITCHES = "coordinator_switches"
 SYSTEM_LOADED = "system_loaded"
+EXCEPTION_DETAILS = "details"
+EXCEPTION_UNKNOWN = "unknown"
 
 # Entry keys
 SYNO_API = "syno_api"

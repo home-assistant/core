@@ -22,6 +22,7 @@ homeassistant/scripts/check_config.py @kellerza
 homeassistant/components/abode/* @shred86
 homeassistant/components/accuweather/* @bieniu
 homeassistant/components/acmeda/* @atmurray
+homeassistant/components/adax/* @danielhiversen
 homeassistant/components/adguard/* @frenck
 homeassistant/components/advantage_air/* @Bre77
 homeassistant/components/aemet/* @noltari
@@ -160,6 +161,7 @@ homeassistant/components/fireservicerota/* @cyberjunky
 homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flick_electric/* @ZephireNZ
+homeassistant/components/flipr/* @cnico
 homeassistant/components/flo/* @dmulcahey
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flume/* @ChrisMandich @bdraco
@@ -331,6 +333,7 @@ homeassistant/components/netdata/* @fabaff
 homeassistant/components/nexia/* @bdraco
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nextcloud/* @meichthys
+homeassistant/components/nfandroidtv/* @tkdrob
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
