@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
 from .alarm_util import calculate_next_active_alarms
-from .const import ATTRIBUTION, DOMAIN, GARMIN_ENTITY_LIST
+from .const import ATTRIBUTION, DOMAIN, GARMIN_ENTITY_LIST, GarminConnectSensorMetadata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,30 +40,14 @@ async def async_setup_entry(
         _LOGGER.exception("Unknown error occurred during Garmin Connect Client update")
 
     entities = []
-    for (
-        sensor_type,
-        (name, unit, icon, device_class, enabled_by_default),
-    ) in GARMIN_ENTITY_LIST.items():
-
-        _LOGGER.debug(
-            "Registering entity: %s, %s, %s, %s, %s, %s",
-            sensor_type,
-            name,
-            unit,
-            icon,
-            device_class,
-            enabled_by_default,
-        )
+    for sensor_type, metadata in GARMIN_ENTITY_LIST.items():
+        _LOGGER.debug("Registering entity: %s, %s", sensor_type, metadata)
         entities.append(
             GarminConnectSensor(
                 garmin_data,
                 unique_id,
                 sensor_type,
-                name,
-                unit,
-                icon,
-                device_class,
-                enabled_by_default,
+                metadata,
             )
         )
 
@@ -78,33 +62,21 @@ class GarminConnectSensor(SensorEntity):
         data,
         unique_id,
         sensor_type,
-        name,
-        unit,
-        icon,
-        device_class,
-        enabled_default: bool = True,
+        metadata: GarminConnectSensorMetadata,
     ):
         """Initialize."""
         self._data = data
         self._unique_id = unique_id
         self._type = sensor_type
-        self._name = name
-        self._unit = unit
-        self._icon = icon
-        self._device_class = device_class
-        self._enabled_default = enabled_default
+
+        self._attr_name = metadata.name
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self._attr_icon = metadata.icon
+        self._attr_device_class = metadata.device_class
+        self._attr_entity_registry_enabled_default = metadata.enabled_by_default
+
         self._available = True
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._icon
 
     @property
     def state(self):
@@ -115,11 +87,6 @@ class GarminConnectSensor(SensorEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
         return f"{self._unique_id}_{self._type}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
 
     @property
     def extra_state_attributes(self):
@@ -147,19 +114,9 @@ class GarminConnectSensor(SensorEntity):
         }
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
 
     async def async_update(self):
         """Update the data from Garmin Connect."""
@@ -195,5 +152,8 @@ class GarminConnectSensor(SensorEntity):
             self._state = data[self._type]
 
         _LOGGER.debug(
-            "Entity %s set to state %s %s", self._type, self._state, self._unit
+            "Entity %s set to state %s %s",
+            self._type,
+            self._state,
+            self._attr_unit_of_measurement,
         )
