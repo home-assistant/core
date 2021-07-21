@@ -452,6 +452,7 @@ LENGTH_MILES: Final = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
 # Pressure units
@@ -509,6 +510,8 @@ IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
 # Precipitation units
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
+PRECIPITATION_INCHES: Final = "in"
+PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
 
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
