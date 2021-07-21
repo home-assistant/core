@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, cast
+
+import pyatmo
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -24,19 +27,21 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_WEATHER_AREAS, DATA_HANDLER, DOMAIN, MANUFACTURER, SIGNAL_NAME
 from .data_handler import (
     HOMECOACH_DATA_CLASS_NAME,
     PUBLICDATA_DATA_CLASS_NAME,
     WEATHERSTATION_DATA_CLASS_NAME,
+    NetatmoDataHandler,
 )
 from .helper import NetatmoArea
 from .netatmo_entity_base import NetatmoBase
@@ -267,12 +272,14 @@ BATTERY_VALUES = {
 PUBLIC = "public"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Netatmo weather and homecoach platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
     platform_not_ready = True
 
-    async def find_entities(data_class_name):
+    async def find_entities(data_class_name: str) -> list:
         """Find all entities."""
         all_module_infos = {}
         data = data_handler.data
@@ -330,7 +337,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    async def add_public_entities(update=True):
+    async def add_public_entities(update: bool = True) -> None:
         """Retrieve Netatmo public weather entities."""
         entities = {
             device.name: device.id
@@ -396,7 +403,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NetatmoSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, data_handler, data_class_name, module_info, sensor_type):
+    def __init__(
+        self,
+        data_handler: NetatmoDataHandler,
+        data_class_name: str,
+        module_info: dict,
+        sensor_type: str,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data_handler)
 
@@ -434,20 +447,21 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         self._attr_entity_registry_enabled_default = metadata.enable_default
 
     @property
-    def available(self):
+    def _data(self) -> pyatmo.AsyncWeatherStationData:
+        """Return data for this entity."""
+        return cast(
+            pyatmo.AsyncWeatherStationData,
+            self.data_handler.data[self._data_classes[0]["name"]],
+        )
+
+    @property
+    def available(self) -> bool:
         """Return entity availability."""
         return self.state is not None
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if self._data is None:
-            if self.state is None:
-                return
-            _LOGGER.warning("No data from update")
-            self._attr_state = None
-            return
-
         data = self._data.get_last_data(station_id=self._station_id, exclude=3600).get(
             self._id
         )
@@ -531,7 +545,7 @@ def process_battery(data: int, model: str) -> str:
     return "Very Low"
 
 
-def process_health(health):
+def process_health(health: int) -> str:
     """Process health index and return string for display."""
     if health == 0:
         return "Healthy"
@@ -541,11 +555,10 @@ def process_health(health):
         return "Fair"
     if health == 3:
         return "Poor"
-    if health == 4:
-        return "Unhealthy"
+    return "Unhealthy"
 
 
-def process_rf(strength):
+def process_rf(strength: int) -> str:
     """Process wifi signal strength and return string for display."""
     if strength >= 90:
         return "Low"
@@ -556,7 +569,7 @@ def process_rf(strength):
     return "Full"
 
 
-def process_wifi(strength):
+def process_wifi(strength: int) -> str:
     """Process wifi signal strength and return string for display."""
     if strength >= 86:
         return "Low"
@@ -570,7 +583,9 @@ def process_wifi(strength):
 class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
-    def __init__(self, data_handler, area, sensor_type):
+    def __init__(
+        self, data_handler: NetatmoDataHandler, area: NetatmoArea, sensor_type: str
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data_handler)
 
@@ -611,13 +626,15 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         )
 
     @property
-    def _data(self):
-        return self.data_handler.data[self._signal_name]
+    def _data(self) -> pyatmo.AsyncPublicData:
+        """Return data for this entity."""
+        return cast(pyatmo.AsyncPublicData, self.data_handler.data[self._signal_name])
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
 
+        assert self.device_info and "name" in self.device_info
         self.data_handler.listeners.append(
             async_dispatcher_connect(
                 self.hass,
@@ -626,7 +643,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
             )
         )
 
-    async def async_config_update_callback(self, area):
+    async def async_config_update_callback(self, area: NetatmoArea) -> None:
         """Update the entity's config."""
         if self.area == area:
             return
@@ -661,7 +678,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         )
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update the entity's state."""
         data = None
 
