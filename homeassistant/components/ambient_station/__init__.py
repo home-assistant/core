@@ -32,7 +32,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -320,7 +320,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    async def _async_disconnect_websocket(*_):
+    async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.client.websocket.disconnect()
 
     config_entry.async_on_unload(
@@ -378,7 +378,7 @@ class AmbientStation:
     async def _attempt_connect(self) -> None:
         """Attempt to connect to the socket (retrying later on fail)."""
 
-        async def connect(timestamp: int | None = None):
+        async def connect(timestamp: int | None = None) -> None:
             """Connect."""
             await self.client.websocket.connect()
 
