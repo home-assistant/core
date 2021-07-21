@@ -22,6 +22,7 @@ homeassistant/scripts/check_config.py @kellerza
 homeassistant/components/abode/* @shred86
 homeassistant/components/accuweather/* @bieniu
 homeassistant/components/acmeda/* @atmurray
+homeassistant/components/adax/* @danielhiversen
 homeassistant/components/adguard/* @frenck
 homeassistant/components/advantage_air/* @Bre77
 homeassistant/components/aemet/* @noltari
