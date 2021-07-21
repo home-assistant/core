@@ -227,11 +227,41 @@ MODULE_TYPE_WIND = "NAModule2"
 MODULE_TYPE_RAIN = "NAModule3"
 MODULE_TYPE_INDOOR = "NAModule4"
 
+
+class BatteryData(NamedTuple):
+    """Metadata for a batter."""
+
+    full: int
+    high: int
+    medium: int
+    low: int
+
+
 BATTERY_VALUES = {
-    MODULE_TYPE_WIND: {"Full": 5590, "High": 5180, "Medium": 4770, "Low": 4360},
-    MODULE_TYPE_RAIN: {"Full": 5500, "High": 5000, "Medium": 4500, "Low": 4000},
-    MODULE_TYPE_INDOOR: {"Full": 5500, "High": 5280, "Medium": 4920, "Low": 4560},
-    MODULE_TYPE_OUTDOOR: {"Full": 5500, "High": 5000, "Medium": 4500, "Low": 4000},
+    MODULE_TYPE_WIND: BatteryData(
+        full=5590,
+        high=5180,
+        medium=4770,
+        low=4360,
+    ),
+    MODULE_TYPE_RAIN: BatteryData(
+        full=5500,
+        high=5000,
+        medium=4500,
+        low=4000,
+    ),
+    MODULE_TYPE_INDOOR: BatteryData(
+        full=5500,
+        high=5280,
+        medium=4920,
+        low=4560,
+    ),
+    MODULE_TYPE_OUTDOOR: BatteryData(
+        full=5500,
+        high=5000,
+        medium=4500,
+        low=4000,
+    ),
 }
 
 PUBLIC = "public"
@@ -488,15 +518,15 @@ def process_angle(angle: int) -> str:
 
 def process_battery(data: int, model: str) -> str:
     """Process battery data and return string for display."""
-    values = BATTERY_VALUES[model]
+    battery_data = BATTERY_VALUES[model]
 
-    if data >= values["Full"]:
+    if data >= battery_data.full:
         return "Full"
-    if data >= values["High"]:
+    if data >= battery_data.high:
         return "High"
-    if data >= values["Medium"]:
+    if data >= battery_data.medium:
         return "Medium"
-    if data >= values["Low"]:
+    if data >= battery_data.low:
         return "Low"
     return "Very Low"
 
