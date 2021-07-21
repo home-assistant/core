@@ -199,9 +199,9 @@ async def test_sound_mode(player, state, mode, mode_sel, mode_2ch, mode_mch):
 async def test_sound_mode_list(player, state):
     """Test sound mode list."""
     player._get_2ch = Mock(return_value=True)  # pylint: disable=W0212
-    assert sorted(player.sound_mode_list) == sorted([x.name for x in DecodeMode2CH])
+    assert sorted(player.sound_mode_list) == sorted(x.name for x in DecodeMode2CH)
     player._get_2ch = Mock(return_value=False)  # pylint: disable=W0212
-    assert sorted(player.sound_mode_list) == sorted([x.name for x in DecodeModeMCH])
+    assert sorted(player.sound_mode_list) == sorted(x.name for x in DecodeModeMCH)
 
 
 async def test_sound_mode_zone_x(player, state):

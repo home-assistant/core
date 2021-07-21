@@ -25,6 +25,7 @@ ignore = [
 jobs = 2
 init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; sys.path.append(str(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins")))'
 load-plugins = [
+    "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "pylint_strict_informational",
     "hass_constructor",
@@ -68,6 +69,9 @@ good-names = [
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
+# ---
+# Enable once current issues are fixed:
+# consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
 disable = [
     "format",
     "abstract-class-little-used",
@@ -90,6 +94,7 @@ disable = [
     "too-many-boolean-expressions",
     "unused-argument",
     "wrong-import-order",
+    "consider-using-namedtuple-or-dataclass",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up

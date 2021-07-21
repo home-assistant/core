@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
+from urllib.parse import urlparse
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
@@ -33,7 +34,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_flow_ssdp_discovery(hass: HomeAssistant):
     """Test config flow: discovered + configured through ssdp."""
     udn = "uuid:device_1"
-    location = "dummy"
+    location = "http://dummy"
     mock_device = MockDevice(udn)
     ssdp_discoveries = [
         {
@@ -93,7 +94,7 @@ async def test_flow_ssdp_discovery(hass: HomeAssistant):
 async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     """Test config flow: incomplete discovery through ssdp."""
     udn = "uuid:device_1"
-    location = "dummy"
+    location = "http://dummy"
     mock_device = MockDevice(udn)
 
     # Discovered via step ssdp.
@@ -112,9 +113,9 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
 
 
 async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
-    """Test config flow: discovery through ssdp, but ignored."""
+    """Test config flow: discovery through ssdp, but ignored, as hostname is used by existing config entry."""
     udn = "uuid:device_random_1"
-    location = "dummy"
+    location = "http://dummy"
     mock_device = MockDevice(udn)
 
     # Existing entry.
@@ -123,46 +124,31 @@ async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
         data={
             CONFIG_ENTRY_UDN: "uuid:device_random_2",
             CONFIG_ENTRY_ST: mock_device.device_type,
-            CONFIG_ENTRY_HOSTNAME: mock_device.hostname,
+            CONFIG_ENTRY_HOSTNAME: urlparse(location).hostname,
         },
         options={CONFIG_ENTRY_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
     config_entry.add_to_hass(hass)
 
-    discoveries = [
-        {
-            DISCOVERY_LOCATION: location,
-            DISCOVERY_NAME: mock_device.name,
-            DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
-            DISCOVERY_USN: mock_device.usn,
-            DISCOVERY_HOSTNAME: mock_device.hostname,
-        }
-    ]
-
-    with patch.object(
-        Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
-    ):
-        # Discovered via step ssdp, but ignored.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data={
-                ssdp.ATTR_SSDP_LOCATION: location,
-                ssdp.ATTR_SSDP_ST: mock_device.device_type,
-                ssdp.ATTR_SSDP_USN: mock_device.usn,
-                ssdp.ATTR_UPNP_UDN: mock_device.udn,
-            },
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "discovery_ignored"
+    # Discovered via step ssdp, but ignored.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
+            ssdp.ATTR_UPNP_UDN: mock_device.udn,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "discovery_ignored"
 
 
 async def test_flow_user(hass: HomeAssistant):
     """Test config flow: discovered + configured through user."""
     udn = "uuid:device_1"
-    location = "dummy"
+    location = "http://dummy"
     mock_device = MockDevice(udn)
     ssdp_discoveries = [
         {
@@ -217,7 +203,7 @@ async def test_flow_import(hass: HomeAssistant):
     """Test config flow: discovered + configured through configuration.yaml."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
-    location = "dummy"
+    location = "http://dummy"
     ssdp_discoveries = [
         {
             ssdp.ATTR_SSDP_LOCATION: location,

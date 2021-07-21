@@ -37,5 +37,14 @@
                 "title": "Synology DSM"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s (m\u00e1sodperc)"
+                }
+            }
+        }
     }
 }

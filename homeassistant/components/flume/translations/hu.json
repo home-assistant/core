@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajhiteles\u00edt\u00e9s sikeres volt"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -9,6 +10,13 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "A(z) {username} jelszava m\u00e1r nem \u00e9rv\u00e9nyes.",
+                "title": "Hiteles\u00edtse \u00fajra Flume-fi\u00f3kj\u00e1t"
+            },
             "user": {
                 "data": {
                     "password": "Jelsz\u00f3",

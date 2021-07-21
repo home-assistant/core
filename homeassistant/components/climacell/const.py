@@ -1,4 +1,10 @@
 """Constants for the ClimaCell integration."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import IntEnum
+from typing import Callable
+
 from pyclimacell.const import (
     DAILY,
     HOURLY,
@@ -26,15 +32,10 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_NAME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -73,13 +74,6 @@ MAX_FORECASTS = {
     HOURLY: 24,
     NOWCAST: 30,
 }
-
-# Sensor type keys
-ATTR_FIELD = "field"
-ATTR_METRIC_CONVERSION = "metric_conversion"
-ATTR_VALUE_MAP = "value_map"
-ATTR_IS_METRIC_CHECK = "is_metric_check"
-ATTR_SCALE = "scale"
 
 # Additional attributes
 ATTR_WIND_GUST = "wind_gust"
@@ -155,165 +149,182 @@ CC_ATTR_SOLAR_GHI = "solarGHI"
 CC_ATTR_CLOUD_BASE = "cloudBase"
 CC_ATTR_CLOUD_CEILING = "cloudCeiling"
 
-CC_SENSOR_TYPES = [
-    {
-        ATTR_FIELD: CC_ATTR_FEELS_LIKE,
-        ATTR_NAME: "Feels Like",
-        CONF_UNIT_SYSTEM_IMPERIAL: TEMP_FAHRENHEIT,
-        CONF_UNIT_SYSTEM_METRIC: TEMP_CELSIUS,
-        ATTR_METRIC_CONVERSION: lambda val: temp_convert(
-            val, TEMP_FAHRENHEIT, TEMP_CELSIUS
-        ),
-        ATTR_IS_METRIC_CHECK: True,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_DEW_POINT,
-        ATTR_NAME: "Dew Point",
-        CONF_UNIT_SYSTEM_IMPERIAL: TEMP_FAHRENHEIT,
-        CONF_UNIT_SYSTEM_METRIC: TEMP_CELSIUS,
-        ATTR_METRIC_CONVERSION: lambda val: temp_convert(
-            val, TEMP_FAHRENHEIT, TEMP_CELSIUS
-        ),
-        ATTR_IS_METRIC_CHECK: True,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_PRESSURE_SURFACE_LEVEL,
-        ATTR_NAME: "Pressure (Surface Level)",
-        CONF_UNIT_SYSTEM_IMPERIAL: PRESSURE_INHG,
-        CONF_UNIT_SYSTEM_METRIC: PRESSURE_HPA,
-        ATTR_METRIC_CONVERSION: lambda val: pressure_convert(
+
+@dataclass
+class ClimaCellSensorMetadata:
+    """Metadata about an individual ClimaCell sensor."""
+
+    field: str
+    name: str
+    unit_imperial: str | None = None
+    unit_metric: str | None = None
+    metric_conversion: Callable[[float], float] | float = 1.0
+    is_metric_check: bool | None = None
+    device_class: str | None = None
+    value_map: IntEnum | None = None
+
+    def __post_init__(self) -> None:
+        """Post initialization."""
+        units = (self.unit_imperial, self.unit_metric)
+        if any(u is not None for u in units) and any(u is None for u in units):
+            raise RuntimeError(
+                "`unit_imperial` and `unit_metric` both need to be None or both need "
+                "to be defined."
+            )
+
+
+CC_SENSOR_TYPES = (
+    ClimaCellSensorMetadata(
+        CC_ATTR_FEELS_LIKE,
+        "Feels Like",
+        unit_imperial=TEMP_FAHRENHEIT,
+        unit_metric=TEMP_CELSIUS,
+        metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
+        is_metric_check=True,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_DEW_POINT,
+        "Dew Point",
+        unit_imperial=TEMP_FAHRENHEIT,
+        unit_metric=TEMP_CELSIUS,
+        metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
+        is_metric_check=True,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_PRESSURE_SURFACE_LEVEL,
+        "Pressure (Surface Level)",
+        unit_imperial=PRESSURE_INHG,
+        unit_metric=PRESSURE_HPA,
+        metric_conversion=lambda val: pressure_convert(
             val, PRESSURE_INHG, PRESSURE_HPA
         ),
-        ATTR_IS_METRIC_CHECK: True,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_SOLAR_GHI,
-        ATTR_NAME: "Global Horizontal Irradiance",
-        CONF_UNIT_SYSTEM_IMPERIAL: IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
-        CONF_UNIT_SYSTEM_METRIC: IRRADIATION_WATTS_PER_SQUARE_METER,
-        ATTR_METRIC_CONVERSION: 3.15459,
-        ATTR_IS_METRIC_CHECK: True,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_CLOUD_BASE,
-        ATTR_NAME: "Cloud Base",
-        CONF_UNIT_SYSTEM_IMPERIAL: LENGTH_MILES,
-        CONF_UNIT_SYSTEM_METRIC: LENGTH_KILOMETERS,
-        ATTR_METRIC_CONVERSION: lambda val: distance_convert(
+        is_metric_check=True,
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_SOLAR_GHI,
+        "Global Horizontal Irradiance",
+        unit_imperial=IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
+        unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
+        metric_conversion=3.15459,
+        is_metric_check=True,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_CLOUD_BASE,
+        "Cloud Base",
+        unit_imperial=LENGTH_MILES,
+        unit_metric=LENGTH_KILOMETERS,
+        metric_conversion=lambda val: distance_convert(
             val, LENGTH_MILES, LENGTH_KILOMETERS
         ),
-        ATTR_IS_METRIC_CHECK: True,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_CLOUD_CEILING,
-        ATTR_NAME: "Cloud Ceiling",
-        CONF_UNIT_SYSTEM_IMPERIAL: LENGTH_MILES,
-        CONF_UNIT_SYSTEM_METRIC: LENGTH_KILOMETERS,
-        ATTR_METRIC_CONVERSION: lambda val: distance_convert(
+        is_metric_check=True,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_CLOUD_CEILING,
+        "Cloud Ceiling",
+        unit_imperial=LENGTH_MILES,
+        unit_metric=LENGTH_KILOMETERS,
+        metric_conversion=lambda val: distance_convert(
             val, LENGTH_MILES, LENGTH_KILOMETERS
         ),
-        ATTR_IS_METRIC_CHECK: True,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_CLOUD_COVER,
-        ATTR_NAME: "Cloud Cover",
-        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_WIND_GUST,
-        ATTR_NAME: "Wind Gust",
-        CONF_UNIT_SYSTEM_IMPERIAL: SPEED_MILES_PER_HOUR,
-        CONF_UNIT_SYSTEM_METRIC: SPEED_METERS_PER_SECOND,
-        ATTR_METRIC_CONVERSION: lambda val: distance_convert(
-            val, LENGTH_MILES, LENGTH_METERS
-        )
+        is_metric_check=True,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_CLOUD_COVER,
+        "Cloud Cover",
+        unit_imperial=PERCENTAGE,
+        unit_metric=PERCENTAGE,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_WIND_GUST,
+        "Wind Gust",
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        unit_metric=SPEED_METERS_PER_SECOND,
+        metric_conversion=lambda val: distance_convert(val, LENGTH_MILES, LENGTH_METERS)
         / 3600,
-        ATTR_IS_METRIC_CHECK: True,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_PRECIPITATION_TYPE,
-        ATTR_NAME: "Precipitation Type",
-        ATTR_VALUE_MAP: PrecipitationType,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_OZONE,
-        ATTR_NAME: "Ozone",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_PARTICULATE_MATTER_25,
-        ATTR_NAME: "Particulate Matter < 2.5 μm",
-        CONF_UNIT_SYSTEM_IMPERIAL: CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
-        CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
-        ATTR_IS_METRIC_CHECK: True,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_PARTICULATE_MATTER_10,
-        ATTR_NAME: "Particulate Matter < 10 μm",
-        CONF_UNIT_SYSTEM_IMPERIAL: CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
-        CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
-        ATTR_IS_METRIC_CHECK: True,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_NITROGEN_DIOXIDE,
-        ATTR_NAME: "Nitrogen Dioxide",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_CARBON_MONOXIDE,
-        ATTR_NAME: "Carbon Monoxide",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_SULFUR_DIOXIDE,
-        ATTR_NAME: "Sulfur Dioxide",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-    },
-    {ATTR_FIELD: CC_ATTR_EPA_AQI, ATTR_NAME: "US EPA Air Quality Index"},
-    {
-        ATTR_FIELD: CC_ATTR_EPA_PRIMARY_POLLUTANT,
-        ATTR_NAME: "US EPA Primary Pollutant",
-        ATTR_VALUE_MAP: PrimaryPollutantType,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_EPA_HEALTH_CONCERN,
-        ATTR_NAME: "US EPA Health Concern",
-        ATTR_VALUE_MAP: HealthConcernType,
-    },
-    {ATTR_FIELD: CC_ATTR_CHINA_AQI, ATTR_NAME: "China MEP Air Quality Index"},
-    {
-        ATTR_FIELD: CC_ATTR_CHINA_PRIMARY_POLLUTANT,
-        ATTR_NAME: "China MEP Primary Pollutant",
-        ATTR_VALUE_MAP: PrimaryPollutantType,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_CHINA_HEALTH_CONCERN,
-        ATTR_NAME: "China MEP Health Concern",
-        ATTR_VALUE_MAP: HealthConcernType,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_POLLEN_TREE,
-        ATTR_NAME: "Tree Pollen Index",
-        ATTR_VALUE_MAP: PollenIndex,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_POLLEN_WEED,
-        ATTR_NAME: "Weed Pollen Index",
-        ATTR_VALUE_MAP: PollenIndex,
-    },
-    {
-        ATTR_FIELD: CC_ATTR_POLLEN_GRASS,
-        ATTR_NAME: "Grass Pollen Index",
-        ATTR_VALUE_MAP: PollenIndex,
-    },
-    {ATTR_FIELD: CC_ATTR_FIRE_INDEX, ATTR_NAME: "Fire Index"},
-]
+        is_metric_check=True,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_PRECIPITATION_TYPE,
+        "Precipitation Type",
+        value_map=PrecipitationType,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_OZONE,
+        "Ozone",
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_PARTICULATE_MATTER_25,
+        "Particulate Matter < 2.5 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        metric_conversion=3.2808399 ** 3,
+        is_metric_check=True,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_PARTICULATE_MATTER_10,
+        "Particulate Matter < 10 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        metric_conversion=3.2808399 ** 3,
+        is_metric_check=True,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_NITROGEN_DIOXIDE,
+        "Nitrogen Dioxide",
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_CARBON_MONOXIDE,
+        "Carbon Monoxide",
+        unit_imperial=CONCENTRATION_PARTS_PER_MILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=DEVICE_CLASS_CO,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_SULFUR_DIOXIDE,
+        "Sulfur Dioxide",
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+    ClimaCellSensorMetadata(CC_ATTR_EPA_AQI, "US EPA Air Quality Index"),
+    ClimaCellSensorMetadata(
+        CC_ATTR_EPA_PRIMARY_POLLUTANT,
+        "US EPA Primary Pollutant",
+        value_map=PrimaryPollutantType,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_EPA_HEALTH_CONCERN,
+        "US EPA Health Concern",
+        value_map=HealthConcernType,
+    ),
+    ClimaCellSensorMetadata(CC_ATTR_CHINA_AQI, "China MEP Air Quality Index"),
+    ClimaCellSensorMetadata(
+        CC_ATTR_CHINA_PRIMARY_POLLUTANT,
+        "China MEP Primary Pollutant",
+        value_map=PrimaryPollutantType,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_CHINA_HEALTH_CONCERN,
+        "China MEP Health Concern",
+        value_map=HealthConcernType,
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_POLLEN_TREE, "Tree Pollen Index", value_map=PollenIndex
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_POLLEN_WEED, "Weed Pollen Index", value_map=PollenIndex
+    ),
+    ClimaCellSensorMetadata(
+        CC_ATTR_POLLEN_GRASS, "Grass Pollen Index", value_map=PollenIndex
+    ),
+    ClimaCellSensorMetadata(CC_ATTR_FIRE_INDEX, "Fire Index"),
+)
 
 # V3 constants
 CONDITIONS_V3 = {
@@ -377,73 +388,68 @@ CC_V3_ATTR_POLLEN_WEED = "pollen_weed"
 CC_V3_ATTR_POLLEN_GRASS = "pollen_grass"
 CC_V3_ATTR_FIRE_INDEX = "fire_index"
 
-CC_V3_SENSOR_TYPES = [
-    {
-        ATTR_FIELD: CC_V3_ATTR_OZONE,
-        ATTR_NAME: "Ozone",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_PARTICULATE_MATTER_25,
-        ATTR_NAME: "Particulate Matter < 2.5 μm",
-        CONF_UNIT_SYSTEM_IMPERIAL: "μg/ft³",
-        CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
-        ATTR_IS_METRIC_CHECK: False,
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_PARTICULATE_MATTER_10,
-        ATTR_NAME: "Particulate Matter < 10 μm",
-        CONF_UNIT_SYSTEM_IMPERIAL: "μg/ft³",
-        CONF_UNIT_SYSTEM_METRIC: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_METRIC_CONVERSION: 3.2808399 ** 3,
-        ATTR_IS_METRIC_CHECK: False,
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_NITROGEN_DIOXIDE,
-        ATTR_NAME: "Nitrogen Dioxide",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_CARBON_MONOXIDE,
-        ATTR_NAME: "Carbon Monoxide",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO,
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_SULFUR_DIOXIDE,
-        ATTR_NAME: "Sulfur Dioxide",
-        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
-    },
-    {ATTR_FIELD: CC_V3_ATTR_EPA_AQI, ATTR_NAME: "US EPA Air Quality Index"},
-    {
-        ATTR_FIELD: CC_V3_ATTR_EPA_PRIMARY_POLLUTANT,
-        ATTR_NAME: "US EPA Primary Pollutant",
-    },
-    {ATTR_FIELD: CC_V3_ATTR_EPA_HEALTH_CONCERN, ATTR_NAME: "US EPA Health Concern"},
-    {ATTR_FIELD: CC_V3_ATTR_CHINA_AQI, ATTR_NAME: "China MEP Air Quality Index"},
-    {
-        ATTR_FIELD: CC_V3_ATTR_CHINA_PRIMARY_POLLUTANT,
-        ATTR_NAME: "China MEP Primary Pollutant",
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_CHINA_HEALTH_CONCERN,
-        ATTR_NAME: "China MEP Health Concern",
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_POLLEN_TREE,
-        ATTR_NAME: "Tree Pollen Index",
-        ATTR_VALUE_MAP: V3PollenIndex,
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_POLLEN_WEED,
-        ATTR_NAME: "Weed Pollen Index",
-        ATTR_VALUE_MAP: V3PollenIndex,
-    },
-    {
-        ATTR_FIELD: CC_V3_ATTR_POLLEN_GRASS,
-        ATTR_NAME: "Grass Pollen Index",
-        ATTR_VALUE_MAP: V3PollenIndex,
-    },
-    {ATTR_FIELD: CC_V3_ATTR_FIRE_INDEX, ATTR_NAME: "Fire Index"},
-]
+CC_V3_SENSOR_TYPES = (
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_OZONE,
+        "Ozone",
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_PARTICULATE_MATTER_25,
+        "Particulate Matter < 2.5 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        metric_conversion=3.2808399 ** 3,
+        is_metric_check=False,
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_PARTICULATE_MATTER_10,
+        "Particulate Matter < 10 μm",
+        unit_imperial=CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+        unit_metric=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        metric_conversion=3.2808399 ** 3,
+        is_metric_check=False,
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_NITROGEN_DIOXIDE,
+        "Nitrogen Dioxide",
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_CARBON_MONOXIDE,
+        "Carbon Monoxide",
+        unit_imperial=CONCENTRATION_PARTS_PER_MILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=DEVICE_CLASS_CO,
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_SULFUR_DIOXIDE,
+        "Sulfur Dioxide",
+        unit_imperial=CONCENTRATION_PARTS_PER_BILLION,
+        unit_metric=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+    ClimaCellSensorMetadata(CC_V3_ATTR_EPA_AQI, "US EPA Air Quality Index"),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_EPA_PRIMARY_POLLUTANT, "US EPA Primary Pollutant"
+    ),
+    ClimaCellSensorMetadata(CC_V3_ATTR_EPA_HEALTH_CONCERN, "US EPA Health Concern"),
+    ClimaCellSensorMetadata(CC_V3_ATTR_CHINA_AQI, "China MEP Air Quality Index"),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_CHINA_PRIMARY_POLLUTANT, "China MEP Primary Pollutant"
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_CHINA_HEALTH_CONCERN, "China MEP Health Concern"
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_POLLEN_TREE, "Tree Pollen Index", value_map=V3PollenIndex
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_POLLEN_WEED, "Weed Pollen Index", value_map=V3PollenIndex
+    ),
+    ClimaCellSensorMetadata(
+        CC_V3_ATTR_POLLEN_GRASS, "Grass Pollen Index", value_map=V3PollenIndex
+    ),
+    ClimaCellSensorMetadata(CC_V3_ATTR_FIRE_INDEX, "Fire Index"),
+)

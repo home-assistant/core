@@ -1207,6 +1207,36 @@ async def test_homekit_start_in_accessory_mode(
     assert homekit.status == STATUS_RUNNING
 
 
+async def test_homekit_start_in_accessory_mode_unsupported_entity(
+    hass, hk_driver, mock_zeroconf, device_reg, caplog
+):
+    """Test HomeKit start method in accessory mode with an unsupported entity."""
+    entry = await async_init_integration(hass)
+
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = []
+    homekit.driver = hk_driver
+    homekit.driver.accessory = Accessory(hk_driver, "any")
+
+    hass.states.async_set("notsupported.demo", "on")
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ) as mock_setup_msg, patch(
+        "pyhap.accessory_driver.AccessoryDriver.async_start"
+    ) as hk_driver_start:
+        await homekit.async_start()
+
+    await hass.async_block_till_done()
+    assert not mock_add_acc.called
+    assert not mock_setup_msg.called
+    assert not hk_driver_start.called
+    assert homekit.status == STATUS_WAIT
+    assert "entity not supported" in caplog.text
+
+
 async def test_homekit_start_in_accessory_mode_missing_entity(
     hass, hk_driver, mock_zeroconf, device_reg, caplog
 ):

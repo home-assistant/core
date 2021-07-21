@@ -356,31 +356,28 @@ async def async_setup_entry(
 class BrSensor(SensorEntity):
     """Representation of an Buienradar sensor."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_should_poll = False
+
     def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-        self.client_name = client_name
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._attr_name = f"{client_name} {SENSOR_TYPES[sensor_type][0]}"
+        self._attr_icon = SENSOR_TYPES[sensor_type][2]
         self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._entity_picture = None
-        self._attribution = None
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._measured = None
-        self._stationname = None
-        self._unique_id = self.uid(coordinates)
+        self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], sensor_type
+        )
+        self._attr_device_class = SENSOR_TYPES[sensor_type][3]
 
         # All continuous sensors should be forced to be updated
-        self._force_update = self.type != SYMBOL and not self.type.startswith(CONDITION)
-
-        if self.type.startswith(PRECIPITATION_FORECAST):
-            self._timeframe = None
-
-    def uid(self, coordinates):
-        """Generate a unique id using coordinates and sensor type."""
-        # The combination of the location, name and sensor type is unique
-        return "{:2.6f}{:2.6f}{}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], self.type
+        self._attr_force_update = sensor_type != SYMBOL and not sensor_type.startswith(
+            CONDITION
         )
+
+        if sensor_type.startswith(PRECIPITATION_FORECAST):
+            self._timeframe = None
 
     @callback
     def data_updated(self, data):
@@ -398,8 +395,6 @@ class BrSensor(SensorEntity):
         if self._measured == data.get(MEASURED):
             return False
 
-        self._attribution = data.get(ATTRIBUTION)
-        self._stationname = data.get(STATIONNAME)
         self._measured = data.get(MEASURED)
 
         if (
@@ -442,18 +437,18 @@ class BrSensor(SensorEntity):
 
                     img = condition.get(IMAGE)
 
-                    if new_state != self._state or img != self._entity_picture:
-                        self._state = new_state
-                        self._entity_picture = img
+                    if new_state != self.state or img != self.entity_picture:
+                        self._attr_state = new_state
+                        self._attr_entity_picture = img
                         return True
                 return False
 
             if self.type.startswith(WINDSPEED):
                 # hass wants windspeeds in km/h not m/s, so convert:
                 try:
-                    self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
-                    if self._state is not None:
-                        self._state = round(self._state * 3.6, 1)
+                    self._attr_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    if self.state is not None:
+                        self._attr_state = round(self.state * 3.6, 1)
                     return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
@@ -461,7 +456,7 @@ class BrSensor(SensorEntity):
 
             # update all other sensors
             try:
-                self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                self._attr_state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
@@ -484,9 +479,9 @@ class BrSensor(SensorEntity):
 
                 img = condition.get(IMAGE)
 
-                if new_state != self._state or img != self._entity_picture:
-                    self._state = new_state
-                    self._entity_picture = img
+                if new_state != self.state or img != self.entity_picture:
+                    self._attr_state = new_state
+                    self._attr_entity_picture = img
                     return True
 
             return False
@@ -495,99 +490,40 @@ class BrSensor(SensorEntity):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
-            self._state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
+            self._attr_state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
             return True
 
         if self.type in [WINDSPEED, WINDGUST]:
             # hass wants windspeeds in km/h not m/s, so convert:
-            self._state = data.get(self.type)
-            if self._state is not None:
-                self._state = round(data.get(self.type) * 3.6, 1)
+            self._attr_state = data.get(self.type)
+            if self.state is not None:
+                self._attr_state = round(data.get(self.type) * 3.6, 1)
             return True
 
         if self.type == VISIBILITY:
             # hass wants visibility in km (not m), so convert:
-            self._state = data.get(self.type)
-            if self._state is not None:
-                self._state = round(self._state / 1000, 1)
+            self._attr_state = data.get(self.type)
+            if self.state is not None:
+                self._attr_state = round(self.state / 1000, 1)
             return True
 
         # update all other sensors
-        self._state = data.get(self.type)
-        return True
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return self._attribution
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def entity_picture(self):
-        """Weather symbol if type is symbol."""
-        return self._entity_picture
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
+        self._attr_state = data.get(self.type)
         if self.type.startswith(PRECIPITATION_FORECAST):
-            result = {ATTR_ATTRIBUTION: self._attribution}
+            result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
             if self._timeframe is not None:
                 result[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
 
-            return result
+            self._attr_extra_state_attributes = result
 
         result = {
-            ATTR_ATTRIBUTION: self._attribution,
-            SENSOR_TYPES["stationname"][0]: self._stationname,
+            ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
+            SENSOR_TYPES["stationname"][0]: data.get(STATIONNAME),
         }
         if self._measured is not None:
             # convert datetime (Europe/Amsterdam) into local datetime
             local_dt = dt_util.as_local(self._measured)
             result[MEASURED_LABEL] = local_dt.strftime("%c")
 
-        return result
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SENSOR_TYPES[self.type][3]
-
-    @property
-    def icon(self):
-        """Return possible sensor specific icon."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def force_update(self):
-        """Return true for continuous sensors, false for discrete sensors."""
-        return self._force_update
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
+        self._attr_extra_state_attributes = result
+        return True

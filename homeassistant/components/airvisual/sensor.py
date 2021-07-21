@@ -37,6 +37,9 @@ ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
 ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
 
+DEVICE_CLASS_POLLUTANT_LABEL = "airvisual__pollutant_label"
+DEVICE_CLASS_POLLUTANT_LEVEL = "airvisual__pollutant_level"
+
 SENSOR_KIND_AQI = "air_quality_index"
 SENSOR_KIND_BATTERY_LEVEL = "battery_level"
 SENSOR_KIND_CO2 = "carbon_dioxide"
@@ -105,22 +108,27 @@ NODE_PRO_SENSORS = [
     ),
 ]
 
-POLLUTANT_LABELS = {
-    "co": "Carbon Monoxide",
-    "n2": "Nitrogen Dioxide",
-    "o3": "Ozone",
-    "p1": "PM10",
-    "p2": "PM2.5",
-    "s2": "Sulfur Dioxide",
-}
+STATE_POLLUTANT_LABEL_CO = "co"
+STATE_POLLUTANT_LABEL_N2 = "n2"
+STATE_POLLUTANT_LABEL_O3 = "o3"
+STATE_POLLUTANT_LABEL_P1 = "p1"
+STATE_POLLUTANT_LABEL_P2 = "p2"
+STATE_POLLUTANT_LABEL_S2 = "s2"
+
+STATE_POLLUTANT_LEVEL_GOOD = "good"
+STATE_POLLUTANT_LEVEL_MODERATE = "moderate"
+STATE_POLLUTANT_LEVEL_UNHEALTHY_SENSITIVE = "unhealthy_sensitive"
+STATE_POLLUTANT_LEVEL_UNHEALTHY = "unhealthy"
+STATE_POLLUTANT_LEVEL_VERY_UNHEALTHY = "very_unhealthy"
+STATE_POLLUTANT_LEVEL_HAZARDOUS = "hazardous"
 
 POLLUTANT_LEVELS = {
-    (0, 50): ("Good", "mdi:emoticon-excited"),
-    (51, 100): ("Moderate", "mdi:emoticon-happy"),
-    (101, 150): ("Unhealthy for sensitive groups", "mdi:emoticon-neutral"),
-    (151, 200): ("Unhealthy", "mdi:emoticon-sad"),
-    (201, 300): ("Very unhealthy", "mdi:emoticon-dead"),
-    (301, 1000): ("Hazardous", "mdi:biohazard"),
+    (0, 50): (STATE_POLLUTANT_LEVEL_GOOD, "mdi:emoticon-excited"),
+    (51, 100): (STATE_POLLUTANT_LEVEL_MODERATE, "mdi:emoticon-happy"),
+    (101, 150): (STATE_POLLUTANT_LEVEL_UNHEALTHY_SENSITIVE, "mdi:emoticon-neutral"),
+    (151, 200): (STATE_POLLUTANT_LEVEL_UNHEALTHY, "mdi:emoticon-sad"),
+    (201, 300): (STATE_POLLUTANT_LEVEL_VERY_UNHEALTHY, "mdi:emoticon-dead"),
+    (301, 1000): (STATE_POLLUTANT_LEVEL_HAZARDOUS, "mdi:biohazard"),
 }
 
 POLLUTANT_UNITS = {
@@ -170,6 +178,10 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
+        if kind == SENSOR_KIND_LEVEL:
+            self._attr_device_class = DEVICE_CLASS_POLLUTANT_LEVEL
+        elif kind == SENSOR_KIND_POLLUTANT:
+            self._attr_device_class = DEVICE_CLASS_POLLUTANT_LABEL
         self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: config_entry.data.get(CONF_CITY),
@@ -209,7 +221,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             self._attr_state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._attr_state = POLLUTANT_LABELS[symbol]
+            self._attr_state = symbol
             self._attr_extra_state_attributes.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,

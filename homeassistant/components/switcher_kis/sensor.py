@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from aioswitcher.consts import WAITING_TEXT
-from aioswitcher.devices import SwitcherV2Device
+from aioswitcher.device import DeviceCategory
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
@@ -12,13 +11,17 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.const import ELECTRICAL_CURRENT_AMPERE, POWER_WATT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ELECTRIC_CURRENT_AMPERE, POWER_WATT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_DEVICE, DOMAIN, SIGNAL_SWITCHER_DEVICE_UPDATE
+from . import SwitcherDeviceWrapper
+from .const import SIGNAL_DEVICE_ADD
 
 
 @dataclass
@@ -31,7 +34,6 @@ class AttributeDescription:
     device_class: str | None = None
     state_class: str | None = None
     default_enabled: bool = True
-    default_value: float | int | str | None = None
 
 
 POWER_SENSORS = {
@@ -40,14 +42,12 @@ POWER_SENSORS = {
         unit=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
-        default_value=0,
     ),
     "electric_current": AttributeDescription(
         name="Electric Current",
-        unit=ELECTRICAL_CURRENT_AMPERE,
+        unit=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
-        default_value=0.0,
     ),
 }
 
@@ -55,77 +55,73 @@ TIME_SENSORS = {
     "remaining_time": AttributeDescription(
         name="Remaining Time",
         icon="mdi:av-timer",
-        default_value="00:00:00",
     ),
     "auto_off_set": AttributeDescription(
         name="Auto Shutdown",
         icon="mdi:progress-clock",
         default_enabled=False,
-        default_value="00:00:00",
     ),
 }
 
-SENSORS = {**POWER_SENSORS, **TIME_SENSORS}
+POWER_PLUG_SENSORS = POWER_SENSORS
+WATER_HEATER_SENSORS = {**POWER_SENSORS, **TIME_SENSORS}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType,
 ) -> None:
     """Set up Switcher sensor from config entry."""
-    device_data = hass.data[DOMAIN][DATA_DEVICE]
 
-    async_add_entities(
-        SwitcherSensorEntity(device_data, attribute, sensor)
-        for attribute, sensor in SENSORS.items()
+    @callback
+    def async_add_sensors(wrapper: SwitcherDeviceWrapper) -> None:
+        """Add sensors from Switcher device."""
+        if wrapper.data.device_type.category == DeviceCategory.POWER_PLUG:
+            async_add_entities(
+                SwitcherSensorEntity(wrapper, attribute, info)
+                for attribute, info in POWER_PLUG_SENSORS.items()
+            )
+        elif wrapper.data.device_type.category == DeviceCategory.WATER_HEATER:
+            async_add_entities(
+                SwitcherSensorEntity(wrapper, attribute, info)
+                for attribute, info in WATER_HEATER_SENSORS.items()
+            )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_sensors)
     )
 
 
-class SwitcherSensorEntity(SensorEntity):
+class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
     """Representation of a Switcher sensor entity."""
 
     def __init__(
         self,
-        device_data: SwitcherV2Device,
+        wrapper: SwitcherDeviceWrapper,
         attribute: str,
         description: AttributeDescription,
     ) -> None:
         """Initialize the entity."""
-        self._device_data = device_data
+        super().__init__(wrapper)
+        self.wrapper = wrapper
         self.attribute = attribute
-        self.description = description
 
         # Entity class attributes
-        self._attr_name = f"{self._device_data.name} {self.description.name}"
-        self._attr_icon = self.description.icon
-        self._attr_unit_of_measurement = self.description.unit
-        self._attr_device_class = self.description.device_class
-        self._attr_entity_registry_enabled_default = self.description.default_enabled
-        self._attr_should_poll = False
+        self._attr_name = f"{wrapper.name} {description.name}"
+        self._attr_icon = description.icon
+        self._attr_unit_of_measurement = description.unit
+        self._attr_device_class = description.device_class
+        self._attr_entity_registry_enabled_default = description.default_enabled
 
-        self._attr_unique_id = f"{self._device_data.device_id}-{self._device_data.mac_addr}-{self.attribute}"
+        self._attr_unique_id = f"{wrapper.device_id}-{wrapper.mac_address}-{attribute}"
+        self._attr_device_info = {
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, wrapper.mac_address)
+            }
+        }
 
     @property
     def state(self) -> StateType:
         """Return value of sensor."""
-        value = getattr(self._device_data, self.attribute)
-        if value and value is not WAITING_TEXT:
-            return value
-
-        return self.description.default_value
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data
-            )
-        )
-
-    @callback
-    def async_update_data(self, device_data: SwitcherV2Device) -> None:
-        """Update the entity data."""
-        self._device_data = device_data
-        self.async_write_ha_state()
+        return getattr(self.wrapper.data, self.attribute)  # type: ignore[no-any-return]

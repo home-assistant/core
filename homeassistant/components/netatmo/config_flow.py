@@ -191,7 +191,7 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
 def fix_coordinates(user_input):
     """Fix coordinates if they don't comply with the Netatmo API."""
     # Ensure coordinates have acceptable length for the Netatmo API
-    for coordinate in [CONF_LAT_NE, CONF_LAT_SW, CONF_LON_NE, CONF_LON_SW]:
+    for coordinate in (CONF_LAT_NE, CONF_LAT_SW, CONF_LON_NE, CONF_LON_SW):
         if len(str(user_input[coordinate]).split(".")[1]) < 7:
             user_input[coordinate] = user_input[coordinate] + 0.0000001
 

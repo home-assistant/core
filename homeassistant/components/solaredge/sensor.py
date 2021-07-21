@@ -72,31 +72,31 @@ class SolarEdgeSensorFactory:
             ],
         ] = {"site_details": (SolarEdgeDetailsSensor, details)}
 
-        for key in [
+        for key in (
             "lifetime_energy",
             "energy_this_year",
             "energy_this_month",
             "energy_today",
             "current_power",
-        ]:
+        ):
             self.services[key] = (SolarEdgeOverviewSensor, overview)
 
-        for key in ["meters", "sensors", "gateways", "batteries", "inverters"]:
+        for key in ("meters", "sensors", "gateways", "batteries", "inverters"):
             self.services[key] = (SolarEdgeInventorySensor, inventory)
 
-        for key in ["power_consumption", "solar_power", "grid_power", "storage_power"]:
+        for key in ("power_consumption", "solar_power", "grid_power", "storage_power"):
             self.services[key] = (SolarEdgePowerFlowSensor, flow)
 
-        for key in ["storage_level"]:
+        for key in ("storage_level",):
             self.services[key] = (SolarEdgeStorageLevelSensor, flow)
 
-        for key in [
+        for key in (
             "purchased_power",
             "production_power",
             "feedin_power",
             "consumption_power",
             "selfconsumption_power",
-        ]:
+        ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
     def create_sensor(self, sensor_type: SolarEdgeSensor) -> SolarEdgeSensor:
