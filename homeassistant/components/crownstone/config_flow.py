@@ -1,7 +1,7 @@
 """Flow handler for Crownstone."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
@@ -12,26 +12,21 @@ import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigEntry,
-    ConfigFlow,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_ID, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
-    CONF_MANUAL_PATH,
-    CONF_REFRESH_LIST,
-    CONF_USB,
     CONF_USB_MANUAL_PATH,
     CONF_USB_PATH,
     CONF_USE_CROWNSTONE_USB,
+    DOMAIN,
+    DONT_USE_USB,
+    MANUAL_PATH,
+    REFRESH_LIST,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 from .helpers import get_serial_by_id
 
 
@@ -39,7 +34,6 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Crownstone."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -51,8 +45,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the flow."""
-        self.cloud = cast(CrownstoneCloud, None)
-        self.login_info = cast("dict[str, Any]", None)
+        self.login_info: dict[str, Any] = {}
         self.usb_path: str | None = None
         self.existing_entry_id: str | None = None
 
@@ -69,7 +62,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        self.cloud = CrownstoneCloud(
+        cloud = CrownstoneCloud(
             email=user_input[CONF_EMAIL],
             password=user_input[CONF_PASSWORD],
             clientsession=aiohttp_client.async_get_clientsession(self.hass),
@@ -77,46 +70,32 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             # get all cloud data for this account
-            await self.cloud.async_initialize()
-
-            # set unique id and abort if already configured
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
-            self._abort_if_unique_id_configured()
-
-            # start next flow
-            self.login_info = user_input
-            return await self.async_step_usb()
+            await cloud.async_initialize()
         except CrownstoneAuthenticationError as auth_error:
             if auth_error.type == "LOGIN_FAILED":
                 errors["base"] = "invalid_auth"
-            if auth_error.type == "LOGIN_FAILED_EMAIL_NOT_VERIFIED":
+            elif auth_error.type == "LOGIN_FAILED_EMAIL_NOT_VERIFIED":
                 errors["base"] = "account_not_verified"
         except CrownstoneUnknownError:
             errors["base"] = "unknown_error"
 
-        # show form again, with the error
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
-            ),
-            errors=errors,
-        )
-
-    async def async_step_usb(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Select whether a Crownstone USB should be used."""
-        if user_input is None:
+        # show form again, with the errors
+        if errors:
             return self.async_show_form(
-                step_id="usb",
-                data_schema=vol.Schema({vol.Optional(CONF_USB, default=False): bool}),
+                step_id="user",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+                ),
+                errors=errors,
             )
 
-        if user_input[CONF_USB]:
-            return await self.async_step_usb_config()
+        # set unique id and abort if already configured
+        await self.async_set_unique_id(user_input[CONF_EMAIL])
+        self._abort_if_unique_id_configured()
 
-        return self.async_finish_flow()
+        # start next flow
+        self.login_info = user_input
+        return await self.async_step_usb_config()
 
     async def async_step_usb_config(
         self, user_input: dict[str, Any] | None = None
@@ -125,14 +104,15 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         list_of_ports = await self.hass.async_add_executor_job(
             serial.tools.list_ports.comports
         )
-        ports_as_string = [
-            f"{p.device}"
-            + f" - {p.product}"
-            + f" - {format(p.vid, 'x')}:{format(p.pid, 'x')}"
-            for p in list_of_ports
-        ]
-        ports_as_string.append(CONF_REFRESH_LIST)
-        ports_as_string.append(CONF_MANUAL_PATH)
+        ports_as_string = [DONT_USE_USB]
+        for port in list_of_ports:
+            ports_as_string.append(
+                f"{port.device}"
+                + f" - {port.product}"
+                + f" - {format(port.vid, 'x')}:{format(port.pid, 'x')}"
+            )
+        ports_as_string.append(MANUAL_PATH)
+        ports_as_string.append(REFRESH_LIST)
 
         if user_input is not None:
             if user_input.get(CONF_UNIQUE_ID) is not None:
@@ -142,16 +122,22 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if user_input.get(CONF_USB_PATH) is not None:
                 selection = user_input[CONF_USB_PATH]
 
+                # no usb should be used, finish flow
+                if selection == DONT_USE_USB:
+                    return self.async_finish_flow()
+
                 # show a form with text field to enter manual path
-                if selection == CONF_MANUAL_PATH:
+                if selection == MANUAL_PATH:
                     return await self.async_step_usb_manual_config()
 
                 # user can refresh the list while in this step
-                if selection != CONF_REFRESH_LIST:
+                if selection != REFRESH_LIST:
                     # get serial-id info
-                    port: ListPortInfo = list_of_ports[ports_as_string.index(selection)]
+                    selected_port: ListPortInfo = list_of_ports[
+                        (ports_as_string.index(selection) - 1)
+                    ]
                     self.usb_path = await self.hass.async_add_executor_job(
-                        get_serial_by_id, port.device
+                        get_serial_by_id, selected_port.device
                     )
 
                     # check if we are updating an existing entry
@@ -177,10 +163,8 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Required(CONF_USB_MANUAL_PATH): str}),
             )
 
-        # get a /dev/serial/by-id symlink if available
-        self.usb_path = await self.hass.async_add_executor_job(
-            get_serial_by_id, user_input[CONF_USB_MANUAL_PATH]
-        )
+        # save usb path
+        self.usb_path = user_input[CONF_USB_MANUAL_PATH]
 
         # check if we are updating an existing entry
         if self.existing_entry_id is not None:

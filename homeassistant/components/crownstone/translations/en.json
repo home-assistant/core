@@ -11,17 +11,11 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "usb": {
-                "data": {
-                    "usb": "Set up a Crownstone USB dongle"
-                },
-                "title": "Crownstone USB dongle"
-            },
             "usb_config": {
                 "data": {
                     "usb_path": "USB Device Path"
                 },
-                "description": "Select the serial port of the Crownstone USB dongle.\n\nLook for a device with VID 10c4 and PID ea60.",
+                "description": "Select the serial port of the Crownstone USB dongle, or select 'Don't use USB' if you don't want to setup a USB dongle.\n\nLook for a device with VID 10c4 and PID ea60.",
                 "title": "Crownstone USB dongle configuration"
             },
             "usb_manual_config": {

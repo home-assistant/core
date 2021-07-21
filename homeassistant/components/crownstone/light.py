@@ -51,20 +51,20 @@ async def async_setup_entry(
     manager: CrownstoneEntryManager = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    crownstone_usb_sphere_id = None
+    usb_sphere_id = None
 
     # Look for a Crownstone USB and what sphere it belongs to
     for sphere in manager.cloud.cloud_data:
         for crownstone in sphere.crownstones:
             if crownstone.type == CROWNSTONE_USB:
-                crownstone_usb_sphere_id = sphere.cloud_id
+                usb_sphere_id = sphere.cloud_id
 
     # Add Crownstone entities that support switching/dimming
     for sphere in manager.cloud.cloud_data:
         for crownstone in sphere.crownstones:
             if crownstone.type in CROWNSTONE_INCLUDE_TYPES:
                 # Crownstone can communicate with Crownstone USB
-                if sphere.cloud_id == crownstone_usb_sphere_id:
+                if sphere.cloud_id == usb_sphere_id and hasattr(manager, "uart"):
                     entities.append(CrownstoneEntity(crownstone, manager.uart))
                 # Crownstone can't communicate with Crownstone USB
                 else:

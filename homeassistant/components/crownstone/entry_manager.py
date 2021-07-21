@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
@@ -35,13 +35,14 @@ _LOGGER = logging.getLogger(__name__)
 class CrownstoneEntryManager:
     """Manage a Crownstone config entry."""
 
+    uart: CrownstoneUart
+    cloud: CrownstoneCloud
+    sse: CrownstoneSSEAsync
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the hub."""
         self.hass = hass
         self.config_entry = config_entry
-        self.uart = cast(CrownstoneUart, None)
-        self.cloud = cast(CrownstoneCloud, None)
-        self.sse = cast(CrownstoneSSEAsync, None)
         self.listeners: dict[str, Any] = {}
 
     async def async_setup(self) -> bool:
@@ -116,7 +117,7 @@ class CrownstoneEntryManager:
                         self.hass,
                         f"Setup of Crownstone USB dongle was unsuccessful on port {port}.\n \
                         Crownstone Cloud will be used to switch Crownstones.\n \
-                        Please check if your port is correct and setup the USB again from integration options.",
+                        Please check if your port is correct and set up the USB again from integration options.",
                         "Crownstone",
                         "crownstone_usb_dongle_setup",
                     )
@@ -142,15 +143,15 @@ class CrownstoneEntryManager:
 
     async def async_unload(self) -> bool:
         """Unload the current config entry."""
-        # stop services
-        if self.uart is not None:
-            self.uart.stop()
-        if self.sse is not None:
-            self.sse.close_client()
-
         # authentication failed
         if self.cloud.cloud_data is None:
             return True
+
+        # stop services
+        if hasattr(self, "uart"):
+            self.uart.stop()
+        if hasattr(self, "sse"):
+            self.sse.close_client()
 
         # Unsubscribe from listeners
         for sse_unsub in self.listeners[SSE]:
@@ -163,15 +164,18 @@ class CrownstoneEntryManager:
             self.config_entry, PLATFORMS
         )
 
+        if unload_ok:
+            self.hass.data[DOMAIN].pop(self.config_entry.entry_id)
+
         return unload_ok
 
     @callback
     def on_close(self, event: Event) -> None:
         """Close SSE client and uart bridge."""
         _LOGGER.debug(event.data)
-        if self.sse is not None:
+        if hasattr(self, "sse"):
             self.sse.close_client()
-        if self.uart is not None:
+        if hasattr(self, "uart"):
             self.uart.stop()
 
 

@@ -12,12 +12,12 @@ from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant import data_entry_flow
 from homeassistant.components.crownstone.const import (
-    CONF_MANUAL_PATH,
-    CONF_USB,
     CONF_USB_MANUAL_PATH,
     CONF_USB_PATH,
     CONF_USE_CROWNSTONE_USB,
     DOMAIN,
+    DONT_USE_USB,
+    MANUAL_PATH,
 )
 from homeassistant.const import CONF_EMAIL, CONF_ID, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
@@ -167,11 +167,11 @@ async def test_successful_login_no_usb(hass: HomeAssistant):
     result = await start_user_flow(hass, get_mocked_crownstone_cloud())
     # should show usb form
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "usb"
+    assert result["step_id"] == "usb_config"
 
     # don't setup USB dongle, create entry
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_USB: False}
+        result["flow_id"], user_input={CONF_USB_PATH: DONT_USE_USB}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == entry_without_usb
@@ -194,13 +194,6 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
     )
     result = await start_user_flow(hass, get_mocked_crownstone_cloud())
     # should show usb form
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "usb"
-
-    # should show usb config form
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_USB: True}
-    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "usb_config"
 
@@ -298,13 +291,7 @@ async def test_update_usb_config(serial_mock: MagicMock, hass: HomeAssistant):
 @patch(
     "serial.tools.list_ports.comports", MagicMock(return_value=[get_mocked_com_port()])
 )
-@patch(
-    "homeassistant.components.crownstone.config_flow.get_serial_by_id",
-    return_value="/dev/crownstone-usb",
-)
-async def test_successful_login_with_manual_usb_path(
-    serial_mock: MagicMock, hass: HomeAssistant
-):
+async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
     entry_with_manual_usb = create_mocked_entry_conf(
         unique_id="example@homeassistant.com",
@@ -315,18 +302,11 @@ async def test_successful_login_with_manual_usb_path(
     result = await start_user_flow(hass, get_mocked_crownstone_cloud())
     # should show usb form
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "usb"
-
-    # should show usb config form
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_USB: True}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "usb_config"
 
     # select manual from the list
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_USB_PATH: CONF_MANUAL_PATH}
+        result["flow_id"], user_input={CONF_USB_PATH: MANUAL_PATH}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -340,7 +320,6 @@ async def test_successful_login_with_manual_usb_path(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == entry_with_manual_usb
-    assert serial_mock.call_count == 1
 
     # test update existing usb call for manual path
     ret_val = {
@@ -357,7 +336,7 @@ async def test_successful_login_with_manual_usb_path(
         data={CONF_UNIQUE_ID: "example@homeassistant.com"},
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_USB_PATH: CONF_MANUAL_PATH}
+        result["flow_id"], user_input={CONF_USB_PATH: MANUAL_PATH}
     )
     with update_usb as update_usb_mock:
         result = await hass.config_entries.flow.async_configure(

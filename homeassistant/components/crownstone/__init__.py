@@ -23,5 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    manager: CrownstoneEntryManager = hass.data[DOMAIN].pop(entry.entry_id)
-    return await manager.async_unload()
+    unload_ok: bool = await hass.data[DOMAIN][entry.entry_id].async_unload()
+    if len(hass.data[DOMAIN]) == 0:
+        hass.data.pop(DOMAIN)
+    return unload_ok
