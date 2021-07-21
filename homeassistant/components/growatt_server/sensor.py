@@ -555,7 +555,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PLANT_ID, default=DEFAULT_PLANT_ID): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
+        vol.Required(CONF_URL, default=DEFAULT_URL): cv.string,
     }
 )
 

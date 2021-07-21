@@ -5,7 +5,13 @@ DEFAULT_PLANT_ID = "0"
 
 DEFAULT_NAME = "Growatt"
 
-DEFAULT_URL = "https://server.growatt.com/"
+SERVER_URLS = [
+    "https://server.growatt.com/",
+    "https://server-us.growatt.com",
+    "http://server.smten.com/",
+]
+
+DEFAULT_URL = SERVER_URLS[0]
 
 DOMAIN = "growatt_server"
 
