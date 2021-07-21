@@ -84,8 +84,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     else:
         return
 
-    for feature in SELECTOR_TYPES.items():
-        selector = SELECTOR_TYPES[feature]
+    for feature, selector in SELECTOR_TYPES.items():
         entities.append(
             entity_class(
                 f"{config_entry.title} {selector.name}",
