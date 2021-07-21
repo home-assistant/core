@@ -1,7 +1,7 @@
 """The airvisual component."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from datetime import timedelta
 from math import ceil
 from typing import Any
@@ -362,7 +362,9 @@ class AirVisualEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
+            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
+        }
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

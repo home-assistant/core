@@ -22,6 +22,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -301,7 +302,7 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         self._kind = kind
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return {
             "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
