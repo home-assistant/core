@@ -41,6 +41,8 @@ class KNXTestKit:
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
             self.xknx = args[0]
+            # disable rate limiter for tests (before StateUpdater starts)
+            self.xknx.rate_limit = 0
             return DEFAULT
 
         with patch(
@@ -50,8 +52,6 @@ class KNXTestKit:
         ):
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
             await self.hass.async_block_till_done()
-            # disable rate limiter for tests
-            self.xknx.rate_limit = 0
 
     ########################
     # Telegram counter tests
@@ -101,13 +101,13 @@ class KNXTestKit:
                 f" {group_address} - {payload}"
             )
 
-        assert (
-            str(telegram.destination_address) == group_address
-        ), f"Group address mismatch in {telegram} - Expected: {group_address}"
-
         assert isinstance(
             telegram.payload, apci_type
         ), f"APCI type mismatch in {telegram} - Expected: {apci_type.__name__}"
+
+        assert (
+            str(telegram.destination_address) == group_address
+        ), f"Group address mismatch in {telegram} - Expected: {group_address}"
 
         if payload is not None:
             assert (
@@ -134,6 +134,13 @@ class KNXTestKit:
     # Incoming telegrams
     ####################
 
+    @staticmethod
+    def _payload_value(payload: int | tuple[int, ...]) -> DPTArray | DPTBinary:
+        """Prepare payload value for GroupValueWrite or GroupValueResponse."""
+        if isinstance(payload, int):
+            return DPTBinary(payload)
+        return DPTArray(payload)
+
     async def _receive_telegram(self, group_address: str, payload: APCI) -> None:
         """Inject incoming KNX telegram."""
         self.xknx.telegrams.put_nowait(
@@ -145,13 +152,6 @@ class KNXTestKit:
             )
         )
         await self.hass.async_block_till_done()
-
-    @staticmethod
-    def _payload_value(payload: int | tuple[int, ...]) -> DPTArray | DPTBinary:
-        """Prepare payload value for GroupValueWrite or GroupValueResponse."""
-        if isinstance(payload, int):
-            return DPTBinary(payload)
-        return DPTArray(payload)
 
     async def receive_read(
         self,
