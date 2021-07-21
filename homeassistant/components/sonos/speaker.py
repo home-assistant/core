@@ -802,25 +802,56 @@ class SonosSpeaker:
         """Restore snapshots for all the speakers."""
 
         def _restore_groups(
-            speakers: list[SonosSpeaker], with_group: bool
+            speakers: set[SonosSpeaker], with_group: bool
         ) -> list[list[SonosSpeaker]]:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
-                if speaker.media.playback_status == SONOS_STATE_PLAYING:
+                if (
+                    speaker.media.playback_status == SONOS_STATE_PLAYING
+                    and "Pause" in speaker.soco.available_actions
+                ):
                     speaker.soco.pause()
 
             groups = []
+            speakers_to_unjoin = set()
 
             if with_group:
-                # Unjoin slaves first to prevent inheritance of queues
+                # Unjoin speakers not contained in the snapshot
+                for speaker in speakers:
+                    if speaker.sonos_group == speaker.snapshot_group:
+                        continue
+
+                    remainder = set(speaker.sonos_group)
+                    remainder.remove(speaker)
+                    desired_group = set(speaker.snapshot_group)
+
+                    if remainder and desired_group.isdisjoint(remainder):
+                        # Unjoining this speaker will preserve the remainder of the existing group
+                        speaker.unjoin()
+                    else:
+                        orphans = [
+                            s
+                            for s in speaker.sonos_group
+                            if s not in speaker.snapshot_group
+                        ]
+                        speakers_to_unjoin.update(orphans)
+
+                # Unjoin slaves to prevent inheritance of queues
                 for speaker in [s for s in speakers if not s.is_coordinator]:
                     if speaker.snapshot_group != speaker.sonos_group:
-                        speaker.unjoin()
+                        speakers_to_unjoin.add(speaker)
+
+                for speaker in speakers_to_unjoin:
+                    speaker.unjoin()
 
                 # Bring back the original group topology
                 for speaker in (s for s in speakers if s.snapshot_group):
                     assert speaker.snapshot_group is not None
-                    if speaker.snapshot_group[0] == speaker:
+                    if (
+                        speaker.snapshot_group[0] == speaker
+                        and speaker.snapshot_group != speaker.sonos_group
+                        and speaker.snapshot_group != [speaker]
+                    ):
                         speaker.join(speaker.snapshot_group)
                         groups.append(speaker.snapshot_group.copy())
 
