@@ -76,41 +76,45 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         super().__init__(account, vehicle)
 
         self._attribute = attribute
-        self._name = f"{self._vehicle.name} {self._attribute}"
-        self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
+        self._attr_name = f"{vehicle.name} {attribute}"
+        self._attr_unique_id = f"{vehicle.vin}-{attribute}"
         self._sensor_name = sensor_name
-        self._device_class = device_class
-        self._icon = icon
-        self._state = None
+        self._attr_device_class = device_class
+        self._attr_icon = icon
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of the binary sensor."""
-        return self._unique_id
+    def update(self):
+        """Read new state data from the library."""
+        vehicle_state = self._vehicle.state
 
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
+        # device class opening: On means open, Off means closed
+        if self._attribute == "lids":
+            _LOGGER.debug("Status of lid: %s", vehicle_state.all_lids_closed)
+            self._attr_state = not vehicle_state.all_lids_closed
+        if self._attribute == "windows":
+            self._attr_state = not vehicle_state.all_windows_closed
+        # device class lock: On means unlocked, Off means locked
+        if self._attribute == "door_lock_state":
+            # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
+            self._attr_state = vehicle_state.door_lock_state not in [
+                LockState.LOCKED,
+                LockState.SECURED,
+            ]
+        # device class light: On means light detected, Off means no light
+        if self._attribute == "lights_parking":
+            self._attr_state = vehicle_state.are_parking_lights_on
+        # device class problem: On means problem detected, Off means no problem
+        if self._attribute == "condition_based_services":
+            self._attr_state = not vehicle_state.are_all_cbs_ok
+        if self._attribute == "check_control_messages":
+            self._attr_state = vehicle_state.has_check_control_messages
+        # device class power: On means power detected, Off means no power
+        if self._attribute == "charging_status":
+            self._attr_state = vehicle_state.charging_status in [ChargingState.CHARGING]
+        # device class plug: On means device is plugged in,
+        #                    Off means device is unplugged
+        if self._attribute == "connection_status":
+            self._attr_state = vehicle_state.connection_status == "CONNECTED"
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the class of the binary sensor."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return the state of the binary sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
         result = self._attrs.copy()
 
@@ -144,40 +148,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         elif self._attribute == "connection_status":
             result["connection_status"] = vehicle_state.connection_status
 
-        return sorted(result.items())
-
-    def update(self):
-        """Read new state data from the library."""
-        vehicle_state = self._vehicle.state
-
-        # device class opening: On means open, Off means closed
-        if self._attribute == "lids":
-            _LOGGER.debug("Status of lid: %s", vehicle_state.all_lids_closed)
-            self._state = not vehicle_state.all_lids_closed
-        if self._attribute == "windows":
-            self._state = not vehicle_state.all_windows_closed
-        # device class lock: On means unlocked, Off means locked
-        if self._attribute == "door_lock_state":
-            # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
-            self._state = vehicle_state.door_lock_state not in [
-                LockState.LOCKED,
-                LockState.SECURED,
-            ]
-        # device class light: On means light detected, Off means no light
-        if self._attribute == "lights_parking":
-            self._state = vehicle_state.are_parking_lights_on
-        # device class problem: On means problem detected, Off means no problem
-        if self._attribute == "condition_based_services":
-            self._state = not vehicle_state.are_all_cbs_ok
-        if self._attribute == "check_control_messages":
-            self._state = vehicle_state.has_check_control_messages
-        # device class power: On means power detected, Off means no power
-        if self._attribute == "charging_status":
-            self._state = vehicle_state.charging_status in [ChargingState.CHARGING]
-        # device class plug: On means device is plugged in,
-        #                    Off means device is unplugged
-        if self._attribute == "connection_status":
-            self._state = vehicle_state.connection_status == "CONNECTED"
+        self._attr_extra_state_attributes = sorted(result.items())
 
     def _format_cbs_report(self, report):
         result = {}
