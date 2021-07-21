@@ -68,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if model not in [MODEL_AIRHUMIDIFIER_CA4]:
         return
 
-    for feature in NUMBER_TYPES:
+    for feature in NUMBER_TYPES.items():
         number = NUMBER_TYPES[feature]
         entities.append(
             XiaomiAirHumidifierNumber(
