@@ -77,7 +77,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "2021-02-15 09:10:32+00:00"
+    assert state.state == "2021-02-15T09:10:32+00:00"
 
     state = hass.states.get("sensor.flipr_myfliprid_red_ox")
     assert state
