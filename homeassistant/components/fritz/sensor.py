@@ -12,6 +12,7 @@ from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntit
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
+    DATA_RATE_KILOBITS_PER_SECOND,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
 )
@@ -113,14 +114,14 @@ SENSOR_DATA = {
         state_provider=_retrieve_kb_s_received_state,
     ),
     "max_kb_s_sent": SensorData(
-        name="Max kB/s sent",
-        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        name="Max kbit/s sent",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_max_kb_s_sent_state,
     ),
     "max_kb_s_received": SensorData(
-        name="Max kB/s received",
-        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        name="Max kbit/s received",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_max_kb_s_received_state,
     ),
