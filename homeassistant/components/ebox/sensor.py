@@ -154,19 +154,13 @@ class EBoxSensor(SensorEntity):
 
     def __init__(self, ebox_data, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = name
         self.type = sensor_type
         metadata = SENSOR_TYPES[sensor_type]
-        self._name = metadata.name
+        self._attr_name = f"{name} {metadata.name}"
         self._attr_unit_of_measurement = metadata.unit_of_measurement
         self._attr_icon = metadata.icon
         self.ebox_data = ebox_data
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
