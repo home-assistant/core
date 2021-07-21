@@ -104,6 +104,7 @@ async def test_service_climate_update(hass, mock_pymodbus):
                 CONF_TARGET_TEMP: 117,
                 CONF_ADDRESS: 117,
                 CONF_SLAVE: 10,
+                CONF_SCAN_INTERVAL: 0,
             }
         ]
     }
@@ -176,6 +177,7 @@ test_value.attributes = {ATTR_TEMPERATURE: 37}
                     CONF_NAME: CLIMATE_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
+                    CONF_SCAN_INTERVAL: 0,
                 }
             ],
         },
