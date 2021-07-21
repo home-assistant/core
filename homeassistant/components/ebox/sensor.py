@@ -158,8 +158,8 @@ class EBoxSensor(SensorEntity):
         self.type = sensor_type
         metadata = SENSOR_TYPES[sensor_type]
         self._name = metadata.name
-        self._unit_of_measurement = metadata.unit_of_measurement
-        self._icon = metadata.icon
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self._attr_icon = metadata.icon
         self.ebox_data = ebox_data
         self._state = None
 
@@ -172,16 +172,6 @@ class EBoxSensor(SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
 
     async def async_update(self):
         """Get the latest data from EBox and update the state."""
