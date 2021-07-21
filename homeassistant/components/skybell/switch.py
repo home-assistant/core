@@ -55,7 +55,7 @@ class SkybellSwitch(SkybellDevice, SwitchEntity):
         super().__init__(device)
         self._switch_type = switch_type
         self._name = "{} {}".format(
-            self._device.name, SWITCH_TYPES[self._switch_type][0]
+            self._device.name, SWITCH_TYPES[self._switch_type].name
         )
 
     @property
