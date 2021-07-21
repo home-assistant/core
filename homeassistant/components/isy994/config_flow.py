@@ -159,11 +159,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(isy_mac)
         if not existing_entry:
             return
-        import pprint
-
-        pprint.pprint(existing_entry)
-        pprint.pprint(existing_entry.data)
-
         parsed_url = urlparse(existing_entry.data[CONF_HOST])
         if parsed_url.hostname != ip_address:
             new_netloc = ip_address
