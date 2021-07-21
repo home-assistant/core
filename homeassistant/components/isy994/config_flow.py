@@ -218,12 +218,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if url.endswith(ISY_URL_POSTFIX):
             url = url[: -len(ISY_URL_POSTFIX)]
 
+        port = HTTP_PORT
         if parsed_url.port:
             port = parsed_url.port
         elif parsed_url.scheme == SCHEME_HTTPS:
             port = HTTPS_PORT
-        else:
-            port = HTTP_PORT
 
         await self._async_set_unique_id_or_update(mac, parsed_url.hostname, port)
 
