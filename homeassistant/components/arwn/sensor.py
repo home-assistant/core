@@ -7,6 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_TEMPERATURE,
+    PRECIPITATION_INCHES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -44,7 +45,11 @@ def discover_sensors(topic, payload):
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
             return ArwnSensor(
-                topic, "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+                topic,
+                "Rain Since Midnight",
+                "since_midnight",
+                PRECIPITATION_INCHES,
+                "mdi:water",
             )
         return (
             ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
