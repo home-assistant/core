@@ -174,7 +174,7 @@ async def test_config_sensor(hass, mock_modbus):
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_STRUCTURE: "",
             },
-            "Error in sensor test_sensor. The `structure` field can not be empty if the parameter `data_type` is set to the `custom`",
+            "Error in sensor test_sensor. The `structure` field can not be empty",
         ),
         (
             {
