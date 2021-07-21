@@ -31,8 +31,8 @@ class IPSensor(SensorEntity):
         """Initialize the sensor."""
         self._attr_name = name
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
-        self._attr_state = self.hass.loop.run_until_complete(
-            async_get_source_ip(self.hass, target_ip=PUBLIC_TARGET_IP)
+        self._attr_state = await async_get_source_ip(
+            self.hass, target_ip=PUBLIC_TARGET_IP
         )

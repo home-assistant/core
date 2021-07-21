@@ -223,9 +223,7 @@ async def _async_register_hass_zc_service(
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
 
-    host_ip = hass.loop.run_until_complete(
-        async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
-    )
+    host_ip = await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
 
     try:
         host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
