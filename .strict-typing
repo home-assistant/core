@@ -9,7 +9,6 @@ homeassistant.components.actiontec.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
-homeassistant.components.airvisual.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*

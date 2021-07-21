@@ -254,7 +254,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         _standardize_node_pro_config_entry(hass, config_entry)
 
-        async def async_update_data():
+        async def async_update_data() -> dict[str, Any]:
             """Get new data from the API."""
             try:
                 async with NodeSamba(
