@@ -72,10 +72,9 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         """Initialize a binary sensor for a Skybell device."""
         super().__init__(device)
         self._sensor_type = sensor_type
-        self._name = "{} {}".format(
-            self._device.name, SENSOR_TYPES[self._sensor_type].name
-        )
-        self._device_class = SENSOR_TYPES[self._sensor_type].device_class
+        self._meta = SENSOR_TYPES[self._sensor_type]
+        self._name = f"{self._device.name} {self._meta.name}"
+        self._device_class = self._meta.device_class
         self._event = {}
         self._state = None
 
@@ -107,7 +106,7 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         """Get the latest data and updates the state."""
         super().update()
 
-        event = self._device.latest(SENSOR_TYPES[self._sensor_type].event)
+        event = self._device.latest(self._meta.event)
 
         self._state = bool(event and event.get("id") != self._event.get("id"))
 
