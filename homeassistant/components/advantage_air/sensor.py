@@ -140,7 +140,8 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
         self._attr_name = f'{self._zone["name"]} Temperature'
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
 
-    @property
-    def state(self):
-        """Return the current value of the measured temperature."""
-        return self._zone["measuredTemp"]
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
+        self._attr_state = self._zone["measuredTemp"]
+        self.async_write_ha_state()
