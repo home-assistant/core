@@ -13,6 +13,7 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
+import slugify as unicode_slug
 import xmltodict
 
 from homeassistant.components.switch import SwitchEntity
@@ -247,7 +248,7 @@ def wifi_entities_list(
         )
         if network_info:
             ssid = network_info["NewSSID"]
-            if ssid in networks.values():
+            if unicode_slug.slugify(ssid, lowercase=False) in networks.values():
                 networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
             else:
                 networks[i] = ssid
