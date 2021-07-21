@@ -126,7 +126,7 @@ class EDL21:
 
     def __init__(self, hass, config, async_add_entities) -> None:
         """Initialize an EDL21 object."""
-        self._registered_obis = set()
+        self._registered_obis: set[()] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._name = config[CONF_NAME]
