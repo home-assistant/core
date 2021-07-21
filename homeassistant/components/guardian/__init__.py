@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Awaitable, Callable
+from collections.abc import MutableMapping
+from typing import Any, Awaitable, cast
 
 from aioguardian import Client
 
@@ -142,9 +143,9 @@ class PairedSensorManager:
 
         self._paired_uids.add(uid)
 
-        def get_paired_sensor_status_coro() -> Callable[..., Awaitable]:
+        def get_paired_sensor_status_coro() -> Awaitable:
             """Define a corotoune for the coordinator to use when getting status."""
-            return self._client.sensor.paired_sensor_status(uid)
+            return cast(Awaitable, self._client.sensor.paired_sensor_status(uid))
 
         coordinator = self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
             API_SENSOR_PAIRED_SENSOR_STATUS
@@ -152,7 +153,7 @@ class PairedSensorManager:
             self._hass,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
-            api_coro=get_paired_sensor_status_coro(),
+            api_coro=get_paired_sensor_status_coro,
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
@@ -222,7 +223,9 @@ class GuardianEntity(CoordinatorEntity):
         """Initialize."""
         self._attr_device_class = device_class
         self._attr_device_info = {"manufacturer": "Elexa"}
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
+        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
+            ATTR_ATTRIBUTION: "Data provided by Elexa"
+        }
         self._attr_icon = icon
         self._attr_name = name
         self._entry = entry
@@ -245,8 +248,8 @@ class PairedSensorEntity(GuardianEntity):
         coordinator: DataUpdateCoordinator,
         kind: str,
         name: str,
-        device_class: str,
-        icon: str,
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)

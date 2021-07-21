@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 from datetime import timedelta
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -49,4 +49,4 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                 resp = await self._api_coro()
             except GuardianError as err:
                 raise UpdateFailed(err) from err
-        return resp["data"]
+        return cast(dict[str, Any], resp["data"])
