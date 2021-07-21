@@ -12,15 +12,19 @@ import homeassistant.helpers.config_validation as cv
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 
-class SensorEntryClass(NamedTuple):
-    """Metadata for sensor types."""
+class SkybellSwitchMetadata(NamedTuple):
+    """Metadata for an individual Skybell switch."""
 
     name: str
 
 
 SWITCH_TYPES = {
-    "do_not_disturb": SensorEntryClass("Do Not Disturb"),
-    "motion_sensor": SensorEntryClass("Motion Sensor"),
+    "do_not_disturb": SkybellSwitchMetadata(
+        "Do Not Disturb",
+    ),
+    "motion_sensor": SkybellSwitchMetadata(
+        "Motion Sensor",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
