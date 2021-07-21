@@ -1,5 +1,8 @@
 """Binary sensor support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import NamedTuple
 
 import voluptuous as vol
 
@@ -16,11 +19,21 @@ from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-# Sensor types: Name, device_class, event
-SENSOR_TYPES = {
-    "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
-    "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
-}
+
+class SensorTypeClass(NamedTuple):
+    """Metadata for sensor types."""
+
+    name: str
+    # Sensor types: Name, device_class, event
+    button: list[str]
+    motion: list[str]
+
+
+SENSOR_TYPES = SensorTypeClass(
+    "sensor type",
+    button=["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
+    motion=["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

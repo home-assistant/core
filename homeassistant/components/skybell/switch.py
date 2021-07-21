@@ -1,4 +1,8 @@
 """Switch support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
+from typing import NamedTuple
+
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -8,10 +12,22 @@ import homeassistant.helpers.config_validation as cv
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 # Switch types: Name
-SWITCH_TYPES = {
-    "do_not_disturb": ["Do Not Disturb"],
-    "motion_sensor": ["Motion Sensor"],
-}
+
+
+class SensorTypeClass(NamedTuple):
+    """Metadata for sensor types."""
+
+    name: str
+    # Sensor types: Name, device_class, event
+    do_not_disturb: list[str]
+    motion_sensor: list[str]
+
+
+SWITCH_TYPES = SensorTypeClass(
+    "sensor type",
+    do_not_disturb=["Do Not Disturb"],
+    motion_sensor=["Motion Sensor"],
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
