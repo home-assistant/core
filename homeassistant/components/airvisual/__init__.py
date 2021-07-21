@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping, MutableMapping
 from datetime import timedelta
 from math import ceil
-from typing import Any
+from typing import Any, cast
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -216,7 +216,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 )
 
             try:
-                return await api_coro
+                data = await api_coro
+                return cast(dict[str, Any], data)
             except (InvalidKeyError, KeyExpiredError) as ex:
                 raise ConfigEntryAuthFailed from ex
             except AirVisualError as err:
@@ -260,7 +261,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 async with NodeSamba(
                     config_entry.data[CONF_IP_ADDRESS], config_entry.data[CONF_PASSWORD]
                 ) as node:
-                    return await node.async_get_latest_measurements()
+                    data = await node.async_get_latest_measurements()
+                    return cast(dict[str, Any], data)
             except NodeProError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
