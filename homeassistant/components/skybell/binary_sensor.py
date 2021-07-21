@@ -20,20 +20,22 @@ from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-class SensorTypeClass(NamedTuple):
+class SensorEntryClass(NamedTuple):
     """Metadata for sensor types."""
 
     name: str
-    # Sensor types: Name, device_class, event
-    button: list[str]
-    motion: list[str]
+    device_class: str
+    event: str
 
 
-SENSOR_TYPES = SensorTypeClass(
-    "sensor type",
-    button=["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
-    motion=["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
-)
+SENSOR_TYPES = {
+    "button": SensorEntryClass(
+        "Button", device_class=DEVICE_CLASS_OCCUPANCY, event="device:sensor:button"
+    ),
+    "motion": SensorEntryClass(
+        "Motion", device_class=DEVICE_CLASS_MOTION, event="device:sensor:motion"
+    ),
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
