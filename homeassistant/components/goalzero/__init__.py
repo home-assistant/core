@@ -1,4 +1,6 @@
 """The Goal Zero Yeti integration."""
+from __future__ import annotations
+
 import logging
 
 from goalzero import Yeti, exceptions
@@ -7,10 +9,20 @@ from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSO
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -41,7 +53,7 @@ async def async_setup_entry(hass, entry):
     try:
         await api.init_connect()
     except exceptions.ConnectError as ex:
-        _LOGGER.warning("Failed to connect: %s", ex)
+        _LOGGER.warning("Failed to connect to device %s", ex)
         raise ConfigEntryNotReady from ex
 
     async def async_update_data():
@@ -88,23 +100,19 @@ class YetiEntity(CoordinatorEntity):
         self.api = api
         self._name = name
         self._server_unique_id = server_unique_id
-        self._device_class = None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
-        info = {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "manufacturer": "Goal Zero",
-            "name": self._name,
-        }
+        model = sw_version = None
         if self.api.sysdata:
-            info["model"] = self.api.sysdata["model"]
+            model = self.api.sysdata[ATTR_MODEL]
         if self.api.data:
-            info["sw_version"] = self.api.data["firmwareVersion"]
-        return info
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class
+            sw_version = self.api.data["firmwareVersion"]
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
+            ATTR_MANUFACTURER: "Goal Zero",
+            ATTR_NAME: self._name,
+            ATTR_MODEL: str(model),
+            ATTR_SW_VERSION: str(sw_version),
+        }
