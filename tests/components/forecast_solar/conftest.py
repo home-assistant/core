@@ -58,7 +58,7 @@ def mock_forecast_solar() -> Generator[None, MagicMock, None]:
         forecast_solar = forecast_solar_mock.return_value
         now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
-        estimate = MagicMock(spec_set=models.Estimate)
+        estimate = MagicMock(spec=models.Estimate)
         estimate.now.return_value = now
         estimate.timezone = "Europe/Amsterdam"
         estimate.energy_production_today = 100000
