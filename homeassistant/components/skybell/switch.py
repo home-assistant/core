@@ -58,9 +58,8 @@ class SkybellSwitch(SkybellDevice, SwitchEntity):
         """Initialize a light for a Skybell device."""
         super().__init__(device)
         self._switch_type = switch_type
-        self._name = "{} {}".format(
-            self._device.name, SWITCH_TYPES[self._switch_type].name
-        )
+        metadata = SWITCH_TYPES[self._switch_type]
+        self._name = f"{self._device.name} {metadata.name}"
 
     @property
     def name(self):
