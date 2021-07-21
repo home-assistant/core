@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast, NamedTuple
+from typing import NamedTuple, cast
 
 import pyatmo
 
