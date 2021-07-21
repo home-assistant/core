@@ -3,8 +3,11 @@ Support for EBox.
 
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 """
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 
 from pyebox import EboxClient
 from pyebox.client import PyEboxError
@@ -34,25 +37,46 @@ REQUESTS_TIMEOUT = 15
 SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-SENSOR_TYPES = {
-    "usage": ["Usage", PERCENTAGE, "mdi:percent"],
-    "balance": ["Balance", PRICE, "mdi:cash-usd"],
-    "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
-    "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],
-    "before_offpeak_download": [
+
+class SensorTypesClass(NamedTuple):
+    """Metadata for sensor types."""
+
+    name: str
+    usage: list[str]
+    balance: list[str]
+    limit: list[str]
+    days_left: list[str]
+    before_offpeak_download: list[str]
+    before_offpeak_upload: list[str]
+    before_offpeak_total: list[str]
+    offpeak_download: list[str]
+    offpeak_upload: list[str]
+    offpeak_total: list[str]
+    download: list[str]
+    upload: list[str]
+    total: list[str]
+
+
+SENSOR_TYPES = SensorTypesClass(
+    "sensor types",
+    usage=["Usage", PERCENTAGE, "mdi:percent"],
+    balance=["Balance", PRICE, "mdi:cash-usd"],
+    limit=["Data limit", DATA_GIGABITS, "mdi:download"],
+    days_left=["Days left", TIME_DAYS, "mdi:calendar-today"],
+    before_offpeak_download=[
         "Download before offpeak",
         DATA_GIGABITS,
         "mdi:download",
     ],
-    "before_offpeak_upload": ["Upload before offpeak", DATA_GIGABITS, "mdi:upload"],
-    "before_offpeak_total": ["Total before offpeak", DATA_GIGABITS, "mdi:download"],
-    "offpeak_download": ["Offpeak download", DATA_GIGABITS, "mdi:download"],
-    "offpeak_upload": ["Offpeak Upload", DATA_GIGABITS, "mdi:upload"],
-    "offpeak_total": ["Offpeak Total", DATA_GIGABITS, "mdi:download"],
-    "download": ["Download", DATA_GIGABITS, "mdi:download"],
-    "upload": ["Upload", DATA_GIGABITS, "mdi:upload"],
-    "total": ["Total", DATA_GIGABITS, "mdi:download"],
-}
+    before_offpeak_upload=["Upload before offpeak", DATA_GIGABITS, "mdi:upload"],
+    before_offpeak_total=["Total before offpeak", DATA_GIGABITS, "mdi:download"],
+    offpeak_download=["Offpeak download", DATA_GIGABITS, "mdi:download"],
+    offpeak_upload=["Offpeak Upload", DATA_GIGABITS, "mdi:upload"],
+    offpeak_total=["Offpeak Total", DATA_GIGABITS, "mdi:download"],
+    download=["Download", DATA_GIGABITS, "mdi:download"],
+    upload=["Upload", DATA_GIGABITS, "mdi:upload"],
+    total=["Total", DATA_GIGABITS, "mdi:download"],
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
