@@ -25,36 +25,32 @@ from .const import DOMAIN, UPTIME_DEVIATION
 _LOGGER = logging.getLogger(__name__)
 
 
+def _uptime_calculation(seconds_uptime: float, last_value: str | None) -> str:
+    """Calculate uptime with deviation."""
+    delta_uptime = utcnow() - datetime.timedelta(seconds=seconds_uptime)
+
+    if (
+        not last_value
+        or abs(
+            (delta_uptime - datetime.datetime.fromisoformat(last_value)).total_seconds()
+        )
+        > UPTIME_DEVIATION
+    ):
+        return delta_uptime.replace(microsecond=0).isoformat()
+
+    return last_value
+
+
 def _retrieve_device_uptime_state(status: FritzStatus, last_value: str) -> str:
     """Return uptime from device."""
-    delta_uptime = utcnow() - datetime.timedelta(seconds=status.device_uptime)
-
-    if (
-        not last_value
-        or abs(
-            (delta_uptime - datetime.datetime.fromisoformat(last_value)).total_seconds()
-        )
-        > UPTIME_DEVIATION
-    ):
-        return delta_uptime.replace(microsecond=0).isoformat()
-
-    return last_value
+    return _uptime_calculation(status.device_uptime, last_value)
 
 
-def _retrieve_wan_uptime_state(status: FritzStatus, last_value: str | None) -> str:
-    """Return uptime from WAN (string)."""
-    delta_uptime = utcnow() - datetime.timedelta(seconds=status.wan_uptime)
-
-    if (
-        not last_value
-        or abs(
-            (delta_uptime - datetime.datetime.fromisoformat(last_value)).total_seconds()
-        )
-        > UPTIME_DEVIATION
-    ):
-        return delta_uptime.replace(microsecond=0).isoformat()
-
-    return last_value
+def _retrieve_connection_uptime_state(
+    status: FritzStatus, last_value: str | None
+) -> str:
+    """Return uptime from connection."""
+    return _uptime_calculation(status.connection_uptime, last_value)
 
 
 def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
@@ -115,10 +111,10 @@ SENSOR_DATA = {
         device_class=DEVICE_CLASS_TIMESTAMP,
         state_provider=_retrieve_device_uptime_state,
     ),
-    "wan_uptime": SensorData(
-        name="WAN Uptime",
+    "connection_uptime": SensorData(
+        name="Connection Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        state_provider=_retrieve_wan_uptime_state,
+        state_provider=_retrieve_connection_uptime_state,
     ),
     "kb_s_sent": SensorData(
         name="kB/s sent",
@@ -228,7 +224,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         )
 
         if self._sensor_data.get("last_reset") is True:
-            self._last_wan_value = _retrieve_wan_uptime_state(
+            self._last_wan_value = _retrieve_connection_uptime_state(
                 status, self._last_wan_value
             )
             self._attr_last_reset = datetime.datetime.strptime(
