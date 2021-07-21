@@ -142,6 +142,7 @@ COMMAND_MEDIA_SEEK_RELATIVE = f"{PREFIX_COMMANDS}mediaSeekRelative"
 COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
+COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 
@@ -1258,14 +1259,7 @@ class FanSpeedTrait(_Trait):
     """
 
     name = TRAIT_FANSPEED
-    commands = [COMMAND_FANSPEED]
-
-    speed_synonyms = {
-        fan.SPEED_OFF: ["stop", "off"],
-        fan.SPEED_LOW: ["slow", "low", "slowest", "lowest"],
-        fan.SPEED_MEDIUM: ["medium", "mid", "middle"],
-        fan.SPEED_HIGH: ["high", "max", "fast", "highest", "fastest", "maximum"],
-    }
+    commands = [COMMAND_FANSPEED, COMMAND_REVERSE]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1280,23 +1274,21 @@ class FanSpeedTrait(_Trait):
         """Return speed point and modes attributes for a sync request."""
         domain = self.state.domain
         speeds = []
-        reversible = False
+        result = {}
 
         if domain == fan.DOMAIN:
-            # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
-            modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
-            for mode in modes:
-                speed = {
-                    "speed_name": mode,
-                    "speed_values": [
-                        {"speed_synonym": self.speed_synonyms.get(mode), "lang": "en"}
-                    ],
-                }
-                speeds.append(speed)
             reversible = bool(
                 self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
                 & fan.SUPPORT_DIRECTION
             )
+
+            result.update(
+                {
+                    "reversible": reversible,
+                    "supportsFanSpeedPercent": True,
+                }
+            )
+
         elif domain == climate.DOMAIN:
             modes = self.state.attributes.get(climate.ATTR_FAN_MODES, [])
             for mode in modes:
@@ -1306,32 +1298,32 @@ class FanSpeedTrait(_Trait):
                 }
                 speeds.append(speed)
 
-        return {
-            "availableFanSpeeds": {"speeds": speeds, "ordered": True},
-            "reversible": reversible,
-            "supportsFanSpeedPercent": True,
-        }
+            result.update(
+                {
+                    "reversible": False,
+                    "availableFanSpeeds": {"speeds": speeds, "ordered": True},
+                }
+            )
+
+        return result
 
     def query_attributes(self):
         """Return speed point and modes query attributes."""
+
         attrs = self.state.attributes
         domain = self.state.domain
         response = {}
         if domain == climate.DOMAIN:
-            speed = attrs.get(climate.ATTR_FAN_MODE)
-            if speed is not None:
-                response["currentFanSpeedSetting"] = speed
+            speed = attrs.get(climate.ATTR_FAN_MODE) or "off"
+            response["currentFanSpeedSetting"] = speed
+
         if domain == fan.DOMAIN:
-            speed = attrs.get(fan.ATTR_SPEED)
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
-            if speed is not None:
-                response["on"] = speed != fan.SPEED_OFF
-                response["currentFanSpeedSetting"] = speed
-            if percent is not None:
-                response["currentFanSpeedPercent"] = percent
+            response["currentFanSpeedPercent"] = percent
+
         return response
 
-    async def execute(self, command, data, params, challenge):
+    async def execute_fanspeed(self, data, params):
         """Execute an SetFanSpeed command."""
         domain = self.state.domain
         if domain == climate.DOMAIN:
@@ -1345,24 +1337,42 @@ class FanSpeedTrait(_Trait):
                 blocking=True,
                 context=data.context,
             )
-        if domain == fan.DOMAIN:
-            service_params = {
-                ATTR_ENTITY_ID: self.state.entity_id,
-            }
-            if "fanSpeedPercent" in params:
-                service = fan.SERVICE_SET_PERCENTAGE
-                service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
-            else:
-                service = fan.SERVICE_SET_SPEED
-                service_params[fan.ATTR_SPEED] = params["fanSpeed"]
 
+        if domain == fan.DOMAIN:
             await self.hass.services.async_call(
                 fan.DOMAIN,
-                service,
-                service_params,
+                fan.SERVICE_SET_PERCENTAGE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    fan.ATTR_PERCENTAGE: params["fanSpeedPercent"],
+                },
                 blocking=True,
                 context=data.context,
             )
+
+    async def execute_reverse(self, data, params):
+        """Execute a Reverse command."""
+        domain = self.state.domain
+        if domain == fan.DOMAIN:
+            if self.state.attributes.get(fan.ATTR_DIRECTION) == fan.DIRECTION_FORWARD:
+                direction = fan.DIRECTION_REVERSE
+            else:
+                direction = fan.DIRECTION_FORWARD
+
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_DIRECTION,
+                {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_DIRECTION: direction},
+                blocking=True,
+                context=data.context,
+            )
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a smart home command."""
+        if command == COMMAND_FANSPEED:
+            await self.execute_fanspeed(data, params)
+        elif command == COMMAND_REVERSE:
+            await self.execute_reverse(data, params)
 
 
 @register_trait
