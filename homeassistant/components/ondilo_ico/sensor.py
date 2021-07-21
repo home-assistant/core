@@ -30,7 +30,7 @@ class OndiloIOCSensorMetadata(NamedTuple):
     """Sensor metadata for an individual Ondilo IOC sensor."""
 
     name: str
-    unit_of_measurement: str
+    unit_of_measurement: str | None
     icon: str | None
     device_class: str | None
 
@@ -50,7 +50,7 @@ SENSOR_TYPES: dict[str, OndiloIOCSensorMetadata] = {
     ),
     "ph": OndiloIOCSensorMetadata(
         "pH",
-        unit_of_measurement="",
+        unit_of_measurement=None,
         icon="mdi:pool",
         device_class=None,
     ),
