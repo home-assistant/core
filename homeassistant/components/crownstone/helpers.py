@@ -27,3 +27,8 @@ def get_port(dev_path: str) -> str | None:
         return f"/dev/{os.path.basename(os.readlink(dev_path))}"
     except FileNotFoundError:
         return None
+
+
+def map_from_to(val: int, in_min: int, in_max: int, out_min: int, out_max: int) -> int:
+    """Map a value from a range to another."""
+    return int((val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)

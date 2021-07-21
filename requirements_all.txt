@@ -1090,9 +1090,6 @@ numato-gpio==0.10.0
 # homeassistant.components.trend
 numpy==1.21.1
 
-# homeassistant.components.crownstone
-numpy==1.21.1
-
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
 

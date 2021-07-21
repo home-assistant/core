@@ -52,7 +52,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the flow."""
         self.cloud = cast(CrownstoneCloud, None)
-        self.login_info = cast(dict[str, Any], None)
+        self.login_info = cast("dict[str, Any]", None)
         self.usb_path: str | None = None
         self.existing_entry_id: str | None = None
 

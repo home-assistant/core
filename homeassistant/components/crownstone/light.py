@@ -13,7 +13,6 @@ from crownstone_cloud.const import (
 )
 from crownstone_cloud.exceptions import CrownstoneAbilityError
 from crownstone_uart import CrownstoneUart
-import numpy
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,6 +34,7 @@ from .const import (
     SIG_UART_STATE_CHANGE,
 )
 from .devices import CrownstoneDevice
+from .helpers import map_from_to
 
 if TYPE_CHECKING:
     from .entry_manager import CrownstoneEntryManager
@@ -75,12 +75,12 @@ async def async_setup_entry(
 
 def crownstone_state_to_hass(value: int) -> int:
     """Crownstone 0..100 to hass 0..255."""
-    return int(numpy.interp(value, [0, 100], [0, 255]))
+    return map_from_to(value, 0, 100, 0, 255)
 
 
 def hass_to_crownstone_state(value: int) -> int:
     """Hass 0..255 to Crownstone 0..100."""
-    return int(numpy.interp(value, [0, 255], [0, 100]))
+    return map_from_to(value, 0, 255, 0, 100)
 
 
 class CrownstoneEntity(CrownstoneDevice, LightEntity):
