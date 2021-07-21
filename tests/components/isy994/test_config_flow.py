@@ -590,7 +590,10 @@ async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: f"http://{MOCK_HOSTNAME}:1443{ISY_URL_POSTFIX}"},
+        data={
+            CONF_USERNAME: "bob",
+            CONF_HOST: f"http://{MOCK_HOSTNAME}:1443{ISY_URL_POSTFIX}",
+        },
         unique_id=MOCK_UUID,
     )
     entry.add_to_hass(hass)
@@ -615,6 +618,7 @@ async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == f"http://1.2.3.4:1443{ISY_URL_POSTFIX}"
+    assert entry.data[CONF_USERNAME] == "bob"
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
