@@ -1,11 +1,9 @@
 """Support for LG webOS Smart TV."""
-import asyncio
 from contextlib import suppress
 import logging
 
-from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
+from aiopylgtv import PyLGTVPairException, WebOsClient
 import voluptuous as vol
-from websockets.exceptions import ConnectionClosed
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -35,6 +33,7 @@ from .const import (
     SERVICE_BUTTON,
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
+    WEBOSTV_EXCEPTIONS,
 )
 
 CUSTOMIZE_SCHEMA = vol.Schema(
@@ -182,15 +181,7 @@ async def async_update_options(hass, config_entry):
 
 async def async_connect(client):
     """Attempt a connection, but fail gracefully if tv is off for example."""
-    with suppress(
-        OSError,
-        ConnectionClosed,
-        ConnectionRefusedError,
-        asyncio.TimeoutError,
-        asyncio.CancelledError,
-        PyLGTVPairException,
-        PyLGTVCmdException,
-    ):
+    with suppress(WEBOSTV_EXCEPTIONS, PyLGTVPairException):
         await client.connect()
 
 
@@ -202,14 +193,7 @@ async def async_control_connect(host: str, key: str) -> WebOsClient:
     except PyLGTVPairException as err:
         _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
         raise PyLGTVPairException(err) from err
-    except (
-        OSError,
-        ConnectionClosed,
-        ConnectionRefusedError,
-        PyLGTVCmdException,
-        asyncio.TimeoutError,
-        asyncio.CancelledError,
-    ) as err:
+    except WEBOSTV_EXCEPTIONS as err:
         raise CannotConnect(f"Error connecting to LG webOS TV {host}") from err
 
     return client

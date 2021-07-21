@@ -1,14 +1,12 @@
 """Support for LG WebOS TV notification service."""
-import asyncio
 import logging
 
-from aiopylgtv import PyLGTVCmdException, PyLGTVPairException
-from websockets.exceptions import ConnectionClosed
+from aiopylgtv import PyLGTVPairException
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_ICON, CONF_NAME
 
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN
+from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, WEBOSTV_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,12 +44,5 @@ class LgWebOSNotificationService(BaseNotificationService):
             _LOGGER.error("Pairing with TV failed")
         except FileNotFoundError:
             _LOGGER.error("Icon %s not found", icon_path)
-        except (
-            OSError,
-            ConnectionClosed,
-            ConnectionRefusedError,
-            asyncio.TimeoutError,
-            asyncio.CancelledError,
-            PyLGTVCmdException,
-        ):
+        except WEBOSTV_EXCEPTIONS:
             _LOGGER.error("TV unreachable")

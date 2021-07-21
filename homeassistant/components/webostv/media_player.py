@@ -1,12 +1,10 @@
 """Support for interface with an LG webOS Smart TV."""
-import asyncio
 from contextlib import suppress
 from datetime import timedelta
 from functools import wraps
 import logging
 
-from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
-from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
+from aiopylgtv import PyLGTVPairException, WebOsClient
 
 from homeassistant import util
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
@@ -42,6 +40,7 @@ from .const import (
     CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
+    WEBOSTV_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,16 +69,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sources = config_entry.options.get(CONF_SOURCES)
     turn_on_action = config_entry.options.get(CONF_ON_ACTION)
     client = hass.data[DOMAIN][config_entry.entry_id]
-    on_script = (
-        Script(
-            hass,
-            [{"service": turn_on_action}],
-            name,
-            DOMAIN,
-        )
-        if turn_on_action
-        else None
-    )
+    on_script = None
+
+    if turn_on_action:
+        on_script = Script(hass, [{"service": turn_on_action}], name, DOMAIN)
 
     async_add_entities(
         [LgWebOSMediaPlayerEntity(client, name, sources, unique_id, on_script)]
@@ -94,11 +87,7 @@ def cmd(func):
         """Wrap all command methods."""
         try:
             await func(obj, *args, **kwargs)
-        except (
-            asyncio.TimeoutError,
-            asyncio.CancelledError,
-            PyLGTVCmdException,
-        ) as exc:
+        except WEBOSTV_EXCEPTIONS as exc:
             # If TV is off, we expect calls to fail.
             if obj.state == STATE_OFF:
                 level = logging.INFO
@@ -118,9 +107,7 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
-    def __init__(
-        self, client: WebOsClient, name: str, sources, unique_id, on_script=None
-    ):
+    def __init__(self, client: WebOsClient, name: str, sources, unique_id, on_script):
         """Initialize the webos device."""
         self._client = client
         self._name = name
@@ -163,7 +150,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     async def async_handle_state_update(self):
         """Update state from WebOsClient."""
         self.update_sources()
-
         self.async_write_ha_state()
 
     def update_sources(self):
@@ -220,18 +206,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self):
         """Connect."""
-        if not self._client.is_connected():
-            with suppress(
-                OSError,
-                ConnectionClosed,
-                ConnectionClosedOK,
-                ConnectionRefusedError,
-                asyncio.TimeoutError,
-                asyncio.CancelledError,
-                PyLGTVPairException,
-                PyLGTVCmdException,
-            ):
-                await self._client.connect()
+        if self._client.is_connected():
+            return
+
+        with suppress(WEBOSTV_EXCEPTIONS, PyLGTVPairException):
+            await self._client.connect()
 
     @property
     def unique_id(self):

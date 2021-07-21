@@ -36,7 +36,7 @@
       }
     },
     "error": {
-      "script_notfound": "Script not found",
+      "script_not_found": "Script not found",
       "cannot_retrieve": "Unable to retrieve the list of sources. Make sure device is switched on"
     }
   }

@@ -80,23 +80,24 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_register(self, user_input, client=None):
         """Register entity."""
-        if client.is_registered():
-            if client.client_key is None:
-                return self.async_abort(reason="client_key_not_found")
+        if not client.is_registered():
+            return await self.async_step_user()
 
-            await self.async_set_unique_id(client.software_info["device_id"])
-            self._abort_if_unique_id_configured()
+        if client.client_key is None:
+            return self.async_abort(reason="client_key_not_found")
 
-            data = {
-                CONF_HOST: self._user_input[CONF_HOST],
-                CONF_NAME: self._user_input[CONF_NAME],
-                CONF_CLIENT_SECRET: client.client_key,
-            }
-            return self.async_create_entry(
-                title=user_input.get(CONF_NAME, CONF_HOST), data=data
-            )
+        await self.async_set_unique_id(client.software_info["device_id"])
+        self._abort_if_unique_id_configured()
 
-        return await self.async_step_user()
+        data = {
+            CONF_HOST: self._user_input[CONF_HOST],
+            CONF_NAME: self._user_input[CONF_NAME],
+            CONF_CLIENT_SECRET: client.client_key,
+        }
+
+        return self.async_create_entry(
+            title=user_input.get(CONF_NAME, CONF_HOST), data=data
+        )
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Webostv device."""
@@ -123,19 +124,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            if user_input.get(CONF_ON_ACTION) and not self.hass.states.get(
-                user_input.get(CONF_ON_ACTION)
-            ):
-                errors["base"] = "script_notfound"
-            elif (
-                user_input.get(CONF_ON_ACTION)
-                and (self.hass.states.get(user_input.get(CONF_ON_ACTION))).domain
-                != "script"
-            ):
-                errors["base"] = "script_notfound"
+            on_action = user_input.get(CONF_ON_ACTION)
+
+            if on_action:
+                action_state = self.hass.states.get(on_action)
+
+                if not action_state or action_state.domain != "script":
+                    errors["base"] = "script_not_found"
+
             if "base" not in errors:
                 options_input = {
-                    CONF_ON_ACTION: user_input.get(CONF_ON_ACTION),
+                    CONF_ON_ACTION: on_action,
                     CONF_SOURCES: user_input[CONF_SOURCES],
                 }
                 return self.async_create_entry(title="", data=options_input)
