@@ -55,7 +55,7 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.components.modbus.validators import (
     number_validator,
-    sensor_schema_validator,
+    struct_validator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -144,12 +144,12 @@ async def test_number_validator():
         },
     ],
 )
-async def test_ok_sensor_schema_validator(do_config):
+async def test_ok_struct_validator(do_config):
     """Test struct validator."""
     try:
-        sensor_schema_validator(do_config)
+        struct_validator(do_config)
     except vol.Invalid:
-        pytest.fail("Sensor_schema_validator unexpected exception")
+        pytest.fail("struct_validator unexpected exception")
 
 
 @pytest.mark.parametrize(
@@ -186,13 +186,13 @@ async def test_ok_sensor_schema_validator(do_config):
         },
     ],
 )
-async def test_exception_sensor_schema_validator(do_config):
+async def test_exception_struct_validator(do_config):
     """Test struct validator."""
     try:
-        sensor_schema_validator(do_config)
+        struct_validator(do_config)
     except vol.Invalid:
         return
-    pytest.fail("Sensor_schema_validator missing exception")
+    pytest.fail("struct_validator missing exception")
 
 
 @pytest.mark.parametrize(
