@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This Flipr is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error",
+            "no_flipr_id_found": "No flipr id associated to your account for now. You should verify it is working with the Flipr's mobile app first."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Connect to your flipr account",
+                "title": "Flipr device"
+            },
+            "flipr_id": {
+                "data": {
+                    "flipr_id": "Flipr ID"
+                },
+                "description": "Choose your flipr ID in the list",
+                "title": "Flipr device"
+            }
+        }
+    }
+}
