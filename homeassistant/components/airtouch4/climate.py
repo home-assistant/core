@@ -61,9 +61,9 @@ def _build_entity(coordinator, group_number, info):
 
 
 def _build_entity_ac(coordinator, ac_number, info):
-    ac = AirtouchAC(coordinator, ac_number, info)
-    _LOGGER.debug("Found ac %s", ac)
-    return ac
+    air_conditioner = AirtouchAC(coordinator, ac_number, info)
+    _LOGGER.debug("Found ac %s", air_conditioner)
+    return air_conditioner
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

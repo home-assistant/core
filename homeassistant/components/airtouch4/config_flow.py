@@ -10,10 +10,6 @@ from .const import DOMAIN
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
-def _createAirtouchObject(host):
-    return AirTouch(host)
-
-
 async def _validate_connection(hass: core.HomeAssistant, host):
     airtouch = AirTouch(host)
     await airtouch.UpdateInfo()
@@ -21,7 +17,7 @@ async def _validate_connection(hass: core.HomeAssistant, host):
     if hasattr(airtouch, "error"):
         if isinstance(airtouch.error, Exception):
             raise airtouch.error
-        return airtouch.error
+        raise ConnectionError()
     return bool(airtouch.GetGroups())
 
 
@@ -44,7 +40,7 @@ class AirtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await _validate_connection(self.hass, host)
             if not result:
                 errors["base"] = "no_units"
-        except Exception:
+        except (OSError, ConnectionError):
             errors["base"] = "cannot_connect"
 
         if errors:
