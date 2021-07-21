@@ -174,6 +174,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(
                 existing_entry,
                 data={
+                    **existing_entry.data,
                     CONF_HOST: urlunparse(
                         (
                             parsed_url.scheme,
@@ -183,7 +184,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             parsed_url.fragment,
                             None,
                         )
-                    )
+                    ),
                 },
             )
             self.hass.async_create_task(
