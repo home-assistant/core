@@ -76,7 +76,7 @@ class SolarSourceType(TypedDict):
     type: Literal["solar"]
 
     stat_energy_from: str
-    config_entry_solar_forecast: str | None
+    config_entry_solar_forecast: list[str] | None
 
 
 SourceType = Union[GridSourceType, SolarSourceType]
@@ -175,7 +175,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "solar",
         vol.Required("stat_energy_from"): str,
-        vol.Optional("config_entry_solar_forecast"): vol.Any(str, None),
+        vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
 
