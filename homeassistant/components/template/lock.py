@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_LOCKED,
     STATE_ON,
-    STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
 from homeassistant.core import callback
@@ -145,7 +144,7 @@ class TemplateLock(TemplateEntity, LockEntity):
             self._state = result.lower()
             return
 
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
