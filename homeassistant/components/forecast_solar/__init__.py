@@ -5,10 +5,12 @@ from datetime import timedelta
 import logging
 
 from forecast_solar import ForecastSolar
+import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -55,7 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+        websocket_api.async_register_command(hass, ws_list_forecasts)
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -77,3 +81,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+@websocket_api.websocket_command({vol.Required("type"): "forecast_solar/forecasts"})
+@callback
+def ws_list_forecasts(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Return a list of available forecasts."""
+    forecasts = {}
+
+    for config_entry_id, coordinator in hass.data[DOMAIN].items():
+        forecasts[config_entry_id] = {
+            timestamp.isoformat(): val
+            for timestamp, val in coordinator.data.watts.items()
+        }
+
+    connection.send_result(msg["id"], forecasts)
