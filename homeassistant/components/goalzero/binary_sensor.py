@@ -12,7 +12,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Goal Zero Yeti sensor."""
     name = entry.data[CONF_NAME]
     goalzero_data = hass.data[DOMAIN][entry.entry_id]
-    sensors = [
+    async_add_entities(
         YetiBinarySensor(
             goalzero_data[DATA_KEY_API],
             goalzero_data[DATA_KEY_COORDINATOR],
@@ -21,8 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entry.entry_id,
         )
         for sensor_name in BINARY_SENSOR_DICT
-    ]
-    async_add_entities(sensors)
+    )
 
 
 class YetiBinarySensor(YetiEntity, BinarySensorEntity):
@@ -47,23 +46,23 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
         self._device_class = variable_info[1]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._name} {self._condition_name}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id of the sensor."""
         return f"{self._server_unique_id}/{self._condition_name}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the service is on."""
         if self.api.data:
             return self.api.data[self._condition] == 1
         return False
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon

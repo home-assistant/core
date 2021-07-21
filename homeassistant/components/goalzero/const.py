@@ -34,10 +34,6 @@ from homeassistant.const import (
 ATTRIBUTION = "Data provided by Goal Zero"
 ATTR_DEFAULT_ENABLED = "default_enabled"
 
-CONF_IDENTIFIERS = "identifiers"
-CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
-CONF_SW_VERSION = "sw_version"
 DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
