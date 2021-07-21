@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_URL,
     CONF_USERNAME,
     CURRENCY_EURO,
     DEVICE_CLASS_BATTERY,
@@ -33,7 +34,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
 
-from .const import CONF_PLANT_ID, DEFAULT_NAME, DEFAULT_PLANT_ID, DOMAIN
+from .const import CONF_PLANT_ID, DEFAULT_NAME, DEFAULT_PLANT_ID, DEFAULT_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -554,6 +555,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PLANT_ID, default=DEFAULT_PLANT_ID): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
     }
 )
 
@@ -579,7 +581,7 @@ def get_device_list(api, config):
     # Log in to api and fetch first plant if no plant id is defined.
     login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
     if not login_response["success"] and login_response["errCode"] == "102":
-        _LOGGER.error("Username or Password may be incorrect!")
+        _LOGGER.error("Username, Password or URL may be incorrect!")
         return
     user_id = login_response["userId"]
     if plant_id == DEFAULT_PLANT_ID:
@@ -596,9 +598,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     config = config_entry.data
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
+    url = config[CONF_URL]
     name = config[CONF_NAME]
 
     api = growattServer.GrowattApi()
+    api.server_url = url
 
     devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
 

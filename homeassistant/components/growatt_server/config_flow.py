@@ -3,10 +3,10 @@ import growattServer
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import CONF_PLANT_ID, DOMAIN
+from .const import CONF_PLANT_ID, DEFAULT_URL, DOMAIN
 
 
 class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -24,7 +24,11 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_show_user_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_URL, default=DEFAULT_URL): str,
+            }
         )
 
         return self.async_show_form(
@@ -36,6 +40,14 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self._async_show_user_form()
 
+        # Remove any accidental whitespace from the URL
+        user_input[CONF_URL] = user_input[CONF_URL].strip()
+
+        # If the URL doesn't end in a / add one (the python library expects a /)
+        if user_input[CONF_URL] != "" and user_input[CONF_URL][-1] != "/":
+            user_input[CONF_URL] = user_input[CONF_URL] + "/"
+
+        self.api.server_url = user_input[CONF_URL]
         login_response = await self.hass.async_add_executor_job(
             self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
         )
