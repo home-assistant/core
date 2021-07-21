@@ -73,15 +73,10 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         super().__init__(device)
         self._sensor_type = sensor_type
         self._metadata = SENSOR_TYPES[self._sensor_type]
-        self._name = f"{self._device.name} {self._metadata.name}"
+        self._attr_name = f"{self._device.name} {self._metadata.name}"
         self._device_class = self._metadata.device_class
         self._event = {}
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def is_on(self):

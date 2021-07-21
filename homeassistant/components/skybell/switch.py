@@ -59,12 +59,7 @@ class SkybellSwitch(SkybellDevice, SwitchEntity):
         super().__init__(device)
         self._switch_type = switch_type
         metadata = SWITCH_TYPES[self._switch_type]
-        self._name = f"{self._device.name} {metadata.name}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_name = f"{self._device.name} {metadata.name}"
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""
