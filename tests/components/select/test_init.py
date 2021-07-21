@@ -13,10 +13,6 @@ class MockSelectEntity(SelectEntity):
     _attr_current_option = "option_one"
     _attr_options = ["option_one", "option_two", "option_three"]
 
-    async def async_select_option(self, option: str) -> None:
-        """Test changing the selected option."""
-        return await super().async_select_option(option)
-
 
 async def test_select(hass: HomeAssistant) -> None:
     """Test getting data from the mocked select entity."""
