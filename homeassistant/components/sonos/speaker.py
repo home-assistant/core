@@ -14,7 +14,7 @@ import async_timeout
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
-from pysonos.exceptions import SoCoException
+from pysonos.exceptions import SoCoException, SoCoUPnPException
 from pysonos.music_library import MusicLibrary
 from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
@@ -810,7 +810,15 @@ class SonosSpeaker:
                     speaker.media.playback_status == SONOS_STATE_PLAYING
                     and "Pause" in speaker.soco.available_actions
                 ):
-                    speaker.soco.pause()
+                    try:
+                        speaker.soco.pause()
+                    except SoCoUPnPException as exc:
+                        _LOGGER.debug(
+                            "Pause failed during restore of %s: %s",
+                            speaker.zone_name,
+                            speaker.soco.available_actions,
+                            exc_info=exc,
+                        )
 
             groups = []
             speakers_to_unjoin = set()
