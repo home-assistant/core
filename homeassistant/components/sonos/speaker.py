@@ -824,30 +824,21 @@ class SonosSpeaker:
             speakers_to_unjoin = set()
 
             if with_group:
-                # Unjoin speakers not contained in the snapshot
+                # Unjoin non-coordinator speakers not contained in the desired snapshot group
+                #
+                # If a coordinator is unjoined from its group, another speaker from the group
+                # will inherit the coordinator's playqueue and its own playqueue will be lost
                 for speaker in speakers:
                     if speaker.sonos_group == speaker.snapshot_group:
                         continue
 
-                    remainder = set(speaker.sonos_group)
-                    remainder.remove(speaker)
-                    desired_group = set(speaker.snapshot_group)
-
-                    if remainder and desired_group.isdisjoint(remainder):
-                        # Unjoining this speaker will preserve the remainder of the existing group
-                        speaker.unjoin()
-                    else:
-                        orphans = [
+                    speakers_to_unjoin.update(
+                        {
                             s
                             for s in speaker.sonos_group
-                            if s not in speaker.snapshot_group
-                        ]
-                        speakers_to_unjoin.update(orphans)
-
-                # Unjoin slaves to prevent inheritance of queues
-                for speaker in [s for s in speakers if not s.is_coordinator]:
-                    if speaker.snapshot_group != speaker.sonos_group:
-                        speakers_to_unjoin.add(speaker)
+                            if s not in speaker.snapshot_group and not s.is_coordinator
+                        }
+                    )
 
                 for speaker in speakers_to_unjoin:
                     speaker.unjoin()
@@ -855,12 +846,12 @@ class SonosSpeaker:
                 # Bring back the original group topology
                 for speaker in (s for s in speakers if s.snapshot_group):
                     assert speaker.snapshot_group is not None
-                    if (
-                        speaker.snapshot_group[0] == speaker
-                        and speaker.snapshot_group != speaker.sonos_group
-                        and speaker.snapshot_group != [speaker]
-                    ):
-                        speaker.join(speaker.snapshot_group)
+                    if speaker.snapshot_group[0] == speaker:
+                        if (
+                            speaker.snapshot_group != speaker.sonos_group
+                            and speaker.snapshot_group != [speaker]
+                        ):
+                            speaker.join(speaker.snapshot_group)
                         groups.append(speaker.snapshot_group.copy())
 
             return groups
