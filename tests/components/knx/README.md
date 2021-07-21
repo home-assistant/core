@@ -18,8 +18,10 @@ async def test_something(hass, knx):
 
 ## Asserting outgoing telegrams
 
+All outgoing telegrams are pushed to an assertion queue. Assert them in order they were sent.
+
 - `knx.assert_no_telegram`
-  Asserts that no telegram was sent.
+  Asserts that no telegram was sent (assertion queue is empty).
 - `knx.assert_telegram_count(count: int)`
   Asserts that `count` telegrams were sent.
 - `knx.assert_read(group_address: str)`
