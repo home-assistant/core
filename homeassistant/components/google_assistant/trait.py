@@ -24,6 +24,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.humidifier import const as humidifier
+from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -1101,7 +1102,11 @@ class LockUnlockTrait(_Trait):
 
     def query_attributes(self):
         """Return LockUnlock query attributes."""
-        return {"isLocked": self.state.state == STATE_LOCKED}
+        if self.state.state == STATE_JAMMED:
+            return {"isJammed": True}
+
+        # If its unlocking its not yet unlocked so we consider is locked
+        return {"isLocked": self.state.state in (STATE_UNLOCKING, STATE_LOCKED)}
 
     async def execute(self, command, data, params, challenge):
         """Execute an LockUnlock command."""
