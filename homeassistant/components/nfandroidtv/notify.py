@@ -42,7 +42,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Deprecated in Home Assistant 2021.7
+# Deprecated in Home Assistant 2021.8
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
