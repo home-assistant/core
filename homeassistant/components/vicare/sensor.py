@@ -1,6 +1,7 @@
 """Viessmann ViCare sensor device."""
 import logging
 
+from PyViCare.PyViCare import PyViCareRateLimitError
 import requests
 
 from homeassistant.components.sensor import SensorEntity
@@ -21,11 +22,11 @@ from homeassistant.const import (
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
-    PYVICARE_ERROR,
     VICARE_API,
     VICARE_HEATING_TYPE,
     VICARE_NAME,
     HeatingType,
+    catch_not_supported,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -350,7 +351,7 @@ class ViCareSensor(SensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None and self._state != PYVICARE_ERROR
+        return self._state is not None
 
     @property
     def unique_id(self):
@@ -385,8 +386,11 @@ class ViCareSensor(SensorEntity):
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self._sensor[CONF_GETTER](self._api)
+            with catch_not_supported() as self._state:
+                self._state = self._sensor[CONF_GETTER](self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
