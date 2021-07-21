@@ -33,7 +33,7 @@ from .entity import (
 )
 from .utils import get_device_uptime, temperature_unit
 
-SENSORS: Final[dict[tuple[str, str], BlockAttributeDescription]] = {
+SENSORS: Final = {
     ("device", "battery"): BlockAttributeDescription(
         name="Battery",
         unit=PERCENTAGE,
@@ -207,7 +207,7 @@ SENSORS: Final[dict[tuple[str, str], BlockAttributeDescription]] = {
     ),
 }
 
-REST_SENSORS: Final[dict[str, RestAttributeDescription]] = {
+REST_SENSORS: Final = {
     "rssi": RestAttributeDescription(
         name="RSSI",
         unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,

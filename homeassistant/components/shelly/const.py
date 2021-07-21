@@ -31,7 +31,7 @@ UPDATE_PERIOD_MULTIPLIER: Final = 2.2
 SHAIR_MAX_WORK_HOURS: Final = 9000
 
 # Map Shelly input events
-INPUTS_EVENTS_DICT: Final[dict[str, str]] = {
+INPUTS_EVENTS_DICT: Final = {
     "S": "single",
     "SS": "double",
     "SSS": "triple",
@@ -41,7 +41,7 @@ INPUTS_EVENTS_DICT: Final[dict[str, str]] = {
 }
 
 # List of battery devices that maintain a permanent WiFi connection
-BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final[list[str]] = ["SHMOS-01"]
+BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = ["SHMOS-01"]
 
 EVENT_SHELLY_CLICK: Final = "shelly.click"
 
@@ -50,19 +50,11 @@ ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
 CONF_SUBTYPE: Final = "subtype"
 
-BASIC_INPUTS_EVENTS_TYPES: Final[set[str]] = {
-    "single",
-    "long",
-}
+BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 
-SHBTN_INPUTS_EVENTS_TYPES: Final[set[str]] = {
-    "single",
-    "double",
-    "triple",
-    "long",
-}
+SHBTN_INPUTS_EVENTS_TYPES: Final = {"single", "double", "triple", "long"}
 
-SUPPORTED_INPUTS_EVENTS_TYPES: Final[set[str]] = {
+SUPPORTED_INPUTS_EVENTS_TYPES: Final = {
     "single",
     "double",
     "triple",
@@ -73,23 +65,18 @@ SUPPORTED_INPUTS_EVENTS_TYPES: Final[set[str]] = {
 
 SHIX3_1_INPUTS_EVENTS_TYPES = SUPPORTED_INPUTS_EVENTS_TYPES
 
-INPUTS_EVENTS_SUBTYPES: Final[dict[str, int]] = {
-    "button": 1,
-    "button1": 1,
-    "button2": 2,
-    "button3": 3,
-}
+INPUTS_EVENTS_SUBTYPES: Final = {"button": 1, "button1": 1, "button2": 2, "button3": 3}
 
-SHBTN_MODELS: Final[list[str]] = ["SHBTN-1", "SHBTN-2"]
+SHBTN_MODELS: Final = ["SHBTN-1", "SHBTN-2"]
 
-STANDARD_RGB_EFFECTS: Final[dict[int, str]] = {
+STANDARD_RGB_EFFECTS: Final = {
     0: "Off",
     1: "Meteor Shower",
     2: "Gradual Change",
     3: "Flash",
 }
 
-SHBLB_1_RGB_EFFECTS: Final[dict[int, str]] = {
+SHBLB_1_RGB_EFFECTS: Final = {
     0: "Off",
     1: "Meteor Shower",
     2: "Gradual Change",

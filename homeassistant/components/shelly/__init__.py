@@ -47,8 +47,8 @@ from .const import (
 )
 from .utils import get_coap_context, get_device_name, get_device_sleep_period
 
-PLATFORMS: Final[list[str]] = ["binary_sensor", "cover", "light", "sensor", "switch"]
-SLEEPING_PLATFORMS: Final[list[str]] = ["binary_sensor", "sensor"]
+PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
+SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
 _LOGGER: Final = logging.getLogger(__name__)
 
 COAP_SCHEMA: Final = vol.Schema(

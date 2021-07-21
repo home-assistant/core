@@ -31,7 +31,7 @@ from .entity import (
 )
 from .utils import is_momentary_input
 
-SENSORS: Final[dict[tuple[str, str], BlockAttributeDescription]] = {
+SENSORS: Final = {
     ("device", "overtemp"): BlockAttributeDescription(
         name="Overheating", device_class=DEVICE_CLASS_PROBLEM
     ),
@@ -90,7 +90,7 @@ SENSORS: Final[dict[tuple[str, str], BlockAttributeDescription]] = {
     ),
 }
 
-REST_SENSORS: Final[dict[str, RestAttributeDescription]] = {
+REST_SENSORS: Final = {
     "cloud": RestAttributeDescription(
         name="Cloud",
         value=lambda status, _: status["cloud"]["connected"],
