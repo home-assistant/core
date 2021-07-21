@@ -38,7 +38,7 @@ class YoulessConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=DOMAIN,
+                    title=user_input[CONF_HOST],
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_DEVICE: api.mac_address,
