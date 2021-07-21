@@ -24,14 +24,13 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """ProxmoxVE Config Flow class."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Init for ProxmoxVE config flow."""
         super().__init__()
 
         self._config = {}
-        self._proxmox_client = None  # type: ProxmoxClient
+        self._proxmox_client = None
 
     async def async_step_import(self, import_config=None):
         """Import existing configuration."""
@@ -39,12 +38,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_init(import_config, True)
 
-    # pylint: disable=signature-differs
     async def async_step_user(self, user_input):
         """Manual user configuration."""
         return await self.async_step_init(user_input, False)
 
-    # pylint: disable=signature-differs
     async def async_step_init(self, info, is_import):
         """Async step user for proxmoxve config flow."""
         errors = {}
@@ -93,7 +90,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except Exception:  # pylint: disable=broad-except
                     errors["base"] = "general_error"
 
-                if not errors:
+                else:
                     # get all vms and containers and add them
 
                     if "nodes" not in self._config:
@@ -107,10 +104,6 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._config[CONF_VERIFY_SSL] = verify_ssl
 
                     await self.hass.async_add_executor_job(self._add_vms_to_config)
-
-                    _LOGGER.info(
-                        "ProxmoxVE configuration successfully imported, you can remove it from configuration.yaml"
-                    )
 
                     return self.async_create_entry(title="ProxmoxVE", data=self._config)
 

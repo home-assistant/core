@@ -13,6 +13,7 @@ DEFAULT_VERIFY_SSL = True
 
 PLATFORMS = ["binary_sensor"]
 PROXMOX_CLIENTS = "proxmox_clients"
+PROXMOX_CLIENT = "proxmox_client"
 
 COORDINATORS = "coordinators"
 API_DATA = "api_data"

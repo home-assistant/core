@@ -39,6 +39,7 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLATFORMS,
+    PROXMOX_CLIENT,
     PROXMOX_CLIENTS,
     TYPE_CONTAINER,
     TYPE_VM,
@@ -165,58 +166,50 @@ async def async_setup_entry(hass: HomeAssistant, config_entry):
 
     entry_data = config_entry.data
 
-    def build_client() -> ProxmoxAPI:
-        """Build the Proxmox client connection."""
-        hass.data[PROXMOX_CLIENTS] = {}
+    hass.data[PROXMOX_CLIENTS] = {}
 
-        host = entry_data[CONF_HOST]
-        port = entry_data[CONF_PORT]
-        user = entry_data[CONF_USERNAME]
-        realm = entry_data[CONF_REALM]
-        password = entry_data[CONF_PASSWORD]
-        verify_ssl = entry_data[CONF_VERIFY_SSL]
+    host = entry_data[CONF_HOST]
+    port = entry_data[CONF_PORT]
+    user = entry_data[CONF_USERNAME]
+    realm = entry_data[CONF_REALM]
+    password = entry_data[CONF_PASSWORD]
+    verify_ssl = entry_data[CONF_VERIFY_SSL]
 
-        hass.data[PROXMOX_CLIENTS][host] = None
+    # hass.data[PROXMOX_CLIENTS][host] = None
 
-        try:
-            # Construct an API client with the given data for the given host
-            proxmox_client = ProxmoxClient(
-                host, port, user, realm, password, verify_ssl
-            )
-            proxmox_client.build_client()
-        except AuthenticationError:
-            _LOGGER.warning(
-                "Invalid credentials for proxmox instance %s:%d", host, port
-            )
-            return False
-        except SSLError:
-            _LOGGER.error(
-                "Unable to verify proxmox server SSL. "
-                'Try using "verify_ssl: false" for proxmox instance %s:%d',
-                host,
-                port,
-            )
-            return False
-        except ConnectTimeout:
-            _LOGGER.warning("Connection to host %s timed out during setup", host)
-            return False
+    try:
+        # Construct an API client with the given data for the given host
+        proxmox_client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
+        proxmox_client.build_client()
+    except AuthenticationError:
+        _LOGGER.warning("Invalid credentials for proxmox instance %s:%d", host, port)
+        return False
+    except SSLError:
+        _LOGGER.error(
+            "Unable to verify proxmox server SSL. "
+            'Try using "verify_ssl: false" for proxmox instance %s:%d',
+            host,
+            port,
+        )
+        return False
+    except ConnectTimeout:
+        _LOGGER.warning("Connection to host %s timed out during setup", host)
+        return False
 
-        hass.data[PROXMOX_CLIENTS][host] = proxmox_client
-
-    await hass.async_add_executor_job(build_client)
+    # hass.data[PROXMOX_CLIENTS][host] = proxmox_client
 
     coordinators = hass.data[DOMAIN][COORDINATORS] = {}
 
     host_name = entry_data["host"]
-    coordinators[host_name] = {}
+    coordinators = {}
 
-    proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
+    #  proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
 
     proxmox = proxmox_client.get_api_client()
 
     for node_config in entry_data["nodes"]:
         node_name = node_config["name"]
-        node_coordinators = coordinators[host_name][node_name] = {}
+        node_coordinators = coordinators[node_name] = {}
 
         for vm_id in node_config["vms"]:
             coordinator = create_coordinator_container_vm(
@@ -237,6 +230,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry):
             await coordinator.async_refresh()
 
             node_coordinators[container_id] = coordinator
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN] = {PROXMOX_CLIENT: proxmox_client, COORDINATORS: coordinators}
 
     # setup platforms
     for platform in PLATFORMS:
@@ -313,7 +309,7 @@ class ProxmoxEntity(CoordinatorEntity):
         unique_id,
         name,
         icon,
-        host_name,
+        # host_name,
         node_name,
         vm_id=None,
     ):
@@ -323,7 +319,7 @@ class ProxmoxEntity(CoordinatorEntity):
         self.coordinator = coordinator
         self._unique_id = unique_id
         self._name = name
-        self._host_name = host_name
+        # self._host_name = host_name
         self._icon = icon
         self._available = True
         self._node_name = node_name
