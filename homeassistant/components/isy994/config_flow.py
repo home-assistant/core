@@ -159,11 +159,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(isy_mac)
         if not existing_entry:
             return
-        import pprint
-
-        pprint.pprint(existing_entry)
-        pprint.pprint(existing_entry.data)
-
         parsed_url = urlparse(existing_entry.data[CONF_HOST])
         if parsed_url.hostname != ip_address:
             new_netloc = ip_address
@@ -223,12 +218,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if url.endswith(ISY_URL_POSTFIX):
             url = url[: -len(ISY_URL_POSTFIX)]
 
+        port = HTTP_PORT
         if parsed_url.port:
             port = parsed_url.port
         elif parsed_url.scheme == SCHEME_HTTPS:
             port = HTTPS_PORT
-        else:
-            port = HTTP_PORT
 
         await self._async_set_unique_id_or_update(mac, parsed_url.hostname, port)
 
