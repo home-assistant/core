@@ -35,7 +35,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
@@ -403,16 +403,20 @@ def _async_register_events_and_services(hass: HomeAssistant):
                 for ctype, cval in dev_reg_ent.connections
                 if ctype == device_registry.CONNECTION_NETWORK_MAC
             ]
+            _LOGGER.debug("Matching macs: %s", macs)
+
             found = False
             for entry_id in hass.data[DOMAIN]:
                 if homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT):
                     formatted_mac = homekit.driver.state.mac
+                    _LOGGER.debug("Check formatted_mac: %s", formatted_mac)
+
                     if formatted_mac in macs:
                         homekit.async_unpair()
                         found = True
 
         if not found:
-            raise ValueError(f"No homekit accessory found for device id: {device_id}")
+            raise HomeAssistantError(f"No homekit accessory found for device id: {device_id}")
 
     hass.services.async_register(
         DOMAIN,
