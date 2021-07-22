@@ -85,10 +85,6 @@ SERVICE_TO_METHOD = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class CannotConnect(Exception):
-    """Error to indicate we cannot connect."""
-
-
 async def async_setup(hass, config):
     """Set up the LG WebOS TV platform."""
     hass.data.setdefault(DOMAIN, {})
@@ -105,22 +101,29 @@ async def async_setup(hass, config):
     return True
 
 
+def _async_migrate_options_from_data(hass, config_entry):
+    """Migrate options from data."""
+    if config_entry.options:
+        return
+
+    config = config_entry.data
+    options = {}
+
+    # Get Turn_on service
+    options[CONF_ON_ACTION] = config.get(CONF_ON_ACTION)
+
+    # Get Preferred Sources
+    if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
+        options[CONF_SOURCES] = sources
+        if isinstance(sources, list) is False:
+            options[CONF_SOURCES] = sources.split(",")
+
+    hass.config_entries.async_update_entry(config_entry, options=options)
+
+
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
-    if not config_entry.options:
-        config = config_entry.data
-        options = {}
-
-        # Get Turn_on service
-        options[CONF_ON_ACTION] = config.get(CONF_ON_ACTION)
-
-        # Get Preferred Sources
-        if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
-            options[CONF_SOURCES] = sources
-            if isinstance(sources, list) is False:
-                options[CONF_SOURCES] = sources.split(",")
-
-        hass.config_entries.async_update_entry(config_entry, options=options)
+    _async_migrate_options_from_data(hass, config_entry)
 
     host = config_entry.data[CONF_HOST]
     key = config_entry.data[CONF_CLIENT_SECRET]
@@ -193,8 +196,6 @@ async def async_control_connect(host: str, key: str) -> WebOsClient:
     except PyLGTVPairException as err:
         _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
         raise PyLGTVPairException(err) from err
-    except WEBOSTV_EXCEPTIONS as err:
-        raise CannotConnect(f"Error connecting to LG webOS TV {host}") from err
 
     return client
 

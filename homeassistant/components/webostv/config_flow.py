@@ -1,4 +1,6 @@
 """Config flow to configure webostv component."""
+from __future__ import annotations
+
 from urllib.parse import urlparse
 
 from aiopylgtv import PyLGTVPairException
@@ -10,8 +12,15 @@ from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from . import CannotConnect, async_control_connect
-from .const import CONF_ON_ACTION, CONF_SOURCES, DEFAULT_NAME, DOMAIN, ON_ACTION_DOCS
+from . import async_control_connect
+from .const import (
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    ON_ACTION_DOCS,
+    WEBOSTV_EXCEPTIONS,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -51,8 +60,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.context["title_placeholders"] = {
                 "name": user_input.get(CONF_NAME, CONF_HOST)
             }
-            if self._force_pairing:
-                return await self.async_step_pairing({})
 
             return await self.async_step_pairing()
 
@@ -63,12 +70,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(self, user_input=None):
         """Display pairing form."""
         errors = {}
-        if user_input is not None:
+        if user_input is not None or self._force_pairing:
             try:
                 client = await async_control_connect(self._user_input[CONF_HOST], None)
             except PyLGTVPairException:
                 return self.async_abort(reason="error_pairing")
-            except CannotConnect:
+            except WEBOSTV_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
                 return await self.async_step_register(self._user_input, client)
@@ -87,7 +94,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="client_key_not_found")
 
         await self.async_set_unique_id(client.software_info["device_id"])
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._user_input[CONF_HOST]}
+        )
 
         data = {
             CONF_HOST: self._user_input[CONF_HOST],
@@ -132,7 +141,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if not action_state or action_state.domain != "script":
                     errors["base"] = "script_not_found"
 
-            if "base" not in errors:
+            if not errors:
                 options_input = {
                     CONF_ON_ACTION: on_action,
                     CONF_SOURCES: user_input[CONF_SOURCES],
@@ -169,17 +178,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-async def async_default_sources(host, key) -> list:
+async def async_default_sources(host, key) -> list | None:
     """Construct sources list."""
-    sources = []
     try:
         client = await async_control_connect(host, key)
-    except CannotConnect:
+    except WEBOSTV_EXCEPTIONS:
         return None
 
-    for app in client.apps.values():
-        sources.append(app["title"])
-    for source in client.inputs.values():
-        sources.append(source["label"])
-
-    return sources
+    return [
+        *(app["title"] for app in client.apps.values()),
+        *(app["label"] for app in client.inputs.values()),
+    ]

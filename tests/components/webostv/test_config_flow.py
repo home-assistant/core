@@ -5,7 +5,6 @@ from aiopylgtv import PyLGTVPairException
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.webostv import CannotConnect
 from homeassistant.components.webostv.const import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_ICON, CONF_NAME, CONF_SOURCE
@@ -107,7 +106,7 @@ async def test_options_flow(hass, client):
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["data"][CONF_ON_ACTION] == "script.test"
 
-    client.connect = Mock(side_effect=CannotConnect("error"))
+    client.connect = Mock(side_effect=ConnectionRefusedError())
     result3 = await hass.config_entries.options.async_init(entry.entry_id)
 
     await hass.async_block_till_done()
@@ -159,7 +158,7 @@ async def test_form_cannot_connect(hass, client):
         data=MOCK_YAML_CONFIG,
     )
 
-    client.connect = Mock(side_effect=CannotConnect("error"))
+    client.connect = Mock(side_effect=ConnectionRefusedError())
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
