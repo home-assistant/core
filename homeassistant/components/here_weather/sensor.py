@@ -1,8 +1,6 @@
 """Sensor platform for the HERE Destination Weather service."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -16,21 +14,19 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN, SENSOR_TYPES
 from .utils import convert_unit_of_measurement_if_needed, get_attribute_from_here_data
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Add here_weather entities from a config_entry."""
-    here_weather_data_dict = hass.data[DOMAIN][config_entry.entry_id]
+    """Add here_weather entities from a ConfigEntry."""
+    here_weather_data_dict = hass.data[DOMAIN][entry.entry_id]
 
     sensors_to_add = []
     for sensor_type in SENSOR_TYPES:
         for weather_attribute in SENSOR_TYPES[sensor_type]:
             sensors_to_add.append(
                 HEREDestinationWeatherSensor(
-                    config_entry,
+                    entry,
                     here_weather_data_dict[sensor_type].coordinator,
                     sensor_type,
                     weather_attribute,
@@ -44,7 +40,7 @@ class HEREDestinationWeatherSensor(CoordinatorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         sensor_type: str,
         weather_attribute: str,
@@ -52,10 +48,10 @@ class HEREDestinationWeatherSensor(CoordinatorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._base_name = config_entry.data[CONF_NAME]
+        self._base_name = entry.data[CONF_NAME]
         self._name_suffix = SENSOR_TYPES[sensor_type][weather_attribute]["name"]
-        self._latitude = config_entry.data[CONF_LATITUDE]
-        self._longitude = config_entry.data[CONF_LONGITUDE]
+        self._latitude = entry.data[CONF_LATITUDE]
+        self._longitude = entry.data[CONF_LONGITUDE]
         self._sensor_type = sensor_type
         self._sensor_number = sensor_number
         self._weather_attribute = weather_attribute

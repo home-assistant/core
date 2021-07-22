@@ -1,8 +1,6 @@
 """Weather platform for the HERE Destination Weather service."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
@@ -38,21 +36,19 @@ from .utils import (
     get_attribute_from_here_data,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Add here_weather entities from a config_entry."""
-    here_weather_data_dict = hass.data[DOMAIN][config_entry.entry_id]
+    """Add here_weather entities from a ConfigEntry."""
+    here_weather_data_dict = hass.data[DOMAIN][entry.entry_id]
 
     entities_to_add = []
     for sensor_type in SENSOR_TYPES:
         if sensor_type != MODE_ASTRONOMY:
             entities_to_add.append(
                 HEREDestinationWeather(
-                    config_entry,
+                    entry,
                     here_weather_data_dict[sensor_type].coordinator,
                     sensor_type,
                 )
@@ -64,11 +60,11 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of an HERE Destination Weather WeatherEntity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, coordinator: DataUpdateCoordinator, mode: str
+        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator, mode: str
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._name = config_entry.data[CONF_NAME]
+        self._name = entry.data[CONF_NAME]
         self._mode = mode
 
     @property
