@@ -53,6 +53,7 @@ TONE_ID_VALUE_ID = {
             "30": "30DOOR~1 (27 sec)",
             "255": "default",
         },
+        "valueChangeOptions": ["volume"],
     },
 }
 
