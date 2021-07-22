@@ -837,8 +837,8 @@ class SonosSpeaker:
                 speakers_to_unjoin.update(
                     {
                         s
-                        for s in speaker.sonos_group
-                        if s not in speaker.snapshot_group and not s.is_coordinator
+                        for s in speaker.sonos_group[1:]
+                        if s not in speaker.snapshot_group
                     }
                 )
 
