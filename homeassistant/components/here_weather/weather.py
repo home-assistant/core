@@ -83,16 +83,12 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        if self.coordinator.data is not None:
-            return get_condition_from_here_data(self.coordinator.data)
-        return None
+        return get_condition_from_here_data(self.coordinator.data)
 
     @property
     def temperature(self) -> float | None:
         """Return the temperature."""
-        if self.coordinator.data is not None:
-            return get_temperature_from_here_data(self.coordinator.data, self._mode)
-        return None
+        return get_temperature_from_here_data(self.coordinator.data, self._mode)
 
     @property
     def temperature_unit(self) -> str:
@@ -104,36 +100,27 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     @property
     def pressure(self) -> float | None:
         """Return the pressure."""
-        if self.coordinator.data is not None:
-            return get_pressure_from_here_data(self.coordinator.data, self._mode)
-        return None
+        return get_pressure_from_here_data(self.coordinator.data, self._mode)
 
     @property
     def humidity(self) -> float | None:
         """Return the humidity."""
-        if self.coordinator.data is not None:
-            if (
-                humidity := get_attribute_from_here_data(
-                    self.coordinator.data, "humidity"
-                )
-                is not None
-            ):
-                return float(humidity)
+        if (
+            humidity := get_attribute_from_here_data(self.coordinator.data, "humidity")
+            is not None
+        ):
+            return float(humidity)
         return None
 
     @property
     def wind_speed(self) -> float | None:
         """Return the wind speed."""
-        if self.coordinator.data is not None:
-            return get_wind_speed_from_here_data(self.coordinator.data)
-        return None
+        return get_wind_speed_from_here_data(self.coordinator.data)
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        if self.coordinator.data is not None:
-            return get_wind_bearing_from_here_data(self.coordinator.data)
-        return None
+        return get_wind_bearing_from_here_data(self.coordinator.data)
 
     @property
     def attribution(self) -> str | None:
@@ -144,21 +131,18 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     def visibility(self) -> float | None:
         """Return the visibility."""
         if "visibility" in SENSOR_TYPES[self._mode]:
-            if self.coordinator.data is not None:
-                if (
-                    visibility := get_attribute_from_here_data(
-                        self.coordinator.data, "visibility"
-                    )
-                    is not None
-                ):
-                    return float(visibility)
+            if (
+                visibility := get_attribute_from_here_data(
+                    self.coordinator.data, "visibility"
+                )
+                is not None
+            ):
+                return float(visibility)
         return None
 
     @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
-        if self.coordinator.data is None:
-            return None
         data: list[Forecast] = []
         for offset in range(len(self.coordinator.data)):
             data.append(

@@ -60,7 +60,7 @@ async def test_weather_daily(hass):
         registry.async_get_or_create(
             "weather",
             DOMAIN,
-            "here_weather_forecast_7days",
+            "40.79962_-73.970314_forecast_7days",
             suggested_object_id="here_weather_forecast_7days",
             disabled_by=None,
         )

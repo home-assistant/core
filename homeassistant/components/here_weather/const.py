@@ -1,6 +1,20 @@
 """Constants for the HERE Destination Weather service."""
 from __future__ import annotations
 
+from homeassistant.const import (
+    DEGREE,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    LENGTH_CENTIMETERS,
+    LENGTH_KILOMETERS,
+    PERCENTAGE,
+    PRESSURE_MBAR,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+)
+
 DOMAIN = "here_weather"
 
 DEFAULT_SCAN_INTERVAL = 120
@@ -24,193 +38,294 @@ CONF_MODES = [
 DEFAULT_MODE = MODE_DAILY_SIMPLE
 
 ASTRONOMY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
-    "sunrise": {"name": "Sunrise", "unit_of_measurement": None},
-    "sunset": {"name": "Sunset", "unit_of_measurement": None},
-    "moonrise": {"name": "Moonrise", "unit_of_measurement": None},
-    "moonset": {"name": "Moonset", "unit_of_measurement": None},
-    "moonPhase": {"name": "Moon Phase", "unit_of_measurement": "%"},
-    "moonPhaseDesc": {"name": "Moon Phase Description", "unit_of_measurement": None},
-    "city": {"name": "City", "unit_of_measurement": None},
-    "latitude": {"name": "Latitude", "unit_of_measurement": None},
-    "longitude": {"name": "Longitude", "unit_of_measurement": None},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
+    "sunrise": {"name": "Sunrise", "unit_of_measurement": None, "device_class": None},
+    "sunset": {"name": "Sunset", "unit_of_measurement": None, "device_class": None},
+    "moonrise": {"name": "Moonrise", "unit_of_measurement": None, "device_class": None},
+    "moonset": {"name": "Moonset", "unit_of_measurement": None, "device_class": None},
+    "moonPhase": {
+        "name": "Moon Phase",
+        "unit_of_measurement": "%",
+        "device_class": None,
+    },
+    "moonPhaseDesc": {
+        "name": "Moon Phase Description",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "city": {"name": "City", "unit_of_measurement": None, "device_class": None},
+    "latitude": {"name": "Latitude", "unit_of_measurement": None, "device_class": None},
+    "longitude": {
+        "name": "Longitude",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "utcTime": {
+        "name": "UTC Time",
+        "unit_of_measurement": None,
+        "device_class": DEVICE_CLASS_TIMESTAMP,
+    },
+}
+
+COMMON_ATTRIBUTES: dict[str, dict[str, str | None]] = {
+    "daylight": {"name": "Daylight", "unit_of_measurement": None, "device_class": None},
+    "description": {
+        "name": "Description",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "skyInfo": {"name": "Sky Info", "unit_of_measurement": None, "device_class": None},
+    "skyDescription": {
+        "name": "Sky Description",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "temperatureDesc": {
+        "name": "Temperature Description",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "comfort": {
+        "name": "Comfort",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
+    "humidity": {
+        "name": "Humidity",
+        "unit_of_measurement": PERCENTAGE,
+        "device_class": DEVICE_CLASS_HUMIDITY,
+    },
+    "dewPoint": {
+        "name": "Dew Point",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
+    "precipitationProbability": {
+        "name": "Precipitation Probability",
+        "unit_of_measurement": PERCENTAGE,
+        "device_class": None,
+    },
+    "precipitationDesc": {
+        "name": "Precipitation Description",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "airDescription": {
+        "name": "Air Description",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "windSpeed": {
+        "name": "Wind Speed",
+        "unit_of_measurement": SPEED_KILOMETERS_PER_HOUR,
+        "device_class": None,
+    },
+    "windDirection": {
+        "name": "Wind Direction",
+        "unit_of_measurement": DEGREE,
+        "device_class": None,
+    },
+    "windDesc": {
+        "name": "Wind Description",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
+    },
+    "windDescShort": {
+        "name": "Wind Description Short",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
+    },
+    "icon": {"name": "Icon", "unit_of_measurement": None, "device_class": None},
+    "iconName": {
+        "name": "Icon Name",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "iconLink": {
+        "name": "Icon Link",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+}
+
+NON_OBERSATION_ATTRIBUTES: dict[str, dict[str, str | None]] = {
+    "rainFall": {
+        "name": "Rain Fall",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
+    },
+    "snowFall": {
+        "name": "Snow Fall",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
+    },
+    "precipitationProbability": {
+        "name": "Precipitation Probability",
+        "unit_of_measurement": PERCENTAGE,
+        "device_class": None,
+    },
+    "dayOfWeek": {
+        "name": "Day of Week",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "weekday": {"name": "Week Day", "unit_of_measurement": None, "device_class": None},
+    "utcTime": {
+        "name": "UTC Time",
+        "unit_of_measurement": None,
+        "device_class": DEVICE_CLASS_TIMESTAMP,
+    },
+    **COMMON_ATTRIBUTES,
 }
 
 HOURLY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
-    "daylight": {"name": "Daylight", "unit_of_measurement": None},
-    "description": {"name": "Description", "unit_of_measurement": None},
-    "skyInfo": {"name": "Sky Info", "unit_of_measurement": None},
-    "skyDescription": {"name": "Sky Description", "unit_of_measurement": None},
-    "temperature": {"name": "Temperature", "unit_of_measurement": "°C"},
-    "temperatureDesc": {"name": "Temperature Description", "unit_of_measurement": None},
-    "comfort": {"name": "Comfort", "unit_of_measurement": "°C"},
-    "humidity": {"name": "Humidity", "unit_of_measurement": "%"},
-    "dewPoint": {"name": "Dew Point", "unit_of_measurement": "°C"},
-    "precipitationProbability": {
-        "name": "Precipitation Probability",
-        "unit_of_measurement": "%",
+    "temperature": {
+        "name": "Temperature",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
     },
-    "precipitationDesc": {
-        "name": "Precipitation Description",
-        "unit_of_measurement": None,
+    "airInfo": {"name": "Air Info", "unit_of_measurement": None, "device_class": None},
+    "visibility": {
+        "name": "Visibility",
+        "unit_of_measurement": LENGTH_KILOMETERS,
+        "device_class": None,
     },
-    "rainFall": {"name": "Rain Fall", "unit_of_measurement": "cm"},
-    "snowFall": {"name": "Snow Fall", "unit_of_measurement": "cm"},
-    "airInfo": {"name": "Air Info", "unit_of_measurement": None},
-    "airDescription": {"name": "Air Description", "unit_of_measurement": None},
-    "windSpeed": {"name": "Wind Speed", "unit_of_measurement": "km/h"},
-    "windDirection": {"name": "Wind Direction", "unit_of_measurement": "°"},
-    "windDesc": {"name": "Wind Description", "unit_of_measurement": "cm"},
-    "windDescShort": {"name": "Wind Description Short", "unit_of_measurement": "cm"},
-    "visibility": {"name": "Visibility", "unit_of_measurement": "km"},
-    "icon": {"name": "Icon", "unit_of_measurement": None},
-    "iconName": {"name": "Icon Name", "unit_of_measurement": None},
-    "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
-    "dayOfWeek": {"name": "Day of Week", "unit_of_measurement": None},
-    "weekday": {"name": "Week Day", "unit_of_measurement": None},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
+    **NON_OBERSATION_ATTRIBUTES,
 }
 
 DAILY_SIMPLE_ATTRIBUTES: dict[str, dict[str, str | None]] = {
-    "daylight": {"name": "Daylight", "unit_of_measurement": None},
-    "description": {"name": "Description", "unit_of_measurement": None},
-    "skyInfo": {"name": "Sky Info", "unit_of_measurement": None},
-    "skyDescription": {"name": "Sky Description", "unit_of_measurement": None},
-    "temperatureDesc": {"name": "Temperature Description", "unit_of_measurement": None},
-    "comfort": {"name": "Comfort", "unit_of_measurement": "°C"},
-    "highTemperature": {"name": "High Temperature", "unit_of_measurement": "°C"},
-    "lowTemperature": {"name": "Low Temperature", "unit_of_measurement": "°C"},
-    "humidity": {"name": "Humidity", "unit_of_measurement": "%"},
-    "dewPoint": {"name": "Dew Point", "unit_of_measurement": "°C"},
-    "precipitationProbability": {
-        "name": "Precipitation Probability",
-        "unit_of_measurement": "%",
+    "highTemperature": {
+        "name": "High Temperature",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
     },
-    "precipitationDesc": {
-        "name": "Precipitation Description",
+    "lowTemperature": {
+        "name": "Low Temperature",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
+    "beaufortScale": {
+        "name": "Beaufort Scale",
         "unit_of_measurement": None,
+        "device_class": None,
     },
-    "rainFall": {"name": "Rain Fall", "unit_of_measurement": "cm"},
-    "snowFall": {"name": "Snow Fall", "unit_of_measurement": "cm"},
-    "airInfo": {"name": "Air Info", "unit_of_measurement": None},
-    "airDescription": {"name": "Air Description", "unit_of_measurement": None},
-    "windSpeed": {"name": "Wind Speed", "unit_of_measurement": "km/h"},
-    "windDirection": {"name": "Wind Direction", "unit_of_measurement": "°"},
-    "windDesc": {"name": "Wind Description", "unit_of_measurement": "cm"},
-    "windDescShort": {"name": "Wind Description Short", "unit_of_measurement": "cm"},
-    "beaufortScale": {"name": "Beaufort Scale", "unit_of_measurement": None},
     "beaufortDescription": {
         "name": "Beaufort Scale Description",
         "unit_of_measurement": None,
+        "device_class": None,
     },
-    "uvIndex": {"name": "UV Index", "unit_of_measurement": None},
-    "uvDesc": {"name": "UV Index Description", "unit_of_measurement": None},
-    "barometerPressure": {"name": "Barometric Pressure", "unit_of_measurement": "mbar"},
-    "icon": {"name": "Icon", "unit_of_measurement": None},
-    "iconName": {"name": "Icon Name", "unit_of_measurement": None},
-    "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
-    "dayOfWeek": {"name": "Day of Week", "unit_of_measurement": None},
-    "weekday": {"name": "Week Day", "unit_of_measurement": None},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
+    "uvIndex": {"name": "UV Index", "unit_of_measurement": None, "device_class": None},
+    "uvDesc": {
+        "name": "UV Index Description",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "barometerPressure": {
+        "name": "Barometric Pressure",
+        "unit_of_measurement": PRESSURE_MBAR,
+        "device_class": DEVICE_CLASS_PRESSURE,
+    },
+    **NON_OBERSATION_ATTRIBUTES,
 }
 
 DAILY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
-    "daylight": {"name": "Daylight", "unit_of_measurement": None},
-    "daySegment": {"name": "Day Segment", "unit_of_measurement": None},
-    "description": {"name": "Description", "unit_of_measurement": None},
-    "skyInfo": {"name": "Sky Info", "unit_of_measurement": None},
-    "skyDescription": {"name": "Sky Description", "unit_of_measurement": None},
-    "temperature": {"name": "Temperature", "unit_of_measurement": "°C"},
-    "temperatureDesc": {"name": "Temperature Description", "unit_of_measurement": None},
-    "comfort": {"name": "Comfort", "unit_of_measurement": "°C"},
-    "humidity": {"name": "Humidity", "unit_of_measurement": "%"},
-    "dewPoint": {"name": "Dew Point", "unit_of_measurement": "°C"},
-    "precipitationProbability": {
-        "name": "Precipitation Probability",
-        "unit_of_measurement": "%",
-    },
-    "precipitationDesc": {
-        "name": "Precipitation Description",
+    "daySegment": {
+        "name": "Day Segment",
         "unit_of_measurement": None,
+        "device_class": None,
     },
-    "rainFall": {"name": "Rain Fall", "unit_of_measurement": "cm"},
-    "snowFall": {"name": "Snow Fall", "unit_of_measurement": "cm"},
-    "airInfo": {"name": "Air Info", "unit_of_measurement": None},
-    "airDescription": {"name": "Air Description", "unit_of_measurement": None},
-    "windSpeed": {"name": "Wind Speed", "unit_of_measurement": "km/h"},
-    "windDirection": {"name": "Wind Direction", "unit_of_measurement": "°"},
-    "windDesc": {"name": "Wind Description", "unit_of_measurement": "cm"},
-    "windDescShort": {"name": "Wind Description Short", "unit_of_measurement": "cm"},
-    "beaufortScale": {"name": "Beaufort Scale", "unit_of_measurement": None},
+    "temperature": {
+        "name": "Temperature",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
+    "beaufortScale": {
+        "name": "Beaufort Scale",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
     "beaufortDescription": {
         "name": "Beaufort Scale Description",
         "unit_of_measurement": None,
+        "device_class": None,
     },
-    "visibility": {"name": "Visibility", "unit_of_measurement": "km"},
-    "icon": {"name": "Icon", "unit_of_measurement": None},
-    "iconName": {"name": "Icon Name", "unit_of_measurement": None},
-    "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
-    "dayOfWeek": {"name": "Day of Week", "unit_of_measurement": None},
-    "weekday": {"name": "Week Day", "unit_of_measurement": None},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
+    "visibility": {
+        "name": "Visibility",
+        "unit_of_measurement": LENGTH_KILOMETERS,
+        "device_class": None,
+    },
+    **NON_OBERSATION_ATTRIBUTES,
 }
 
 OBSERVATION_ATTRIBUTES: dict[str, dict[str, str | None]] = {
-    "daylight": {"name": "Daylight", "unit_of_measurement": None},
-    "description": {"name": "Description", "unit_of_measurement": None},
-    "skyInfo": {"name": "Sky Info", "unit_of_measurement": None},
-    "skyDescription": {"name": "Sky Description", "unit_of_measurement": None},
-    "temperature": {"name": "Temperature", "unit_of_measurement": "°C"},
-    "temperatureDesc": {"name": "Temperature Description", "unit_of_measurement": None},
-    "comfort": {"name": "Comfort", "unit_of_measurement": "°C"},
-    "highTemperature": {"name": "High Temperature", "unit_of_measurement": "°C"},
-    "lowTemperature": {"name": "Low Temperature", "unit_of_measurement": "°C"},
-    "humidity": {"name": "Humidity", "unit_of_measurement": "%"},
-    "dewPoint": {"name": "Dew Point", "unit_of_measurement": "°C"},
+    "temperature": {
+        "name": "Temperature",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
+    "highTemperature": {
+        "name": "High Temperature",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
+    "lowTemperature": {
+        "name": "Low Temperature",
+        "unit_of_measurement": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
     "precipitation1H": {
         "name": "Precipitation Over 1 Hour",
-        "unit_of_measurement": "cm",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
     },
     "precipitation3H": {
         "name": "Precipitation Over 3 Hours",
-        "unit_of_measurement": "cm",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
     },
     "precipitation6H": {
         "name": "Precipitation Over 6 Hours",
-        "unit_of_measurement": "cm",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
     },
     "precipitation12H": {
         "name": "Precipitation Over 12 Hours",
-        "unit_of_measurement": "cm",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
     },
     "precipitation24H": {
         "name": "Precipitation Over 24 Hours",
-        "unit_of_measurement": "cm",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
     },
-    "precipitationDesc": {
-        "name": "Precipitation Description",
-        "unit_of_measurement": None,
+    "barometerPressure": {
+        "name": "Barometric Pressure",
+        "unit_of_measurement": PRESSURE_MBAR,
+        "device_class": DEVICE_CLASS_PRESSURE,
     },
-    "airInfo": {"name": "Air Info", "unit_of_measurement": None},
-    "airDescription": {"name": "Air Description", "unit_of_measurement": None},
-    "windSpeed": {"name": "Wind Speed", "unit_of_measurement": "km/h"},
-    "windDirection": {"name": "Wind Direction", "unit_of_measurement": "°"},
-    "windDesc": {"name": "Wind Description", "unit_of_measurement": "cm"},
-    "windDescShort": {"name": "Wind Description Short", "unit_of_measurement": None},
-    "barometerPressure": {"name": "Barometric Pressure", "unit_of_measurement": "mbar"},
     "barometerTrend": {
         "name": "Barometric Pressure Trend",
         "unit_of_measurement": None,
+        "device_class": None,
     },
-    "visibility": {"name": "Visibility", "unit_of_measurement": "km"},
-    "snowCover": {"name": "Snow Cover", "unit_of_measurement": "cm"},
-    "icon": {"name": "Icon", "unit_of_measurement": None},
-    "iconName": {"name": "Icon Name", "unit_of_measurement": None},
-    "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
-    "activeAlerts": {"name": "Active Alerts", "unit_of_measurement": None},
-    "country": {"name": "Country", "unit_of_measurement": None},
-    "state": {"name": "State", "unit_of_measurement": None},
-    "city": {"name": "City", "unit_of_measurement": None},
+    "visibility": {
+        "name": "Visibility",
+        "unit_of_measurement": LENGTH_KILOMETERS,
+        "device_class": None,
+    },
+    "snowCover": {
+        "name": "Snow Cover",
+        "unit_of_measurement": LENGTH_CENTIMETERS,
+        "device_class": None,
+    },
+    "activeAlerts": {
+        "name": "Active Alerts",
+        "unit_of_measurement": None,
+        "device_class": None,
+    },
+    "country": {"name": "Country", "unit_of_measurement": None, "device_class": None},
+    "state": {"name": "State", "unit_of_measurement": None, "device_class": None},
+    "city": {"name": "City", "unit_of_measurement": None, "device_class": None},
+    **COMMON_ATTRIBUTES,
 }
 
 SENSOR_TYPES: dict[str, dict[str, dict[str, str | None]]] = {

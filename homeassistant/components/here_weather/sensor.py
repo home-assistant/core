@@ -60,6 +60,9 @@ class HEREDestinationWeatherSensor(CoordinatorEntity, SensorEntity):
             self.coordinator.hass.config.units.name,
             SENSOR_TYPES[sensor_type][weather_attribute]["unit_of_measurement"],
         )
+        self._device_class = SENSOR_TYPES[sensor_type][weather_attribute][
+            "device_class"
+        ]
         self._unique_id = "".join(
             f"{self._latitude}_{self._longitude}_{self._sensor_type}_{self._name_suffix}_{self._sensor_number}".lower().split()
         )
@@ -82,13 +85,11 @@ class HEREDestinationWeatherSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the device."""
-        if self.coordinator.data is not None:
-            return get_attribute_from_here_data(
-                self.coordinator.data,
-                self._weather_attribute,
-                self._sensor_number,
-            )
-        return None
+        return get_attribute_from_here_data(
+            self.coordinator.data,
+            self._weather_attribute,
+            self._sensor_number,
+        )
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -105,3 +106,8 @@ class HEREDestinationWeatherSensor(CoordinatorEntity, SensorEntity):
             "manufacturer": "here.com",
             "entry_type": "service",
         }
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device."""
+        return self._device_class
