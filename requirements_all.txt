@@ -648,6 +648,9 @@ fritzconnection==1.4.2
 # homeassistant.components.google_translate
 gTTS==2.2.3
 
+# homeassistant.components.gandi_livedns
+gandi-api-livedns==0.3.0
+
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==2.1.1
 

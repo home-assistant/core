@@ -3,6 +3,14 @@ from __future__ import annotations
 
 import logging
 
+from gandi_api_livedns import GandiApiLiveDNS
+from gandi_api_livedns.const import (
+    AVAILABLE_TYPE,
+    DEFAULT_IPV6,
+    DEFAULT_TIMEOUT,
+    DEFAULT_TTL,
+    DEFAULT_TYPE,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -14,21 +22,9 @@ from homeassistant.const import (
     CONF_TTL,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    AVAILABLE_TYPE,
-    CONF_IPV6,
-    CONF_UPDATE_INTERVAL,
-    DEFAULT_IPV6,
-    DEFAULT_TIMEOUT,
-    DEFAULT_TTL,
-    DEFAULT_TYPE,
-    DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
-)
-from .gandi import GandiApiLiveDNS
+from .const import CONF_IPV6, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,30 +44,41 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-
-    errors = {}
-    info = {}
-
-    gandiApiLiveDNS = GandiApiLiveDNS(hass, data, _LOGGER)
-    record, error = await gandiApiLiveDNS.getDNSRecord()
-    if error:
-        errors["base"] = error
-        _LOGGER.debug(errors["base"])
-    else:
-        info["record"] = record
-
-    return info, errors
-
-
 class GandiLiveDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Gandi.net live DNS."""
 
     VERSION = 1
+
+    async def _validate_input(self, data: dict):
+        """Validate the user input allows us to connect.
+
+        Data has the keys from DATA_SCHEMA with values provided by the user.
+        """
+
+        errors = {}
+        info = {}
+
+        gandiApiLiveDNS = GandiApiLiveDNS(
+            api_key=data[CONF_API_KEY],
+            domain=data[CONF_DOMAIN],
+            rrname=data[CONF_NAME],
+            rrtype=data[CONF_TYPE],
+            rrttl=data[CONF_TTL],
+            ipv6=data[CONF_IPV6],
+            timeout=data[CONF_TIMEOUT],
+            logger=_LOGGER,
+        )
+
+        record, error = await self.hass.async_add_executor_job(
+            gandiApiLiveDNS.getDNSRecord
+        )
+        if error:
+            errors["base"] = error
+            _LOGGER.debug(errors["base"])
+        else:
+            info["record"] = record
+
+        return info, errors
 
     def __init__(self):
         """Initialize the Gandi.net live DNS config flow."""
@@ -83,14 +90,16 @@ class GandiLiveDnsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            record, errors = await validate_input(self.hass, user_input)
+            record, errors = await self._validate_input(user_input)
 
             if not errors:
                 self._config.update(user_input)
 
                 title = (
-                    self._config[CONF_NAME]
-                    + self._config[CONF_TYPE]
+                    self._config[CONF_TYPE]
+                    + ":"
+                    + self._config[CONF_NAME]
+                    + "."
                     + self._config[CONF_DOMAIN]
                 )
 
@@ -107,7 +116,7 @@ class GandiLiveDnsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         info = {}
 
-        record, error = await validate_input(self.hass, config)
+        record, error = await self._validate_input(config)
 
         if error is not None:
             errors["base"] = error
