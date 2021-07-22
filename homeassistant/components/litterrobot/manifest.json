@@ -3,7 +3,7 @@
   "name": "Litter-Robot",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/litterrobot",
-  "requirements": ["pylitterbot==2021.3.1"],
+  "requirements": ["pylitterbot==2021.7.2"],
   "codeowners": ["@natekspencer"],
   "iot_class": "cloud_polling"
 }

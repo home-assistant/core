@@ -6,7 +6,7 @@
         },
         "error": {
             "forbidden": "Verbindung kann nicht hergestellt werden. Bitte \u00fcberpr\u00fcfe deine forked-daapd-Netzwerkberechtigungen.",
-            "unknown_error": "Unbekannter Fehler",
+            "unknown_error": "Unerwarteter Fehler",
             "websocket_not_enabled": "Forked-Daapd-Server-Websocket nicht aktiviert.",
             "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte Host und Port pr\u00fcfen.",
             "wrong_password": "Ung\u00fcltiges Passwort",

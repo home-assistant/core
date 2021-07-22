@@ -10,9 +10,9 @@ from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_POTENTIAL_VOLT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -37,10 +37,10 @@ SENSOR_TYPES = {
     "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet", None],
     "temperature": ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge", None],
-    "voltage_0": ["voltage_0", VOLT, "mdi:flash", None],
-    "voltage_1": ["voltage_1", VOLT, "mdi:flash", None],
-    "voltage_2": ["voltage_2", VOLT, "mdi:flash", None],
-    "voltage_3": ["voltage_3", VOLT, "mdi:flash", None],
+    "voltage_0": ["voltage_0", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_1": ["voltage_1", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_2": ["voltage_2", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_3": ["voltage_3", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

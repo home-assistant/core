@@ -12,11 +12,17 @@ from homeassistant.components.fritzbox.const import (
     ATTR_TOTAL_CONSUMPTION_UNIT,
     DOMAIN as FB_DOMAIN,
 )
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     ENERGY_KILO_WATT_HOUR,
     SERVICE_TURN_OFF,
@@ -27,11 +33,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import MOCK_CONFIG, FritzDeviceSwitchMock, setup_config_entry
+from . import FritzDeviceSwitchMock, setup_config_entry
+from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.fake_name"
+ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock):
@@ -45,13 +52,23 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_CURRENT_POWER_W] == 5.678
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
     assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
     assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
-    assert state.attributes[ATTR_TEMPERATURE] == "135"
+    assert state.attributes[ATTR_TEMPERATURE] == "1.23"
     assert state.attributes[ATTR_TEMPERATURE_UNIT] == TEMP_CELSIUS
     assert state.attributes[ATTR_TOTAL_CONSUMPTION] == "1.234"
     assert state.attributes[ATTR_TOTAL_CONSUMPTION_UNIT] == ENERGY_KILO_WATT_HOUR
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_temperature")
+    assert state
+    assert state.state == "1.23"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Temperature"
+    assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
+    assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
 
 
 async def test_turn_on(hass: HomeAssistant, fritz: Mock):

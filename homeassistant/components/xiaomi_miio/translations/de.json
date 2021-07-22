@@ -50,7 +50,7 @@
                     "name": "Name des Gateways",
                     "token": "API-Token"
                 },
-                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token. Anweisungen findest du unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
+                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token. Anweisungen findest du unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token. Bitte beachte, dass sich dieser API-Token von dem Schl\u00fcssel unterscheidet, der von der Xiaomi Aqara Integration verwendet wird.",
                 "title": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
             },
             "manual": {

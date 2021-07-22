@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix les credencials utilitzades per iniciar sessi\u00f3 a mytotalconnectcomfort.com.",
+                "title": "Honeywell Total Connect Comfort (EUA)"
+            }
+        }
+    }
+}

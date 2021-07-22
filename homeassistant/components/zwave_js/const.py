@@ -70,7 +70,3 @@ ATTR_BROADCAST = "broadcast"
 SERVICE_PING = "ping"
 
 ADDON_SLUG = "core_zwave_js"
-
-# Siren constants
-TONE_ID_DEFAULT = 255
-TONE_ID_OFF = 0

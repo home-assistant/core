@@ -54,24 +54,11 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             self._unique_id
         )
         self._is_on: bool = self._binary_switch_property.state
-        self._consumption: float | None
-
-        if hasattr(self._device_instance, "consumption_property"):
-            self._consumption = self._device_instance.consumption_property.get(
-                self._unique_id.replace("BinarySwitch", "Meter")
-            ).current
-        else:
-            self._consumption = None
 
     @property
     def is_on(self) -> bool:
         """Return the state."""
         return self._is_on
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current consumption."""
-        return self._consumption
 
     def turn_on(self, **kwargs: Any) -> None:
         """Switch on the device."""
@@ -87,10 +74,6 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
             self._is_on = self._device_instance.binary_switch_property[message[0]].state
-        elif message[0].startswith("devolo.Meter"):
-            self._consumption = self._device_instance.consumption_property[
-                message[0]
-            ].current
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()
