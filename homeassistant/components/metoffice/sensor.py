@@ -188,7 +188,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{hass_data[METOFFICE_NAME]} {metadata.title} {mode_label}"
         self._attr_unique_id = f"{metadata.title}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:
-            self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
+            self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
         self._attr_device_class = metadata.device_class
         self._attr_unit_of_measurement = metadata.unit_of_measurement
 
