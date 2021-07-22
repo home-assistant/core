@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -168,7 +169,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
 
         if consumption == "total":
-            self._attr_state_class = "measurement"
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
             self._attr_last_reset = device_instance.consumption_property[
                 element_uid
             ].total_since
