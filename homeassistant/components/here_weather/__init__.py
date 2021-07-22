@@ -7,18 +7,23 @@ import logging
 import async_timeout
 import herepy
 
+from homeassistant.components.here_weather.utils import active_here_clients
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MODES, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_MODES,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MAX_UPDATE_RATE_FOR_ONE_CLIENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,32 +68,22 @@ class HEREWeatherData:
 
     async def async_setup(self) -> None:
         """Set up the here_weather integration."""
-        self.add_options()
-        self.entry.async_on_unload(
-            self.entry.add_update_listener(self.async_options_updated)
-        )
         self.coordinator = DataUpdateCoordinator(
             self.hass,
             _LOGGER,
             name=DOMAIN,
             update_method=self.async_update,
-            update_interval=timedelta(seconds=self.entry.options[CONF_SCAN_INTERVAL]),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         await self.coordinator.async_config_entry_first_refresh()
-
-    def add_options(self) -> None:
-        """Add options for here_weather integration."""
-        if not self.entry.options:
-            options = {
-                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-            }
-            self.hass.config_entries.async_update_entry(self.entry, options=options)
 
     async def async_update(self):
         """Handle data update with the DataUpdateCoordinator."""
         try:
             async with async_timeout.timeout(10):
-                return await self.hass.async_add_executor_job(self._get_data)
+                data = await self.hass.async_add_executor_job(self._get_data)
+                self._set_update_interval()
+                return data
         except herepy.InvalidRequestError as error:
             raise UpdateFailed(
                 f"Unable to fetch data from HERE: {error.message}"
@@ -107,18 +102,16 @@ class HEREWeatherData:
             data, self.weather_product_type
         )
 
-    @staticmethod
-    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Triggered by config entry options updates."""
-        for mode in CONF_MODES:
-            hass.data[DOMAIN][entry.entry_id][mode].set_update_interval(
-                entry.options[CONF_SCAN_INTERVAL]
+    def _set_update_interval(self) -> int:
+        """Throttle the default update rate based on the number of active clients."""
+        if (
+            update_interval := (
+                active_here_clients(self.hass) * MAX_UPDATE_RATE_FOR_ONE_CLIENT * 2
             )
-
-    def set_update_interval(self, update_interval: int) -> None:
-        """Set the coordinator update_interval to the supplied update_interval."""
-        if self.coordinator is not None:
-            self.coordinator.update_interval = timedelta(seconds=update_interval)
+        ) > DEFAULT_SCAN_INTERVAL:
+            _LOGGER.debug("Setting update_interval to %s", update_interval)
+            return update_interval
+        return DEFAULT_SCAN_INTERVAL
 
 
 def extract_data_from_payload_for_product_type(

@@ -14,6 +14,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
 
 
 def convert_temperature_unit_of_measurement_if_needed(
@@ -60,3 +63,14 @@ def convert_asterisk_to_none(state: str) -> str | None:
     if state == "*":
         return None
     return state
+
+
+def active_here_clients(hass: HomeAssistant) -> int:
+    """Return the number of active herepy clients."""
+    active_coordinators = 0
+    if config_entries := hass.data.get(DOMAIN):
+        for here_weather_data_dicts in config_entries.values():
+            for here_weather_data in here_weather_data_dicts.values():
+                if len(here_weather_data.coordinator._listeners) > 0:
+                    active_coordinators += 1
+    return active_coordinators

@@ -1,6 +1,8 @@
 """Constants for the HERE Destination Weather service."""
 from __future__ import annotations
 
+import math
+
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_HUMIDITY,
@@ -17,7 +19,12 @@ from homeassistant.const import (
 
 DOMAIN = "here_weather"
 
-DEFAULT_SCAN_INTERVAL = 120
+DEFAULT_SCAN_INTERVAL = 300
+
+FREEMIUM_REQUESTS_PER_MONTH = 250000
+MAX_UPDATE_RATE_FOR_ONE_CLIENT = math.ceil(
+    (31 * 24 * 3600) / FREEMIUM_REQUESTS_PER_MONTH
+)
 
 CONF_LANGUAGE = "language"
 CONF_OFFSET = "offset"
