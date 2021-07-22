@@ -304,7 +304,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.19.0
+async-upnp-client==0.19.1
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -1020,7 +1020,7 @@ nettigo-air-monitor==1.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.9
+nexia==0.9.10
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1375,7 +1375,7 @@ pydaikin==2.4.4
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==81
+pydeconz==82
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1773,7 +1773,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.52
+pysonos==0.0.53
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2102,7 +2102,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.1
+simplisafe-python==11.0.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2210,7 +2210,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.6.0
+surepy==0.7.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
