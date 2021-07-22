@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import CommandClass, ToneID
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN, TONE_ID_DEFAULT, TONE_ID_OFF
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -65,7 +65,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
         return [
             val
             for key, val in self._tones_value.metadata.states.items()
-            if int(key) not in (TONE_ID_DEFAULT, TONE_ID_OFF)
+            if int(key) not in (ToneID.DEFAULT, ToneID.OFF)
         ]
 
     @property
