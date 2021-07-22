@@ -12,7 +12,7 @@ DOMAINS_AND_TYPES = {
         "RM4MINI",
         "RM4PRO",
         "RMPRO",
-        "SP2",
+        "SP2S",
         "SP3S",
         "SP4",
         "SP4B",
