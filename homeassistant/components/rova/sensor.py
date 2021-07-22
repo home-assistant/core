@@ -1,7 +1,9 @@
 """Support for Rova garbage calendar."""
+from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import NamedTuple
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
@@ -24,13 +26,36 @@ CONF_HOUSE_NUMBER_SUFFIX = "house_number_suffix"
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
 
-# Supported sensor types:
-# Key: [json_key, name, icon]
-SENSOR_TYPES = {
-    "bio": ["gft", "Biowaste", "mdi:recycle"],
-    "paper": ["papier", "Paper", "mdi:recycle"],
-    "plastic": ["pmd", "PET", "mdi:recycle"],
-    "residual": ["restafval", "Residual", "mdi:recycle"],
+
+class RovaSensorMetadata(NamedTuple):
+    """Metadata for an individual rova sensor."""
+
+    name: str
+    json_key: str
+    icon: str
+
+
+SENSOR_TYPES: dict[str, RovaSensorMetadata] = {
+    "bio": RovaSensorMetadata(
+        "Biowaste",
+        json_key="gft",
+        icon="mdi:recycle",
+    ),
+    "paper": RovaSensorMetadata(
+        "Paper",
+        json_key="papier",
+        icon="mdi:recycle",
+    ),
+    "plastic": RovaSensorMetadata(
+        "PET",
+        json_key="pmd",
+        icon="mdi:recycle",
+    ),
+    "residual": RovaSensorMetadata(
+        "Residual",
+        json_key="restafval",
+        icon="mdi:recycle",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -90,17 +115,14 @@ class RovaSensor(SensorEntity):
 
         self._state = None
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
+        metadata = SENSOR_TYPES[sensor_key]
+        self._json_key = metadata.json_key
+        self._attr_icon = metadata.icon
 
     @property
     def name(self):
         """Return the name."""
         return f"{self.platform_name}_{self.sensor_key}"
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][2]
 
     @property
     def device_class(self):

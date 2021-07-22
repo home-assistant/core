@@ -40,7 +40,7 @@ import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 
-from . import DOMAIN
+from . import ATTR_LAST_RESET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
 }
 
+# Normalized units which will be stored in the statistics table
 DEVICE_CLASS_UNITS = {
     DEVICE_CLASS_ENERGY: ENERGY_KILO_WATT_HOUR,
     DEVICE_CLASS_POWER: POWER_WATT,
@@ -62,14 +63,18 @@ DEVICE_CLASS_UNITS = {
 }
 
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
+    # Convert energy to kWh
     DEVICE_CLASS_ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
     },
+    # Convert power W
     DEVICE_CLASS_POWER: {
         POWER_WATT: lambda x: x,
         POWER_KILO_WATT: lambda x: x * 1000,
     },
+    # Convert pressure to Pa
+    # Note: pressure_util.convert is bypassed to avoid redundant error checking
     DEVICE_CLASS_PRESSURE: {
         PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
         PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
@@ -78,6 +83,8 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
         PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
     },
+    # Convert temperature to °C
+    # Note: temperature_util.convert is bypassed to avoid redundant error checking
     DEVICE_CLASS_TEMPERATURE: {
         TEMP_CELSIUS: lambda x: x,
         TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
@@ -85,6 +92,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     },
 }
 
+# Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = set()
 
 
@@ -216,7 +224,11 @@ def compile_statistics(
         result[entity_id] = {}
 
         # Set meta data
-        result[entity_id]["meta"] = {"unit_of_measurement": unit}
+        result[entity_id]["meta"] = {
+            "unit_of_measurement": unit,
+            "has_mean": "mean" in wanted_statistics,
+            "has_sum": "sum" in wanted_statistics,
+        }
 
         # Make calculations
         stat: dict = {}
@@ -232,7 +244,7 @@ def compile_statistics(
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0
-            last_stats = statistics.get_last_statistics(hass, 1, entity_id)  # type: ignore
+            last_stats = statistics.get_last_statistics(hass, 1, entity_id)
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
@@ -268,3 +280,36 @@ def compile_statistics(
         result[entity_id]["stat"] = stat
 
     return result
+
+
+def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -> dict:
+    """Return statistic_ids and meta data."""
+    entities = _get_entities(hass)
+
+    statistic_ids = {}
+
+    for entity_id, device_class in entities:
+        provided_statistics = DEVICE_CLASS_STATISTICS[device_class]
+
+        if statistic_type is not None and statistic_type not in provided_statistics:
+            continue
+
+        state = hass.states.get(entity_id)
+        assert state
+
+        if "sum" in provided_statistics and ATTR_LAST_RESET not in state.attributes:
+            continue
+
+        native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if device_class not in UNIT_CONVERSIONS:
+            statistic_ids[entity_id] = native_unit
+            continue
+
+        if native_unit not in UNIT_CONVERSIONS[device_class]:
+            continue
+
+        statistics_unit = DEVICE_CLASS_UNITS[device_class]
+        statistic_ids[entity_id] = statistics_unit
+
+    return statistic_ids

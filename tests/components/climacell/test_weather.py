@@ -228,7 +228,7 @@ async def test_v3_weather(
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 9.9940
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 320.31
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 14.6289
-    assert weather_state.attributes[ATTR_CLOUD_COVER] == 1
+    assert weather_state.attributes[ATTR_CLOUD_COVER] == 100
     assert weather_state.attributes[ATTR_WIND_GUST] == 24.0758
     assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"
 
@@ -391,6 +391,6 @@ async def test_v4_weather(
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 13.1162
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.0152
-    assert weather_state.attributes[ATTR_CLOUD_COVER] == 1
+    assert weather_state.attributes[ATTR_CLOUD_COVER] == 100
     assert weather_state.attributes[ATTR_WIND_GUST] == 20.3421
     assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"

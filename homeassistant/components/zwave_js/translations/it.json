@@ -51,6 +51,21 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Valore del parametro di configurazione {subtype}",
+            "node_status": "Stato del nodo",
+            "value": "Valore corrente di un valore Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Inviata una notifica di controllo delle entrate",
+            "event.notification.notification": "Inviata una notifica",
+            "event.value_notification.basic": "Evento CC di base su {subtype}",
+            "event.value_notification.central_scene": "Azione della scena centrale su {subtype}",
+            "event.value_notification.scene_activation": "Attivazione scena su {subtype}",
+            "state.node_status": "Lo stato del nodo \u00e8 cambiato"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Impossibile ottenere le informazioni sul rilevamento del componente aggiuntivo Z-Wave JS.",

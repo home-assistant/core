@@ -381,17 +381,17 @@ class VizioDevice(MediaPlayerEntity):
         # show the combination with , otherwise just return inputs
         if self._available_apps:
             return [
-                *[
+                *(
                     _input
                     for _input in self._available_inputs
                     if _input not in INPUT_APPS
-                ],
+                ),
                 *self._available_apps,
-                *[
+                *(
                     app
                     for app in self._get_additional_app_names()
                     if app not in self._available_apps
-                ],
+                ),
             ]
 
         return self._available_inputs

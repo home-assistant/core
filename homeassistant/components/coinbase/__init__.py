@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
@@ -19,6 +20,7 @@ from .const import (
     API_ACCOUNT_ID,
     API_ACCOUNTS_DATA,
     CONF_CURRENCIES,
+    CONF_EXCHANGE_BASE,
     CONF_EXCHANGE_RATES,
     CONF_YAML_API_TOKEN,
     DOMAIN,
@@ -66,9 +68,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Coinbase from a config entry."""
 
-    instance = await hass.async_add_executor_job(
-        create_and_update_instance, entry.data[CONF_API_KEY], entry.data[CONF_API_TOKEN]
-    )
+    instance = await hass.async_add_executor_job(create_and_update_instance, entry)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -88,12 +90,36 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-def create_and_update_instance(api_key, api_token):
+def create_and_update_instance(entry: ConfigEntry) -> CoinbaseData:
     """Create and update a Coinbase Data instance."""
-    client = Client(api_key, api_token)
-    instance = CoinbaseData(client)
+    client = Client(entry.data[CONF_API_KEY], entry.data[CONF_API_TOKEN])
+    base_rate = entry.options.get(CONF_EXCHANGE_BASE, "USD")
+    instance = CoinbaseData(client, base_rate)
     instance.update()
     return instance
+
+
+async def update_listener(hass, config_entry):
+    """Handle options update."""
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+    registry = entity_registry.async_get(hass)
+    entities = entity_registry.async_entries_for_config_entry(
+        registry, config_entry.entry_id
+    )
+
+    # Remove orphaned entities
+    for entity in entities:
+        currency = entity.unique_id.split("-")[-1]
+        if "xe" in entity.unique_id and currency not in config_entry.options.get(
+            CONF_EXCHANGE_RATES
+        ):
+            registry.async_remove(entity.entity_id)
+        elif "wallet" in entity.unique_id and currency not in config_entry.options.get(
+            CONF_CURRENCIES
+        ):
+            registry.async_remove(entity.entity_id)
 
 
 def get_accounts(client):
@@ -113,11 +139,12 @@ def get_accounts(client):
 class CoinbaseData:
     """Get the latest data and update the states."""
 
-    def __init__(self, client):
+    def __init__(self, client, exchange_base):
         """Init the coinbase data object."""
 
         self.client = client
         self.accounts = None
+        self.exchange_base = exchange_base
         self.exchange_rates = None
         self.user_id = self.client.get_current_user()[API_ACCOUNT_ID]
 
@@ -127,7 +154,9 @@ class CoinbaseData:
 
         try:
             self.accounts = get_accounts(self.client)
-            self.exchange_rates = self.client.get_exchange_rates()
+            self.exchange_rates = self.client.get_exchange_rates(
+                currency=self.exchange_base
+            )
         except AuthenticationError as coinbase_error:
             _LOGGER.error(
                 "Authentication error connecting to coinbase: %s", coinbase_error

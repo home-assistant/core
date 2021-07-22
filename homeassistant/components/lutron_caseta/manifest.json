@@ -2,7 +2,7 @@
   "domain": "lutron_caseta",
   "name": "Lutron Cas\u00e9ta",
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
-  "requirements": ["pylutron-caseta==0.10.0", "aiolip==1.1.4"],
+  "requirements": ["pylutron-caseta==0.11.0", "aiolip==1.1.4"],
   "config_flow": true,
   "zeroconf": ["_leap._tcp.local."],
   "homekit": {

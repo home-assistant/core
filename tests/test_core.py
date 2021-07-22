@@ -315,9 +315,9 @@ def test_event_eq():
     now = dt_util.utcnow()
     data = {"some": "attr"}
     context = ha.Context()
-    event1, event2 = [
+    event1, event2 = (
         ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
-    ]
+    )
 
     assert event1 == event2
 

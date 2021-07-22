@@ -208,7 +208,7 @@ class NotionEntity(CoordinatorEntity):
         raise NotImplementedError
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         if self._task_id in self.coordinator.data["tasks"]:
             self.hass.async_create_task(self._async_update_bridge_id())
@@ -216,7 +216,7 @@ class NotionEntity(CoordinatorEntity):
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._async_update_from_latest_data()

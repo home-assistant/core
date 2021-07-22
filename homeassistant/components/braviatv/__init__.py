@@ -1,14 +1,20 @@
 """The Bravia TV component."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
+from typing import Final
 
 from bravia_tv import BraviaRC
 from bravia_tv.braviarc import NoIPControl
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -16,11 +22,11 @@ from .const import CLIENTID_PREFIX, CONF_IGNORED_SOURCES, DOMAIN, NICKNAME
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
-SCAN_INTERVAL = timedelta(seconds=10)
+PLATFORMS: Final[list[str]] = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
+SCAN_INTERVAL: Final = timedelta(seconds=10)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]
     mac = config_entry.data[CONF_MAC]
@@ -40,7 +46,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -52,7 +58,7 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -64,28 +70,33 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     several platforms.
     """
 
-    def __init__(self, hass, host, mac, pin, ignored_sources):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        mac: str,
+        pin: str,
+        ignored_sources: list[str],
+    ) -> None:
         """Initialize Bravia TV Client."""
 
         self.braviarc = BraviaRC(host, mac)
         self.pin = pin
         self.ignored_sources = ignored_sources
-        self.muted = False
-        self.channel_name = None
-        self.channel_number = None
-        self.media_title = None
-        self.source = None
-        self.source_list = []
-        self.original_content_list = []
-        self.content_mapping = {}
-        self.duration = None
-        self.content_uri = None
-        self.start_date_time = None
-        self.program_media_type = None
-        self.audio_output = None
-        self.min_volume = None
-        self.max_volume = None
-        self.volume_level = None
+        self.muted: bool = False
+        self.channel_name: str | None = None
+        self.media_title: str | None = None
+        self.source: str | None = None
+        self.source_list: list[str] = []
+        self.original_content_list: list[str] = []
+        self.content_mapping: dict[str, str] = {}
+        self.duration: int | None = None
+        self.content_uri: str | None = None
+        self.program_media_type: str | None = None
+        self.audio_output: str | None = None
+        self.min_volume: int | None = None
+        self.max_volume: int | None = None
+        self.volume_level: float | None = None
         self.is_on = False
         # Assume that the TV is in Play mode
         self.playing = True
@@ -101,19 +112,20 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
-    def _send_command(self, command, repeats=1):
+    def _send_command(self, command: str, repeats: int = 1) -> None:
         """Send a command to the TV."""
         for _ in range(repeats):
             for cmd in command:
                 self.braviarc.send_command(cmd)
 
-    def _get_source(self):
+    def _get_source(self) -> str | None:
         """Return the name of the source."""
         for key, value in self.content_mapping.items():
             if value == self.content_uri:
                 return key
+        return None
 
-    def _refresh_volume(self):
+    def _refresh_volume(self) -> bool:
         """Refresh volume information."""
         volume_info = self.braviarc.get_volume_info(self.audio_output)
         if volume_info is not None:
@@ -122,11 +134,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.audio_output = volume_info.get("target")
             self.min_volume = volume_info.get("minVolume")
             self.max_volume = volume_info.get("maxVolume")
-            self.muted = volume_info.get("mute")
+            self.muted = volume_info.get("mute", False)
             return True
         return False
 
-    def _refresh_channels(self):
+    def _refresh_channels(self) -> bool:
         """Refresh source and channels list."""
         if not self.source_list:
             self.content_mapping = self.braviarc.load_source_list()
@@ -138,17 +150,15 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     self.source_list.append(key)
         return True
 
-    def _refresh_playing_info(self):
+    def _refresh_playing_info(self) -> None:
         """Refresh playing information."""
         playing_info = self.braviarc.get_playing_info()
         program_name = playing_info.get("programTitle")
         self.channel_name = playing_info.get("title")
         self.program_media_type = playing_info.get("programMediaType")
-        self.channel_number = playing_info.get("dispNum")
         self.content_uri = playing_info.get("uri")
         self.source = self._get_source()
         self.duration = playing_info.get("durationSec")
-        self.start_date_time = playing_info.get("startDateTime")
         if not playing_info:
             self.channel_name = "App"
         if self.channel_name is not None:
@@ -158,7 +168,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         else:
             self.media_title = None
 
-    def _update_tv_data(self):
+    def _update_tv_data(self) -> None:
         """Connect and update TV info."""
         power_status = self.braviarc.get_power_status()
 
@@ -182,26 +192,26 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
 
         self.is_on = False
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch the latest data."""
         if self.state_lock.locked():
             return
 
         await self.hass.async_add_executor_job(self._update_tv_data)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the device on."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.turn_on)
             await self.async_request_refresh()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.turn_off)
             await self.async_request_refresh()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(
@@ -209,7 +219,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             )
             await self.async_request_refresh()
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Send volume up command to device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(
@@ -217,7 +227,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             )
             await self.async_request_refresh()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Send volume down command to device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(
@@ -225,46 +235,46 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             )
             await self.async_request_refresh()
 
-    async def async_volume_mute(self, mute):
+    async def async_volume_mute(self, mute: bool) -> None:
         """Send mute command to device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.mute_volume, mute)
             await self.async_request_refresh()
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command to device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.media_play)
             self.playing = True
             await self.async_request_refresh()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command to device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.media_pause)
             self.playing = False
             await self.async_request_refresh()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command to device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.media_stop)
             self.playing = False
             await self.async_request_refresh()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.media_next_track)
             await self.async_request_refresh()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.media_previous_track)
             await self.async_request_refresh()
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         if source in self.content_mapping:
             uri = self.content_mapping[source]
@@ -272,7 +282,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.hass.async_add_executor_job(self.braviarc.play_content, uri)
                 await self.async_request_refresh()
 
-    async def async_send_command(self, command, repeats):
+    async def async_send_command(self, command: Iterable[str], repeats: int) -> None:
         """Send command to device."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self._send_command, command, repeats)

@@ -13,7 +13,9 @@
                 "data": {
                     "host": "IP c\u00edm",
                     "port": "Port"
-                }
+                },
+                "description": "Konfigur\u00e1lja az Insteon Hub 1. verzi\u00f3j\u00e1t (2014 el\u0151tti).",
+                "title": "Insteon Hub 1. verzi\u00f3"
             },
             "hubv2": {
                 "data": {
@@ -22,12 +24,14 @@
                     "port": "Port",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
+                "description": "Konfigur\u00e1lja az Insteon Hub 2. verzi\u00f3j\u00e1t.",
                 "title": "Insteon Hub 2. verzi\u00f3"
             },
             "plm": {
                 "data": {
                     "device": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
-                }
+                },
+                "title": "Insteon PLM"
             },
             "user": {
                 "data": {
@@ -47,6 +51,9 @@
                 "title": "Insteon"
             },
             "add_x10": {
+                "data": {
+                    "unitcode": "Egys\u00e9gk\u00f3d (1 - 16)"
+                },
                 "title": "Insteon"
             },
             "change_hub_config": {
@@ -59,12 +66,19 @@
                 "title": "Insteon"
             },
             "init": {
+                "data": {
+                    "add_x10": "Adjon hozz\u00e1 egy X10 eszk\u00f6zt."
+                },
                 "title": "Insteon"
             },
             "remove_override": {
                 "title": "Insteon"
             },
             "remove_x10": {
+                "data": {
+                    "address": "V\u00e1lassza ki az elt\u00e1vol\u00edtani k\u00edv\u00e1nt eszk\u00f6z c\u00edm\u00e9t"
+                },
+                "description": "T\u00e1vol\u00edtson el egy X10 eszk\u00f6zt",
                 "title": "Insteon"
             }
         }

@@ -47,12 +47,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(account.data[CONF_EMAIL])
+            await self.async_set_unique_id(account.email)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=account.data[CONF_EMAIL],
-                data={ACCOUNT_HASH: account.data[ACCOUNT_HASH]},
+                title=account.email,
+                data={ACCOUNT_HASH: account.account_hash},
             )
 
         return self.async_show_form(
