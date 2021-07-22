@@ -106,11 +106,11 @@ class CanaryCamera(CoordinatorEntity, Camera):
         self._device_type_name = device.device_type["name"]
         self._timeout = timeout
         self._live_stream_session: LiveStreamSession | None = None
-        self._attr_name = self._device_name
+        self._attr_name = device.name
         self._attr_unique_id = str(self._device_id)
         self._attr_device_info = {
             "identifiers": {(DOMAIN, str(self._device_id))},
-            "name": self._device_name,
+            "name": device.name,
             "model": self._device_type_name,
             "manufacturer": MANUFACTURER,
         }

@@ -119,7 +119,7 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{self._device_id}_{self._sensor_type[0]}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, str(self._device_id))},
-            "name": self._device_name,
+            "name": device.name,
             "model": self._device_type_name,
             "manufacturer": MANUFACTURER,
         }
