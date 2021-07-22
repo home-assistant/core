@@ -33,7 +33,7 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
 
 
 @bind_hass
-async def async_get_source_ip(hass: HomeAssistant, target_ip: str) -> str | None:
+async def async_get_source_ip(hass: HomeAssistant, target_ip: str) -> str:
     """Get the source ip for a target ip."""
     adapters = await async_get_adapters(hass)
     all_ipv4s = []
