@@ -158,6 +158,7 @@ class Light(HomeAccessory):
             self.char_on.set_value(0)
 
         attributes = new_state.attributes
+        has_mode = ATTR_COLOR_MODE in attributes
         color_temp_mode = attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
 
         # Handle Brightness
@@ -181,7 +182,7 @@ class Light(HomeAccessory):
                     self.char_brightness.set_value(brightness)
 
         # Handle color temperature
-        if color_temp_mode and CHAR_COLOR_TEMPERATURE in self.chars:
+        if (not has_mode or color_temp_mode) and CHAR_COLOR_TEMPERATURE in self.chars:
             color_temperature = attributes.get(ATTR_COLOR_TEMP)
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
@@ -190,7 +191,7 @@ class Light(HomeAccessory):
 
         # Handle Color
         if (
-            not color_temp_mode
+            (not has_mode or not color_temp_mode)
             and CHAR_SATURATION in self.chars
             and CHAR_HUE in self.chars
         ):
