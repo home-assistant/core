@@ -10,7 +10,7 @@ import socket
 from urllib.parse import urlparse
 
 from soco import events_asyncio
-import soco.config
+import soco.config as soco_config
 from soco.core import SoCo
 from soco.exceptions import SoCoException
 import voluptuous as vol
@@ -109,7 +109,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
-    soco.config.EVENTS_MODULE = events_asyncio
+    soco_config.EVENTS_MODULE = events_asyncio
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
-        soco.config.EVENT_ADVERTISE_IP = advertise_addr
+        soco_config.EVENT_ADVERTISE_IP = advertise_addr
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):
         _LOGGER.warning(
