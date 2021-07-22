@@ -394,29 +394,29 @@ def _async_register_events_and_services(hass: HomeAssistant):
         for device_id in referenced.referenced_devices:
             dev_reg_ent = dev_reg.async_get(device_id)
             if not dev_reg_ent:
-                raise ValueError(f"No device found for device id: {device_id}")
-
+                raise HomeAssistantError(f"No device found for device id: {device_id}")
             macs = [
                 cval
                 for ctype, cval in dev_reg_ent.connections
                 if ctype == device_registry.CONNECTION_NETWORK_MAC
             ]
-
-            found = False
-            for entry_id in hass.data[DOMAIN]:
-                if (
-                    not (homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT))
-                    or not homekit.driver
-                ):
-                    continue
-                if device_registry.format_mac(homekit.driver.state.mac) in macs:
-                    homekit.async_unpair()
-                    found = True
-
-            if not found:
+            domain_data = hass.data[DOMAIN]
+            matching_instances = [
+                domain_data[entry_id][HOMEKIT]
+                for entry_id in domain_data
+                if HOMEKIT in domain_data[entry_id]
+                and domain_data[entry_id][HOMEKIT].driver
+                and device_registry.format_mac(
+                    domain_data[entry_id][HOMEKIT].driver.state.mac
+                )
+                in macs
+            ]
+            if not matching_instances:
                 raise HomeAssistantError(
                     f"No homekit accessory found for device id: {device_id}"
                 )
+            for homekit in matching_instances:
+                homekit.async_unpair()
 
     hass.services.async_register(
         DOMAIN,
