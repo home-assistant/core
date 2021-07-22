@@ -46,18 +46,18 @@ async def async_setup_entry(
 ):
     """Add here_weather entities from a config_entry."""
     here_weather_data_dict = hass.data[DOMAIN][config_entry.entry_id]
+
+    entities_to_add = []
     for sensor_type in SENSOR_TYPES:
         if sensor_type != MODE_ASTRONOMY:
-            async_add_entities(
-                [
-                    HEREDestinationWeather(
-                        config_entry,
-                        here_weather_data_dict[sensor_type].coordinator,
-                        sensor_type,
-                    )
-                ],
-                True,
+            entities_to_add.append(
+                HEREDestinationWeather(
+                    config_entry,
+                    here_weather_data_dict[sensor_type].coordinator,
+                    sensor_type,
+                )
             )
+    async_add_entities(entities_to_add)
 
 
 class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
