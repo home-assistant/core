@@ -50,7 +50,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Prosegur Alarm."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
     entry: ConfigEntry
 
     async def async_step_user(self, user_input=None):
@@ -60,10 +59,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 info = await validate_input(self.hass, user_input)
-
-                await self.async_set_unique_id(info["contract"])
-                self._abort_if_unique_id_configured()
-
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -72,6 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception(exception)
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(info["contract"])
+                self._abort_if_unique_id_configured()
+
                 user_input["contract"] = info["contract"]
                 return self.async_create_entry(title=info["title"], data=user_input)
 

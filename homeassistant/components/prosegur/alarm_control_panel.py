@@ -39,7 +39,6 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
 
     def __init__(self, contract: str, auth: Auth) -> None:
         """Initialize the Prosegur alarm panel."""
-        self._attr_state = None
         self._changed_by = None
 
         self._installation = None
