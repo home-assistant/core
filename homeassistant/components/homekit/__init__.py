@@ -707,7 +707,7 @@ class HomeKit:
         state = self.driver.state
         for client_uuid in list(state.paired_clients):
             state.remove_paired_client(client_uuid)
-        self.driver.self.async_persist()
+        self.driver.async_persist()
         self.driver.async_update_advertisement()
         self._async_show_setup_message()
 
