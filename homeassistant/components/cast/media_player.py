@@ -185,10 +185,10 @@ class CastDevice(MediaPlayerEntity):
         self._attr_name = cast_info.friendly_name
         if cast_info.model_name != "Google Cast Group":
             self._attr_device_info = {
-                "name": cast_info.friendly_name,
-                "identifiers": {(CAST_DOMAIN, cast_info.uuid.replace("-", ""))},
+                "name": str(cast_info.friendly_name),
+                "identifiers": {(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
                 "model": cast_info.model_name,
-                "manufacturer": cast_info.manufacturer,
+                "manufacturer": str(cast_info.manufacturer),
             }
 
     async def async_added_to_hass(self):
