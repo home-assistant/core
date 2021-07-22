@@ -4,8 +4,8 @@ from __future__ import annotations
 import datetime
 import logging
 
-from pysonos.core import SoCo
-from pysonos.exceptions import SoCoException
+from soco.core import SoCo
+from soco.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
