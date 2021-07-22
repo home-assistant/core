@@ -128,9 +128,9 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
         )
 
     @property
-    def device_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this entity."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
         attrs[ATTR_BATTERY_AVAILABLE_ENERGY] = (
             self.data.batteryAvailableEnergy if self.data else None
         )
