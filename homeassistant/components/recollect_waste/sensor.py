@@ -1,6 +1,9 @@
 """Support for ReCollect Waste sensors."""
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from typing import Any
+
 from aiorecollect.client import PickupType
 import voluptuous as vol
 
@@ -91,7 +94,9 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
+            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
+        }
         self._attr_name = DEFAULT_NAME
         self._attr_unique_id = (
             f"{entry.data[CONF_PLACE_ID]}{entry.data[CONF_SERVICE_ID]}"
