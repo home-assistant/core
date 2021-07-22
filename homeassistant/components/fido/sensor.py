@@ -6,6 +6,7 @@ https://www.fido.ca/pages/#/my-account/wireless
 """
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 
 from pyfido import FidoClient
 from pyfido.client import PyFidoError
@@ -33,27 +34,116 @@ DEFAULT_NAME = "Fido"
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
+
+class FidoSensorMetadata(NamedTuple):
+    """Metadata for an individual Fido sensor."""
+
+    name: str
+    unit_of_measurement: str
+    icon: str
+
+
 SENSOR_TYPES = {
-    "fido_dollar": ["Fido dollar", PRICE, "mdi:cash-usd"],
-    "balance": ["Balance", PRICE, "mdi:cash-usd"],
-    "data_used": ["Data used", DATA_KILOBITS, "mdi:download"],
-    "data_limit": ["Data limit", DATA_KILOBITS, "mdi:download"],
-    "data_remaining": ["Data remaining", DATA_KILOBITS, "mdi:download"],
-    "text_used": ["Text used", MESSAGES, "mdi:message-text"],
-    "text_limit": ["Text limit", MESSAGES, "mdi:message-text"],
-    "text_remaining": ["Text remaining", MESSAGES, "mdi:message-text"],
-    "mms_used": ["MMS used", MESSAGES, "mdi:message-image"],
-    "mms_limit": ["MMS limit", MESSAGES, "mdi:message-image"],
-    "mms_remaining": ["MMS remaining", MESSAGES, "mdi:message-image"],
-    "text_int_used": ["International text used", MESSAGES, "mdi:message-alert"],
-    "text_int_limit": ["International text limit", MESSAGES, "mdi:message-alert"],
-    "text_int_remaining": ["International remaining", MESSAGES, "mdi:message-alert"],
-    "talk_used": ["Talk used", TIME_MINUTES, "mdi:cellphone"],
-    "talk_limit": ["Talk limit", TIME_MINUTES, "mdi:cellphone"],
-    "talk_remaining": ["Talk remaining", TIME_MINUTES, "mdi:cellphone"],
-    "other_talk_used": ["Other Talk used", TIME_MINUTES, "mdi:cellphone"],
-    "other_talk_limit": ["Other Talk limit", TIME_MINUTES, "mdi:cellphone"],
-    "other_talk_remaining": ["Other Talk remaining", TIME_MINUTES, "mdi:cellphone"],
+    "fido_dollar": FidoSensorMetadata(
+        "Fido dollar",
+        unit_of_measurement=PRICE,
+        icon="mdi:cash-usd",
+    ),
+    "balance": FidoSensorMetadata(
+        "Balance",
+        unit_of_measurement=PRICE,
+        icon="mdi:cash-usd",
+    ),
+    "data_used": FidoSensorMetadata(
+        "Data used",
+        unit_of_measurement=DATA_KILOBITS,
+        icon="mdi:download",
+    ),
+    "data_limit": FidoSensorMetadata(
+        "Data limit",
+        unit_of_measurement=DATA_KILOBITS,
+        icon="mdi:download",
+    ),
+    "data_remaining": FidoSensorMetadata(
+        "Data remaining",
+        unit_of_measurement=DATA_KILOBITS,
+        icon="mdi:download",
+    ),
+    "text_used": FidoSensorMetadata(
+        "Text used",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-text",
+    ),
+    "text_limit": FidoSensorMetadata(
+        "Text limit",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-text",
+    ),
+    "text_remaining": FidoSensorMetadata(
+        "Text remaining",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-text",
+    ),
+    "mms_used": FidoSensorMetadata(
+        "MMS used",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-image",
+    ),
+    "mms_limit": FidoSensorMetadata(
+        "MMS limit",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-image",
+    ),
+    "mms_remaining": FidoSensorMetadata(
+        "MMS remaining",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-image",
+    ),
+    "text_int_used": FidoSensorMetadata(
+        "International text used",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-alert",
+    ),
+    "text_int_limit": FidoSensorMetadata(
+        "International text limit",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-alert",
+    ),
+    "text_int_remaining": FidoSensorMetadata(
+        "International remaining",
+        unit_of_measurement=MESSAGES,
+        icon="mdi:message-alert",
+    ),
+    "talk_used": FidoSensorMetadata(
+        "Talk used",
+        unit_of_measurement=TIME_MINUTES,
+        icon="mdi:cellphone",
+    ),
+    "talk_limit": FidoSensorMetadata(
+        "Talk limit",
+        unit_of_measurement=TIME_MINUTES,
+        icon="mdi:cellphone",
+    ),
+    "talk_remaining": FidoSensorMetadata(
+        "Talk remaining",
+        unit_of_measurement=TIME_MINUTES,
+        icon="mdi:cellphone",
+    ),
+    "other_talk_used": FidoSensorMetadata(
+        "Other Talk used",
+        unit_of_measurement=TIME_MINUTES,
+        icon="mdi:cellphone",
+    ),
+    "other_talk_limit": FidoSensorMetadata(
+        "Other Talk limit",
+        unit_of_measurement=TIME_MINUTES,
+        icon="mdi:cellphone",
+    ),
+    "other_talk_remaining": FidoSensorMetadata(
+        "Other Talk remaining",
+        unit_of_measurement=TIME_MINUTES,
+        icon="mdi:cellphone",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -97,31 +187,17 @@ class FidoSensor(SensorEntity):
         self.client_name = name
         self._number = number
         self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        metadata = SENSOR_TYPES[sensor_type]
+        self._attr_name = f"{self.client_name} {self._number} {metadata.name}"
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self._attr_icon = metadata.icon
         self.fido_data = fido_data
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._number} {self._name}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
 
     @property
     def extra_state_attributes(self):
