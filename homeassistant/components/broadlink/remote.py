@@ -127,10 +127,10 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags = defaultdict(int)
         self._lock = asyncio.Lock()
 
-        self._attr_name = f"{self._device.name} Remote"
+        self._attr_name = f"{device.name} Remote"
         self._attr_is_on = True
         self._attr_supported_features = SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
-        self._attr_unique_id = self._device.unique_id
+        self._attr_unique_id = device.unique_id
 
     def _extract_codes(self, commands, device=None):
         """Extract a list of codes.

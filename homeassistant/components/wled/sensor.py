@@ -10,6 +10,7 @@ from homeassistant.const import (
     DATA_BYTES,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
+    ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
@@ -17,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
+from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 from .models import WLEDEntity
 
@@ -47,7 +48,7 @@ class WLEDEstimatedCurrentSensor(WLEDEntity, SensorEntity):
     """Defines a WLED estimated current sensor."""
 
     _attr_icon = "mdi:power"
-    _attr_unit_of_measurement = CURRENT_MA
+    _attr_unit_of_measurement = ELECTRIC_CURRENT_MILLIAMPERE
     _attr_device_class = DEVICE_CLASS_CURRENT
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:

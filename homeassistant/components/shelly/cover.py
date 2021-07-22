@@ -1,4 +1,8 @@
 """Cover for Shelly."""
+from __future__ import annotations
+
+from typing import Any, cast
+
 from aioshelly import Block
 
 from homeassistant.components.cover import (
@@ -10,14 +14,20 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up cover for device."""
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][COAP]
     blocks = [block for block in wrapper.device.blocks if block.type == "roller"]
@@ -36,72 +46,72 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
-        self.control_result = None
-        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        self.control_result: dict[str, Any] | None = None
+        self._supported_features: int = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
         if self.wrapper.device.settings["rollers"][0]["positioning"]:
             self._supported_features |= SUPPORT_SET_POSITION
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """If cover is closed."""
         if self.control_result:
-            return self.control_result["current_pos"] == 0
+            return cast(bool, self.control_result["current_pos"] == 0)
 
-        return self.block.rollerPos == 0
+        return cast(bool, self.block.rollerPos == 0)
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Position of the cover."""
         if self.control_result:
-            return self.control_result["current_pos"]
+            return cast(int, self.control_result["current_pos"])
 
-        return self.block.rollerPos
+        return cast(int, self.block.rollerPos)
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing."""
         if self.control_result:
-            return self.control_result["state"] == "close"
+            return cast(bool, self.control_result["state"] == "close")
 
-        return self.block.roller == "close"
+        return cast(bool, self.block.roller == "close")
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening."""
         if self.control_result:
-            return self.control_result["state"] == "open"
+            return cast(bool, self.control_result["state"] == "open")
 
-        return self.block.roller == "open"
+        return cast(bool, self.block.roller == "open")
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         self.control_result = await self.set_state(
             go="to_pos", roller_pos=kwargs[ATTR_POSITION]
         )
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **_kwargs):
+    async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
         self.control_result = await self.set_state(go="stop")
         self.async_write_ha_state()
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
         super()._update_callback()

@@ -25,5 +25,11 @@
                 "title": "AccuWeather be\u00e1ll\u00edt\u00e1sok"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u00c9rje el az AccuWeather szervert",
+            "remaining_requests": "Fennmarad\u00f3 enged\u00e9lyezett k\u00e9r\u00e9sek"
+        }
     }
 }

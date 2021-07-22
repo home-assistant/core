@@ -3,9 +3,9 @@ from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntit
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_POWER,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    VOLT,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -96,8 +96,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for i in range(len(data.active_voltage)):
         devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
-    for type_id in TRENDS_SENSOR_TYPES:
-        typ = TRENDS_SENSOR_TYPES[type_id]
+    for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for var in SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type
@@ -175,7 +174,7 @@ class SenseActiveSensor(SensorEntity):
 class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
-    _attr_unit_of_measurement = VOLT
+    _attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
     _attr_should_poll = False

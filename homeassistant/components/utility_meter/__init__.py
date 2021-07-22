@@ -76,7 +76,7 @@ async def async_setup(hass, config):
                     hass,
                     SENSOR_DOMAIN,
                     DOMAIN,
-                    [{CONF_METER: meter, CONF_NAME: meter}],
+                    [{CONF_METER: meter, CONF_NAME: conf.get(CONF_NAME, meter)}],
                     config,
                 )
             )

@@ -142,7 +142,6 @@ class KulerskyLight(LightEntity):
         try:
             if not self._available:
                 await self._light.connect()
-            # pylint: disable=invalid-name
             rgbw = await self._light.get_color()
         except pykulersky.PykulerskyException as exc:
             if self._available:

@@ -31,7 +31,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP-Adresse",
+                    "host": "IP-Adresse (optional)",
                     "interface": "Die zu verwendende Netzwerkschnittstelle",
                     "mac": "MAC-Adresse"
                 },

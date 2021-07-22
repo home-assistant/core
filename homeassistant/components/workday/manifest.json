@@ -2,7 +2,7 @@
   "domain": "workday",
   "name": "Workday",
   "documentation": "https://www.home-assistant.io/integrations/workday",
-  "requirements": ["holidays==0.11.1"],
+  "requirements": ["holidays==0.11.2"],
   "codeowners": ["@fabaff"],
   "quality_scale": "internal",
   "iot_class": "local_polling"

@@ -509,10 +509,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     def get_distribution_num(self) -> int:
         """Return the distribution_num (number of clients in the whole musiccast system)."""
         return sum(
-            [
-                len(server.coordinator.data.group_client_list)
-                for server in self.get_all_server_entities()
-            ]
+            len(server.coordinator.data.group_client_list)
+            for server in self.get_all_server_entities()
         )
 
     def is_part_of_group(self, group_server) -> bool:

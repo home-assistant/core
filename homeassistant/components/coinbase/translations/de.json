@@ -23,7 +23,7 @@
     },
     "options": {
         "error": {
-            "currency_unavaliable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von Ihrer Coinbase-API nicht bereitgestellt.",
+            "currency_unavaliable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
             "exchange_rate_unavaliable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
             "unknown": "Unerwarteter Fehler"
         },
@@ -31,6 +31,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Zu meldende Wallet-Guthaben.",
+                    "exchange_base": "Basisw\u00e4hrung f\u00fcr Wechselkurssensoren.",
                     "exchange_rate_currencies": "Zu meldende Wechselkurse."
                 },
                 "description": "Coinbase-Optionen anpassen"

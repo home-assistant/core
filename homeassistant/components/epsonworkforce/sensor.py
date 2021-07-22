@@ -1,5 +1,8 @@
 """Support for Epson Workforce Printer."""
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import NamedTuple
 
 from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
@@ -9,13 +12,46 @@ from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-MONITORED_CONDITIONS = {
-    "black": ["Ink level Black", PERCENTAGE, "mdi:water"],
-    "photoblack": ["Ink level Photoblack", PERCENTAGE, "mdi:water"],
-    "magenta": ["Ink level Magenta", PERCENTAGE, "mdi:water"],
-    "cyan": ["Ink level Cyan", PERCENTAGE, "mdi:water"],
-    "yellow": ["Ink level Yellow", PERCENTAGE, "mdi:water"],
-    "clean": ["Cleaning level", PERCENTAGE, "mdi:water"],
+
+class MonitoredConditionsMetadata(NamedTuple):
+    """Metadata for an individual montiored condition."""
+
+    name: str
+    icon: str
+    unit_of_measurement: str
+
+
+MONITORED_CONDITIONS: dict[str, MonitoredConditionsMetadata] = {
+    "black": MonitoredConditionsMetadata(
+        "Ink level Black",
+        icon="mdi:water",
+        unit_of_measurement=PERCENTAGE,
+    ),
+    "photoblack": MonitoredConditionsMetadata(
+        "Ink level Photoblack",
+        icon="mdi:water",
+        unit_of_measurement=PERCENTAGE,
+    ),
+    "magenta": MonitoredConditionsMetadata(
+        "Ink level Magenta",
+        icon="mdi:water",
+        unit_of_measurement=PERCENTAGE,
+    ),
+    "cyan": MonitoredConditionsMetadata(
+        "Ink level Cyan",
+        icon="mdi:water",
+        unit_of_measurement=PERCENTAGE,
+    ),
+    "yellow": MonitoredConditionsMetadata(
+        "Ink level Yellow",
+        icon="mdi:water",
+        unit_of_measurement=PERCENTAGE,
+    ),
+    "clean": MonitoredConditionsMetadata(
+        "Cleaning level",
+        icon="mdi:water",
+        unit_of_measurement=PERCENTAGE,
+    ),
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -52,24 +88,10 @@ class EpsonPrinterCartridge(SensorEntity):
         self._api = api
 
         self._id = cartridgeidx
-        self._name = MONITORED_CONDITIONS[self._id][0]
-        self._unit = MONITORED_CONDITIONS[self._id][1]
-        self._icon = MONITORED_CONDITIONS[self._id][2]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
+        metadata = MONITORED_CONDITIONS[self._id]
+        self._attr_name = metadata.name
+        self._attr_icon = metadata.icon
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
 
     @property
     def state(self):

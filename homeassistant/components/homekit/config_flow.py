@@ -1,4 +1,7 @@
 """Config flow for HomeKit integration."""
+from __future__ import annotations
+
+import asyncio
 import random
 import re
 import string
@@ -7,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -18,7 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
 )
-from homeassistant.core import callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -26,6 +30,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
 )
+from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_AUTO_START,
@@ -54,7 +59,12 @@ MODE_EXCLUDE = "exclude"
 
 INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
 
-DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
+DOMAINS_NEED_ACCESSORY_MODE = [
+    CAMERA_DOMAIN,
+    LOCK_DOMAIN,
+    MEDIA_PLAYER_DOMAIN,
+    REMOTE_DOMAIN,
+]
 NEVER_BRIDGED_DOMAINS = [CAMERA_DOMAIN]
 
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
@@ -108,6 +118,21 @@ _EMPTY_ENTITY_FILTER = {
 }
 
 
+async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
+    """Create a mapping of types of devices/entities HomeKit can support."""
+    integrations = await asyncio.gather(
+        *(async_get_integration(hass, domain) for domain in SUPPORTED_DOMAINS),
+        return_exceptions=True,
+    )
+    name_to_type_map = {
+        domain: domain
+        if isinstance(integrations[idx], Exception)
+        else integrations[idx].name
+        for idx, domain in enumerate(SUPPORTED_DOMAINS)
+    }
+    return name_to_type_map
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HomeKit."""
 
@@ -127,13 +152,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.hk_data[CONF_HOMEKIT_MODE] = HOMEKIT_MODE_BRIDGE
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
+        name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_INCLUDE_DOMAINS, default=default_domains
-                    ): cv.multi_select(SUPPORTED_DOMAINS),
+                    ): cv.multi_select(name_to_type_map),
                 }
             ),
         )
@@ -437,6 +463,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
             domains.extend(_domains_set_from_entities(include_entities))
+        name_to_type_map = await _async_name_to_type_map(self.hass)
 
         return self.async_show_form(
             step_id="init",
@@ -448,7 +475,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_DOMAINS,
                         default=domains,
-                    ): cv.multi_select(SUPPORTED_DOMAINS),
+                    ): cv.multi_select(name_to_type_map),
                 }
             ),
         )

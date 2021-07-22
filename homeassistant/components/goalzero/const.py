@@ -18,9 +18,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -28,15 +30,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
-    VOLT,
 )
 
+ATTRIBUTION = "Data provided by Goal Zero"
 ATTR_DEFAULT_ENABLED = "default_enabled"
 
-CONF_IDENTIFIERS = "identifiers"
-CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
-CONF_SW_VERSION = "sw_version"
 DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
@@ -45,14 +43,19 @@ DATA_KEY_API = "api"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 BINARY_SENSOR_DICT = {
-    "backlight": ["Backlight", None, "mdi:clock-digital"],
-    "app_online": [
-        "App Online",
-        DEVICE_CLASS_CONNECTIVITY,
-        None,
-    ],
-    "isCharging": ["Charging", DEVICE_CLASS_BATTERY_CHARGING, None],
-    "inputDetected": ["Input Detected", DEVICE_CLASS_POWER, None],
+    "backlight": {ATTR_NAME: "Backlight", ATTR_ICON: "mdi:clock-digital"},
+    "app_online": {
+        ATTR_NAME: "App Online",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
+    },
+    "isCharging": {
+        ATTR_NAME: "Charging",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
+    },
+    "inputDetected": {
+        ATTR_NAME: "Input Detected",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+    },
 }
 
 SENSOR_DICT = {
@@ -66,7 +69,7 @@ SENSOR_DICT = {
     "ampsIn": {
         ATTR_NAME: "Amps In",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-        ATTR_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
+        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -80,7 +83,7 @@ SENSOR_DICT = {
     "ampsOut": {
         ATTR_NAME: "Amps Out",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-        ATTR_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
+        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -101,7 +104,7 @@ SENSOR_DICT = {
     "volts": {
         ATTR_NAME: "Volts",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-        ATTR_UNIT_OF_MEASUREMENT: VOLT,
+        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
         ATTR_DEFAULT_ENABLED: False,
     },
     "socPercent": {
@@ -131,6 +134,14 @@ SENSOR_DICT = {
     "timestamp": {
         ATTR_NAME: "Total Run Time",
         ATTR_UNIT_OF_MEASUREMENT: TIME_SECONDS,
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "ssid": {
+        ATTR_NAME: "Wi-Fi SSID",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "ipAddr": {
+        ATTR_NAME: "IP Address",
         ATTR_DEFAULT_ENABLED: False,
     },
 }
