@@ -15,7 +15,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -66,6 +66,9 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
         super().__init__(coordinator)
         self._name = entry.data[CONF_NAME]
         self._mode = mode
+        self._unique_id = "".join(
+            f"{entry.data[CONF_LATITUDE]}_{entry.data[CONF_LONGITUDE]}_{self._mode}".lower().split()
+        )
 
     @property
     def name(self):
@@ -75,7 +78,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     @property
     def unique_id(self):
         """Set unique_id for sensor."""
-        return f"{self._name}_{self._mode}"
+        return self._unique_id
 
     @property
     def condition(self) -> str | None:
@@ -200,7 +203,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return {
-            "identifiers": {(DOMAIN, self._name)},
+            "identifiers": {(DOMAIN, self._unique_id)},
             "name": self._name,
             "manufacturer": "here.com",
         }

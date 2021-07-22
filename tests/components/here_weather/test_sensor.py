@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_START,
 )
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
@@ -47,16 +46,13 @@ async def test_sensor_invalid_request(hass):
             registry.async_get_or_create(
                 "sensor",
                 DOMAIN,
-                "here_weather_forecast_7days_simple_windspeed_0",
+                "40.79962_-73.970314_forecast_7days_simple_windspeed_0",
                 suggested_object_id="here_weather_forecast_7days_simple_windspeed_0",
                 disabled_by=None,
             )
 
             await hass.config_entries.async_setup(entry.entry_id)
 
-            await hass.async_block_till_done()
-
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             await hass.async_block_till_done()
 
             sensor = hass.states.get(
@@ -99,16 +95,13 @@ async def test_forecast_astronomy(hass):
         registry.async_get_or_create(
             "sensor",
             DOMAIN,
-            "here_weather_forecast_astronomy_sunrise_0",
+            "40.79962_-73.970314_forecast_astronomy_sunrise_0",
             suggested_object_id="here_weather_forecast_astronomy_sunrise_0",
             disabled_by=None,
         )
 
         await hass.config_entries.async_setup(entry.entry_id)
 
-        await hass.async_block_till_done()
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.here_weather_forecast_astronomy_sunrise_0")
@@ -142,16 +135,13 @@ async def test_imperial(hass):
         registry.async_get_or_create(
             "sensor",
             DOMAIN,
-            "here_weather_forecast_7days_simple_windspeed_0",
+            "40.79962_-73.970314_forecast_7days_simple_windspeed_0",
             suggested_object_id="here_weather_forecast_7days_simple_windspeed_0",
             disabled_by=None,
         )
 
         await hass.config_entries.async_setup(entry.entry_id)
 
-        await hass.async_block_till_done()
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         sensor = hass.states.get(

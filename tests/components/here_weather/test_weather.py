@@ -2,13 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.here_weather.const import DOMAIN
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import mock_weather_for_coordinates
@@ -36,9 +30,6 @@ async def test_weather(hass):
 
         await hass.config_entries.async_setup(entry.entry_id)
 
-        await hass.async_block_till_done()
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         sensor = hass.states.get("weather.here_weather_forecast_7days_simple")
@@ -76,9 +67,6 @@ async def test_weather_daily(hass):
 
         await hass.config_entries.async_setup(entry.entry_id)
 
-        await hass.async_block_till_done()
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         sensor = hass.states.get("weather.here_weather_forecast_7days")
