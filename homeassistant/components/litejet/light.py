@@ -93,36 +93,32 @@ class LiteJetLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        is_complex = False
-        brightness = 99
-        transition = self._config_entry.options.get(CONF_DEFAULT_TRANSITION, 0)
 
-        if ATTR_BRIGHTNESS in kwargs:
-            is_complex = True
-            brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 99)
-
-        if ATTR_TRANSITION in kwargs:
-            is_complex = True
-            transition = kwargs[ATTR_TRANSITION]
-
-        if is_complex:
-            self._lj.activate_load_at(self._index, brightness, int(transition))
-        else:
+        # If neither attribute is specified then the simple activate load
+        # LiteJet API will use the per-light default brightness and
+        # transition values programmed in the LiteJet system.
+        if ATTR_BRIGHTNESS not in kwargs and ATTR_TRANSITION not in kwargs:
             self._lj.activate_load(self._index)
+            return
+
+        # If either attribute is specified then Home Assistant must
+        # control both values.
+        default_transition = self._config_entry.options.get(CONF_DEFAULT_TRANSITION, 0)
+        transition = kwargs.get(ATTR_TRANSITION, default_transition)
+        brightness = int(kwargs.get(ATTR_BRIGHTNESS, 255) / 255 * 99)
+
+        self._lj.activate_load_at(self._index, brightness, int(transition))
 
     def turn_off(self, **kwargs):
         """Turn off the light."""
-        is_complex = False
-        transition = self._config_entry.options.get(CONF_DEFAULT_TRANSITION, 0)
-
         if ATTR_TRANSITION in kwargs:
-            is_complex = True
-            transition = kwargs[ATTR_TRANSITION]
+            self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
+            return
 
-        if is_complex:
-            self._lj.activate_load_at(self._index, 0, transition)
-        else:
-            self._lj.deactivate_load(self._index)
+        # If transition attribute is not specified then the simple
+        # deactivate load LiteJet API will use the per-light default
+        # transition value programmed in the LiteJet system.
+        self._lj.deactivate_load(self._index)
 
     def update(self):
         """Retrieve the light's brightness from the LiteJet system."""
