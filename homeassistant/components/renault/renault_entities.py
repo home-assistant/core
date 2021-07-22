@@ -44,7 +44,7 @@ class RenaultDataEntity(CoordinatorEntity, Entity):
     @property
     def name(self) -> str:
         """Return the name of this entity."""
-        return f"{self.vehicle.details.vin}-{self._entity_type}"
+        return self._entity_type
 
     @property
     def available(self) -> bool:
