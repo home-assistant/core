@@ -3,15 +3,10 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    DEVICE_CLASS_TIMESTAMP,
-    PERCENTAGE,
-)
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
 
-from .model import SensorDescription
+from .model import BrotherSensorMetadata
 
 ATTR_BELT_UNIT_REMAINING_LIFE: Final = "belt_unit_remaining_life"
 ATTR_BLACK_DRUM_COUNTER: Final = "black_drum_counter"
@@ -31,9 +26,7 @@ ATTR_DRUM_COUNTER: Final = "drum_counter"
 ATTR_DRUM_REMAINING_LIFE: Final = "drum_remaining_life"
 ATTR_DRUM_REMAINING_PAGES: Final = "drum_remaining_pages"
 ATTR_DUPLEX_COUNTER: Final = "duplex_unit_pages_counter"
-ATTR_ENABLED: Final = "enabled"
 ATTR_FUSER_REMAINING_LIFE: Final = "fuser_remaining_life"
-ATTR_LABEL: Final = "label"
 ATTR_LASER_REMAINING_LIFE: Final = "laser_remaining_life"
 ATTR_MAGENTA_DRUM_COUNTER: Final = "magenta_drum_counter"
 ATTR_MAGENTA_DRUM_REMAINING_LIFE: Final = "magenta_drum_remaining_life"
@@ -46,7 +39,6 @@ ATTR_PF_KIT_1_REMAINING_LIFE: Final = "pf_kit_1_remaining_life"
 ATTR_PF_KIT_MP_REMAINING_LIFE: Final = "pf_kit_mp_remaining_life"
 ATTR_REMAINING_PAGES: Final = "remaining_pages"
 ATTR_STATUS: Final = "status"
-ATTR_UNIT: Final = "unit"
 ATTR_UPTIME: Final = "uptime"
 ATTR_YELLOW_DRUM_COUNTER: Final = "yellow_drum_counter"
 ATTR_YELLOW_DRUM_REMAINING_LIFE: Final = "yellow_drum_remaining_life"
@@ -84,174 +76,172 @@ ATTRS_MAP: Final[dict[str, tuple[str, str]]] = {
     ),
 }
 
-SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
-    ATTR_STATUS: {
-        ATTR_ICON: "mdi:printer",
-        ATTR_LABEL: ATTR_STATUS.title(),
-        ATTR_UNIT: None,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: None,
-    },
-    ATTR_PAGE_COUNTER: {
-        ATTR_ICON: "mdi:file-document-outline",
-        ATTR_LABEL: ATTR_PAGE_COUNTER.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PAGES,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_BW_COUNTER: {
-        ATTR_ICON: "mdi:file-document-outline",
-        ATTR_LABEL: ATTR_BW_COUNTER.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PAGES,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_COLOR_COUNTER: {
-        ATTR_ICON: "mdi:file-document-outline",
-        ATTR_LABEL: ATTR_COLOR_COUNTER.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PAGES,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_DUPLEX_COUNTER: {
-        ATTR_ICON: "mdi:file-document-outline",
-        ATTR_LABEL: ATTR_DUPLEX_COUNTER.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_PAGES,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_DRUM_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: ATTR_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_BLACK_DRUM_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: ATTR_BLACK_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_CYAN_DRUM_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: ATTR_CYAN_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_MAGENTA_DRUM_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: ATTR_MAGENTA_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_YELLOW_DRUM_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:chart-donut",
-        ATTR_LABEL: ATTR_YELLOW_DRUM_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_BELT_UNIT_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:current-ac",
-        ATTR_LABEL: ATTR_BELT_UNIT_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_FUSER_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:water-outline",
-        ATTR_LABEL: ATTR_FUSER_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_LASER_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:spotlight-beam",
-        ATTR_LABEL: ATTR_LASER_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_PF_KIT_1_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:printer-3d",
-        ATTR_LABEL: ATTR_PF_KIT_1_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_PF_KIT_MP_REMAINING_LIFE: {
-        ATTR_ICON: "mdi:printer-3d",
-        ATTR_LABEL: ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_BLACK_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_CYAN_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_MAGENTA_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_YELLOW_TONER_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_BLACK_INK_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_CYAN_INK_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_MAGENTA_INK_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_YELLOW_INK_REMAINING: {
-        ATTR_ICON: "mdi:printer-3d-nozzle",
-        ATTR_LABEL: ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_ENABLED: True,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-    },
-    ATTR_UPTIME: {
-        ATTR_ICON: None,
-        ATTR_LABEL: ATTR_UPTIME.title(),
-        ATTR_UNIT: None,
-        ATTR_ENABLED: False,
-        ATTR_STATE_CLASS: None,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
-    },
+SENSOR_TYPES: Final[dict[str, BrotherSensorMetadata]] = {
+    ATTR_STATUS: BrotherSensorMetadata(
+        icon="mdi:printer",
+        label=ATTR_STATUS.title(),
+        unit_of_measurement=None,
+        enabled=True,
+    ),
+    ATTR_PAGE_COUNTER: BrotherSensorMetadata(
+        icon="mdi:file-document-outline",
+        label=ATTR_PAGE_COUNTER.replace("_", " ").title(),
+        unit_of_measurement=UNIT_PAGES,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_BW_COUNTER: BrotherSensorMetadata(
+        icon="mdi:file-document-outline",
+        label=ATTR_BW_COUNTER.replace("_", " ").title(),
+        unit_of_measurement=UNIT_PAGES,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_COLOR_COUNTER: BrotherSensorMetadata(
+        icon="mdi:file-document-outline",
+        label=ATTR_COLOR_COUNTER.replace("_", " ").title(),
+        unit_of_measurement=UNIT_PAGES,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_DUPLEX_COUNTER: BrotherSensorMetadata(
+        icon="mdi:file-document-outline",
+        label=ATTR_DUPLEX_COUNTER.replace("_", " ").title(),
+        unit_of_measurement=UNIT_PAGES,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_DRUM_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:chart-donut",
+        label=ATTR_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_BLACK_DRUM_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:chart-donut",
+        label=ATTR_BLACK_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_CYAN_DRUM_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:chart-donut",
+        label=ATTR_CYAN_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_MAGENTA_DRUM_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:chart-donut",
+        label=ATTR_MAGENTA_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_YELLOW_DRUM_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:chart-donut",
+        label=ATTR_YELLOW_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_BELT_UNIT_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:current-ac",
+        label=ATTR_BELT_UNIT_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_FUSER_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:water-outline",
+        label=ATTR_FUSER_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_LASER_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:spotlight-beam",
+        label=ATTR_LASER_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_PF_KIT_1_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:printer-3d",
+        label=ATTR_PF_KIT_1_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_PF_KIT_MP_REMAINING_LIFE: BrotherSensorMetadata(
+        icon="mdi:printer-3d",
+        label=ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_BLACK_TONER_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_CYAN_TONER_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_MAGENTA_TONER_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_YELLOW_TONER_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_BLACK_INK_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_CYAN_INK_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_MAGENTA_INK_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_YELLOW_INK_REMAINING: BrotherSensorMetadata(
+        icon="mdi:printer-3d-nozzle",
+        label=ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
+        unit_of_measurement=PERCENTAGE,
+        enabled=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_UPTIME: BrotherSensorMetadata(
+        icon=None,
+        label=ATTR_UPTIME.title(),
+        unit_of_measurement=None,
+        enabled=False,
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
 }
