@@ -60,9 +60,8 @@ class RenaultBatteryDataEntity(RenaultDataEntity[KamereonVehicleBatteryStatusDat
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this entity."""
-        if self.data is None:
-            return {ATTR_LAST_UPDATE: None}
-        return {ATTR_LAST_UPDATE: self.data.timestamp}
+        last_update = self.data.timestamp if self.data else None
+        return {ATTR_LAST_UPDATE: last_update}
 
     @property
     def is_charging(self) -> bool:
