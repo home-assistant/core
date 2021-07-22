@@ -391,12 +391,12 @@ def _async_register_events_and_services(hass: HomeAssistant):
         """Handle unpair HomeKit service call."""
         referenced = await async_extract_referenced_entity_ids(hass, service)
         dev_reg = device_registry.async_get(hass)
-
+        _LOGGER.debug("Unpair devices: %s", referenced.referenced_devices)
         for device_id in referenced.referenced_devices:
             dev_reg_ent = dev_reg.async_get(device_id)
 
             if not dev_reg_ent:
-                raise ValueError(f"No device found for {device_id}")
+                raise ValueError(f"No device found for device id: {device_id}")
 
             macs = [
                 cval
@@ -412,7 +412,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
                         found = True
 
         if not found:
-            raise ValueError(f"No homekit accessory found for {device_id}")
+            raise ValueError(f"No homekit accessory found for device id: {device_id}")
 
     hass.services.async_register(
         DOMAIN,
