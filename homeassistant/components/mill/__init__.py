@@ -1,13 +1,42 @@
 """The mill component."""
+from datetime import timedelta
+import logging
+
 from mill import Mill
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = ["climate", "sensor"]
+
+
+class MillDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Mill data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        update_interval: timedelta,
+        mill_data_connection: Mill,
+    ) -> None:
+        """Initialize global Mill data updater."""
+        self.mill_data_connection = mill_data_connection
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=mill_data_connection.fetch_heater_data,
+            update_interval=update_interval,
+        )
 
 
 async def async_setup_entry(hass, entry):
@@ -20,9 +49,13 @@ async def async_setup_entry(hass, entry):
     if not await mill_data_connection.connect():
         raise ConfigEntryNotReady
 
-    await mill_data_connection.find_all_heaters()
+    hass.data[DOMAIN] = MillDataUpdateCoordinator(
+        hass,
+        mill_data_connection=mill_data_connection,
+        update_interval=timedelta(seconds=30),
+    )
 
-    hass.data[DOMAIN] = mill_data_connection
+    await hass.data[DOMAIN].async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
