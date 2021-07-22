@@ -4,10 +4,8 @@ import logging
 
 import aiohttp
 import tibber
-import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,13 +18,7 @@ PLATFORMS = [
     "sensor",
 ]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,18 +27,6 @@ async def async_setup(hass, config):
     """Set up the Tibber component."""
 
     hass.data[DATA_HASS_CONFIG] = config
-
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
     return True
 
 
@@ -82,7 +62,7 @@ async def async_setup_entry(hass, entry):
     # have to use discovery to load platform.
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, "notify", DOMAIN, {CONF_NAME: DOMAIN}, hass.data[DATA_HASS_CONFIG]
+            hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
         )
     )
     return True

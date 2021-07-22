@@ -13,6 +13,7 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
+import slugify as unicode_slug
 import xmltodict
 
 from homeassistant.components.switch import SwitchEntity
@@ -247,7 +248,7 @@ def wifi_entities_list(
         )
         if network_info:
             ssid = network_info["NewSSID"]
-            if ssid in networks.values():
+            if unicode_slug.slugify(ssid, lowercase=False) in networks.values():
                 networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
             else:
                 networks[i] = ssid
@@ -557,20 +558,14 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     """Defines a FRITZ!Box Tools DeviceProfile switch."""
 
+    _attr_icon = "mdi:router-wireless-settings"
+
     def __init__(self, fritzbox_tools: FritzBoxTools, device: FritzDevice) -> None:
         """Init Fritz profile."""
         super().__init__(fritzbox_tools, device)
         self._attr_is_on: bool = False
-
-    @property
-    def unique_id(self) -> str:
-        """Return device unique id."""
-        return f"{self._mac}_switch"
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:router-wireless-settings"
+        self._name = f"{device.hostname} Internet Access"
+        self._attr_unique_id = f"{self._mac}_internet_access"
 
     async def async_process_update(self) -> None:
         """Update device."""

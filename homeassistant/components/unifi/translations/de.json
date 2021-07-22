@@ -57,7 +57,7 @@
             "simple_options": {
                 "data": {
                     "block_client": "Clients mit Netzwerkzugriffskontrolle",
-                    "track_clients": "Netzwerger\u00e4te \u00fcberwachen",
+                    "track_clients": "Nachverfolgen von Netzwerkclients",
                     "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)"
                 },
                 "description": "Konfiguriere die UniFi-Integration"

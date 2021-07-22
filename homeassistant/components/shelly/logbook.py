@@ -1,8 +1,13 @@
 """Describe Shelly logbook events."""
+from __future__ import annotations
+
+from typing import Callable
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import EventType
 
+from . import get_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -10,15 +15,18 @@ from .const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
 )
-from .utils import get_device_name, get_device_wrapper
+from .utils import get_device_name
 
 
 @callback
-def async_describe_events(hass, async_describe_event):
+def async_describe_events(
+    hass: HomeAssistant,
+    async_describe_event: Callable[[str, str, Callable[[EventType], dict]], None],
+) -> None:
     """Describe logbook events."""
 
     @callback
-    def async_describe_shelly_click_event(event):
+    def async_describe_shelly_click_event(event: EventType) -> dict[str, str]:
         """Describe shelly.click logbook event."""
         wrapper = get_device_wrapper(hass, event.data[ATTR_DEVICE_ID])
         if wrapper:

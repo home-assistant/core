@@ -43,6 +43,7 @@ ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
+ATTR_OPTIONS = "options"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
@@ -69,7 +70,3 @@ ATTR_BROADCAST = "broadcast"
 SERVICE_PING = "ping"
 
 ADDON_SLUG = "core_zwave_js"
-
-# Siren constants
-TONE_ID_DEFAULT = 255
-TONE_ID_OFF = 0

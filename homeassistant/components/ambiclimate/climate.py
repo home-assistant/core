@@ -1,6 +1,7 @@
 """Support for Ambiclimate ac."""
 import asyncio
 import logging
+from typing import Any
 
 import ambiclimate
 import voluptuous as vol
@@ -146,24 +147,24 @@ class AmbiclimateEntity(ClimateEntity):
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
-        self._attr_unique_id = self._heater.device_id
-        self._attr_name = self._heater.name
+        self._attr_unique_id = heater.device_id
+        self._attr_name = heater.name
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Ambiclimate",
         }
-        self._attr_min_temp = self._heater.get_min_temp()
-        self._attr_max_temp = self._heater.get_max_temp()
+        self._attr_min_temp = heater.get_min_temp()
+        self._attr_max_temp = heater.get_max_temp()
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         await self._heater.set_target_temperature(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
             await self._heater.turn_on()

@@ -52,6 +52,7 @@ from .const import (
     SERVICE_REQUEST_AREA_PRESET,
     SERVICE_REQUEST_CHANNEL_LEVEL,
 )
+from .convert_config import convert_config
 
 
 def num_string(value: int | str) -> str:
@@ -263,7 +264,7 @@ async def async_entry_changed(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
-    bridge = DynaliteBridge(hass, entry.data)
+    bridge = DynaliteBridge(hass, convert_config(entry.data))
     # need to do it before the listener
     hass.data[DOMAIN][entry.entry_id] = bridge
     entry.async_on_unload(entry.add_update_listener(async_entry_changed))

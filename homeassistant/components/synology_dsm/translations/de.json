@@ -24,7 +24,7 @@
                     "port": "Port",
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "SSL Zertifikat verifizieren"
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "description": "M\u00f6chtest du {name} ({host}) einrichten?",
                 "title": "Synology DSM"
@@ -36,7 +36,7 @@
                     "port": "Port",
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "SSL Zertifikat verifizieren"
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "title": "Synology DSM"
             }
