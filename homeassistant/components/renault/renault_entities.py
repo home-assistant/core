@@ -79,16 +79,15 @@ class RenaultBatteryDataEntity(RenaultDataEntity):
     @property
     def is_charging(self) -> bool:
         """Return charge state as boolean."""
-        if self.data is None:
-            return False
-        return self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
+        return (
+            self.data
+            and self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
+        )
 
     @property
     def is_plugged_in(self) -> bool:
         """Return plug state as boolean."""
-        if self.data is None:
-            return False
-        return self.data.get_plug_status() == PlugState.PLUGGED
+        return self.data and self.data.get_plug_status() == PlugState.PLUGGED
 
 
 class RenaultChargeModeDataEntity(RenaultDataEntity):
