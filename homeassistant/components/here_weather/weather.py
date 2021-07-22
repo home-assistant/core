@@ -259,14 +259,14 @@ def get_precipitation_probability(
 
 def get_condition_from_here_data(here_data: list, offset: int = 0) -> str | None:
     """Return the condition from here_data."""
-    try:
-        return [
+    return next(
+        (
             k
             for k, v in CONDITION_CLASSES.items()
             if get_attribute_from_here_data(here_data, "iconName", offset) in v
-        ][0]
-    except IndexError:
-        return None  # Fallback if the API introduces new values
+        ),
+        None,
+    )
 
 
 def get_high_or_default_temperature_from_here_data(
