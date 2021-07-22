@@ -4,7 +4,7 @@ from unittest.mock import patch
 import herepy
 
 from homeassistant import config_entries, setup
-from homeassistant.components.here_weather.const import DOMAIN, HERE_API_KEYS
+from homeassistant.components.here_weather.const import DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -35,6 +35,16 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.here_weather.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+        existing_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_API_KEY: "test",
+                CONF_NAME: DOMAIN,
+                CONF_LATITUDE: "40.79962",
+                CONF_LONGITUDE: "-73.970314",
+            },
+        )
+        existing_entry.add_to_hass(hass)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -54,34 +64,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_LATITUDE: 40.79962,
         CONF_LONGITUDE: -73.970314,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_config_flow_known_api_key(hass):
-    """Test we can finish a config flow."""
-    with patch(
-        "herepy.DestinationWeatherApi.weather_for_coordinates",
-        side_effect=mock_weather_for_coordinates,
-    ):
-        hass.data.setdefault(HERE_API_KEYS, []).append("test")
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
-        )
-        assert result["type"] == "form"
-        config = {
-            CONF_API_KEY: "test",
-            CONF_NAME: DOMAIN,
-            CONF_LATITUDE: "40.79962",
-            CONF_LONGITUDE: "-73.970314",
-        }
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], config
-        )
-        assert result["type"] == "create_entry"
-
-        await hass.async_block_till_done()
-        state = hass.states.get("weather.here_weather_forecast_7days_simple")
-        assert state
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_unauthorized(hass):

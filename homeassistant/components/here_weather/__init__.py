@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MODES, DEFAULT_SCAN_INTERVAL, DOMAIN, HERE_API_KEYS
+from .const import CONF_MODES, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await here_weather_data.async_setup()
         here_weather_data_dict[mode] = here_weather_data
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = here_weather_data_dict
-
-    known_api_keys = hass.data.setdefault(HERE_API_KEYS, [])
-    if entry.data[CONF_API_KEY] not in known_api_keys:
-        known_api_keys.append(entry.data[CONF_API_KEY])
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

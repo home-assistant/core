@@ -3,8 +3,6 @@ from __future__ import annotations
 
 DOMAIN = "here_weather"
 
-HERE_API_KEYS = "here_api_keys"
-
 DEFAULT_SCAN_INTERVAL = 120
 
 CONF_LANGUAGE = "language"
