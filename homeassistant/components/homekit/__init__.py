@@ -407,7 +407,6 @@ def _async_register_events_and_services(hass: HomeAssistant):
                 if (
                     not (homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT))
                     or not homekit.driver
-                    or not homekit.driver.state
                 ):
                     continue
                 if device_registry.format_mac(homekit.driver.state.mac) in macs:
