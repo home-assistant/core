@@ -13,6 +13,9 @@ DOMAINS_AND_TYPES = {
         "RM4PRO",
         "RMPRO",
         "SP2",
+        "SP3S",
+        "SP4",
+        "SP4B",
     },
     SWITCH_DOMAIN: {
         "BG1",
