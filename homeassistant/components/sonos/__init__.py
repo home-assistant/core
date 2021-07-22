@@ -9,8 +9,8 @@ import logging
 import socket
 from urllib.parse import urlparse
 
-import soco
 from soco import events_asyncio
+import soco.config
 from soco.core import SoCo
 from soco.exceptions import SoCoException
 import voluptuous as vol

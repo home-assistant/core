@@ -50,7 +50,7 @@ def config_entry_fixture():
 @pytest.fixture(name="soco")
 def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
     """Create a mock soco SoCo fixture."""
-    with patch("soco.SoCo", autospec=True) as mock, patch(
+    with patch("homeassistant.components.sonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
     ):
         mock_soco = mock.return_value
