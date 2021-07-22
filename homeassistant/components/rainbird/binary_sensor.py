@@ -56,7 +56,7 @@ class RainBirdSensor(BinarySensorEntity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating sensor: %s", self._attr_name)
+        _LOGGER.debug("Updating sensor: %s", self.name)
         state = None
         if self._sensor_type == SENSOR_TYPE_RAINSENSOR:
             state = self._controller.get_rain_sensor_state()
