@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_IDLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TransmissionClientCoordinator
@@ -28,22 +29,23 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Transmission sensors."""
 
     tm_client: TransmissionClientCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data[CONF_NAME]
 
     entities = [
-        TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
-        TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
-        TransmissionStatusSensor(tm_client, name, "Status", ""),
-        TransmissionTorrentsSensor(tm_client, name, "Active Torrents", "active"),
-        TransmissionTorrentsSensor(tm_client, name, "Paused Torrents", "paused"),
-        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total"),
-        TransmissionTorrentsSensor(tm_client, name, "Completed Torrents", "completed"),
-        TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
+        TransmissionSpeedSensor(tm_client, "Down Speed", "download"),
+        TransmissionSpeedSensor(tm_client, "Up Speed", "upload"),
+        TransmissionStatusSensor(tm_client, "Status", ""),
+        TransmissionTorrentsSensor(tm_client, "Active Torrents", "active"),
+        TransmissionTorrentsSensor(tm_client, "Paused Torrents", "paused"),
+        TransmissionTorrentsSensor(tm_client, "Total Torrents", "total"),
+        TransmissionTorrentsSensor(tm_client, "Completed Torrents", "completed"),
+        TransmissionTorrentsSensor(tm_client, "Started Torrents", "started"),
     ]
 
     async_add_entities(entities)
@@ -57,12 +59,12 @@ class TransmissionSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         coordinator: TransmissionClientCoordinator,
-        client_name: str,
         sensor_name: str,
         sub_type: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        client_name = self.coordinator.config_entry.data[CONF_NAME]
         self._sub_type = sub_type
         self._attr_name = f"{client_name} {sensor_name}"
         self._attr_unique_id = (
@@ -84,7 +86,6 @@ class TransmissionSpeedSensor(TransmissionSensor):
     def state(self) -> float:
         """Return the state of the entity."""
         data = self.coordinator.data
-        print(data.downloadSpeed)
         mb_spd = (
             float(data.downloadSpeed)
             if self._sub_type == "download"
@@ -155,7 +156,7 @@ def _filter_torrents(torrents: list[Torrent], statuses=None) -> list[Torrent]:
     ]
 
 
-def _torrents_info(torrents, order, limit, statuses=None):
+def _torrents_info(torrents, order, limit, statuses=None) -> dict[str, dict]:
     infos = {}
     torrents = _filter_torrents(torrents, statuses)
     torrents = SUPPORTED_ORDER_MODES[order](torrents)

@@ -59,25 +59,15 @@ SERVICE_ADD_TORRENT_SCHEMA = vol.Schema(
     {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
-SERVICE_REMOVE_TORRENT_SCHEMA = vol.Schema(
+SERVICE_BASE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ID): cv.positive_int,
+    }
+)
+SERVICE_REMOVE_TORRENT_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
         vol.Optional(ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA): cv.boolean,
-    }
-)
-
-SERVICE_START_TORRENT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ID): cv.positive_int,
-    }
-)
-
-SERVICE_STOP_TORRENT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ID): cv.positive_int,
     }
 )
 
@@ -139,8 +129,7 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             return await self.hass.async_add_executor_job(self.tm_data.update)
         except TransmissionError as err:
             raise UpdateFailed(
-                "Unable to connect to Transmission client %s",
-                self.config_entry.data[CONF_HOST],
+                f"Unable to connect to Transmission client {self.config_entry.data[CONF_HOST]}",
             ) from err
 
     async def async_setup(self) -> None:
@@ -152,9 +141,8 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed from error
         except TrasnmissionrBaseError as error:
             raise ConfigEntryNotReady from error
-        print(tm_api, tm_api.session)
-        self.add_options()
 
+        self.add_options()
         self._tm_data = TransmissionData(self.hass, self.config_entry, tm_api)
         await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
 
@@ -191,9 +179,8 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             if tm_client is None:
                 _LOGGER.error("Transmission instance is not found")
                 return
-            torrent_id = service.data[CONF_ID]
             await self.hass.async_add_executor_job(
-                tm_client.tm_data.api.start_torrent, torrent_id
+                tm_client.tm_data.api.start_torrent, service.data[CONF_ID]
             )
             await tm_client.async_request_refresh()
 
@@ -207,9 +194,8 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             if tm_client is None:
                 _LOGGER.error("Transmission instance is not found")
                 return
-            torrent_id = service.data[CONF_ID]
             await self.hass.async_add_executor_job(
-                tm_client.tm_data.api.stop_torrent, torrent_id
+                tm_client.tm_data.api.stop_torrent, service.data[CONF_ID]
             )
             await tm_client.async_request_refresh()
 
@@ -223,13 +209,11 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             if tm_client is None:
                 _LOGGER.error("Transmission instance is not found")
                 return
-            torrent_id = service.data[CONF_ID]
-            delete_data = service.data[ATTR_DELETE_DATA]
             await self.hass.async_add_executor_job(
                 partial(
                     tm_client.tm_data.api.remove_torrent,
-                    torrent_id,
-                    delete_data=delete_data,
+                    service.data[CONF_ID],
+                    delete_data=service.data[ATTR_DELETE_DATA],
                 )
             )
             await tm_client.async_request_refresh()
@@ -252,14 +236,14 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             DOMAIN,
             SERVICE_START_TORRENT,
             async_start_torrent,
-            schema=SERVICE_START_TORRENT_SCHEMA,
+            schema=SERVICE_BASE_SCHEMA,
         )
 
         self.hass.services.async_register(
             DOMAIN,
             SERVICE_STOP_TORRENT,
             async_stop_torrent,
-            schema=SERVICE_STOP_TORRENT_SCHEMA,
+            schema=SERVICE_BASE_SCHEMA,
         )
 
         self.config_entry.async_on_unload(

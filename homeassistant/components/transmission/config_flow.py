@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
 
 from .client import get_api
 from .const import (
@@ -55,6 +56,10 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler(config_entry)
 
+    def __init__(self) -> None:
+        """Initiate config flow."""
+        self._reauth_unique_id = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -64,7 +69,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             await self.async_set_unique_id(
-                f"{user_input[CONF_HOST]}-{user_input[CONF_PORT]}"
+                f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
             )
             self._abort_if_unique_id_configured()
 
@@ -88,7 +93,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Import from Transmission client config."""
         import_config[CONF_SCAN_INTERVAL] = import_config[
             CONF_SCAN_INTERVAL

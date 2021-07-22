@@ -23,13 +23,10 @@ async def async_setup_entry(
     """Set up the Transmission switch."""
 
     tm_client: TransmissionClientCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    client_name = config_entry.data[CONF_NAME]
 
     entities = []
     for switch_type, switch_name in SWITCH_TYPES.items():
-        entities.append(
-            TransmissionSwitch(tm_client, switch_type, switch_name, client_name)
-        )
+        entities.append(TransmissionSwitch(tm_client, switch_type, switch_name))
 
     async_add_entities(entities)
 
@@ -44,10 +41,10 @@ class TransmissionSwitch(CoordinatorEntity, ToggleEntity):
         coordinator: TransmissionClientCoordinator,
         switch_type: str,
         switch_name: str,
-        client_name: str,
     ) -> None:
         """Initialize the Transmission switch."""
         super().__init__(coordinator)
+        client_name = self.coordinator.config_entry.data[CONF_NAME]
         self._attr_name = f"{client_name} {switch_name}"
         self.type = switch_type
         self._attr_unique_id = (
@@ -64,7 +61,7 @@ class TransmissionSwitch(CoordinatorEntity, ToggleEntity):
         """Return the state of the entity."""
         if self.type == "on_off":
             return self.coordinator.data.activeTorrentCount > 0
-        elif self.type == "turtle_mode":
+        if self.type == "turtle_mode":
             return self.coordinator.data.alt_speed_enabled
         return False
 

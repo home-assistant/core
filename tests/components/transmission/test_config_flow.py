@@ -112,7 +112,7 @@ async def test_import_success(hass: HomeAssistant) -> None:
 
 async def test_host_port_already_configured(hass: HomeAssistant) -> None:
     """Test host is already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY, unique_id="1.2.3.4-9091")
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY, unique_id="1.2.3.4:9091")
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
