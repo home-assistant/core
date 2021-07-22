@@ -9,10 +9,10 @@ import logging
 import socket
 from urllib.parse import urlparse
 
-import pysonos
-from pysonos import events_asyncio
-from pysonos.core import SoCo
-from pysonos.exceptions import SoCoException
+from soco import events_asyncio
+import soco.config as soco_config
+from soco.core import SoCo
+from soco.exceptions import SoCoException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -109,7 +109,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
-    pysonos.config.EVENTS_MODULE = events_asyncio
+    soco_config.EVENTS_MODULE = events_asyncio
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
-        pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+        soco_config.EVENT_ADVERTISE_IP = advertise_addr
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):
         _LOGGER.warning(
@@ -140,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _create_soco(ip_address: str, source: SoCoCreationSource) -> SoCo | None:
     """Create a soco instance and return if successful."""
     try:
-        soco = pysonos.SoCo(ip_address)
+        soco = SoCo(ip_address)
         # Ensure that the player is available and UID is cached
         _ = soco.uid
         _ = soco.volume
