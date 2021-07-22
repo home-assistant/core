@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.5.1
+HAP-python==3.5.2
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -218,7 +218,7 @@ aiomusiccast==0.8.0
 aionotify==0.2.0
 
 # homeassistant.components.notion
-aionotion==1.1.0
+aionotion==3.0.2
 
 # homeassistant.components.automate
 aiopulse2==0.6.0

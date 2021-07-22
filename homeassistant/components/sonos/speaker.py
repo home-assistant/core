@@ -25,6 +25,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
@@ -821,38 +822,39 @@ class SonosSpeaker:
                         )
 
             groups = []
+            if not with_group:
+                return groups
+
+            # Unjoin non-coordinator speakers not contained in the desired snapshot group
+            #
+            # If a coordinator is unjoined from its group, another speaker from the group
+            # will inherit the coordinator's playqueue and its own playqueue will be lost
             speakers_to_unjoin = set()
+            for speaker in speakers:
+                if speaker.sonos_group == speaker.snapshot_group:
+                    continue
 
-            if with_group:
-                # Unjoin non-coordinator speakers not contained in the desired snapshot group
-                #
-                # If a coordinator is unjoined from its group, another speaker from the group
-                # will inherit the coordinator's playqueue and its own playqueue will be lost
-                for speaker in speakers:
-                    if speaker.sonos_group == speaker.snapshot_group:
-                        continue
+                speakers_to_unjoin.update(
+                    {
+                        s
+                        for s in speaker.sonos_group[1:]
+                        if s not in speaker.snapshot_group
+                    }
+                )
 
-                    speakers_to_unjoin.update(
-                        {
-                            s
-                            for s in speaker.sonos_group
-                            if s not in speaker.snapshot_group and not s.is_coordinator
-                        }
-                    )
+            for speaker in speakers_to_unjoin:
+                speaker.unjoin()
 
-                for speaker in speakers_to_unjoin:
-                    speaker.unjoin()
-
-                # Bring back the original group topology
-                for speaker in (s for s in speakers if s.snapshot_group):
-                    assert speaker.snapshot_group is not None
-                    if speaker.snapshot_group[0] == speaker:
-                        if (
-                            speaker.snapshot_group != speaker.sonos_group
-                            and speaker.snapshot_group != [speaker]
-                        ):
-                            speaker.join(speaker.snapshot_group)
-                        groups.append(speaker.snapshot_group.copy())
+            # Bring back the original group topology
+            for speaker in (s for s in speakers if s.snapshot_group):
+                assert speaker.snapshot_group is not None
+                if speaker.snapshot_group[0] == speaker:
+                    if (
+                        speaker.snapshot_group != speaker.sonos_group
+                        and speaker.snapshot_group != [speaker]
+                    ):
+                        speaker.join(speaker.snapshot_group)
+                    groups.append(speaker.snapshot_group.copy())
 
             return groups
 
@@ -866,6 +868,11 @@ class SonosSpeaker:
 
         # Find all affected players
         speakers_set = {s for s in speakers if s.soco_snapshot}
+        if missing_snapshots := set(speakers) - speakers_set:
+            raise HomeAssistantError(
+                f"Restore failed, speakers are missing snapshots: {[s.zone_name for s in missing_snapshots]}"
+            )
+
         if with_group:
             for speaker in [s for s in speakers_set if s.snapshot_group]:
                 assert speaker.snapshot_group is not None
