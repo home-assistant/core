@@ -66,6 +66,9 @@ class HEREDestinationWeatherSensor(CoordinatorEntity, SensorEntity):
         self._unique_id = "".join(
             f"{self._latitude}_{self._longitude}_{self._sensor_type}_{self._name_suffix}_{self._sensor_number}".lower().split()
         )
+        self._unique_device_id = "".join(
+            f"{self._latitude}_{self._longitude}_{self._sensor_type}".lower().split()
+        )
 
     @property
     def entity_registry_enabled_default(self):
@@ -101,8 +104,8 @@ class HEREDestinationWeatherSensor(CoordinatorEntity, SensorEntity):
         """Return a device description for device registry."""
 
         return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._base_name,
+            "identifiers": {(DOMAIN, self._unique_device_id)},
+            "name": f"{self._base_name} {self._sensor_type}",
             "manufacturer": "here.com",
             "entry_type": "service",
         }

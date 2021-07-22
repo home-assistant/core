@@ -107,8 +107,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
         """Return the humidity."""
         if (
             humidity := get_attribute_from_here_data(self.coordinator.data, "humidity")
-            is not None
-        ):
+        ) is not None:
             return float(humidity)
         return None
 
@@ -135,8 +134,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
                 visibility := get_attribute_from_here_data(
                     self.coordinator.data, "visibility"
                 )
-                is not None
-            ):
+            ) is not None:
                 return float(visibility)
         return None
 
@@ -188,8 +186,9 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
         """Return a device description for device registry."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._name,
+            "name": self.name,
             "manufacturer": "here.com",
+            "entry_type": "service",
         }
 
 
@@ -223,8 +222,7 @@ def get_pressure_from_here_data(
             pressure := get_attribute_from_here_data(
                 here_data, "barometerPressure", offset
             )
-            is not None
-        ):
+        ) is not None:
             return float(pressure)
     return None
 
@@ -238,8 +236,7 @@ def get_precipitation_probability(
             precipitation_probability := get_attribute_from_here_data(
                 here_data, "precipitationProbability", offset
             )
-            is not None
-        ):
+        ) is not None:
             return int(precipitation_probability)
     return None
 
