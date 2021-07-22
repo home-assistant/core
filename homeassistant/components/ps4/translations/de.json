@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "credential_error": "Fehler beim Abrufen der Anmeldeinformationen.",
-            "no_devices_found": "Es wurden keine PlayStation 4 im Netzwerk gefunden.",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
             "port_987_bind_error": "Konnte sich nicht an Port 987 binden. Weitere Informationen findest du in der [Dokumentation] (https://www.home-assistant.io/components/ps4/).",
             "port_997_bind_error": "Bind to Port 997 nicht m\u00f6glich. Weitere Informationen findest du in der [Dokumentation](https://www.home-assistant.io/components/ps4/)"
         },
@@ -25,7 +25,7 @@
                     "name": "Name",
                     "region": "Region"
                 },
-                "description": "Gib deine PlayStation 4-Informationen ein. Navigiere f\u00fcr \"PIN\" auf der PlayStation 4-Konsole zu \"Einstellungen\". Navigiere dann zu \"Mobile App-Verbindungseinstellungen\" und w\u00e4hle \"Ger\u00e4t hinzuf\u00fcgen\" aus. Gib die angezeigte PIN ein. Weitere Informationen findest du in der [Dokumentation](https://www.home-assistant.io/components/ps4/).",
+                "description": "Gib deine PlayStation 4-Informationen ein. Navigiere f\u00fcr den PIN-Code auf der PlayStation 4-Konsole zu \"Einstellungen\". Navigiere dann zu \"Mobile App-Verbindungseinstellungen\" und w\u00e4hle \"Ger\u00e4t hinzuf\u00fcgen\" aus. Gib die angezeigte PIN-Code ein. Weitere Informationen findest du in der [Dokumentation](https://www.home-assistant.io/components/ps4/).",
                 "title": "PlayStation 4"
             },
             "mode": {
