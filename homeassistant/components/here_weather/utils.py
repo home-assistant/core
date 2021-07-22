@@ -40,10 +40,10 @@ def get_attribute_from_here_data(
     """Extract and convert data from HERE response or None if not found."""
     try:
         state = here_data[sensor_number][attribute_name]
-        state = convert_asterisk_to_none(state)
-        return state
     except KeyError:
         return None
+    state = convert_asterisk_to_none(state)
+    return state
 
 
 def convert_asterisk_to_none(state: str) -> str | None:
