@@ -120,7 +120,6 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         self.entity_id = entity_id
         self._event = None
         self._attr_name = name
-        self._offset_reached = False
 
     @property
     def event(self):
@@ -139,9 +138,8 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
             self._event = event
             return
         event = calculate_offset(event, OFFSET)
-        self._offset_reached = is_offset_reached(event)
         self._event = event
-        self._attr_extra_state_attributes = {"offset_reached": self._offset_reached}
+        self._attr_extra_state_attributes = {"offset_reached": is_offset_reached(event)}
 
 
 class WebDavCalendarData:
