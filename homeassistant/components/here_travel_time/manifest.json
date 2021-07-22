@@ -2,7 +2,7 @@
   "domain": "here_travel_time",
   "name": "HERE Travel Time",
   "documentation": "https://www.home-assistant.io/integrations/here_travel_time",
-  "requirements": ["herepy==3.0.2"],
+  "requirements": ["herepy==3.5.3"],
   "codeowners": ["@eifinger"],
   "iot_class": "cloud_polling"
 }
