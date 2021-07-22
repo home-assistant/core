@@ -28,7 +28,7 @@ SCAN_INTERVAL = timedelta(hours=12)
 
 
 class RovaSensorMetadata(NamedTuple):
-    """Metadata for an individual ebox sensor."""
+    """Metadata for an individual rova sensor."""
 
     name: str
     json_key: str
