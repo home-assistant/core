@@ -187,12 +187,10 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_picture: str | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
     name: str | None = None
-    supported_features: int | None = None
     unit_of_measurement: str | None = None
 
 
