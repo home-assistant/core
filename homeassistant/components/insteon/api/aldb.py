@@ -11,7 +11,7 @@ from pyinsteon.utils import subscribe_topic, unsubscribe_topic
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from ..const import DEVICE_ADDRESS, ID, INSTEON_DEVICE_NOT_FOUND, TYPE
 from .device import async_device_name, notify_device_not_found
@@ -62,12 +62,16 @@ async def async_reload_and_save_aldb(hass, device):
     await devices.async_save(workdir=hass.config.config_dir)
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "insteon/aldb/get", vol.Required(DEVICE_ADDRESS): str}
 )
-async def websocket_get_aldb(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_get_aldb(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Get the All-Link Database for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -91,8 +95,6 @@ async def websocket_get_aldb(hass, connection, msg):
     connection.send_result(msg[ID], records)
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/aldb/change",
@@ -100,7 +102,13 @@ async def websocket_get_aldb(hass, connection, msg):
         vol.Required(ALDB_RECORD): ALDB_RECORD_SCHEMA,
     }
 )
-async def websocket_change_aldb_record(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_change_aldb_record(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Change an All-Link Database record for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -121,8 +129,6 @@ async def websocket_change_aldb_record(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/aldb/create",
@@ -130,7 +136,13 @@ async def websocket_change_aldb_record(hass, connection, msg):
         vol.Required(ALDB_RECORD): ALDB_RECORD_SCHEMA,
     }
 )
-async def websocket_create_aldb_record(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_create_aldb_record(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Create an All-Link Database record for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -149,15 +161,19 @@ async def websocket_create_aldb_record(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/aldb/write",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_write_aldb(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_write_aldb(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Create an All-Link Database record for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -169,15 +185,19 @@ async def websocket_write_aldb(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/aldb/load",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_load_aldb(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_load_aldb(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Create an All-Link Database record for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -188,15 +208,19 @@ async def websocket_load_aldb(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/aldb/reset",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_reset_aldb(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_reset_aldb(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Create an All-Link Database record for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -207,15 +231,19 @@ async def websocket_reset_aldb(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/aldb/add_default_links",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_add_default_links(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_add_default_links(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -228,15 +256,19 @@ async def websocket_add_default_links(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/aldb/notify",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_notify_on_aldb_status(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_notify_on_aldb_status(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Tell Insteon a new ALDB record was added."""
 
     device = devices[msg[DEVICE_ADDRESS]]

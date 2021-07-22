@@ -4,6 +4,7 @@ from pyinsteon import devices
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.core import HomeAssistant
 
 from ..const import (
     DEVICE_ID,
@@ -48,12 +49,16 @@ def notify_device_not_found(connection, msg, text):
     )
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "insteon/device/get", vol.Required(DEVICE_ID): str}
 )
-async def websocket_get_device(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_get_device(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Get an Insteon device."""
     dev_registry = await hass.helpers.device_registry.async_get_registry()
     ha_device = dev_registry.async_get(msg[DEVICE_ID])

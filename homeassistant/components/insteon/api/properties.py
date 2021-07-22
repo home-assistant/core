@@ -16,6 +16,7 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from ..const import (
@@ -280,15 +281,19 @@ def _get_usable_value(prop):
     return value, prop.is_dirty
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/properties/get",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_get_properties(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_get_properties(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -300,8 +305,6 @@ async def websocket_get_properties(hass, connection, msg):
     connection.send_result(msg[ID], {"properties": properties, "schema": schema})
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/properties/change",
@@ -310,7 +313,13 @@ async def websocket_get_properties(hass, connection, msg):
         vol.Required(PROPERTY_VALUE): vol.Any(list, int, float, bool, str),
     }
 )
-async def websocket_change_properties_record(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_change_properties_record(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -321,15 +330,19 @@ async def websocket_change_properties_record(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/properties/write",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_write_properties(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_write_properties(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -349,15 +362,19 @@ async def websocket_write_properties(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/properties/load",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_load_properties(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_load_properties(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
@@ -377,15 +394,19 @@ async def websocket_load_properties(hass, connection, msg):
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "insteon/properties/reset",
         vol.Required(DEVICE_ADDRESS): str,
     }
 )
-async def websocket_reset_properties(hass, connection, msg):
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_reset_properties(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     device = devices[msg[DEVICE_ADDRESS]]
     if not device:
