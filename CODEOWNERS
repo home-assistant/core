@@ -56,6 +56,7 @@ homeassistant/components/august/* @bdraco
 homeassistant/components/aurora/* @djtimca
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
+homeassistant/components/automate/* @sillyfrog
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
 homeassistant/components/awair/* @ahayworth @danielsjf
@@ -566,6 +567,7 @@ homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @esev
 homeassistant/components/wiffi/* @mampfes
 homeassistant/components/wilight/* @leofig-rj
+homeassistant/components/wirelesstag/* @sergeymaysak
 homeassistant/components/withings/* @vangorra
 homeassistant/components/wled/* @frenck
 homeassistant/components/wolflink/* @adamkrol93

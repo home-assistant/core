@@ -142,6 +142,9 @@ aiomusiccast==0.8.0
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.automate
+aiopulse2==0.6.0
+
 # homeassistant.components.acmeda
 aiopulse==0.4.2
 
@@ -1023,7 +1026,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.53
+pysonos==0.0.54
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1312,7 +1315,7 @@ wiffi==1.0.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.7.1
+wled==0.7.3
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

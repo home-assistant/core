@@ -221,7 +221,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         elif hasattr(self.coordinator.data.now, self._type):
             value = getattr(self.coordinator.data.now, self._type)
 
-            if not isinstance(value, int):
+            if hasattr(value, "value"):
                 value = value.value
 
         return value

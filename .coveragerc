@@ -75,6 +75,12 @@ omit =
     homeassistant/components/asuswrt/router.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
+    homeassistant/components/automate/__init__.py
+    homeassistant/components/automate/base.py
+    homeassistant/components/automate/const.py
+    homeassistant/components/automate/cover.py
+    homeassistant/components/automate/helpers.py
+    homeassistant/components/automate/hub.py
     homeassistant/components/aurora/__init__.py
     homeassistant/components/aurora/binary_sensor.py
     homeassistant/components/aurora/const.py
@@ -970,7 +976,6 @@ omit =
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
-    homeassistant/components/speedtestdotnet/*
     homeassistant/components/spider/*
     homeassistant/components/splunk/*
     homeassistant/components/spotify/__init__.py
