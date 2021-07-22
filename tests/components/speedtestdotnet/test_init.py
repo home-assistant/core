@@ -11,7 +11,7 @@ from homeassistant.components.speedtestdotnet.const import (
     SPEED_TEST_SERVICE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -84,7 +84,9 @@ async def test_server_not_found(hass: HomeAssistant, mock_api: MagicMock) -> Non
     mock_api.return_value.get_servers.side_effect = speedtest.NoMatchedServers
     await hass.data[DOMAIN].async_refresh()
     await hass.async_block_till_done()
-    assert not hass.data[DOMAIN].last_update_success
+    state = hass.states.get("sensor.speedtest_ping")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_get_best_server_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -106,4 +108,6 @@ async def test_get_best_server_error(hass: HomeAssistant, mock_api: MagicMock) -
     )
     await hass.data[DOMAIN].async_refresh()
     await hass.async_block_till_done()
-    assert not hass.data[DOMAIN].last_update_success
+    state = hass.states.get("sensor.speedtest_ping")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
