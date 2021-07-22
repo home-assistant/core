@@ -2,13 +2,14 @@
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
@@ -34,7 +35,20 @@ PLATFORM_SCHEMA = cv.deprecated(
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_platform(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities, discovery_info=None
+):
+    """Set up the Modem Caller ID component."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up the Modem Caller ID sensor."""
     api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     async_add_entities(
@@ -60,7 +74,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
     )
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "reject_call")
 
@@ -112,6 +126,6 @@ class ModemCalleridSensor(SensorEntity):
             self._attr_state = STATE_IDLE
             self.async_schedule_update_ha_state()
 
-    async def reject_call(self) -> None:
+    async def reject_call(self):
         """Reject Incoming Call."""
         await self.api.reject_call(self.device)

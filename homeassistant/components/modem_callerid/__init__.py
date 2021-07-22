@@ -5,7 +5,7 @@ from phone_modem import PhoneModem, exceptions
 import serial
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -15,19 +15,6 @@ from .const import DATA_KEY_API, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [SENSOR_DOMAIN]
-
-
-async def async_setup(hass: HomeAssistant, config) -> bool:
-    """Set up the Modem Caller ID component."""
-    hass.data[DOMAIN] = {}
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config.get(DOMAIN)
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unable to open port %s", device)
         raise ConfigEntryNotReady from ex
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
     }

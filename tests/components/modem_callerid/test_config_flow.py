@@ -82,3 +82,21 @@ async def test_flow_import(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA
+
+
+async def test_flow_import_duplicate(hass):
+    """Test already configured import."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: DEFAULT_DEVICE},
+    )
+
+    entry.add_to_hass(hass)
+
+    service_info = {"device": DEFAULT_DEVICE}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=service_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
