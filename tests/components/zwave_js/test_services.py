@@ -35,6 +35,7 @@ from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
     AIR_TEMPERATURE_SENSOR,
     CLIMATE_DANFOSS_LC13_ENTITY,
+    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
 )
 
@@ -805,7 +806,7 @@ async def test_multicast_set_value(
     hass,
     client,
     climate_danfoss_lc_13,
-    climate_radio_thermostat_ct100_plus_different_endpoints,
+    climate_eurotronic_spirit_z,
     integration,
 ):
     """Test multicast_set_value service."""
@@ -816,7 +817,7 @@ async def test_multicast_set_value(
         {
             ATTR_ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
-                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
             ATTR_COMMAND_CLASS: 117,
             ATTR_PROPERTY: "local",
@@ -829,7 +830,7 @@ async def test_multicast_set_value(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "multicast_group.set_value"
     assert args["nodeIDs"] == [
-        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        climate_eurotronic_spirit_z.node_id,
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
@@ -847,7 +848,7 @@ async def test_multicast_set_value(
         {
             ATTR_ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
-                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
             ATTR_COMMAND_CLASS: 117,
             ATTR_PROPERTY: "local",
@@ -860,7 +861,7 @@ async def test_multicast_set_value(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "multicast_group.set_value"
     assert args["nodeIDs"] == [
-        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        climate_eurotronic_spirit_z.node_id,
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
@@ -937,7 +938,7 @@ async def test_multicast_set_value(
             {
                 ATTR_ENTITY_ID: [
                     CLIMATE_DANFOSS_LC13_ENTITY,
-                    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
                 ],
                 ATTR_COMMAND_CLASS: 117,
                 ATTR_PROPERTY: "local",
