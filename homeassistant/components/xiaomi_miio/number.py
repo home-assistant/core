@@ -15,6 +15,7 @@ from .const import (
     FEATURE_SET_MOTOR_SPEED,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_MIGRATE_ENTITY_NAME,
     MODEL_AIRHUMIDIFIER_CA4,
 )
 from .device import XiaomiCoordinatedMiioEntity
@@ -63,6 +64,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
+        name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
+    else:
+        name = config_entry.title
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
     if model not in [MODEL_AIRHUMIDIFIER_CA4]:
@@ -71,7 +76,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for number in NUMBER_TYPES.values():
         entities.append(
             XiaomiAirHumidifierNumber(
-                f"{config_entry.title} {number.name}",
+                f"{name} {number.name}",
                 device,
                 config_entry,
                 f"{number.short_name}_{config_entry.unique_id}",
