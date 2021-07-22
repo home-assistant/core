@@ -1,7 +1,8 @@
 """Viessmann ViCare water_heater device."""
+from contextlib import suppress
 import logging
 
-from PyViCare.PyViCare import PyViCareRateLimitError
+from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
 import requests
 
 from homeassistant.components.water_heater import (
@@ -10,13 +11,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 
-from . import (
-    DOMAIN as VICARE_DOMAIN,
-    VICARE_API,
-    VICARE_HEATING_TYPE,
-    VICARE_NAME,
-    catch_not_supported,
-)
+from . import DOMAIN as VICARE_DOMAIN, VICARE_API, VICARE_HEATING_TYPE, VICARE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,17 +77,17 @@ class ViCareWater(WaterHeaterEntity):
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
         try:
-            with catch_not_supported() as self._current_temperature:
+            with suppress(PyViCareNotSupportedFeatureError):
                 self._current_temperature = (
                     self._api.getDomesticHotWaterStorageTemperature()
                 )
 
-            with catch_not_supported() as self._target_temperature:
+            with suppress(PyViCareNotSupportedFeatureError):
                 self._target_temperature = (
                     self._api.getDomesticHotWaterConfiguredTemperature()
                 )
 
-            with catch_not_supported() as self._current_mode:
+            with suppress(PyViCareNotSupportedFeatureError):
                 self._current_mode = self._api.getActiveMode()
 
         except requests.exceptions.ConnectionError:

@@ -1,7 +1,8 @@
 """Viessmann ViCare sensor device."""
+from contextlib import suppress
 import logging
 
-from PyViCare.PyViCare import PyViCareRateLimitError
+from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
 import requests
 
 from homeassistant.components.sensor import SensorEntity
@@ -26,7 +27,6 @@ from . import (
     VICARE_HEATING_TYPE,
     VICARE_NAME,
     HeatingType,
-    catch_not_supported,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -386,7 +386,7 @@ class ViCareSensor(SensorEntity):
     def update(self):
         """Update state of sensor."""
         try:
-            with catch_not_supported() as self._state:
+            with suppress(PyViCareNotSupportedFeatureError):
                 self._state = self._sensor[CONF_GETTER](self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
