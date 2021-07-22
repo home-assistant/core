@@ -161,7 +161,7 @@ class Light(HomeAccessory):
         attributes = new_state.attributes
         has_mode = ATTR_COLOR_MODE in attributes
         color_temp_mode = attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
-        color_mode_changes = (
+        color_mode_changed = (
             attributes.get(ATTR_COLOR_MODE) != self._previous_color_mode
         )
 
@@ -191,18 +191,14 @@ class Light(HomeAccessory):
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
                 if (
-                    color_mode_changes
+                    color_mode_changed
                     or self.char_color_temperature.value != color_temperature
                 ):
                     self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
-        if (
-            (not has_mode or not color_temp_mode)
-            and CHAR_SATURATION in self.chars
-            and CHAR_HUE in self.chars
-        ):
-            if ATTR_HS_COLOR in attributes:
+        if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
+            if (not has_mode or not color_temp_mode) and ATTR_HS_COLOR in attributes:
                 hue, saturation = attributes[ATTR_HS_COLOR]
             elif ATTR_COLOR_TEMP in attributes:
                 hue, saturation = color_temperature_to_hs(
@@ -213,9 +209,9 @@ class Light(HomeAccessory):
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)
-                if color_mode_changes or hue != self.char_hue.value:
+                if color_mode_changed or hue != self.char_hue.value:
                     self.char_hue.set_value(hue)
-                if color_mode_changes or saturation != self.char_saturation.value:
+                if color_mode_changed or saturation != self.char_saturation.value:
                     self.char_saturation.set_value(saturation)
 
         self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
