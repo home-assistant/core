@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import MutableMapping
+from collections import ChainMap
 from functools import wraps
 from types import ModuleType
-from typing import Any
+from typing import Any, Iterable, Mapping
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -14,8 +14,7 @@ from homeassistant.components import websocket_api
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.loader import IntegrationNotFound
+from homeassistant.loader import IntegrationNotFound, bind_hass
 from homeassistant.requirements import async_get_integration_with_requirements
 
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
@@ -47,6 +46,16 @@ TYPES = {
     ),
     "action": ("device_action", "async_get_actions", "async_get_action_capabilities"),
 }
+
+
+@bind_hass
+async def async_get_device_automations(
+    hass: HomeAssistant,
+    automation_type: str,
+    device_ids: Iterable[str] | None = None,
+) -> Mapping[str, Any]:
+    """Return all the device automations for a type optionally limited to specific device ids."""
+    return await _async_get_device_automations(hass, automation_type, device_ids)
 
 
 async def async_setup(hass, config):
@@ -96,7 +105,7 @@ async def async_get_device_automation_platform(
 
 
 async def _async_get_device_automations_from_domain(
-    hass, domain, automation_type, device_id
+    hass, domain, automation_type, device_ids
 ):
     """List device automations."""
     try:
@@ -104,48 +113,52 @@ async def _async_get_device_automations_from_domain(
             hass, domain, automation_type
         )
     except InvalidDeviceAutomationConfig:
-        return None
+        return {}
 
     function_name = TYPES[automation_type][1]
 
-    return await getattr(platform, function_name)(hass, device_id)
+    tasks = [
+        getattr(platform, function_name)(hass, device_id) for device_id in device_ids
+    ]
+    results = await asyncio.gather(*tasks)
+    return {device_id: results[idx] for idx, device_id in enumerate(device_ids)}
 
 
-async def _async_get_device_automations(hass, automation_type, device_id):
+async def _async_get_device_automations(
+    hass: HomeAssistant, automation_type: str, device_ids: Iterable[str] | None
+) -> Mapping[str, Any]:
     """List device automations."""
-    device_registry, entity_registry = await asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-    )
+    device_registry = hass.helpers.device_registry.async_get(hass)
+    entity_registry = hass.helpers.entity_registry.async_get(hass)
+    domain_devices: dict[str, set[str]] = {}
+    device_entities_domains: dict[str, set[str]] = {}
+    match_device_ids = set(device_ids or device_registry.devices)
+    for entry in entity_registry.entities.values():
+        if not entry.disabled_by and entry.device_id in match_device_ids:
+            device_entities_domains.setdefault(entry.device_id, set()).add(entry.domain)
 
-    domains = set()
-    automations: list[MutableMapping[str, Any]] = []
-    device = device_registry.async_get(device_id)
+    for device_id in match_device_ids:
+        device = device_registry.async_get(device_id)
+        if device is None:
+            raise DeviceNotFound
+        for entry_id in device.config_entries:
+            if config_entry := hass.config_entries.async_get_entry(entry_id):
+                domain_devices.setdefault(config_entry.domain, set()).add(device_id)
+        for domain in device_entities_domains.get(device_id, []):
+            domain_devices.setdefault(domain, set()).add(device_id)
 
-    if device is None:
-        raise DeviceNotFound
-
-    for entry_id in device.config_entries:
-        config_entry = hass.config_entries.async_get_entry(entry_id)
-        domains.add(config_entry.domain)
-
-    entity_entries = async_entries_for_device(entity_registry, device_id)
-    for entity_entry in entity_entries:
-        domains.add(entity_entry.domain)
-
-    device_automations = await asyncio.gather(
-        *(
-            _async_get_device_automations_from_domain(
-                hass, domain, automation_type, device_id
+    return dict(
+        ChainMap(
+            *await asyncio.gather(
+                *(
+                    _async_get_device_automations_from_domain(
+                        hass, domain, automation_type, domain_devices[domain]
+                    )
+                    for domain in domain_devices
+                )
             )
-            for domain in domains
         )
     )
-    for device_automation in device_automations:
-        if device_automation is not None:
-            automations.extend(device_automation)
-
-    return automations
 
 
 async def _async_get_device_automation_capabilities(hass, automation_type, automation):
@@ -207,7 +220,9 @@ def handle_device_errors(func):
 async def websocket_device_automation_list_actions(hass, connection, msg):
     """Handle request for device actions."""
     device_id = msg["device_id"]
-    actions = await _async_get_device_automations(hass, "action", device_id)
+    actions = (await _async_get_device_automations(hass, "action", [device_id])).get(
+        device_id
+    )
     connection.send_result(msg["id"], actions)
 
 
@@ -222,7 +237,9 @@ async def websocket_device_automation_list_actions(hass, connection, msg):
 async def websocket_device_automation_list_conditions(hass, connection, msg):
     """Handle request for device conditions."""
     device_id = msg["device_id"]
-    conditions = await _async_get_device_automations(hass, "condition", device_id)
+    conditions = (
+        await _async_get_device_automations(hass, "condition", [device_id])
+    ).get(device_id)
     connection.send_result(msg["id"], conditions)
 
 
@@ -237,7 +254,9 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
 async def websocket_device_automation_list_triggers(hass, connection, msg):
     """Handle request for device triggers."""
     device_id = msg["device_id"]
-    triggers = await _async_get_device_automations(hass, "trigger", device_id)
+    triggers = (await _async_get_device_automations(hass, "trigger", [device_id])).get(
+        device_id
+    )
     connection.send_result(msg["id"], triggers)
 
 
