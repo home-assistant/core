@@ -70,10 +70,12 @@ class Light(HomeAccessory):
         if color_supported(self._color_modes):
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
-        elif color_temp_supported(self._color_modes):
-            # ColorTemperature and Hue characteristic should not be
-            # exposed both. Both states are tracked separately in HomeKit,
-            # causing "source of truth" problems.
+
+        if color_temp_supported(self._color_modes):
+            # ColorTemperature and Hue characteristic technically should not
+            # both be exposed according to the spec, but even certified
+            # devices do this so and iOS handles it just fine in all
+            # current non-EOL iOS versions.
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
