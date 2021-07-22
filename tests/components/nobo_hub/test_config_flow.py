@@ -4,7 +4,11 @@ from unittest.mock import Mock, PropertyMock, patch
 from pynobo import nobo
 
 from homeassistant import config_entries, setup
-from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, CONF_WEEK_PROFILE_NONE, DOMAIN
+from homeassistant.components.nobo_hub.const import (
+    CONF_OVERRIDE_TYPE,
+    CONF_WEEK_PROFILE_NONE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
 
