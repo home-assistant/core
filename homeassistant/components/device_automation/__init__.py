@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
+from collections.abc import Iterable, Mapping
 from functools import wraps
 from types import ModuleType
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import voluptuous as vol
 import voluptuous_serialize
