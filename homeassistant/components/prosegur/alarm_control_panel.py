@@ -49,6 +49,10 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._attr_unique_id = self.contract
         self._attr_supported_features = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
 
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await self.async_update()
+
     async def async_update(self):
         """Update alarm status."""
 
@@ -64,18 +68,12 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        if self._installation is None:
-            await self.async_update()
         await self._installation.disarm(self._auth)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm away command."""
-        if self._installation is None:
-            await self.async_update()
         await self._installation.arm_partially(self._auth)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if self._installation is None:
-            await self.async_update()
         await self._installation.arm(self._auth)
