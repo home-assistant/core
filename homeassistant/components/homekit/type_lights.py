@@ -6,11 +6,13 @@ from pyhap.const import CATEGORY_LIGHTBULB
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
+    COLOR_MODE_COLOR_TEMP,
     DOMAIN,
     brightness_supported,
     color_supported,
@@ -155,9 +157,12 @@ class Light(HomeAccessory):
         elif state == STATE_OFF and self.char_on.value != 0:
             self.char_on.set_value(0)
 
+        attributes = new_state.attributes
+        color_temp_mode = attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
+
         # Handle Brightness
         if CHAR_BRIGHTNESS in self.chars:
-            brightness = new_state.attributes.get(ATTR_BRIGHTNESS)
+            brightness = attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, (int, float)):
                 brightness = round(brightness / 255 * 100, 0)
                 # The homeassistant component might report its brightness as 0 but is
@@ -176,22 +181,24 @@ class Light(HomeAccessory):
                     self.char_brightness.set_value(brightness)
 
         # Handle color temperature
-        if CHAR_COLOR_TEMPERATURE in self.chars:
-            color_temperature = new_state.attributes.get(ATTR_COLOR_TEMP)
+        if color_temp_mode and CHAR_COLOR_TEMPERATURE in self.chars:
+            color_temperature = attributes.get(ATTR_COLOR_TEMP)
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
                 if self.char_color_temperature.value != color_temperature:
                     self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
-        if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
-            if ATTR_HS_COLOR in new_state.attributes:
-                hue, saturation = new_state.attributes[ATTR_HS_COLOR]
-            elif ATTR_COLOR_TEMP in new_state.attributes:
+        if (
+            not color_temp_mode
+            and CHAR_SATURATION in self.chars
+            and CHAR_HUE in self.chars
+        ):
+            if ATTR_HS_COLOR in attributes:
+                hue, saturation = attributes[ATTR_HS_COLOR]
+            elif ATTR_COLOR_TEMP in attributes:
                 hue, saturation = color_temperature_to_hs(
-                    color_temperature_mired_to_kelvin(
-                        new_state.attributes[ATTR_COLOR_TEMP]
-                    )
+                    color_temperature_mired_to_kelvin(attributes[ATTR_COLOR_TEMP])
                 )
             else:
                 hue, saturation = None, None
