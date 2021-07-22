@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "wrong_server_id": "Server ID is not valid"
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
             "user": {
