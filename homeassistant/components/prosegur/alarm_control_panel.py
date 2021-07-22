@@ -56,10 +56,11 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
             self._installation = await Installation.retrieve(self._auth)
         except ConnectionError as err:
             _LOGGER.error(err)
-            self._attr_state = None
+            self._attr_available = False
             return
 
         self._attr_state = STATE_MAPPING.get(self._installation.status)
+        self._attr_available = True
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

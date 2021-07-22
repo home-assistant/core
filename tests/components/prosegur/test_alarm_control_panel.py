@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
-    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import entity_component
 
@@ -85,7 +85,7 @@ async def test_connection_error(hass, mock_auth):
         await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
 
         state = hass.states.get(PROSEGUR_ALARM_ENTITY)
-        assert state.state == STATE_UNKNOWN
+        assert state.state == STATE_UNAVAILABLE
 
 
 @mark.parametrize(
