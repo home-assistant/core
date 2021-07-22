@@ -22,8 +22,8 @@ async def async_setup_entry(
     here_weather_data_dict = hass.data[DOMAIN][entry.entry_id]
 
     sensors_to_add = []
-    for sensor_type in SENSOR_TYPES:
-        for weather_attribute in SENSOR_TYPES[sensor_type]:
+    for sensor_type, weather_attributes in SENSOR_TYPES.items():
+        for weather_attribute in weather_attributes:
             sensors_to_add.append(
                 HEREDestinationWeatherSensor(
                     entry,
