@@ -232,14 +232,12 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Initialize the switch."""
         super().__init__(device, *args, **kwargs)
         self._attr_is_on = self._coordinator.data["pwr"]
-        self._attr_current_power_w = self._coordinator.data.get("power")
 
     @callback
     def update_data(self):
         """Update data."""
         if self._coordinator.last_update_success:
             self._attr_is_on = self._coordinator.data["pwr"]
-            self._attr_current_power_w = self._coordinator.data.get("power")
         self.async_write_ha_state()
 
 
