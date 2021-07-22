@@ -31,6 +31,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Zu meldende Wallet-Guthaben.",
+                    "exchange_base": "Basisw\u00e4hrung f\u00fcr Wechselkurssensoren.",
                     "exchange_rate_currencies": "Zu meldende Wechselkurse."
                 },
                 "description": "Coinbase-Optionen anpassen"

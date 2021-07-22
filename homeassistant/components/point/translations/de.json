@@ -12,7 +12,7 @@
         },
         "error": {
             "follow_link": "Bitte folgen dem Link und authentifiziere dich, bevor du auf Senden klickst",
-            "no_token": "Ung\u00fcltiger Access Token"
+            "no_token": "Ung\u00fcltiger Zugriffs-Token"
         },
         "step": {
             "auth": {
