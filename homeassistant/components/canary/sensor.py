@@ -96,8 +96,6 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._sensor_type = sensor_type
         self._device_id = device.device_id
-        self._device_name = device.name
-        self._device_type_name = device.device_type["name"]
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
         self._attr_name = f"{location.name} {device.name} {sensor_type_name}"
@@ -116,16 +114,16 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
 
         self._canary_type = canary_sensor_type
         self._attr_state = self.reading
-        self._attr_unique_id = f"{self._device_id}_{self._sensor_type[0]}"
+        self._attr_unique_id = f"{device.device_id}_{sensor_type[0]}"
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(self._device_id))},
+            "identifiers": {(DOMAIN, str(device.device_id))},
             "name": device.name,
-            "model": self._device_type_name,
+            "model": device.device_type["name"],
             "manufacturer": MANUFACTURER,
         }
-        self._attr_unit_of_measurement = self._sensor_type[1]
-        self._attr_device_class = self._sensor_type[3]
-        self._attr_icon = self._sensor_type[2]
+        self._attr_unit_of_measurement = sensor_type[1]
+        self._attr_device_class = sensor_type[3]
+        self._attr_icon = sensor_type[2]
 
     @property
     def reading(self) -> float | None:
