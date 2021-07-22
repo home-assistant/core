@@ -6,11 +6,14 @@ import logging
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +33,10 @@ from .const import (
     MODE_DAILY_SIMPLE,
     SENSOR_TYPES,
 )
-from .utils import convert_unit_of_measurement_if_needed, get_attribute_from_here_data
+from .utils import (
+    convert_temperature_unit_of_measurement_if_needed,
+    get_attribute_from_here_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,63 +82,102 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
         return f"{self._name}_{self._mode}"
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         if self.coordinator.data is not None:
             return get_condition_from_here_data(self.coordinator.data)
+        return None
 
     @property
-    def temperature(self):
+    def temperature(self) -> float | None:
         """Return the temperature."""
         if self.coordinator.data is not None:
             return get_temperature_from_here_data(self.coordinator.data, self._mode)
+        return None
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return convert_unit_of_measurement_if_needed(
+        return convert_temperature_unit_of_measurement_if_needed(
             self.coordinator.hass.config.units.name, TEMP_CELSIUS
         )
 
     @property
-    def pressure(self):
+    def pressure(self) -> float | None:
         """Return the pressure."""
+        if self.coordinator.data is not None:
+            return get_pressure_from_here_data(self.coordinator.data, self._mode)
         return None
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         if self.coordinator.data is not None:
-            return get_attribute_from_here_data(self.coordinator.data, "humidity")
+            if (
+                humidity := get_attribute_from_here_data(
+                    self.coordinator.data, "humidity"
+                )
+                is not None
+            ):
+                return float(humidity)
+        return None
 
     @property
-    def wind_speed(self):
+    def wind_speed(self) -> float | None:
         """Return the wind speed."""
         if self.coordinator.data is not None:
-            return get_attribute_from_here_data(self.coordinator.data, "windSpeed")
+            return get_wind_speed_from_here_data(self.coordinator.data)
+        return None
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         if self.coordinator.data is not None:
-            return get_attribute_from_here_data(self.coordinator.data, "windDirection")
+            return get_wind_bearing_from_here_data(self.coordinator.data)
+        return None
 
     @property
-    def attribution(self):
+    def attribution(self) -> str | None:
         """Return the attribution."""
         return None
 
     @property
-    def forecast(self):
+    def visibility(self) -> float | None:
+        """Return the visibility."""
+        if "visibility" in SENSOR_TYPES[self._mode]:
+            if self.coordinator.data is not None:
+                if (
+                    visibility := get_attribute_from_here_data(
+                        self.coordinator.data, "visibility"
+                    )
+                    is not None
+                ):
+                    return float(visibility)
+        return None
+
+    @property
+    def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if self.coordinator.data is None:
             return None
-        data = []
+        data: list[Forecast] = []
         for offset in range(len(self.coordinator.data)):
             data.append(
                 {
-                    ATTR_FORECAST_TIME: get_attribute_from_here_data(
-                        self.coordinator.data, "utcTime", offset
+                    ATTR_FORECAST_CONDITION: get_condition_from_here_data(
+                        self.coordinator.data, offset
+                    ),
+                    ATTR_FORECAST_TIME: get_time_from_here_data(
+                        self.coordinator.data, offset
+                    ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: get_precipitation_probability(
+                        self.coordinator.data, self._mode, offset
+                    ),
+                    ATTR_FORECAST_PRECIPITATION: calc_precipitation(
+                        self.coordinator.data, offset
+                    ),
+                    ATTR_FORECAST_PRESSURE: get_pressure_from_here_data(
+                        self.coordinator.data, self._mode, offset
                     ),
                     ATTR_FORECAST_TEMP: get_high_or_default_temperature_from_here_data(
                         self.coordinator.data, self._mode, offset
@@ -140,16 +185,10 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
                     ATTR_FORECAST_TEMP_LOW: get_low_or_default_temperature_from_here_data(
                         self.coordinator.data, self._mode, offset
                     ),
-                    ATTR_FORECAST_PRECIPITATION: calc_precipitation(
+                    ATTR_FORECAST_WIND_BEARING: get_wind_bearing_from_here_data(
                         self.coordinator.data, offset
                     ),
-                    ATTR_FORECAST_WIND_SPEED: get_attribute_from_here_data(
-                        self.coordinator.data, "windSpeed", offset
-                    ),
-                    ATTR_FORECAST_WIND_BEARING: get_attribute_from_here_data(
-                        self.coordinator.data, "windDirection", offset
-                    ),
-                    ATTR_FORECAST_CONDITION: get_condition_from_here_data(
+                    ATTR_FORECAST_WIND_SPEED: get_wind_speed_from_here_data(
                         self.coordinator.data, offset
                     ),
                 }
@@ -164,12 +203,62 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-
         return {
             "identifiers": {(DOMAIN, self._name)},
             "name": self._name,
             "manufacturer": "here.com",
         }
+
+
+def get_wind_speed_from_here_data(here_data: list, offset: int = 0) -> float:
+    """Return the wind speed from here_data."""
+    wind_speed = get_attribute_from_here_data(here_data, "windSpeed", offset)
+    assert wind_speed is not None
+    return float(wind_speed)
+
+
+def get_wind_bearing_from_here_data(here_data: list, offset: int = 0) -> int:
+    """Return the wind bearing from here_data."""
+    wind_bearing = get_attribute_from_here_data(here_data, "windDirection", offset)
+    assert wind_bearing is not None
+    return int(wind_bearing)
+
+
+def get_time_from_here_data(here_data: list, offset: int = 0) -> str:
+    """Return the time from here_data."""
+    time = get_attribute_from_here_data(here_data, "utcTime", offset)
+    assert time is not None
+    return time
+
+
+def get_pressure_from_here_data(
+    here_data: list, mode: str, offset: int = 0
+) -> float | None:
+    """Return the pressure from here_data."""
+    if "barometerPressure" in SENSOR_TYPES[mode]:
+        if (
+            pressure := get_attribute_from_here_data(
+                here_data, "barometerPressure", offset
+            )
+            is not None
+        ):
+            return float(pressure)
+    return None
+
+
+def get_precipitation_probability(
+    here_data: list, mode: str, offset: int = 0
+) -> int | None:
+    """Return the precipitation probability from here_data."""
+    if "precipitationProbability" in SENSOR_TYPES[mode]:
+        if (
+            precipitation_probability := get_attribute_from_here_data(
+                here_data, "precipitationProbability", offset
+            )
+            is not None
+        ):
+            return int(precipitation_probability)
+    return None
 
 
 def get_condition_from_here_data(here_data: list, offset: int = 0) -> str | None:

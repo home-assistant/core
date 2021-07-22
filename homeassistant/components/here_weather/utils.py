@@ -16,8 +16,17 @@ from homeassistant.const import (
 )
 
 
+def convert_temperature_unit_of_measurement_if_needed(
+    unit_system: str, unit_of_measurement: str
+) -> str:
+    """Convert the temperature unit of measurement to imperial if configured."""
+    if unit_system != CONF_UNIT_SYSTEM_METRIC:
+        unit_of_measurement = TEMP_FAHRENHEIT
+    return unit_of_measurement
+
+
 def convert_unit_of_measurement_if_needed(
-    unit_system, unit_of_measurement: str | None
+    unit_system: str, unit_of_measurement: str | None
 ) -> str | None:
     """Convert the unit of measurement to imperial if configured."""
     if unit_system != CONF_UNIT_SYSTEM_METRIC:
