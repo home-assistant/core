@@ -13,8 +13,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Email",
-                    "mfa": "MFA Code (Optional)"
+                    "username": "Email"
                 },
                 "description": "Please enter your information.",
                 "title": "Tesla - Configuration"
