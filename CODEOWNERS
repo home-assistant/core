@@ -493,6 +493,7 @@ homeassistant/components/launch_library/* @ludeeus @DurgNomis-drol
 tests/components/launch_library/* @ludeeus @DurgNomis-drol
 homeassistant/components/lcn/* @alengwenus
 tests/components/lcn/* @alengwenus
+homeassistant/components/legrand_rflc/* @rtyle
 homeassistant/components/lg_netcast/* @Drafteed
 homeassistant/components/life360/* @pnbruckner
 homeassistant/components/linux_battery/* @fabaff

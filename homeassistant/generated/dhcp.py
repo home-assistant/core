@@ -153,6 +153,10 @@ DHCP = [
         "macaddress": "0021B9*"
     },
     {
+        "domain": "legrand_rflc",
+        "hostname": "legrand lc7001"
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*"

@@ -949,6 +949,9 @@ krakenex==2.1.0
 # homeassistant.components.eufy
 lakeside==0.12
 
+# homeassistant.components.legrand_rflc
+lc7001==1.0.1
+
 # homeassistant.components.foscam
 libpyfoscam==1.0
 
