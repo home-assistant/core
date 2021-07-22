@@ -408,6 +408,8 @@ def _async_register_events_and_services(hass: HomeAssistant):
             found = False
             for entry_id in hass.data[DOMAIN]:
                 if homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT):
+                    if not homekit.driver or not homekit.driver.state:
+                        continue
                     formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
                     _LOGGER.debug("Check formatted_mac: %s", formatted_mac)
 
