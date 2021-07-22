@@ -2597,7 +2597,8 @@
 				"writeable": true,
 				"label": "Tone ID",
 				"min": 0,
-				"max": 255
+				"max": 255,
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{
@@ -2726,7 +2727,8 @@
 					"29": "29UPWA~1 (2 sec)",
 					"30": "30DOOR~1 (27 sec)",
 					"255": "default"
-				}
+				},
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{
@@ -2856,7 +2858,8 @@
 					"29": "29UPWA~1 (2 sec)",
 					"30": "30DOOR~1 (27 sec)",
 					"255": "default"
-				}
+				},
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{
@@ -3011,7 +3014,8 @@
 					"29": "29UPWA~1 (2 sec)",
 					"30": "30DOOR~1 (27 sec)",
 					"255": "default"
-				}
+				},
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{
@@ -3166,7 +3170,8 @@
 					"29": "29UPWA~1 (2 sec)",
 					"30": "30DOOR~1 (27 sec)",
 					"255": "default"
-				}
+				},
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{
@@ -3321,7 +3326,8 @@
 					"29": "29UPWA~1 (2 sec)",
 					"30": "30DOOR~1 (27 sec)",
 					"255": "default"
-				}
+				},
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{
@@ -3451,7 +3457,8 @@
 					"29": "29UPWA~1 (2 sec)",
 					"30": "30DOOR~1 (27 sec)",
 					"255": "default"
-				}
+				},
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{
@@ -3581,7 +3588,8 @@
 					"29": "29UPWA~1 (2 sec)",
 					"30": "30DOOR~1 (27 sec)",
 					"255": "default"
-				}
+				},
+                "valueChangeOptions": ["volume"]
 			}
 		},
 		{

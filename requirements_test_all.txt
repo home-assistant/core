@@ -109,7 +109,7 @@ aioesphomeapi==5.0.1
 aioflo==0.4.1
 
 # homeassistant.components.guardian
-aioguardian==1.0.4
+aioguardian==1.0.8
 
 # homeassistant.components.harmony
 aioharmony==0.2.7
@@ -1365,4 +1365,4 @@ zigpy-znp==0.5.1
 zigpy==0.35.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.27.1
+zwave-js-server-python==0.28.0
