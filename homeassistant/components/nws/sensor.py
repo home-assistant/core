@@ -2,7 +2,6 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     LENGTH_KILOMETERS,
@@ -14,6 +13,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
@@ -21,10 +21,6 @@ from homeassistant.util.pressure import convert as convert_pressure
 
 from . import base_unique_id
 from .const import (
-    ATTR_ICON,
-    ATTR_LABEL,
-    ATTR_UNIT,
-    ATTR_UNIT_CONVERT,
     ATTRIBUTION,
     CONF_STATION,
     COORDINATOR_OBSERVATION,
@@ -32,6 +28,7 @@ from .const import (
     NWS_DATA,
     OBSERVATION_VALID_TIME,
     SENSOR_TYPES,
+    NWSSensorMetadata,
 )
 
 PARALLEL_UPDATES = 0
@@ -43,21 +40,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     station = entry.data[CONF_STATION]
 
     entities = []
-    for sensor_type, sensor_data in SENSOR_TYPES.items():
-        if hass.config.units.is_metric:
-            unit = sensor_data[ATTR_UNIT]
-        else:
-            unit = sensor_data[ATTR_UNIT_CONVERT]
+    for sensor_type, metadata in SENSOR_TYPES.items():
         entities.append(
             NWSSensor(
+                hass,
                 entry.data,
                 hass_data,
                 sensor_type,
+                metadata,
                 station,
-                sensor_data[ATTR_LABEL],
-                sensor_data[ATTR_ICON],
-                sensor_data[ATTR_DEVICE_CLASS],
-                unit,
             ),
         )
 
@@ -69,14 +60,12 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry_data,
         hass_data,
         sensor_type,
+        metadata: NWSSensorMetadata,
         station,
-        label,
-        icon,
-        device_class,
-        unit,
     ):
         """Initialise the platform with a data instance."""
         super().__init__(hass_data[COORDINATOR_OBSERVATION])
@@ -84,11 +73,15 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
         self._type = sensor_type
-        self._station = station
-        self._label = label
-        self._icon = icon
-        self._device_class = device_class
-        self._unit = unit
+        self._metadata = metadata
+
+        self._attr_name = f"{station} {metadata.label}"
+        self._attr_icon = metadata.icon
+        self._attr_device_class = metadata.device_class
+        if hass.config.units.is_metric:
+            self._attr_unit_of_measurement = metadata.unit
+        else:
+            self._attr_unit_of_measurement = metadata.unit_convert
 
     @property
     def state(self):
@@ -96,42 +89,22 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         value = self._nws.observation.get(self._type)
         if value is None:
             return None
-        if self._unit == SPEED_MILES_PER_HOUR:
+        if self._attr_unit_of_measurement == SPEED_MILES_PER_HOUR:
             return round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
-        if self._unit == LENGTH_MILES:
+        if self._attr_unit_of_measurement == LENGTH_MILES:
             return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
-        if self._unit == PRESSURE_INHG:
+        if self._attr_unit_of_measurement == PRESSURE_INHG:
             return round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
-        if self._unit == TEMP_CELSIUS:
+        if self._attr_unit_of_measurement == TEMP_CELSIUS:
             return round(value, 1)
-        if self._unit == PERCENTAGE:
+        if self._attr_unit_of_measurement == PERCENTAGE:
             return round(value)
         return value
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
 
     @property
     def device_state_attributes(self):
         """Return the attribution."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def name(self):
-        """Return the name of the station."""
-        return f"{self._station} {self._label}"
 
     @property
     def unique_id(self):
