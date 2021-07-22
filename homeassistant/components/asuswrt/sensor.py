@@ -120,16 +120,15 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._router = router
         self._sensor_type = sensor_type
-        self._sensor_def = sensor_def
         self._attr_name = f"{DEFAULT_PREFIX} {sensor_def[SENSOR_NAME]}"
         self._factor = sensor_def.get(SENSOR_FACTOR)
-        self._attr_unique_id = f"{DOMAIN} {self._attr_name}"
-        self._attr_entity_registry_enabled_default = self._sensor_def.get(
+        self._attr_unique_id = f"{DOMAIN} {self.name}"
+        self._attr_entity_registry_enabled_default = sensor_def.get(
             SENSOR_DEFAULT_ENABLED, False
         )
-        self._attr_unit_of_measurement = self._sensor_def.get(SENSOR_UNIT)
-        self._attr_icon = self._sensor_def.get(SENSOR_ICON)
-        self._attr_device_class = self._sensor_def.get(SENSOR_DEVICE_CLASS)
+        self._attr_unit_of_measurement = sensor_def.get(SENSOR_UNIT)
+        self._attr_icon = sensor_def.get(SENSOR_ICON)
+        self._attr_device_class = sensor_def.get(SENSOR_DEVICE_CLASS)
 
     @property
     def state(self) -> str:
