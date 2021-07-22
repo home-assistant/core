@@ -1,6 +1,7 @@
 """Support for Start.ca Bandwidth Monitor."""
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 from xml.parsers.expat import ExpatError
 
 import async_timeout
@@ -28,19 +29,76 @@ CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
+
+class StartcaSensorMetadata(NamedTuple):
+    """Metadata for an individual Startca sensor."""
+
+    name: str
+    unit_of_measurement: str
+    icon: str
+
+
 SENSOR_TYPES = {
-    "usage": ["Usage Ratio", PERCENTAGE, "mdi:percent"],
-    "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
-    "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
-    "used_download": ["Used Download", DATA_GIGABYTES, "mdi:download"],
-    "used_upload": ["Used Upload", DATA_GIGABYTES, "mdi:upload"],
-    "used_total": ["Used Total", DATA_GIGABYTES, "mdi:download"],
-    "grace_download": ["Grace Download", DATA_GIGABYTES, "mdi:download"],
-    "grace_upload": ["Grace Upload", DATA_GIGABYTES, "mdi:upload"],
-    "grace_total": ["Grace Total", DATA_GIGABYTES, "mdi:download"],
-    "total_download": ["Total Download", DATA_GIGABYTES, "mdi:download"],
-    "total_upload": ["Total Upload", DATA_GIGABYTES, "mdi:download"],
-    "used_remaining": ["Remaining", DATA_GIGABYTES, "mdi:download"],
+    "usage": StartcaSensorMetadata(
+        "Usage Ratio",
+        unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+    ),
+    "usage_gb": StartcaSensorMetadata(
+        "Usage",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "limit": StartcaSensorMetadata(
+        "Data limit",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "used_download": StartcaSensorMetadata(
+        "Used Download",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "used_upload": StartcaSensorMetadata(
+        "Used Upload",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:upload",
+    ),
+    "used_total": StartcaSensorMetadata(
+        "Used Total",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "grace_download": StartcaSensorMetadata(
+        "Grace Download",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "grace_upload": StartcaSensorMetadata(
+        "Grace Upload",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:upload",
+    ),
+    "grace_total": StartcaSensorMetadata(
+        "Grace Total",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "total_download": StartcaSensorMetadata(
+        "Total Download",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "total_upload": StartcaSensorMetadata(
+        "Total Upload",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
+    "used_remaining": StartcaSensorMetadata(
+        "Remaining",
+        unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:download",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -81,31 +139,17 @@ class StartcaSensor(SensorEntity):
         """Initialize the sensor."""
         self.client_name = name
         self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        metadata = SENSOR_TYPES[sensor_type]
+        self._attr_name = f"{self.client_name} {metadata.name}"
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self._attr_icon = metadata.icon
         self.startcadata = startcadata
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
 
     async def async_update(self):
         """Get the latest data from Start.ca and update the state."""
