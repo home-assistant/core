@@ -1,6 +1,7 @@
 """Sensor platform for the HERE Destination Weather service."""
 from __future__ import annotations
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -35,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(sensors_to_add)
 
 
-class HEREDestinationWeatherSensor(CoordinatorEntity):
+class HEREDestinationWeatherSensor(CoordinatorEntity, SensorEntity):
     """Implementation of an HERE Destination Weather sensor."""
 
     def __init__(
