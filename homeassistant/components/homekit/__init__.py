@@ -23,6 +23,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -93,6 +94,7 @@ from .const import (
     MANUFACTURER,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
+    SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
 )
 from .util import (
@@ -168,6 +170,9 @@ CONFIG_SCHEMA = vol.Schema(
 RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_ids}
 )
+
+
+UNPAIR_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string})
 
 
 def _async_get_entries_by_name(current_entries):
@@ -356,7 +361,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
     hass.http.register_view(HomeKitPairingQRView)
 
     async def async_handle_homekit_reset_accessory(service):
-        """Handle start HomeKit service call."""
+        """Handle reset accessory HomeKit service call."""
         for entry_id in hass.data[DOMAIN]:
             if HOMEKIT not in hass.data[DOMAIN][entry_id]:
                 continue
@@ -376,6 +381,38 @@ def _async_register_events_and_services(hass: HomeAssistant):
         SERVICE_HOMEKIT_RESET_ACCESSORY,
         async_handle_homekit_reset_accessory,
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
+    )
+
+    async def async_handle_homekit_unpair(service):
+        """Handle unpair HomeKit service call."""
+        device_id = service.data.get(ATTR_DEVICE_ID)
+        dev_reg = device_registry.async_get(hass)
+        dev_reg_ent = dev_reg.async_get(device_id)
+
+        if not dev_reg_ent:
+            raise ValueError(f"No device found for {device_id}")
+
+        macs = [
+            cval
+            for ctype, cval in dev_reg_ent.connections
+            if ctype == device_registry.CONNECTION_NETWORK_MAC
+        ]
+        found = False
+        for entry_id in hass.data[DOMAIN]:
+            if homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT):
+                formatted_mac = homekit.driver.state.mac
+                if formatted_mac in macs:
+                    homekit.async_unpair()
+                    found = True
+
+        if not found:
+            raise ValueError(f"No homekit accessory found for {device_id}")
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_HOMEKIT_UNPAIR,
+        async_handle_homekit_unpair,
+        schema=UNPAIR_SERVICE_SCHEMA,
     )
 
     async def async_handle_homekit_service_start(service):
@@ -639,7 +676,11 @@ class HomeKit:
 
         if self.driver.state.paired:
             return
+        self._async_show_setup_message()
 
+    @callback
+    def _async_show_setup_message(self):
+        """Show the pairing setup message."""
         show_setup_message(
             self.hass,
             self._entry_id,
@@ -647,6 +688,15 @@ class HomeKit:
             self.driver.state.pincode,
             self.driver.accessory.xhm_uri(),
         )
+
+    @callback
+    def async_unpair(self):
+        """Remove all pairings for an accessory so it can be repaired."""
+        for client_uuid in list(self.driver.state.paired_clients):
+            self.driver.state.remove_paired_client(client_uuid)
+        self.driver.self.async_persist()
+        self.driver.async_update_advertisement()
+        self._async_show_setup_message()
 
     @callback
     def _async_register_bridge(self):
