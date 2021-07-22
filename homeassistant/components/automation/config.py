@@ -75,10 +75,10 @@ async def async_validate_config_item(hass, config, full_config=None):
 
     if CONF_CONDITION in config:
         config[CONF_CONDITION] = await asyncio.gather(
-            *[
+            *(
                 async_validate_condition_config(hass, cond)
                 for cond in config[CONF_CONDITION]
-            ]
+            )
         )
 
     config[CONF_ACTION] = await script.async_validate_actions_config(

@@ -2,8 +2,12 @@
 import asyncio
 from uuid import UUID
 
-from simplipy import API
-from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
+from simplipy import get_api
+from simplipy.errors import (
+    EndpointUnavailableError,
+    InvalidCredentialsError,
+    SimplipyError,
+)
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
@@ -155,24 +159,20 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     client_id = await async_get_client_id(hass)
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    async def async_get_api():
-        """Define a helper to get an authenticated SimpliSafe API object."""
-        return await API.login_via_credentials(
+    try:
+        api = await get_api(
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             client_id=client_id,
             session=websession,
         )
-
-    try:
-        api = await async_get_api()
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed from err
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    simplisafe = SimpliSafe(hass, config_entry, api, async_get_api)
+    simplisafe = SimpliSafe(hass, config_entry, api)
 
     try:
         await simplisafe.async_init()
@@ -261,7 +261,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             LOGGER.error("Error during service call: %s", err)
             return
 
-    for service, method, schema in [
+    for service, method, schema in (
         ("clear_notifications", clear_notifications, None),
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
@@ -270,7 +270,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             set_system_properties,
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),
-    ]:
+    ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
@@ -295,10 +295,9 @@ async def async_reload_entry(hass, config_entry):
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass, config_entry, api, async_get_api):
+    def __init__(self, hass, config_entry, api):
         """Initialize."""
         self._api = api
-        self._async_get_api = async_get_api
         self._hass = hass
         self._system_notifications = {}
         self.config_entry = config_entry
@@ -375,19 +374,9 @@ class SimpliSafe:
 
         for result in results:
             if isinstance(result, InvalidCredentialsError):
-                try:
-                    self._api = await self._async_get_api()
-                    return
-                except InvalidCredentialsError as err:
-                    raise ConfigEntryAuthFailed(
-                        "Unable to re-authenticate with SimpliSafe"
-                    ) from err
-                except SimplipyError as err:
-                    raise UpdateFailed(
-                        f"SimpliSafe error while updating: {err}"
-                    ) from err
+                raise ConfigEntryAuthFailed("Invalid credentials") from result
 
-            if isinstance(result, EndpointUnavailable):
+            if isinstance(result, EndpointUnavailableError):
                 # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):

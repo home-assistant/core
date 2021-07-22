@@ -1,4 +1,5 @@
 """Support for Ambient Weather Station Service."""
+from __future__ import annotations
 
 from aioambient import Client
 from aioambient.errors import WebsocketError
@@ -8,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
@@ -26,11 +28,13 @@ from homeassistant.const import (
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_INCHES_PER_HOUR,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -154,7 +158,7 @@ TYPE_WINDSPDMPH_AVG2M = "windspdmph_avg2m"
 TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_TYPES = {
-    TYPE_24HOURRAININ: ("24 Hr Rain", "in", SENSOR, None),
+    TYPE_24HOURRAININ: ("24 Hr Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, SENSOR, DEVICE_CLASS_PRESSURE),
     TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, SENSOR, DEVICE_CLASS_PRESSURE),
     TYPE_BATT10: ("Battery 10", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
@@ -170,11 +174,16 @@ SENSOR_TYPES = {
     TYPE_BATTOUT: ("Battery", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
     TYPE_BATT_CO2: ("CO2 Battery", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
     TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, SENSOR, DEVICE_CLASS_CO2),
-    TYPE_DAILYRAININ: ("Daily Rain", "in", SENSOR, None),
+    TYPE_DAILYRAININ: ("Daily Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_DEWPOINT: ("Dew Point", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
-    TYPE_EVENTRAININ: ("Event Rain", "in", SENSOR, None),
+    TYPE_EVENTRAININ: ("Event Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_FEELSLIKE: ("Feels Like", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
-    TYPE_HOURLYRAININ: ("Hourly Rain Rate", "in/hr", SENSOR, None),
+    TYPE_HOURLYRAININ: (
+        "Hourly Rain Rate",
+        PRECIPITATION_INCHES_PER_HOUR,
+        SENSOR,
+        None,
+    ),
     TYPE_HUMIDITY10: ("Humidity 10", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
     TYPE_HUMIDITY1: ("Humidity 1", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
     TYPE_HUMIDITY2: ("Humidity 2", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
@@ -189,7 +198,7 @@ SENSOR_TYPES = {
     TYPE_HUMIDITYIN: ("Humidity In", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
     TYPE_LASTRAIN: ("Last Rain", None, SENSOR, DEVICE_CLASS_TIMESTAMP),
     TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, SENSOR, None),
-    TYPE_MONTHLYRAININ: ("Monthly Rain", "in", SENSOR, None),
+    TYPE_MONTHLYRAININ: ("Monthly Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_PM25_24H: (
         "PM25 24h Avg",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -275,9 +284,9 @@ SENSOR_TYPES = {
     TYPE_TEMP9F: ("Temp 9", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_TEMPF: ("Temp", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
-    TYPE_TOTALRAININ: ("Lifetime Rain", "in", SENSOR, None),
+    TYPE_TOTALRAININ: ("Lifetime Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_UV: ("uv", "Index", SENSOR, None),
-    TYPE_WEEKLYRAININ: ("Weekly Rain", "in", SENSOR, None),
+    TYPE_WEEKLYRAININ: ("Weekly Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", DEGREE, SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, SENSOR, None),
     TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, SENSOR, None),
@@ -286,13 +295,13 @@ SENSOR_TYPES = {
     TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, SENSOR, None),
     TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, SENSOR, None),
     TYPE_WINDSPEEDMPH: ("Wind Speed", SPEED_MILES_PER_HOUR, SENSOR, None),
-    TYPE_YEARLYRAININ: ("Yearly Rain", "in", SENSOR, None),
+    TYPE_YEARLYRAININ: ("Yearly Rain", PRECIPITATION_INCHES, SENSOR, None),
 }
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Ambient PWS as config entry."""
     hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
 
@@ -318,7 +327,7 @@ async def async_setup_entry(hass, config_entry):
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    async def _async_disconnect_websocket(*_):
+    async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.client.websocket.disconnect()
 
     config_entry.async_on_unload(
@@ -330,7 +339,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload an Ambient PWS config entry."""
     ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
@@ -338,7 +347,7 @@ async def async_unload_entry(hass, config_entry):
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
 
@@ -362,19 +371,21 @@ async def async_migrate_entry(hass, config_entry):
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(self, hass, config_entry, client):
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, client: Client
+    ) -> None:
         """Initialize."""
         self._config_entry = config_entry
         self._entry_setup_complete = False
         self._hass = hass
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
-        self.stations = {}
+        self.stations: dict[str, dict] = {}
 
-    async def _attempt_connect(self):
+    async def _attempt_connect(self) -> None:
         """Attempt to connect to the socket (retrying later on fail)."""
 
-        async def connect(timestamp=None):
+        async def connect(timestamp: int | None = None) -> None:
             """Connect."""
             await self.client.websocket.connect()
 
@@ -385,14 +396,14 @@ class AmbientStation:
             self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
             async_call_later(self._hass, self._ws_reconnect_delay, connect)
 
-    async def ws_connect(self):
+    async def ws_connect(self) -> None:
         """Register handlers and connect to the websocket."""
 
-        def on_connect():
+        def on_connect() -> None:
             """Define a handler to fire when the websocket is connected."""
             LOGGER.info("Connected to websocket")
 
-        def on_data(data):
+        def on_data(data: dict) -> None:
             """Define a handler to fire when the data is received."""
             mac_address = data["macAddress"]
             if data != self.stations[mac_address][ATTR_LAST_DATA]:
@@ -402,11 +413,11 @@ class AmbientStation:
                     self._hass, f"ambient_station_data_update_{mac_address}"
                 )
 
-        def on_disconnect():
+        def on_disconnect() -> None:
             """Define a handler to fire when the websocket is disconnected."""
             LOGGER.info("Disconnected from websocket")
 
-        def on_subscribed(data):
+        def on_subscribed(data: dict) -> None:
             """Define a handler to fire when the subscription is set."""
             for station in data["devices"]:
                 if station["macAddress"] in self.stations:
@@ -447,7 +458,7 @@ class AmbientStation:
 
         await self._attempt_connect()
 
-    async def ws_disconnect(self):
+    async def ws_disconnect(self) -> None:
         """Disconnect from the websocket."""
         await self.client.websocket.disconnect()
 
@@ -456,8 +467,14 @@ class AmbientWeatherEntity(Entity):
     """Define a base Ambient PWS entity."""
 
     def __init__(
-        self, ambient, mac_address, station_name, sensor_type, sensor_name, device_class
-    ):
+        self,
+        ambient: AmbientStation,
+        mac_address: str,
+        station_name: str,
+        sensor_type: str,
+        sensor_name: str,
+        device_class: str | None,
+    ) -> None:
         """Initialize the sensor."""
         self._ambient = ambient
         self._attr_device_class = device_class
@@ -472,11 +489,11 @@ class AmbientWeatherEntity(Entity):
         self._mac_address = mac_address
         self._sensor_type = sensor_type
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         @callback
-        def update():
+        def update() -> None:
             """Update the state."""
             if self._sensor_type == TYPE_SOLARRADIATION_LX:
                 self._attr_available = (
@@ -505,6 +522,6 @@ class AmbientWeatherEntity(Entity):
         self.update_from_latest_data()
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         raise NotImplementedError

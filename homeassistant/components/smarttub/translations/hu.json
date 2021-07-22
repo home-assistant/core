@@ -8,6 +8,10 @@
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "A SmartTub integr\u00e1ci\u00f3nak \u00fajra hiteles\u00edtenie kell a fi\u00f3kj\u00e1t",
+                "title": "Az integr\u00e1ci\u00f3 \u00fajb\u00f3li azonos\u00edt\u00e1sa"
+            },
             "user": {
                 "data": {
                     "email": "E-mail",

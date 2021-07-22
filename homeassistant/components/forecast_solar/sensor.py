@@ -1,6 +1,8 @@
 """Support for the Forecast.Solar sensor service."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_NAME
@@ -64,5 +66,13 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the sensor."""
-        state: StateType = getattr(self.coordinator.data, self._sensor.key)
+        if self._sensor.state is None:
+            state: StateType | datetime = getattr(
+                self.coordinator.data, self._sensor.key
+            )
+        else:
+            state = self._sensor.state(self.coordinator.data)
+
+        if isinstance(state, datetime):
+            return state.isoformat()
         return state

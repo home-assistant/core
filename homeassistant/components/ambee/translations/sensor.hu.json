@@ -3,6 +3,7 @@
         "ambee__risk": {
             "high": "Magas",
             "low": "Alacsony",
+            "moderate": "M\u00e9rs\u00e9kelt",
             "very high": "Nagyon magas"
         }
     }

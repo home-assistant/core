@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "A vez\u00e9rl\u0151 webhelye m\u00e1r konfigur\u00e1lva van",
             "configuration_updated": "A konfigur\u00e1ci\u00f3 friss\u00edtve.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
         },
@@ -26,6 +27,9 @@
     "options": {
         "step": {
             "client_control": {
+                "data": {
+                    "dpi_restrictions": "Enged\u00e9lyezze a DPI restrikci\u00f3s csoportok vez\u00e9rl\u00e9s\u00e9t"
+                },
                 "description": "Konfigur\u00e1lja a klienseket\n\n Hozzon l\u00e9tre kapcsol\u00f3kat azokhoz a sorsz\u00e1mokhoz, amelyeknek vez\u00e9relni k\u00edv\u00e1nja a h\u00e1l\u00f3zati hozz\u00e1f\u00e9r\u00e9st."
             },
             "simple_options": {
@@ -33,7 +37,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "S\u00e1vsz\u00e9less\u00e9g-haszn\u00e1lati \u00e9rz\u00e9kel\u0151k l\u00e9trehoz\u00e1sa a h\u00e1l\u00f3zati \u00fcgyfelek sz\u00e1m\u00e1ra"
+                    "allow_bandwidth_sensors": "S\u00e1vsz\u00e9less\u00e9g-haszn\u00e1lati \u00e9rz\u00e9kel\u0151k l\u00e9trehoz\u00e1sa a h\u00e1l\u00f3zati \u00fcgyfelek sz\u00e1m\u00e1ra",
+                    "allow_uptime_sensors": "\u00dczemid\u0151-\u00e9rz\u00e9kel\u0151k h\u00e1l\u00f3zati \u00fcgyfelek sz\u00e1m\u00e1ra"
                 }
             }
         }

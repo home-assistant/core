@@ -44,7 +44,8 @@ SIMPLE_SENSOR = {
         "unit": TEMP_CELSIUS,
         # This sensor is only for temperature characteristics that are not part
         # of a temperature sensor service.
-        "probe": lambda char: char.service.type != ServicesTypes.TEMPERATURE_SENSOR,
+        "probe": lambda char: char.service.type
+        != ServicesTypes.get_uuid(ServicesTypes.TEMPERATURE_SENSOR),
     },
 }
 

@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +53,7 @@ async def async_setup_entry(
         for device in gateway.devices.values():
             if hasattr(device, "consumption_property"):
                 for consumption in device.consumption_property:
-                    for consumption_type in ["current", "total"]:
+                    for consumption_type in ("current", "total"):
                         entities.append(
                             DevoloConsumptionEntity(
                                 homecontrol=gateway,
@@ -167,6 +168,12 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         self._sensor_type = consumption
         self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
 
+        if consumption == "total":
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_last_reset = device_instance.consumption_property[
+                element_uid
+            ].total_since
+
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
         )
@@ -183,11 +190,15 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
     def _sync(self, message: tuple) -> None:
         """Update the consumption sensor state."""
-        if message[0] == self._unique_id:
+        if message[0] == self._unique_id and message[2] != "total_since":
             self._value = getattr(
                 self._device_instance.consumption_property[self._unique_id],
                 self._sensor_type,
             )
+        elif message[0] == self._unique_id and message[2] == "total_since":
+            self._attr_last_reset = self._device_instance.consumption_property[
+                self._unique_id
+            ].total_since
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()

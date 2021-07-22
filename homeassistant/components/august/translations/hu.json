@@ -23,6 +23,7 @@
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
+                "description": "Ha a bejelentkez\u00e9si m\u00f3dszer \u201ee-mail\u201d, akkor a felhaszn\u00e1l\u00f3n\u00e9v az e-mail c\u00edm. Ha a bejelentkez\u00e9si m\u00f3dszer \u201etelefon\u201d, akkor a felhaszn\u00e1l\u00f3n\u00e9v a \u201e+ NNNNNNNNNN\u201d form\u00e1tum\u00fa telefonsz\u00e1m.",
                 "title": "August fi\u00f3k be\u00e1ll\u00edt\u00e1sa"
             },
             "validation": {

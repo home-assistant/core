@@ -1,12 +1,7 @@
 """Sensors for National Weather Service (NWS)."""
 import pytest
 
-from homeassistant.components.nws.const import (
-    ATTR_LABEL,
-    ATTRIBUTION,
-    DOMAIN,
-    SENSOR_TYPES,
-)
+from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN, SENSOR_TYPES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
 from homeassistant.util import slugify
@@ -40,12 +35,12 @@ async def test_imperial_metric(
     """Test with imperial and metric units."""
     registry = await hass.helpers.entity_registry.async_get_registry()
 
-    for sensor_name, sensor_data in SENSOR_TYPES.items():
+    for sensor_name, metadata in SENSOR_TYPES.items():
         registry.async_get_or_create(
             SENSOR_DOMAIN,
             DOMAIN,
             f"35_-75_{sensor_name}",
-            suggested_object_id=f"abc_{sensor_data[ATTR_LABEL]}",
+            suggested_object_id=f"abc_{metadata.label}",
             disabled_by=None,
         )
 
@@ -58,8 +53,8 @@ async def test_imperial_metric(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    for sensor_name, sensor_data in SENSOR_TYPES.items():
-        state = hass.states.get(f"sensor.abc_{slugify(sensor_data[ATTR_LABEL])}")
+    for sensor_name, metadata in SENSOR_TYPES.items():
+        state = hass.states.get(f"sensor.abc_{slugify(metadata.label)}")
         assert state
         assert state.state == result_observation[sensor_name]
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -72,12 +67,12 @@ async def test_none_values(hass, mock_simple_nws, no_weather):
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
-    for sensor_name, sensor_data in SENSOR_TYPES.items():
+    for sensor_name, metadata in SENSOR_TYPES.items():
         registry.async_get_or_create(
             SENSOR_DOMAIN,
             DOMAIN,
             f"35_-75_{sensor_name}",
-            suggested_object_id=f"abc_{sensor_data[ATTR_LABEL]}",
+            suggested_object_id=f"abc_{metadata.label}",
             disabled_by=None,
         )
 
@@ -89,7 +84,7 @@ async def test_none_values(hass, mock_simple_nws, no_weather):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    for sensor_name, sensor_data in SENSOR_TYPES.items():
-        state = hass.states.get(f"sensor.abc_{slugify(sensor_data[ATTR_LABEL])}")
+    for sensor_name, metadata in SENSOR_TYPES.items():
+        state = hass.states.get(f"sensor.abc_{slugify(metadata.label)}")
         assert state
         assert state.state == STATE_UNKNOWN

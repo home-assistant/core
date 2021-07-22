@@ -40,11 +40,15 @@ from .const import (
 
 def discovery_info_to_discovery(discovery_info: Mapping) -> Mapping:
     """Convert a SSDP-discovery to 'our' discovery."""
+    location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+    parsed = urlparse(location)
+    hostname = parsed.hostname
     return {
         DISCOVERY_UDN: discovery_info[ssdp.ATTR_UPNP_UDN],
         DISCOVERY_ST: discovery_info[ssdp.ATTR_SSDP_ST],
         DISCOVERY_LOCATION: discovery_info[ssdp.ATTR_SSDP_LOCATION],
         DISCOVERY_USN: discovery_info[ssdp.ATTR_SSDP_USN],
+        DISCOVERY_HOSTNAME: hostname,
     }
 
 

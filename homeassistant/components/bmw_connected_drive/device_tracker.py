@@ -29,15 +29,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     """BMW Connected Drive device tracker."""
 
+    _attr_force_update = False
+    _attr_icon = "mdi:car"
+
     def __init__(self, account, vehicle):
         """Initialize the Tracker."""
         super().__init__(account, vehicle)
 
-        self._unique_id = vehicle.vin
+        self._attr_unique_id = vehicle.vin
         self._location = (
             vehicle.state.gps_position if vehicle.state.gps_position else (None, None)
         )
-        self._name = vehicle.name
+        self._attr_name = vehicle.name
 
     @property
     def latitude(self):
@@ -50,29 +53,9 @@ class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
         return self._location[1] if self._location else None
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return self._unique_id
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return "mdi:car"
-
-    @property
-    def force_update(self):
-        """All updates do not need to be written to the state machine."""
-        return False
 
     def update(self):
         """Update state of the decvice tracker."""
