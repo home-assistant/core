@@ -90,28 +90,19 @@ class CrownstoneEntity(CrownstoneDevice, LightEntity):
     Light platform is used to support dimming.
     """
 
+    _attr_should_poll = False
+    _attr_icon = "mdi:power-socket-de"
+
     def __init__(self, crownstone_data: Crownstone, usb: CrownstoneUart = None) -> None:
         """Initialize the crownstone."""
         super().__init__(crownstone_data)
         self.usb = usb
+        # Entity class attributes
+        self._attr_name = str(self.device.name)
+        self._attr_unique_id = f"{self.cloud_id}-{CROWNSTONE_SUFFIX}"
 
     @property
-    def name(self) -> str:
-        """Return the name of this presence holder."""
-        return str(self.device.name)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of this entity."""
-        return f"{self.cloud_id}-{CROWNSTONE_SUFFIX}"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:power-socket-de"
-
-    @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness if dimming enabled."""
         return crownstone_state_to_hass(self.device.state)
 
@@ -128,27 +119,7 @@ class CrownstoneEntity(CrownstoneDevice, LightEntity):
         return 0
 
     @property
-    def should_poll(self) -> bool:
-        """Return if polling is required after switching."""
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        # new state received
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIG_CROWNSTONE_STATE_UPDATE, self.async_write_ha_state
-            )
-        )
-        # updates state attributes when usb connects/disconnects
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIG_UART_STATE_CHANGE, self.async_write_ha_state
-            )
-        )
-
-    @property
-    def device_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """State attributes for Crownstone devices."""
         attributes: dict[str, Any] = {}
         # switch method
@@ -169,6 +140,21 @@ class CrownstoneEntity(CrownstoneDevice, LightEntity):
         )
 
         return attributes
+
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener when this entity is added to HA."""
+        # new state received
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIG_CROWNSTONE_STATE_UPDATE, self.async_write_ha_state
+            )
+        )
+        # updates state attributes when usb connects/disconnects
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIG_UART_STATE_CHANGE, self.async_write_ha_state
+            )
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on this light via dongle or cloud."""
