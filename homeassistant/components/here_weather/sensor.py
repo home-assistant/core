@@ -85,11 +85,13 @@ class HEREDestinationWeatherSensor(CoordinatorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the device."""
-        return get_attribute_from_here_data(
-            self.coordinator.data,
-            self._weather_attribute,
-            self._sensor_number,
-        )
+        if self.coordinator.data is not None:
+            return get_attribute_from_here_data(
+                self.coordinator.data,
+                self._weather_attribute,
+                self._sensor_number,
+            )
+        return None
 
     @property
     def unit_of_measurement(self) -> str | None:

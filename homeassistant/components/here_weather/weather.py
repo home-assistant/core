@@ -78,12 +78,14 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return get_condition_from_here_data(self.coordinator.data)
+        if self.coordinator.data is not None:
+            return get_condition_from_here_data(self.coordinator.data)
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return get_temperature_from_here_data(self.coordinator.data, self._mode)
+        if self.coordinator.data is not None:
+            return get_temperature_from_here_data(self.coordinator.data, self._mode)
 
     @property
     def temperature_unit(self):
@@ -100,17 +102,20 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        get_attribute_from_here_data(self.coordinator.data, "humidity")
+        if self.coordinator.data is not None:
+            return get_attribute_from_here_data(self.coordinator.data, "humidity")
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        get_attribute_from_here_data(self.coordinator.data, "windSpeed")
+        if self.coordinator.data is not None:
+            return get_attribute_from_here_data(self.coordinator.data, "windSpeed")
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        get_attribute_from_here_data(self.coordinator.data, "windDirection")
+        if self.coordinator.data is not None:
+            return get_attribute_from_here_data(self.coordinator.data, "windDirection")
 
     @property
     def attribution(self):
