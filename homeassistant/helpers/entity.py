@@ -183,6 +183,9 @@ class DeviceInfo(TypedDict, total=False):
 class EntityDescription:
     """An class that describes Home Assistant entities."""
 
+    # This is the key identifier for this entity
+    key: str
+
     device_class: str | None = None
     entity_picture: str | None = None
     entity_registry_enabled_default: bool = True

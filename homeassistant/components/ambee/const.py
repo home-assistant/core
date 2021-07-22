@@ -34,175 +34,202 @@ SERVICES: dict[str, str] = {
     SERVICE_POLLEN: "Pollen",
 }
 
-SENSORS: dict[str, dict[str, SensorEntityDescription]] = {
-    SERVICE_AIR_QUALITY: {
-        "particulate_matter_2_5": SensorEntityDescription(
+SENSORS: dict[str, list[SensorEntityDescription]] = {
+    SERVICE_AIR_QUALITY: [
+        SensorEntityDescription(
+            key="particulate_matter_2_5",
             name="Particulate Matter < 2.5 μm",
             unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        "particulate_matter_10": SensorEntityDescription(
+        SensorEntityDescription(
+            key="particulate_matter_10",
             name="Particulate Matter < 10 μm",
             unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        "sulphur_dioxide": SensorEntityDescription(
+        SensorEntityDescription(
+            key="sulphur_dioxide",
             name="Sulphur Dioxide (SO2)",
             unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        "nitrogen_dioxide": SensorEntityDescription(
+        SensorEntityDescription(
+            key="nitrogen_dioxide",
             name="Nitrogen Dioxide (NO2)",
             unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        "ozone": SensorEntityDescription(
+        SensorEntityDescription(
+            key="ozone",
             name="Ozone",
             unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        "carbon_monoxide": SensorEntityDescription(
+        SensorEntityDescription(
+            key="carbon_monoxide",
             name="Carbon Monoxide (CO)",
             device_class=DEVICE_CLASS_CO,
             unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        "air_quality_index": SensorEntityDescription(
+        SensorEntityDescription(
+            key="air_quality_index",
             name="Air Quality Index (AQI)",
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-    },
-    SERVICE_POLLEN: {
-        "grass": SensorEntityDescription(
+    ],
+    SERVICE_POLLEN: [
+        SensorEntityDescription(
+            key="grass",
             name="Grass Pollen",
             icon="mdi:grass",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         ),
-        "tree": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree",
             name="Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         ),
-        "weed": SensorEntityDescription(
+        SensorEntityDescription(
+            key="weed",
             name="Weed Pollen",
             icon="mdi:sprout",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         ),
-        "grass_risk": SensorEntityDescription(
+        SensorEntityDescription(
+            key="grass_risk",
             name="Grass Pollen Risk",
             icon="mdi:grass",
             device_class=DEVICE_CLASS_AMBEE_RISK,
         ),
-        "tree_risk": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_risk",
             name="Tree Pollen Risk",
             icon="mdi:tree",
             device_class=DEVICE_CLASS_AMBEE_RISK,
         ),
-        "weed_risk": SensorEntityDescription(
+        SensorEntityDescription(
+            key="weed_risk",
             name="Weed Pollen Risk",
             icon="mdi:sprout",
             device_class=DEVICE_CLASS_AMBEE_RISK,
         ),
-        "grass_poaceae": SensorEntityDescription(
+        SensorEntityDescription(
+            key="grass_poaceae",
             name="Poaceae Grass Pollen",
             icon="mdi:grass",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_alder": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_alder",
             name="Alder Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_birch": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_birch",
             name="Birch Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_cypress": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_cypress",
             name="Cypress Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_elm": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_elm",
             name="Elm Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_hazel": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_hazel",
             name="Hazel Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_oak": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_oak",
             name="Oak Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_pine": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_pine",
             name="Pine Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_plane": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_plane",
             name="Plane Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "tree_poplar": SensorEntityDescription(
+        SensorEntityDescription(
+            key="tree_poplar",
             name="Poplar Tree Pollen",
             icon="mdi:tree",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "weed_chenopod": SensorEntityDescription(
+        SensorEntityDescription(
+            key="weed_chenopod",
             name="Chenopod Weed Pollen",
             icon="mdi:sprout",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "weed_mugwort": SensorEntityDescription(
+        SensorEntityDescription(
+            key="weed_mugwort",
             name="Mugwort Weed Pollen",
             icon="mdi:sprout",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "weed_nettle": SensorEntityDescription(
+        SensorEntityDescription(
+            key="weed_nettle",
             name="Nettle Weed Pollen",
             icon="mdi:sprout",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-        "weed_ragweed": SensorEntityDescription(
+        SensorEntityDescription(
+            key="weed_ragweed",
             name="Ragweed Weed Pollen",
             icon="mdi:sprout",
             state_class=STATE_CLASS_MEASUREMENT,
             unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
             entity_registry_enabled_default=False,
         ),
-    },
+    ],
 }
