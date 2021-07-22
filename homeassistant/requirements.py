@@ -118,10 +118,10 @@ async def _async_process_integration(
         return
 
     results = await asyncio.gather(
-        *[
+        *(
             async_get_integration_with_requirements(hass, dep, done)
             for dep in deps_to_check
-        ],
+        ),
         return_exceptions=True,
     )
     for result in results:

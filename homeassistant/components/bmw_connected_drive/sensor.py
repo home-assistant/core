@@ -451,12 +451,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         "chargecycle_range",
                         "total_electric_distance",
                     ):
-                        for attr in [
+                        for attr in (
                             "community_average",
                             "community_high",
                             "community_low",
                             "user_average",
-                        ]:
+                        ):
                             device = BMWConnectedDriveSensor(
                                 account,
                                 vehicle,
@@ -466,7 +466,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             )
                             entities.append(device)
                         if attribute_name == "chargecycle_range":
-                            for attr in ["user_current_charge_cycle", "user_high"]:
+                            for attr in ("user_current_charge_cycle", "user_high"):
                                 device = BMWConnectedDriveSensor(
                                     account,
                                     vehicle,
@@ -476,7 +476,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                 )
                                 entities.append(device)
                         if attribute_name == "total_electric_distance":
-                            for attr in ["user_total"]:
+                            for attr in ("user_total",):
                                 device = BMWConnectedDriveSensor(
                                     account,
                                     vehicle,
@@ -503,110 +503,73 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
 
         self._attribute = attribute
         self._service = service
-        self._state = None
-        if self._service:
-            self._name = (
-                f"{self._vehicle.name} {self._service.lower()}_{self._attribute}"
-            )
-            self._unique_id = (
-                f"{self._vehicle.vin}-{self._service.lower()}-{self._attribute}"
-            )
+        if service:
+            self._attr_name = f"{vehicle.name} {service.lower()}_{attribute}"
+            self._attr_unique_id = f"{vehicle.vin}-{service.lower()}-{attribute}"
         else:
-            self._name = f"{self._vehicle.name} {self._attribute}"
-            self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
+            self._attr_name = f"{vehicle.name} {attribute}"
+            self._attr_unique_id = f"{vehicle.vin}-{attribute}"
         self._attribute_info = attribute_info
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        vehicle_state = self._vehicle.state
-        charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
-
-        if self._attribute == "charging_level_hv":
-            return icon_for_battery_level(
-                battery_level=vehicle_state.charging_level_hv, charging=charging_state
-            )
-        icon = self._attribute_info.get(self._attribute, [None, None, None, None])[0]
-        return icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        enabled_default = self._attribute_info.get(
-            self._attribute, [None, None, None, True]
+        self._attr_entity_registry_enabled_default = attribute_info.get(
+            attribute, [None, None, None, True]
         )[3]
-        return enabled_default
-
-    @property
-    def state(self):
-        """Return the state of the sensor.
-
-        The return type of this call depends on the attribute that
-        is configured.
-        """
-        return self._state
-
-    @property
-    def device_class(self) -> str:
-        """Get the device class."""
-        clss = self._attribute_info.get(self._attribute, [None, None, None, None])[1]
-        return clss
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Get the unit of measurement."""
-        unit = self._attribute_info.get(self._attribute, [None, None, None, None])[2]
-        return unit
+        self._attr_device_class = attribute_info.get(
+            attribute, [None, None, None, None]
+        )[1]
+        self._attr_unit_of_measurement = attribute_info.get(
+            attribute, [None, None, None, None]
+        )[2]
 
     def update(self) -> None:
         """Read new state data from the library."""
         _LOGGER.debug("Updating %s", self._vehicle.name)
         vehicle_state = self._vehicle.state
         if self._attribute == "charging_status":
-            self._state = getattr(vehicle_state, self._attribute).value
+            self._attr_state = getattr(vehicle_state, self._attribute).value
         elif self.unit_of_measurement == VOLUME_GALLONS:
             value = getattr(vehicle_state, self._attribute)
             value_converted = self.hass.config.units.volume(value, VOLUME_LITERS)
-            self._state = round(value_converted)
+            self._attr_state = round(value_converted)
         elif self.unit_of_measurement == LENGTH_MILES:
             value = getattr(vehicle_state, self._attribute)
             value_converted = self.hass.config.units.length(value, LENGTH_KILOMETERS)
-            self._state = round(value_converted)
+            self._attr_state = round(value_converted)
         elif self._service is None:
-            self._state = getattr(vehicle_state, self._attribute)
+            self._attr_state = getattr(vehicle_state, self._attribute)
         elif self._service == SERVICE_LAST_TRIP:
             vehicle_last_trip = self._vehicle.state.last_trip
             if self._attribute == "date_utc":
                 date_str = getattr(vehicle_last_trip, "date")
-                self._state = dt_util.parse_datetime(date_str).isoformat()
+                self._attr_state = dt_util.parse_datetime(date_str).isoformat()
             else:
-                self._state = getattr(vehicle_last_trip, self._attribute)
+                self._attr_state = getattr(vehicle_last_trip, self._attribute)
         elif self._service == SERVICE_ALL_TRIPS:
             vehicle_all_trips = self._vehicle.state.all_trips
-            for attribute in [
+            for attribute in (
                 "average_combined_consumption",
                 "average_electric_consumption",
                 "average_recuperation",
                 "chargecycle_range",
                 "total_electric_distance",
-            ]:
+            ):
                 if self._attribute.startswith(f"{attribute}_"):
                     attr = getattr(vehicle_all_trips, attribute)
                     sub_attr = self._attribute.replace(f"{attribute}_", "")
-                    self._state = getattr(attr, sub_attr)
+                    self._attr_state = getattr(attr, sub_attr)
                     return
             if self._attribute == "reset_date_utc":
                 date_str = getattr(vehicle_all_trips, "reset_date")
-                self._state = dt_util.parse_datetime(date_str).isoformat()
+                self._attr_state = dt_util.parse_datetime(date_str).isoformat()
             else:
-                self._state = getattr(vehicle_all_trips, self._attribute)
+                self._attr_state = getattr(vehicle_all_trips, self._attribute)
+
+        vehicle_state = self._vehicle.state
+        charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
+
+        if self._attribute == "charging_level_hv":
+            self._attr_icon = icon_for_battery_level(
+                battery_level=vehicle_state.charging_level_hv, charging=charging_state
+            )
+        self._attr_icon = self._attribute_info.get(
+            self._attribute, [None, None, None, None]
+        )[0]

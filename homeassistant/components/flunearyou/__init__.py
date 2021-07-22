@@ -48,7 +48,7 @@ async def async_setup_entry(hass, entry):
             raise UpdateFailed(err) from err
 
     data_init_tasks = []
-    for api_category in [CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT]:
+    for api_category in (CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT):
         coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api_category
         ] = DataUpdateCoordinator(

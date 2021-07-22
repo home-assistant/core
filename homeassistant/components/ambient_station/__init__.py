@@ -28,11 +28,13 @@ from homeassistant.const import (
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_INCHES_PER_HOUR,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -156,7 +158,7 @@ TYPE_WINDSPDMPH_AVG2M = "windspdmph_avg2m"
 TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_TYPES = {
-    TYPE_24HOURRAININ: ("24 Hr Rain", "in", SENSOR, None),
+    TYPE_24HOURRAININ: ("24 Hr Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, SENSOR, DEVICE_CLASS_PRESSURE),
     TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, SENSOR, DEVICE_CLASS_PRESSURE),
     TYPE_BATT10: ("Battery 10", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
@@ -172,11 +174,16 @@ SENSOR_TYPES = {
     TYPE_BATTOUT: ("Battery", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
     TYPE_BATT_CO2: ("CO2 Battery", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
     TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, SENSOR, DEVICE_CLASS_CO2),
-    TYPE_DAILYRAININ: ("Daily Rain", "in", SENSOR, None),
+    TYPE_DAILYRAININ: ("Daily Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_DEWPOINT: ("Dew Point", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
-    TYPE_EVENTRAININ: ("Event Rain", "in", SENSOR, None),
+    TYPE_EVENTRAININ: ("Event Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_FEELSLIKE: ("Feels Like", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
-    TYPE_HOURLYRAININ: ("Hourly Rain Rate", "in/hr", SENSOR, None),
+    TYPE_HOURLYRAININ: (
+        "Hourly Rain Rate",
+        PRECIPITATION_INCHES_PER_HOUR,
+        SENSOR,
+        None,
+    ),
     TYPE_HUMIDITY10: ("Humidity 10", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
     TYPE_HUMIDITY1: ("Humidity 1", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
     TYPE_HUMIDITY2: ("Humidity 2", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
@@ -191,7 +198,7 @@ SENSOR_TYPES = {
     TYPE_HUMIDITYIN: ("Humidity In", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
     TYPE_LASTRAIN: ("Last Rain", None, SENSOR, DEVICE_CLASS_TIMESTAMP),
     TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, SENSOR, None),
-    TYPE_MONTHLYRAININ: ("Monthly Rain", "in", SENSOR, None),
+    TYPE_MONTHLYRAININ: ("Monthly Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_PM25_24H: (
         "PM25 24h Avg",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -277,9 +284,9 @@ SENSOR_TYPES = {
     TYPE_TEMP9F: ("Temp 9", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_TEMPF: ("Temp", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
-    TYPE_TOTALRAININ: ("Lifetime Rain", "in", SENSOR, None),
+    TYPE_TOTALRAININ: ("Lifetime Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_UV: ("uv", "Index", SENSOR, None),
-    TYPE_WEEKLYRAININ: ("Weekly Rain", "in", SENSOR, None),
+    TYPE_WEEKLYRAININ: ("Weekly Rain", PRECIPITATION_INCHES, SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", DEGREE, SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, SENSOR, None),
     TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, SENSOR, None),
@@ -288,7 +295,7 @@ SENSOR_TYPES = {
     TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, SENSOR, None),
     TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, SENSOR, None),
     TYPE_WINDSPEEDMPH: ("Wind Speed", SPEED_MILES_PER_HOUR, SENSOR, None),
-    TYPE_YEARLYRAININ: ("Yearly Rain", "in", SENSOR, None),
+    TYPE_YEARLYRAININ: ("Yearly Rain", PRECIPITATION_INCHES, SENSOR, None),
 }
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
@@ -320,7 +327,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    async def _async_disconnect_websocket(*_):
+    async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.client.websocket.disconnect()
 
     config_entry.async_on_unload(
@@ -378,7 +385,7 @@ class AmbientStation:
     async def _attempt_connect(self) -> None:
         """Attempt to connect to the socket (retrying later on fail)."""
 
-        async def connect(timestamp: int | None = None):
+        async def connect(timestamp: int | None = None) -> None:
             """Connect."""
             await self.client.websocket.connect()
 

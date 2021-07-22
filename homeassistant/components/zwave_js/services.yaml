@@ -154,6 +154,12 @@ set_value:
       required: true
       selector:
         object:
+    options:
+      name: Options
+      description: Set value options. Refer to the Z-Wave JS documentation for more information on what options can be set.
+      required: false
+      selector:
+        object:
     wait_for_result:
       name: Wait for result?
       description: Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the service call can take a while if setting a value on an asleep battery device.

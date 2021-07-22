@@ -30,9 +30,6 @@ ATTR_SPEED = "speed"
 ATTR_TARGET_BRIGHTNESS = "target_brightness"
 ATTR_UDP_PORT = "udp_port"
 
-# Units of measurement
-CURRENT_MA = "mA"
-
 # Services
 SERVICE_EFFECT = "effect"
 SERVICE_PRESET = "preset"

@@ -3,7 +3,11 @@ import asyncio
 from uuid import UUID
 
 from simplipy import get_api
-from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
+from simplipy.errors import (
+    EndpointUnavailableError,
+    InvalidCredentialsError,
+    SimplipyError,
+)
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
@@ -257,7 +261,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             LOGGER.error("Error during service call: %s", err)
             return
 
-    for service, method, schema in [
+    for service, method, schema in (
         ("clear_notifications", clear_notifications, None),
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
@@ -266,7 +270,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             set_system_properties,
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),
-    ]:
+    ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
@@ -372,7 +376,7 @@ class SimpliSafe:
             if isinstance(result, InvalidCredentialsError):
                 raise ConfigEntryAuthFailed("Invalid credentials") from result
 
-            if isinstance(result, EndpointUnavailable):
+            if isinstance(result, EndpointUnavailableError):
                 # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):

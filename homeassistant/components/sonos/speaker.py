@@ -46,7 +46,6 @@ from .const import (
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_ENTITY_CREATED,
-    SONOS_GROUP_UPDATE,
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
     SONOS_SEEN,
@@ -206,11 +205,6 @@ class SonosSpeaker:
             f"{SONOS_ENTITY_CREATED}-{self.soco.uid}",
             self.async_handle_new_entity,
         )
-        self._group_dispatcher = dispatcher_connect(
-            self.hass,
-            SONOS_GROUP_UPDATE,
-            self.async_update_groups,
-        )
         self._seen_dispatcher = dispatcher_connect(
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
         )
@@ -352,7 +346,7 @@ class SonosSpeaker:
         """Cancel all subscriptions."""
         _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
         await asyncio.gather(
-            *[subscription.unsubscribe() for subscription in self._subscriptions],
+            *(subscription.unsubscribe() for subscription in self._subscriptions),
             return_exceptions=True,
         )
         self._subscriptions = []
@@ -612,22 +606,18 @@ class SonosSpeaker:
     #
     # Group management
     #
-    def update_groups(self, event: SonosEvent | None = None) -> None:
-        """Handle callback for topology change event."""
-        coro = self.create_update_groups_coro(event)
-        if coro:
-            self.hass.add_job(coro)  # type: ignore
+    def update_groups(self) -> None:
+        """Update group topology when polling."""
+        self.hass.add_job(self.create_update_groups_coro())
 
     @callback
-    def async_update_groups(self, event: SonosEvent | None = None) -> None:
+    def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
-        coro = self.create_update_groups_coro(event)
-        if coro:
-            self.hass.async_add_job(coro)  # type: ignore
+        if not hasattr(event, "zone_player_uui_ds_in_group"):
+            return None
+        self.hass.async_add_job(self.create_update_groups_coro(event))
 
-    def create_update_groups_coro(
-        self, event: SonosEvent | None = None
-    ) -> Coroutine | None:
+    def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
 
         def _get_soco_group() -> list[str]:
@@ -646,7 +636,7 @@ class SonosSpeaker:
 
             return [coordinator_uid] + slave_uids
 
-        async def _async_extract_group(event: SonosEvent) -> list[str]:
+        async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
             group = event and event.zone_player_uui_ds_in_group
             if group:
@@ -658,6 +648,10 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
+            if group == [self.soco.uid] and self.sonos_group == [self]:
+                # Skip updating existing single speakers in polling mode
+                return
+
             entity_registry = ent_reg.async_get(self.hass)
             sonos_group = []
             sonos_group_entities = []
@@ -670,6 +664,11 @@ class SonosSpeaker:
                         MP_DOMAIN, DOMAIN, uid
                     )
                     sonos_group_entities.append(entity_id)
+
+            if self.sonos_group_entities == sonos_group_entities:
+                # Useful in polling mode for speakers with stereo pairs or surrounds
+                # as those "invisible" speakers will bypass the single speaker check
+                return
 
             self.coordinator = None
             self.sonos_group = sonos_group
@@ -684,7 +683,9 @@ class SonosSpeaker:
                     slave.sonos_group_entities = sonos_group_entities
                     slave.async_write_entity_states()
 
-        async def _async_handle_group_event(event: SonosEvent) -> None:
+            _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)
+
+        async def _async_handle_group_event(event: SonosEvent | None) -> None:
             """Get async lock and handle event."""
 
             async with self.hass.data[DATA_SONOS].topology_condition:
@@ -694,9 +695,6 @@ class SonosSpeaker:
                     _async_regroup(group)
 
                     self.hass.data[DATA_SONOS].topology_condition.notify_all()
-
-        if event and not hasattr(event, "zone_player_uui_ds_in_group"):
-            return None
 
         return _async_handle_group_event(event)
 

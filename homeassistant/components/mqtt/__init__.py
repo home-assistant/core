@@ -126,6 +126,7 @@ PLATFORMS = [
     "climate",
     "cover",
     "fan",
+    "humidifier",
     "light",
     "lock",
     "number",

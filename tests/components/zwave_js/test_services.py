@@ -11,6 +11,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
+    ATTR_OPTIONS,
     ATTR_PROPERTY,
     ATTR_REFRESH_ALL_VALUES,
     ATTR_VALUE,
@@ -31,8 +32,10 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
 from .common import (
+    AEON_SMART_SWITCH_LIGHT_ENTITY,
     AIR_TEMPERATURE_SENSOR,
     CLIMATE_DANFOSS_LC13_ENTITY,
+    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
 )
 
@@ -759,11 +762,51 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
         )
 
 
+async def test_set_value_options(hass, client, aeon_smart_switch_6, integration):
+    """Test set_value service with options."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: AEON_SMART_SWITCH_LIGHT_ENTITY,
+            ATTR_COMMAND_CLASS: 37,
+            ATTR_PROPERTY: "targetValue",
+            ATTR_VALUE: 2,
+            ATTR_OPTIONS: {"transitionDuration": 1},
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 37,
+        "commandClassName": "Binary Switch",
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "ccVersion": 1,
+        "metadata": {
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+            "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
+        },
+    }
+    assert args["value"] == 2
+    assert args["options"] == {"transitionDuration": 1}
+
+    client.async_send_command.reset_mock()
+
+
 async def test_multicast_set_value(
     hass,
     client,
     climate_danfoss_lc_13,
-    climate_radio_thermostat_ct100_plus_different_endpoints,
+    climate_eurotronic_spirit_z,
     integration,
 ):
     """Test multicast_set_value service."""
@@ -774,7 +817,7 @@ async def test_multicast_set_value(
         {
             ATTR_ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
-                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
             ATTR_COMMAND_CLASS: 117,
             ATTR_PROPERTY: "local",
@@ -787,7 +830,7 @@ async def test_multicast_set_value(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "multicast_group.set_value"
     assert args["nodeIDs"] == [
-        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        climate_eurotronic_spirit_z.node_id,
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
@@ -805,7 +848,7 @@ async def test_multicast_set_value(
         {
             ATTR_ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
-                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
             ATTR_COMMAND_CLASS: 117,
             ATTR_PROPERTY: "local",
@@ -818,7 +861,7 @@ async def test_multicast_set_value(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "multicast_group.set_value"
     assert args["nodeIDs"] == [
-        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        climate_eurotronic_spirit_z.node_id,
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
@@ -895,7 +938,7 @@ async def test_multicast_set_value(
             {
                 ATTR_ENTITY_ID: [
                     CLIMATE_DANFOSS_LC13_ENTITY,
-                    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
                 ],
                 ATTR_COMMAND_CLASS: 117,
                 ATTR_PROPERTY: "local",

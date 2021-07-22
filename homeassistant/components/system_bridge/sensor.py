@@ -14,10 +14,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_GIGAHERTZ,
     PERCENTAGE,
     TEMP_CELSIUS,
-    VOLT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -48,10 +48,10 @@ async def async_setup_entry(
         BridgeCpuSpeedSensor(coordinator, bridge),
         BridgeCpuTemperatureSensor(coordinator, bridge),
         BridgeCpuVoltageSensor(coordinator, bridge),
-        *[
+        *(
             BridgeFilesystemSensor(coordinator, bridge, key)
             for key, _ in bridge.filesystem.fsSize.items()
-        ],
+        ),
         BridgeMemoryFreeSensor(coordinator, bridge),
         BridgeMemoryUsedSensor(coordinator, bridge),
         BridgeMemoryUsedPercentageSensor(coordinator, bridge),
@@ -205,7 +205,7 @@ class BridgeCpuVoltageSensor(BridgeSensor):
             "CPU Voltage",
             None,
             DEVICE_CLASS_VOLTAGE,
-            VOLT,
+            ELECTRIC_POTENTIAL_VOLT,
             False,
         )
 

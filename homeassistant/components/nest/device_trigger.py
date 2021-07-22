@@ -27,7 +27,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str:
+async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str | None:
     """Get the nest API device_id from the HomeAssistant device_id."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(device_id)
