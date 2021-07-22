@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast, final
@@ -31,7 +32,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -93,6 +94,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     component = cast(EntityComponent, hass.data[DOMAIN])
     return await component.async_unload_entry(entry)
+
+
+@dataclass
+class SensorEntityDescription(EntityDescription):
+    """An class that describes sensor entities."""
+
+    state_class: str | None = None
+    last_reset: datetime | None = None
 
 
 class SensorEntity(Entity):

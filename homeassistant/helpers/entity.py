@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -176,6 +177,20 @@ class DeviceInfo(TypedDict, total=False):
     default_name: str
     default_manufacturer: str
     default_model: str
+
+
+@dataclass
+class EntityDescription:
+    """An class that describes Home Assistant entities."""
+
+    device_class: str | None = None
+    entity_picture: str | None = None
+    entity_registry_enabled_default: bool = True
+    force_update: bool = False
+    icon: str | None = None
+    name: str | None = None
+    supported_features: int | None = None
+    unit_of_measurement: str | None = None
 
 
 class Entity(ABC):

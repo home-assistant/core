@@ -2,19 +2,12 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -23,15 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    ATTR_ENABLED_BY_DEFAULT,
-    ATTR_ENTRY_TYPE,
-    DOMAIN,
-    ENTRY_TYPE_SERVICE,
-    SENSORS,
-    SERVICES,
-)
-from .models import AmbeeSensor
+from .const import ATTR_ENTRY_TYPE, DOMAIN, ENTRY_TYPE_SERVICE, SENSORS, SERVICES
 
 
 async def async_setup_entry(
@@ -63,7 +48,7 @@ class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         entry_id: str,
         sensor_key: str,
-        sensor: AmbeeSensor,
+        sensor: SensorEntityDescription,
         service_key: str,
         service: str,
     ) -> None:
@@ -73,15 +58,15 @@ class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
         self._service_key = service_key
 
         self.entity_id = f"{SENSOR_DOMAIN}.{service_key}_{sensor_key}"
-        self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
-        self._attr_entity_registry_enabled_default = sensor.get(
-            ATTR_ENABLED_BY_DEFAULT, True
+        self._attr_device_class = sensor.device_class
+        self._attr_entity_registry_enabled_default = (
+            sensor.entity_registry_enabled_default
         )
-        self._attr_icon = sensor.get(ATTR_ICON)
-        self._attr_name = sensor.get(ATTR_NAME)
-        self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
+        self._attr_icon = sensor.icon
+        self._attr_name = sensor.name
+        self._attr_state_class = sensor.state_class
         self._attr_unique_id = f"{entry_id}_{service_key}_{sensor_key}"
-        self._attr_unit_of_measurement = sensor.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._attr_unit_of_measurement = sensor.unit_of_measurement
 
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, f"{entry_id}_{service_key}")},
