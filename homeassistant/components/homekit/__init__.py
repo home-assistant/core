@@ -35,7 +35,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
@@ -391,28 +391,33 @@ def _async_register_events_and_services(hass: HomeAssistant):
         """Handle unpair HomeKit service call."""
         referenced = await async_extract_referenced_entity_ids(hass, service)
         dev_reg = device_registry.async_get(hass)
-
         for device_id in referenced.referenced_devices:
             dev_reg_ent = dev_reg.async_get(device_id)
 
             if not dev_reg_ent:
-                raise ValueError(f"No device found for {device_id}")
+                raise ValueError(f"No device found for device id: {device_id}")
 
             macs = [
                 cval
                 for ctype, cval in dev_reg_ent.connections
                 if ctype == device_registry.CONNECTION_NETWORK_MAC
             ]
+
             found = False
             for entry_id in hass.data[DOMAIN]:
                 if homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT):
-                    formatted_mac = homekit.driver.state.mac
+                    if not homekit.driver or not homekit.driver.state:
+                        continue
+                    formatted_mac = device_registry.format_mac(homekit.driver.state.mac)
+
                     if formatted_mac in macs:
                         homekit.async_unpair()
                         found = True
 
-        if not found:
-            raise ValueError(f"No homekit accessory found for {device_id}")
+            if not found:
+                raise HomeAssistantError(
+                    f"No homekit accessory found for device id: {device_id}"
+                )
 
     hass.services.async_register(
         DOMAIN,
@@ -698,9 +703,10 @@ class HomeKit:
     @callback
     def async_unpair(self):
         """Remove all pairings for an accessory so it can be repaired."""
-        for client_uuid in list(self.driver.state.paired_clients):
-            self.driver.state.remove_paired_client(client_uuid)
-        self.driver.self.async_persist()
+        state = self.driver.state
+        for client_uuid in list(state.paired_clients):
+            state.remove_paired_client(client_uuid)
+        self.driver.async_persist()
         self.driver.async_update_advertisement()
         self._async_show_setup_message()
 
