@@ -1,6 +1,8 @@
 """Viessmann ViCare climate device."""
+from contextlib import suppress
 import logging
 
+from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
 import requests
 import voluptuous as vol
 
@@ -21,7 +23,6 @@ from homeassistant.helpers import entity_platform
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
-    PYVICARE_ERROR,
     VICARE_API,
     VICARE_HEATING_TYPE,
     VICARE_NAME,
@@ -136,47 +137,58 @@ class ViCareClimate(ClimateEntity):
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
         try:
-            _room_temperature = self._api.getRoomTemperature()
-            _supply_temperature = self._api.getSupplyTemperature()
-            if _room_temperature is not None and _room_temperature != PYVICARE_ERROR:
+            _room_temperature = None
+            with suppress(PyViCareNotSupportedFeatureError):
+                _room_temperature = self._api.getRoomTemperature()
+
+            _supply_temperature = None
+            with suppress(PyViCareNotSupportedFeatureError):
+                _supply_temperature = self._api.getSupplyTemperature()
+
+            if _room_temperature is not None:
                 self._current_temperature = _room_temperature
-            elif _supply_temperature != PYVICARE_ERROR:
+            elif _supply_temperature is not None:
                 self._current_temperature = _supply_temperature
             else:
                 self._current_temperature = None
-            self._current_program = self._api.getActiveProgram()
 
-            # The getCurrentDesiredTemperature call can yield 'error' (str) when the system is in standby
-            desired_temperature = self._api.getCurrentDesiredTemperature()
-            if desired_temperature == PYVICARE_ERROR:
-                desired_temperature = None
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._current_program = self._api.getActiveProgram()
 
-            self._target_temperature = desired_temperature
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._target_temperature = self._api.getCurrentDesiredTemperature()
 
-            self._current_mode = self._api.getActiveMode()
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._current_mode = self._api.getActiveMode()
 
             # Update the generic device attributes
             self._attributes = {}
+
             self._attributes["room_temperature"] = _room_temperature
             self._attributes["active_vicare_program"] = self._current_program
             self._attributes["active_vicare_mode"] = self._current_mode
-            self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
-            self._attributes["heating_curve_shift"] = self._api.getHeatingCurveShift()
-            self._attributes[
-                "month_since_last_service"
-            ] = self._api.getMonthSinceLastService()
-            self._attributes["date_last_service"] = self._api.getLastServiceDate()
-            self._attributes["error_history"] = self._api.getErrorHistory()
-            self._attributes["active_error"] = self._api.getActiveError()
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attributes[
+                    "heating_curve_slope"
+                ] = self._api.getHeatingCurveSlope()
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attributes[
+                    "heating_curve_shift"
+                ] = self._api.getHeatingCurveShift()
 
             # Update the specific device attributes
             if self._heating_type == HeatingType.gas:
-                self._current_action = self._api.getBurnerActive()
-
+                with suppress(PyViCareNotSupportedFeatureError):
+                    self._current_action = self._api.getBurnerActive()
             elif self._heating_type == HeatingType.heatpump:
-                self._current_action = self._api.getCompressorActive()
+                with suppress(PyViCareNotSupportedFeatureError):
+                    self._current_action = self._api.getCompressorActive()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
 
