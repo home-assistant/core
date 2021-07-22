@@ -13,8 +13,7 @@
             "user": {
                 "data": {
                     "password": "Passwort",
-                    "username": "E-Mail",
-                    "mfa": "Multi-Faktor Code (Optional)"
+                    "username": "E-Mail"
                 },
                 "description": "Bitte gib deine Daten ein.",
                 "title": "Tesla - Konfiguration"
