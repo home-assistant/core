@@ -1,9 +1,7 @@
 {
-    "title": "HERE Destination Weather",
     "config": {
         "step": {
             "user": {
-                "title": "HERE Destination Weather",
                 "description": "[%key:common::config_flow::description::confirm_setup%]",
                 "data": {
                     "api_key": "[%key:common::config_flow::data::api_key%]",
