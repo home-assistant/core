@@ -25,6 +25,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
@@ -867,6 +868,11 @@ class SonosSpeaker:
 
         # Find all affected players
         speakers_set = {s for s in speakers if s.soco_snapshot}
+        if missing_snapshots := set(speakers) - speakers_set:
+            raise HomeAssistantError(
+                f"Restore failed, speakers are missing snapshots: {[s.zone_name for s in missing_snapshots]}"
+            )
+
         if with_group:
             for speaker in [s for s in speakers_set if s.snapshot_group]:
                 assert speaker.snapshot_group is not None
