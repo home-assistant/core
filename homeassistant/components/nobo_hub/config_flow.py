@@ -149,7 +149,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
         profile_names = sorted(
-            [k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()]
+            k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
         )
 
         if user_input is not None:
