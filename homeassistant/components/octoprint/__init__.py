@@ -1,6 +1,9 @@
 """Support for monitoring OctoPrint 3D printers."""
+from __future__ import annotations
+
 import logging
 import time
+from typing import NamedTuple
 
 from aiohttp.hdrs import CONTENT_TYPE
 import requests
@@ -51,10 +54,30 @@ def ensure_valid_path(value):
     return value
 
 
+class OctoprintBinarySensorMetadata(NamedTuple):
+    """Metadata for an individual Skybell binary_sensor."""
+
+    name: str
+    endpoint: str
+    group: str
+    key: str
+    unit_of_measurement: str | None = None
+
+
 BINARY_SENSOR_TYPES = {
-    # API Endpoint, Group, Key, unit
-    "Printing": ["printer", "state", "printing", None],
-    "Printing Error": ["printer", "state", "error", None],
+    "Printing": OctoprintBinarySensorMetadata(
+        "entry",
+        endpoint="printer",
+        group="state",
+        key="printing",
+        unit_of_measurement=None,
+    ),
+    "Printing Error": OctoprintBinarySensorMetadata(
+        "entry",
+        endpoint="printer",
+        group="state",
+        key="error",
+    ),
 }
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
