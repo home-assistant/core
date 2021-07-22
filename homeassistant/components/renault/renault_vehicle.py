@@ -97,10 +97,10 @@ class RenaultVehicleProxy:
                 )
         # Check all coordinators
         await asyncio.gather(
-            *[
+            *(
                 coordinator.async_config_entry_first_refresh()
                 for coordinator in self.coordinators.values()
-            ]
+            )
         )
         for key in list(self.coordinators):
             # list() to avoid Runtime iteration error
