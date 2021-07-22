@@ -41,6 +41,7 @@ from .const import (
     FEATURE_SET_DRY,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_MIGRATE_ENTITY_NAME,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -218,13 +219,63 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switch from a config entry."""
+    if (
+        config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
+        or config_entry.data[CONF_MODEL] == "lumi.acpartner.v3"
+    ):
+        await async_setup_other_entry(hass, config_entry, async_add_entities)
+    else:
+        await async_setup_coordinated_entry(hass, config_entry, async_add_entities)
+
+
+async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
+    """Set up the coordinated switch from a config entry."""
+    entities = []
+    model = config_entry.data[CONF_MODEL]
+    unique_id = config_entry.unique_id
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
+        name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
+    else:
+        name = config_entry.title
+
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
+
+    device_features = 0
+
+    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
+    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
+    elif model in MODELS_HUMIDIFIER:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER
+
+    for feature, switch in SWITCH_TYPES.items():
+        if feature & device_features:
+            entities.append(
+                XiaomiGenericCoordinatedSwitch(
+                    f"{name} {switch.name}",
+                    device,
+                    config_entry,
+                    f"{switch.short_name}_{unique_id}",
+                    switch,
+                    coordinator,
+                )
+            )
+
+    async_add_entities(entities)
+
+
+async def async_setup_other_entry(hass, config_entry, async_add_entities):
+    """Set up the other type switch from a config entry."""
     entities = []
     host = config_entry.data[CONF_HOST]
     token = config_entry.data[CONF_TOKEN]
     name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
-
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
         # Gateway sub devices
@@ -253,21 +304,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        device_features = 0
-
-        if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-        elif model in [MODEL_AIRHUMIDIFIER_CA4]:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
-        elif model in MODELS_HUMIDIFIER:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-        elif model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
+        if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
             plug = ChuangmiPlug(host, token, model=model)
 
             # The device has two switchable channels (mains and a USB port).
@@ -346,19 +383,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )
-
-        for feature, switch in SWITCH_TYPES.items():
-            if feature & device_features:
-                entities.append(
-                    XiaomiGenericCoordinatedSwitch(
-                        f"{config_entry.title} {switch.name}",
-                        device,
-                        config_entry,
-                        f"{switch.short_name}_{config_entry.unique_id}",
-                        switch,
-                        coordinator,
-                    )
-                )
 
     async_add_entities(entities)
 
