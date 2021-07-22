@@ -1,9 +1,14 @@
 """Config flow for Modem Caller ID integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from phone_modem import PhoneModem
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_DEVICE, DEFAULT_NAME, DOMAIN, EXCEPTIONS
 
@@ -13,7 +18,9 @@ DATA_SCHEMA = vol.Schema({"name": str, "device": str})
 class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Phone Modem."""
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -48,7 +55,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, config):
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
