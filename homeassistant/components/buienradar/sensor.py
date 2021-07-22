@@ -18,17 +18,16 @@ from buienradar.constants import (
     WINDGUST,
     WINDSPEED,
 )
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
+    DEVICE_CLASS_TEMPERATURE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
@@ -39,7 +38,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -60,158 +58,261 @@ SCHEDULE_NOK = 2
 # Supported sensor types:
 # Key: ['label', unit, icon]
 SENSOR_TYPES = {
-    "stationname": ["Stationname", None, None],
+    "stationname": ["Stationname", None, None, None],
     # new in json api (>1.0.0):
-    "barometerfc": ["Barometer value", None, "mdi:gauge"],
+    "barometerfc": ["Barometer value", None, "mdi:gauge", None],
     # new in json api (>1.0.0):
-    "barometerfcname": ["Barometer", None, "mdi:gauge"],
+    "barometerfcname": ["Barometer", None, "mdi:gauge", None],
     # new in json api (>1.0.0):
-    "barometerfcnamenl": ["Barometer", None, "mdi:gauge"],
-    "condition": ["Condition", None, None],
-    "conditioncode": ["Condition code", None, None],
-    "conditiondetailed": ["Detailed condition", None, None],
-    "conditionexact": ["Full condition", None, None],
-    "symbol": ["Symbol", None, None],
+    "barometerfcnamenl": ["Barometer", None, "mdi:gauge", None],
+    "condition": ["Condition", None, None, None],
+    "conditioncode": ["Condition code", None, None, None],
+    "conditiondetailed": ["Detailed condition", None, None, None],
+    "conditionexact": ["Full condition", None, None, None],
+    "symbol": ["Symbol", None, None, None],
     # new in json api (>1.0.0):
-    "feeltemperature": ["Feel temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "humidity": ["Humidity", PERCENTAGE, "mdi:water-percent"],
-    "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "groundtemperature": ["Ground temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "windspeed": ["Wind speed", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "windforce": ["Wind force", "Bft", "mdi:weather-windy"],
-    "winddirection": ["Wind direction", None, "mdi:compass-outline"],
-    "windazimuth": ["Wind direction azimuth", DEGREE, "mdi:compass-outline"],
-    "pressure": ["Pressure", PRESSURE_HPA, "mdi:gauge"],
-    "visibility": ["Visibility", LENGTH_KILOMETERS, None],
-    "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
+    "feeltemperature": [
+        "Feel temperature",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "humidity": ["Humidity", PERCENTAGE, "mdi:water-percent", None],
+    "temperature": [
+        "Temperature",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "groundtemperature": [
+        "Ground temperature",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "windspeed": ["Wind speed", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy", None],
+    "windforce": ["Wind force", "Bft", "mdi:weather-windy", None],
+    "winddirection": ["Wind direction", None, "mdi:compass-outline", None],
+    "windazimuth": ["Wind direction azimuth", DEGREE, "mdi:compass-outline", None],
+    "pressure": ["Pressure", PRESSURE_HPA, "mdi:gauge", None],
+    "visibility": ["Visibility", LENGTH_KILOMETERS, None, None],
+    "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy", None],
     "precipitation": [
         "Precipitation",
         PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-pouring",
+        None,
     ],
-    "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
+    "irradiance": [
+        "Irradiance",
+        IRRADIATION_WATTS_PER_SQUARE_METER,
+        "mdi:sunglasses",
+        None,
+    ],
     "precipitation_forecast_average": [
         "Precipitation forecast average",
         PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-pouring",
+        None,
     ],
     "precipitation_forecast_total": [
         "Precipitation forecast total",
         LENGTH_MILLIMETERS,
         "mdi:weather-pouring",
+        None,
     ],
     # new in json api (>1.0.0):
-    "rainlast24hour": ["Rain last 24h", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "rainlast24hour": [
+        "Rain last 24h",
+        LENGTH_MILLIMETERS,
+        "mdi:weather-pouring",
+        None,
+    ],
     # new in json api (>1.0.0):
-    "rainlasthour": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "temperature_1d": ["Temperature 1d", TEMP_CELSIUS, "mdi:thermometer"],
-    "temperature_2d": ["Temperature 2d", TEMP_CELSIUS, "mdi:thermometer"],
-    "temperature_3d": ["Temperature 3d", TEMP_CELSIUS, "mdi:thermometer"],
-    "temperature_4d": ["Temperature 4d", TEMP_CELSIUS, "mdi:thermometer"],
-    "temperature_5d": ["Temperature 5d", TEMP_CELSIUS, "mdi:thermometer"],
-    "mintemp_1d": ["Minimum temperature 1d", TEMP_CELSIUS, "mdi:thermometer"],
-    "mintemp_2d": ["Minimum temperature 2d", TEMP_CELSIUS, "mdi:thermometer"],
-    "mintemp_3d": ["Minimum temperature 3d", TEMP_CELSIUS, "mdi:thermometer"],
-    "mintemp_4d": ["Minimum temperature 4d", TEMP_CELSIUS, "mdi:thermometer"],
-    "mintemp_5d": ["Minimum temperature 5d", TEMP_CELSIUS, "mdi:thermometer"],
-    "rain_1d": ["Rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "rain_2d": ["Rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "rain_3d": ["Rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "rain_4d": ["Rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "rain_5d": ["Rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "rainlasthour": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "temperature_1d": [
+        "Temperature 1d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "temperature_2d": [
+        "Temperature 2d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "temperature_3d": [
+        "Temperature 3d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "temperature_4d": [
+        "Temperature 4d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "temperature_5d": [
+        "Temperature 5d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "mintemp_1d": [
+        "Minimum temperature 1d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "mintemp_2d": [
+        "Minimum temperature 2d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "mintemp_3d": [
+        "Minimum temperature 3d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "mintemp_4d": [
+        "Minimum temperature 4d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "mintemp_5d": [
+        "Minimum temperature 5d",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "rain_1d": ["Rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "rain_2d": ["Rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "rain_3d": ["Rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "rain_4d": ["Rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "rain_5d": ["Rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
     # new in json api (>1.0.0):
-    "minrain_1d": ["Minimum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "minrain_2d": ["Minimum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "minrain_3d": ["Minimum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "minrain_4d": ["Minimum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "minrain_5d": ["Minimum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "minrain_1d": ["Minimum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "minrain_2d": ["Minimum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "minrain_3d": ["Minimum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "minrain_4d": ["Minimum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "minrain_5d": ["Minimum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
     # new in json api (>1.0.0):
-    "maxrain_1d": ["Maximum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "maxrain_2d": ["Maximum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "maxrain_3d": ["Maximum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "maxrain_4d": ["Maximum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "maxrain_5d": ["Maximum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
-    "rainchance_1d": ["Rainchance 1d", PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_2d": ["Rainchance 2d", PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_3d": ["Rainchance 3d", PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_4d": ["Rainchance 4d", PERCENTAGE, "mdi:weather-pouring"],
-    "rainchance_5d": ["Rainchance 5d", PERCENTAGE, "mdi:weather-pouring"],
-    "sunchance_1d": ["Sunchance 1d", PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_2d": ["Sunchance 2d", PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_3d": ["Sunchance 3d", PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_4d": ["Sunchance 4d", PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "sunchance_5d": ["Sunchance 5d", PERCENTAGE, "mdi:weather-partly-cloudy"],
-    "windforce_1d": ["Wind force 1d", "Bft", "mdi:weather-windy"],
-    "windforce_2d": ["Wind force 2d", "Bft", "mdi:weather-windy"],
-    "windforce_3d": ["Wind force 3d", "Bft", "mdi:weather-windy"],
-    "windforce_4d": ["Wind force 4d", "Bft", "mdi:weather-windy"],
-    "windforce_5d": ["Wind force 5d", "Bft", "mdi:weather-windy"],
-    "windspeed_1d": ["Wind speed 1d", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "windspeed_2d": ["Wind speed 2d", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "windspeed_3d": ["Wind speed 3d", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "windspeed_4d": ["Wind speed 4d", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "windspeed_5d": ["Wind speed 5d", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "winddirection_1d": ["Wind direction 1d", None, "mdi:compass-outline"],
-    "winddirection_2d": ["Wind direction 2d", None, "mdi:compass-outline"],
-    "winddirection_3d": ["Wind direction 3d", None, "mdi:compass-outline"],
-    "winddirection_4d": ["Wind direction 4d", None, "mdi:compass-outline"],
-    "winddirection_5d": ["Wind direction 5d", None, "mdi:compass-outline"],
-    "windazimuth_1d": ["Wind direction azimuth 1d", DEGREE, "mdi:compass-outline"],
-    "windazimuth_2d": ["Wind direction azimuth 2d", DEGREE, "mdi:compass-outline"],
-    "windazimuth_3d": ["Wind direction azimuth 3d", DEGREE, "mdi:compass-outline"],
-    "windazimuth_4d": ["Wind direction azimuth 4d", DEGREE, "mdi:compass-outline"],
-    "windazimuth_5d": ["Wind direction azimuth 5d", DEGREE, "mdi:compass-outline"],
-    "condition_1d": ["Condition 1d", None, None],
-    "condition_2d": ["Condition 2d", None, None],
-    "condition_3d": ["Condition 3d", None, None],
-    "condition_4d": ["Condition 4d", None, None],
-    "condition_5d": ["Condition 5d", None, None],
-    "conditioncode_1d": ["Condition code 1d", None, None],
-    "conditioncode_2d": ["Condition code 2d", None, None],
-    "conditioncode_3d": ["Condition code 3d", None, None],
-    "conditioncode_4d": ["Condition code 4d", None, None],
-    "conditioncode_5d": ["Condition code 5d", None, None],
-    "conditiondetailed_1d": ["Detailed condition 1d", None, None],
-    "conditiondetailed_2d": ["Detailed condition 2d", None, None],
-    "conditiondetailed_3d": ["Detailed condition 3d", None, None],
-    "conditiondetailed_4d": ["Detailed condition 4d", None, None],
-    "conditiondetailed_5d": ["Detailed condition 5d", None, None],
-    "conditionexact_1d": ["Full condition 1d", None, None],
-    "conditionexact_2d": ["Full condition 2d", None, None],
-    "conditionexact_3d": ["Full condition 3d", None, None],
-    "conditionexact_4d": ["Full condition 4d", None, None],
-    "conditionexact_5d": ["Full condition 5d", None, None],
-    "symbol_1d": ["Symbol 1d", None, None],
-    "symbol_2d": ["Symbol 2d", None, None],
-    "symbol_3d": ["Symbol 3d", None, None],
-    "symbol_4d": ["Symbol 4d", None, None],
-    "symbol_5d": ["Symbol 5d", None, None],
+    "maxrain_1d": ["Maximum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "maxrain_2d": ["Maximum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "maxrain_3d": ["Maximum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "maxrain_4d": ["Maximum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "maxrain_5d": ["Maximum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring", None],
+    "rainchance_1d": ["Rainchance 1d", PERCENTAGE, "mdi:weather-pouring", None],
+    "rainchance_2d": ["Rainchance 2d", PERCENTAGE, "mdi:weather-pouring", None],
+    "rainchance_3d": ["Rainchance 3d", PERCENTAGE, "mdi:weather-pouring", None],
+    "rainchance_4d": ["Rainchance 4d", PERCENTAGE, "mdi:weather-pouring", None],
+    "rainchance_5d": ["Rainchance 5d", PERCENTAGE, "mdi:weather-pouring", None],
+    "sunchance_1d": ["Sunchance 1d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
+    "sunchance_2d": ["Sunchance 2d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
+    "sunchance_3d": ["Sunchance 3d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
+    "sunchance_4d": ["Sunchance 4d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
+    "sunchance_5d": ["Sunchance 5d", PERCENTAGE, "mdi:weather-partly-cloudy", None],
+    "windforce_1d": ["Wind force 1d", "Bft", "mdi:weather-windy", None],
+    "windforce_2d": ["Wind force 2d", "Bft", "mdi:weather-windy", None],
+    "windforce_3d": ["Wind force 3d", "Bft", "mdi:weather-windy", None],
+    "windforce_4d": ["Wind force 4d", "Bft", "mdi:weather-windy", None],
+    "windforce_5d": ["Wind force 5d", "Bft", "mdi:weather-windy", None],
+    "windspeed_1d": [
+        "Wind speed 1d",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
+    "windspeed_2d": [
+        "Wind speed 2d",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
+    "windspeed_3d": [
+        "Wind speed 3d",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
+    "windspeed_4d": [
+        "Wind speed 4d",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
+    "windspeed_5d": [
+        "Wind speed 5d",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
+    "winddirection_1d": ["Wind direction 1d", None, "mdi:compass-outline", None],
+    "winddirection_2d": ["Wind direction 2d", None, "mdi:compass-outline", None],
+    "winddirection_3d": ["Wind direction 3d", None, "mdi:compass-outline", None],
+    "winddirection_4d": ["Wind direction 4d", None, "mdi:compass-outline", None],
+    "winddirection_5d": ["Wind direction 5d", None, "mdi:compass-outline", None],
+    "windazimuth_1d": [
+        "Wind direction azimuth 1d",
+        DEGREE,
+        "mdi:compass-outline",
+        None,
+    ],
+    "windazimuth_2d": [
+        "Wind direction azimuth 2d",
+        DEGREE,
+        "mdi:compass-outline",
+        None,
+    ],
+    "windazimuth_3d": [
+        "Wind direction azimuth 3d",
+        DEGREE,
+        "mdi:compass-outline",
+        None,
+    ],
+    "windazimuth_4d": [
+        "Wind direction azimuth 4d",
+        DEGREE,
+        "mdi:compass-outline",
+        None,
+    ],
+    "windazimuth_5d": [
+        "Wind direction azimuth 5d",
+        DEGREE,
+        "mdi:compass-outline",
+        None,
+    ],
+    "condition_1d": ["Condition 1d", None, None, None],
+    "condition_2d": ["Condition 2d", None, None, None],
+    "condition_3d": ["Condition 3d", None, None, None],
+    "condition_4d": ["Condition 4d", None, None, None],
+    "condition_5d": ["Condition 5d", None, None, None],
+    "conditioncode_1d": ["Condition code 1d", None, None, None],
+    "conditioncode_2d": ["Condition code 2d", None, None, None],
+    "conditioncode_3d": ["Condition code 3d", None, None, None],
+    "conditioncode_4d": ["Condition code 4d", None, None, None],
+    "conditioncode_5d": ["Condition code 5d", None, None, None],
+    "conditiondetailed_1d": ["Detailed condition 1d", None, None, None],
+    "conditiondetailed_2d": ["Detailed condition 2d", None, None, None],
+    "conditiondetailed_3d": ["Detailed condition 3d", None, None, None],
+    "conditiondetailed_4d": ["Detailed condition 4d", None, None, None],
+    "conditiondetailed_5d": ["Detailed condition 5d", None, None, None],
+    "conditionexact_1d": ["Full condition 1d", None, None, None],
+    "conditionexact_2d": ["Full condition 2d", None, None, None],
+    "conditionexact_3d": ["Full condition 3d", None, None, None],
+    "conditionexact_4d": ["Full condition 4d", None, None, None],
+    "conditionexact_5d": ["Full condition 5d", None, None, None],
+    "symbol_1d": ["Symbol 1d", None, None, None],
+    "symbol_2d": ["Symbol 2d", None, None, None],
+    "symbol_3d": ["Symbol 3d", None, None, None],
+    "symbol_4d": ["Symbol 4d", None, None, None],
+    "symbol_5d": ["Symbol 5d", None, None, None],
 }
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=["symbol", "temperature"]
-        ): vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME): vol.All(
-            vol.Coerce(int), vol.Range(min=5, max=120)
-        ),
-        vol.Optional(CONF_NAME, default="br"): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up buienradar sensor platform."""
-    _LOGGER.warning(
-        "Platform configuration is deprecated, will be removed in a future release"
-    )
 
 
 async def async_setup_entry(
@@ -255,31 +356,28 @@ async def async_setup_entry(
 class BrSensor(SensorEntity):
     """Representation of an Buienradar sensor."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_should_poll = False
+
     def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-        self.client_name = client_name
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._attr_name = f"{client_name} {SENSOR_TYPES[sensor_type][0]}"
+        self._attr_icon = SENSOR_TYPES[sensor_type][2]
         self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._entity_picture = None
-        self._attribution = None
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._measured = None
-        self._stationname = None
-        self._unique_id = self.uid(coordinates)
+        self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], sensor_type
+        )
+        self._attr_device_class = SENSOR_TYPES[sensor_type][3]
 
         # All continuous sensors should be forced to be updated
-        self._force_update = self.type != SYMBOL and not self.type.startswith(CONDITION)
-
-        if self.type.startswith(PRECIPITATION_FORECAST):
-            self._timeframe = None
-
-    def uid(self, coordinates):
-        """Generate a unique id using coordinates and sensor type."""
-        # The combination of the location, name and sensor type is unique
-        return "{:2.6f}{:2.6f}{}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], self.type
+        self._attr_force_update = sensor_type != SYMBOL and not sensor_type.startswith(
+            CONDITION
         )
+
+        if sensor_type.startswith(PRECIPITATION_FORECAST):
+            self._timeframe = None
 
     @callback
     def data_updated(self, data):
@@ -297,8 +395,6 @@ class BrSensor(SensorEntity):
         if self._measured == data.get(MEASURED):
             return False
 
-        self._attribution = data.get(ATTRIBUTION)
-        self._stationname = data.get(STATIONNAME)
         self._measured = data.get(MEASURED)
 
         if (
@@ -341,18 +437,18 @@ class BrSensor(SensorEntity):
 
                     img = condition.get(IMAGE)
 
-                    if new_state != self._state or img != self._entity_picture:
-                        self._state = new_state
-                        self._entity_picture = img
+                    if new_state != self.state or img != self.entity_picture:
+                        self._attr_state = new_state
+                        self._attr_entity_picture = img
                         return True
                 return False
 
             if self.type.startswith(WINDSPEED):
                 # hass wants windspeeds in km/h not m/s, so convert:
                 try:
-                    self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
-                    if self._state is not None:
-                        self._state = round(self._state * 3.6, 1)
+                    self._attr_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    if self.state is not None:
+                        self._attr_state = round(self.state * 3.6, 1)
                     return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
@@ -360,7 +456,7 @@ class BrSensor(SensorEntity):
 
             # update all other sensors
             try:
-                self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                self._attr_state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
@@ -383,9 +479,9 @@ class BrSensor(SensorEntity):
 
                 img = condition.get(IMAGE)
 
-                if new_state != self._state or img != self._entity_picture:
-                    self._state = new_state
-                    self._entity_picture = img
+                if new_state != self.state or img != self.entity_picture:
+                    self._attr_state = new_state
+                    self._attr_entity_picture = img
                     return True
 
             return False
@@ -394,94 +490,40 @@ class BrSensor(SensorEntity):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
-            self._state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
+            self._attr_state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
             return True
 
         if self.type in [WINDSPEED, WINDGUST]:
             # hass wants windspeeds in km/h not m/s, so convert:
-            self._state = data.get(self.type)
-            if self._state is not None:
-                self._state = round(data.get(self.type) * 3.6, 1)
+            self._attr_state = data.get(self.type)
+            if self.state is not None:
+                self._attr_state = round(data.get(self.type) * 3.6, 1)
             return True
 
         if self.type == VISIBILITY:
             # hass wants visibility in km (not m), so convert:
-            self._state = data.get(self.type)
-            if self._state is not None:
-                self._state = round(self._state / 1000, 1)
+            self._attr_state = data.get(self.type)
+            if self.state is not None:
+                self._attr_state = round(self.state / 1000, 1)
             return True
 
         # update all other sensors
-        self._state = data.get(self.type)
-        return True
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return self._attribution
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def entity_picture(self):
-        """Weather symbol if type is symbol."""
-        return self._entity_picture
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
+        self._attr_state = data.get(self.type)
         if self.type.startswith(PRECIPITATION_FORECAST):
-            result = {ATTR_ATTRIBUTION: self._attribution}
+            result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
             if self._timeframe is not None:
                 result[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
 
-            return result
+            self._attr_extra_state_attributes = result
 
         result = {
-            ATTR_ATTRIBUTION: self._attribution,
-            SENSOR_TYPES["stationname"][0]: self._stationname,
+            ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
+            SENSOR_TYPES["stationname"][0]: data.get(STATIONNAME),
         }
         if self._measured is not None:
             # convert datetime (Europe/Amsterdam) into local datetime
             local_dt = dt_util.as_local(self._measured)
             result[MEASURED_LABEL] = local_dt.strftime("%c")
 
-        return result
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return possible sensor specific icon."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def force_update(self):
-        """Return true for continuous sensors, false for discrete sensors."""
-        return self._force_update
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
+        self._attr_extra_state_attributes = result
+        return True

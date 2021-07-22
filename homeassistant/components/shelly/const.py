@@ -1,34 +1,37 @@
 """Constants for the Shelly integration."""
+from __future__ import annotations
 
-COAP = "coap"
-DATA_CONFIG_ENTRY = "config_entry"
-DEVICE = "device"
-DOMAIN = "shelly"
-REST = "rest"
+from typing import Final
 
-CONF_COAP_PORT = "coap_port"
-DEFAULT_COAP_PORT = 5683
+COAP: Final = "coap"
+DATA_CONFIG_ENTRY: Final = "config_entry"
+DEVICE: Final = "device"
+DOMAIN: Final = "shelly"
+REST: Final = "rest"
+
+CONF_COAP_PORT: Final = "coap_port"
+DEFAULT_COAP_PORT: Final = 5683
 
 # Used in "_async_update_data" as timeout for polling data from devices.
-POLLING_TIMEOUT_SEC = 18
+POLLING_TIMEOUT_SEC: Final = 18
 
 # Refresh interval for REST sensors
-REST_SENSORS_UPDATE_INTERVAL = 60
+REST_SENSORS_UPDATE_INTERVAL: Final = 60
 
 # Timeout used for aioshelly calls
-AIOSHELLY_DEVICE_TIMEOUT_SEC = 10
+AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
-SLEEP_PERIOD_MULTIPLIER = 1.2
+SLEEP_PERIOD_MULTIPLIER: Final = 1.2
 
 # Multiplier used to calculate the "update_interval" for non-sleeping devices.
-UPDATE_PERIOD_MULTIPLIER = 2.2
+UPDATE_PERIOD_MULTIPLIER: Final = 2.2
 
 # Shelly Air - Maximum work hours before lamp replacement
-SHAIR_MAX_WORK_HOURS = 9000
+SHAIR_MAX_WORK_HOURS: Final = 9000
 
 # Map Shelly input events
-INPUTS_EVENTS_DICT = {
+INPUTS_EVENTS_DICT: Final = {
     "S": "single",
     "SS": "double",
     "SSS": "triple",
@@ -38,28 +41,20 @@ INPUTS_EVENTS_DICT = {
 }
 
 # List of battery devices that maintain a permanent WiFi connection
-BATTERY_DEVICES_WITH_PERMANENT_CONNECTION = ["SHMOS-01"]
+BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = ["SHMOS-01"]
 
-EVENT_SHELLY_CLICK = "shelly.click"
+EVENT_SHELLY_CLICK: Final = "shelly.click"
 
-ATTR_CLICK_TYPE = "click_type"
-ATTR_CHANNEL = "channel"
-ATTR_DEVICE = "device"
-CONF_SUBTYPE = "subtype"
+ATTR_CLICK_TYPE: Final = "click_type"
+ATTR_CHANNEL: Final = "channel"
+ATTR_DEVICE: Final = "device"
+CONF_SUBTYPE: Final = "subtype"
 
-BASIC_INPUTS_EVENTS_TYPES = {
-    "single",
-    "long",
-}
+BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 
-SHBTN_INPUTS_EVENTS_TYPES = {
-    "single",
-    "double",
-    "triple",
-    "long",
-}
+SHBTN_INPUTS_EVENTS_TYPES: Final = {"single", "double", "triple", "long"}
 
-SUPPORTED_INPUTS_EVENTS_TYPES = SHIX3_1_INPUTS_EVENTS_TYPES = {
+SUPPORTED_INPUTS_EVENTS_TYPES: Final = {
     "single",
     "double",
     "triple",
@@ -68,23 +63,20 @@ SUPPORTED_INPUTS_EVENTS_TYPES = SHIX3_1_INPUTS_EVENTS_TYPES = {
     "long_single",
 }
 
-INPUTS_EVENTS_SUBTYPES = {
-    "button": 1,
-    "button1": 1,
-    "button2": 2,
-    "button3": 3,
-}
+SHIX3_1_INPUTS_EVENTS_TYPES = SUPPORTED_INPUTS_EVENTS_TYPES
 
-SHBTN_MODELS = ["SHBTN-1", "SHBTN-2"]
+INPUTS_EVENTS_SUBTYPES: Final = {"button": 1, "button1": 1, "button2": 2, "button3": 3}
 
-STANDARD_RGB_EFFECTS = {
+SHBTN_MODELS: Final = ["SHBTN-1", "SHBTN-2"]
+
+STANDARD_RGB_EFFECTS: Final = {
     0: "Off",
     1: "Meteor Shower",
     2: "Gradual Change",
     3: "Flash",
 }
 
-SHBLB_1_RGB_EFFECTS = {
+SHBLB_1_RGB_EFFECTS: Final = {
     0: "Off",
     1: "Meteor Shower",
     2: "Gradual Change",
@@ -95,8 +87,8 @@ SHBLB_1_RGB_EFFECTS = {
 }
 
 # Kelvin value for colorTemp
-KELVIN_MAX_VALUE = 6500
-KELVIN_MIN_VALUE_WHITE = 2700
-KELVIN_MIN_VALUE_COLOR = 3000
+KELVIN_MAX_VALUE: Final = 6500
+KELVIN_MIN_VALUE_WHITE: Final = 2700
+KELVIN_MIN_VALUE_COLOR: Final = 3000
 
-UPTIME_DEVIATION = 5
+UPTIME_DEVIATION: Final = 5

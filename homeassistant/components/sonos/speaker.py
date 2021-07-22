@@ -19,6 +19,7 @@ from pysonos.music_library import MusicLibrary
 from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
 
+from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -37,6 +38,7 @@ from .const import (
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
     DOMAIN,
+    MDNS_SERVICE,
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
@@ -44,7 +46,6 @@ from .const import (
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_ENTITY_CREATED,
-    SONOS_GROUP_UPDATE,
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
     SONOS_SEEN,
@@ -56,7 +57,7 @@ from .const import (
     SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
-from .helpers import soco_error
+from .helpers import soco_error, uid_to_short_hostname
 
 EVENT_CHARGING = {
     "CHARGING": True,
@@ -71,6 +72,7 @@ SUBSCRIPTION_SERVICES = [
     "zoneGroupTopology",
 ]
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
+UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -202,11 +204,6 @@ class SonosSpeaker:
             self.hass,
             f"{SONOS_ENTITY_CREATED}-{self.soco.uid}",
             self.async_handle_new_entity,
-        )
-        self._group_dispatcher = dispatcher_connect(
-            self.hass,
-            SONOS_GROUP_UPDATE,
-            self.async_update_groups,
         )
         self._seen_dispatcher = dispatcher_connect(
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
@@ -349,7 +346,7 @@ class SonosSpeaker:
         """Cancel all subscriptions."""
         _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
         await asyncio.gather(
-            *[subscription.unsubscribe() for subscription in self._subscriptions],
+            *(subscription.unsubscribe() for subscription in self._subscriptions),
             return_exceptions=True,
         )
         self._subscriptions = []
@@ -407,6 +404,10 @@ class SonosSpeaker:
         """Update device properties from an event."""
         if more_info := event.variables.get("more_info"):
             battery_dict = dict(x.split(":") for x in more_info.split(","))
+            for unused in UNUSED_DEVICE_KEYS:
+                battery_dict.pop(unused, None)
+            if not battery_dict:
+                return
             if "BattChg" not in battery_dict:
                 _LOGGER.debug(
                     "Unknown device properties update for %s (%s), please report an issue: '%s'",
@@ -493,11 +494,26 @@ class SonosSpeaker:
         self, now: datetime.datetime | None = None, will_reconnect: bool = False
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
-        self._share_link_plugin = None
-
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
+
+        hostname = uid_to_short_hostname(self.soco.uid)
+        zcname = f"{hostname}.{MDNS_SERVICE}"
+        aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
+        if await aiozeroconf.async_get_service_info(MDNS_SERVICE, zcname):
+            # We can still see the speaker via zeroconf check again later.
+            self._seen_timer = self.hass.helpers.event.async_call_later(
+                SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+            )
+            return
+
+        _LOGGER.debug(
+            "No activity and could not locate %s on the network. Marking unavailable",
+            zcname,
+        )
+
+        self._share_link_plugin = None
 
         if self._poll_timer:
             self._poll_timer()
@@ -506,7 +522,7 @@ class SonosSpeaker:
         await self.async_unsubscribe()
 
         if not will_reconnect:
-            self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
+            self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
             self.async_write_entity_states()
 
     async def async_rebooted(self, soco: SoCo) -> None:
@@ -590,22 +606,18 @@ class SonosSpeaker:
     #
     # Group management
     #
-    def update_groups(self, event: SonosEvent | None = None) -> None:
-        """Handle callback for topology change event."""
-        coro = self.create_update_groups_coro(event)
-        if coro:
-            self.hass.add_job(coro)  # type: ignore
+    def update_groups(self) -> None:
+        """Update group topology when polling."""
+        self.hass.add_job(self.create_update_groups_coro())
 
     @callback
-    def async_update_groups(self, event: SonosEvent | None = None) -> None:
+    def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
-        coro = self.create_update_groups_coro(event)
-        if coro:
-            self.hass.async_add_job(coro)  # type: ignore
+        if not hasattr(event, "zone_player_uui_ds_in_group"):
+            return None
+        self.hass.async_add_job(self.create_update_groups_coro(event))
 
-    def create_update_groups_coro(
-        self, event: SonosEvent | None = None
-    ) -> Coroutine | None:
+    def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
 
         def _get_soco_group() -> list[str]:
@@ -624,7 +636,7 @@ class SonosSpeaker:
 
             return [coordinator_uid] + slave_uids
 
-        async def _async_extract_group(event: SonosEvent) -> list[str]:
+        async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
             group = event and event.zone_player_uui_ds_in_group
             if group:
@@ -636,6 +648,10 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
+            if group == [self.soco.uid] and self.sonos_group == [self]:
+                # Skip updating existing single speakers in polling mode
+                return
+
             entity_registry = ent_reg.async_get(self.hass)
             sonos_group = []
             sonos_group_entities = []
@@ -648,6 +664,11 @@ class SonosSpeaker:
                         MP_DOMAIN, DOMAIN, uid
                     )
                     sonos_group_entities.append(entity_id)
+
+            if self.sonos_group_entities == sonos_group_entities:
+                # Useful in polling mode for speakers with stereo pairs or surrounds
+                # as those "invisible" speakers will bypass the single speaker check
+                return
 
             self.coordinator = None
             self.sonos_group = sonos_group
@@ -662,7 +683,9 @@ class SonosSpeaker:
                     slave.sonos_group_entities = sonos_group_entities
                     slave.async_write_entity_states()
 
-        async def _async_handle_group_event(event: SonosEvent) -> None:
+            _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)
+
+        async def _async_handle_group_event(event: SonosEvent | None) -> None:
             """Get async lock and handle event."""
 
             async with self.hass.data[DATA_SONOS].topology_condition:
@@ -672,9 +695,6 @@ class SonosSpeaker:
                     _async_regroup(group)
 
                     self.hass.data[DATA_SONOS].topology_condition.notify_all()
-
-        if event and not hasattr(event, "zone_player_uui_ds_in_group"):
-            return None
 
         return _async_handle_group_event(event)
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import NodeStatus
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +19,8 @@ from .helpers import get_device_id, get_unique_id
 LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
+EVENT_DEAD = "dead"
+EVENT_ALIVE = "alive"
 
 
 class ZWaveBaseEntity(Entity):
@@ -90,6 +93,11 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
+        for status_event in (EVENT_ALIVE, EVENT_DEAD):
+            self.async_on_remove(
+                self.info.node.on(status_event, self._node_status_alive_or_dead)
+            )
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -135,7 +143,20 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and bool(self.info.node.ready)
+        return (
+            self.client.connected
+            and bool(self.info.node.ready)
+            and self.info.node.status != NodeStatus.DEAD
+        )
+
+    @callback
+    def _node_status_alive_or_dead(self, event_data: dict) -> None:
+        """
+        Call when node status changes to alive or dead.
+
+        Should not be overridden by subclasses.
+        """
+        self.async_write_ha_state()
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
@@ -192,13 +213,13 @@ class ZWaveBaseEntity(Entity):
         # If we haven't found a value and check_all_endpoints is True, we should
         # return the first value we can find on any other endpoint
         if return_value is None and check_all_endpoints:
-            for endpoint_ in self.info.node.endpoints:
-                if endpoint_.index != self.info.primary_value.endpoint:
+            for endpoint_idx in self.info.node.endpoints:
+                if endpoint_idx != self.info.primary_value.endpoint:
                     value_id = get_value_id(
                         self.info.node,
                         command_class,
                         value_property,
-                        endpoint=endpoint_.index,
+                        endpoint=endpoint_idx,
                         property_key=value_property_key,
                     )
                     return_value = self.info.node.values.get(value_id)

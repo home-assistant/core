@@ -37,8 +37,8 @@ CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 
 ATTR_COUNTER: Final = "counter"
-ATTR_SOURCE: Final = "source"
 ATTR_LAST_KNX_UPDATE: Final = "last_knx_update"
+ATTR_SOURCE: Final = "source"
 
 
 class ColorTempModes(Enum):

@@ -5,7 +5,6 @@ from functools import partial
 from typing import Any, Tuple, cast
 
 import voluptuous as vol
-from wled import Preset
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -87,9 +86,8 @@ async def async_setup_entry(
 
     update_segments = partial(
         async_update_segments,
-        entry,
         coordinator,
-        {},
+        set(),
         async_add_entities,
     )
 
@@ -218,18 +216,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if playlist == -1:
             playlist = None
 
-        preset: int | None = None
-        if isinstance(self.coordinator.data.state.preset, Preset):
-            preset = self.coordinator.data.state.preset.preset_id
-        elif self.coordinator.data.state.preset != -1:
-            preset = self.coordinator.data.state.preset
-
         segment = self.coordinator.data.state.segments[self._segment]
         return {
             ATTR_INTENSITY: segment.intensity,
             ATTR_PALETTE: segment.palette.name,
             ATTR_PLAYLIST: playlist,
-            ATTR_PRESET: preset,
             ATTR_REVERSE: segment.reverse,
             ATTR_SPEED: segment.speed,
         }
@@ -371,30 +362,24 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
 @callback
 def async_update_segments(
-    entry: ConfigEntry,
     coordinator: WLEDDataUpdateCoordinator,
-    current: dict[int, WLEDSegmentLight | WLEDMasterLight],
+    current_ids: set[int],
     async_add_entities,
 ) -> None:
     """Update segments."""
     segment_ids = {light.segment_id for light in coordinator.data.state.segments}
-    current_ids = set(current)
-    new_entities = []
-
-    # Discard master (if present)
-    current_ids.discard(-1)
-
-    # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
-        current[segment_id] = WLEDSegmentLight(coordinator, segment_id)
-        new_entities.append(current[segment_id])
+    new_entities: list[WLEDMasterLight | WLEDSegmentLight] = []
 
     # More than 1 segment now? No master? Add master controls
     if not coordinator.keep_master_light and (
         len(current_ids) < 2 and len(segment_ids) > 1
     ):
-        current[-1] = WLEDMasterLight(coordinator)
-        new_entities.append(current[-1])
+        new_entities.append(WLEDMasterLight(coordinator))
+
+    # Process new segments, add them to Home Assistant
+    for segment_id in segment_ids - current_ids:
+        current_ids.add(segment_id)
+        new_entities.append(WLEDSegmentLight(coordinator, segment_id))
 
     if new_entities:
         async_add_entities(new_entities)

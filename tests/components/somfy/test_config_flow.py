@@ -82,7 +82,9 @@ async def test_full_flow(
         },
     )
 
-    with patch("homeassistant.components.somfy.api.ConfigEntrySomfyApi"):
+    with patch(
+        "homeassistant.components.somfy.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["data"]["auth_implementation"] == DOMAIN
@@ -95,12 +97,7 @@ async def test_full_flow(
         "expires_in": 60,
     }
 
-    assert DOMAIN in hass.config.components
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is config_entries.ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_abort_if_authorization_timeout(hass, current_request_with_host):

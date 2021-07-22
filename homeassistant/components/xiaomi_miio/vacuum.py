@@ -507,7 +507,11 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
 
         # Fetch timers separately, see #38285
         try:
-            self._timers = self._device.timer()
+            # Do not try this if the first fetch timed out.
+            # Two timeouts take longer than 10 seconds and trigger a warning.
+            # See #52353
+            if self._available:
+                self._timers = self._device.timer()
         except DeviceException as exc:
             _LOGGER.debug(
                 "Unable to fetch timers, this may happen on some devices: %s", exc

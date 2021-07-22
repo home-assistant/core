@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +59,13 @@ async def mock_modbus(hass, do_config):
         assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
         yield mock_pb
+
+
+@pytest.fixture
+async def mock_test_state(hass, request):
+    """Mock restore cache."""
+    mock_restore_cache(hass, request.param)
+    return request.param
 
 
 # dataclass

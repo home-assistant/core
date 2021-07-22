@@ -21,6 +21,8 @@
             "init": {
                 "data": {
                     "floor_temperature": "Padl\u00f3 h\u0151m\u00e9rs\u00e9klete",
+                    "read_precision": "Pontoss\u00e1g olvas\u00e1sa",
+                    "set_precision": "Pontoss\u00e1g be\u00e1ll\u00edt\u00e1sa",
                     "temporary_override_mode": "Ideiglenes be\u00e1ll\u00edt\u00e1s fel\u00fclb\u00edr\u00e1l\u00e1si m\u00f3dja"
                 }
             }

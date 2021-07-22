@@ -1,6 +1,7 @@
 """Support for EE Brightbox router."""
 import logging
 
+# pylint: disable=import-error
 from eebrightbox import EEBrightBox, EEBrightBoxException
 import voluptuous as vol
 
