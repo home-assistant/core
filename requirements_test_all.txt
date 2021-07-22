@@ -196,7 +196,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.19.0
+async-upnp-client==0.19.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -574,7 +574,7 @@ netdisco==2.9.0
 nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
-nexia==0.9.9
+nexia==0.9.10
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
@@ -773,7 +773,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==81
+pydeconz==82
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -1009,7 +1009,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.52
+pysonos==0.0.53
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1151,7 +1151,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.1
+simplisafe-python==11.0.2
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1218,7 +1218,7 @@ subarulink==0.3.12
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.6.0
+surepy==0.7.0
 
 # homeassistant.components.synology_dsm
 synologydsm-api==1.0.2
