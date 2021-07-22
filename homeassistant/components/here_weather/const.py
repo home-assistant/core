@@ -69,8 +69,6 @@ HOURLY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "dayOfWeek": {"name": "Day of Week", "unit_of_measurement": None},
     "weekday": {"name": "Week Day", "unit_of_measurement": None},
     "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
-    "localTime": {"name": "Local Time", "unit_of_measurement": None},
-    "localTimeFormat": {"name": "Local Time Format", "unit_of_measurement": None},
 }
 
 DAILY_SIMPLE_ATTRIBUTES: dict[str, dict[str, str | None]] = {
