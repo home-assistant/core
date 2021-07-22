@@ -40,6 +40,7 @@ from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import (  # noqa: F401
@@ -385,25 +386,27 @@ def _async_register_events_and_services(hass: HomeAssistant):
 
     async def async_handle_homekit_unpair(service):
         """Handle unpair HomeKit service call."""
-        device_id = service.data.get(ATTR_DEVICE_ID)
+        referenced = await async_extract_referenced_entity_ids(hass, service)
         dev_reg = device_registry.async_get(hass)
-        dev_reg_ent = dev_reg.async_get(device_id)
 
-        if not dev_reg_ent:
-            raise ValueError(f"No device found for {device_id}")
+        for device_id in referenced.referenced_devices:
+            dev_reg_ent = dev_reg.async_get(device_id)
 
-        macs = [
-            cval
-            for ctype, cval in dev_reg_ent.connections
-            if ctype == device_registry.CONNECTION_NETWORK_MAC
-        ]
-        found = False
-        for entry_id in hass.data[DOMAIN]:
-            if homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT):
-                formatted_mac = homekit.driver.state.mac
-                if formatted_mac in macs:
-                    homekit.async_unpair()
-                    found = True
+            if not dev_reg_ent:
+                raise ValueError(f"No device found for {device_id}")
+
+            macs = [
+                cval
+                for ctype, cval in dev_reg_ent.connections
+                if ctype == device_registry.CONNECTION_NETWORK_MAC
+            ]
+            found = False
+            for entry_id in hass.data[DOMAIN]:
+                if homekit := hass.data[DOMAIN][entry_id].get(HOMEKIT):
+                    formatted_mac = homekit.driver.state.mac
+                    if formatted_mac in macs:
+                        homekit.async_unpair()
+                        found = True
 
         if not found:
             raise ValueError(f"No homekit accessory found for {device_id}")
