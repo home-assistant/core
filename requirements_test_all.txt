@@ -109,7 +109,7 @@ aioesphomeapi==5.0.1
 aioflo==0.4.1
 
 # homeassistant.components.guardian
-aioguardian==1.0.4
+aioguardian==1.0.8
 
 # homeassistant.components.harmony
 aioharmony==0.2.7
