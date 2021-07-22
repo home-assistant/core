@@ -415,8 +415,8 @@ def _async_register_events_and_services(hass: HomeAssistant):
                         homekit.async_unpair()
                         found = True
 
-        if not found:
-            raise HomeAssistantError(f"No homekit accessory found for device id: {device_id}")
+            if not found:
+                raise HomeAssistantError(f"No homekit accessory found for device id: {device_id}")
 
     hass.services.async_register(
         DOMAIN,
