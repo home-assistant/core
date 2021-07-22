@@ -1,10 +1,11 @@
 """Models helper class for the Ambee integration."""
 from __future__ import annotations
 
-from typing import NamedTuple
+from dataclasses import dataclass
 
 
-class AmbeeSensor(NamedTuple):
+@dataclass
+class AmbeeSensor:
     """Represent an Ambee Sensor."""
 
     name: str
