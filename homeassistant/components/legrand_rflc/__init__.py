@@ -4,8 +4,9 @@ https://www.legrand.us/solutions/smart-lighting/radio-frequency-lighting-control
 """
 
 import asyncio
+from collections.abc import Mapping
 import logging
-from typing import Final, Mapping
+from typing import Final
 
 import lc7001.aio
 
@@ -50,7 +51,7 @@ async def async_setup_entry(
             DOMAIN,
             context={
                 "source": SOURCE_REAUTH,
-                "entry_id": entry_id,
+                "entry": entry,
                 "unique_id": entry.unique_id,
             },
         )

@@ -1,7 +1,8 @@
 """The Legrand RFLC integration light platform."""
 
+from collections.abc import Mapping
 import logging
-from typing import Any, Dict, Final, Mapping
+from typing import Any, Final
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -46,14 +47,14 @@ class _Switch(LightEntity):
     async def _available(self) -> None:
         self.async_write_ha_state()
 
-    def _zone_properties_changed_switch(self, message: Mapping):
+    def _zone_properties_changed_switch(self, message: Mapping) -> None:
         hub = self._hub
         if hub.PROPERTY_LIST in message:
             properties = message[hub.PROPERTY_LIST]
             if hub.POWER in properties:
                 self._attr_is_on = properties[hub.POWER]
 
-    async def _zone_properties_changed(self, message: Mapping):
+    async def _zone_properties_changed(self, message: Mapping) -> None:
         self._zone_properties_changed_switch(message)
         self.async_write_ha_state()
 
@@ -120,7 +121,7 @@ class _Dimmer(_Switch):
         async def handle(message: Mapping) -> None:
             hub.StatusError(message).raise_if()
 
-        kwargs_: Dict[str, Any] = {"power": power}
+        kwargs_: dict[str, Any] = {"power": power}
         if ATTR_BRIGHTNESS in kwargs:
             brightness = self._from_ha(kwargs[ATTR_BRIGHTNESS])
             kwargs_["power_level"] = brightness
@@ -157,8 +158,8 @@ async def async_setup_entry(
     """
     hub = hass.data[DOMAIN][entry.entry_id]
 
-    async def zones(message: Mapping):
-        async def zone(message: Mapping):
+    async def zones(message: Mapping) -> None:
+        async def zone(message: Mapping) -> None:
             zid = message[hub.ZID]
             properties = message[hub.PROPERTY_LIST]
             device_type = properties[hub.DEVICE_TYPE]
