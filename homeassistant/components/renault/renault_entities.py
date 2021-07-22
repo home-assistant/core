@@ -11,7 +11,7 @@ from renault_api.kamereon.models import (
     KamereonVehicleHvacStatusData,
 )
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -32,21 +32,11 @@ class RenaultDataEntity(Generic[T], CoordinatorEntity[Optional[T]], Entity):
         super().__init__(vehicle.coordinators[coordinator_key])
         self.vehicle = vehicle
         self._entity_type = entity_type
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return self.vehicle.device_info
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
-        return slugify(f"{self.vehicle.details.vin}-{self._entity_type}")
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self._entity_type
+        self._attr_device_info = self.vehicle.device_info
+        self._attr_name = entity_type
+        self._attr_unique_id = slugify(
+            f"{self.vehicle.details.vin}-{self._entity_type}"
+        )
 
     @property
     def available(self) -> bool:
