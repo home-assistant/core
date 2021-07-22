@@ -217,8 +217,12 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._services_items = []
         self._preset_items = []
         self._sync_status = {}
-        self._status = self._is_online = self._retry_remove = None
-        self._master = self._group_name = self._bluesound_device_name = None
+        self._status = None
+        self._is_online = None
+        self._retry_remove = None
+        self._master = None
+        self._group_name = None
+        self._bluesound_device_name = None
         self._is_master = False
         self._group_list = []
         self._init_callback = init_callback
