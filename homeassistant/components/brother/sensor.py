@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,17 +13,15 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BrotherDataUpdateCoordinator
 from .const import (
     ATTR_COUNTER,
-    ATTR_ENABLED,
-    ATTR_LABEL,
     ATTR_MANUFACTURER,
     ATTR_REMAINING_PAGES,
-    ATTR_UNIT,
     ATTR_UPTIME,
     ATTRS_MAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     SENSOR_TYPES,
 )
+from .model import BrotherSensorMetadata
 
 
 async def async_setup_entry(
@@ -43,9 +40,11 @@ async def async_setup_entry(
         "sw_version": getattr(coordinator.data, "firmware", None),
     }
 
-    for sensor in SENSOR_TYPES:
+    for sensor, metadata in SENSOR_TYPES.items():
         if sensor in coordinator.data:
-            sensors.append(BrotherPrinterSensor(coordinator, sensor, device_info))
+            sensors.append(
+                BrotherPrinterSensor(coordinator, sensor, metadata, device_info)
+            )
     async_add_entities(sensors, False)
 
 
@@ -56,20 +55,20 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: BrotherDataUpdateCoordinator,
         kind: str,
+        metadata: BrotherSensorMetadata,
         device_info: DeviceInfo,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        description = SENSOR_TYPES[kind]
         self._attrs: dict[str, Any] = {}
-        self._attr_device_class = description.get(ATTR_DEVICE_CLASS)
+        self._attr_device_class = metadata.device_class
         self._attr_device_info = device_info
-        self._attr_entity_registry_enabled_default = description[ATTR_ENABLED]
-        self._attr_icon = description[ATTR_ICON]
-        self._attr_name = f"{coordinator.data.model} {description[ATTR_LABEL]}"
-        self._attr_state_class = description[ATTR_STATE_CLASS]
+        self._attr_entity_registry_enabled_default = metadata.enabled
+        self._attr_icon = metadata.icon
+        self._attr_name = f"{coordinator.data.model} {metadata.label}"
+        self._attr_state_class = metadata.state_class
         self._attr_unique_id = f"{coordinator.data.serial.lower()}_{kind}"
-        self._attr_unit_of_measurement = description[ATTR_UNIT]
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
         self.kind = kind
 
     @property
