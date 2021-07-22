@@ -286,6 +286,15 @@ async def test_set_options_service(hass):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_OPTIONS,
+        {ATTR_OPTIONS: ["first option", "middle option"], ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "middle option"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OPTIONS,
         {ATTR_OPTIONS: ["test1", "test2"], ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
