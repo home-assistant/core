@@ -14,7 +14,7 @@ import async_timeout
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
-from pysonos.exceptions import SoCoException
+from pysonos.exceptions import SoCoException, SoCoUPnPException
 from pysonos.music_library import MusicLibrary
 from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
@@ -802,26 +802,56 @@ class SonosSpeaker:
         """Restore snapshots for all the speakers."""
 
         def _restore_groups(
-            speakers: list[SonosSpeaker], with_group: bool
+            speakers: set[SonosSpeaker], with_group: bool
         ) -> list[list[SonosSpeaker]]:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
-                if speaker.media.playback_status == SONOS_STATE_PLAYING:
-                    speaker.soco.pause()
+                if (
+                    speaker.media.playback_status == SONOS_STATE_PLAYING
+                    and "Pause" in speaker.soco.available_actions
+                ):
+                    try:
+                        speaker.soco.pause()
+                    except SoCoUPnPException as exc:
+                        _LOGGER.debug(
+                            "Pause failed during restore of %s: %s",
+                            speaker.zone_name,
+                            speaker.soco.available_actions,
+                            exc_info=exc,
+                        )
 
             groups = []
+            speakers_to_unjoin = set()
 
             if with_group:
-                # Unjoin slaves first to prevent inheritance of queues
-                for speaker in [s for s in speakers if not s.is_coordinator]:
-                    if speaker.snapshot_group != speaker.sonos_group:
-                        speaker.unjoin()
+                # Unjoin non-coordinator speakers not contained in the desired snapshot group
+                #
+                # If a coordinator is unjoined from its group, another speaker from the group
+                # will inherit the coordinator's playqueue and its own playqueue will be lost
+                for speaker in speakers:
+                    if speaker.sonos_group == speaker.snapshot_group:
+                        continue
+
+                    speakers_to_unjoin.update(
+                        {
+                            s
+                            for s in speaker.sonos_group
+                            if s not in speaker.snapshot_group and not s.is_coordinator
+                        }
+                    )
+
+                for speaker in speakers_to_unjoin:
+                    speaker.unjoin()
 
                 # Bring back the original group topology
                 for speaker in (s for s in speakers if s.snapshot_group):
                     assert speaker.snapshot_group is not None
                     if speaker.snapshot_group[0] == speaker:
-                        speaker.join(speaker.snapshot_group)
+                        if (
+                            speaker.snapshot_group != speaker.sonos_group
+                            and speaker.snapshot_group != [speaker]
+                        ):
+                            speaker.join(speaker.snapshot_group)
                         groups.append(speaker.snapshot_group.copy())
 
             return groups
