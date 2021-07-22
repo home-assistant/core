@@ -63,6 +63,7 @@ class Light(HomeAccessory):
         self.chars = []
         state = self.hass.states.get(self.entity_id)
 
+        self._previous_color_mode = None
         self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         self._color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
 
@@ -160,6 +161,9 @@ class Light(HomeAccessory):
         attributes = new_state.attributes
         has_mode = ATTR_COLOR_MODE in attributes
         color_temp_mode = attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
+        color_mode_changes = (
+            attributes.get(ATTR_COLOR_MODE) != self._previous_color_mode
+        )
 
         # Handle Brightness
         if CHAR_BRIGHTNESS in self.chars:
@@ -186,7 +190,10 @@ class Light(HomeAccessory):
             color_temperature = attributes.get(ATTR_COLOR_TEMP)
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
-                if self.char_color_temperature.value != color_temperature:
+                if (
+                    color_mode_changes
+                    or self.char_color_temperature.value != color_temperature
+                ):
                     self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
@@ -206,7 +213,9 @@ class Light(HomeAccessory):
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)
-                if hue != self.char_hue.value:
+                if color_mode_changes or hue != self.char_hue.value:
                     self.char_hue.set_value(hue)
-                if saturation != self.char_saturation.value:
+                if color_mode_changes or saturation != self.char_saturation.value:
                     self.char_saturation.set_value(saturation)
+
+        self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
