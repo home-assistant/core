@@ -24,6 +24,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_MIGRATE_ENTITY_NAME,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -50,10 +51,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     host = config_entry.data[CONF_HOST]
     token = config_entry.data[CONF_TOKEN]
-    name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
+        name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
+    else:
+        name = config_entry.title
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
