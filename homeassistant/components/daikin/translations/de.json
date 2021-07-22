@@ -16,7 +16,7 @@
                     "host": "Host",
                     "password": "Passwort"
                 },
-                "description": "Gib die IP-Adresse deiner Daikin AC ein.",
+                "description": "Gib die IP-Adresse deiner Daikin AC ein.\n\nBeachte, dass API-Schl\u00fcssel und Passwort nur von BRP072Cxx bzw. SKYFi-Ger\u00e4ten verwendet werden.",
                 "title": "Daikin AC konfigurieren"
             }
         }

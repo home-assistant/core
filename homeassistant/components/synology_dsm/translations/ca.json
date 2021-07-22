@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -28,6 +29,14 @@
                 },
                 "description": "Vols configurar {name} ({host})?",
                 "title": "Synology DSM"
+            },
+            "reauth": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Motiu: {details}",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3 Synology DSM"
             },
             "user": {
                 "data": {
