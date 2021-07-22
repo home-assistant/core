@@ -166,8 +166,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = discovery_info_to_discovery(discovery_info)
 
         # Ensure not already configuring/configured.
-        discovery = await Device.async_supplement_discovery(self.hass, discovery)
-        unique_id = discovery[DISCOVERY_UNIQUE_ID]
+        unique_id = discovery[DISCOVERY_USN]
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={CONFIG_ENTRY_HOSTNAME: discovery[DISCOVERY_HOSTNAME]}
@@ -182,6 +181,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Found existing config_entry with same hostname, discovery ignored"
                 )
                 return self.async_abort(reason="discovery_ignored")
+
+        # Get more data about the device.
+        discovery = await Device.async_supplement_discovery(self.hass, discovery)
 
         # Store discovery.
         self._discoveries = [discovery]

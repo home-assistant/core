@@ -67,6 +67,8 @@ def setup_platform(
 class AcerSwitch(SwitchEntity):
     """Represents an Acer Projector as a switch."""
 
+    _attr_icon = ICON
+
     def __init__(
         self,
         serial_port: str,
@@ -79,9 +81,7 @@ class AcerSwitch(SwitchEntity):
             port=serial_port, timeout=timeout, write_timeout=write_timeout
         )
         self._serial_port = serial_port
-        self._name = name
-        self._state = False
-        self._available = False
+        self._attr_name = name
         self._attributes = {
             LAMP_HOURS: STATE_UNKNOWN,
             INPUT_SOURCE: STATE_UNKNOWN,
@@ -116,57 +116,33 @@ class AcerSwitch(SwitchEntity):
             return match.group(1)
         return STATE_UNKNOWN
 
-    @property
-    def available(self) -> bool:
-        """Return if projector is available."""
-        return self._available
-
-    @property
-    def name(self) -> str:
-        """Return name of the projector."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return ICON
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the projector is turned on."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return state attributes."""
-        return self._attributes
-
     def update(self) -> None:
         """Get the latest state from the projector."""
         awns = self._write_read_format(CMD_DICT[LAMP])
         if awns == "Lamp 1":
-            self._state = True
-            self._available = True
+            self._attr_is_on = True
+            self._attr_available = True
         elif awns == "Lamp 0":
-            self._state = False
-            self._available = True
+            self._attr_is_on = False
+            self._attr_available = True
         else:
-            self._available = False
+            self._attr_available = False
 
         for key in self._attributes:
             msg = CMD_DICT.get(key)
             if msg:
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns
+        self._attr_extra_state_attributes = self._attributes
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
         msg = CMD_DICT[STATE_ON]
         self._write_read(msg)
-        self._state = True
+        self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the projector off."""
         msg = CMD_DICT[STATE_OFF]
         self._write_read(msg)
-        self._state = False
+        self._attr_is_on = False

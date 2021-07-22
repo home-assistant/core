@@ -33,6 +33,16 @@ async def test_sensor(hass, aioclient_mock):
     await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
+    state = hass.states.get("sensor.home_caqi")
+    assert state
+    assert state.state == "23"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
+
+    entry = registry.async_get("sensor.home_caqi")
+    assert entry
+    assert entry.unique_id == "123-456-caqi"
+
     state = hass.states.get("sensor.home_humidity")
     assert state
     assert state.state == "92.8"
@@ -59,6 +69,36 @@ async def test_sensor(hass, aioclient_mock):
     entry = registry.async_get("sensor.home_pm1")
     assert entry
     assert entry.unique_id == "123-456-pm1"
+
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == "14"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+
+    entry = registry.async_get("sensor.home_pm2_5")
+    assert entry
+    assert entry.unique_id == "123-456-pm25"
+
+    state = hass.states.get("sensor.home_pm10")
+    assert state
+    assert state.state == "19"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+
+    entry = registry.async_get("sensor.home_pm10")
+    assert entry
+    assert entry.unique_id == "123-456-pm10"
 
     state = hass.states.get("sensor.home_pressure")
     assert state

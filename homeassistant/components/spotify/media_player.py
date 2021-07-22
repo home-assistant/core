@@ -266,6 +266,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             "manufacturer": "Spotify AB",
             "model": model,
             "name": self._name,
+            "entry_type": "service",
         }
 
     @property

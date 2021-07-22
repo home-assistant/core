@@ -264,10 +264,10 @@ async def async_setup_entry(  # noqa: C901
 
     async def start_platforms():
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         if entry.data.get(CONF_USE_ADDON):
             mqtt_client_task = asyncio.create_task(mqtt_client.start_client(manager))

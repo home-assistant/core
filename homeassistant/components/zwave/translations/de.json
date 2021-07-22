@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "network_key": "Netzwerkschl\u00fcssel (leer lassen, um automatisch zu generieren)",
-                    "usb_path": "USB-Ger\u00e4t Pfad"
+                    "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
                 "description": "Diese Integration wird nicht mehr gepflegt. Verwenden Sie bei Neuinstallationen stattdessen Z-Wave JS.\n\nSiehe https://www.home-assistant.io/docs/z-wave/installation/ f\u00fcr Informationen zu den Konfigurationsvariablen"
             }
@@ -26,7 +26,7 @@
         },
         "query_stage": {
             "dead": "Nicht erreichbar ({query_stage})",
-            "initializing": "Initialisiere"
+            "initializing": "Initialisierend"
         }
     }
 }

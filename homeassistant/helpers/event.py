@@ -977,10 +977,10 @@ class _TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _suppress_domain_all_in_render_info(self._info[template])
+                        _suppress_domain_all_in_render_info(info)
                         if self._rate_limit.async_has_timer(template)
-                        else self._info[template]
-                        for template in self._info
+                        else info
+                        for template, info in self._info.items()
                     ]
                 )
             )
@@ -1440,7 +1440,9 @@ def async_track_time_change(
 track_time_change = threaded_listener_factory(async_track_time_change)
 
 
-def process_state_match(parameter: None | str | Iterable[str]) -> Callable[[str], bool]:
+def process_state_match(
+    parameter: None | str | Iterable[str],
+) -> Callable[[str | None], bool]:
     """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True

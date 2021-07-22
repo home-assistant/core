@@ -1,26 +1,27 @@
 """Constants for the BSB-Lan integration."""
+from typing import Final
 
 DOMAIN = "bsblan"
 
-DATA_BSBLAN_CLIENT = "bsblan_client"
-DATA_BSBLAN_TIMER = "bsblan_timer"
-DATA_BSBLAN_UPDATED = "bsblan_updated"
+DATA_BSBLAN_CLIENT: Final = "bsblan_client"
+DATA_BSBLAN_TIMER: Final = "bsblan_timer"
+DATA_BSBLAN_UPDATED: Final = "bsblan_updated"
 
-ATTR_IDENTIFIERS = "identifiers"
-ATTR_MODEL = "model"
-ATTR_MANUFACTURER = "manufacturer"
+ATTR_IDENTIFIERS: Final = "identifiers"
+ATTR_MODEL: Final = "model"
+ATTR_MANUFACTURER: Final = "manufacturer"
 
-ATTR_TARGET_TEMPERATURE = "target_temperature"
-ATTR_INSIDE_TEMPERATURE = "inside_temperature"
-ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
+ATTR_TARGET_TEMPERATURE: Final = "target_temperature"
+ATTR_INSIDE_TEMPERATURE: Final = "inside_temperature"
+ATTR_OUTSIDE_TEMPERATURE: Final = "outside_temperature"
 
-ATTR_STATE_ON = "on"
-ATTR_STATE_OFF = "off"
+ATTR_STATE_ON: Final = "on"
+ATTR_STATE_OFF: Final = "off"
 
-CONF_DEVICE_IDENT = "device_identification"
-CONF_CONTROLLER_FAM = "controller_family"
-CONF_CONTROLLER_VARI = "controller_variant"
+CONF_DEVICE_IDENT: Final = "device_identification"
+CONF_CONTROLLER_FAM: Final = "controller_family"
+CONF_CONTROLLER_VARI: Final = "controller_variant"
 
-SENSOR_TYPE_TEMPERATURE = "temperature"
+SENSOR_TYPE_TEMPERATURE: Final = "temperature"
 
-CONF_PASSKEY = "passkey"
+CONF_PASSKEY: Final = "passkey"

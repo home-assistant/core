@@ -4,6 +4,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    ATTR_STATUS,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
@@ -26,6 +27,7 @@ from .. import subscription
 from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 SERVICE_TO_STRING = {
@@ -96,6 +98,10 @@ DEFAULT_PAYLOAD_TURN_ON = "turn_on"
 DEFAULT_RETAIN = False
 DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES, SERVICE_TO_STRING)
 
+MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED = MQTT_VACUUM_ATTRIBUTES_BLOCKED | frozenset(
+    {ATTR_STATUS}
+)
+
 PLATFORM_SCHEMA_LEGACY = (
     mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
@@ -159,6 +165,8 @@ async def async_setup_entity_legacy(
 
 class MqttVacuum(MqttEntity, VacuumEntity):
     """Representation of a MQTT-controlled legacy vacuum."""
+
+    _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""

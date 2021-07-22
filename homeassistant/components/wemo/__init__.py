@@ -235,12 +235,12 @@ class WemoDiscovery:
             _LOGGER.debug("Adding statically configured WeMo devices")
             for device in await gather_with_concurrency(
                 MAX_CONCURRENCY,
-                *[
+                *(
                     self._hass.async_add_executor_job(
                         validate_static_config, host, port
                     )
                     for host, port in self._static_config
-                ],
+                ),
             ):
                 if device:
                     await self._wemo_dispatcher.async_add_unique_device(
