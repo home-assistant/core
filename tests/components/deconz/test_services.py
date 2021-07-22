@@ -152,8 +152,27 @@ async def test_configure_service_with_entity_and_field(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
 
+async def test_configure_service_with_faulty_bridgeid(hass, aioclient_mock):
+    """Test that service fails on a bad bridge id."""
+    await setup_deconz_integration(hass, aioclient_mock)
+    aioclient_mock.clear_requests()
+
+    data = {
+        CONF_BRIDGE_ID: "Bad bridge id",
+        SERVICE_FIELD: "/lights/1",
+        SERVICE_DATA: {"on": True},
+    }
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+    )
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
 async def test_configure_service_with_faulty_field(hass, aioclient_mock):
-    """Test that service invokes pydeconz with the correct path and data."""
+    """Test that service fails on a bad field."""
     await setup_deconz_integration(hass, aioclient_mock)
 
     data = {SERVICE_FIELD: "light/2", SERVICE_DATA: {}}
@@ -166,7 +185,7 @@ async def test_configure_service_with_faulty_field(hass, aioclient_mock):
 
 
 async def test_configure_service_with_faulty_entity(hass, aioclient_mock):
-    """Test that service invokes pydeconz with the correct path and data."""
+    """Test that service on a non existing entity."""
     await setup_deconz_integration(hass, aioclient_mock)
     aioclient_mock.clear_requests()
 

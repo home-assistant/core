@@ -1,7 +1,7 @@
 """Tests for homekit_controller config flow."""
 from unittest import mock
 import unittest.mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohomekit
 from aiohomekit.model import Accessories, Accessory
@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.homekit_controller import config_flow
+from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.helpers import device_registry
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -383,11 +384,16 @@ async def test_discovery_invalid_config_entry(hass, controller):
 
 async def test_discovery_already_configured(hass, controller):
     """Already configured."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain="homekit_controller",
-        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        data={
+            "AccessoryIP": "4.4.4.4",
+            "AccessoryPort": 66,
+            "AccessoryPairingID": "00:00:00:00:00:00",
+        },
         unique_id="00:00:00:00:00:00",
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -403,6 +409,49 @@ async def test_discovery_already_configured(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert entry.data["AccessoryIP"] == discovery_info["host"]
+    assert entry.data["AccessoryPort"] == discovery_info["port"]
+
+
+async def test_discovery_already_configured_update_csharp(hass, controller):
+    """Already configured and csharp changes."""
+    entry = MockConfigEntry(
+        domain="homekit_controller",
+        data={
+            "AccessoryIP": "4.4.4.4",
+            "AccessoryPort": 66,
+            "AccessoryPairingID": "AA:BB:CC:DD:EE:FF",
+        },
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    connection_mock = AsyncMock()
+    connection_mock.pairing.connect.reconnect_soon = AsyncMock()
+    connection_mock.async_refresh_entity_map = AsyncMock()
+    hass.data[KNOWN_DEVICES] = {"AA:BB:CC:DD:EE:FF": connection_mock}
+
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Set device as already paired
+    discovery_info["properties"]["sf"] = 0x00
+    discovery_info["properties"]["c#"] = 99999
+    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    await hass.async_block_till_done()
+
+    assert entry.data["AccessoryIP"] == discovery_info["host"]
+    assert entry.data["AccessoryPort"] == discovery_info["port"]
+    assert connection_mock.async_refresh_entity_map.await_count == 1
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)

@@ -18,8 +18,6 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required("host"): str, vol.Required("name"): str})
-
 
 class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Goal Zero Yeti."""
@@ -65,7 +63,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -100,7 +98,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_try_connect(self, host):
+    async def _async_try_connect(self, host) -> tuple:
         """Try connecting to Goal Zero Yeti."""
         try:
             session = async_get_clientsession(self.hass)

@@ -1042,6 +1042,45 @@ async def test_lock_unlock_lock(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
 
 
+async def test_lock_unlock_unlocking(hass):
+    """Test LockUnlock trait locking support for lock domain."""
+    assert helpers.get_google_type(lock.DOMAIN, None) is not None
+    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+
+    trt = trait.LockUnlockTrait(
+        hass, State("lock.front_door", lock.STATE_UNLOCKING), PIN_CONFIG
+    )
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {"isLocked": True}
+
+
+async def test_lock_unlock_lock_jammed(hass):
+    """Test LockUnlock trait locking support for lock domain that jams."""
+    assert helpers.get_google_type(lock.DOMAIN, None) is not None
+    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+
+    trt = trait.LockUnlockTrait(
+        hass, State("lock.front_door", lock.STATE_JAMMED), PIN_CONFIG
+    )
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {"isJammed": True}
+
+    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": True})
+
+    calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
+
+    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": True}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
+
+
 async def test_lock_unlock_unlock(hass):
     """Test LockUnlock trait unlocking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
@@ -1422,13 +1461,6 @@ async def test_fan_speed(hass):
             "fan.living_room_fan",
             fan.SPEED_HIGH,
             attributes={
-                "speed_list": [
-                    fan.SPEED_OFF,
-                    fan.SPEED_LOW,
-                    fan.SPEED_MEDIUM,
-                    fan.SPEED_HIGH,
-                ],
-                "speed": "low",
                 "percentage": 33,
                 "percentage_step": 1.0,
             },
@@ -1437,63 +1469,13 @@ async def test_fan_speed(hass):
     )
 
     assert trt.sync_attributes() == {
-        "availableFanSpeeds": {
-            "ordered": True,
-            "speeds": [
-                {
-                    "speed_name": "off",
-                    "speed_values": [{"speed_synonym": ["stop", "off"], "lang": "en"}],
-                },
-                {
-                    "speed_name": "low",
-                    "speed_values": [
-                        {
-                            "speed_synonym": ["slow", "low", "slowest", "lowest"],
-                            "lang": "en",
-                        }
-                    ],
-                },
-                {
-                    "speed_name": "medium",
-                    "speed_values": [
-                        {"speed_synonym": ["medium", "mid", "middle"], "lang": "en"}
-                    ],
-                },
-                {
-                    "speed_name": "high",
-                    "speed_values": [
-                        {
-                            "speed_synonym": [
-                                "high",
-                                "max",
-                                "fast",
-                                "highest",
-                                "fastest",
-                                "maximum",
-                            ],
-                            "lang": "en",
-                        }
-                    ],
-                },
-            ],
-        },
         "reversible": False,
         "supportsFanSpeedPercent": True,
     }
 
     assert trt.query_attributes() == {
-        "currentFanSpeedSetting": "low",
-        "on": True,
         "currentFanSpeedPercent": 33,
     }
-
-    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
-
-    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_SPEED)
-    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": "medium"}, {})
-
-    assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "fan.living_room_fan", "speed": "medium"}
 
     assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedPercent": 10})
 
@@ -1502,6 +1484,53 @@ async def test_fan_speed(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
+
+
+@pytest.mark.parametrize(
+    "direction_state,direction_call",
+    [
+        (fan.DIRECTION_FORWARD, fan.DIRECTION_REVERSE),
+        (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD),
+        (None, fan.DIRECTION_FORWARD),
+    ],
+)
+async def test_fan_reverse(hass, direction_state, direction_call):
+    """Test FanSpeed trait speed control support for fan domain."""
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_DIRECTION)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "fan.living_room_fan",
+            fan.SPEED_HIGH,
+            attributes={
+                "percentage": 33,
+                "percentage_step": 1.0,
+                "direction": direction_state,
+                "supported_features": fan.SUPPORT_DIRECTION,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "reversible": True,
+        "supportsFanSpeedPercent": True,
+    }
+
+    assert trt.query_attributes() == {
+        "currentFanSpeedPercent": 33,
+    }
+
+    assert trt.can_execute(trait.COMMAND_REVERSE, params={})
+    await trt.execute(trait.COMMAND_REVERSE, BASIC_DATA, {}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "fan.living_room_fan",
+        "direction": direction_call,
+    }
 
 
 async def test_climate_fan_speed(hass):
@@ -1547,7 +1576,6 @@ async def test_climate_fan_speed(hass):
             ],
         },
         "reversible": False,
-        "supportsFanSpeedPercent": True,
     }
 
     assert trt.query_attributes() == {

@@ -1,4 +1,5 @@
 """Hass.io const variables."""
+from enum import Enum
 
 DOMAIN = "hassio"
 
@@ -46,3 +47,10 @@ ATTR_UPDATE_AVAILABLE = "update_available"
 ATTR_SLUG = "slug"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
+
+
+class SupervisorEntityModel(str, Enum):
+    """Supervisor entity model."""
+
+    ADDON = "Home Assistant Add-on"
+    OS = "Home Assistant Operating System"

@@ -58,7 +58,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
                 self._state = False
             return True
 
-        rgbhexstr = "%x" % value
+        rgbhexstr = f"{value:x}"
         if len(rgbhexstr) > 8:
             _LOGGER.error(
                 "Light RGB data error."

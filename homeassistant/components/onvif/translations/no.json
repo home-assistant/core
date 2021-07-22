@@ -18,6 +18,16 @@
                 },
                 "title": "Konfigurere godkjenning"
             },
+            "configure": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                },
+                "title": "Konfigurere ONVIF-enhet"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Lag kameraentitet"
@@ -40,6 +50,9 @@
                 "title": "Konfigurere ONVIF-enhet"
             },
             "user": {
+                "data": {
+                    "auto": "S\u00f8k automatisk"
+                },
                 "description": "Ved \u00e5 klikke send inn, vil vi s\u00f8ke nettverket etter ONVIF-enheter som st\u00f8tter Profil S.\n\nNoen produsenter har begynt \u00e5 deaktivere ONVIF som standard. Vennligst kontroller at ONVIF er aktivert i kameraets konfigurasjon.",
                 "title": "ONVIF enhetsoppsett"
             }

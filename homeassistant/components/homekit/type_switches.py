@@ -55,6 +55,9 @@ VALVE_TYPE = {
 }
 
 
+ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
+
+
 @TYPES.register("Outlet")
 class Outlet(HomeAccessory):
     """Generate an Outlet accessory."""
@@ -98,7 +101,7 @@ class Switch(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
-        self._domain = split_entity_id(self.entity_id)[0]
+        self._domain, self._object_id = split_entity_id(self.entity_id)
         state = self.hass.states.get(self.entity_id)
 
         self.activate_only = self.is_activate(self.hass.states.get(self.entity_id))
@@ -113,9 +116,7 @@ class Switch(HomeAccessory):
 
     def is_activate(self, state):
         """Check if entity is activate only."""
-        if self._domain == "scene":
-            return True
-        return False
+        return self._domain in ACTIVATE_ONLY_SWITCH_DOMAINS
 
     def reset_switch(self, *args):
         """Reset switch to emulate activate click."""
@@ -129,8 +130,14 @@ class Switch(HomeAccessory):
         if self.activate_only and not value:
             _LOGGER.debug("%s: Ignoring turn_off call", self.entity_id)
             return
+
         params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+        if self._domain == "script":
+            service = self._object_id
+            params = {}
+        else:
+            service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+
         self.async_call_service(self._domain, service, params)
 
         if self.activate_only:

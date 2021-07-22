@@ -44,6 +44,13 @@ CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
 CONF_STATE_CLASS = "state_class"
 
+MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        sensor.ATTR_LAST_RESET,
+        sensor.ATTR_STATE_CLASS,
+    }
+)
+
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
@@ -87,6 +94,7 @@ class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
     _attr_last_reset = None
+    _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the sensor."""
@@ -234,6 +242,7 @@ class MqttSensor(MqttEntity, SensorEntity):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         expire_after = self._config.get(CONF_EXPIRE_AFTER)
-        return MqttAvailability.available.fget(self) and (
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
             expire_after is None or not self._expired
         )

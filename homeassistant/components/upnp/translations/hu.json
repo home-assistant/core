@@ -12,7 +12,17 @@
         "step": {
             "user": {
                 "data": {
+                    "unique_id": "Eszk\u00f6z",
                     "usn": "Eszk\u00f6z"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Friss\u00edt\u00e9si intervallum (m\u00e1sodperc, minimum 30)"
                 }
             }
         }

@@ -20,6 +20,7 @@ from .const import (
     DOMAIN,
     SENSORS_BYTES,
     SENSORS_CONNECTED_DEVICE,
+    SENSORS_LOAD_AVG,
     SENSORS_RATES,
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
@@ -66,6 +67,18 @@ CONNECTION_SENSORS = {
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:upload",
+    },
+    SENSORS_LOAD_AVG[0]: {
+        SENSOR_NAME: "Load Avg (1m)",
+        SENSOR_ICON: "mdi:cpu-32-bit",
+    },
+    SENSORS_LOAD_AVG[1]: {
+        SENSOR_NAME: "Load Avg (5m)",
+        SENSOR_ICON: "mdi:cpu-32-bit",
+    },
+    SENSORS_LOAD_AVG[2]: {
+        SENSOR_NAME: "Load Avg (15m)",
+        SENSOR_ICON: "mdi:cpu-32-bit",
     },
 }
 

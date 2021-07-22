@@ -5,9 +5,9 @@ import collections
 from typing import Callable, Dict
 
 import attr
+from zigpy import zcl
 import zigpy.profiles.zha
 import zigpy.profiles.zll
-import zigpy.zcl as zcl
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
@@ -32,6 +32,7 @@ PHILLIPS_REMOTE_CLUSTER = 0xFC00
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
+VOC_LEVEL_CLUSTER = 0x042E
 
 REMOTE_DEVICE_TYPES = {
     zigpy.profiles.zha.PROFILE_ID: [
@@ -62,6 +63,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     # a different dict that is keyed by manufacturer
     SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
     SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR,
+    VOC_LEVEL_CLUSTER: SENSOR,
     zcl.clusters.closures.DoorLock.cluster_id: LOCK,
     zcl.clusters.closures.WindowCovering.cluster_id: COVER,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
@@ -73,6 +75,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.hvac.Fan.cluster_id: FAN,
     zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: SENSOR,
     zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: SENSOR,
+    zcl.clusters.measurement.FormaldehydeConcentration.cluster_id: SENSOR,
     zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: SENSOR,
     zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
     zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
