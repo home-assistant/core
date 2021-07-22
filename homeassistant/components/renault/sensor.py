@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.sensor import (
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -83,7 +86,7 @@ async def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultData
     return entities
 
 
-class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity):
+class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity, SensorEntity):
     """Battery autonomy sensor."""
 
     @property
@@ -102,7 +105,7 @@ class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity):
         return LENGTH_KILOMETERS
 
 
-class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
+class RenaultBatteryLevelSensor(RenaultBatteryDataEntity, SensorEntity):
     """Battery Level sensor."""
 
     @property
@@ -137,7 +140,7 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
         return attrs
 
 
-class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity):
+class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity, SensorEntity):
     """Battery Temperature sensor."""
 
     @property
@@ -156,7 +159,7 @@ class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity):
         return TEMP_CELSIUS
 
 
-class RenaultChargeModeSensor(RenaultChargeModeDataEntity):
+class RenaultChargeModeSensor(RenaultChargeModeDataEntity, SensorEntity):
     """Charge Mode sensor."""
 
     @property
@@ -177,7 +180,7 @@ class RenaultChargeModeSensor(RenaultChargeModeDataEntity):
         return DEVICE_CLASS_CHARGE_MODE
 
 
-class RenaultChargeStateSensor(RenaultBatteryDataEntity):
+class RenaultChargeStateSensor(RenaultBatteryDataEntity, SensorEntity):
     """Charge State sensor."""
 
     @property
@@ -197,7 +200,7 @@ class RenaultChargeStateSensor(RenaultBatteryDataEntity):
         return DEVICE_CLASS_CHARGE_STATE
 
 
-class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity):
+class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity, SensorEntity):
     """Charging Remaining Time sensor."""
 
     @property
@@ -216,7 +219,7 @@ class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity):
         return TIME_MINUTES
 
 
-class RenaultChargingPowerSensor(RenaultBatteryDataEntity):
+class RenaultChargingPowerSensor(RenaultBatteryDataEntity, SensorEntity):
     """Charging Power sensor."""
 
     @property
@@ -240,7 +243,7 @@ class RenaultChargingPowerSensor(RenaultBatteryDataEntity):
         return DEVICE_CLASS_ENERGY
 
 
-class RenaultFuelAutonomySensor(RenaultCockpitDataEntity):
+class RenaultFuelAutonomySensor(RenaultCockpitDataEntity, SensorEntity):
     """Fuel autonomy sensor."""
 
     @property
@@ -263,7 +266,7 @@ class RenaultFuelAutonomySensor(RenaultCockpitDataEntity):
         return LENGTH_KILOMETERS
 
 
-class RenaultFuelQuantitySensor(RenaultCockpitDataEntity):
+class RenaultFuelQuantitySensor(RenaultCockpitDataEntity, SensorEntity):
     """Fuel quantity sensor."""
 
     @property
@@ -286,7 +289,7 @@ class RenaultFuelQuantitySensor(RenaultCockpitDataEntity):
         return VOLUME_LITERS
 
 
-class RenaultMileageSensor(RenaultCockpitDataEntity):
+class RenaultMileageSensor(RenaultCockpitDataEntity, SensorEntity):
     """Mileage sensor."""
 
     @property
@@ -309,7 +312,7 @@ class RenaultMileageSensor(RenaultCockpitDataEntity):
         return LENGTH_KILOMETERS
 
 
-class RenaultOutsideTemperatureSensor(RenaultHVACDataEntity):
+class RenaultOutsideTemperatureSensor(RenaultHVACDataEntity, SensorEntity):
     """HVAC Outside Temperature sensor."""
 
     @property
@@ -328,7 +331,7 @@ class RenaultOutsideTemperatureSensor(RenaultHVACDataEntity):
         return TEMP_CELSIUS
 
 
-class RenaultPlugStateSensor(RenaultBatteryDataEntity):
+class RenaultPlugStateSensor(RenaultBatteryDataEntity, SensorEntity):
     """Plug State sensor."""
 
     @property
