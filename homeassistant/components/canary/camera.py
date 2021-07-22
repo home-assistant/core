@@ -29,7 +29,6 @@ from .const import (
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_TIMEOUT,
     DOMAIN,
     MANUFACTURER,
 )
@@ -72,7 +71,6 @@ async def async_setup_entry(
                         coordinator,
                         location_id,
                         device,
-                        DEFAULT_TIMEOUT,
                         ffmpeg_arguments,
                     )
                 )
@@ -91,7 +89,6 @@ class CanaryCamera(CoordinatorEntity, Camera):
         coordinator: CanaryDataUpdateCoordinator,
         location_id: str,
         device: Device,
-        timeout: int,
         ffmpeg_args: str,
     ) -> None:
         """Initialize a Canary security camera."""
@@ -101,17 +98,13 @@ class CanaryCamera(CoordinatorEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_args
         self._location_id = location_id
         self._device = device
-        self._device_id: str = device.device_id
-        self._device_name: str = device.name
-        self._device_type_name = device.device_type["name"]
-        self._timeout = timeout
         self._live_stream_session: LiveStreamSession | None = None
         self._attr_name = device.name
-        self._attr_unique_id = str(self._device_id)
+        self._attr_unique_id = str(device.device_id)
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(self._device_id))},
+            "identifiers": {(DOMAIN, str(device.device_id))},
             "name": device.name,
-            "model": self._device_type_name,
+            "model": device.device_type["name"],
             "manufacturer": MANUFACTURER,
         }
 
