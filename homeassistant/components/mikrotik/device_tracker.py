@@ -85,6 +85,11 @@ class MikrotikClientTracker(ScannerEntity):
         self.host: str | None = all_clients[mac].host
         self.hub = hub
         self.this_device: DeviceEntry | None = None
+        self._attr_name = self.all_clients[self.mac].name
+        self._attr_unique_id = self.mac
+        self._attr_extra_state_attributes = (
+            self.all_clients[self.mac].attrs if self.is_connected else None
+        )
 
     @property
     def is_connected(self) -> bool:
@@ -100,11 +105,6 @@ class MikrotikClientTracker(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the client."""
-        return self.all_clients[self.mac].name
-
-    @property
     def hostname(self) -> str | None:
         """Return the hostname of the client."""
         return self.all_clients[self.mac].name
@@ -118,16 +118,6 @@ class MikrotikClientTracker(ScannerEntity):
     def ip_address(self) -> str | None:
         """Return the mac address of the client."""
         return self.all_clients[self.mac].ip_address
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this device."""
-        return self.mac
-
-    @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return the device state attributes."""
-        return self.all_clients[self.mac].attrs if self.is_connected else None
 
     @property
     def device_info(self) -> DeviceInfo:
