@@ -704,8 +704,9 @@ class HomeKit:
     @callback
     def async_unpair(self):
         """Remove all pairings for an accessory so it can be repaired."""
-        for client_uuid in list(self.driver.state.paired_clients):
-            self.driver.state.remove_paired_client(client_uuid)
+        state = self.driver.state
+        for client_uuid in list(state.paired_clients):
+            state.remove_paired_client(client_uuid)
         self.driver.self.async_persist()
         self.driver.async_update_advertisement()
         self._async_show_setup_message()
