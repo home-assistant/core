@@ -89,7 +89,7 @@ class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.batteryAutonomy if self.data is not None else None
+        return self.data.batteryAutonomy if self.data else None
 
     @property
     def icon(self) -> str:
@@ -108,7 +108,7 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.batteryLevel if self.data is not None else None
+        return self.data.batteryLevel if self.data else None
 
     @property
     def device_class(self) -> str:
@@ -131,8 +131,9 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
     def device_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this entity."""
         attrs = super().device_state_attributes
-        if self.data is not None and self.data.batteryAvailableEnergy is not None:
-            attrs[ATTR_BATTERY_AVAILABLE_ENERGY] = self.data.batteryAvailableEnergy
+        attrs[ATTR_BATTERY_AVAILABLE_ENERGY] = (
+            self.data.batteryAvailableEnergy if self.data else None
+        )
         return attrs
 
 
@@ -142,7 +143,7 @@ class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.batteryTemperature if self.data is not None else None
+        return self.data.batteryTemperature if self.data else None
 
     @property
     def device_class(self) -> str:
@@ -161,12 +162,12 @@ class RenaultChargeModeSensor(RenaultChargeModeDataEntity):
     @property
     def state(self) -> str | None:
         """Return the state of this entity."""
-        return self.data.chargeMode
+        return self.data.chargeMode if self.data else None
 
     @property
     def icon(self) -> str:
         """Icon handling."""
-        if self.data is not None and self.data.chargeMode == "schedule_mode":
+        if self.data and self.data.chargeMode == "schedule_mode":
             return "mdi:calendar-clock"
         return "mdi:calendar-remove"
 
@@ -182,9 +183,7 @@ class RenaultChargeStateSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> str | None:
         """Return the state of this entity."""
-        charging_status = (
-            self.data.get_charging_status() if self.data is not None else None
-        )
+        charging_status = self.data.get_charging_status() if self.data else None
         return slugify(charging_status.name) if charging_status is not None else None
 
     @property
@@ -204,7 +203,7 @@ class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.chargingRemainingTime if self.data is not None else None
+        return self.data.chargingRemainingTime if self.data else None
 
     @property
     def icon(self) -> str:
@@ -223,7 +222,7 @@ class RenaultChargingPowerSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> float | None:
         """Return the state of this entity."""
-        if self.data is None or self.data.chargingInstantaneousPower is None:
+        if not self.data or self.data.chargingInstantaneousPower is None:
             return None
         if self.vehicle.details.reports_charging_power_in_watts():
             # Need to convert to kilowatts
@@ -249,7 +248,7 @@ class RenaultFuelAutonomySensor(RenaultCockpitDataEntity):
         """Return the state of this entity."""
         return (
             round(self.data.fuelAutonomy)
-            if self.data.fuelAutonomy is not None
+            if self.data and self.data.fuelAutonomy is not None
             else None
         )
 
@@ -272,7 +271,7 @@ class RenaultFuelQuantitySensor(RenaultCockpitDataEntity):
         """Return the state of this entity."""
         return (
             round(self.data.fuelQuantity)
-            if self.data.fuelQuantity is not None
+            if self.data and self.data.fuelQuantity is not None
             else None
         )
 
@@ -295,7 +294,7 @@ class RenaultMileageSensor(RenaultCockpitDataEntity):
         """Return the state of this entity."""
         return (
             round(self.data.totalMileage)
-            if self.data.totalMileage is not None
+            if self.data and self.data.totalMileage is not None
             else None
         )
 
@@ -316,7 +315,7 @@ class RenaultOutsideTemperatureSensor(RenaultHVACDataEntity):
     @property
     def state(self) -> float | None:
         """Return the state of this entity."""
-        return self.data.externalTemperature
+        return self.data.externalTemperature if self.data else None
 
     @property
     def device_class(self) -> str:
@@ -335,7 +334,7 @@ class RenaultPlugStateSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> str | None:
         """Return the state of this entity."""
-        plug_status = self.data.get_plug_status() if self.data is not None else None
+        plug_status = self.data.get_plug_status() if self.data else None
         return slugify(plug_status.name) if plug_status is not None else None
 
     @property

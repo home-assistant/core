@@ -1,7 +1,7 @@
 """Base classes for Renault entities."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Generic, Optional, TypeVar
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
@@ -19,8 +19,10 @@ from .renault_vehicle import RenaultVehicleProxy
 
 ATTR_LAST_UPDATE = "last_update"
 
+T = TypeVar("T")
 
-class RenaultDataEntity(CoordinatorEntity, Entity):
+
+class RenaultDataEntity(Generic[T], CoordinatorEntity[Optional[T]], Entity):
     """Implementation of a Renault entity with a data coordinator."""
 
     def __init__(
@@ -50,24 +52,20 @@ class RenaultDataEntity(CoordinatorEntity, Entity):
     def available(self) -> bool:
         """Return if entity is available."""
         # Data can succeed, but be empty
-        return super().available and self.coordinator.data
+        return super().available and self.coordinator.data is not None
+
+    @property
+    def data(self) -> T | None:
+        """Return collected data."""
+        return self.coordinator.data
 
 
-class RenaultBatteryDataEntity(RenaultDataEntity):
+class RenaultBatteryDataEntity(RenaultDataEntity[KamereonVehicleBatteryStatusData]):
     """Implementation of a Renault entity with battery coordinator."""
 
     def __init__(self, vehicle: RenaultVehicleProxy, entity_type: str) -> None:
         """Initialise entity."""
         super().__init__(vehicle, entity_type, "battery")
-
-    @property
-    def data(self) -> KamereonVehicleBatteryStatusData | None:
-        """Return collected data."""
-        return (
-            cast(KamereonVehicleBatteryStatusData, self.coordinator.data)
-            if self.coordinator.data is not None
-            else None
-        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -80,50 +78,37 @@ class RenaultBatteryDataEntity(RenaultDataEntity):
     def is_charging(self) -> bool:
         """Return charge state as boolean."""
         return (
-            self.data
+            self.data is not None
             and self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
         )
 
     @property
     def is_plugged_in(self) -> bool:
         """Return plug state as boolean."""
-        return self.data and self.data.get_plug_status() == PlugState.PLUGGED
+        return (
+            self.data is not None and self.data.get_plug_status() == PlugState.PLUGGED
+        )
 
 
-class RenaultChargeModeDataEntity(RenaultDataEntity):
+class RenaultChargeModeDataEntity(RenaultDataEntity[KamereonVehicleChargeModeData]):
     """Implementation of a Renault entity with charge_mode coordinator."""
 
     def __init__(self, vehicle: RenaultVehicleProxy, entity_type: str) -> None:
         """Initialise entity."""
         super().__init__(vehicle, entity_type, "charge_mode")
 
-    @property
-    def data(self) -> KamereonVehicleChargeModeData:
-        """Return collected data."""
-        return cast(KamereonVehicleChargeModeData, self.coordinator.data)
 
-
-class RenaultCockpitDataEntity(RenaultDataEntity):
+class RenaultCockpitDataEntity(RenaultDataEntity[KamereonVehicleCockpitData]):
     """Implementation of a Renault entity with cockpit coordinator."""
 
     def __init__(self, vehicle: RenaultVehicleProxy, entity_type: str) -> None:
         """Initialise entity."""
         super().__init__(vehicle, entity_type, "cockpit")
 
-    @property
-    def data(self) -> KamereonVehicleCockpitData:
-        """Return collected data."""
-        return cast(KamereonVehicleCockpitData, self.coordinator.data)
 
-
-class RenaultHVACDataEntity(RenaultDataEntity):
+class RenaultHVACDataEntity(RenaultDataEntity[KamereonVehicleHvacStatusData]):
     """Implementation of a Renault entity with hvac_status coordinator."""
 
     def __init__(self, vehicle: RenaultVehicleProxy, entity_type: str) -> None:
         """Initialise entity."""
         super().__init__(vehicle, entity_type, "hvac_status")
-
-    @property
-    def data(self) -> KamereonVehicleHvacStatusData:
-        """Return collected data."""
-        return cast(KamereonVehicleHvacStatusData, self.coordinator.data)
