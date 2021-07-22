@@ -50,7 +50,7 @@ class RenaultDataEntity(CoordinatorEntity, Entity):
     def available(self) -> bool:
         """Return if entity is available."""
         # Data can succeed, but be empty
-        return self.coordinator.last_update_success and self.coordinator.data
+        return super().available and self.coordinator.data
 
 
 class RenaultBatteryDataEntity(RenaultDataEntity):
