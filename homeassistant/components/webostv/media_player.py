@@ -24,7 +24,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
@@ -65,7 +64,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the LG webOS Smart TV platform."""
     unique_id = config_entry.unique_id
-    name = config_entry.data.get(CONF_NAME)
+    name = config_entry.title
     sources = config_entry.options.get(CONF_SOURCES)
     turn_on_action = config_entry.options.get(CONF_ON_ACTION)
     client = hass.data[DOMAIN][config_entry.entry_id]

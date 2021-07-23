@@ -1,7 +1,7 @@
 """Tests for the WebOS TV integration."""
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.webostv.const import DOMAIN
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_ICON, CONF_NAME
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -15,11 +15,9 @@ async def setup_webostv(hass):
         domain=DOMAIN,
         data={
             CONF_HOST: "1.2.3.4",
-            CONF_NAME: TV_NAME,
             CONF_CLIENT_SECRET: "0123456789",
-            CONF_ICON: "mdi:test",
         },
-        unique_id="00:01:02:03:04:05",
+        title=TV_NAME,
     )
     entry.add_to_hass(hass)
 

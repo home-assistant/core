@@ -20,8 +20,8 @@
     },
     "abort": {
       "error_pairing": "Connected to LG webOS TV but not paired",
-      "client_key_not_found": "Client key not found",
-      "already_configured_device": "Device is already configured"
+      "already_in_progress": "Configuration flow is already in progress",
+      "already_configured": "Device is already configured"
     }
   },
   "options": {

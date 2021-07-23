@@ -154,7 +154,7 @@ async def async_setup_entry(hass, config_entry):
             "notify",
             DOMAIN,
             {
-                CONF_NAME: config_entry.data[CONF_NAME],
+                CONF_NAME: config_entry.title,
                 ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
             },
             hass.data[DOMAIN],
