@@ -143,13 +143,15 @@ class Light(HomeAccessory):
             serv_light_primary.setter_callback = self._set_chars
 
     def _set_primary_chars(self, char_values):
+        """Primary service is RGB or W if only color or color temp is supported."""
         self._set_chars(char_values, True)
 
     def _set_secondary_chars(self, char_values):
+        """Secondary service is W if both color or color temp are supported."""
         self._set_chars(char_values, False)
 
     def _set_chars(self, char_values, is_primary=None):
-        _LOGGER.debug("Light _set_chars: %s", char_values)
+        _LOGGER.debug("Light _set_chars: %s, is_primary: %s", char_values, is_primary)
         events = []
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
