@@ -3,4 +3,4 @@
 from datetime import timedelta
 
 DOMAIN = "twcmanager"
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=30)
