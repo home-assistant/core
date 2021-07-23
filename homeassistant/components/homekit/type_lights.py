@@ -61,20 +61,20 @@ class Light(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self._color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
-        is_color_supported = color_supported(self._color_modes)
-        is_color_temp_supported = color_temp_supported(self._color_modes)
-        is_brightness_supported = brightness_supported(self._color_modes)
+        color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        self.is_color_supported = color_supported(color_modes)
+        self.is_color_temp_supported = color_temp_supported(color_modes)
+        is_brightness_supported = brightness_supported(color_modes)
 
         if is_brightness_supported:
             self.primary_chars.append(CHAR_BRIGHTNESS)
 
-        if is_color_supported:
+        if self.is_color_supported:
             self.primary_chars.append(CHAR_HUE)
             self.primary_chars.append(CHAR_SATURATION)
 
-        if is_color_temp_supported:
-            if is_color_supported:
+        if self.is_color_temp_supported:
+            if self.is_color_supported:
                 self.secondary_chars.append(CHAR_COLOR_TEMPERATURE)
                 if is_brightness_supported:
                     self.secondary_chars.append(CHAR_BRIGHTNESS)
@@ -107,7 +107,7 @@ class Light(HomeAccessory):
                     CHAR_BRIGHTNESS, value=100
                 )
 
-        if is_color_temp_supported:
+        if self.is_color_temp_supported:
             min_mireds = self.hass.states.get(self.entity_id).attributes.get(
                 ATTR_MIN_MIREDS, 153
             )
@@ -121,7 +121,7 @@ class Light(HomeAccessory):
                 properties={PROP_MIN_VALUE: min_mireds, PROP_MAX_VALUE: max_mireds},
             )
 
-        if is_color_supported:
+        if self.is_color_supported:
             self.char_hue = serv_light_primary.configure_char(CHAR_HUE, value=0)
             self.char_saturation = serv_light_primary.configure_char(
                 CHAR_SATURATION, value=75
@@ -129,11 +129,19 @@ class Light(HomeAccessory):
 
         self.async_update_state(state)
 
-        serv_light_primary.setter_callback = self._set_chars
         if serv_light_secondary:
-            serv_light_secondary.setter_callback = self._set_chars
+            serv_light_primary.setter_callback = self._set_primary_chars
+            serv_light_secondary.setter_callback = self._set_secondary_chars
+        else:
+            serv_light_primary.setter_callback = self._set_chars
 
-    def _set_chars(self, char_values):
+    def _set_primary_chars(self, char_values):
+        self._set_chars(char_values, True)
+
+    def _set_secondary_chars(self, char_values):
+        self._set_chars(char_values, False)
+
+    def _set_chars(self, char_values, is_primary=None):
         _LOGGER.debug("Light _set_chars: %s", char_values)
         events = []
         service = SERVICE_TURN_ON
@@ -151,16 +159,22 @@ class Light(HomeAccessory):
                 params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
             events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
 
-        if CHAR_COLOR_TEMPERATURE in char_values:
-            params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
+        if self.is_color_temp_supported and (
+            is_primary is False or CHAR_COLOR_TEMPERATURE in char_values
+        ):
+            params[ATTR_COLOR_TEMP] = char_values.get(
+                CHAR_COLOR_TEMPERATURE, self.char_color_temperature.value
+            )
             events.append(f"color temperature at {char_values[CHAR_COLOR_TEMPERATURE]}")
 
-        if (
-            color_supported(self._color_modes)
-            and CHAR_HUE in char_values
-            and CHAR_SATURATION in char_values
+        if self.is_color_supported and (
+            is_primary is True
+            or (CHAR_HUE in char_values and CHAR_SATURATION in char_values)
         ):
-            color = (char_values[CHAR_HUE], char_values[CHAR_SATURATION])
+            color = (
+                char_values.get(CHAR_HUE, self.char_hue.value),
+                char_values.get(CHAR_SATURATION, self.char_saturation.value),
+            )
             _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, color)
             params[ATTR_HS_COLOR] = color
             events.append(f"set color at {color}")
