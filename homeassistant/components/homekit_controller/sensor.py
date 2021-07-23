@@ -37,6 +37,12 @@ SIMPLE_SENSOR = {
         "state_class": STATE_CLASS_MEASUREMENT,
         "unit": "watts",
     },
+    CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: {
+        "name": "Real Time Energy",
+        "device_class": DEVICE_CLASS_POWER,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": "watts",
+    },
     CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): {
         "name": "Current Temperature",
         "device_class": DEVICE_CLASS_TEMPERATURE,
