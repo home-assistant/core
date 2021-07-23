@@ -91,7 +91,7 @@ async def async_setup_entry(
 class SurePetcareSensor(SensorEntity):  # type: ignore
     """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, spc: SurePetcareAPI):
+    def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare sensor."""
 
         self._id = _id
@@ -251,7 +251,9 @@ class Felaqua(SurePetcareSensor):
 class FeederBowl(SurePetcareSensor):
     """Sure Petcare Feeder Bowl."""
 
-    def __init__(self, _id: int, spc: SurePetcareAPI, bowl_data: dict[str, int | str]):
+    def __init__(
+        self, _id: int, spc: SurePetcareAPI, bowl_data: dict[str, int | str]
+    ) -> None:
         """Initialize a Sure Petcare sensor."""
 
         super().__init__(_id, spc)
@@ -337,9 +339,9 @@ class Feeder(SurePetcareSensor):
 
         if lunch_data := self._surepy_entity.raw_data().get("lunch"):
             for bowl_data in lunch_data["weights"]:
-                self._surepy_entity.bowls[
-                    bowl_data["index"]
-                ]._data = bowl_data  # pylint: disable=protected-access
+                # requires library update, will be fixed when the library is updated
+                # pylint: disable=protected-access
+                self._surepy_entity.bowls[bowl_data["index"]]._data = bowl_data
 
 
 class SureBattery(SurePetcareSensor):

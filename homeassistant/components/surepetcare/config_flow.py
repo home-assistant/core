@@ -24,8 +24,6 @@ DATA_SCHEMA = vol.Schema(
 async def is_valid(hass: core.HomeAssistant, user_input: dict[str, Any]) -> str | None:
     """Check if we can log in with the supplied credentials."""
 
-    _LOGGER.info("is_valid(..) called with: %s", user_input)
-
     try:
         surepy = Surepy(
             user_input[CONF_USERNAME],
@@ -56,9 +54,6 @@ class SurePetcareConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: 
         self, import_info: dict[str, Any]
     ) -> data_entry_flow.FlowResult:
         """Set up entry from configuration.yaml file."""
-
-        _LOGGER.info("async_step_import(..) called with: ", import_info)
-
         return await self.async_step_user(import_info)
 
     async def async_step_user(
@@ -68,15 +63,11 @@ class SurePetcareConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: 
 
         errors: dict[str, Any] = {}
 
-        _LOGGER.info("async_step_user(..) called with: %s", user_input)
-
         if not user_input:
             data_schema = {
                 vol.Required("username"): str,
                 vol.Required("password"): str,
             }
-
-            _LOGGER.info("no input, calling async_show_form(..) with: %s", data_schema)
 
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
