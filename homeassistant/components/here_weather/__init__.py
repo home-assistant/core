@@ -7,7 +7,6 @@ import logging
 import async_timeout
 import herepy
 
-from homeassistant.components.here_weather.utils import active_here_clients
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
@@ -24,6 +23,7 @@ from .const import (
     DOMAIN,
     MAX_UPDATE_RATE_FOR_ONE_CLIENT,
 )
+from .utils import active_here_clients
 
 _LOGGER = logging.getLogger(__name__)
 
