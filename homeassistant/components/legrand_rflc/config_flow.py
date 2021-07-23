@@ -84,9 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 key = kwargs["key"] = lc7001.aio.hash_password(
                     user_input[CONF_PASSWORD].encode()
                 )
-            if (
-                CONF_PORT in user_input
-            ):  # for testing only (server emulation on localhost)
+            if CONF_PORT in user_input:  # for testing server emulation on localhost
                 kwargs["port"] = user_input[CONF_PORT]
             task = self.hass.async_create_task(
                 lc7001.aio.Connector(host, **kwargs).loop()
