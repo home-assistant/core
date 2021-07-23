@@ -233,7 +233,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if device_id != self._device_id:
+        if not self._event_applies(event, device_id):
             return
 
         _LOGGER.debug(

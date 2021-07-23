@@ -44,6 +44,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
+    COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_DEBUG,
@@ -519,6 +520,18 @@ class RfxtrxEntity(RestoreEntity):
             "name": f"{self._device.type_string} {self._device.id_string}",
             "model": self._device.type_string,
         }
+
+    def _event_applies(self, event, device_id):
+        """Check if event applies to me."""
+        if "Command" in event.values and event.values["Command"] in COMMAND_GROUP_LIST:
+            # A group event with device id 213c7f2:1 applies to all devices with ids 213c7f2:n.
+            if ":" not in event.device.id_string:
+                return False
+            group_id = event.device.id_string[0 : event.device.id_string.index(":") + 1]
+            return self._device.id_string.startswith(group_id)
+
+        # Otherwise, the event only applies to the matching device.
+        return device_id == self._device_id
 
     def _apply_event(self, event):
         """Apply a received event."""
