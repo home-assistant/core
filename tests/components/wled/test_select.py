@@ -408,8 +408,8 @@ async def test_old_style_playlist_active(
     mock_wled: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test unknown preset returned (when old style/unknown) preset is active."""
-    # Set device preset state to a random number
+    """Test when old style playlist cycle is active."""
+    # Set device playlist to 0, which meant "cycle" previously.
     mock_wled.update.return_value.state.playlist = 0
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
