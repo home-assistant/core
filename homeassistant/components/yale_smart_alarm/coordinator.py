@@ -42,16 +42,16 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 lock_status = int(str(lock_status_str or 0), 16)
                 closed = (lock_status & 16) == 16
                 locked = (lock_status & 1) == 1
-                if not lock_status_str and "device_status.lock" in state:
+                if not lock_status and "device_status.lock" in state:
                     device["_state"] = "locked"
                     locks.append(device)
                     continue
-                if not lock_status_str and "device_status.unlock" in state:
+                if not lock_status and "device_status.unlock" in state:
                     device["_state"] = "unlocked"
                     locks.append(device)
                     continue
                 if (
-                    lock_status_str is True
+                    lock_status is True
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
@@ -62,7 +62,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     locks.append(device)
                     continue
                 if (
-                    lock_status_str is True
+                    lock_status is True
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
@@ -73,7 +73,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     locks.append(device)
                     continue
                 if (
-                    lock_status_str is True
+                    lock_status is True
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
