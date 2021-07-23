@@ -153,19 +153,19 @@ class ClementineDevice(MediaPlayerEntity):
 
     def media_play_pause(self):
         """Simulate play pause media player."""
-        if self._state == STATE_PLAYING:
+        if self.state == STATE_PLAYING:
             self.media_pause()
         else:
             self.media_play()
 
     def media_play(self):
         """Send play command."""
-        self._state = STATE_PLAYING
+        self._attr_state = STATE_PLAYING
         self._client.play()
 
     def media_pause(self):
         """Send media pause command to media player."""
-        self._state = STATE_PAUSED
+        self._attr_state = STATE_PAUSED
         self._client.pause()
 
     def media_next_track(self):
