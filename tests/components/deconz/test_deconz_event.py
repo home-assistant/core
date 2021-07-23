@@ -267,7 +267,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
 
     # Unsupported events
 
-    # Action is None
+    # Bad action string; string is None
 
     event_changed_sensor = {
         "t": "event",
@@ -281,7 +281,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
 
     assert len(captured_events) == 1
 
-    # Action is an empty string
+    # Bad action string; empty string
 
     event_changed_sensor = {
         "t": "event",
@@ -295,7 +295,21 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
 
     assert len(captured_events) == 1
 
-    # Bad action
+    # Bad action string; too few ","
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"action": "armed_away,1234"},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(captured_events) == 1
+
+    # Bad action string; unsupported command
 
     event_changed_sensor = {
         "t": "event",
