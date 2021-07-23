@@ -165,7 +165,7 @@ class Light(HomeAccessory):
             params[ATTR_COLOR_TEMP] = char_values.get(
                 CHAR_COLOR_TEMPERATURE, self.char_color_temperature.value
             )
-            events.append(f"color temperature at {char_values[CHAR_COLOR_TEMPERATURE]}")
+            events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
         if self.is_color_supported and (
             is_primary is True
