@@ -76,3 +76,11 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._multi_level_switch_property.set(0)
+
+    def _generic_message(self, message: tuple) -> None:
+        """Handle generic messages."""
+        if message[0].startswith("mss"):
+            # The default tone was changed
+            self._default_tone = message[1]
+        else:
+            super()._generic_message(message=message)
