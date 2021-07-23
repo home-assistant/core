@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    async def async_update() -> dict[str, Any]:
+    async def async_update() -> dict[str, dict[str, Any]]:
         """Get the latest data from the Notion API."""
         data: dict[str, dict[str, Any]] = {"bridges": {}, "sensors": {}, "tasks": {}}
         tasks = {
