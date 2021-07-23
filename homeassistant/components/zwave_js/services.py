@@ -283,6 +283,7 @@ class ZWaveServices:
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                         vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
                     vol.Any(
                         cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
@@ -409,6 +410,7 @@ class ZWaveServices:
         """Set a value via multicast to multiple nodes."""
         nodes = service.data[const.ATTR_NODES]
         broadcast: bool = service.data[const.ATTR_BROADCAST]
+        options = service.data.get(const.ATTR_OPTIONS)
 
         if not broadcast and len(nodes) == 1:
             const.LOGGER.warning(
@@ -441,7 +443,8 @@ class ZWaveServices:
             client,
             new_value,
             {k: v for k, v in value.items() if v is not None},
-            None if broadcast else list(nodes),
+            nodes=None if broadcast else list(nodes),
+            options=options,
         )
 
         if success is False:
