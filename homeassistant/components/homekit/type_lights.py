@@ -152,6 +152,7 @@ class Light(HomeAccessory):
     def async_update_state(self, new_state):
         """Update light after state change."""
         # Handle State
+
         state = new_state.state
         if state == STATE_ON and self.char_on.value != 1:
             self.char_on.set_value(1)
@@ -159,10 +160,17 @@ class Light(HomeAccessory):
             self.char_on.set_value(0)
 
         attributes = new_state.attributes
-        has_mode = ATTR_COLOR_MODE in attributes
-        color_temp_mode = attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_COLOR_TEMP
-        color_mode_changed = (
-            attributes.get(ATTR_COLOR_MODE) != self._previous_color_mode
+        color_mode = attributes.get(ATTR_COLOR_MODE)
+        has_mode = color_mode is not None
+
+        color_temp_mode = color_mode == COLOR_MODE_COLOR_TEMP
+        color_mode_changed = color_mode != self._previous_color_mode
+        _LOGGER.debug(
+            "%s: async_update_state: %s, color_mode_changed: %s, _previous_color_mode: %s",
+            self.entity_id,
+            new_state,
+            color_mode_changed,
+            self._previous_color_mode,
         )
 
         # Handle Brightness
@@ -214,4 +222,4 @@ class Light(HomeAccessory):
                 if color_mode_changed or saturation != self.char_saturation.value:
                     self.char_saturation.set_value(saturation)
 
-        self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
+        self._previous_color_mode = color_mode
