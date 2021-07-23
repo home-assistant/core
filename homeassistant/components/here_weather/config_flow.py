@@ -32,17 +32,18 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            await self.async_set_unique_id(_unique_id(user_input))
+            self._abort_if_unique_id_configured()
             try:
-                await self.async_set_unique_id(_unique_id(user_input))
-                self._abort_if_unique_id_configured()
                 await async_validate_user_input(self.hass, user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
             except herepy.InvalidRequestError:
                 errors["base"] = "invalid_request"
             except herepy.UnauthorizedError:
                 errors["base"] = "unauthorized"
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
         return self.async_show_form(
             step_id="user",
             data_schema=self._get_schema(user_input),
