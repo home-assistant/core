@@ -1546,7 +1546,7 @@ async def websocket_subscribe_controller_statistics(
             unsub()
 
     @callback
-    def forward_progress(event: dict) -> None:
+    def forward_stats(event: dict) -> None:
         statistics: ControllerStatistics = event["statistics_updated"]
         connection.send_message(
             websocket_api.event_message(
@@ -1562,7 +1562,7 @@ async def websocket_subscribe_controller_statistics(
     controller = client.driver.controller
 
     msg[DATA_UNSUBSCRIBE] = unsubs = [
-        controller.on("statistics updated", forward_progress)
+        controller.on("statistics updated", forward_stats)
     ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
@@ -1606,7 +1606,7 @@ async def websocket_subscribe_node_statistics(
             unsub()
 
     @callback
-    def forward_progress(event: dict) -> None:
+    def forward_stats(event: dict) -> None:
         statistics: NodeStatistics = event["statistics_updated"]
         connection.send_message(
             websocket_api.event_message(
@@ -1620,7 +1620,7 @@ async def websocket_subscribe_node_statistics(
             )
         )
 
-    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("statistics updated", forward_progress)]
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("statistics updated", forward_stats)]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     connection.send_result(msg[ID], _get_node_statistics_dict(node.statistics))
