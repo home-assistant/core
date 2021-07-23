@@ -11,6 +11,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
+    ATTR_ENDPOINT,
     ATTR_METER_TYPE,
     ATTR_OPTIONS,
     ATTR_PROPERTY,
@@ -20,10 +21,10 @@ from homeassistant.components.zwave_js.const import (
     ATTR_WAIT_FOR_RESULT,
     DOMAIN,
     SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
-    SERVICE_METER_RESET,
     SERVICE_MULTICAST_SET_VALUE,
     SERVICE_PING,
     SERVICE_REFRESH_VALUE,
+    SERVICE_RESET_METER,
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_VALUE,
 )
@@ -1089,14 +1090,14 @@ async def test_ping(
         )
 
 
-async def test_meter_reset(
+async def test_reset_meter(
     hass,
     client,
     aeon_smart_switch_6,
     climate_heatit_z_trm3,
     integration,
 ):
-    """Test meter_reset service."""
+    """Test reset_meter service."""
     client.async_send_command.return_value = {}
     client.async_send_command_no_wait.return_value = {}
 
@@ -1106,7 +1107,7 @@ async def test_meter_reset(
     # Test successful meter reset call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_METER_RESET,
+        SERVICE_RESET_METER,
         {
             ATTR_DEVICE_ID: device.id,
         },
@@ -1125,7 +1126,7 @@ async def test_meter_reset(
     # Test successful meter reset call with options
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_METER_RESET,
+        SERVICE_RESET_METER,
         {
             ATTR_DEVICE_ID: device.id,
             ATTR_METER_TYPE: 1,
@@ -1143,13 +1144,27 @@ async def test_meter_reset(
 
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that no reset meter call gets made when an endpoint is provided that doesn't
+    # reset support
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RESET_METER,
+        {
+            ATTR_DEVICE_ID: device.id,
+            ATTR_ENDPOINT: 1,
+        },
+        blocking=True,
+    )
+    # If we got no calls we know that the escape logic worked
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
     # Test that no reset meter call gets made when the input device doesn't support it
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device({get_device_id(client, climate_heatit_z_trm3)})
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_METER_RESET,
+        SERVICE_RESET_METER,
         {
             ATTR_DEVICE_ID: device.id,
         },

@@ -50,7 +50,7 @@ ATTR_ZWAVE_VALUE = "zwave_value"
 
 # service constants
 SERVICE_SET_VALUE = "set_value"
-SERVICE_METER_RESET = "meter_reset"
+SERVICE_RESET_METER = "reset_meter"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 SERVICE_PING = "ping"
 SERVICE_REFRESH_VALUE = "refresh_value"

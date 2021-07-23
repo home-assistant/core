@@ -315,8 +315,8 @@ class ZWaveServices:
 
         self._hass.services.async_register(
             const.DOMAIN,
-            const.SERVICE_METER_RESET,
-            self.async_meter_reset,
+            const.SERVICE_RESET_METER,
+            self.async_reset_meter,
             schema=vol.Schema(
                 vol.All(
                     {
@@ -324,6 +324,7 @@ class ZWaveServices:
                             cv.ensure_list, [cv.string]
                         ),
                         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                         vol.Optional(const.ATTR_METER_TYPE): vol.Coerce(int),
                         vol.Optional(const.ATTR_VALUE): vol.Coerce(int),
                     },
@@ -475,9 +476,10 @@ class ZWaveServices:
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         await asyncio.gather(*(node.async_ping() for node in nodes))
 
-    async def async_meter_reset(self, service: ServiceCall) -> None:
+    async def async_reset_meter(self, service: ServiceCall) -> None:
         """Reset meter(s)."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
+        endpoint = service.data.get(const.ATTR_ENDPOINT)
         options = {}
         if (type_ := service.data.get(const.ATTR_METER_TYPE)) is not None:
             options["type"] = type_
@@ -492,10 +494,19 @@ class ZWaveServices:
                         CommandClass.METER
                     ).values()
                     if value.property_ == "reset"
+                    and (endpoint is None or value.endpoint == endpoint)
                 ),
                 None,
             )
-            if not value:
+            if value:
+                args = [options] if options else []
+                await node.endpoints[value.endpoint].async_invoke_cc_api(
+                    CommandClass.METER, "reset", *args, wait_for_result=False
+                )
+                continue
+
+            # We only get here if we couldn't find a value
+            if endpoint is None:
                 const.LOGGER.warning(
                     (
                         "Node %s either doesn't support the Meter CC or doesn't "
@@ -503,9 +514,12 @@ class ZWaveServices:
                     ),
                     node,
                 )
-                continue
-
-            args = [options] if options else []
-            await node.endpoints[value.endpoint].async_invoke_cc_api(
-                CommandClass.METER, "reset", *args, wait_for_result=False
-            )
+            else:
+                const.LOGGER.warning(
+                    (
+                        "Node %s endpoint %s either doesn't support the Meter CC or "
+                        "doesn't support meter resets."
+                    ),
+                    node,
+                    endpoint,
+                )
