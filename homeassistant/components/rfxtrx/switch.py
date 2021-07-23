@@ -117,12 +117,10 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if device_id != self._device_id:
-            return
+        if self._event_applies(event, device_id):
+            self._apply_event(event)
 
-        self._apply_event(event)
-
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     @property
     def is_on(self):
