@@ -76,7 +76,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 continue
 
             if self._uuid and not entry.unique_id:
-                _LOGGER.error(
+                _LOGGER.debug(
                     "Updating unique_id for host %s, unique_id: %s",
                     self._host,
                     self._uuid,

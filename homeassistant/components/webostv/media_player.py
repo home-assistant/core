@@ -304,19 +304,25 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return device information."""
-        if self._client.system_info is None and self.state == STATE_OFF:
-            return {
-                "identifiers": {(DOMAIN, self._unique_id)},
-            }
-        maj_v = self._client.software_info.get("major_ver")
-        min_v = self._client.software_info.get("minor_ver")
-        return {
+        device_info = {
             "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": "LG",
             "name": self._name,
-            "model": self._client.system_info.get("modelName"),
-            "sw_version": f"{maj_v}.{min_v}",
         }
+
+        if self._client.system_info is None and self.state == STATE_OFF:
+            return device_info
+
+        maj_v = self._client.software_info.get("major_ver")
+        min_v = self._client.software_info.get("minor_ver")
+        if maj_v and min_v:
+            device_info["sw_version"] = f"{maj_v}.{min_v}"
+
+        model = self._client.system_info.get("modelName")
+        if model:
+            device_info["model"] = model
+
+        return device_info
 
     @property
     def extra_state_attributes(self):
