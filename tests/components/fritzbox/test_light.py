@@ -23,11 +23,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import color
 import homeassistant.util.dt as dt_util
 
-from . import MOCK_CONFIG, FritzDeviceLightMock, setup_config_entry
+from . import FritzDeviceLightMock, setup_config_entry
+from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.fake_name"
+ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock):
