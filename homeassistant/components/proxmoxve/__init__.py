@@ -90,7 +90,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
-<<<<<<< HEAD
     hass.data.setdefault(DOMAIN, {})
 
     def build_client() -> ProxmoxAPI:
@@ -144,8 +143,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for host_config in config[DOMAIN]:
         host_name = host_config["host"]
         coordinators[host_name] = {}
-=======
->>>>>>> changed existing code to support config flow
 
     # import to config flow
     if DOMAIN in config:
