@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import MutableMapping
+from collections.abc import Awaitable, MutableMapping
 from datetime import timedelta
 from functools import partial
-from typing import Any, Awaitable, Callable, Dict, cast
+from typing import Any, Callable, Dict, cast
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
@@ -117,7 +117,7 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
         sensor_type: str,
         name: str,
         icon: str,
-    ):
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
