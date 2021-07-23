@@ -440,9 +440,9 @@ class ZWaveServices:
             client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
 
         success = await async_multicast_set_value(
-            client,
-            new_value,
-            {k: v for k, v in value.items() if v is not None},
+            client=client,
+            new_value=new_value,
+            value_data={k: v for k, v in value.items() if v is not None},
             nodes=None if broadcast else list(nodes),
             options=options,
         )
