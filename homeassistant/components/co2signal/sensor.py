@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import cast
 
 import voluptuous as vol
 
@@ -113,11 +114,11 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
     @property
     def state(self) -> StateType:
         """Return sensor state."""
-        return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore
+        return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore[misc]
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if self._description.unit_of_measurement:
             return self._description.unit_of_measurement
-        return self.coordinator.data["units"].get(self._description.key)  # type: ignore
+        return cast(str, self.coordinator.data["units"].get(self._description.key))

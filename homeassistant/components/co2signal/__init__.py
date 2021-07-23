@@ -87,9 +87,6 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CO2SignalResponse]):
         except CO2Error as err:
             raise UpdateFailed(str(err)) from err
 
-        if "error" in data:
-            raise UpdateFailed(data["error"])
-
         return data
 
 
