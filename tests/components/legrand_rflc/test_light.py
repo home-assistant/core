@@ -111,6 +111,7 @@ async def test_light(hass):
 
     hass.async_create_task(EventAuditor().start())
 
+    # start an emulated server for our client's session
     server_port = await Server(hass, sessions).start(False)
 
     # create a mock config entry referencing emulated server
@@ -124,10 +125,10 @@ async def test_light(hass):
     )
     entry.add_to_hass(hass)
 
-    # setup config entry (this will start a client)
+    # setup config entry (this will start our client)
     hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
 
-    # wait until the sessions are complete
+    # wait until our client's session with the server is complete
     await hass.async_block_till_done()
 
     # unload the client
