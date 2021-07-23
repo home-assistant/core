@@ -17,7 +17,6 @@ from homeassistant.components.light import (
 from homeassistant.components.wled.const import (
     ATTR_INTENSITY,
     ATTR_PALETTE,
-    ATTR_PLAYLIST,
     ATTR_PRESET,
     ATTR_REVERSE,
     ATTR_SPEED,
@@ -58,7 +57,6 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
     assert state.attributes.get(ATTR_INTENSITY) == 128
     assert state.attributes.get(ATTR_PALETTE) == "Default"
-    assert state.attributes.get(ATTR_PLAYLIST) is None
     assert state.attributes.get(ATTR_PRESET) is None
     assert state.attributes.get(ATTR_REVERSE) is False
     assert state.attributes.get(ATTR_SPEED) == 32
@@ -77,7 +75,6 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
     assert state.attributes.get(ATTR_INTENSITY) == 64
     assert state.attributes.get(ATTR_PALETTE) == "Random Cycle"
-    assert state.attributes.get(ATTR_PLAYLIST) is None
     assert state.attributes.get(ATTR_PRESET) is None
     assert state.attributes.get(ATTR_REVERSE) is False
     assert state.attributes.get(ATTR_SPEED) == 16
