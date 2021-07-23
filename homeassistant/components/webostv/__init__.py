@@ -1,4 +1,6 @@
 """Support for LG webOS Smart TV."""
+from __future__ import annotations
+
 from contextlib import suppress
 import logging
 
@@ -27,6 +29,8 @@ from .const import (
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
     CONF_SOURCES,
+    DATA_CONFIG_ENTRY,
+    DATA_HASS_CONFIG,
     DEFAULT_NAME,
     DOMAIN,
     PLATFORMS,
@@ -88,6 +92,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up the LG WebOS TV platform."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
+    hass.data[DOMAIN][DATA_HASS_CONFIG] = config
+
     if DOMAIN not in config:
         return True
 
@@ -115,7 +122,7 @@ def _async_migrate_options_from_data(hass, config_entry):
     # Get Preferred Sources
     if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
         options[CONF_SOURCES] = sources
-        if isinstance(sources, list) is False:
+        if not isinstance(sources, list):
             options[CONF_SOURCES] = sources.split(",")
 
     hass.config_entries.async_update_entry(config_entry, options=options)
@@ -143,7 +150,7 @@ async def async_setup_entry(hass, config_entry):
             DOMAIN, service, async_service_handler, schema=schema
         )
 
-    hass.data[DOMAIN][config_entry.entry_id] = client
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = client
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
@@ -157,7 +164,7 @@ async def async_setup_entry(hass, config_entry):
                 CONF_NAME: config_entry.title,
                 ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
             },
-            hass.data[DOMAIN],
+            hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
     )
 
@@ -188,7 +195,7 @@ async def async_connect(client):
         await client.connect()
 
 
-async def async_control_connect(host: str, key: str) -> WebOsClient:
+async def async_control_connect(host: str, key: str | None) -> WebOsClient:
     """LG Connection."""
     client = await WebOsClient.create(host, client_key=key)
     try:
@@ -202,12 +209,18 @@ async def async_control_connect(host: str, key: str) -> WebOsClient:
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    client = hass.data[DOMAIN][entry.entry_id]
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
         await hass_notify.async_reload(hass, DOMAIN)
         client.clear_state_update_callbacks()
         await client.disconnect()
+
+    # unregister service calls, check if this is the last entry to unload
+    if unload_ok and not hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
+        for service in SERVICE_TO_METHOD:
+            hass.services.async_remove(DOMAIN, service)
 
     return unload_ok

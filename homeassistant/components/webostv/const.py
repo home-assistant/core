@@ -6,7 +6,8 @@ from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 DOMAIN = "webostv"
 PLATFORMS = ["media_player"]
-
+DATA_CONFIG_ENTRY = "config_entry"
+DATA_HASS_CONFIG = "hass_config"
 DEFAULT_NAME = "LG webOS Smart TV"
 
 ATTR_BUTTON = "button"

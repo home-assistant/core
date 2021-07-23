@@ -37,6 +37,7 @@ from .const import (
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
     CONF_SOURCES,
+    DATA_CONFIG_ENTRY,
     DOMAIN,
     LIVE_TV_APP_ID,
     WEBOSTV_EXCEPTIONS,
@@ -67,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config_entry.title
     sources = config_entry.options.get(CONF_SOURCES)
     turn_on_action = config_entry.options.get(CONF_ON_ACTION)
-    client = hass.data[DOMAIN][config_entry.entry_id]
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
     on_script = None
 
     if turn_on_action:
@@ -122,7 +123,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Connect and subscribe to dispatcher signals and state updates."""
-        async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
+        )
 
         await self._client.register_state_update_callback(
             self.async_handle_state_update

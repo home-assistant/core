@@ -6,7 +6,7 @@ from aiopylgtv import PyLGTVPairException
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_ICON, CONF_NAME
 
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import ATTR_CONFIG_ENTRY_ID, DATA_CONFIG_ENTRY, DOMAIN, WEBOSTV_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ async def async_get_service(hass, _config, discovery_info=None):
         return None
 
     name = discovery_info.get(CONF_NAME)
-    client = hass.data[DOMAIN][discovery_info[ATTR_CONFIG_ENTRY_ID]]
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][discovery_info[ATTR_CONFIG_ENTRY_ID]]
 
     return LgWebOSNotificationService(client, name)
 

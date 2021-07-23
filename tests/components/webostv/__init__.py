@@ -2,6 +2,7 @@
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +22,11 @@ async def setup_webostv(hass):
     )
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_HOST: "1.2.3.4"}},
+    )
     await hass.async_block_till_done()
 
     return entry

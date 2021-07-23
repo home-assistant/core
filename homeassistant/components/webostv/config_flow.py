@@ -190,7 +190,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-async def async_default_sources(host, key) -> list | None:
+async def async_default_sources(host, key):
     """Construct sources list."""
     try:
         client = await async_control_connect(host, key)
