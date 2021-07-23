@@ -179,6 +179,11 @@ class Light(HomeAccessory):
             params[ATTR_HS_COLOR] = color
             events.append(f"set color at {color}")
 
+        if is_primary is True:
+            self.char_on_secondary.set_value(0)
+        elif is_primary is False:
+            self.char_on_primary.set_value(0)
+
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
     @callback
