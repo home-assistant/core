@@ -129,13 +129,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(err) from err
 
     controller_init_tasks = []
-    for api_category in [
+    for api_category in (
         DATA_PROGRAMS,
         DATA_PROVISION_SETTINGS,
         DATA_RESTRICTIONS_CURRENT,
         DATA_RESTRICTIONS_UNIVERSAL,
         DATA_ZONES,
-    ]:
+    ):
         coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api_category
         ] = DataUpdateCoordinator(

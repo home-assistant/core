@@ -5,6 +5,7 @@ from functools import partial
 from typing import Any, Tuple, cast
 
 import voluptuous as vol
+from wled import Playlist
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -212,7 +213,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
-        playlist: int | None = self.coordinator.data.state.playlist
+        playlist: int | Playlist | None = self.coordinator.data.state.playlist
+        if isinstance(playlist, Playlist):
+            playlist = playlist.playlist_id
         if playlist == -1:
             playlist = None
 

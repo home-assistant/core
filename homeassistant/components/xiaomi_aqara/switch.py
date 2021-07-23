@@ -194,7 +194,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
             if not self._in_use:
                 self._load_power = 0
 
-        for key in [POWER_CONSUMED, ENERGY_CONSUMED]:
+        for key in (POWER_CONSUMED, ENERGY_CONSUMED):
             if key in data:
                 self._power_consumed = round(float(data[key]), 2)
                 break

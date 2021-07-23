@@ -27,7 +27,7 @@
                 "data": {
                     "exclude": "Netzwerkadressen (kommagetrennt), die von der \u00dcberpr\u00fcfung ausgeschlossen werden sollen",
                     "home_interval": "Mindestanzahl von Minuten zwischen den Scans aktiver Ger\u00e4te (Batterie schonen)",
-                    "hosts": "Zu scannende Netzwerkadressen (kommagetrennt)",
+                    "hosts": "Netzwerkadressen (kommagetrennt) zum Scannen",
                     "interval_seconds": "Scanintervall",
                     "scan_options": "Raw konfigurierbare Scan-Optionen f\u00fcr Nmap",
                     "track_new_devices": "Neue Ger\u00e4te verfolgen"

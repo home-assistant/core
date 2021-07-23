@@ -1,5 +1,7 @@
 """The tests for the hassio component."""
 
+from unittest.mock import MagicMock, patch
+
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 import pytest
 
@@ -275,3 +277,29 @@ async def test_ingress_websocket(hassio_client, build_type, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
+
+
+async def test_ingress_missing_peername(hassio_client, aioclient_mock, caplog):
+    """Test hadnling of missing peername."""
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/lorem/ipsum",
+        text="test",
+    )
+
+    def get_extra_info(_):
+        return None
+
+    with patch(
+        "aiohttp.web_request.BaseRequest.transport",
+        return_value=MagicMock(),
+    ) as transport_mock:
+        transport_mock.get_extra_info = get_extra_info
+        resp = await hassio_client.get(
+            "/api/hassio_ingress/lorem/ipsum",
+            headers={"X-Test-Header": "beer"},
+        )
+
+    assert "Can't set forward_for header, missing peername" in caplog.text
+
+    # Check we got right response
+    assert resp.status == 400

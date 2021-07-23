@@ -1,8 +1,8 @@
 """Sensor platform for Advantage Air integration."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
@@ -25,9 +25,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(AdvantageAirTimeTo(instance, ac_key, "On"))
         entities.append(AdvantageAirTimeTo(instance, ac_key, "Off"))
         for zone_key, zone in ac_device["zones"].items():
-            # Only show damper sensors when zone is in temperature control
+            # Only show damper and temp sensors when zone is in temperature control
             if zone["type"] != 0:
                 entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
+                entities.append(AdvantageAirZoneTemp(instance, ac_key, zone_key))
             # Only show wireless signal strength sensors when using wireless sensors
             if zone["rssi"] > 0:
                 entities.append(AdvantageAirZoneSignal(instance, ac_key, zone_key))
@@ -84,6 +85,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
     _attr_unit_of_measurement = PERCENTAGE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
@@ -114,6 +116,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
     _attr_unit_of_measurement = PERCENTAGE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
@@ -142,3 +145,23 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
         if self._zone["rssi"] >= 20:
             return "mdi:wifi-strength-1"
         return "mdi:wifi-strength-outline"
+
+
+class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
+    """Representation of Advantage Air Zone wireless signal sensor."""
+
+    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_icon = "mdi:thermometer"
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Zone Temp Sensor."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_name = f'{self._zone["name"]} Temperature'
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
+
+    @property
+    def state(self):
+        """Return the current value of the measured temperature."""
+        return self._zone["measuredTemp"]

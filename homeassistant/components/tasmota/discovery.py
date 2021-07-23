@@ -18,7 +18,7 @@ from hatasmota.models import DiscoveryHashType, TasmotaDeviceConfig
 from hatasmota.mqtt import TasmotaMQTTClient
 from hatasmota.sensor import TasmotaBaseSensorConfig
 
-import homeassistant.components.sensor as sensor
+from homeassistant.components import sensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dev_reg

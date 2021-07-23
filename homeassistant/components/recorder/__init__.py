@@ -324,7 +324,7 @@ class PerodicCleanupTask:
 class StatisticsTask(NamedTuple):
     """An object to insert into the recorder queue to run a statistics task."""
 
-    start: datetime.datetime
+    start: datetime
 
 
 class WaitTask:
@@ -358,7 +358,7 @@ class Recorder(threading.Thread):
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
-        self.async_db_ready = asyncio.Future()
+        self.async_db_ready: asyncio.Future = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Any = None
@@ -370,8 +370,8 @@ class Recorder(threading.Thread):
         self._timechanges_seen = 0
         self._commits_without_expire = 0
         self._keepalive_count = 0
-        self._old_states = {}
-        self._pending_expunge = []
+        self._old_states: dict[str, States] = {}
+        self._pending_expunge: list[States] = []
         self.event_session = None
         self.get_session = None
         self._completed_first_database_setup = None

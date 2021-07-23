@@ -3,8 +3,10 @@
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
+    DOMAIN as HOMEKIT_DOMAIN,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     KEY_ARROW_RIGHT,
+    SERVICE_HOMEKIT_RESET_ACCESSORY,
 )
 from homeassistant.components.homekit.type_remotes import ActivityRemote
 from homeassistant.components.remote import (
@@ -146,3 +148,19 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
 
     assert len(events) == 1
     assert events[0].data[ATTR_KEY_NAME] == KEY_ARROW_RIGHT
+
+    call_reset_accessory = async_mock_service(
+        hass, HOMEKIT_DOMAIN, SERVICE_HOMEKIT_RESET_ACCESSORY
+    )
+    # A wild source appears - The accessory should rebuild itself
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_ACTIVITY,
+            ATTR_CURRENT_ACTIVITY: "Amazon TV",
+            ATTR_ACTIVITY_LIST: ["TV", "Apple TV", "Amazon TV"],
+        },
+    )
+    await hass.async_block_till_done()
+    assert call_reset_accessory[0].data[ATTR_ENTITY_ID] == entity_id

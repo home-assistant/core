@@ -29,7 +29,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Verwendet ein SSL Zertifikat"
+                    "ssl": "Verwendet ein SSL-Zertifikat"
                 },
                 "description": "Kodi-Verbindungsinformationen. Bitte stelle sicher, dass du \"Steuerung von Kodi \u00fcber HTTP zulassen\" in System/Einstellungen/Netzwerk/Dienste aktiviert hast."
             },

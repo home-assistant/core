@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert. Nur eine Konfiguration m\u00f6glich.",
+            "already_configured": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "error": {

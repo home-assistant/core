@@ -43,7 +43,7 @@
                 "data": {
                     "include_domains": "Domains to include"
                 },
-                "description": "Choose the domains to be included. All supported entities in the domain will be included. A separate HomeKit instance in accessory mode will be created for each tv media player and camera.",
+                "description": "Choose the domains to be included. All supported entities in the domain will be included. A separate HomeKit instance in accessory mode will be created for each tv media player, activity based remote, lock, and camera.",
                 "title": "Select domains to be included"
             },
             "pairing": {

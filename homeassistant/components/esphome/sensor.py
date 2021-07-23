@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from typing import cast
 
 from aioesphomeapi import (
     SensorInfo,
@@ -21,6 +22,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
 from . import (
@@ -34,7 +36,7 @@ ICON_SCHEMA = vol.Schema(cv.icon)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up esphome sensors based on a config entry."""
     await platform_async_setup_entry(
@@ -61,7 +63,7 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-_STATE_CLASSES: EsphomeEnumMapper[SensorStateClass] = EsphomeEnumMapper(
+_STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMapper(
     {
         SensorStateClass.NONE: None,
         SensorStateClass.MEASUREMENT: STATE_CLASS_MEASUREMENT,
@@ -69,23 +71,15 @@ _STATE_CLASSES: EsphomeEnumMapper[SensorStateClass] = EsphomeEnumMapper(
 )
 
 
-class EsphomeSensor(EsphomeEntity, SensorEntity):
+class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
 
     @property
-    def _static_info(self) -> SensorInfo:
-        return super()._static_info
-
-    @property
-    def _state(self) -> SensorState | None:
-        return super()._state
-
-    @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon."""
         if not self._static_info.icon or self._static_info.device_class:
             return None
-        return ICON_SCHEMA(self._static_info.icon)
+        return cast(str, ICON_SCHEMA(self._static_info.icon))
 
     @property
     def force_update(self) -> bool:
@@ -104,14 +98,14 @@ class EsphomeSensor(EsphomeEntity, SensorEntity):
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if not self._static_info.unit_of_measurement:
             return None
         return self._static_info.unit_of_measurement
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         if self._static_info.device_class not in DEVICE_CLASSES:
             return None
@@ -125,16 +119,8 @@ class EsphomeSensor(EsphomeEntity, SensorEntity):
         return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 
 
-class EsphomeTextSensor(EsphomeEntity, SensorEntity):
+class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
     """A text sensor implementation for ESPHome."""
-
-    @property
-    def _static_info(self) -> TextSensorInfo:
-        return super()._static_info
-
-    @property
-    def _state(self) -> TextSensorState | None:
-        return super()._state
 
     @property
     def icon(self) -> str:

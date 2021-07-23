@@ -22,7 +22,8 @@
                 "data": {
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                }
+                },
+                "description": "Friss\u00edtse a(z) {name} bejelentkez\u00e9si adatait."
             },
             "user": {
                 "data": {

@@ -304,7 +304,7 @@ def _update_states_table_with_foreign_key_options(connection, engine):
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
     old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
-        TABLE_STATES, MetaData(), *[alter["old_fk"] for alter in alters]
+        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)
     )
 
     for alter in alters:

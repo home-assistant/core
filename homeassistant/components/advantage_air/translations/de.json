@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP Adresse",
+                    "ip_address": "IP-Adresse",
                     "port": "Port"
                 },
                 "description": "Anschluss an die API deines Advantage Air Wandtabletts.",

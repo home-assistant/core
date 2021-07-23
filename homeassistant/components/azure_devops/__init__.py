@@ -72,7 +72,7 @@ class AzureDevOpsEntity(Entity):
                 )
             self._attr_available = False
 
-    async def _azure_devops_update(self) -> None:
+    async def _azure_devops_update(self) -> bool:
         """Update Azure DevOps entity."""
         raise NotImplementedError()
 
@@ -85,7 +85,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
         """Return device information about this Azure DevOps instance."""
         return {
             "identifiers": {
-                (
+                (  # type: ignore
                     DOMAIN,
                     self.organization,
                     self.project,
