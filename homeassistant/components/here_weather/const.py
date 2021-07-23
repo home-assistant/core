@@ -26,10 +26,6 @@ MAX_UPDATE_RATE_FOR_ONE_CLIENT = math.ceil(
     (31 * 24 * 3600) / FREEMIUM_REQUESTS_PER_MONTH
 )
 
-CONF_LANGUAGE = "language"
-CONF_OFFSET = "offset"
-CONF_OPTION = "option"
-
 MODE_ASTRONOMY = "forecast_astronomy"
 MODE_HOURLY = "forecast_hourly"
 MODE_DAILY = "forecast_7days"
