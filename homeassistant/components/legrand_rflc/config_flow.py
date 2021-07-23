@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Mapping
-import logging
 import socket
 from typing import Final, Optional
 
@@ -21,8 +20,6 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

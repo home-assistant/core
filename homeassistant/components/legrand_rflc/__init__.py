@@ -5,7 +5,6 @@ https://www.legrand.us/solutions/smart-lighting/radio-frequency-lighting-control
 
 import asyncio
 from collections.abc import Mapping
-import logging
 from typing import Final
 
 import lc7001.aio
@@ -18,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 
 PLATFORMS: Final = ["light"]
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
