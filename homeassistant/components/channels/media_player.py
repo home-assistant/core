@@ -104,8 +104,10 @@ class ChannelsPlayer(MediaPlayerEntity):
         channel_hash = state_hash.get("channel")
         np_hash = state_hash.get("now_playing")
         channel_image_url = None
+        self._attr_media_content_id = None
         if channel_hash:
             channel_image_url = channel_hash.get("channel_image_url")
+            self._attr_media_content_id = channel_hash.get("channel_number")
         now_playing_title = now_playing_image_url = None
         if np_hash:
             now_playing_title = np_hash.get("title")
