@@ -87,7 +87,6 @@ class FrigidaireClimate(ClimateEntity):
             HVAC_MODE_FAN_ONLY,
         ]
 
-
     @property
     def temperature_unit(self):
         """Return the unit of measurement which this thermostat uses."""
