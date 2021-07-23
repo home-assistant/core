@@ -473,7 +473,7 @@ class ZWaveServices:
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        await asyncio.gather(*[node.async_ping() for node in nodes])
+        await asyncio.gather(*(node.async_ping() for node in nodes))
 
     async def async_meter_reset(self, service: ServiceCall) -> None:
         """Reset meter(s)."""
@@ -497,8 +497,11 @@ class ZWaveServices:
             )
             if not value:
                 const.LOGGER.warning(
-                    f"Node {node} either doesn't support the Meter CC or doesn't "
-                    "support meter resets."
+                    (
+                        "Node %s either doesn't support the Meter CC or doesn't "
+                        "support meter resets."
+                    ),
+                    node,
                 )
                 continue
 
