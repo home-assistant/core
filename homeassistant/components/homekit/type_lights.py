@@ -168,6 +168,12 @@ class Light(HomeAccessory):
                 params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
             events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
 
+        if service == SERVICE_TURN_OFF:
+            self.async_call_service(
+                DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}, ", ".join(events)
+            )
+            return
+
         if self.is_color_temp_supported and (
             is_primary is False or CHAR_COLOR_TEMPERATURE in char_values
         ):
