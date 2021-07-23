@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import cast
 
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
@@ -32,7 +33,7 @@ class RenaultVehicleProxy:
         self._vehicle = vehicle
         self._details = details
         self._device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, details.vin or "")},
+            "identifiers": {(DOMAIN, cast(str, details.vin))},
             "manufacturer": (details.get_brand_label() or "").capitalize(),
             "model": (details.get_model_label() or "").capitalize(),
             "name": details.registrationNumber or "",
