@@ -13,15 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
-    config_entry: ConfigEntry,
-    async_add_entities,
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up binary sensors."""
 
     sensors = []
-
-    # host_name = config_entry.data["host"]
     coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
 
     for node_config in config_entry.data["nodes"]:

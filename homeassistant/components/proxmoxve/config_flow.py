@@ -87,7 +87,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_VERIFY_SSL] = "ssl_rejection"
                 except ConnectTimeout:
                     errors[CONF_HOST] = "cant_connect"
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     errors["base"] = "general_error"
 
                 else:
