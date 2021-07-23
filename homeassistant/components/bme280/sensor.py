@@ -17,8 +17,8 @@ from homeassistant.const import (
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
-from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 from .const import (
@@ -34,9 +34,6 @@ from .const import (
     CONF_SPI_DEV,
     CONF_T_STANDBY,
     DOMAIN,
-    INTERFACE_I2C,
-    INTERFACE_SPI,
-    MIN_TIME_BETWEEN_UPDATES,
     SENSOR_HUMID,
     SENSOR_PRESS,
     SENSOR_TEMP,
@@ -58,7 +55,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         spi_dev = sensor_conf[CONF_SPI_DEV]
         spi_bus = sensor_conf[CONF_SPI_BUS]
         _LOGGER.debug("BME280 sensor initialize at %s.%s", spi_bus, spi_dev)
-        interface = INTERFACE_SPI
         sensor = await hass.async_add_executor_job(
             partial(
                 BME280_spi,
@@ -74,11 +70,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if not sensor.sample_ok:
             _LOGGER.error("BME280 sensor not detected at %s.%s", spi_bus, spi_dev)
             return
-        sensor_update = sensor.update
     else:
         i2c_address = sensor_conf[CONF_I2C_ADDRESS]
         bus = smbus.SMBus(sensor_conf[CONF_I2C_BUS])
-        interface = INTERFACE_I2C
         sensor = await hass.async_add_executor_job(
             partial(
                 BME280_i2c,
@@ -96,12 +90,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if not sensor.sample_ok:
             _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
             return
-        sensor_update = partial(sensor.update, True)
 
     async def async_update_data():
-        return await hass.async_add_executor_job(sensor_update)
+        await hass.async_add_executor_job(sensor.update)
+        if not sensor.sample_ok:
+            raise UpdateFailed(f"Bad update of sensor {name}")
+        return sensor
 
-    sensor_handler = BME280Handler(sensor, interface)
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -109,12 +104,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         update_method=async_update_data,
         update_interval=scan_interval,
     )
+    await coordinator.async_refresh()
     entities = []
     with suppress(KeyError):
         for condition in sensor_conf[CONF_MONITORED_CONDITIONS]:
             entities.append(
                 BME280Sensor(
-                    sensor_handler,
                     condition,
                     SENSOR_TYPES[condition][1],
                     name,
@@ -124,38 +119,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities, True)
 
 
-class BME280Handler:
-    """BME280 sensor working in SPI or I2C bus."""
-
-    def __init__(self, sensor, interface):
-        """Initialize the sensor handler."""
-        self.sensor = sensor
-        self.interface = interface
-        if self.interface == INTERFACE_SPI:
-            self.update = self.update_spi
-        elif self.interface == INTERFACE_I2C:
-            self.update = self.update_i2c
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_spi(self):
-        """Read sensor data."""
-        self.sensor.update()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_i2c(self, first_reading=False):
-        """Read sensor data."""
-        self.sensor.update(first_reading)
-
-
 class BME280Sensor(CoordinatorEntity, SensorEntity):
     """Implementation of the BME280 sensor."""
 
-    def __init__(self, bme280_client, sensor_type, temp_unit, name, coordinator):
+    def __init__(self, sensor_type, temp_unit, name, coordinator):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
-        self.bme280_client = bme280_client
         self.temp_unit = temp_unit
         self.type = sensor_type
         self._state = None
@@ -170,19 +141,16 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.bme280_client.sensor.sample_ok:
-            if self.type == SENSOR_TEMP:
-                temperature = round(self.bme280_client.sensor.temperature, 1)
-                if self.temp_unit == TEMP_FAHRENHEIT:
-                    temperature = round(celsius_to_fahrenheit(temperature), 1)
-                self._state = temperature
-            elif self.type == SENSOR_HUMID:
-                self._state = round(self.bme280_client.sensor.humidity, 1)
-            elif self.type == SENSOR_PRESS:
-                self._state = round(self.bme280_client.sensor.pressure, 1)
-        else:
-            _LOGGER.warning("Bad update of sensor.%s", self.name)
-        return self._state
+        if self.type == SENSOR_TEMP:
+            temperature = round(self.coordinator.data.temperature, 1)
+            if self.temp_unit == TEMP_FAHRENHEIT:
+                temperature = round(celsius_to_fahrenheit(temperature), 1)
+            state = temperature
+        elif self.type == SENSOR_HUMID:
+            state = round(self.coordinator.data.humidity, 1)
+        elif self.type == SENSOR_PRESS:
+            state = round(self.coordinator.data.pressure, 1)
+        return state
 
     @property
     def unit_of_measurement(self):
