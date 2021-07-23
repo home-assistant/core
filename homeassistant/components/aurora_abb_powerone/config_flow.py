@@ -50,6 +50,20 @@ def validate_and_connect(hass: core.HomeAssistant, data):
     return ret
 
 
+def scan_comports():
+    """Find and store available com ports for the GUI dropdown."""
+    comports = serial.tools.list_ports.comports(include_links=True)
+    comportslist = []
+    for port in comports:
+        comportslist.append(port.device)
+        _LOGGER.debug("COM port option: %s", port.device)
+    if len(comportslist) > 0:
+        return comportslist, comportslist[0]
+    else:
+        _LOGGER.warning("No com ports found.  Need a valid RS485 device to communicate")
+        return None, None
+
+
 class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aurora ABB PowerOne."""
 
@@ -61,21 +75,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.config = None
         self._comportslist = None
         self._defaultcomport = None
-
-    def scan_comports(self):
-        """Find and store available com ports for the GUI dropdown."""
-        comports = serial.tools.list_ports.comports(include_links=True)
-        comportslist = []
-        for port in comports:
-            comportslist.append(port.device)
-            _LOGGER.debug("COM port option: %s", port.device)
-        if len(comportslist) > 0:
-            self._comportslist = comportslist
-            self._defaultcomport = comportslist[0]
-        else:
-            _LOGGER.warning(
-                "No com ports found.  Need a valid RS485 device to communicate"
-            )
 
     async def async_step_import(self, config: dict):
         """Import a configuration from config.yaml."""
@@ -100,7 +99,8 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if self._comportslist is None:
-            self.scan_comports()
+            result = await self.hass.async_add_executor_job(scan_comports)
+            self._comportslist, self._defaultcomport = result
             if self._defaultcomport is None:
                 return self.async_abort(reason="no_serial_ports")
 
