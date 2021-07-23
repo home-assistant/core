@@ -254,6 +254,8 @@ class FeederBowl(SurePetcareSensor):
     def __init__(self, _id: int, spc: SurePetcareAPI, bowl_data: dict[str, int | str]):
         """Initialize a Sure Petcare sensor."""
 
+        super().__init__(_id, spc)
+
         self.feeder_id = _id
         self.bowl_id = int(bowl_data["index"])
 
@@ -306,7 +308,6 @@ class FeederBowl(SurePetcareSensor):
         self._surepy_feeder_entity = self._spc.states[self.feeder_id]
         self._surepy_entity = self._spc.states[self.feeder_id].bowls[self.bowl_id]
         self._state = self._surepy_entity.raw_data()
-        # _LOGGER.debug("🐾 %s updated", self._surepy_entity.name)
 
 
 class Feeder(SurePetcareSensor):
@@ -336,9 +337,9 @@ class Feeder(SurePetcareSensor):
 
         if lunch_data := self._surepy_entity.raw_data().get("lunch"):
             for bowl_data in lunch_data["weights"]:
-                self._surepy_entity.bowls[bowl_data["index"]]._data = bowl_data
-
-        # _LOGGER.debug("🐾 %s updated", self._surepy_entity.name)
+                self._surepy_entity.bowls[
+                    bowl_data["index"]
+                ]._data = bowl_data  # pylint: disable=protected-access
 
 
 class SureBattery(SurePetcareSensor):

@@ -24,7 +24,7 @@ DATA_SCHEMA = vol.Schema(
 async def is_valid(hass: core.HomeAssistant, user_input: dict[str, Any]) -> str | None:
     """Check if we can log in with the supplied credentials."""
 
-    _LOGGER.info(f"is_valid(..) called with {user_input = }")
+    _LOGGER.info("is_valid(..) called with: %s", user_input)
 
     try:
         surepy = Surepy(
@@ -57,7 +57,7 @@ class SurePetcareConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: 
     ) -> data_entry_flow.FlowResult:
         """Set up entry from configuration.yaml file."""
 
-        _LOGGER.info(f"async_step_import(..) called with {import_info = }")
+        _LOGGER.info("async_step_import(..) called with: ", import_info)
 
         return await self.async_step_user(import_info)
 
@@ -68,7 +68,7 @@ class SurePetcareConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: 
 
         errors: dict[str, Any] = {}
 
-        _LOGGER.info(f"async_step_user(..) called with {user_input = }")
+        _LOGGER.info("async_step_user(..) called with: %s", user_input)
 
         if not user_input:
             data_schema = {
@@ -76,9 +76,8 @@ class SurePetcareConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: 
                 vol.Required("password"): str,
             }
 
-            _LOGGER.info(
-                f"no user_input, calling async_show_form(..) with {data_schema = }"
-            )
+            _LOGGER.info("no input, calling async_show_form(..) with: %s", data_schema)
+
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
@@ -97,6 +96,4 @@ class SurePetcareConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: 
                 },
             )
 
-        else:
-
-            return self.async_abort(reason="authentication_failed")
+        return self.async_abort(reason="authentication_failed")
