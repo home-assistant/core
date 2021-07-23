@@ -81,16 +81,16 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                 ],
                 "flow_to": [
                     {
-                        "stat_energy_to": "sensor.return_to_grid",
+                        "stat_energy_to": "sensor.return_to_grid_peak",
                         "stat_compensation": None,
                         "entity_energy_to": None,
                         "entity_energy_price": None,
                         "number_energy_price": None,
                     },
                     {
-                        "stat_energy_to": "return_to_grid_stat",
+                        "stat_energy_to": "sensor.return_to_grid_offpeak",
                         "stat_compensation": None,
-                        "entity_energy_to": "sensor.return_to_grid",
+                        "entity_energy_to": "sensor.return_to_grid_offpeak",
                         "entity_energy_price": None,
                         "number_energy_price": 0.20,
                     },
@@ -116,9 +116,23 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
 
     assert data.STORAGE_KEY not in hass_storage, "expected not to be written yet"
 
-    await flush_store(hass.data[data.DOMAIN]._store)
+    await flush_store((await data.async_get_manager(hass))._store)
 
     assert hass_storage[data.STORAGE_KEY]["data"] == new_prefs
+
+    # Verify info reflects data.
+    await client.send_json({"id": 7, "type": "energy/info"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 7
+    assert msg["success"]
+    assert msg["result"] == {
+        "cost_sensors": {
+            "sensor.heat_pump_meter_2": "sensor.heat_pump_meter_2_cost",
+            "sensor.return_to_grid_offpeak": "sensor.return_to_grid_offpeak_compensation",
+        }
+    }
 
     # Prefs with limited options
     new_prefs_2 = {
@@ -145,11 +159,11 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
         ],
     }
 
-    await client.send_json({"id": 7, "type": "energy/save_prefs", **new_prefs_2})
+    await client.send_json({"id": 8, "type": "energy/save_prefs", **new_prefs_2})
 
     msg = await client.receive_json()
 
-    assert msg["id"] == 7
+    assert msg["id"] == 8
     assert msg["success"]
     assert msg["result"] == {**new_prefs, **new_prefs_2}
 

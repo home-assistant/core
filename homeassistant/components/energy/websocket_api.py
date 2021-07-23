@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
+from .const import DOMAIN
 from .data import (
     DEVICE_CONSUMPTION_SCHEMA,
     ENERGY_SOURCE_SCHEMA,
@@ -33,6 +34,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the energy websocket API."""
     websocket_api.async_register_command(hass, ws_get_prefs)
     websocket_api.async_register_command(hass, ws_save_prefs)
+    websocket_api.async_register_command(hass, ws_info)
 
 
 def _ws_with_manager(
@@ -97,3 +99,18 @@ async def ws_save_prefs(
     msg.pop("type")
     await manager.async_update(cast(EnergyPreferencesUpdate, msg))
     connection.send_result(msg_id, manager.data)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "energy/info",
+    }
+)
+@callback
+def ws_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command."""
+    connection.send_result(msg["id"], hass.data[DOMAIN])

@@ -17,6 +17,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
+from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
 
 
@@ -225,6 +226,11 @@ class EnergyCostSensor(SensorEntity):
 
         self._update_cost()
 
+        # Store stat ID in hass.data so frontend can look it up
+        self.hass.data[DOMAIN]["cost_sensors"][
+            self._flow[self._adapter.entity_energy_key]
+        ] = self.entity_id
+
         @callback
         def async_state_changed_listener(*_: Any) -> None:
             """Handle child updates."""
@@ -238,6 +244,13 @@ class EnergyCostSensor(SensorEntity):
                 async_state_changed_listener,
             )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removing from hass."""
+        self.hass.data[DOMAIN]["cost_sensors"].pop(
+            self._flow[self._adapter.entity_energy_key]
+        )
+        await super().async_will_remove_from_hass()
 
     @callback
     def update_config(self, flow: dict) -> None:

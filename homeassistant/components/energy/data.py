@@ -17,7 +17,7 @@ STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN
 
 
-@singleton.singleton(DOMAIN)
+@singleton.singleton(f"{DOMAIN}_manager")
 async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
     """Return an initialized data manager."""
     manager = EnergyManager(hass)

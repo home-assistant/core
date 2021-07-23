@@ -18,5 +18,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(
         discovery.async_load_platform(hass, "sensor", DOMAIN, {}, config)
     )
+    hass.data[DOMAIN] = {
+        "cost_sensors": {},
+    }
 
     return True
