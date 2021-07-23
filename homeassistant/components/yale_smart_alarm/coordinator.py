@@ -42,38 +42,38 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 lock_status = int(str(lock_status_str or 0), 16)
                 closed = (lock_status & 16) == 16
                 locked = (lock_status & 1) == 1
-                if lock_status_str == "" and "device_status.lock" in state:
+                if not lock_status_str and "device_status.lock" in state:
                     device["_state"] = "locked"
                     locks.append(device)
                     continue
-                if lock_status_str == "" and "device_status.unlock" in state:
+                if not lock_status_str and "device_status.unlock" in state:
                     device["_state"] = "unlocked"
                     locks.append(device)
                     continue
                 if (
-                    lock_status_str != ""
+                    lock_status_str is True
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
-                    and closed is True
-                    and locked is True
+                    and closed
+                    and locked
                 ):
                     device["_state"] = "locked"
                     locks.append(device)
                     continue
                 if (
-                    lock_status_str != ""
+                    lock_status_str is True
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
-                    and closed is True
-                    and locked is False
+                    and closed
+                    and not locked
                 ):
                     device["_state"] = "unlocked"
                     locks.append(device)
                     continue
                 if (
-                    lock_status_str != ""
+                    lock_status_str is True
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
