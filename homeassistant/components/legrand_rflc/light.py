@@ -118,10 +118,10 @@ class _Dimmer(_Switch):
         async def handle(message: Mapping) -> None:
             hub.StatusError(message).raise_if()
 
-        kwargs_: Dict[str, Any] = {"power": power}
+        properties: Dict[str, Any] = {"power": power}
         if ATTR_BRIGHTNESS in kwargs:
             brightness = self._from_ha(kwargs[ATTR_BRIGHTNESS])
-            kwargs_["power_level"] = brightness
+            properties["power_level"] = brightness
         else:
             if power:
                 brightness = self._from_ha(self.brightness)
@@ -129,12 +129,12 @@ class _Dimmer(_Switch):
                 brightness = 0
         if ATTR_TRANSITION in kwargs:
             change = abs(brightness - self._from_ha(self.brightness))
-            kwargs_["ramp_rate"] = min(
+            properties["ramp_rate"] = min(
                 max(int(change / kwargs[ATTR_TRANSITION]), 1), 100
             )
         await hub.handle_send(
             handle,
-            hub.compose_set_zone_properties(self._zid, **kwargs_),
+            hub.compose_set_zone_properties(self._zid, **properties),
         )
 
     async def async_turn_on(self, **kwargs) -> None:
