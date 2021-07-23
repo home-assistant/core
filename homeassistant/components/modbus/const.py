@@ -79,6 +79,15 @@ DATA_TYPE_FLOAT = "float"
 DATA_TYPE_INT = "int"
 DATA_TYPE_UINT = "uint"
 DATA_TYPE_STRING = "string"
+DATA_TYPE_INT16 = "int16"
+DATA_TYPE_INT32 = "int32"
+DATA_TYPE_INT64 = "int64"
+DATA_TYPE_UINT16 = "uint16"
+DATA_TYPE_UINT32 = "uint32"
+DATA_TYPE_UINT64 = "uint64"
+DATA_TYPE_FLOAT16 = "float16"
+DATA_TYPE_FLOAT32 = "float32"
+DATA_TYPE_FLOAT64 = "float64"
 
 # call types
 CALL_TYPE_COIL = "coil"
@@ -89,6 +98,8 @@ CALL_TYPE_WRITE_COIL = "write_coil"
 CALL_TYPE_WRITE_COILS = "write_coils"
 CALL_TYPE_WRITE_REGISTER = "write_register"
 CALL_TYPE_WRITE_REGISTERS = "write_registers"
+CALL_TYPE_X_COILS = "coils"
+CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
@@ -100,9 +111,16 @@ DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
 DEFAULT_STRUCT_FORMAT = {
-    DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-    DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-    DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
+    DATA_TYPE_INT16: ["h", 1],
+    DATA_TYPE_INT32: ["i", 2],
+    DATA_TYPE_INT64: ["q", 4],
+    DATA_TYPE_UINT16: ["H", 1],
+    DATA_TYPE_UINT32: ["I", 2],
+    DATA_TYPE_UINT64: ["Q", 4],
+    DATA_TYPE_FLOAT16: ["e", 1],
+    DATA_TYPE_FLOAT32: ["f", 2],
+    DATA_TYPE_FLOAT64: ["d", 4],
+    DATA_TYPE_STRING: ["s", 1],
 }
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"

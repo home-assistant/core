@@ -1,10 +1,10 @@
 PyJWT==1.7.1
-PyNaCl==1.3.0
+PyNaCl==1.4.0
 aiodiscover==1.4.2
 aiohttp==3.7.4.post0
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.19.0
+async-upnp-client==0.19.1
 async_timeout==3.0.1
 attrs==21.2.0
 awesomeversion==21.4.0
@@ -18,7 +18,7 @@ distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.44.0
 home-assistant-frontend==20210707.0
-httpx==0.18.0
+httpx==0.18.2
 ifaddr==0.1.7
 jinja2==3.0.1
 paho-mqtt==1.5.1
@@ -33,7 +33,7 @@ sqlalchemy==1.4.17
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
 yarl==1.6.3
-zeroconf==0.32.1
+zeroconf==0.33.1
 
 pycryptodome>=3.6.6
 
@@ -61,8 +61,4 @@ btlewrap>=0.0.10
 enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
-
-# httpcore 0.13.4 breaks several integrations
-# https://github.com/home-assistant/core/issues/51778
-httpcore==0.13.3
 

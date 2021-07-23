@@ -1,5 +1,8 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+from __future__ import annotations
+
 import logging
+from typing import NamedTuple
 
 from pyrainbird import RainbirdController
 import voluptuous as vol
@@ -26,10 +29,25 @@ DOMAIN = "rainbird"
 
 SENSOR_TYPE_RAINDELAY = "raindelay"
 SENSOR_TYPE_RAINSENSOR = "rainsensor"
-# sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {
-    SENSOR_TYPE_RAINSENSOR: ["Rainsensor", None, "mdi:water"],
-    SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
+
+
+class RainBirdSensorMetadata(NamedTuple):
+    """Metadata for an individual RainBird sensor."""
+
+    name: str
+    icon: str
+    unit_of_measurement: str | None = None
+
+
+SENSOR_TYPES: dict[str, RainBirdSensorMetadata] = {
+    SENSOR_TYPE_RAINSENSOR: RainBirdSensorMetadata(
+        "Rainsensor",
+        icon="mdi:water",
+    ),
+    SENSOR_TYPE_RAINDELAY: RainBirdSensorMetadata(
+        "Raindelay",
+        icon="mdi:water-off",
+    ),
 }
 
 TRIGGER_TIME_SCHEMA = vol.All(

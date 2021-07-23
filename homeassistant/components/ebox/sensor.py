@@ -3,8 +3,11 @@ Support for EBox.
 
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 """
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 
 from pyebox import EboxClient
 from pyebox.client import PyEboxError
@@ -34,24 +37,81 @@ REQUESTS_TIMEOUT = 15
 SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
+
+class EboxSensorMetadata(NamedTuple):
+    """Metadata for an individual ebox sensor."""
+
+    name: str
+    unit_of_measurement: str
+    icon: str
+
+
 SENSOR_TYPES = {
-    "usage": ["Usage", PERCENTAGE, "mdi:percent"],
-    "balance": ["Balance", PRICE, "mdi:cash-usd"],
-    "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
-    "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],
-    "before_offpeak_download": [
+    "usage": EboxSensorMetadata(
+        "Usage",
+        unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+    ),
+    "balance": EboxSensorMetadata(
+        "Balance",
+        unit_of_measurement=PRICE,
+        icon="mdi:cash-usd",
+    ),
+    "limit": EboxSensorMetadata(
+        "Data limit",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    "days_left": EboxSensorMetadata(
+        "Days left",
+        unit_of_measurement=TIME_DAYS,
+        icon="mdi:calendar-today",
+    ),
+    "before_offpeak_download": EboxSensorMetadata(
         "Download before offpeak",
-        DATA_GIGABITS,
-        "mdi:download",
-    ],
-    "before_offpeak_upload": ["Upload before offpeak", DATA_GIGABITS, "mdi:upload"],
-    "before_offpeak_total": ["Total before offpeak", DATA_GIGABITS, "mdi:download"],
-    "offpeak_download": ["Offpeak download", DATA_GIGABITS, "mdi:download"],
-    "offpeak_upload": ["Offpeak Upload", DATA_GIGABITS, "mdi:upload"],
-    "offpeak_total": ["Offpeak Total", DATA_GIGABITS, "mdi:download"],
-    "download": ["Download", DATA_GIGABITS, "mdi:download"],
-    "upload": ["Upload", DATA_GIGABITS, "mdi:upload"],
-    "total": ["Total", DATA_GIGABITS, "mdi:download"],
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    "before_offpeak_upload": EboxSensorMetadata(
+        "Upload before offpeak",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:upload",
+    ),
+    "before_offpeak_total": EboxSensorMetadata(
+        "Total before offpeak",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    "offpeak_download": EboxSensorMetadata(
+        "Offpeak download",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    "offpeak_upload": EboxSensorMetadata(
+        "Offpeak Upload",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:upload",
+    ),
+    "offpeak_total": EboxSensorMetadata(
+        "Offpeak Total",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    "download": EboxSensorMetadata(
+        "Download",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    "upload": EboxSensorMetadata(
+        "Upload",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:upload",
+    ),
+    "total": EboxSensorMetadata(
+        "Total",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -94,33 +154,18 @@ class EBoxSensor(SensorEntity):
 
     def __init__(self, ebox_data, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = name
         self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        metadata = SENSOR_TYPES[sensor_type]
+        self._attr_name = f"{name} {metadata.name}"
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self._attr_icon = metadata.icon
         self.ebox_data = ebox_data
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
 
     async def async_update(self):
         """Get the latest data from EBox and update the state."""

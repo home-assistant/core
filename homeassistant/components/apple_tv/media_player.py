@@ -75,6 +75,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     """Representation of an Apple TV media player."""
 
+    _attr_supported_features = SUPPORT_APPLE_TV
+
     def __init__(self, name, identifier, manager, **kwargs):
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager, **kwargs)
@@ -228,11 +230,6 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         if self._is_feature_available(FeatureName.Shuffle):
             return self._playing.shuffle != ShuffleState.Off
         return None
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_APPLE_TV
 
     def _is_feature_available(self, feature):
         """Return if a feature is available."""

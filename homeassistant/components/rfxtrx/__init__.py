@@ -23,7 +23,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     DEGREE,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
     LENGTH_MILLIMETERS,
@@ -35,7 +36,6 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
-    VOLT,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -87,11 +87,11 @@ DATA_TYPES = OrderedDict(
         ("Wind gust", SPEED_METERS_PER_SECOND),
         ("Chill", TEMP_CELSIUS),
         ("Count", "count"),
-        ("Current Ch. 1", ELECTRICAL_CURRENT_AMPERE),
-        ("Current Ch. 2", ELECTRICAL_CURRENT_AMPERE),
-        ("Current Ch. 3", ELECTRICAL_CURRENT_AMPERE),
-        ("Voltage", VOLT),
-        ("Current", ELECTRICAL_CURRENT_AMPERE),
+        ("Current Ch. 1", ELECTRIC_CURRENT_AMPERE),
+        ("Current Ch. 2", ELECTRIC_CURRENT_AMPERE),
+        ("Current Ch. 3", ELECTRIC_CURRENT_AMPERE),
+        ("Voltage", ELECTRIC_POTENTIAL_VOLT),
+        ("Current", ELECTRIC_CURRENT_AMPERE),
         ("Battery numeric", PERCENTAGE),
         ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
     ]

@@ -1,7 +1,11 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -9,6 +13,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -33,18 +38,15 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        if (
-            device.has_temperature_sensor
-            and not device.has_switch
-            and not device.has_thermostat
-        ):
+        if device.has_temperature_sensor and not device.has_thermostat:
             entities.append(
                 FritzBoxTempSensor(
                     {
-                        ATTR_NAME: f"{device.name}",
-                        ATTR_ENTITY_ID: f"{device.ain}",
+                        ATTR_NAME: f"{device.name} Temperature",
+                        ATTR_ENTITY_ID: f"{device.ain}_temperature",
                         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-                        ATTR_DEVICE_CLASS: None,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                     },
                     coordinator,
                     ain,
@@ -59,6 +61,7 @@ async def async_setup_entry(
                         ATTR_ENTITY_ID: f"{device.ain}_battery",
                         ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                         ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+                        ATTR_STATE_CLASS: None,
                     },
                     coordinator,
                     ain,

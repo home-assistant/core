@@ -9,18 +9,22 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
-    ELECTRICAL_CURRENT_AMPERE,
-    ELECTRICAL_VOLT_AMPERE,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
     LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
+    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    VOLT,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
@@ -31,37 +35,37 @@ from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
-    "V_TEMP": [None, "mdi:thermometer"],
-    "V_HUM": [PERCENTAGE, "mdi:water-percent"],
-    "V_DIMMER": [PERCENTAGE, "mdi:percent"],
-    "V_PERCENTAGE": [PERCENTAGE, "mdi:percent"],
-    "V_PRESSURE": [None, "mdi:gauge"],
-    "V_FORECAST": [None, "mdi:weather-partly-cloudy"],
-    "V_RAIN": [None, "mdi:weather-rainy"],
-    "V_RAINRATE": [None, "mdi:weather-rainy"],
-    "V_WIND": [None, "mdi:weather-windy"],
-    "V_GUST": [None, "mdi:weather-windy"],
-    "V_DIRECTION": [DEGREE, "mdi:compass"],
-    "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram"],
-    "V_DISTANCE": [LENGTH_METERS, "mdi:ruler"],
-    "V_IMPEDANCE": ["ohm", None],
-    "V_WATT": [POWER_WATT, None],
-    "V_KWH": [ENERGY_KILO_WATT_HOUR, None],
-    "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny"],
-    "V_FLOW": [LENGTH_METERS, "mdi:gauge"],
-    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None],
+    "V_TEMP": [None, None, DEVICE_CLASS_TEMPERATURE],
+    "V_HUM": [PERCENTAGE, "mdi:water-percent", DEVICE_CLASS_HUMIDITY],
+    "V_DIMMER": [PERCENTAGE, "mdi:percent", None],
+    "V_PERCENTAGE": [PERCENTAGE, "mdi:percent", None],
+    "V_PRESSURE": [None, "mdi:gauge", None],
+    "V_FORECAST": [None, "mdi:weather-partly-cloudy", None],
+    "V_RAIN": [None, "mdi:weather-rainy", None],
+    "V_RAINRATE": [None, "mdi:weather-rainy", None],
+    "V_WIND": [None, "mdi:weather-windy", None],
+    "V_GUST": [None, "mdi:weather-windy", None],
+    "V_DIRECTION": [DEGREE, "mdi:compass", None],
+    "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram", None],
+    "V_DISTANCE": [LENGTH_METERS, "mdi:ruler", None],
+    "V_IMPEDANCE": ["ohm", None, None],
+    "V_WATT": [POWER_WATT, None, None],
+    "V_KWH": [ENERGY_KILO_WATT_HOUR, None, None],
+    "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny", None],
+    "V_FLOW": [LENGTH_METERS, "mdi:gauge", None],
+    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None, None],
     "V_LEVEL": {
-        "S_SOUND": ["dB", "mdi:volume-high"],
-        "S_VIBRATION": [FREQUENCY_HERTZ, None],
-        "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny"],
+        "S_SOUND": [SOUND_PRESSURE_DB, "mdi:volume-high", None],
+        "S_VIBRATION": [FREQUENCY_HERTZ, None, None],
+        "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny", None],
     },
-    "V_VOLTAGE": [VOLT, "mdi:flash"],
-    "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],
-    "V_PH": ["pH", None],
-    "V_ORP": ["mV", None],
-    "V_EC": [CONDUCTIVITY, None],
-    "V_VAR": ["var", None],
-    "V_VA": [ELECTRICAL_VOLT_AMPERE, None],
+    "V_VOLTAGE": [ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "V_CURRENT": [ELECTRIC_CURRENT_AMPERE, "mdi:flash-auto", None],
+    "V_PH": ["pH", None, None],
+    "V_ORP": [ELECTRIC_POTENTIAL_MILLIVOLT, None, None],
+    "V_EC": [CONDUCTIVITY, None, None],
+    "V_VAR": ["var", None, None],
+    "V_VA": [POWER_VOLT_AMPERE, None, None],
 }
 
 
@@ -107,14 +111,18 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
 
     @property
     def state(self) -> str | None:
-        """Return the state of the device."""
+        """Return the state of this entity."""
         return self._values.get(self.value_type)
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of this entity."""
+        return self._get_sensor_type()[2]
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        icon = self._get_sensor_type()[1]
-        return icon
+        return self._get_sensor_type()[1]
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -140,9 +148,11 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
         pres = self.gateway.const.Presentation
         set_req = self.gateway.const.SetReq
 
-        _sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
+        _sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None, None])
         if isinstance(_sensor_type, dict):
-            sensor_type = _sensor_type.get(pres(self.child_type).name, [None, None])
+            sensor_type = _sensor_type.get(
+                pres(self.child_type).name, [None, None, None]
+            )
         else:
             sensor_type = _sensor_type
         return sensor_type

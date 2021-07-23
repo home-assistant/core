@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -50,6 +51,7 @@ async def async_setup_entry(
                     ATTR_ENTITY_ID: f"{device.ain}",
                     ATTR_UNIT_OF_MEASUREMENT: None,
                     ATTR_DEVICE_CLASS: None,
+                    ATTR_STATE_CLASS: None,
                 },
                 coordinator,
                 ain,

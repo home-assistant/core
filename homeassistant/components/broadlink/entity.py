@@ -1,11 +1,12 @@
 """Broadlink entities."""
 
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
 
-class BroadlinkEntity:
+class BroadlinkEntity(Entity):
     """Representation of a Broadlink entity."""
 
     _attr_should_poll = False

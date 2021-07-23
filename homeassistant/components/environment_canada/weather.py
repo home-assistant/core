@@ -28,7 +28,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 
 CONF_FORECAST = "forecast"
 CONF_ATTRIBUTION = "Data provided by Environment Canada"

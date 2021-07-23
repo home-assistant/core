@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, MutableMapping
+from typing import Any, cast
 
 from aioguardian import Client
 
@@ -60,13 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up DataUpdateCoordinators for the valve controller:
     init_valve_controller_tasks = []
-    for api, api_coro in [
+    for api, api_coro in (
         (API_SENSOR_PAIR_DUMP, client.sensor.pair_dump),
         (API_SYSTEM_DIAGNOSTICS, client.system.diagnostics),
         (API_SYSTEM_ONBOARD_SENSOR_STATUS, client.system.onboard_sensor_status),
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
-    ]:
+    ):
         coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api
         ] = GuardianDataUpdateCoordinator(
@@ -89,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await paired_sensor_manager.async_process_latest_paired_sensor_uids()
 
     @callback
-    def async_process_paired_sensor_uids():
+    def async_process_paired_sensor_uids() -> None:
         """Define a callback for when new paired sensor data is received."""
         hass.async_create_task(
             paired_sensor_manager.async_process_latest_paired_sensor_uids()
@@ -133,8 +135,7 @@ class PairedSensorManager:
         self._client = client
         self._entry = entry
         self._hass = hass
-        self._listeners = []
-        self._paired_uids = set()
+        self._paired_uids: set[str] = set()
 
     async def async_pair_sensor(self, uid: str) -> None:
         """Add a new paired sensor coordinator."""
@@ -148,7 +149,9 @@ class PairedSensorManager:
             self._hass,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
-            api_coro=lambda: self._client.sensor.paired_sensor_status(uid),
+            api_coro=lambda: cast(
+                Awaitable, self._client.sensor.paired_sensor_status(uid)
+            ),
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
@@ -208,12 +211,19 @@ class GuardianEntity(CoordinatorEntity):
     """Define a base Guardian entity."""
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, entry: ConfigEntry, kind: str, name: str, device_class: str, icon: str
+        self,
+        entry: ConfigEntry,
+        kind: str,
+        name: str,
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         self._attr_device_class = device_class
         self._attr_device_info = {"manufacturer": "Elexa"}
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
+        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
+            ATTR_ATTRIBUTION: "Data provided by Elexa"
+        }
         self._attr_icon = icon
         self._attr_name = name
         self._entry = entry
@@ -236,16 +246,18 @@ class PairedSensorEntity(GuardianEntity):
         coordinator: DataUpdateCoordinator,
         kind: str,
         name: str,
-        device_class: str,
-        icon: str,
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
         paired_sensor_uid = coordinator.data["uid"]
-        self._attr_device_info["identifiers"] = {(DOMAIN, paired_sensor_uid)}
-        self._attr_device_info["name"] = f"Guardian Paired Sensor {paired_sensor_uid}"
-        self._attr_device_info["via_device"] = (DOMAIN, entry.data[CONF_UID])
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, paired_sensor_uid)},
+            "name": f"Guardian Paired Sensor {paired_sensor_uid}",
+            "via_device": (DOMAIN, entry.data[CONF_UID]),
+        }
         self._attr_name = f"Guardian Paired Sensor {paired_sensor_uid}: {name}"
         self._attr_unique_id = f"{paired_sensor_uid}_{kind}"
         self._kind = kind
@@ -271,13 +283,11 @@ class ValveControllerEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
-        self._attr_device_info["identifiers"] = {(DOMAIN, entry.data[CONF_UID])}
-        self._attr_device_info[
-            "name"
-        ] = f"Guardian Valve Controller {entry.data[CONF_UID]}"
-        self._attr_device_info["model"] = coordinators[API_SYSTEM_DIAGNOSTICS].data[
-            "firmware"
-        ]
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.data[CONF_UID])},
+            "name": f"Guardian Valve Controller {entry.data[CONF_UID]}",
+            "model": coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
+        }
         self._attr_name = f"Guardian {entry.data[CONF_UID]}: {name}"
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{kind}"
         self._kind = kind
@@ -304,7 +314,7 @@ class ValveControllerEntity(GuardianEntity):
         """Add a listener to a DataUpdateCoordinator based on the API referenced."""
 
         @callback
-        def update():
+        def update() -> None:
             """Update the entity's state."""
             self._async_update_from_latest_data()
             self.async_write_ha_state()
@@ -327,6 +337,7 @@ class ValveControllerEntity(GuardianEntity):
             return
 
         refresh_tasks = [
-            coordinator.async_request_refresh() for coordinator in self.coordinators
+            coordinator.async_request_refresh()
+            for coordinator in self.coordinators.values()
         ]
         await asyncio.gather(*refresh_tasks)

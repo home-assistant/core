@@ -11,6 +11,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
+    ATTR_OPTIONS,
     ATTR_PROPERTY,
     ATTR_REFRESH_ALL_VALUES,
     ATTR_VALUE,
@@ -31,8 +32,10 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
 from .common import (
+    AEON_SMART_SWITCH_LIGHT_ENTITY,
     AIR_TEMPERATURE_SENSOR,
     CLIMATE_DANFOSS_LC13_ENTITY,
+    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
 )
 
@@ -261,31 +264,7 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     }
     assert args["value"] == 1
 
-    # Test that an invalid entity ID raises a MultipleInvalid
-    with pytest.raises(vol.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
-            {
-                ATTR_ENTITY_ID: "sensor.fake_entity",
-                ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-                ATTR_CONFIG_VALUE: "Fahrenheit",
-            },
-            blocking=True,
-        )
-
-    # Test that an invalid device ID raises a MultipleInvalid
-    with pytest.raises(vol.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
-            {
-                ATTR_DEVICE_ID: "fake_device_id",
-                ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-                ATTR_CONFIG_VALUE: "Fahrenheit",
-            },
-            blocking=True,
-        )
+    client.async_send_command_no_wait.reset_mock()
 
     # Test that we can't include a bitmask value if parameter is a string
     with pytest.raises(vol.Invalid):
@@ -308,35 +287,9 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
         identifiers={("test", "test")},
     )
 
-    # Test that a non Z-Wave JS device raises a MultipleInvalid
-    with pytest.raises(vol.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
-            {
-                ATTR_DEVICE_ID: non_zwave_js_device.id,
-                ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-                ATTR_CONFIG_VALUE: "Fahrenheit",
-            },
-            blocking=True,
-        )
-
     zwave_js_device_with_invalid_node_id = dev_reg.async_get_or_create(
         config_entry_id=integration.entry_id, identifiers={(DOMAIN, "500-500")}
     )
-
-    # Test that a Z-Wave JS device with an invalid node ID raises a MultipleInvalid
-    with pytest.raises(vol.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
-            {
-                ATTR_DEVICE_ID: zwave_js_device_with_invalid_node_id.id,
-                ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-                ATTR_CONFIG_VALUE: "Fahrenheit",
-            },
-            blocking=True,
-        )
 
     non_zwave_js_entity = ent_reg.async_get_or_create(
         "test",
@@ -346,18 +299,59 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
         config_entry=non_zwave_js_config_entry,
     )
 
-    # Test that a non Z-Wave JS entity raises a MultipleInvalid
-    with pytest.raises(vol.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
-            {
-                ATTR_ENTITY_ID: non_zwave_js_entity.entity_id,
-                ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
-                ATTR_CONFIG_VALUE: "Fahrenheit",
-            },
-            blocking=True,
-        )
+    # Test that a Z-Wave JS device with an invalid node ID, non Z-Wave JS entity,
+    # non Z-Wave JS device, invalid device_id, and invalid node_id gets filtered out.
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG_PARAMETER,
+        {
+            ATTR_ENTITY_ID: [
+                AIR_TEMPERATURE_SENSOR,
+                non_zwave_js_entity.entity_id,
+                "sensor.fake",
+            ],
+            ATTR_DEVICE_ID: [
+                zwave_js_device_with_invalid_node_id.id,
+                non_zwave_js_device.id,
+                "fake_device_id",
+            ],
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_PARAMETER_BITMASK: "0x01",
+            ATTR_CONFIG_VALUE: 1,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClassName": "Configuration",
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 102,
+        "propertyName": "Group 2: Send battery reports",
+        "propertyKey": 1,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "valueSize": 4,
+            "min": 0,
+            "max": 1,
+            "default": 1,
+            "format": 0,
+            "allowManualEntry": True,
+            "label": "Group 2: Send battery reports",
+            "description": "Include battery information in periodic reports to Group 2",
+            "isFromConfig": True,
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command_no_wait.reset_mock()
 
     # Test that when a device is awake, we call async_send_command instead of
     # async_send_command_no_wait
@@ -768,11 +762,51 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
         )
 
 
+async def test_set_value_options(hass, client, aeon_smart_switch_6, integration):
+    """Test set_value service with options."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: AEON_SMART_SWITCH_LIGHT_ENTITY,
+            ATTR_COMMAND_CLASS: 37,
+            ATTR_PROPERTY: "targetValue",
+            ATTR_VALUE: 2,
+            ATTR_OPTIONS: {"transitionDuration": 1},
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 37,
+        "commandClassName": "Binary Switch",
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "ccVersion": 1,
+        "metadata": {
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+            "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
+        },
+    }
+    assert args["value"] == 2
+    assert args["options"] == {"transitionDuration": 1}
+
+    client.async_send_command.reset_mock()
+
+
 async def test_multicast_set_value(
     hass,
     client,
     climate_danfoss_lc_13,
-    climate_radio_thermostat_ct100_plus_different_endpoints,
+    climate_eurotronic_spirit_z,
     integration,
 ):
     """Test multicast_set_value service."""
@@ -783,7 +817,7 @@ async def test_multicast_set_value(
         {
             ATTR_ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
-                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
             ATTR_COMMAND_CLASS: 117,
             ATTR_PROPERTY: "local",
@@ -796,7 +830,7 @@ async def test_multicast_set_value(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "multicast_group.set_value"
     assert args["nodeIDs"] == [
-        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        climate_eurotronic_spirit_z.node_id,
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
@@ -814,7 +848,7 @@ async def test_multicast_set_value(
         {
             ATTR_ENTITY_ID: [
                 CLIMATE_DANFOSS_LC13_ENTITY,
-                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
             ATTR_COMMAND_CLASS: 117,
             ATTR_PROPERTY: "local",
@@ -827,7 +861,7 @@ async def test_multicast_set_value(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "multicast_group.set_value"
     assert args["nodeIDs"] == [
-        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        climate_eurotronic_spirit_z.node_id,
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
@@ -862,19 +896,24 @@ async def test_multicast_set_value(
 
     client.async_send_command.reset_mock()
 
-    # Test sending one node without broadcast fails
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
-            {
-                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
-                ATTR_VALUE: 2,
-            },
-            blocking=True,
-        )
+    # Test sending one node without broadcast uses the node.set_value command instead
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ATTR_COMMAND_CLASS: 117,
+            ATTR_PROPERTY: "local",
+            ATTR_VALUE: 2,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+
+    client.async_send_command_no_wait.reset_mock()
 
     # Test no device, entity, or broadcast flag raises error
     with pytest.raises(vol.Invalid):
@@ -899,7 +938,7 @@ async def test_multicast_set_value(
             {
                 ATTR_ENTITY_ID: [
                     CLIMATE_DANFOSS_LC13_ENTITY,
-                    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
                 ],
                 ATTR_COMMAND_CLASS: 117,
                 ATTR_PROPERTY: "local",

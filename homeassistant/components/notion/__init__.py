@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         client = await async_get_client(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
     except InvalidCredentialsError:
         LOGGER.error("Invalid username and/or password")

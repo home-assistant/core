@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.16.0
+    rev: v2.21.2
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/psf/black
-    rev: 21.6b0
+    rev: 21.7b0
     hooks:
       - id: black
         args:
@@ -70,7 +70,7 @@ repos:
       - id: prettier
         stages: [manual]
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.3.3
+    rev: v0.3.5
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
