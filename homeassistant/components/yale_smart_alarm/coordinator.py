@@ -51,7 +51,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     locks.append(device)
                     continue
                 if (
-                    lock_status is True
+                    lock_status
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
@@ -62,7 +62,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     locks.append(device)
                     continue
                 if (
-                    lock_status is True
+                    lock_status
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
@@ -73,7 +73,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     locks.append(device)
                     continue
                 if (
-                    lock_status is True
+                    lock_status
                     and (
                         "device_status.lock" in state or "device_status.unlock" in state
                     )
