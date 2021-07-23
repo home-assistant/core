@@ -45,7 +45,7 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
 
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
-    ):
+    ) -> None:
         """Initialize a devolo multi level switch."""
         super().__init__(
             homecontrol=homecontrol,
