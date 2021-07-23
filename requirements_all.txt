@@ -1254,6 +1254,9 @@ py-nightscout==1.2.2
 # homeassistant.components.schluter
 py-schluter==0.1.7
 
+# homeassistant.components.synology_dsm
+py-synologydsm-api==1.0.3
+
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
 
@@ -2224,9 +2227,6 @@ swisshydrodata==0.1.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
-
-# homeassistant.components.synology_dsm
-synologydsm-api==1.0.2
 
 # homeassistant.components.system_bridge
 systembridge==1.1.5

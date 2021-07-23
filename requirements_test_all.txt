@@ -706,6 +706,9 @@ py-melissa-climate==2.1.4
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.synology_dsm
+py-synologydsm-api==1.0.3
+
 # homeassistant.components.seventeentrack
 py17track==3.2.1
 
@@ -1226,9 +1229,6 @@ sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
 surepy==0.7.0
-
-# homeassistant.components.synology_dsm
-synologydsm-api==1.0.2
 
 # homeassistant.components.system_bridge
 systembridge==1.1.5
