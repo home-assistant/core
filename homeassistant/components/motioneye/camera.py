@@ -33,7 +33,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MotionEyeEntity, is_acceptable_camera, listen_for_new_cameras
+from . import (
+    MotionEyeEntity,
+    get_camera_from_cameras,
+    is_acceptable_camera,
+    listen_for_new_cameras,
+)
 from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
@@ -167,13 +172,13 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
+        self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
         if self._camera and self._is_acceptable_streaming_camera():
             self._set_mjpeg_camera_state_for_camera(self._camera)
             self._motion_detection_enabled = self._camera.get(
                 KEY_MOTION_DETECTION, False
             )
-            self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def brand(self) -> str:

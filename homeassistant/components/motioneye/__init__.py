@@ -440,6 +440,7 @@ class MotionEyeEntity(CoordinatorEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, Any],
+        enabled_by_default: bool = True,
     ) -> None:
         """Initialize a motionEye entity."""
         self._camera_id = camera[KEY_ID]
@@ -454,7 +455,13 @@ class MotionEyeEntity(CoordinatorEntity):
         self._client = client
         self._camera: dict[str, Any] | None = camera
         self._options = options
+        self._enabled_by_default = enabled_by_default
         super().__init__(coordinator)
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Whether or not the entity is enabled by default."""
+        return self._enabled_by_default
 
     @property
     def unique_id(self) -> str:
@@ -465,9 +472,3 @@ class MotionEyeEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {"identifiers": {self._device_identifier}}
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
-        super()._handle_coordinator_update()

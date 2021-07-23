@@ -1,6 +1,7 @@
 """Tests for the motionEye switch platform."""
 import copy
-from unittest.mock import AsyncMock, call
+from datetime import timedelta
+from unittest.mock import AsyncMock, call, patch
 
 from motioneye_client.const import (
     KEY_MOTION_DETECTION,
@@ -14,6 +15,7 @@ from motioneye_client.const import (
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -96,19 +98,66 @@ async def test_switch_has_correct_entities(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
 
-    expected_switch_keys = [
+    enabled_switch_keys = [
         KEY_MOTION_DETECTION,
-        KEY_MOVIES,
         KEY_STILL_IMAGES,
+        KEY_MOVIES,
+    ]
+    disabled_switch_keys = [
         KEY_TEXT_OVERLAY,
         KEY_UPLOAD_ENABLED,
         KEY_VIDEO_STREAMING,
     ]
 
-    for switch_key in expected_switch_keys:
+    for switch_key in enabled_switch_keys:
         entity_id = f"{TEST_SWITCH_ENTITY_ID_BASE}_{switch_key}"
         entity_state = hass.states.get(entity_id)
         assert entity_state, f"Couldn't find entity: {entity_id}"
+
+    for switch_key in disabled_switch_keys:
+        entity_id = f"{TEST_SWITCH_ENTITY_ID_BASE}_{switch_key}"
+        entity_state = hass.states.get(entity_id)
+        assert not entity_state
+
+
+async def test_disabled_switches_can_be_enabled(hass: HomeAssistant) -> None:
+    """Verify disabled switches can be enabled."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    disabled_switch_keys = [
+        KEY_TEXT_OVERLAY,
+        KEY_UPLOAD_ENABLED,
+    ]
+
+    for switch_key in disabled_switch_keys:
+        entity_id = f"{TEST_SWITCH_ENTITY_ID_BASE}_{switch_key}"
+        entity_registry = er.async_get(hass)
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled
+        assert entry.disabled_by == er.DISABLED_INTEGRATION
+        entity_state = hass.states.get(entity_id)
+        assert not entity_state
+
+        with patch(
+            "homeassistant.components.motioneye.MotionEyeClient",
+            return_value=client,
+        ):
+            updated_entry = entity_registry.async_update_entity(
+                entity_id, disabled_by=None
+            )
+            assert not updated_entry.disabled
+            await hass.async_block_till_done()
+
+            async_fire_time_changed(
+                hass,
+                dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            )
+            await hass.async_block_till_done()
+
+        entity_state = hass.states.get(entity_id)
+        assert entity_state
 
 
 async def test_switch_device_info(hass: HomeAssistant) -> None:

@@ -19,18 +19,17 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import slugify
 
 from . import MotionEyeEntity, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
 
 MOTIONEYE_SWITCHES = [
-    KEY_MOTION_DETECTION,
-    KEY_TEXT_OVERLAY,
-    KEY_VIDEO_STREAMING,
-    KEY_STILL_IMAGES,
-    KEY_MOVIES,
-    KEY_UPLOAD_ENABLED,
+    (KEY_MOTION_DETECTION, "Motion Detection", True),
+    (KEY_TEXT_OVERLAY, "Text Overlay", False),
+    (KEY_VIDEO_STREAMING, "Video Streaming", False),
+    (KEY_STILL_IMAGES, "Still Images", True),
+    (KEY_MOVIES, "Movies", True),
+    (KEY_UPLOAD_ENABLED, "Upload Enabled", False),
 ]
 
 
@@ -49,11 +48,13 @@ async def async_setup_entry(
                     entry.entry_id,
                     camera,
                     switch_key,
+                    switch_key_friendly_name,
                     entry_data[CONF_CLIENT],
                     entry_data[CONF_COORDINATOR],
                     entry.options,
+                    enabled,
                 )
-                for switch_key in MOTIONEYE_SWITCHES
+                for switch_key, switch_key_friendly_name, enabled in MOTIONEYE_SWITCHES
             ]
         )
 
@@ -69,24 +70,24 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         config_entry_id: str,
         camera: dict[str, Any],
         switch_key: str,
+        switch_key_friendly_name: str,
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, str],
+        enabled_by_default: bool,
     ) -> None:
         """Initialize the switch."""
         self._switch_key = switch_key
-        self._switch_key_friendly_name = " ".join(
-            [w.capitalize() for w in self._switch_key.split("_")]
-        )
-
+        self._switch_key_friendly_name = switch_key_friendly_name
         MotionEyeEntity.__init__(
             self,
             config_entry_id,
-            slugify(f"{TYPE_MOTIONEYE_SWITCH_BASE} {switch_key}"),
+            f"{TYPE_MOTIONEYE_SWITCH_BASE}_{switch_key}",
             camera,
             client,
             coordinator,
             options,
+            enabled_by_default,
         )
 
     @property
@@ -109,7 +110,6 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         if camera:
             camera[self._switch_key] = value
             await self._client.async_set_camera(self._camera_id, camera)
-            await self.coordinator.async_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
