@@ -466,6 +466,9 @@ class RfxtrxEntity(RestoreEntity):
         self._event = event
         self._device_id = device_id
         self._unique_id = "_".join(x for x in self._device_id)
+        # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
+        # group events regardless of their group indices.
+        (self._group_id, _, _) = device.id_string.partition(":")
 
     async def async_added_to_hass(self):
         """Restore RFXtrx device state (ON/OFF)."""
@@ -524,11 +527,8 @@ class RfxtrxEntity(RestoreEntity):
     def _event_applies(self, event, device_id):
         """Check if event applies to me."""
         if "Command" in event.values and event.values["Command"] in COMMAND_GROUP_LIST:
-            # A group event with device id 213c7f2:1 applies to all devices with ids 213c7f2:n.
-            if ":" not in event.device.id_string:
-                return False
-            group_id = event.device.id_string[0 : event.device.id_string.index(":") + 1]
-            return self._device.id_string.startswith(group_id)
+            (group_id, _, _) = event.device.id_string.partition(":")
+            return group_id == self._group_id
 
         # Otherwise, the event only applies to the matching device.
         return device_id == self._device_id
