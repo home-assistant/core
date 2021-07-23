@@ -87,40 +87,6 @@ class FrigidaireClimate(ClimateEntity):
             HVAC_MODE_FAN_ONLY,
         ]
 
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the entity."""
-        return self._attr_assumed_state
-
-    @property
-    def unique_id(self):
-        """Return unique ID based on Frigidaire ID."""
-        return self._attr_unique_id
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._attr_name
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._attr_supported_features
-
-    @property
-    def hvac_modes(self):
-        """List of available operation modes."""
-        return self._attr_hvac_modes
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return self._attr_target_temperature_step
-
-    @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return self._attr_fan_modes
 
     @property
     def temperature_unit(self):
