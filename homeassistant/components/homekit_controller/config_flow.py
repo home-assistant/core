@@ -275,7 +275,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self._async_setup_controller()
 
             pairing = self.controller.load_pairing(
-                existing.data["AccessoryPairingID"], existing.data
+                existing.data["AccessoryPairingID"], dict(existing.data)
             )
             try:
                 await pairing.list_accessories_and_characteristics()
