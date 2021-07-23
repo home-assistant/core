@@ -51,15 +51,10 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def _get_schema(self, user_input: dict | None) -> vol.Schema:
-        known_api_keys = {
-            entry.data[CONF_API_KEY] for entry in self._async_current_entries()
-        }
         if user_input is not None:
             return vol.Schema(
                 {
-                    vol.Required(
-                        CONF_API_KEY, default=user_input[CONF_API_KEY]
-                    ): vol.In(known_api_keys),
+                    vol.Required(CONF_API_KEY, default=user_input[CONF_API_KEY]): str,
                     vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
                     vol.Required(
                         CONF_LATITUDE, default=user_input[CONF_LATITUDE]
@@ -71,7 +66,7 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return vol.Schema(
             {
-                vol.Required(CONF_API_KEY): vol.In(known_api_keys),
+                vol.Required(CONF_API_KEY): str,
                 vol.Required(CONF_NAME, default=DOMAIN): str,
                 vol.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
