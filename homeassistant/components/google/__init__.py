@@ -77,9 +77,13 @@ READ_WRITE_SCOPES = "https://www.googleapis.com/auth/calendar"
 
 TOKEN_FILE = f".{DOMAIN}.token"
 
+
 class FeatureAccess(Enum):
+    """Class to represent different access scopes."""
+
     Read = "read"
     ReadWrite = "readwrite"
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -137,7 +141,10 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
+
 def get_scope(conf):
+    """Gets the google calendar scope based on the defined access level."""
+
     scopes = ""
     if conf.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite:
         scopes = READ_WRITE_SCOPES
@@ -239,6 +246,7 @@ def setup(hass, config):
 
     return True
 
+
 def check_correct_scopes(token_file, config):
     """Check for the correct scopes in file."""
     with open(token_file) as tokenfile:
@@ -247,6 +255,7 @@ def check_correct_scopes(token_file, config):
             _LOGGER.warning("Please re-authenticate with Google")
             return False
     return True
+
 
 def setup_services(hass, hass_config, config, track_new_found_calendars, calendar_service):
     """Set up the service listeners."""
