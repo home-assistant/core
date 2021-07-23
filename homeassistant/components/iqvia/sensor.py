@@ -1,10 +1,14 @@
 """Support for IQVIA sensors."""
+from __future__ import annotations
+
 from statistics import mean
 
 import numpy as np
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IQVIAEntity
 from .const import (
@@ -58,7 +62,9 @@ TREND_INCREASING = "Increasing"
 TREND_SUBSIDING = "Subsiding"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up IQVIA sensors based on a config entry."""
     sensor_class_mapping = {
         TYPE_ALLERGY_FORECAST: ForecastSensor,
@@ -76,13 +82,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
         api_category = API_CATEGORY_MAPPING.get(sensor_type, sensor_type)
         coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][api_category]
         sensor_class = sensor_class_mapping[sensor_type]
-
         sensors.append(sensor_class(coordinator, entry, sensor_type, name, icon))
 
     async_add_entities(sensors)
 
 
-def calculate_trend(indices):
+@callback
+def calculate_trend(indices: list[float]) -> str:
     """Calculate the "moving average" of a set of indices."""
     index_range = np.arange(0, len(indices))
     index_array = np.array(indices)
@@ -102,7 +108,7 @@ class ForecastSensor(IQVIAEntity):
     """Define sensor related to forecast data."""
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the sensor."""
         if not self.available:
             return
@@ -151,7 +157,7 @@ class IndexSensor(IQVIAEntity):
     """Define sensor related to indices."""
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the sensor."""
         if not self.coordinator.last_update_success:
             return
