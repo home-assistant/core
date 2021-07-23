@@ -150,7 +150,7 @@ COMMON_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     },
 }
 
-NON_OBERSATION_ATTRIBUTES: dict[str, dict[str, str | None]] = {
+NON_OBSERVATION_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "rainFall": {
         "name": "Rain Fall",
         "unit_of_measurement": LENGTH_CENTIMETERS,
@@ -192,7 +192,7 @@ HOURLY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
         "unit_of_measurement": LENGTH_KILOMETERS,
         "device_class": None,
     },
-    **NON_OBERSATION_ATTRIBUTES,
+    **NON_OBSERVATION_ATTRIBUTES,
 }
 
 DAILY_SIMPLE_ATTRIBUTES: dict[str, dict[str, str | None]] = {
@@ -227,7 +227,7 @@ DAILY_SIMPLE_ATTRIBUTES: dict[str, dict[str, str | None]] = {
         "unit_of_measurement": PRESSURE_MBAR,
         "device_class": DEVICE_CLASS_PRESSURE,
     },
-    **NON_OBERSATION_ATTRIBUTES,
+    **NON_OBSERVATION_ATTRIBUTES,
 }
 
 DAILY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
@@ -256,7 +256,7 @@ DAILY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
         "unit_of_measurement": LENGTH_KILOMETERS,
         "device_class": None,
     },
-    **NON_OBERSATION_ATTRIBUTES,
+    **NON_OBSERVATION_ATTRIBUTES,
 }
 
 OBSERVATION_ATTRIBUTES: dict[str, dict[str, str | None]] = {
