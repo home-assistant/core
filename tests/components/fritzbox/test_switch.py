@@ -7,7 +7,6 @@ from requests.exceptions import HTTPError
 from homeassistant.components.fritzbox.const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
-    ATTR_TEMPERATURE_UNIT,
     DOMAIN as FB_DOMAIN,
 )
 from homeassistant.components.sensor import (
@@ -20,7 +19,6 @@ from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     ENERGY_KILO_WATT_HOUR,
@@ -54,8 +52,6 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
     assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
     assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
-    assert state.attributes[ATTR_TEMPERATURE] == "1.23"
-    assert state.attributes[ATTR_TEMPERATURE_UNIT] == TEMP_CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_temperature")

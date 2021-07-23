@@ -10,9 +10,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,7 +19,6 @@ from . import FritzBoxEntity
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
-    ATTR_TEMPERATURE_UNIT,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
@@ -86,12 +83,4 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
             ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
             ATTR_STATE_LOCKED: self.device.lock,
         }
-
-        if self.device.has_temperature_sensor:
-            attrs[ATTR_TEMPERATURE] = str(
-                self.hass.config.units.temperature(
-                    self.device.temperature, TEMP_CELSIUS
-                )
-            )
-            attrs[ATTR_TEMPERATURE_UNIT] = self.hass.config.units.temperature_unit
         return attrs
