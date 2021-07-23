@@ -65,6 +65,7 @@ homeassistant.components.netatmo.*
 homeassistant.components.network.*
 homeassistant.components.no_ip.*
 homeassistant.components.notify.*
+homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
 homeassistant.components.persistent_notification.*

@@ -115,7 +115,7 @@ aioguardian==1.0.8
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.5.1
+aiohomekit==0.6.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -282,7 +282,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.3.0
+debugpy==1.4.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1312,7 +1312,7 @@ wiffi==1.0.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.7.3
+wled==0.8.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

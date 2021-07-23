@@ -6,13 +6,11 @@ from pyhap.const import CATEGORY_LIGHTBULB
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
     DOMAIN,
     brightness_supported,
     color_supported,
@@ -23,7 +21,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -60,59 +57,83 @@ class Light(HomeAccessory):
         """Initialize a new Light accessory object."""
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
 
-        self.chars = []
+        self.primary_chars = []
+        self.secondary_chars = []
+
         state = self.hass.states.get(self.entity_id)
 
-        self._previous_color_mode = None
         self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         self._color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        is_color_supported = color_supported(self._color_modes)
+        is_color_temp_supported = color_temp_supported(self._color_modes)
+        is_brightness_supported = brightness_supported(self._color_modes)
 
-        if brightness_supported(self._color_modes):
-            self.chars.append(CHAR_BRIGHTNESS)
+        if is_brightness_supported:
+            self.primary_chars.append(CHAR_BRIGHTNESS)
 
-        if color_supported(self._color_modes):
-            self.chars.append(CHAR_HUE)
-            self.chars.append(CHAR_SATURATION)
+        if is_color_supported:
+            self.primary_chars.append(CHAR_HUE)
+            self.primary_chars.append(CHAR_SATURATION)
 
-        if color_temp_supported(self._color_modes):
-            # ColorTemperature and Hue characteristic technically should not
-            # both be exposed according to the spec, but even certified
-            # devices do this so and iOS handles it just fine in all
-            # current non-EOL iOS versions.
-            self.chars.append(CHAR_COLOR_TEMPERATURE)
+        if is_color_temp_supported:
+            if is_color_supported:
+                self.secondary_chars.append(CHAR_COLOR_TEMPERATURE)
+                if is_brightness_supported:
+                    self.secondary_chars.append(CHAR_BRIGHTNESS)
+            else:
+                self.primary_chars.append(CHAR_COLOR_TEMPERATURE)
 
-        serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
+        serv_light_primary = self.add_preload_service(
+            SERV_LIGHTBULB, self.primary_chars
+        )
+        serv_light_secondary = None
+        self.char_on_primary = serv_light_primary.configure_char(CHAR_ON, value=0)
+        if self.secondary_chars:
+            serv_light_secondary = self.add_preload_service(
+                SERV_LIGHTBULB, self.secondary_chars
+            )
+            serv_light_primary.add_linked_service(serv_light_secondary)
+            self.char_on_secondary = serv_light_secondary.configure_char(
+                CHAR_ON, value=0
+            )
 
-        self.char_on = serv_light.configure_char(CHAR_ON, value=0)
-
-        if CHAR_BRIGHTNESS in self.chars:
+        if is_brightness_supported:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
             # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
-            self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
+            self.char_brightness_primary = serv_light_primary.configure_char(
+                CHAR_BRIGHTNESS, value=100
+            )
+            if self.secondary_chars:
+                self.char_brightness_secondary = serv_light_secondary.configure_char(
+                    CHAR_BRIGHTNESS, value=100
+                )
 
-        if CHAR_COLOR_TEMPERATURE in self.chars:
+        if is_color_temp_supported:
             min_mireds = self.hass.states.get(self.entity_id).attributes.get(
                 ATTR_MIN_MIREDS, 153
             )
             max_mireds = self.hass.states.get(self.entity_id).attributes.get(
                 ATTR_MAX_MIREDS, 500
             )
+            serv_light = serv_light_secondary or serv_light_primary
             self.char_color_temperature = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
                 value=min_mireds,
                 properties={PROP_MIN_VALUE: min_mireds, PROP_MAX_VALUE: max_mireds},
             )
 
-        if CHAR_HUE in self.chars:
-            self.char_hue = serv_light.configure_char(CHAR_HUE, value=0)
-
-        if CHAR_SATURATION in self.chars:
-            self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
+        if is_color_supported:
+            self.char_hue = serv_light_primary.configure_char(CHAR_HUE, value=0)
+            self.char_saturation = serv_light_primary.configure_char(
+                CHAR_SATURATION, value=75
+            )
 
         self.async_update_state(state)
 
-        serv_light.setter_callback = self._set_chars
+        serv_light_primary.setter_callback = self._set_chars
+        if serv_light_secondary:
+            serv_light_secondary.setter_callback = self._set_chars
 
     def _set_chars(self, char_values):
         _LOGGER.debug("Light _set_chars: %s", char_values)
@@ -152,29 +173,19 @@ class Light(HomeAccessory):
     def async_update_state(self, new_state):
         """Update light after state change."""
         # Handle State
-
         state = new_state.state
-        if state == STATE_ON and self.char_on.value != 1:
-            self.char_on.set_value(1)
-        elif state == STATE_OFF and self.char_on.value != 0:
-            self.char_on.set_value(0)
-
         attributes = new_state.attributes
-        color_mode = attributes.get(ATTR_COLOR_MODE)
-        has_mode = color_mode is not None
-
-        color_temp_mode = color_mode == COLOR_MODE_COLOR_TEMP
-        color_mode_changed = color_mode != self._previous_color_mode
-        _LOGGER.debug(
-            "%s: async_update_state: %s, color_mode_changed: %s, _previous_color_mode: %s",
-            self.entity_id,
-            new_state,
-            color_mode_changed,
-            self._previous_color_mode,
-        )
+        char_on_value = int(state == STATE_ON)
+        if self.char_on_primary.value != char_on_value:
+            self.char_on_primary.set_value(char_on_value)
+        if self.secondary_chars and self.char_on_secondary.value != char_on_value:
+            self.char_on_secondary.set_value(char_on_value)
 
         # Handle Brightness
-        if CHAR_BRIGHTNESS in self.chars:
+        if (
+            CHAR_BRIGHTNESS in self.primary_chars
+            or CHAR_BRIGHTNESS in self.secondary_chars
+        ):
             brightness = attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, (int, float)):
                 brightness = round(brightness / 255 * 100, 0)
@@ -190,23 +201,31 @@ class Light(HomeAccessory):
                 # order to avoid this incorrect behavior.
                 if brightness == 0 and state == STATE_ON:
                     brightness = 1
-                if self.char_brightness.value != brightness:
-                    self.char_brightness.set_value(brightness)
+                if (
+                    CHAR_BRIGHTNESS in self.primary_chars
+                    and self.char_brightness_primary.value != brightness
+                ):
+                    self.char_brightness_primary.set_value(brightness)
+                if (
+                    CHAR_BRIGHTNESS in self.secondary_chars
+                    and self.char_brightness_secondary.value != brightness
+                ):
+                    self.char_brightness_secondary.set_value(brightness)
 
         # Handle color temperature
-        if (not has_mode or color_temp_mode) and CHAR_COLOR_TEMPERATURE in self.chars:
+        if (
+            CHAR_COLOR_TEMPERATURE in self.primary_chars
+            or CHAR_COLOR_TEMPERATURE in self.secondary_chars
+        ):
             color_temperature = attributes.get(ATTR_COLOR_TEMP)
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
-                if (
-                    color_mode_changed
-                    or self.char_color_temperature.value != color_temperature
-                ):
+                if self.char_color_temperature.value != color_temperature:
                     self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
-        if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
-            if (not has_mode or not color_temp_mode) and ATTR_HS_COLOR in attributes:
+        if CHAR_SATURATION in self.primary_chars:
+            if ATTR_HS_COLOR in attributes:
                 hue, saturation = attributes[ATTR_HS_COLOR]
             elif ATTR_COLOR_TEMP in attributes:
                 hue, saturation = color_temperature_to_hs(
@@ -217,9 +236,7 @@ class Light(HomeAccessory):
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)
-                if color_mode_changed or hue != self.char_hue.value:
+                if hue != self.char_hue.value:
                     self.char_hue.set_value(hue)
-                if color_mode_changed or saturation != self.char_saturation.value:
+                if saturation != self.char_saturation.value:
                     self.char_saturation.set_value(saturation)
-
-        self._previous_color_mode = color_mode
