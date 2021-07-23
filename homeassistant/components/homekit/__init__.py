@@ -589,7 +589,7 @@ class HomeKit:
         for state in new:
             acc = self.add_bridge_accessory(state)
             if acc:
-                self.hass.add_job(acc.run)
+                self.hass.async_add_job(acc.run)
         await self.async_config_changed()
 
     async def async_config_changed(self):
