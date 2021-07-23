@@ -11,5 +11,6 @@
   "codeowners": [
     "@jherby2k"
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "quality_scale": "silver"
 }
