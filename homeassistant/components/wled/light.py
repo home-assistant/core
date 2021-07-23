@@ -36,6 +36,7 @@ from .const import (
     ATTR_SEGMENT_ID,
     ATTR_SPEED,
     DOMAIN,
+    LOGGER,
     SERVICE_EFFECT,
     SERVICE_PRESET,
 )
@@ -164,6 +165,13 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
         preset: int,
     ) -> None:
         """Set a WLED light to a saved preset."""
+        # The WLED preset service is replaced by a preset select entity
+        # and marked deprecated as of Home Assistant 2021.8
+        LOGGER.warning(
+            "The 'wled.preset' service is deprecated and replaced by a "
+            "dedicated preset select entity; Please use that entity to "
+            "change presets instead"
+        )
         await self.coordinator.wled.preset(preset=preset)
 
 
