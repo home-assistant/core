@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
-HAP-python==3.5.1
+HAP-python==3.5.2
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -140,7 +140,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.8.0
 
 # homeassistant.components.notion
-aionotion==1.1.0
+aionotion==3.0.2
 
 # homeassistant.components.automate
 aiopulse2==0.6.0
@@ -750,7 +750,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==5.2.1
+pyatmo==5.2.3
 
 # homeassistant.components.apple_tv
 pyatv==0.8.1
@@ -1015,9 +1015,6 @@ pysmartthings==0.7.6
 # homeassistant.components.soma
 pysoma==0.0.10
 
-# homeassistant.components.sonos
-pysonos==0.0.53
-
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
@@ -1175,6 +1172,9 @@ smarthab==0.21
 # homeassistant.components.smhi
 smhi-pkg==1.0.15
 
+# homeassistant.components.sonos
+soco==0.23.1
+
 # homeassistant.components.solaredge
 solaredge==0.0.2
 
@@ -1305,7 +1305,7 @@ wiffi==1.0.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.7.1
+wled==0.7.3
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

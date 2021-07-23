@@ -1,0 +1,11 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "co": "Monoxyde de carbone"
+        },
+        "airvisual__pollutant_level": {
+            "good": "Bon",
+            "hazardous": "Hasardeux"
+        }
+    }
+}

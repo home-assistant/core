@@ -1,7 +1,7 @@
 """Config flow for SONOS."""
 import logging
 
-import pysonos
+import soco
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
-    result = await hass.async_add_executor_job(pysonos.discover)
+    result = await hass.async_add_executor_job(soco.discover)
     return bool(result)
 
 
