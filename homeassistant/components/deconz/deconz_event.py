@@ -163,11 +163,13 @@ class DeconzAlarmEvent(DeconzEvent):
         if (
             self.gateway.ignore_state_updates
             or "action" not in self._device.changed_keys
-            or self._device.action == ""
         ):
             return
 
-        state, code, _area = self._device.action.split(",")
+        try:
+            state, code, _area = self._device.action.split(",")
+        except (AttributeError, ValueError):
+            return
 
         if state not in DECONZ_TO_ALARM_STATE:
             return

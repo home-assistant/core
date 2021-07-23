@@ -267,6 +267,36 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
 
     # Unsupported events
 
+    # Action is None
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"action": None},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(captured_events) == 1
+
+    # Action is an empty string
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"action": ""},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(captured_events) == 1
+
+    # Bad action
+
     event_changed_sensor = {
         "t": "event",
         "e": "changed",
@@ -278,6 +308,8 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
     await hass.async_block_till_done()
 
     assert len(captured_events) == 1
+
+    # Only care for changes to action
 
     event_changed_sensor = {
         "t": "event",
