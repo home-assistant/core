@@ -1,6 +1,8 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
@@ -23,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxEntity
 from .const import (
@@ -128,6 +131,12 @@ class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
     def state(self) -> float | None:
         """Return the state of the sensor."""
         return (self.device.energy or 0.0) / 1000
+
+    @property
+    def last_reset(self) -> datetime:
+        """Return the time when the sensor was last reset, if any."""
+        # device does not provide timestamp of initialization
+        return utc_from_timestamp(0)
 
 
 class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
