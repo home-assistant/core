@@ -6,7 +6,6 @@ This Koogeek device has a custom power sensor that extra handling.
 It should have 2 entities - the actual switch and a sensor for power usage.
 """
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
@@ -14,8 +13,6 @@ from tests.components.homekit_controller.common import (
     setup_accessories_from_file,
     setup_test_accessories,
 )
-
-LIGHT_ON = ("lightbulb", "on")
 
 
 async def test_koogeek_ls1_setup(hass):
