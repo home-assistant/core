@@ -153,7 +153,7 @@ async def test_step_reauth(hass):
             DOMAIN,
             context={
                 "source": SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
+                "entry": entry,
                 "unique_id": Server.HOST,
             },
             data={
