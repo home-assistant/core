@@ -20,7 +20,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -60,9 +59,8 @@ class Light(HomeAccessory):
         self.secondary_chars = []
 
         state = self.hass.states.get(self.entity_id)
-
-        self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+        attributes = state.attributes
+        color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
         self.is_color_supported = color_supported(color_modes)
         self.is_color_temp_supported = color_temp_supported(color_modes)
         self.color_and_temp_supported = (
@@ -117,12 +115,8 @@ class Light(HomeAccessory):
                 )
 
         if self.is_color_temp_supported:
-            min_mireds = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_MIN_MIREDS, 153
-            )
-            max_mireds = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_MAX_MIREDS, 500
-            )
+            min_mireds = attributes.get(ATTR_MIN_MIREDS, 153)
+            max_mireds = attributes.get(ATTR_MAX_MIREDS, 500)
             serv_light = serv_light_secondary or serv_light_primary
             self.char_color_temperature = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
