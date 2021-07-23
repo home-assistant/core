@@ -51,7 +51,7 @@ ASTRONOMY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "moonset": {"name": "Moonset", "unit_of_measurement": None, "device_class": None},
     "moonPhase": {
         "name": "Moon Phase",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": PERCENTAGE,
         "device_class": None,
     },
     "moonPhaseDesc": {
