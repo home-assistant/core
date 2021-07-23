@@ -17,13 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_MODES,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MAX_UPDATE_RATE_FOR_ONE_CLIENT,
-)
-from .utils import active_here_clients
+from .const import CONF_MODES, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,16 +64,11 @@ class HEREWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    def number_of_listeners(self) -> int:
-        """Return the number ob active listeners registered against this coordinator."""
-        return len(self._listeners)
-
     async def _async_update_data(self) -> list:
         """Perform data update."""
         try:
             async with async_timeout.timeout(10):
                 data = await self.hass.async_add_executor_job(self._get_data)
-                self._set_update_interval()
                 return data
         except herepy.InvalidRequestError as error:
             raise UpdateFailed(
@@ -98,17 +87,6 @@ class HEREWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         return extract_data_from_payload_for_product_type(
             data, self.weather_product_type
         )
-
-    def _set_update_interval(self) -> int:
-        """Throttle the default update rate based on the number of active clients."""
-        if (
-            update_interval := (
-                active_here_clients(self.hass) * MAX_UPDATE_RATE_FOR_ONE_CLIENT * 2
-            )
-        ) > DEFAULT_SCAN_INTERVAL:
-            _LOGGER.debug("Setting update_interval to %s", update_interval)
-            return update_interval
-        return DEFAULT_SCAN_INTERVAL
 
 
 def extract_data_from_payload_for_product_type(
