@@ -96,15 +96,11 @@ class Light(HomeAccessory):
                 SERV_LIGHTBULB, self.secondary_chars
             )
             serv_light_primary.add_linked_service(serv_light_secondary)
-            serv_light_primary.configure_char(
-                CHAR_NAME, value=f"{self.display_name} RGB"
-            )
+            serv_light_primary.configure_char(CHAR_NAME, value="RGB")
             self.char_on_secondary = serv_light_secondary.configure_char(
                 CHAR_ON, value=0
             )
-            serv_light_secondary.configure_char(
-                CHAR_NAME, value=f"{self.display_name} W"
-            )
+            serv_light_secondary.configure_char(CHAR_NAME, value="W")
 
         if self.is_brightness_supported:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
