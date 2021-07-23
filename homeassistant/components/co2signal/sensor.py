@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_TOKEN,
-    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
 )
 from homeassistant.helpers import config_validation as cv, update_coordinator
 from homeassistant.helpers.typing import StateType
@@ -30,7 +30,6 @@ from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
-CO2_INTENSITY_UNIT = f"CO2eq/{ENERGY_KILO_WATT_HOUR}"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
@@ -62,7 +61,7 @@ SENSORS = (
     CO2SensorEntityDescription(
         key="fossilFuelPercentage",
         name="Grid fossil fuel percentage",
-        unit_of_measurement="%",
+        unit_of_measurement=PERCENTAGE,
     ),
 )
 

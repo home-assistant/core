@@ -90,7 +90,7 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CO2SignalResponse]):
         if "error" in data:
             raise UpdateFailed(data["error"])
 
-        return cast(CO2SignalResponse, data)
+        return data
 
 
 class CO2Error(HomeAssistantError):
@@ -109,7 +109,7 @@ class UnknownError(CO2Error):
     """Raised when an unknown error occurs."""
 
 
-def get_data(hass, config: dict) -> dict:
+def get_data(hass: HomeAssistant, config: dict) -> CO2SignalResponse:
     """Get data from the API."""
     if CONF_COUNTRY_CODE in config:
         latitude = None
@@ -149,4 +149,4 @@ def get_data(hass, config: dict) -> dict:
             _LOGGER.exception("Unexpected response: %s", data)
             raise UnknownError
 
-    return data
+    return cast(CO2SignalResponse, data)
