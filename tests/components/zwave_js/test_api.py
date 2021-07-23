@@ -929,6 +929,7 @@ async def test_subscribe_heal_network_progress(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"] is None
 
     # Fire heal network progress
     event = Event(
@@ -959,6 +960,39 @@ async def test_subscribe_heal_network_progress(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_subscribe_heal_network_progress_initial_value(
+    hass, integration, client, hass_ws_client
+):
+    """Test subscribe_heal_network_progress command when heal network in progress."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    assert not client.driver.controller.heal_network_progress
+
+    # Fire heal network progress before sending heal network progress command
+    event = Event(
+        "heal network progress",
+        {
+            "source": "controller",
+            "event": "heal network progress",
+            "progress": {67: "pending"},
+        },
+    )
+    client.driver.controller.receive_event(event)
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/subscribe_heal_network_progress",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"67": "pending"}
 
 
 async def test_stop_healing_network(
@@ -2403,6 +2437,7 @@ async def test_subscribe_firmware_update_status(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"] is None
 
     event = Event(
         type="firmware update progress",
@@ -2441,6 +2476,44 @@ async def test_subscribe_firmware_update_status(
         "status": 255,
         "wait_time": 10,
     }
+
+
+async def test_subscribe_firmware_update_status_initial_value(
+    hass, integration, multisensor_6, client, hass_ws_client
+):
+    """Test subscribe_firmware_update_status websocket command with in progress update."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    assert multisensor_6.firmware_update_progress is None
+
+    # Send a firmware update progress event before the WS command
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "node",
+            "event": "firmware update progress",
+            "nodeId": multisensor_6.node_id,
+            "sentFragments": 1,
+            "totalFragments": 10,
+        },
+    )
+    multisensor_6.receive_event(event)
+
+    client.async_send_command_no_wait.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"sent_fragments": 1, "total_fragments": 10}
 
 
 async def test_subscribe_firmware_update_status_failures(
