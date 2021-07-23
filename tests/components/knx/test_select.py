@@ -87,7 +87,7 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit):
 
 
 async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit):
-    """Test KNX select with state_address, passive_address and respond_to_read."""
+    """Test KNX select with passive_address and respond_to_read restoring state."""
     _options = [
         {SelectSchema.CONF_PAYLOAD: 0b00, SelectSchema.CONF_OPTION: "No control"},
         {SelectSchema.CONF_PAYLOAD: 0b10, SelectSchema.CONF_OPTION: "Control - Off"},
