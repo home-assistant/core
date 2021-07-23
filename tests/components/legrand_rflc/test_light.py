@@ -39,10 +39,7 @@ async def test_light(hass):
             b'{"ID":3,"Service":"ReportZoneProperties","ZID":1,"PropertyList":{"Name":"dimmer","DeviceType":"Dimmer","PowerLevel":100,"Power":false},"Status":"Success"}\x00',
             COMPOSER.wrap(4, COMPOSER.compose_set_zone_properties(0, power=True)),
             b'{"ID":0,"Service":"ZonePropertiesChanged","ZID":0,"PropertyList":{"Power":true},"Status":"Success"}\x00{"ID":4,"Service":"SetZoneProperties","Status":"Success"}\x00',
-            COMPOSER.wrap(
-                5,
-                COMPOSER.compose_set_zone_properties(0, power=False),
-            ),
+            COMPOSER.wrap(5, COMPOSER.compose_set_zone_properties(0, power=False)),
             b'{"ID":0,"Service":"ZonePropertiesChanged","ZID":0,"PropertyList":{"Power":false},"Status":"Success"}\x00{"ID":5,"Service":"SetZoneProperties","Status":"Success"}\x00',
             COMPOSER.wrap(6, COMPOSER.compose_set_zone_properties(1, power=True)),
             b'{"ID":0,"Service":"ZonePropertiesChanged","ZID":1,"PropertyList":{"Power":true},"Status":"Success"}\x00{"ID":6,"Service":"SetZoneProperties","Status":"Success"}\x00',
@@ -53,10 +50,7 @@ async def test_light(hass):
                 ),
             ),
             b'{"ID":0,"Service":"ZonePropertiesChanged","ZID":1,"PropertyList":{"PowerLevel":50,"Power":true},"Status":"Success"}\x00{"ID":7,"Service":"SetZoneProperties","Status":"Success"}\x00',
-            COMPOSER.wrap(
-                8,
-                COMPOSER.compose_set_zone_properties(1, power=False),
-            ),
+            COMPOSER.wrap(8, COMPOSER.compose_set_zone_properties(1, power=False)),
             b'{"ID":0,"Service":"ZonePropertiesChanged","ZID":1,"PropertyList":{"Power":false},"Status":"Success"}\x00{"ID":8,"Service":"SetZoneProperties","Status":"Success"}\x00',
         ],
     ]
