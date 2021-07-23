@@ -6,11 +6,13 @@ from pyhap.const import CATEGORY_LIGHTBULB
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
+    COLOR_MODE_COLOR_TEMP,
     DOMAIN,
     brightness_supported,
     color_supported,
@@ -176,10 +178,19 @@ class Light(HomeAccessory):
         state = new_state.state
         attributes = new_state.attributes
         char_on_value = int(state == STATE_ON)
-        if self.char_on_primary.value != char_on_value:
-            self.char_on_primary.set_value(char_on_value)
-        if self.secondary_chars and self.char_on_secondary.value != char_on_value:
-            self.char_on_secondary.set_value(char_on_value)
+
+        if self.secondary_chars:
+            color_mode = attributes.get(ATTR_COLOR_MODE)
+            color_temp_mode = color_mode == COLOR_MODE_COLOR_TEMP
+            primary_on_value = char_on_value if not color_temp_mode else 0
+            secondary_on_value = char_on_value if color_temp_mode else 0
+            if self.char_on_primary.value != primary_on_value:
+                self.char_on_primary.set_value(primary_on_value)
+            if self.char_on_secondary.value != secondary_on_value:
+                self.char_on_secondary.set_value(secondary_on_value)
+        else:
+            if self.char_on_primary.value != char_on_value:
+                self.char_on_primary.set_value(char_on_value)
 
         # Handle Brightness
         if (
