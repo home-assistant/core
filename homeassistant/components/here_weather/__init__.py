@@ -32,12 +32,12 @@ PLATFORMS = ["sensor", "weather"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up here_weather from a config entry."""
-    here_weather_data_dict = {}
+    here_weather_coordinators = {}
     for mode in CONF_MODES:
-        here_weather_data = HEREWeatherData(hass, entry, mode)
-        await here_weather_data.async_setup()
-        here_weather_data_dict[mode] = here_weather_data
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = here_weather_data_dict
+        coordinator = HEREWeatherDataUpdateCoordinator(hass, entry, mode)
+        await coordinator.async_config_entry_first_refresh()
+        here_weather_coordinators[mode] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = here_weather_coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -53,32 +53,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class HEREWeatherData:
+class HEREWeatherDataUpdateCoordinator(DataUpdateCoordinator):
     """Get the latest data from HERE."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, mode: str) -> None:
         """Initialize the data object."""
-        self.hass = hass
-        self.entry = entry
         self.here_client = herepy.DestinationWeatherApi(entry.data[CONF_API_KEY])
         self.latitude = entry.data[CONF_LATITUDE]
         self.longitude = entry.data[CONF_LONGITUDE]
         self.weather_product_type = herepy.WeatherProductType[mode]
-        self.coordinator: DataUpdateCoordinator | None = None
 
-    async def async_setup(self) -> None:
-        """Set up the here_weather integration."""
-        self.coordinator = DataUpdateCoordinator(
-            self.hass,
+        super().__init__(
+            hass,
             _LOGGER,
             name=DOMAIN,
-            update_method=self.async_update,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-        await self.coordinator.async_config_entry_first_refresh()
 
-    async def async_update(self):
-        """Handle data update with the DataUpdateCoordinator."""
+    def number_of_listeners(self) -> int:
+        """Return the number ob active listeners registered against this coordinator."""
+        return len(self._listeners)
+
+    async def _async_update_data(self) -> list:
+        """Perform data update."""
         try:
             async with async_timeout.timeout(10):
                 data = await self.hass.async_add_executor_job(self._get_data)

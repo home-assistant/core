@@ -20,7 +20,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Add here_weather entities from a ConfigEntry."""
-    here_weather_data_dict = hass.data[DOMAIN][entry.entry_id]
+    here_weather_coordinators = hass.data[DOMAIN][entry.entry_id]
 
     sensors_to_add = []
     for sensor_type, weather_attributes in SENSOR_TYPES.items():
@@ -28,7 +28,7 @@ async def async_setup_entry(
             sensors_to_add.append(
                 HEREDestinationWeatherSensor(
                     entry,
-                    here_weather_data_dict[sensor_type].coordinator,
+                    here_weather_coordinators[sensor_type],
                     sensor_type,
                     weather_attribute,
                 )

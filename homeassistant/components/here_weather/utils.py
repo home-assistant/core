@@ -69,8 +69,8 @@ def active_here_clients(hass: HomeAssistant) -> int:
     """Return the number of active herepy clients."""
     active_coordinators = 0
     if config_entries := hass.data.get(DOMAIN):
-        for here_weather_data_dicts in config_entries.values():
-            for here_weather_data in here_weather_data_dicts.values():
-                if len(here_weather_data.coordinator._listeners) > 0:
+        for here_weather_coordinators in config_entries.values():
+            for coordinator in here_weather_coordinators.values():
+                if coordinator.number_of_listeners() > 0:
                     active_coordinators += 1
     return active_coordinators
