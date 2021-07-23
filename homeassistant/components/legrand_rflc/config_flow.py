@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+import logging
 import socket
 from typing import Final, Optional
 
@@ -20,6 +21,8 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -55,7 +58,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # {'ip': '192.168.0.1', 'hostname': 'legrand lc7001', 'macaddress': '0026ec000000'}
         try:
             resolutions = await asyncio.get_event_loop().getaddrinfo(self.HOST, None)
-        except OSError:
+        except OSError as error:
+            _LOGGER.warning("getaddrinfo %s error %s", self.HOST, error)
             return self.async_abort(reason=self.ABORT_NO_DEVICES_FOUND)
         address = discovery_info[IP_ADDRESS]
         if any(
@@ -66,6 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._async_handle_discovery_without_unique_id()
             # wait for user interaction in the next step
             return await self.async_step_user()
+        _LOGGER.warning("%s does not resolve to discovered %s", self.HOST, address)
         return self.async_abort(reason=self.ABORT_NO_DEVICES_FOUND)
 
     async def async_step_user(
