@@ -87,28 +87,18 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
     coordinator: YaleDataUpdateCoordinator
 
-    _attr_name = coordinator.entry.data[CONF_NAME]
-    _attr_entry_id = coordinator.entry.entry_id
-    _attr_identifier = coordinator.entry.data[CONF_USERNAME]
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return str(self._attr_name)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._attr_entry_id
+    _attr_name: str = coordinator.entry.data[CONF_NAME]
+    _attr_unique_id: str = coordinator.entry.entry_id
+    _identifier: str = coordinator.entry.data[CONF_USERNAME]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return {
-            ATTR_NAME: str(self._attr_name),
+            ATTR_NAME: str(self.name),
             ATTR_MANUFACTURER: MANUFACTURER,
             ATTR_MODEL: MODEL,
-            ATTR_IDENTIFIERS: {(DOMAIN, self._attr_identifier)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self._identifier)},
         }
 
     @property
