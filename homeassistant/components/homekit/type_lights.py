@@ -32,6 +32,7 @@ from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
     CHAR_HUE,
+    CHAR_NAME,
     CHAR_ON,
     CHAR_SATURATION,
     PROP_MAX_VALUE,
@@ -64,9 +65,12 @@ class Light(HomeAccessory):
         color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
         self.is_color_supported = color_supported(color_modes)
         self.is_color_temp_supported = color_temp_supported(color_modes)
-        is_brightness_supported = brightness_supported(color_modes)
+        self.color_and_temp_supported = (
+            self.is_color_supported and self.is_color_temp_supported
+        )
+        self.is_brightness_supported = brightness_supported(color_modes)
 
-        if is_brightness_supported:
+        if self.is_brightness_supported:
             self.primary_chars.append(CHAR_BRIGHTNESS)
 
         if self.is_color_supported:
@@ -74,9 +78,11 @@ class Light(HomeAccessory):
             self.primary_chars.append(CHAR_SATURATION)
 
         if self.is_color_temp_supported:
-            if self.is_color_supported:
+            if self.color_and_temp_supported:
+                self.primary_chars.append(CHAR_NAME)
+                self.secondary_chars.append(CHAR_NAME)
                 self.secondary_chars.append(CHAR_COLOR_TEMPERATURE)
-                if is_brightness_supported:
+                if self.is_brightness_supported:
                     self.secondary_chars.append(CHAR_BRIGHTNESS)
             else:
                 self.primary_chars.append(CHAR_COLOR_TEMPERATURE)
@@ -86,16 +92,19 @@ class Light(HomeAccessory):
         )
         serv_light_secondary = None
         self.char_on_primary = serv_light_primary.configure_char(CHAR_ON, value=0)
-        if self.secondary_chars:
+
+        if self.color_and_temp_supported:
             serv_light_secondary = self.add_preload_service(
                 SERV_LIGHTBULB, self.secondary_chars
             )
             serv_light_primary.add_linked_service(serv_light_secondary)
+            serv_light_primary.configure_char(CHAR_NAME, f"{self.name} RGB")
             self.char_on_secondary = serv_light_secondary.configure_char(
                 CHAR_ON, value=0
             )
+            serv_light_secondary.configure_char(CHAR_NAME, f"{self.name} W")
 
-        if is_brightness_supported:
+        if self.is_brightness_supported:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
             # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
@@ -129,7 +138,7 @@ class Light(HomeAccessory):
 
         self.async_update_state(state)
 
-        if serv_light_secondary:
+        if self.color_and_temp_supported:
             serv_light_primary.setter_callback = self._set_primary_chars
             serv_light_secondary.setter_callback = self._set_secondary_chars
         else:
@@ -179,11 +188,6 @@ class Light(HomeAccessory):
             params[ATTR_HS_COLOR] = color
             events.append(f"set color at {color}")
 
-        #        if is_primary is True:
-        #            self.char_on_secondary.set_value(0)
-        #        elif is_primary is False:
-        #            self.char_on_primary.set_value(0)
-
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
     @callback
@@ -194,7 +198,7 @@ class Light(HomeAccessory):
         attributes = new_state.attributes
         char_on_value = int(state == STATE_ON)
 
-        if self.secondary_chars:
+        if self.color_and_temp_supported:
             color_mode = attributes.get(ATTR_COLOR_MODE)
             color_temp_mode = color_mode == COLOR_MODE_COLOR_TEMP
             primary_on_value = char_on_value if not color_temp_mode else 0
@@ -208,10 +212,7 @@ class Light(HomeAccessory):
                 self.char_on_primary.set_value(char_on_value)
 
         # Handle Brightness
-        if (
-            CHAR_BRIGHTNESS in self.primary_chars
-            or CHAR_BRIGHTNESS in self.secondary_chars
-        ):
+        if self.is_brightness_supported:
             brightness = attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, (int, float)):
                 brightness = round(brightness / 255 * 100, 0)
@@ -239,10 +240,7 @@ class Light(HomeAccessory):
                     self.char_brightness_secondary.set_value(brightness)
 
         # Handle color temperature
-        if (
-            CHAR_COLOR_TEMPERATURE in self.primary_chars
-            or CHAR_COLOR_TEMPERATURE in self.secondary_chars
-        ):
+        if self.is_color_temp_supported:
             color_temperature = attributes.get(ATTR_COLOR_TEMP)
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
@@ -250,11 +248,8 @@ class Light(HomeAccessory):
                     self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
-        if CHAR_SATURATION in self.primary_chars:
-            if ATTR_HS_COLOR in attributes:
-                hue, saturation = attributes[ATTR_HS_COLOR]
-            else:
-                hue, saturation = None, None
+        if self.is_color_supported:
+            hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)
