@@ -557,6 +557,7 @@ class HomeKit:
             return
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
+            self.hass.async_add_job(new_acc.run)
             await self.async_config_changed()
 
     async def async_reset_accessories_in_bridge_mode(self, entity_ids):
@@ -586,7 +587,9 @@ class HomeKit:
         await self.async_config_changed()
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         for state in new:
-            self.add_bridge_accessory(state)
+            acc = self.add_bridge_accessory(state)
+            if acc:
+                self.hass.add_job(acc.run)
         await self.async_config_changed()
 
     async def async_config_changed(self):
@@ -625,10 +628,12 @@ class HomeKit:
             acc = get_accessory(self.hass, self.driver, state, aid, conf)
             if acc is not None:
                 self.bridge.add_accessory(acc)
+                return acc
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
+        return None
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""

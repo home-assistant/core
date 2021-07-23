@@ -646,7 +646,9 @@ async def test_homekit_reset_accessories(hass, mock_zeroconf):
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch.object(
+    ), patch(
+        f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
+    ) as mock_run, patch.object(
         homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
@@ -667,6 +669,7 @@ async def test_homekit_reset_accessories(hass, mock_zeroconf):
 
         assert hk_driver_config_changed.call_count == 2
         assert mock_add_accessory.called
+        assert mock_run.called
         homekit.status = STATUS_READY
 
 
@@ -923,7 +926,9 @@ async def test_homekit_reset_single_accessory(hass, mock_zeroconf):
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
     ) as hk_driver_config_changed, patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ):
+    ), patch(
+        f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
+    ) as mock_run:
         await async_init_entry(hass, entry)
 
         homekit.status = STATUS_RUNNING
@@ -938,7 +943,7 @@ async def test_homekit_reset_single_accessory(hass, mock_zeroconf):
             blocking=True,
         )
         await hass.async_block_till_done()
-
+        assert mock_run.called
         assert hk_driver_config_changed.call_count == 1
         homekit.status = STATUS_READY
 
