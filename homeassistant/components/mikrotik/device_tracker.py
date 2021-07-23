@@ -13,7 +13,9 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import CLIENTS, DOMAIN
@@ -60,7 +62,7 @@ def update_items(
     hub: MikrotikHub,
     tracked: dict[str, MikrotikClientTracker],
     all_clients: dict[str, MikrotikClient],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update tracked device state from the hub."""
     new_tracked = []
@@ -73,13 +75,16 @@ def update_items(
         async_add_entities(new_tracked)
 
 
-class MikrotikClientTracker(ScannerEntity):
+class MikrotikClientTracker(CoordinatorEntity, ScannerEntity):
     """Representation of network device."""
+
+    coordinator: MikrotikHub
 
     def __init__(
         self, mac: str, hub: MikrotikHub, all_clients: dict[str, MikrotikClient]
     ) -> None:
         """Initialize the tracked device."""
+        super().__init__(hub)
         self.mac = mac
         self.all_clients = all_clients
         self.host: str | None = all_clients[mac].host
@@ -87,9 +92,6 @@ class MikrotikClientTracker(ScannerEntity):
         self.this_device: DeviceEntry | None = None
         self._attr_name = self.all_clients[self.mac].name
         self._attr_unique_id = self.mac
-        self._attr_extra_state_attributes = (
-            self.all_clients[self.mac].attrs if self.is_connected else None
-        )
 
     @property
     def is_connected(self) -> bool:
@@ -120,6 +122,11 @@ class MikrotikClientTracker(ScannerEntity):
         return self.all_clients[self.mac].ip_address
 
     @property
+    def extra_state_attributes(self) -> dict | None:
+        """Return the device state attributes."""
+        return self.all_clients[self.mac].attrs if self.is_connected else None
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
         device_info: DeviceInfo = {
@@ -132,9 +139,15 @@ class MikrotikClientTracker(ScannerEntity):
             device_info["name"] = self.name
         return device_info
 
-    async def async_added_to_hass(self) -> None:
-        """Client entity created."""
-        self.async_on_remove(self.hub.async_add_listener(self._update_callback))
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if (
+            self.all_clients[self.mac].host
+            and self.host != self.all_clients[self.mac].host
+        ):
+            self.async_update_device_details()
+        self.async_write_ha_state()
 
     def async_update_device_details(self):
         """Update the device details if it has changed."""
@@ -157,13 +170,3 @@ class MikrotikClientTracker(ScannerEntity):
             self.this_device.id, via_device_id=hub_device.id
         )
         self.host = self.all_clients[self.mac].host
-
-    @callback
-    def _update_callback(self) -> None:
-        """Update device state and related hub_id."""
-        if (
-            self.all_clients[self.mac].host
-            and self.host != self.all_clients[self.mac].host
-        ):
-            self.async_update_device_details()
-        self.async_write_ha_state()

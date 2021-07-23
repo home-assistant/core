@@ -43,7 +43,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+    ) -> MikrotikOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MikrotikOptionsFlowHandler(config_entry)
 
