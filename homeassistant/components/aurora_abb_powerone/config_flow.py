@@ -59,9 +59,8 @@ def scan_comports():
         _LOGGER.debug("COM port option: %s", port.device)
     if len(comportslist) > 0:
         return comportslist, comportslist[0]
-    else:
-        _LOGGER.warning("No com ports found.  Need a valid RS485 device to communicate")
-        return None, None
+    _LOGGER.warning("No com ports found.  Need a valid RS485 device to communicate")
+    return None, None
 
 
 class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
