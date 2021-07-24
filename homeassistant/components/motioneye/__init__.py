@@ -6,6 +6,7 @@ from collections.abc import Callable
 from http import HTTPStatus
 import json
 import logging
+import os
 from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlencode, urljoin
@@ -15,13 +16,17 @@ from motioneye_client.client import (
     MotionEyeClient,
     MotionEyeClientError,
     MotionEyeClientInvalidAuthError,
+    MotionEyeClientPathError,
 )
 from motioneye_client.const import (
     KEY_CAMERAS,
     KEY_HTTP_METHOD_POST_JSON,
     KEY_ID,
     KEY_NAME,
+    KEY_ROOT_DIRECTORY,
     KEY_WEB_HOOK_CONVERSION_SPECIFIERS,
+    KEY_WEB_HOOK_CS_FILE_PATH,
+    KEY_WEB_HOOK_CS_FILE_TYPE,
     KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
     KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
     KEY_WEB_HOOK_NOTIFICATIONS_URL,
@@ -32,6 +37,7 @@ from motioneye_client.const import (
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.media_source.const import URI_SCHEME
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.webhook import (
     async_generate_id,
@@ -74,6 +80,8 @@ from .const import (
     DOMAIN,
     EVENT_FILE_STORED,
     EVENT_FILE_STORED_KEYS,
+    EVENT_FILE_URL,
+    EVENT_MEDIA_CONTENT_ID,
     EVENT_MOTION_DETECTED,
     EVENT_MOTION_DETECTED_KEYS,
     MOTIONEYE_MANUFACTURER,
@@ -99,6 +107,20 @@ def get_motioneye_device_identifier(
 ) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
     return (DOMAIN, f"{config_entry_id}_{camera_id}")
+
+
+def split_motioneye_device_identifier(
+    identifier: tuple[str, str]
+) -> tuple[str, str, int] | None:
+    """Get the identifiers for a motionEye device."""
+    if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
+        return None
+    config_id, camera_id_str = identifier[1].split("_", 1)
+    try:
+        camera_id = int(camera_id_str)
+    except ValueError:
+        return None
+    return (DOMAIN, config_id, camera_id)
 
 
 def get_motioneye_entity_unique_id(
@@ -428,6 +450,21 @@ async def handle_webhook(
             status=HTTPStatus.BAD_REQUEST,
         )
 
+    if KEY_WEB_HOOK_CS_FILE_PATH in data and KEY_WEB_HOOK_CS_FILE_TYPE in data:
+        try:
+            event_file_type = int(data[KEY_WEB_HOOK_CS_FILE_TYPE])
+        except ValueError:
+            pass
+        else:
+            data.update(
+                _get_media_event_data(
+                    hass,
+                    device,
+                    data[KEY_WEB_HOOK_CS_FILE_PATH],
+                    event_file_type,
+                )
+            )
+
     hass.bus.async_fire(
         f"{DOMAIN}.{event_type}",
         {
@@ -438,6 +475,68 @@ async def handle_webhook(
         },
     )
     return None
+
+
+def _get_media_event_data(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+    event_file_path: str,
+    event_file_type: int,
+) -> dict[str, str]:
+    config_entry_id = next(iter(device.config_entries), None)
+    client = hass.data[DOMAIN].get(config_entry_id, {}).get(CONF_CLIENT)
+    coordinator = hass.data[DOMAIN].get(config_entry_id, {}).get(CONF_COORDINATOR)
+
+    if not coordinator or not client:
+        return {}
+
+    for identifier in device.identifiers:
+        data = split_motioneye_device_identifier(identifier)
+        if data is not None:
+            camera_id = data[2]
+            camera = get_camera_from_cameras(camera_id, coordinator.data)
+            break
+    else:
+        return {}
+
+    root_directory = camera.get(KEY_ROOT_DIRECTORY) if camera else None
+    if root_directory is None:
+        return {}
+
+    kind = "images" if client.is_file_type_image(event_file_type) else "movies"
+
+    # The file_path in the event is the full local filesystem path to the
+    # media. To convert that to the media path that motionEye will
+    # understanding, we need to strip the root directory from the path.
+    if os.path.commonprefix([root_directory, event_file_path]) == root_directory:
+        file_path = "/" + os.path.relpath(event_file_path, root_directory)
+        output = {
+            EVENT_MEDIA_CONTENT_ID: f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
+        }
+        url = get_media_url(
+            client,
+            camera_id,
+            file_path,
+            kind == "images",
+        )
+        if url:
+            output[EVENT_FILE_URL] = url
+        return output
+
+    return {}
+
+
+def get_media_url(
+    client: MotionEyeClient, camera_id: int, path: str, image: bool
+) -> str | None:
+    """Get the URL for a motionEye media item."""
+    try:
+        if image:
+            return client.get_image_url(camera_id, path)
+        else:
+            return client.get_movie_url(camera_id, path)
+    except MotionEyeClientPathError:
+        return None
 
 
 class MotionEyeEntity(CoordinatorEntity):
