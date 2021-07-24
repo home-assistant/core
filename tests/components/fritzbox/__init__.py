@@ -55,6 +55,7 @@ class FritzDeviceBinarySensorMock(FritzDeviceBaseMock):
     battery_level = 23
     fw_version = "1.2.3"
     has_alarm = True
+    has_powermeter = False
     has_switch = False
     has_temperature_sensor = False
     has_thermostat = False
@@ -73,6 +74,7 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     eco_temperature = 16.0
     fw_version = "1.2.3"
     has_alarm = False
+    has_powermeter = False
     has_switch = False
     has_temperature_sensor = False
     has_thermostat = True
@@ -91,6 +93,7 @@ class FritzDeviceSensorMock(FritzDeviceBaseMock):
     device_lock = "fake_locked_device"
     fw_version = "1.2.3"
     has_alarm = False
+    has_powermeter = False
     has_switch = False
     has_temperature_sensor = True
     has_thermostat = False
@@ -107,6 +110,7 @@ class FritzDeviceSwitchMock(FritzDeviceBaseMock):
     energy = 1234
     fw_version = "1.2.3"
     has_alarm = False
+    has_powermeter = True
     has_switch = True
     has_temperature_sensor = True
     has_thermostat = False

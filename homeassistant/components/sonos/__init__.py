@@ -9,10 +9,10 @@ import logging
 import socket
 from urllib.parse import urlparse
 
-import pysonos
-from pysonos import events_asyncio
-from pysonos.core import SoCo
-from pysonos.exceptions import NotSupportedException, SoCoException
+from soco import events_asyncio
+import soco.config as soco_config
+from soco.core import SoCo
+from soco.exceptions import SoCoException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -87,7 +87,6 @@ class SonosData:
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
-        self.discovery_ignored: set[str] = set()
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
 
@@ -110,7 +109,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
-    pysonos.config.EVENTS_MODULE = events_asyncio
+    soco_config.EVENTS_MODULE = events_asyncio
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -122,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
-        pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+        soco_config.EVENT_ADVERTISE_IP = advertise_addr
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):
         _LOGGER.warning(
@@ -138,6 +137,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+def _create_soco(ip_address: str, source: SoCoCreationSource) -> SoCo | None:
+    """Create a soco instance and return if successful."""
+    try:
+        soco = SoCo(ip_address)
+        # Ensure that the player is available and UID is cached
+        _ = soco.uid
+        _ = soco.volume
+        return soco
+    except (OSError, SoCoException) as ex:
+        _LOGGER.warning(
+            "Failed to connect to %s player '%s': %s", source.value, ip_address, ex
+        )
+    return None
+
+
 class SonosDiscoveryManager:
     """Manage sonos discovery."""
 
@@ -150,26 +164,6 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = hosts
         self.discovery_lock = asyncio.Lock()
-
-    def _create_soco(self, ip_address: str, source: SoCoCreationSource) -> SoCo | None:
-        """Create a soco instance and return if successful."""
-        if ip_address in self.data.discovery_ignored:
-            return None
-
-        try:
-            soco = pysonos.SoCo(ip_address)
-            # Ensure that the player is available and UID is cached
-            uid = soco.uid
-            _ = soco.volume
-            return soco
-        except NotSupportedException as exc:
-            _LOGGER.debug("Device %s is not supported, ignoring: %s", uid, exc)
-            self.data.discovery_ignored.add(ip_address)
-        except (OSError, SoCoException) as ex:
-            _LOGGER.warning(
-                "Failed to connect to %s player '%s': %s", source.value, ip_address, ex
-            )
-        return None
 
     async def _async_stop_event_listener(self, event: Event) -> None:
         await asyncio.gather(
@@ -219,7 +213,7 @@ class SonosDiscoveryManager:
             if known_uid:
                 dispatcher_send(self.hass, f"{SONOS_SEEN}-{known_uid}")
             else:
-                soco = self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
+                soco = _create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
                 if soco and soco.is_visible:
                     self._discovered_player(soco)
 
@@ -228,7 +222,7 @@ class SonosDiscoveryManager:
         )
 
     def _discovered_ip(self, ip_address):
-        soco = self._create_soco(ip_address, SoCoCreationSource.DISCOVERED)
+        soco = _create_soco(ip_address, SoCoCreationSource.DISCOVERED)
         if soco and soco.is_visible:
             self._discovered_player(soco)
 
@@ -244,7 +238,7 @@ class SonosDiscoveryManager:
             if boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:
                 self.data.boot_counts[uid] = boot_seqnum
                 if soco := await self.hass.async_add_executor_job(
-                    self._create_soco, discovered_ip, SoCoCreationSource.REBOOTED
+                    _create_soco, discovered_ip, SoCoCreationSource.REBOOTED
                 ):
                     async_dispatcher_send(self.hass, f"{SONOS_REBOOTED}-{uid}", soco)
             else:

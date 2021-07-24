@@ -5,9 +5,9 @@ from collections.abc import Iterator
 import logging
 from typing import Any
 
-from pysonos import SoCo
-from pysonos.data_structures import DidlFavorite
-from pysonos.exceptions import SoCoException
+from soco import SoCo
+from soco.data_structures import DidlFavorite
+from soco.exceptions import SoCoException
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
