@@ -65,8 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         async with async_timeout.timeout(60):
-            await client.async_get_information(),
-            await client.async_get_system(),
+            await client.async_get_information()
+            await client.async_get_system()
     except BridgeAuthenticationException as exception:
         raise ConfigEntryAuthFailed from exception
     except BRIDGE_CONNECTION_ERRORS as exception:
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             or coordinator.bridge.processes is None
             or coordinator.bridge.system is None
         ):
-            _LOGGER.debug("No data yet, waiting..")
+            _LOGGER.debug("Waiting for initial data")
             await asyncio.sleep(1)
 
     hass.data.setdefault(DOMAIN, {})
