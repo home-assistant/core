@@ -44,9 +44,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self.discovered_ip_address: str | None = None
+    discovered_ip_address: str | None = None
 
     @staticmethod
     @callback
