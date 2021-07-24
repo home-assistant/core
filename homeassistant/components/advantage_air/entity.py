@@ -1,5 +1,6 @@
 """Advantage Air parent entity class."""
 
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -21,6 +22,15 @@ class AdvantageAirEntity(CoordinatorEntity):
             "model": self.coordinator.data["system"]["sysType"],
             "sw_version": self.coordinator.data["system"]["myAppRev"],
         }
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self._update_callback()
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
+
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
 
     @property
     def _ac(self):
