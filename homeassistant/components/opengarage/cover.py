@@ -12,6 +12,8 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_TEMPERATURE,
     CONF_COVERS,
     CONF_HOST,
     CONF_NAME,
@@ -30,8 +32,15 @@ from homeassistant.helpers.device_registry import format_mac
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DISTANCE_SENSOR = "distance_sensor"
+ATTR_SWITCH_SENSOR = "switch_sensor"
 ATTR_DOOR_STATE = "door_state"
+ATTR_VEHICLE_STATUS = "vehicle_status"
+ATTR_READ_COUNT = "read_count"
+ATTR_FIRMWARE_VERSION = "firmware_version"
+ATTR_MAC_ADDRESS = "mac_address"
+ATTR_WIFI_CHIP_ID = "wifi_chip_id"
 ATTR_SIGNAL_STRENGTH = "wifi_signal"
+ATTR_HUMIDITY = "humidity"
 
 CONF_DEVICE_KEY = "device_key"
 
@@ -153,12 +162,30 @@ class OpenGarageCover(CoverEntity):
             self._state = state
 
         _LOGGER.debug("%s status: %s", self._name, self._state)
-        if status.get("rssi") is not None:
-            self._extra_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
         if status.get("dist") is not None:
             self._extra_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
+        if status.get("sn2") is not None:
+            self._extra_state_attributes[ATTR_SWITCH_SENSOR] = status.get("sn2")
         if self._state is not None:
             self._extra_state_attributes[ATTR_DOOR_STATE] = self._state
+        if status.get("vehicle") is not None:
+            self._extra_state_attributes[ATTR_VEHICLE_STATUS] = status.get("vehicle")
+        if status.get("rcnt") is not None:
+            self._extra_state_attributes[ATTR_READ_COUNT] = status.get("rcnt")
+        if status.get("fwv") is not None:
+            self._extra_state_attributes[ATTR_FIRMWARE_VERSION] = status.get("fwv")
+        if status.get("name") is not None:
+            self._extra_state_attributes[ATTR_NAME] = status.get("name")
+        if status.get("mac") is not None:
+            self._extra_state_attributes[ATTR_MAC_ADDRESS] = status.get("mac")
+        if status.get("cid") is not None:
+            self._extra_state_attributes[ATTR_WIFI_CHIP_ID] = status.get("cid")
+        if status.get("rssi") is not None:
+            self._extra_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
+        if status.get("temp") is not None:
+            self._extra_state_attributes[ATTR_TEMPERATURE] = status.get("temp")
+        if status.get("humid") is not None:
+            self._extra_state_attributes[ATTR_HUMIDITY] = status.get("humid")
 
         self._available = True
 
