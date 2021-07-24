@@ -26,7 +26,7 @@
                 "data": {
                     "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",
                     "password": "Passwort",
-                    "username": "E-Mail-Adresse"
+                    "username": "E-Mail"
                 },
                 "title": "Gib deine Informationen ein"
             }

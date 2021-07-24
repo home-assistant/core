@@ -499,12 +499,11 @@ def accessory_friendly_name(hass_name, accessory):
 
 def state_needs_accessory_mode(state):
     """Return if the entity represented by the state must be paired in accessory mode."""
-    if state.domain == CAMERA_DOMAIN:
+    if state.domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
         return True
 
     return (
-        state.domain == LOCK_DOMAIN
-        or state.domain == MEDIA_PLAYER_DOMAIN
+        state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY

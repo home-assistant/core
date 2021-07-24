@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -125,36 +126,37 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
     def __init__(self, sensor_type, temp_unit, name, coordinator):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self.temp_unit = temp_unit
         self.type = sensor_type
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the entity from the latest data."""
         if self.type == SENSOR_TEMP:
             temperature = round(self.coordinator.data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:
                 temperature = round(celsius_to_fahrenheit(temperature), 1)
-            state = temperature
+            self._attr_state = temperature
         elif self.type == SENSOR_HUMID:
-            state = round(self.coordinator.data.humidity, 1)
+            self._attr_state = round(self.coordinator.data.humidity, 1)
         elif self.type == SENSOR_PRESS:
-            state = round(self.coordinator.data.pressure, 1)
-        return state
+            self._attr_state = round(self.coordinator.data.pressure, 1)
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        @callback
+        def update() -> None:
+            """Update the state."""
+            self.update_from_latest_data()
+            self.async_write_ha_state()
+
+        self.async_on_remove(self.coordinator.async_add_listener(update))
+
+        self.update_from_latest_data()
 
     @property
     def should_poll(self) -> bool:

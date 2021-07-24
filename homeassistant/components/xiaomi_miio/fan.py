@@ -336,7 +336,6 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
     ATTR_EXTRA_FEATURES: "extra_features",
 }
 
-OPERATION_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
 PRESET_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
 OPERATION_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
@@ -635,9 +634,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 await asyncio.wait(update_tasks)
 
         for air_purifier_service, method in SERVICE_TO_METHOD.items():
-            schema = method[air_purifier_service].get(
-                "schema", AIRPURIFIER_SERVICE_SCHEMA
-            )
+            schema = method.get("schema", AIRPURIFIER_SERVICE_SCHEMA)
             hass.services.async_register(
                 DOMAIN, air_purifier_service, async_service_handler, schema=schema
             )
@@ -905,10 +902,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
             self._preset_modes = PRESET_MODES_AIRPURIFIER
-            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
-            self._speed_count = 4
+            self._supported_features = SUPPORT_PRESET_MODE
+            self._speed_count = 1
             # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = OPERATION_MODES_AIRPURIFIER
+            self._speed_list = []
 
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}

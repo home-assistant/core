@@ -65,7 +65,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return self._name
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 

@@ -20,6 +20,8 @@ omit =
     homeassistant/components/acmeda/helpers.py
     homeassistant/components/acmeda/hub.py
     homeassistant/components/acmeda/sensor.py
+    homeassistant/components/adax/__init__.py
+    homeassistant/components/adax/climate.py
     homeassistant/components/adguard/__init__.py
     homeassistant/components/adguard/const.py
     homeassistant/components/adguard/sensor.py
@@ -73,6 +75,12 @@ omit =
     homeassistant/components/asuswrt/router.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
+    homeassistant/components/automate/__init__.py
+    homeassistant/components/automate/base.py
+    homeassistant/components/automate/const.py
+    homeassistant/components/automate/cover.py
+    homeassistant/components/automate/helpers.py
+    homeassistant/components/automate/hub.py
     homeassistant/components/aurora/__init__.py
     homeassistant/components/aurora/binary_sensor.py
     homeassistant/components/aurora/const.py
@@ -132,9 +140,7 @@ omit =
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
     homeassistant/components/brunt/cover.py
-    homeassistant/components/bsblan/__init__.py
     homeassistant/components/bsblan/climate.py
-    homeassistant/components/bsblan/const.py
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
     homeassistant/components/buienradar/sensor.py
@@ -154,7 +160,6 @@ omit =
     homeassistant/components/clicksend/notify.py
     homeassistant/components/clicksend_tts/notify.py
     homeassistant/components/cmus/media_player.py
-    homeassistant/components/co2signal/*
     homeassistant/components/coinbase/sensor.py
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comfoconnect/fan.py
@@ -437,6 +442,7 @@ omit =
     homeassistant/components/home_plus_control/api.py
     homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homeworks/*
+    homeassistant/components/honeywell/__init__.py
     homeassistant/components/honeywell/climate.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
@@ -624,6 +630,7 @@ omit =
     homeassistant/components/mill/__init__.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
+    homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minecraft_server/binary_sensor.py
     homeassistant/components/minecraft_server/const.py
@@ -692,6 +699,7 @@ omit =
     homeassistant/components/neurio_energy/sensor.py
     homeassistant/components/nexia/climate.py
     homeassistant/components/nextcloud/*
+    homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
@@ -969,7 +977,6 @@ omit =
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
-    homeassistant/components/speedtestdotnet/*
     homeassistant/components/spider/*
     homeassistant/components/splunk/*
     homeassistant/components/spotify/__init__.py
@@ -1209,7 +1216,10 @@ omit =
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
+    homeassistant/components/yale_smart_alarm/__init__.py
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
+    homeassistant/components/yale_smart_alarm/const.py
+    homeassistant/components/yale_smart_alarm/coordinator.py
     homeassistant/components/yamaha_musiccast/__init__.py
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yandex_transport/*

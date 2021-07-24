@@ -66,7 +66,13 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the sensor."""
-        state: StateType | datetime = getattr(self.coordinator.data, self._sensor.key)
+        if self._sensor.state is None:
+            state: StateType | datetime = getattr(
+                self.coordinator.data, self._sensor.key
+            )
+        else:
+            state = self._sensor.state(self.coordinator.data)
+
         if isinstance(state, datetime):
             return state.isoformat()
         return state
