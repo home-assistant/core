@@ -638,9 +638,11 @@ freebox-api==0.0.10
 # homeassistant.components.free_mobile
 freesms==0.2.0
 
-# homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection==1.4.2
+
+# homeassistant.components.fritz
+fritzconnection==1.6.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.3
