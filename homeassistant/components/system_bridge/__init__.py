@@ -1,6 +1,7 @@
 """The System Bridge integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import shlex
 
@@ -65,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with async_timeout.timeout(60):
             await client.async_get_information(),
+            await client.async_get_system(),
     except BridgeAuthenticationException as exception:
         raise ConfigEntryAuthFailed from exception
     except BRIDGE_CONNECTION_ERRORS as exception:
@@ -73,14 +75,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = SystemBridgeDataUpdateCoordinator(hass, _LOGGER, entry=entry)
     await coordinator.async_config_entry_first_refresh()
 
-    # # Wait for initial data
-    # async with async_timeout.timeout(60):
-    #     while (
-    #         coordinator.bridge.information is not None
-    #         and "host" in coordinator.bridge.information is not None
-    #         and "uuid" in coordinator.bridge.information is not None
-    #     ):
-    #         await asyncio.sleep(1)
+    # Wait for initial data
+    async with async_timeout.timeout(60):
+        while (
+            coordinator.bridge.battery is None
+            or coordinator.bridge.cpu is None
+            or coordinator.bridge.filesystem is None
+            or coordinator.bridge.information is None
+            or coordinator.bridge.memory is None
+            or coordinator.bridge.network is None
+            or coordinator.bridge.os is None
+            or coordinator.bridge.processes is None
+            or coordinator.bridge.system is None
+        ):
+            _LOGGER.debug("No data yet, waiting..")
+            await asyncio.sleep(1)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -215,18 +224,13 @@ class SystemBridgeEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
-        bridge: Bridge = self.coordinator.data
-        # asyncio.get_running_loop().run_until_complete(bridge.async_get_information())
-        _LOGGER.warning("coordinator.bridge %s", bridge)
-        _LOGGER.warning("coordinator.bridge.information %s", bridge.information)
+        bridge: Bridge = coordinator.data
         self._key = f"{bridge.information.host}_{key}"
         self._name = f"{bridge.information.host} {name}"
         self._icon = icon
         self._enabled_default = enabled_by_default
         self._hostname = bridge.information.host
-        self._default_interface = bridge.network.interfaces[
-            bridge.network.interfaceDefault
-        ]
+        self._mac = bridge.information.mac
         self._manufacturer = bridge.system.system.manufacturer
         self._model = bridge.system.system.model
         self._version = bridge.system.system.version
@@ -259,9 +263,7 @@ class SystemBridgeDeviceEntity(SystemBridgeEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
         return {
-            "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._default_interface["mac"])
-            },
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
             "manufacturer": self._manufacturer,
             "model": self._model,
             "name": self._hostname,

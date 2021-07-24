@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 import logging
 from typing import Callable
 
@@ -43,80 +44,85 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         self.host = entry.data[CONF_HOST]
         self.unsub: Callable | None = None
 
-        super().__init__(hass, LOGGER, name=DOMAIN)
+        super().__init__(
+            hass, LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
+        )
 
     def update_listeners(self) -> None:
         """Call update on all listeners."""
         for update_callback in self._listeners:
             update_callback()
 
+    async def async_handle_event(self, event: Event):
+        """Handle System Bridge events from the WebSocket."""
+        # No need to update anything, as everything is updated in the caller
+        self.logger.debug("New event from System Bridge: %s", event.name)
+        self.async_set_updated_data(self.bridge)
+
     @callback
-    def _use_websocket(self) -> None:
+    async def _setup_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
 
-        async def listen() -> None:
-            """Listen for state changes via WebSocket."""
-            try:
-                await self.bridge.async_get_information()
-                self.logger.debug(
-                    "Connecting to ws://%s:%s",
-                    self.host,
-                    self.bridge.information.websocketPort,
-                )
-                await self.bridge.async_connect_websocket(
-                    self.host,
-                    self.bridge.information.websocketPort,
-                )
-            except BridgeException as exception:
-                self.logger.error(exception)
-                if self.unsub:
-                    self.unsub()
-                    self.unsub = None
-                return
+        try:
+            await self.bridge.async_get_information()
+            self.logger.debug(
+                "Connecting to ws://%s:%s",
+                self.host,
+                self.bridge.information.websocketPort,
+            )
+            await self.bridge.async_connect_websocket(
+                self.host,
+                self.bridge.information.websocketPort,
+            )
+        except BridgeException as exception:
+            self.logger.error(exception)
+            if self.unsub:
+                self.unsub()
+                self.unsub = None
+            return
 
-            try:
-                await self.bridge.listen_for_events(callback=self.async_handle_event)
-                await self.bridge.async_send_event(
-                    "get-data",
-                    [
-                        "battery",
-                        "cpu",
-                        "filesystem",
-                        "memory",
-                        "network",
-                        "os",
-                        "processes",
-                        "system",
-                    ],
-                )
-            except BridgeConnectionClosedException as exception:
-                self.last_update_success = False
-                self.logger.info(exception)
-            except BridgeException as exception:
-                self.last_update_success = False
-                self.update_listeners()
-                self.logger.error(exception)
+        try:
+            asyncio.create_task(
+                self.bridge.listen_for_events(callback=self.async_handle_event)
+            )
+            await self.bridge.async_send_event(
+                "get-data",
+                [
+                    "battery",
+                    "cpu",
+                    "filesystem",
+                    "information",
+                    "memory",
+                    "network",
+                    "os",
+                    "processes",
+                    "system",
+                ],
+            )
+        except BridgeConnectionClosedException as exception:
+            self.last_update_success = False
+            self.logger.info(exception)
+        except BridgeException as exception:
+            self.last_update_success = False
+            self.update_listeners()
+            self.logger.error(exception)
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
-            await self.bridge.async_disconnect_websocket()
+            await self.bridge.async_close_websocket()
 
         # Clean disconnect WebSocket on Home Assistant shutdown
         self.unsub = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, close_websocket
         )
 
-        # Start listening
-        asyncio.create_task(listen())
-
     async def _async_update_data(self) -> Bridge:
         """Update System Bridge data from WebSocket."""
+        self.logger.debug(
+            "_async_update_data - WebSocket Connected: %s",
+            self.bridge.websocket_connected,
+        )
         if not self.bridge.websocket_connected:
-            self._use_websocket()
-        return self.bridge
+            await self._setup_websocket()
 
-    async def async_handle_event(self, event: Event):
-        """Handle System Bridge events from the WebSocket."""
-        # No need to update anything, as everything is updated in the caller
-        self.logger.debug("New event from System Bridge: %s", event.name)
-        self.async_set_updated_data(self.bridge)
+        return self.bridge

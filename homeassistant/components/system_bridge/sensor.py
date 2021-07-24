@@ -49,7 +49,7 @@ async def async_setup_entry(
         SystemBridgeCpuVoltageSensor(coordinator),
         *(
             SystemBridgeFilesystemSensor(coordinator, key)
-            for key, _ in coordinator.bridge.filesystem.fsSize.items()
+            for key, _ in coordinator.data.filesystem.fsSize.items()
         ),
         SystemBridgeMemoryFreeSensor(coordinator),
         SystemBridgeMemoryUsedSensor(coordinator),
@@ -60,7 +60,7 @@ async def async_setup_entry(
         SystemBridgeBiosVersionSensor(coordinator),
     ]
 
-    if coordinator.bridge.battery.hasBattery:
+    if coordinator.data.battery.hasBattery:
         entities.append(SystemBridgeBatterySensor(coordinator))
         entities.append(SystemBridgeBatteryTimeRemainingSensor(coordinator))
 

@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up System Bridge binary sensor based on a config entry."""
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    bridge: Bridge = coordinator.bridge
+    bridge: Bridge = coordinator.data
 
     if bridge.battery and bridge.battery.hasBattery:
         async_add_entities([SystemBridgeBatteryIsChargingBinarySensor(coordinator)])
