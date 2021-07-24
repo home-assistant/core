@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class VeluxLight(VeluxEntity, LightEntity):
     """Representation of a Velux light."""
 
-    def __init__(self, node: Node):
+    def __init__(self, node: Node) -> None:
         """Initialize the Velux light."""
         super().__init__(node)
 
