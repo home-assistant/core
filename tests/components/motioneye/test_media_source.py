@@ -384,11 +384,14 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
     )
 
-    broken_device = device_registry.async_get_or_create(
+    broken_device_1 = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={(DOMAIN, config.entry_id)},
     )
-
+    broken_device_2 = device_registry.async_get_or_create(
+        config_entry_id=config.entry_id,
+        identifiers={(DOMAIN, f"{config.entry_id}_NOTINT")},
+    )
     client.get_movie_url = Mock(return_value="http://url")
 
     # URI doesn't contain necessary components.
@@ -407,13 +410,23 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
             hass, f"{const.URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#2#3#4"
         )
 
-    # Device identifiers are incorrect.
+    # Device identifiers are incorrect (no camera id)
     with pytest.raises(MediaSourceError):
         await media_source.async_resolve_media(
             hass,
             (
                 f"{const.URI_SCHEME}{DOMAIN}"
-                f"/{TEST_CONFIG_ENTRY_ID}#{broken_device.id}#images#4"
+                f"/{TEST_CONFIG_ENTRY_ID}#{broken_device_1.id}#images#4"
+            ),
+        )
+
+    # Device identifiers are incorrect (non integer camera id)
+    with pytest.raises(MediaSourceError):
+        await media_source.async_resolve_media(
+            hass,
+            (
+                f"{const.URI_SCHEME}{DOMAIN}"
+                f"/{TEST_CONFIG_ENTRY_ID}#{broken_device_2.id}#images#4"
             ),
         )
 
