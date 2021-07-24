@@ -57,9 +57,17 @@ class TestInsightCurrentPower:
         await hass.async_block_till_done()
 
         entity_registry = er.async_get(hass)
+        correct_entity = None
+        to_remove = []
         for entry in entity_registry.entities.values():
             if entry.entity_id.endswith("_current_power"):
-                return entry
+                correct_entity = entry
+            else:
+                to_remove.append(entry.entity_id)
+
+        for removal in to_remove:
+            entity_registry.async_remove(removal)
+        return correct_entity
 
     # Tests that are in common among wemo platforms. These test methods will be run
     # in the scope of this test module. They will run using the pywemo_model from
@@ -68,24 +76,39 @@ class TestInsightCurrentPower:
         self, hass, pywemo_registry, wemo_entity, pywemo_device
     ):
         """Test that two hass async_update state updates do not proceed at the same time."""
+        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_multiple_updates(
-            hass, pywemo_registry, wemo_entity, pywemo_device
+            hass,
+            pywemo_registry,
+            wemo_entity,
+            pywemo_device,
+            update_polling_method=pywemo_device.update_insight_params,
         )
 
     async def test_async_update_locked_multiple_callbacks(
         self, hass, pywemo_registry, wemo_entity, pywemo_device
     ):
         """Test that two device callback state updates do not proceed at the same time."""
+        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_multiple_callbacks(
-            hass, pywemo_registry, wemo_entity, pywemo_device
+            hass,
+            pywemo_registry,
+            wemo_entity,
+            pywemo_device,
+            update_polling_method=pywemo_device.update_insight_params,
         )
 
     async def test_async_update_locked_callback_and_update(
         self, hass, pywemo_registry, wemo_entity, pywemo_device
     ):
         """Test that a callback and a state update request can't both happen at the same time."""
+        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_callback_and_update(
-            hass, pywemo_registry, wemo_entity, pywemo_device
+            hass,
+            pywemo_registry,
+            wemo_entity,
+            pywemo_device,
+            update_polling_method=pywemo_device.update_insight_params,
         )
 
     async def test_async_locked_update_with_exception(
@@ -141,9 +164,17 @@ class TestInsightTodayEnergy:
         await hass.async_block_till_done()
 
         entity_registry = er.async_get(hass)
+        correct_entity = None
+        to_remove = []
         for entry in entity_registry.entities.values():
             if entry.entity_id.endswith("_today_energy"):
-                return entry
+                correct_entity = entry
+            else:
+                to_remove.append(entry.entity_id)
+
+        for removal in to_remove:
+            entity_registry.async_remove(removal)
+        return correct_entity
 
     # Tests that are in common among wemo platforms. These test methods will be run
     # in the scope of this test module. They will run using the pywemo_model from
@@ -152,24 +183,39 @@ class TestInsightTodayEnergy:
         self, hass, pywemo_registry, wemo_entity, pywemo_device
     ):
         """Test that two hass async_update state updates do not proceed at the same time."""
+        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_multiple_updates(
-            hass, pywemo_registry, wemo_entity, pywemo_device
+            hass,
+            pywemo_registry,
+            wemo_entity,
+            pywemo_device,
+            update_polling_method=pywemo_device.update_insight_params,
         )
 
     async def test_async_update_locked_multiple_callbacks(
         self, hass, pywemo_registry, wemo_entity, pywemo_device
     ):
         """Test that two device callback state updates do not proceed at the same time."""
+        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_multiple_callbacks(
-            hass, pywemo_registry, wemo_entity, pywemo_device
+            hass,
+            pywemo_registry,
+            wemo_entity,
+            pywemo_device,
+            update_polling_method=pywemo_device.update_insight_params,
         )
 
     async def test_async_update_locked_callback_and_update(
         self, hass, pywemo_registry, wemo_entity, pywemo_device
     ):
         """Test that a callback and a state update request can't both happen at the same time."""
+        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_callback_and_update(
-            hass, pywemo_registry, wemo_entity, pywemo_device
+            hass,
+            pywemo_registry,
+            wemo_entity,
+            pywemo_device,
+            update_polling_method=pywemo_device.update_insight_params,
         )
 
     async def test_async_locked_update_with_exception(
