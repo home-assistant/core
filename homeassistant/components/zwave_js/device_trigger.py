@@ -218,7 +218,7 @@ class DeviceTracker:
     config_entry_id: str
     device_id: str
     node: Node
-    value_update_unsub: Callable | None = field(default=None, init=False)
+    value_update_unsub: Callable = field(init=False)
     values: dict[str, ValueTracker] = field(default_factory=dict, init=False)
 
     def __post_init__(self) -> None:
@@ -417,8 +417,7 @@ def _detach_trigger(hass: HomeAssistant, automation_tracker: AutomationTracker) 
             "Node %s is no longer attached to any device triggers",
             async_get_node_from_device_id(hass, device_id),
         )
-        if device_tracker.value_update_unsub is not None:
-            device_tracker.value_update_unsub()
+        device_tracker.value_update_unsub()
         hass.data[DOMAIN][entry_id][DATA_DEVICE_TRIGGER_TRACKERS].pop(device_id)
 
 
