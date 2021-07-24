@@ -356,7 +356,7 @@ async def test_camera_option_stream_url_template(
     # It won't actually get a stream from the dummy handler, so just catch
     # the expected exception, then verify the right handler was called.
     with pytest.raises(HTTPBadGateway):
-        await async_get_mjpeg_stream(hass, None, TEST_CAMERA_ENTITY_ID)
+        await async_get_mjpeg_stream(hass, Mock(), TEST_CAMERA_ENTITY_ID)
     assert stream_handler.called
     assert not client.get_camera_stream_url.called
 
@@ -374,8 +374,5 @@ async def test_get_stream_from_camera_with_broken_host(
         hass, config_entry=config_entry, client=client
     )
     await hass.async_block_till_done()
-
-    # It won't actually get a stream from the dummy handler, so just catch
-    # the expected exception, then verify the right handler was called.
     with pytest.raises(HTTPBadGateway):
-        await async_get_mjpeg_stream(hass, None, TEST_CAMERA_ENTITY_ID)
+        await async_get_mjpeg_stream(hass, Mock(), TEST_CAMERA_ENTITY_ID)
