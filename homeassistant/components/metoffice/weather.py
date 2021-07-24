@@ -1,7 +1,10 @@
 """Support for UK Met Office weather service."""
+from datapoint.Timestep import Timestep
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_DAYTIME,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -12,6 +15,7 @@ from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import utcnow
 
 from .const import (
     ATTRIBUTION,
@@ -45,19 +49,22 @@ async def async_setup_entry(
     )
 
 
-def _build_forecast_data(timestep):
+def _build_forecast_data(timestep: Timestep, use_3hourly: bool):
     data = {}
     data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
     if timestep.precipitation:
-        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
         data[ATTR_FORECAST_TEMP] = timestep.temperature.value
     if timestep.wind_direction:
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
         data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+    if not use_3hourly:
+        # if it's close to noon, mark as Day, otherwise as Night
+        data[ATTR_FORECAST_DAYTIME] = abs(timestep.date.hour - 12) < 6
     return data
 
 
@@ -80,6 +87,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         self._unique_id = hass_data[METOFFICE_COORDINATES]
         if not use_3hourly:
             self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
+        self.use_3hourly = use_3hourly
 
     @property
     def name(self):
@@ -165,9 +173,12 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         """Return the forecast array."""
         if self.coordinator.data.forecast is None:
             return None
+        time_now = utcnow()
         return [
-            _build_forecast_data(timestep)
-            for timestep in self.coordinator.data.forecast
+            _build_forecast_data(timestep, self.use_3hourly)
+            for day in self.coordinator.data.forecast.days
+            for timestep in day.timesteps
+            if timestep.date > time_now
         ]
 
     @property
