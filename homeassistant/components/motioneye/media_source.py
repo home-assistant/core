@@ -59,7 +59,7 @@ class MotionEyeMediaSource(MediaSource):
 
     name: str = "motionEye Media"
 
-    def __init__(self, hass: HomeAssistantType):
+    def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize Xbox source."""
         super().__init__(DOMAIN)
 
@@ -90,8 +90,9 @@ class MotionEyeMediaSource(MediaSource):
         return PlayMedia(url, MIME_TYPE_MAP[kind])
 
     @callback
+    @classmethod
     def _parse_identifier(
-        self, identifier: str
+        cls, identifier: str
     ) -> tuple[str | None, str | None, str | None, str | None]:
         base = [None] * 4
         data = identifier.split("#", 3)
@@ -119,9 +120,9 @@ class MotionEyeMediaSource(MediaSource):
 
             if config and device and kind:
                 return await self._build_media_path(config, device, kind, path)
-            elif config and device:
+            if config and device:
                 return self._build_media_kinds(config, device)
-            elif config:
+            if config:
                 return self._build_media_devices(config)
         return self._build_media_configs()
 
@@ -140,13 +141,15 @@ class MotionEyeMediaSource(MediaSource):
             raise MediaSourceError(f"Unable to find device with id: {device_id}")
         return device
 
-    def _verify_kind_or_raise(self, kind: str) -> None:
+    @classmethod
+    def _verify_kind_or_raise(cls, kind: str) -> None:
         """Verify kind is an expected value."""
         if kind in MEDIA_CLASS_MAP:
             return
         raise MediaSourceError(f"Unknown media type: {kind}")
 
-    def _get_path_or_raise(self, path: str | None) -> str:
+    @classmethod
+    def _get_path_or_raise(cls, path: str | None) -> str:
         """Verify path is a valid motionEye path."""
         if not path:
             return "/"
@@ -156,8 +159,9 @@ class MotionEyeMediaSource(MediaSource):
             f"motionEye media path must start with '/', received: {path}"
         )
 
+    @classmethod
     def _get_camera_id_or_raise(
-        self, config: ConfigEntry, device: dr.DeviceEntry
+        cls, config: ConfigEntry, device: dr.DeviceEntry
     ) -> int:
         """Get a config entry from a URL."""
         for identifier in device.identifiers:
@@ -166,7 +170,8 @@ class MotionEyeMediaSource(MediaSource):
                 return data[2]
         raise MediaSourceError(f"Could not find camera id for device id: {device.id}")
 
-    def _build_media_config(self, config: ConfigEntry) -> BrowseMediaSource:
+    @classmethod
+    def _build_media_config(cls, config: ConfigEntry) -> BrowseMediaSource:
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=config.entry_id,
@@ -195,8 +200,9 @@ class MotionEyeMediaSource(MediaSource):
             children_media_class=MEDIA_CLASS_DIRECTORY,
         )
 
+    @classmethod
     def _build_media_device(
-        self,
+        cls,
         config: ConfigEntry,
         device: dr.DeviceEntry,
         full_title: bool = True,
@@ -224,8 +230,9 @@ class MotionEyeMediaSource(MediaSource):
         ]
         return base
 
+    @classmethod
     def _build_media_kind(
-        self,
+        cls,
         config: ConfigEntry,
         device: dr.DeviceEntry,
         kind: str,

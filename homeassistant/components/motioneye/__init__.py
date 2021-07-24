@@ -535,8 +535,7 @@ def get_media_url(
     try:
         if image:
             return client.get_image_url(camera_id, path)
-        else:
-            return client.get_movie_url(camera_id, path)
+        return client.get_movie_url(camera_id, path)
     except MotionEyeClientPathError:
         return None
 
