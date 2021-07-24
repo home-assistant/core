@@ -30,7 +30,7 @@ STATE_MAPPING = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Prosegur alarm control panel platform."""
     async_add_entities(
-        [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])], 
+        [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])],
         update_before_add=True,
     )
 
