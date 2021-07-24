@@ -3,10 +3,13 @@
 import pytest
 
 from homeassistant.components.select.const import (
+    ATTR_CYCLE,
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN,
+    SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
+    SERVICE_SELECT_PREVIOUS,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -64,6 +67,68 @@ async def test_select_option(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_OPTION: "light_speed", ATTR_ENTITY_ID: ENTITY_SPEED},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_SPEED)
+    assert state
+    assert state.state == "light_speed"
+
+
+async def test_select_next(hass: HomeAssistant) -> None:
+    """Test selecting a next option."""
+    state = hass.states.get(ENTITY_SPEED)
+    assert state
+    assert state.state == "ridiculous_speed"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_CYCLE: True, ATTR_ENTITY_ID: ENTITY_SPEED},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_SPEED)
+    assert state
+    assert state.state == "ludicrous_speed"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_ENTITY_ID: ENTITY_SPEED},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_SPEED)
+    assert state
+    assert state.state == "light_speed"
+
+
+async def test_select_previous(hass: HomeAssistant) -> None:
+    """Test selecting a previous option."""
+    state = hass.states.get(ENTITY_SPEED)
+    assert state
+    assert state.state == "ridiculous_speed"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_CYCLE: True, ATTR_ENTITY_ID: ENTITY_SPEED},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_SPEED)
+    assert state
+    assert state.state == "light_speed"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_CYCLE: False, ATTR_ENTITY_ID: ENTITY_SPEED},
         blocking=True,
     )
     await hass.async_block_till_done()

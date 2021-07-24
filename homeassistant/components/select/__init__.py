@@ -8,7 +8,7 @@ from typing import Any, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -18,7 +18,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION
+from .const import (
+    ATTR_CYCLE,
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN,
+    SERVICE_SELECT_NEXT,
+    SERVICE_SELECT_OPTION,
+    SERVICE_SELECT_PREVIOUS,
+)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -40,6 +48,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SELECT_OPTION,
         {vol.Required(ATTR_OPTION): cv.string},
         "async_select_option",
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_NEXT,
+        {vol.Optional(ATTR_CYCLE, default=True): cv.boolean},
+        "async_select_next",
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_PREVIOUS,
+        {vol.Optional(ATTR_CYCLE, default=True): cv.boolean},
+        "async_select_previous",
     )
 
     return True
@@ -89,10 +107,41 @@ class SelectEntity(Entity):
         """Return the selected entity option to represent the entity state."""
         return self._attr_current_option
 
+    @callback
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         raise NotImplementedError()
 
+    @callback
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.hass.async_add_executor_job(self.select_option, option)
+
+    @callback
+    @final
+    async def async_offset_index(self, offset: int, cycle: bool) -> None:
+        """Offset current index."""
+        if not self.options:
+            return
+        if self.current_option:
+            current_index = self.options.index(self.current_option)
+            new_index = current_index + offset
+            if cycle:
+                new_index = new_index % len(self.options)
+            else:
+                new_index = max(0, min(new_index, len(self.options) - 1))
+        else:
+            new_index = 0
+        await self.async_select_option(self.options[new_index])
+
+    @callback
+    @final
+    async def async_select_next(self, cycle: bool) -> None:
+        """Select next option."""
+        await self.async_offset_index(1, cycle)
+
+    @callback
+    @final
+    async def async_select_previous(self, cycle: bool) -> None:
+        """Select previous option."""
+        await self.async_offset_index(-1, cycle)

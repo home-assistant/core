@@ -54,7 +54,19 @@ async def test_get_actions(
             "type": "select_option",
             "device_id": device_entry.id,
             "entity_id": "select.test_5678",
-        }
+        },
+        {
+            "domain": DOMAIN,
+            "type": "select_next",
+            "device_id": device_entry.id,
+            "entity_id": "select.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "select_previous",
+            "device_id": device_entry.id,
+            "entity_id": "select.test_5678",
+        },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)
@@ -94,8 +106,79 @@ async def test_action(hass: HomeAssistant) -> None:
     assert select_calls[0].data == {"entity_id": "select.entity", "option": "option1"}
 
 
-async def test_get_action_capabilities(hass: HomeAssistant) -> None:
-    """Test we get the expected capabilities from a select action."""
+async def test_next_action(hass: HomeAssistant) -> None:
+    """Test for select_next action."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "select.entity",
+                        "type": "select_next",
+                        "cycle": True,
+                    },
+                },
+            ]
+        },
+    )
+
+    select_next_calls = async_mock_service(hass, DOMAIN, "select_next")
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(select_next_calls) == 1
+    assert select_next_calls[0].domain == DOMAIN
+    assert select_next_calls[0].service == "select_next"
+    assert select_next_calls[0].data == {"entity_id": "select.entity", "cycle": True}
+
+
+async def test_previous_action(hass: HomeAssistant) -> None:
+    """Test for select_previous action."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "select.entity",
+                        "type": "select_previous",
+                        "cycle": False,
+                    },
+                },
+            ]
+        },
+    )
+
+    select_previous_calls = async_mock_service(hass, DOMAIN, "select_previous")
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(select_previous_calls) == 1
+    assert select_previous_calls[0].domain == DOMAIN
+    assert select_previous_calls[0].service == "select_previous"
+    assert select_previous_calls[0].data == {
+        "entity_id": "select.entity",
+        "cycle": False,
+    }
+
+
+async def test_get_select_option_action_capabilities(hass: HomeAssistant) -> None:
+    """Test we get the expected capabilities from a select_option action."""
     config = {
         "platform": "device",
         "domain": DOMAIN,
@@ -134,5 +217,93 @@ async def test_get_action_capabilities(hass: HomeAssistant) -> None:
             "required": True,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
+        },
+    ]
+
+
+async def test_get_select_next_action_capabilities(hass: HomeAssistant) -> None:
+    """Test we get the expected capabilities from a select_next action."""
+    config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "select_next",
+        "entity_id": "select.test",
+        "cycle": True,
+    }
+
+    # Test when entity doesn't exists
+    capabilities = await async_get_action_capabilities(hass, config)
+    assert capabilities
+    assert "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "cycle",
+            "optional": True,
+            "default": True,
+            "type": "boolean",
+        },
+    ]
+
+    # Mock an entity
+    hass.states.async_set("select.test", "option1", {"options": ["option1", "option2"]})
+
+    # Test if we get the right capabilities now
+    capabilities = await async_get_action_capabilities(hass, config)
+    assert capabilities
+    assert "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "cycle",
+            "optional": True,
+            "default": True,
+            "type": "boolean",
+        },
+    ]
+
+
+async def test_get_select_previous_action_capabilities(hass: HomeAssistant) -> None:
+    """Test we get the expected capabilities from a select_previous action."""
+    config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "select_previous",
+        "entity_id": "select.test",
+        "cycle": False,
+    }
+
+    # Test when entity doesn't exists
+    capabilities = await async_get_action_capabilities(hass, config)
+    assert capabilities
+    assert "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "cycle",
+            "optional": True,
+            "default": True,
+            "type": "boolean",
+        },
+    ]
+
+    # Mock an entity
+    hass.states.async_set("select.test", "option1", {"options": ["option1", "option2"]})
+
+    # Test if we get the right capabilities now
+    capabilities = await async_get_action_capabilities(hass, config)
+    assert capabilities
+    assert "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "cycle",
+            "optional": True,
+            "default": True,
+            "type": "boolean",
         },
     ]
