@@ -1,7 +1,9 @@
 """Support for RainMachine devices."""
 import asyncio
+from collections.abc import MutableMapping
 from datetime import timedelta
 from functools import partial
+from typing import Any, Dict, cast
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -113,18 +115,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update the appropriate API data based on a category."""
         try:
             if api_category == DATA_PROGRAMS:
-                return await controller.programs.all(include_inactive=True)
+                data = await controller.programs.all(include_inactive=True)
+            elif api_category == DATA_PROVISION_SETTINGS:
+                data = await controller.provisioning.settings()
+            elif api_category == DATA_RESTRICTIONS_CURRENT:
+                data = await controller.restrictions.current()
+            elif api_category == DATA_RESTRICTIONS_UNIVERSAL:
+                data = await controller.restrictions.universal()
+            else:
+                data = await controller.zones.all(details=True, include_inactive=True)
 
-            if api_category == DATA_PROVISION_SETTINGS:
-                return await controller.provisioning.settings()
-
-            if api_category == DATA_RESTRICTIONS_CURRENT:
-                return await controller.restrictions.current()
-
-            if api_category == DATA_RESTRICTIONS_UNIVERSAL:
-                return await controller.restrictions.universal()
-
-            return await controller.zones.all(details=True, include_inactive=True)
+            return cast(Dict[str, Any], data)
         except RainMachineError as err:
             raise UpdateFailed(err) from err
 
@@ -192,7 +193,9 @@ class RainMachineEntity(CoordinatorEntity):
             ),
             "sw_version": controller.software_version,
         }
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
+            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
+        }
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:
@@ -201,12 +204,12 @@ class RainMachineEntity(CoordinatorEntity):
         self._entity_type = entity_type
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         self.update_from_latest_data()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.update_from_latest_data()
