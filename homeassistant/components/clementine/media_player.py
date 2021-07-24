@@ -74,10 +74,6 @@ class ClementineDevice(MediaPlayerEntity):
         """Initialize the Clementine device."""
         self._client = client
         self._attr_name = name
-        self._attr_volume_level = 0.0
-        self._attr_media_title = ""
-        self._attr_media_artist = ""
-        self._attr_media_album_name = ""
 
     def update(self):
         """Retrieve the latest data from the Clementine Player."""
@@ -98,24 +94,19 @@ class ClementineDevice(MediaPlayerEntity):
 
             volume = float(client.volume) if client.volume else 0.0
             self._attr_volume_level = volume / 100.0
-            self._attr_source = (
-                client.playlists[client.active_playlist_id]["name"]
-                if client.active_playlist_id in client.playlists
-                else "Unknown"
-            )
-            self._attr_source_list = [
-                s["name"] for s in self._client.playlists.values()
-            ]
+            if client.active_playlist_id in client.playlists:
+                self._attr_source = client.playlists[client.active_playlist_id]["name"]
+            else:
+                self._attr_source = "Unknown"
+            self._attr_source_list = [s["name"] for s in client.playlists.values()]
 
             if client.current_track:
                 self._attr_media_title = client.current_track["title"]
                 self._attr_media_artist = client.current_track["track_artist"]
                 self._attr_media_album_name = client.current_track["track_album"]
-                self._attr_media_image_hash = (
-                    self._client.current_track["track_id"]
-                    if self._client.current_track
-                    else None
-                )
+                self._attr_media_image_hash = client.current_track["track_id"]
+            else:
+                self._attr_media_image_hash = None
 
         except Exception:
             self._attr_state = STATE_OFF
