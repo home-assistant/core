@@ -1,6 +1,5 @@
 """Support for power sensors in WeMo Insight devices."""
 import asyncio
-import logging
 
 import pywemo
 
@@ -18,8 +17,6 @@ from homeassistant.util import convert
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoSubscriptionEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
