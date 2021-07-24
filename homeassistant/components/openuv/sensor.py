@@ -99,7 +99,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
 
     def __init__(
         self, openuv: OpenUV, sensor_type: str, name: str, icon: str, unit: str | None
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(openuv, sensor_type)
 

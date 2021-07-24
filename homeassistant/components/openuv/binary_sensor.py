@@ -39,7 +39,7 @@ async def async_setup_entry(
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
-    def __init__(self, openuv: OpenUV, sensor_type: str, name: str, icon: str):
+    def __init__(self, openuv: OpenUV, sensor_type: str, name: str, icon: str) -> None:
         """Initialize the sensor."""
         super().__init__(openuv, sensor_type)
 

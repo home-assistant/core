@@ -167,7 +167,7 @@ class OpenUV:
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
 
-    def __init__(self, openuv: OpenUV, sensor_type: str):
+    def __init__(self, openuv: OpenUV, sensor_type: str) -> None:
         """Initialize."""
         self._attr_extra_state_attributes: MutableMapping[str, Any] = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
