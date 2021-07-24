@@ -8,12 +8,12 @@ from uuid import UUID
 
 from simplipy import get_api
 from simplipy.api import API
+from simplipy.entity import Entity as SimplipyEntity
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
 )
-from simplipy.sensor import Sensor
 from simplipy.system import System, SystemNotification
 import voluptuous as vol
 
@@ -474,7 +474,9 @@ class SimpliSafeEntity(CoordinatorEntity):
 class SimpliSafeBaseSensor(SimpliSafeEntity):
     """Define a SimpliSafe base (binary) sensor."""
 
-    def __init__(self, simplisafe: SimpliSafe, system: System, sensor: Sensor) -> None:
+    def __init__(
+        self, simplisafe: SimpliSafe, system: System, sensor: SimplipyEntity
+    ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
 
