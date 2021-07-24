@@ -53,6 +53,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
             element_uid=element_uid,
         )
 
+        self._attr_supported_features = SUPPORT_BRIGHTNESS
         self._binary_switch_property = device_instance.binary_switch_property.get(
             element_uid.replace("Dimmer", "BinarySwitch")
         )
@@ -66,11 +67,6 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
     def is_on(self) -> bool:
         """Return the state of the light."""
         return bool(self._value)
-
-    @property
-    def supported_features(self) -> int:
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
