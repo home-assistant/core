@@ -33,6 +33,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_AREA_ID,
+    COORDINATOR,
     DEFAULT_AREA_ID,
     DEFAULT_NAME,
     DOMAIN,
@@ -78,7 +79,7 @@ async def async_setup_entry(
     """Set up the alarm entry."""
 
     async_add_entities(
-        [YaleAlarmDevice(coordinator=hass.data[DOMAIN][entry.entry_id]["coordinator"])]
+        [YaleAlarmDevice(coordinator=hass.data[DOMAIN][entry.entry_id][COORDINATOR])]
     )
 
 

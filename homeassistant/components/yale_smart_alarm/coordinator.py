@@ -8,7 +8,7 @@ from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClien
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
@@ -129,6 +129,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     data=self.entry.data,
                 )
             )
+            raise UpdateFailed
 
         return {
             "arm_status": arm_status,
