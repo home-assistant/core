@@ -35,15 +35,13 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_PROBLEM
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._ac["name"]} Filter'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-filter'
+    def __init__(self, instance, ac_key):
+        """Initialize an Advantage Air Filter."""
+        super().__init__(instance, ac_key)
+        self._attr_name = f'{self._ac["name"]} Filter'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-filter'
+        )
 
     @property
     def is_on(self):
@@ -56,15 +54,13 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_MOTION
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} Motion'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-motion'
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Zone Motion."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_name = f'{self._zone["name"]} Motion'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-motion'
+        )
 
     @property
     def is_on(self):
@@ -77,15 +73,13 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
 
     _attr_entity_registry_enabled_default = False
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} MyZone'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-myzone'
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Zone MyZone."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_name = f'{self._zone["name"]} MyZone'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-myzone'
+        )
 
     @property
     def is_on(self):
