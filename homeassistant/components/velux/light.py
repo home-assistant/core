@@ -30,8 +30,7 @@ class VeluxLight(VeluxEntity, LightEntity):
     @property
     def brightness(self):
         """Return the current brightness."""
-        brightness = int((100 - self.node.intensity.intensity_percent) * 255 / 100)
-        return brightness
+        return int((100 - self.node.intensity.intensity_percent) * 255 / 100)
 
     @property
     def is_on(self):
