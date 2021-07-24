@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 
-from pytile import Tile, async_login
+from pytile import async_login
 from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
+from pytile.tile import Tile
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

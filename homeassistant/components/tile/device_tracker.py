@@ -5,7 +5,7 @@ from collections.abc import Awaitable, MutableMapping
 import logging
 from typing import Any, Callable, cast
 
-from pytile import Tile
+from pytile.tile import Tile
 
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
