@@ -30,7 +30,8 @@ STATE_MAPPING = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Prosegur alarm control panel platform."""
     async_add_entities(
-        [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])]
+        [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])], 
+        update_before_add=True,
     )
 
 
@@ -48,10 +49,6 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._attr_name = f"contract {self.contract}"
         self._attr_unique_id = self.contract
         self._attr_supported_features = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
-
-    async def async_added_to_hass(self) -> None:
-        """Run when about to be added to hass."""
-        await self.async_update()
 
     async def async_update(self):
         """Update alarm status."""
