@@ -206,7 +206,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class BridgeEntity(CoordinatorEntity):
+class SystemBridgeEntity(CoordinatorEntity):
     """Defines a base System Bridge entity."""
 
     def __init__(
@@ -253,7 +253,7 @@ class BridgeEntity(CoordinatorEntity):
         return self._enabled_default
 
 
-class BridgeDeviceEntity(BridgeEntity):
+class SystemBridgeDeviceEntity(SystemBridgeEntity):
     """Defines a System Bridge device entity."""
 
     @property

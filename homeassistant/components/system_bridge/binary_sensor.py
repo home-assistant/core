@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import BridgeDeviceEntity
+from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
 
 
@@ -23,10 +23,12 @@ async def async_setup_entry(
     bridge: Bridge = coordinator.data
 
     if bridge.battery.hasBattery:
-        async_add_entities([BridgeBatteryIsChargingBinarySensor(coordinator, bridge)])
+        async_add_entities(
+            [SystemBridgeBatteryIsChargingBinarySensor(coordinator, bridge)]
+        )
 
 
-class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
+class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
     """Defines a System Bridge binary sensor."""
 
     def __init__(
@@ -50,7 +52,7 @@ class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
         return self._device_class
 
 
-class BridgeBatteryIsChargingBinarySensor(BridgeBinarySensor):
+class SystemBridgeBatteryIsChargingBinarySensor(SystemBridgeBinarySensor):
     """Defines a Battery is charging binary sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
