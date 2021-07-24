@@ -70,7 +70,7 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
 
 
 class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
-    """Defined a WLED Playlist select."""
+    """Define a WLED Playlist select."""
 
     _attr_icon = "mdi:play-speed"
 
@@ -91,7 +91,7 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
-        """Return the current selected playlist."""
+        """Return the currently selected playlist."""
         if not isinstance(self.coordinator.data.state.playlist, Playlist):
             return None
         return self.coordinator.data.state.playlist.name
