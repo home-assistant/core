@@ -12,11 +12,11 @@ from . import DATA_VELUX, VeluxEntity
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up light(s) for Velux platform."""
-    entities = []
-    for node in hass.data[DATA_VELUX].pyvlx.nodes:
-        if isinstance(node, LighteningDevice):
-            entities.append(VeluxLight(node))
-    async_add_entities(entities)
+    async_add_entities(
+        VeluxLight(node)
+        for node in hass.data[DATA_VELUX].pyvlx.nodes
+        if isinstance(node, LighteningDevice)
+    )
 
 
 class VeluxLight(VeluxEntity, LightEntity):
