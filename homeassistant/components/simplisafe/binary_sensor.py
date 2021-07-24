@@ -1,5 +1,9 @@
 """Support for SimpliSafe binary sensors."""
+from __future__ import annotations
+
 from simplipy.entity import EntityTypes
+from simplipy.sensor import Sensor
+from simplipy.system import System
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
@@ -11,9 +15,11 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafeBaseSensor
+from . import SimpliSafe, SimpliSafeBaseSensor
 from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
@@ -39,10 +45,13 @@ TRIGGERED_SENSOR_TYPES = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up SimpliSafe binary sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-    sensors = []
+
+    sensors: list[BatteryBinarySensor | TriggeredBinarySensor] = []
 
     for system in simplisafe.systems.values():
         if system.version == 2:
@@ -68,14 +77,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     """Define a binary sensor related to whether an entity has been triggered."""
 
-    def __init__(self, simplisafe, system, sensor, device_class):
+    def __init__(
+        self, simplisafe: SimpliSafe, system: System, sensor: Sensor, device_class: str
+    ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, sensor)
 
         self._attr_device_class = device_class
 
     @callback
-    def async_update_from_rest_api(self):
+    def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_is_on = self._sensor.triggered
 
@@ -85,13 +96,13 @@ class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_BATTERY
 
-    def __init__(self, simplisafe, system, sensor):
+    def __init__(self, simplisafe: SimpliSafe, system: System, sensor: Sensor) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, sensor)
 
         self._attr_unique_id = f"{super().unique_id}-battery"
 
     @callback
-    def async_update_from_rest_api(self):
+    def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_is_on = self._sensor.low_battery
