@@ -125,8 +125,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = self.context["unique_id"]
         errors = {CONF_PASSWORD: self.ERROR_INVALID_AUTH}
         if user_input is not None:
-            key = None
+            key: Optional[bytes] = None
             kwargs = {"key": key, "loop_timeout": -1}
+            if CONF_AUTHENTICATION in user_input:
+                key = kwargs["key"] = bytes.fromhex(user_input[CONF_AUTHENTICATION])
             if CONF_PORT in user_input:  # for testing server emulation on localhost
                 kwargs["port"] = user_input[CONF_PORT]
             if CONF_PASSWORD in user_input:

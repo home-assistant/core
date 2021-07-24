@@ -4,6 +4,8 @@ from typing import Final
 
 import lc7001.aio
 
+from homeassistant import setup
+
 from .emulation import Server
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -49,6 +51,21 @@ async def test_security_non_compliant(hass):
     sessions = [
         [
             Server.SECURITY_NON_COMPLIANT,
+            COMPOSER.wrap(1, COMPOSER.compose_list_zones()),
+            b'{"ID":1,"Service":"ListZones","ZoneList":[],"Status":"Success"}\x00',
+        ],
+    ]
+    await Server(hass, sessions).start()
+
+
+async def test_security_hello_reauth(hass):
+    """Test security compliant LC7001 "Hello" challenge reauth."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    sessions = [
+        Server.SECURITY_HELLO_AUTHENTICATION_INVALID,
+        Server.SECURITY_HELLO_AUTHENTICATION_OK,
+        Server.SECURITY_HELLO_AUTHENTICATION_OK
+        + [
             COMPOSER.wrap(1, COMPOSER.compose_list_zones()),
             b'{"ID":1,"Service":"ListZones","ZoneList":[],"Status":"Success"}\x00',
         ],

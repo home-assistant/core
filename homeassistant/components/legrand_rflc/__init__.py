@@ -51,6 +51,7 @@ async def async_setup_entry(
                 "entry": entry,
                 "unique_id": entry.unique_id,
             },
+            data=data,
         )
 
     async def reauth() -> None:
@@ -75,7 +76,6 @@ async def async_unload_entry(
     """Unload a config entry."""
     hub = hass.data[DOMAIN][entry.entry_id]
     await hub.cancel()
-    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-        return True
-    return False
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hass.data[DOMAIN].pop(entry.entry_id)
+    return True

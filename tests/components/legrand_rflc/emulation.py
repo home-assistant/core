@@ -92,6 +92,7 @@ class Server:
             # create a mock config entry referencing emulated server
             self._entry = entry = MockConfigEntry(
                 domain=DOMAIN,
+                unique_id=self.HOST,
                 data={
                     CONF_AUTHENTICATION: self.AUTHENTICATION,
                     CONF_HOST: self.HOST,
