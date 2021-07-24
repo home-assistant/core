@@ -17,10 +17,19 @@ from motioneye_client.client import (
     MotionEyeClientInvalidAuthError,
 )
 from motioneye_client.const import (
+    KEY_ACTION_SNAPSHOT,
     KEY_CAMERAS,
     KEY_HTTP_METHOD_POST_JSON,
     KEY_ID,
     KEY_NAME,
+    KEY_TEXT_OVERLAY_CAMERA_NAME,
+    KEY_TEXT_OVERLAY_CUSTOM_TEXT,
+    KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
+    KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
+    KEY_TEXT_OVERLAY_DISABLED,
+    KEY_TEXT_OVERLAY_LEFT,
+    KEY_TEXT_OVERLAY_RIGHT,
+    KEY_TEXT_OVERLAY_TIMESTAMP,
     KEY_WEB_HOOK_CONVERSION_SPECIFIERS,
     KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
     KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
@@ -29,6 +38,7 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
     KEY_WEB_HOOK_STORAGE_URL,
 )
+import voluptuous as vol
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -39,10 +49,14 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -50,6 +64,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -59,6 +74,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_WEBHOOK_ID,
+    CONF_ACTION,
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
     CONF_CLIENT,
@@ -76,6 +92,9 @@ from .const import (
     EVENT_MOTION_DETECTED,
     EVENT_MOTION_DETECTED_KEYS,
     MOTIONEYE_MANUFACTURER,
+    SERVICE_ACTION,
+    SERVICE_SET_TEXT_OVERLAY,
+    SERVICE_SNAPSHOT,
     SIGNAL_CAMERA_ADD,
     WEB_HOOK_SENTINEL_KEY,
     WEB_HOOK_SENTINEL_VALUE,
@@ -98,6 +117,20 @@ def get_motioneye_device_identifier(
 ) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
     return (DOMAIN, f"{config_entry_id}_{camera_id}")
+
+
+def split_motioneye_device_identifier(
+    identifier: tuple[str, str]
+) -> tuple[str, str, int] | None:
+    """Get the identifiers for a motionEye device."""
+    if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
+        return None
+    config_id, camera_id_str = identifier[1].split("_", 1)
+    try:
+        camera_id = int(camera_id_str)
+    except ValueError:
+        return None
+    return (DOMAIN, config_id, camera_id)
 
 
 def get_motioneye_entity_unique_id(
@@ -274,10 +307,15 @@ async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the motionEye component."""
+    hass.data[DOMAIN] = {}
+    MotionEyeServices(hass).async_register()
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     client = create_motioneye_client(
         entry.data[CONF_URL],
         admin_username=entry.data.get(CONF_ADMIN_USERNAME),
@@ -437,6 +475,149 @@ async def handle_webhook(
         },
     )
     return None
+
+
+class MotionEyeServices:
+    """Class that holds motionEye services that should be published to hass."""
+
+    SCHEMA_TEXT_OVERLAY = vol.In(
+        [
+            KEY_TEXT_OVERLAY_DISABLED,
+            KEY_TEXT_OVERLAY_TIMESTAMP,
+            KEY_TEXT_OVERLAY_CUSTOM_TEXT,
+            KEY_TEXT_OVERLAY_CAMERA_NAME,
+        ]
+    )
+
+    SCHEMA_DEVICE_OR_ENTITIES = {
+        vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    }
+
+    SERVICE_TO_ACTION = {
+        SERVICE_SNAPSHOT: KEY_ACTION_SNAPSHOT,
+    }
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize with hass object."""
+        self._hass = hass
+
+    @callback
+    def async_register(self) -> None:
+        """Register all our services."""
+        self._hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_TEXT_OVERLAY,
+            self._async_set_text_overlay,
+            schema=vol.All(
+                {
+                    **self.SCHEMA_DEVICE_OR_ENTITIES,
+                    vol.Optional(KEY_TEXT_OVERLAY_LEFT): self.SCHEMA_TEXT_OVERLAY,
+                    vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
+                    vol.Optional(KEY_TEXT_OVERLAY_RIGHT): self.SCHEMA_TEXT_OVERLAY,
+                    vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                cv.has_at_least_one_key(
+                    KEY_TEXT_OVERLAY_LEFT,
+                    KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
+                    KEY_TEXT_OVERLAY_RIGHT,
+                    KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
+                ),
+            ),
+        )
+        self._hass.services.async_register(
+            DOMAIN,
+            SERVICE_ACTION,
+            self._async_action,
+            schema=vol.All(
+                {
+                    **self.SCHEMA_DEVICE_OR_ENTITIES,
+                    vol.Required(CONF_ACTION): cv.string,
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+            ),
+        )
+
+        # Wrapper service calls for snapshot.
+        self._hass.services.async_register(
+            DOMAIN,
+            SERVICE_SNAPSHOT,
+            self._async_action,
+            schema=vol.All(
+                {
+                    **self.SCHEMA_DEVICE_OR_ENTITIES,
+                },
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+            ),
+        )
+
+    async def _get_clients_and_camera_indices_from_request(
+        self, service: ServiceCall
+    ) -> set[tuple[MotionEyeClient, int]]:
+        """Get a tuple of client and camera indices from a service request."""
+        entity_registry = er.async_get(self._hass)
+        device_registry = dr.async_get(self._hass)
+        devices_ids = service.data.get(ATTR_DEVICE_ID) or []
+
+        for entity_id in service.data.get(ATTR_ENTITY_ID) or []:
+            entity_entry = entity_registry.async_get(entity_id)
+            if entity_entry and entity_entry.device_id:
+                devices_ids.append(entity_entry.device_id)
+
+        output: set[tuple[MotionEyeClient, int]] = set()
+        for device_id in devices_ids:
+            device_entry = device_registry.async_get(device_id)
+            if not device_entry:
+                continue
+
+            # A device will always have at least 1 config_entry.
+            config_entry_id = next(iter(device_entry.config_entries), None)
+            client: MotionEyeClient = (
+                self._hass.data[DOMAIN].get(config_entry_id, {}).get(CONF_CLIENT)
+            )
+
+            for identifier in device_entry.identifiers:
+                data = split_motioneye_device_identifier(identifier)
+                if data is not None:
+                    output.add((client, data[2]))
+                break
+        return output
+
+    async def _async_set_text_overlay(self, service: ServiceCall) -> None:
+        """Set camera text overlay."""
+        cameras = await self._get_clients_and_camera_indices_from_request(service)
+        for client, camera_id in cameras or {}:
+            camera = await client.async_get_camera(camera_id)
+            if not camera:
+                continue
+
+            for key in (KEY_TEXT_OVERLAY_LEFT, KEY_TEXT_OVERLAY_RIGHT):
+                if service.data.get(key):
+                    camera[key] = service.data[key]
+
+            for key in (
+                KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
+                KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
+            ):
+                if service.data.get(key):
+                    camera[key] = (
+                        service.data[key].encode("unicode_escape").decode("UTF-8")
+                    )
+
+            await client.async_set_camera(camera_id, camera)
+
+    async def _async_action(self, service: ServiceCall) -> None:
+        """Perform a motionEye action."""
+        cameras = await self._get_clients_and_camera_indices_from_request(service)
+        for client, camera_id in cameras or {}:
+            await client.async_action(
+                camera_id,
+                (
+                    self.SERVICE_TO_ACTION.get(service.service)
+                    or service.data[CONF_ACTION]
+                ),
+            )
 
 
 class MotionEyeEntity(CoordinatorEntity):
