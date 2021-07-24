@@ -47,7 +47,7 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(websession)
+        client = Client(session=websession)
 
         try:
             await client.cdc_reports.status_by_coordinates(

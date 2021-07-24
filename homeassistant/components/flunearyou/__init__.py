@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(websession)
+    client = Client(session=websession)
 
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
