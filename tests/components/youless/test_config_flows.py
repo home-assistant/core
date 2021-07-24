@@ -43,7 +43,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         )
 
     assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result2.get("title") == DOMAIN
+    assert result2.get("title") == "localhost"
     assert len(mocked_youless.mock_calls) == 1
 
 
