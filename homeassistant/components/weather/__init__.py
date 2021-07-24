@@ -39,6 +39,7 @@ ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
 ATTR_FORECAST_CONDITION: Final = "condition"
+ATTR_FORECAST_DAYTIME = "daytime"
 ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
 ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
 ATTR_FORECAST_PRESSURE: Final = "pressure"
@@ -68,6 +69,7 @@ class Forecast(TypedDict, total=False):
 
     condition: str | None
     datetime: str
+    daytime: bool | None
     precipitation_probability: int | None
     precipitation: float | None
     pressure: float | None
