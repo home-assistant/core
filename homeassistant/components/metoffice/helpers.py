@@ -3,9 +3,9 @@
 import logging
 
 import datapoint
+from datapoint.Site import Site
 
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import utcnow
 
 from .data import MetOfficeData
 
@@ -23,7 +23,7 @@ def fetch_site(connection: datapoint.Manager, latitude, longitude):
         return None
 
 
-def fetch_data(connection: datapoint.Manager, site, mode) -> MetOfficeData:
+def fetch_data(connection: datapoint.Manager, site: Site, mode) -> MetOfficeData:
     """Fetch weather and forecast from Datapoint API."""
     try:
         forecast = connection.get_forecast_for_site(site.id, mode)
@@ -31,14 +31,4 @@ def fetch_data(connection: datapoint.Manager, site, mode) -> MetOfficeData:
         _LOGGER.error("Check Met Office connection: %s", err.args)
         raise UpdateFailed from err
     else:
-        time_now = utcnow()
-        return MetOfficeData(
-            forecast.now(),
-            [
-                timestep
-                for day in forecast.days
-                for timestep in day.timesteps
-                if timestep.date > time_now
-            ],
-            site,
-        )
+        return MetOfficeData(now=forecast.now(), forecast=forecast, site=site)
