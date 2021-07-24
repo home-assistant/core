@@ -9,7 +9,7 @@ from typing import Final
 
 import lc7001.aio
 
-import homeassistant
+from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -20,13 +20,13 @@ PLATFORMS: Final = ["light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up integration."""
+    """Set up Legrand RFLC integration."""
     hass.data[DOMAIN] = {}
     return True
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: homeassistant.config_entries.ConfigEntry
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up Legrand LC7001 from a config entry."""
     entry_id = entry.entry_id
@@ -71,7 +71,7 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: homeassistant.config_entries.ConfigEntry
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
     hub = hass.data[DOMAIN][entry.entry_id]

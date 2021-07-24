@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, Dict, Final
 
+from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
@@ -10,7 +11,6 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-import homeassistant.config_entries
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -146,7 +146,7 @@ class _Dimmer(_Switch):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: homeassistant.config_entries.ConfigEntry,
+    entry: config_entries.ConfigEntry,
     async_add_entities,
 ) -> None:
     """Set up the Legrand RFLC integration light platform.
