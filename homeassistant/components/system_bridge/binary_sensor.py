@@ -9,23 +9,21 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
+from .coordinator import SystemBridgeDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up System Bridge binary sensor based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    bridge: Bridge = coordinator.data
+    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    bridge: Bridge = coordinator.bridge
 
-    if bridge.battery.hasBattery:
-        async_add_entities(
-            [SystemBridgeBatteryIsChargingBinarySensor(coordinator, bridge)]
-        )
+    if bridge.battery and bridge.battery.hasBattery:
+        async_add_entities([SystemBridgeBatteryIsChargingBinarySensor(coordinator)])
 
 
 class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
@@ -33,8 +31,7 @@ class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        bridge: Bridge,
+        coordinator: SystemBridgeDataUpdateCoordinator,
         key: str,
         name: str,
         icon: str | None,
@@ -44,7 +41,7 @@ class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
         """Initialize System Bridge binary sensor."""
         self._device_class = device_class
 
-        super().__init__(coordinator, bridge, key, name, icon, enabled_by_default)
+        super().__init__(coordinator, key, name, icon, enabled_by_default)
 
     @property
     def device_class(self) -> str | None:
@@ -55,11 +52,10 @@ class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
 class SystemBridgeBatteryIsChargingBinarySensor(SystemBridgeBinarySensor):
     """Defines a Battery is charging binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
         """Initialize System Bridge binary sensor."""
         super().__init__(
             coordinator,
-            bridge,
             "battery_is_charging",
             "Battery Is Charging",
             None,

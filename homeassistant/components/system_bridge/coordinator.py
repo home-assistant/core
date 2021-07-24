@@ -8,6 +8,7 @@ from typing import Callable
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeConnectionClosedException, BridgeException
+from systembridge.objects.events import Event
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -56,9 +57,15 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         async def listen() -> None:
             """Listen for state changes via WebSocket."""
             try:
+                await self.bridge.async_get_information()
+                self.logger.debug(
+                    "Connecting to ws://%s:%s",
+                    self.host,
+                    self.bridge.information.websocketPort,
+                )
                 await self.bridge.async_connect_websocket(
                     self.host,
-                    (await self.bridge.async_get_setting("network", "wsPort")).value,
+                    self.bridge.information.websocketPort,
                 )
             except BridgeException as exception:
                 self.logger.error(exception)
@@ -68,8 +75,19 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
                 return
 
             try:
-                await self.bridge.listen_for_events(
-                    callback=self.async_set_updated_data
+                await self.bridge.listen_for_events(callback=self.async_handle_event)
+                await self.bridge.async_send_event(
+                    "get-data",
+                    [
+                        "battery",
+                        "cpu",
+                        "filesystem",
+                        "memory",
+                        "network",
+                        "os",
+                        "processes",
+                        "system",
+                    ],
                 )
             except BridgeConnectionClosedException as exception:
                 self.last_update_success = False
@@ -96,3 +114,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         if not self.bridge.websocket_connected:
             self._use_websocket()
         return self.bridge
+
+    async def async_handle_event(self, event: Event):
+        """Handle System Bridge events from the WebSocket."""
+        # No need to update anything, as everything is updated in the caller
+        self.logger.debug("New event from System Bridge: %s", event.name)
+        self.async_set_updated_data(self.bridge)

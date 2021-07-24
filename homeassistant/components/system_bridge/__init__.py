@@ -56,7 +56,6 @@ SERVICE_OPEN_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Bridge from a config entry."""
-
     client = Bridge(
         BridgeClient(aiohttp_client.async_get_clientsession(hass)),
         f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
@@ -65,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         async with async_timeout.timeout(60):
-            client.async_get_information(),
+            await client.async_get_information(),
     except BridgeAuthenticationException as exception:
         raise ConfigEntryAuthFailed from exception
     except BRIDGE_CONNECTION_ERRORS as exception:
@@ -73,6 +72,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = SystemBridgeDataUpdateCoordinator(hass, _LOGGER, entry=entry)
     await coordinator.async_config_entry_first_refresh()
+
+    # # Wait for initial data
+    # async with async_timeout.timeout(60):
+    #     while (
+    #         coordinator.bridge.information is not None
+    #         and "host" in coordinator.bridge.information is not None
+    #         and "uuid" in coordinator.bridge.information is not None
+    #     ):
+    #         await asyncio.sleep(1)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -100,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if entry.entry_id in device_entry.config_entries
         )
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.data
+        bridge: Bridge = coordinator.bridge
 
         _LOGGER.debug(
             "Command payload: %s",
@@ -138,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if entry.entry_id in device_entry.config_entries
         )
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.data
+        bridge: Bridge = coordinator.bridge
 
         _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
         try:
@@ -200,7 +208,6 @@ class SystemBridgeEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
-        bridge: Bridge,
         key: str,
         name: str,
         icon: str | None,
@@ -208,11 +215,15 @@ class SystemBridgeEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
-        self._key = f"{bridge.os.hostname}_{key}"
-        self._name = f"{bridge.os.hostname} {name}"
+        bridge: Bridge = self.coordinator.data
+        # asyncio.get_running_loop().run_until_complete(bridge.async_get_information())
+        _LOGGER.warning("coordinator.bridge %s", bridge)
+        _LOGGER.warning("coordinator.bridge.information %s", bridge.information)
+        self._key = f"{bridge.information.host}_{key}"
+        self._name = f"{bridge.information.host} {name}"
         self._icon = icon
         self._enabled_default = enabled_by_default
-        self._hostname = bridge.os.hostname
+        self._hostname = bridge.information.host
         self._default_interface = bridge.network.interfaces[
             bridge.network.interfaceDefault
         ]
