@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from aiopylgtv import PyLGTVPairException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -69,7 +69,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_check_configured_entry(self):
+    @callback
+    def _async_check_configured_entry(self):
         """Check if entry is configured, update unique_id if needed."""
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] != self._host:
@@ -83,14 +84,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 self.hass.config_entries.async_update_entry(entry, unique_id=self._uuid)
 
-            return True
-
-        return False
+            raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_step_pairing(self, user_input=None):
         """Display pairing form."""
-        if await self.async_check_configured_entry():
-            return self.async_abort(reason="already_configured")
+        self._async_check_configured_entry()
 
         self.context[CONF_HOST] = self._host
         self.context["title_placeholders"] = {"name": self._name}
