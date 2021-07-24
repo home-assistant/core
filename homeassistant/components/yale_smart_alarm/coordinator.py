@@ -129,7 +129,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     data=self.entry.data,
                 )
             )
-            raise UpdateFailed
+            raise UpdateFailed from error
 
         return {
             "arm_status": arm_status,
