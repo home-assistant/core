@@ -92,6 +92,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tcp.*
+homeassistant.components.tile.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
