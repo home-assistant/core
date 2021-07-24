@@ -169,6 +169,8 @@ class EventManager:
                 )
 
                 # Renew subscription if less than two hours is left
+                if not isinstance(response.TerminationTime, dt.datetime):
+                    raise Fault(message="Invalid TerminationTime '%s'" % response.TerminationTime)
                 if (
                     dt_util.as_utc(response.TerminationTime) - dt_util.utcnow()
                 ).total_seconds() < 7200:
