@@ -571,7 +571,7 @@ class AmcrestCam(Camera):
     def _goto_preset(self, preset):
         """Move camera position and zoom to preset."""
         try:
-            self._api.go_to_preset(action="start", preset_point_number=preset)
+            self._api.go_to_preset(preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error
