@@ -1,5 +1,6 @@
 """Support for power sensors in WeMo Insight devices."""
 import asyncio
+from datetime import datetime
 
 import pywemo
 
@@ -13,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import convert
+from homeassistant.util import convert, dt
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoSubscriptionEntity
@@ -92,6 +93,11 @@ class InsightTodayEnergy(InsightSensor):
         super().__init__(
             device, "Today Energy", DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
         )
+
+    @property
+    def last_reset(self) -> datetime:
+        """Return the time when the sensor was initialized."""
+        return dt.start_of_local_day()
 
     @property
     def state(self) -> StateType:
