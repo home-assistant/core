@@ -151,7 +151,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a RainMachine options flow."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 
