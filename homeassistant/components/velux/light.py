@@ -1,9 +1,10 @@
 """Support for Velux lights."""
 from pyvlx import Intensity, LighteningDevice
+from pyvlx.node import Node
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     LightEntity,
 )
 
@@ -22,10 +23,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class VeluxLight(VeluxEntity, LightEntity):
     """Representation of a Velux light."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+    def __init__(self, node: Node):
+        """Initialize the Velux light."""
+        super().__init__(node)
+
+        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
 
     @property
     def brightness(self):
@@ -43,11 +46,11 @@ class VeluxLight(VeluxEntity, LightEntity):
             intensity_percent = int(100 - kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             await self.node.set_intensity(
                 Intensity(intensity_percent=intensity_percent),
-                wait_for_completion=False,
+                wait_for_completion=True,
             )
         else:
-            await self.node.turn_on(wait_for_completion=False)
+            await self.node.turn_on(wait_for_completion=True)
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        await self.node.turn_off(wait_for_completion=False)
+        await self.node.turn_off(wait_for_completion=True)
