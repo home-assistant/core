@@ -51,27 +51,21 @@ async def async_setup_entry(
 
     for surepy_entity in spc.states.values():
 
-        entity = None
-
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
         ]:
-            entity = Flap(surepy_entity.id, spc)
-            entities.append(entity)
+            entities.append(Flap(surepy_entity.id, spc))
 
         elif surepy_entity.type == EntityType.FELAQUA:
-            entity = Felaqua(surepy_entity.id, spc)
-            entities.append(entity)
+            entities.append(Felaqua(surepy_entity.id, spc))
 
         elif surepy_entity.type == EntityType.FEEDER:
 
             for bowl in surepy_entity.bowls.values():
-                bowl_entity = FeederBowl(surepy_entity.id, spc, bowl.raw_data())
-                entities.append(bowl_entity)
+                entities.append(FeederBowl(surepy_entity.id, spc, bowl.raw_data()))
 
-            entity = Feeder(surepy_entity.id, spc)
-            entities.append(entity)
+            entities.append(Feeder(surepy_entity.id, spc))
 
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
@@ -79,11 +73,7 @@ async def async_setup_entry(
             EntityType.FEEDER,
             EntityType.FELAQUA,
         ]:
-            entity = SureBattery(surepy_entity.id, spc)
-            entities.append(entity)
-
-        if entity:
-            _LOGGER.debug("🐾 %s added...", entity.name)
+            entities.append(SureBattery(surepy_entity.id, spc))
 
     async_add_entities(entities)
 
@@ -177,9 +167,7 @@ class SurePetcareSensor(SensorEntity):  # type: ignore
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
+        async_dispatcher_connect(self.hass, TOPIC_UPDATE, update)
 
         self._async_update()
 

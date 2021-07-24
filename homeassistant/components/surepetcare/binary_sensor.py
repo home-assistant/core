@@ -104,6 +104,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):  # type: ignore
     @callback
     def _async_update(self) -> None:
         """Get the latest data and update the state."""
+        self.async_schedule_update_ha_state(True)
         self._surepy_entity = self._spc.states[self._id]
         self._state = self._surepy_entity.raw_data()["status"]
         # _LOGGER.debug("🐾 %s updated", self._surepy_entity.name)
@@ -120,9 +121,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):  # type: ignore
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
+        async_dispatcher_connect(self.hass, TOPIC_UPDATE, update)
 
         self._async_update()
 

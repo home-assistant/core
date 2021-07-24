@@ -72,8 +72,5 @@ MOCK_CONFIG = {
     DOMAIN: {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
-        "feeders": [12345],
-        "flaps": [13579, 13576],
-        "pets": [24680],
     },
 }
