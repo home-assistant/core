@@ -1,4 +1,4 @@
-"""Xbox Media Source Implementation."""
+"""motionEye Media Source Implementation."""
 from __future__ import annotations
 
 import logging
@@ -326,7 +326,10 @@ class MotionEyeMediaSource(MediaSource):
                         base.children.append(
                             BrowseMediaSource(
                                 domain=DOMAIN,
-                                identifier=f"{config.entry_id}#{device.id}#{kind}#{full_child_path}",
+                                identifier=(
+                                    f"{config.entry_id}#{device.id}"
+                                    f"#{kind}#{full_child_path}"
+                                ),
                                 media_class=MEDIA_CLASS_DIRECTORY,
                                 media_content_type=MEDIA_CLASS_DIRECTORY,
                                 title=display_child_path,

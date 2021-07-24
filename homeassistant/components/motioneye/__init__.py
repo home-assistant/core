@@ -511,7 +511,9 @@ def _get_media_event_data(
     if os.path.commonprefix([root_directory, event_file_path]) == root_directory:
         file_path = "/" + os.path.relpath(event_file_path, root_directory)
         output = {
-            EVENT_MEDIA_CONTENT_ID: f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
+            EVENT_MEDIA_CONTENT_ID: (
+                f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
+            ),
         }
         url = get_media_url(
             client,
