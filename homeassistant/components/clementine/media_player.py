@@ -75,6 +75,9 @@ class ClementineDevice(MediaPlayerEntity):
         self._client = client
         self._attr_name = name
         self._attr_volume_level = 0.0
+        self._attr_media_title = ""
+        self._attr_media_artist = ""
+        self._attr_media_album_name = ""
 
     def update(self):
         """Retrieve the latest data from the Clementine Player."""
