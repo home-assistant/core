@@ -1,5 +1,4 @@
 """Support for BME280 temperature, humidity and pressure sensor."""
-from contextlib import suppress
 from functools import partial
 import logging
 
@@ -35,6 +34,7 @@ from .const import (
     CONF_SPI_DEV,
     CONF_T_STANDBY,
     DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
     SENSOR_HUMID,
     SENSOR_PRESS,
     SENSOR_TEMP,
@@ -51,7 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     sensor_conf = discovery_info[SENSOR_DOMAIN]
     name = sensor_conf[CONF_NAME]
-    scan_interval = sensor_conf[CONF_SCAN_INTERVAL]
+    scan_interval = max(sensor_conf[CONF_SCAN_INTERVAL], MIN_TIME_BETWEEN_UPDATES)
     if CONF_SPI_BUS in sensor_conf and CONF_SPI_DEV in sensor_conf:
         spi_dev = sensor_conf[CONF_SPI_DEV]
         spi_bus = sensor_conf[CONF_SPI_BUS]
@@ -107,16 +107,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     await coordinator.async_refresh()
     entities = []
-    with suppress(KeyError):
-        for condition in sensor_conf[CONF_MONITORED_CONDITIONS]:
-            entities.append(
-                BME280Sensor(
-                    condition,
-                    SENSOR_TYPES[condition][1],
-                    name,
-                    coordinator,
-                )
+    for condition in sensor_conf[CONF_MONITORED_CONDITIONS]:
+        entities.append(
+            BME280Sensor(
+                condition,
+                SENSOR_TYPES[condition][1],
+                name,
+                coordinator,
             )
+        )
     async_add_entities(entities, True)
 
 
