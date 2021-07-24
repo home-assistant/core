@@ -111,13 +111,17 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
         return int(self._tile.accuracy)
 
     @property
-    def latitude(self) -> float:
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
+        if not self._tile.latitude:
+            return None
         return cast(float, self._tile.latitude)
 
     @property
-    def longitude(self) -> float:
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
+        if not self._tile.longitude:
+            return None
         return cast(float, self._tile.longitude)
 
     @property
