@@ -1324,6 +1324,9 @@ xknx==0.18.8
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 
+# homeassistant.components.yale_smart_alarm
+yalesmartalarmclient==0.3.3
+
 # homeassistant.components.august
 yalexs==1.1.12
 
