@@ -108,19 +108,22 @@ class ChannelsPlayer(MediaPlayerEntity):
         if channel_hash:
             channel_image_url = channel_hash.get("channel_image_url")
             self._attr_media_content_id = channel_hash.get("channel_number")
-        now_playing_title = now_playing_image_url = None
+        now_playing_title = None
+        now_playing_image_url = None
         if np_hash:
             now_playing_title = np_hash.get("title")
             now_playing_image_url = np_hash.get("image_url")
         self._attr_source_list = [channel["name"] for channel in self.favorite_channels]
         self._attr_media_title = now_playing_title if self._attr_state else None
-        self._attr_media_image_url = (
-            now_playing_image_url
-            if now_playing_image_url
-            else channel_image_url
-            if channel_image_url
-            else "https://getchannels.com/assets/img/icon-1024.png"
-        )
+        if now_playing_image_url:
+            self._attr_media_image_url = now_playing_image_url
+        elif channel_image_url:
+            self._attr_media_image_url = channel_image_url
+        else:
+            self._attr_media_image_url = (
+                "https://getchannels.com/assets/img/icon-1024.png"
+            )
+
         self._attr_state = None
         if self.status == "stopped":
             self._attr_state = STATE_IDLE
@@ -136,7 +139,7 @@ class ChannelsPlayer(MediaPlayerEntity):
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) player."""
-        if mute != self._attr_is_volume_muted:
+        if mute != self.is_volume_muted:
             response = self.client.toggle_muted()
             self.update_state(response)
 
