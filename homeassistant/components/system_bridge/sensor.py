@@ -223,25 +223,26 @@ class BridgeFilesystemSensor(BridgeSensor):
         self, coordinator: DataUpdateCoordinator, bridge: Bridge, key: str
     ) -> None:
         """Initialize System Bridge sensor."""
+        uid_key = key.replace(":", "")
         super().__init__(
             coordinator,
             bridge,
-            f"filesystem_{key}",
+            f"filesystem_{uid_key}",
             f"{key} Space Used",
             "mdi:harddisk",
             None,
             PERCENTAGE,
             True,
         )
-        self._key = key
+        self._fs_key = key
 
     @property
     def state(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
-            round(bridge.filesystem.fsSize[self._key]["use"], 2)
-            if bridge.filesystem.fsSize[self._key]["use"] is not None
+            round(bridge.filesystem.fsSize[self._fs_key]["use"], 2)
+            if bridge.filesystem.fsSize[self._fs_key]["use"] is not None
             else None
         )
 
@@ -250,12 +251,12 @@ class BridgeFilesystemSensor(BridgeSensor):
         """Return the state attributes of the entity."""
         bridge: Bridge = self.coordinator.data
         return {
-            ATTR_AVAILABLE: bridge.filesystem.fsSize[self._key]["available"],
-            ATTR_FILESYSTEM: bridge.filesystem.fsSize[self._key]["fs"],
-            ATTR_MOUNT: bridge.filesystem.fsSize[self._key]["mount"],
-            ATTR_SIZE: bridge.filesystem.fsSize[self._key]["size"],
-            ATTR_TYPE: bridge.filesystem.fsSize[self._key]["type"],
-            ATTR_USED: bridge.filesystem.fsSize[self._key]["used"],
+            ATTR_AVAILABLE: bridge.filesystem.fsSize[self._fs_key]["available"],
+            ATTR_FILESYSTEM: bridge.filesystem.fsSize[self._fs_key]["fs"],
+            ATTR_MOUNT: bridge.filesystem.fsSize[self._fs_key]["mount"],
+            ATTR_SIZE: bridge.filesystem.fsSize[self._fs_key]["size"],
+            ATTR_TYPE: bridge.filesystem.fsSize[self._fs_key]["type"],
+            ATTR_USED: bridge.filesystem.fsSize[self._fs_key]["used"],
         }
 
 
