@@ -9,6 +9,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from . import api
 from .const import (
     CONF_CAT,
     CONF_DIM_STEPS,
@@ -163,6 +164,8 @@ async def async_setup_entry(hass, entry):
         model=f"{devices.modem.model} ({devices.modem.cat!r}, 0x{devices.modem.subcat:02x})",
         sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
     )
+
+    api.async_load_api(hass)
 
     asyncio.create_task(async_get_device_config(hass, entry))
 

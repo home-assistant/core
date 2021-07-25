@@ -10,7 +10,12 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import (
+    DATA_GIGABYTES,
+    DATA_RATE_KILOBITS_PER_SECOND,
+    DATA_RATE_KILOBYTES_PER_SECOND,
+    DEVICE_CLASS_TIMESTAMP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -97,38 +102,38 @@ SENSOR_DATA = {
     "kb_s_sent": SensorData(
         name="kB/s sent",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement="kB/s",
+        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_kb_s_sent_state,
     ),
     "kb_s_received": SensorData(
         name="kB/s received",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement="kB/s",
+        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_kb_s_received_state,
     ),
     "max_kb_s_sent": SensorData(
-        name="Max kb/s sent",
-        unit_of_measurement="kb/s",
+        name="Max kbit/s sent",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_max_kb_s_sent_state,
     ),
     "max_kb_s_received": SensorData(
-        name="Max kb/s received",
-        unit_of_measurement="kb/s",
+        name="Max kbit/s received",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_max_kb_s_received_state,
     ),
     "gb_sent": SensorData(
         name="GB sent",
-        unit_of_measurement="GB",
+        unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
         state_provider=_retrieve_gb_sent_state,
     ),
     "gb_received": SensorData(
         name="GB received",
-        unit_of_measurement="GB",
+        unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
     ),

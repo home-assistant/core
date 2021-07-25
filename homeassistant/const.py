@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 from __future__ import annotations
 
-from typing import Final, NewType
+from typing import Final
 
 MAJOR_VERSION: Final = 2021
 MINOR_VERSION: Final = 8
@@ -274,6 +274,9 @@ STATE_ALARM_DISARMING: Final = "disarming"
 STATE_ALARM_TRIGGERED: Final = "triggered"
 STATE_LOCKED: Final = "locked"
 STATE_UNLOCKED: Final = "unlocked"
+STATE_LOCKING: Final = "locking"
+STATE_UNLOCKING: Final = "unlocking"
+STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
@@ -395,209 +398,176 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 
 # #### UNITS OF MEASUREMENT ####
-UnitT = NewType("UnitT", str)
-
 # Power units
-UnitPowerT = NewType("UnitPowerT", UnitT)
-POWER_WATT: Final[UnitPowerT] = UnitPowerT(UnitT("W"))
-POWER_KILO_WATT: Final[UnitPowerT] = UnitPowerT(UnitT("kW"))
-
-# Voltage units
-VOLT: Final[UnitT] = UnitT("V")
+POWER_WATT: Final = "W"
+POWER_KILO_WATT: Final = "kW"
+POWER_VOLT_AMPERE: Final = "VA"
 
 # Energy units
-UnitEnergyT = NewType("UnitEnergyT", UnitT)
-ENERGY_WATT_HOUR: Final[UnitEnergyT] = UnitEnergyT(UnitT("Wh"))
-ENERGY_KILO_WATT_HOUR: Final[UnitEnergyT] = UnitEnergyT(UnitT("kWh"))
+ENERGY_WATT_HOUR: Final = "Wh"
+ENERGY_KILO_WATT_HOUR: Final = "kWh"
 
-# Electrical units
-ELECTRICAL_CURRENT_AMPERE: Final[UnitT] = UnitT("A")
-ELECTRICAL_VOLT_AMPERE: Final[UnitT] = UnitT("VA")
+# Electric_current units
+ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
+ELECTRIC_CURRENT_AMPERE: Final = "A"
+
+# Electric_potential units
+ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
+ELECTRIC_POTENTIAL_VOLT: Final = "V"
 
 # Degree units
-DEGREE: Final[UnitT] = UnitT("°")
+DEGREE: Final = "°"
 
 # Currency units
-UnitCurrencyT = NewType("UnitCurrencyT", UnitT)
-CURRENCY_EURO: Final[UnitCurrencyT] = UnitCurrencyT(UnitT("€"))
-CURRENCY_DOLLAR: Final[UnitCurrencyT] = UnitCurrencyT(UnitT("$"))
-CURRENCY_CENT: Final[UnitCurrencyT] = UnitCurrencyT(UnitT("¢"))
+CURRENCY_EURO: Final = "€"
+CURRENCY_DOLLAR: Final = "$"
+CURRENCY_CENT: Final = "¢"
 
 # Temperature units
-UnitTemperatureT = NewType("UnitTemperatureT", UnitT)
-TEMP_CELSIUS: Final[UnitTemperatureT] = UnitTemperatureT(UnitT("°C"))
-TEMP_FAHRENHEIT: Final[UnitTemperatureT] = UnitTemperatureT(UnitT("°F"))
-TEMP_KELVIN: Final[UnitTemperatureT] = UnitTemperatureT(UnitT("K"))
+TEMP_CELSIUS: Final = "°C"
+TEMP_FAHRENHEIT: Final = "°F"
+TEMP_KELVIN: Final = "K"
 
 # Time units
-UnitTimeT = NewType("UnitTimeT", UnitT)
-TIME_MICROSECONDS: Final[UnitTimeT] = UnitTimeT(UnitT("μs"))
-TIME_MILLISECONDS: Final[UnitTimeT] = UnitTimeT(UnitT("ms"))
-TIME_SECONDS: Final[UnitTimeT] = UnitTimeT(UnitT("s"))
-TIME_MINUTES: Final[UnitTimeT] = UnitTimeT(UnitT("min"))
-TIME_HOURS: Final[UnitTimeT] = UnitTimeT(UnitT("h"))
-TIME_DAYS: Final[UnitTimeT] = UnitTimeT(UnitT("d"))
-TIME_WEEKS: Final[UnitTimeT] = UnitTimeT(UnitT("w"))
-TIME_MONTHS: Final[UnitTimeT] = UnitTimeT(UnitT("m"))
-TIME_YEARS: Final[UnitTimeT] = UnitTimeT(UnitT("y"))
+TIME_MICROSECONDS: Final = "μs"
+TIME_MILLISECONDS: Final = "ms"
+TIME_SECONDS: Final = "s"
+TIME_MINUTES: Final = "min"
+TIME_HOURS: Final = "h"
+TIME_DAYS: Final = "d"
+TIME_WEEKS: Final = "w"
+TIME_MONTHS: Final = "m"
+TIME_YEARS: Final = "y"
 
 # Length units
-UnitLengthT = NewType("UnitLengthT", UnitT)
-LENGTH_MILLIMETERS: Final[UnitLengthT] = UnitLengthT(UnitT("mm"))
-LENGTH_CENTIMETERS: Final[UnitLengthT] = UnitLengthT(UnitT("cm"))
-LENGTH_METERS: Final[UnitLengthT] = UnitLengthT(UnitT("m"))
-LENGTH_KILOMETERS: Final[UnitLengthT] = UnitLengthT(UnitT("km"))
+LENGTH_MILLIMETERS: Final = "mm"
+LENGTH_CENTIMETERS: Final = "cm"
+LENGTH_METERS: Final = "m"
+LENGTH_KILOMETERS: Final = "km"
 
-LENGTH_INCHES: Final[UnitLengthT] = UnitLengthT(UnitT("in"))
-LENGTH_FEET: Final[UnitLengthT] = UnitLengthT(UnitT("ft"))
-LENGTH_YARD: Final[UnitLengthT] = UnitLengthT(UnitT("yd"))
-LENGTH_MILES: Final[UnitLengthT] = UnitLengthT(UnitT("mi"))
+LENGTH_INCHES: Final = "in"
+LENGTH_FEET: Final = "ft"
+LENGTH_YARD: Final = "yd"
+LENGTH_MILES: Final = "mi"
 
 # Frequency units
-UnitFrequencyT = NewType("UnitFrequencyT", UnitT)
-FREQUENCY_HERTZ: Final[UnitFrequencyT] = UnitFrequencyT(UnitT("Hz"))
-FREQUENCY_GIGAHERTZ: Final[UnitFrequencyT] = UnitFrequencyT(UnitT("GHz"))
+FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_MEGAHERTZ: Final = "MHz"
+FREQUENCY_GIGAHERTZ: Final = "GHz"
 
 # Pressure units
-UnitPressureT = NewType("UnitPressureT", UnitT)
-PRESSURE_PA: Final[UnitPressureT] = UnitPressureT(UnitT("Pa"))
-PRESSURE_HPA: Final[UnitPressureT] = UnitPressureT(UnitT("hPa"))
-PRESSURE_BAR: Final[UnitPressureT] = UnitPressureT(UnitT("bar"))
-PRESSURE_MBAR: Final[UnitPressureT] = UnitPressureT(UnitT("mbar"))
-PRESSURE_INHG: Final[UnitPressureT] = UnitPressureT(UnitT("inHg"))
-PRESSURE_PSI: Final[UnitPressureT] = UnitPressureT(UnitT("psi"))
+PRESSURE_PA: Final = "Pa"
+PRESSURE_HPA: Final = "hPa"
+PRESSURE_BAR: Final = "bar"
+PRESSURE_MBAR: Final = "mbar"
+PRESSURE_INHG: Final = "inHg"
+PRESSURE_PSI: Final = "psi"
+
+# Sound pressure units
+SOUND_PRESSURE_DB: Final = "dB"
+SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
 
 # Volume units
-UnitVolumeT = NewType("UnitVolumeT", UnitT)
-VOLUME_LITERS: Final[UnitVolumeT] = UnitVolumeT(UnitT("L"))
-VOLUME_MILLILITERS: Final[UnitVolumeT] = UnitVolumeT(UnitT("mL"))
-VOLUME_CUBIC_METERS: Final[UnitVolumeT] = UnitVolumeT(UnitT("m³"))
-VOLUME_CUBIC_FEET: Final[UnitVolumeT] = UnitVolumeT(UnitT("ft³"))
+VOLUME_LITERS: Final = "L"
+VOLUME_MILLILITERS: Final = "mL"
+VOLUME_CUBIC_METERS: Final = "m³"
+VOLUME_CUBIC_FEET: Final = "ft³"
 
-VOLUME_GALLONS: Final[UnitVolumeT] = UnitVolumeT(UnitT("gal"))
-VOLUME_FLUID_OUNCE: Final[UnitVolumeT] = UnitVolumeT(UnitT("fl. oz."))
+VOLUME_GALLONS: Final = "gal"
+VOLUME_FLUID_OUNCE: Final = "fl. oz."
 
 # Volume Flow Rate units
-UnitVolumeFlowT = NewType("UnitVolumeFlowT", UnitT)
-VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final[UnitVolumeFlowT] = UnitVolumeFlowT(
-    UnitT("m³/h")
-)
-VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final[UnitVolumeFlowT] = UnitVolumeFlowT(
-    UnitT("ft³/m")
-)
+VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
+VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
 
 # Area units
-UnitAreaT = NewType("UnitAreaT", UnitT)
-AREA_SQUARE_METERS: Final[UnitAreaT] = UnitAreaT(UnitT("m²"))
+AREA_SQUARE_METERS: Final = "m²"
 
 # Mass units
-UnitMassT = NewType("UnitMassT", UnitT)
-MASS_GRAMS: Final[UnitMassT] = UnitMassT(UnitT("g"))
-MASS_KILOGRAMS: Final[UnitMassT] = UnitMassT(UnitT("kg"))
-MASS_MILLIGRAMS: Final[UnitMassT] = UnitMassT(UnitT("mg"))
-MASS_MICROGRAMS: Final[UnitMassT] = UnitMassT(UnitT("µg"))
+MASS_GRAMS: Final = "g"
+MASS_KILOGRAMS: Final = "kg"
+MASS_MILLIGRAMS: Final = "mg"
+MASS_MICROGRAMS: Final = "µg"
 
-MASS_OUNCES: Final[UnitMassT] = UnitMassT(UnitT("oz"))
-MASS_POUNDS: Final[UnitMassT] = UnitMassT(UnitT("lb"))
+MASS_OUNCES: Final = "oz"
+MASS_POUNDS: Final = "lb"
 
 # Conductivity units
-CONDUCTIVITY: Final[UnitT] = UnitT("µS/cm")
+CONDUCTIVITY: Final = "µS/cm"
 
 # Light units
-LIGHT_LUX: Final[UnitT] = UnitT("lx")
+LIGHT_LUX: Final = "lx"
 
 # UV Index units
-UV_INDEX: Final[UnitT] = UnitT("UV index")
+UV_INDEX: Final = "UV index"
 
 # Percentage units
-PERCENTAGE: Final[UnitT] = UnitT("%")
+PERCENTAGE: Final = "%"
 
 # Irradiation units
-UnitIrradiationT = NewType("UnitIrradiationT", UnitT)
-IRRADIATION_WATTS_PER_SQUARE_METER: Final[UnitIrradiationT] = UnitIrradiationT(
-    UnitT("W/m²")
-)
-IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final[UnitIrradiationT] = UnitIrradiationT(
-    UnitT("BTU/(h×ft²)")
-)
+IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
+IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
 # Precipitation units
-PRECIPITATION_MILLIMETERS_PER_HOUR: Final[UnitT] = UnitT("mm/h")
+PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
+PRECIPITATION_INCHES: Final = "in"
+PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
 
 # Concentration units
-UnitConcentrationT = NewType("UnitConcentrationT", UnitT)
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final[
-    UnitConcentrationT
-] = UnitConcentrationT(UnitT("µg/m³"))
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final[
-    UnitConcentrationT
-] = UnitConcentrationT(UnitT("mg/m³"))
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final[UnitConcentrationT] = UnitConcentrationT(
-    UnitT("μg/ft³")
-)
-CONCENTRATION_PARTS_PER_CUBIC_METER: Final[UnitConcentrationT] = UnitConcentrationT(
-    UnitT("p/m³")
-)
-CONCENTRATION_PARTS_PER_MILLION: Final[UnitConcentrationT] = UnitConcentrationT(
-    UnitT("ppm")
-)
-CONCENTRATION_PARTS_PER_BILLION: Final[UnitConcentrationT] = UnitConcentrationT(
-    UnitT("ppb")
-)
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
+CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
+CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
+CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
+CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
 # Speed units
-UnitSpeedT = NewType("UnitSpeedT", UnitT)
-SPEED_MILLIMETERS_PER_DAY: Final[UnitSpeedT] = UnitSpeedT(UnitT("mm/d"))
-SPEED_INCHES_PER_DAY: Final[UnitSpeedT] = UnitSpeedT(UnitT("in/d"))
-SPEED_METERS_PER_SECOND: Final[UnitSpeedT] = UnitSpeedT(UnitT("m/s"))
-SPEED_INCHES_PER_HOUR: Final[UnitSpeedT] = UnitSpeedT(UnitT("in/h"))
-SPEED_KILOMETERS_PER_HOUR: Final[UnitSpeedT] = UnitSpeedT(UnitT("km/h"))
-SPEED_MILES_PER_HOUR: Final[UnitSpeedT] = UnitSpeedT(UnitT("mph"))
+SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
+SPEED_INCHES_PER_DAY: Final = "in/d"
+SPEED_METERS_PER_SECOND: Final = "m/s"
+SPEED_INCHES_PER_HOUR: Final = "in/h"
+SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
+SPEED_MILES_PER_HOUR: Final = "mph"
 
 # Signal_strength units
-UnitSignalStrengthT = NewType("UnitSignalStrengthT", UnitT)
-SIGNAL_STRENGTH_DECIBELS: Final[UnitSignalStrengthT] = UnitSignalStrengthT(UnitT("dB"))
-SIGNAL_STRENGTH_DECIBELS_MILLIWATT: Final[UnitSignalStrengthT] = UnitSignalStrengthT(
-    UnitT("dBm")
-)
+SIGNAL_STRENGTH_DECIBELS: Final = "dB"
+SIGNAL_STRENGTH_DECIBELS_MILLIWATT: Final = "dBm"
 
 # Data units
-UnitDataT = NewType("UnitDataT", UnitT)
-DATA_BITS: Final[UnitDataT] = UnitDataT(UnitT("bit"))
-DATA_KILOBITS: Final[UnitDataT] = UnitDataT(UnitT("kbit"))
-DATA_MEGABITS: Final[UnitDataT] = UnitDataT(UnitT("Mbit"))
-DATA_GIGABITS: Final[UnitDataT] = UnitDataT(UnitT("Gbit"))
-DATA_BYTES: Final[UnitDataT] = UnitDataT(UnitT("B"))
-DATA_KILOBYTES: Final[UnitDataT] = UnitDataT(UnitT("kB"))
-DATA_MEGABYTES: Final[UnitDataT] = UnitDataT(UnitT("MB"))
-DATA_GIGABYTES: Final[UnitDataT] = UnitDataT(UnitT("GB"))
-DATA_TERABYTES: Final[UnitDataT] = UnitDataT(UnitT("TB"))
-DATA_PETABYTES: Final[UnitDataT] = UnitDataT(UnitT("PB"))
-DATA_EXABYTES: Final[UnitDataT] = UnitDataT(UnitT("EB"))
-DATA_ZETTABYTES: Final[UnitDataT] = UnitDataT(UnitT("ZB"))
-DATA_YOTTABYTES: Final[UnitDataT] = UnitDataT(UnitT("YB"))
-DATA_KIBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("KiB"))
-DATA_MEBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("MiB"))
-DATA_GIBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("GiB"))
-DATA_TEBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("TiB"))
-DATA_PEBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("PiB"))
-DATA_EXBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("EiB"))
-DATA_ZEBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("ZiB"))
-DATA_YOBIBYTES: Final[UnitDataT] = UnitDataT(UnitT("YiB"))
+DATA_BITS: Final = "bit"
+DATA_KILOBITS: Final = "kbit"
+DATA_MEGABITS: Final = "Mbit"
+DATA_GIGABITS: Final = "Gbit"
+DATA_BYTES: Final = "B"
+DATA_KILOBYTES: Final = "kB"
+DATA_MEGABYTES: Final = "MB"
+DATA_GIGABYTES: Final = "GB"
+DATA_TERABYTES: Final = "TB"
+DATA_PETABYTES: Final = "PB"
+DATA_EXABYTES: Final = "EB"
+DATA_ZETTABYTES: Final = "ZB"
+DATA_YOTTABYTES: Final = "YB"
+DATA_KIBIBYTES: Final = "KiB"
+DATA_MEBIBYTES: Final = "MiB"
+DATA_GIBIBYTES: Final = "GiB"
+DATA_TEBIBYTES: Final = "TiB"
+DATA_PEBIBYTES: Final = "PiB"
+DATA_EXBIBYTES: Final = "EiB"
+DATA_ZEBIBYTES: Final = "ZiB"
+DATA_YOBIBYTES: Final = "YiB"
 
 # Data_rate units
-UnitDataRateT = NewType("UnitDataRateT", UnitT)
-DATA_RATE_BITS_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("bit/s"))
-DATA_RATE_KILOBITS_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("kbit/s"))
-DATA_RATE_MEGABITS_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("Mbit/s"))
-DATA_RATE_GIGABITS_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("Gbit/s"))
-DATA_RATE_BYTES_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("B/s"))
-DATA_RATE_KILOBYTES_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("kB/s"))
-DATA_RATE_MEGABYTES_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("MB/s"))
-DATA_RATE_GIGABYTES_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("GB/s"))
-DATA_RATE_KIBIBYTES_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("KiB/s"))
-DATA_RATE_MEBIBYTES_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("MiB/s"))
-DATA_RATE_GIBIBYTES_PER_SECOND: Final[UnitDataRateT] = UnitDataRateT(UnitT("GiB/s"))
+DATA_RATE_BITS_PER_SECOND: Final = "bit/s"
+DATA_RATE_KILOBITS_PER_SECOND: Final = "kbit/s"
+DATA_RATE_MEGABITS_PER_SECOND: Final = "Mbit/s"
+DATA_RATE_GIGABITS_PER_SECOND: Final = "Gbit/s"
+DATA_RATE_BYTES_PER_SECOND: Final = "B/s"
+DATA_RATE_KILOBYTES_PER_SECOND: Final = "kB/s"
+DATA_RATE_MEGABYTES_PER_SECOND: Final = "MB/s"
+DATA_RATE_GIGABYTES_PER_SECOND: Final = "GB/s"
+DATA_RATE_KIBIBYTES_PER_SECOND: Final = "KiB/s"
+DATA_RATE_MEBIBYTES_PER_SECOND: Final = "MiB/s"
+DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
 
 
 # #### SERVICES ####
@@ -699,14 +669,13 @@ RESTART_EXIT_CODE: Final = 100
 
 UNIT_NOT_RECOGNIZED_TEMPLATE: Final = "{} is not a recognized {} unit."
 
-UnitTypeT = NewType("UnitTypeT", str)
-LENGTH: Final[UnitTypeT] = UnitTypeT("length")
-MASS: Final[UnitTypeT] = UnitTypeT("mass")
-PRESSURE: Final[UnitTypeT] = UnitTypeT("pressure")
-VOLUME: Final[UnitTypeT] = UnitTypeT("volume")
-TEMPERATURE: Final[UnitTypeT] = UnitTypeT("temperature")
-SPEED_MS: Final[UnitTypeT] = UnitTypeT("speed_ms")
-ILLUMINANCE: Final[UnitTypeT] = UnitTypeT("illuminance")
+LENGTH: Final = "length"
+MASS: Final = "mass"
+PRESSURE: Final = "pressure"
+VOLUME: Final = "volume"
+TEMPERATURE: Final = "temperature"
+SPEED_MS: Final = "speed_ms"
+ILLUMINANCE: Final = "illuminance"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 

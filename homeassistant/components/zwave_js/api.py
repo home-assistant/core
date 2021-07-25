@@ -796,7 +796,7 @@ async def websocket_subscribe_heal_network_progress(
         controller.on("heal network done", partial(forward_event, "result")),
     ]
 
-    connection.send_result(msg[ID])
+    connection.send_result(msg[ID], controller.heal_network_progress)
 
 
 @websocket_api.require_admin
@@ -1390,7 +1390,15 @@ async def websocket_subscribe_firmware_update_status(
     ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    connection.send_result(msg[ID])
+    result = (
+        {
+            "sent_fragments": node.firmware_update_progress.sent_fragments,
+            "total_fragments": node.firmware_update_progress.total_fragments,
+        }
+        if node.firmware_update_progress
+        else None
+    )
+    connection.send_result(msg[ID], result)
 
 
 class FirmwareUploadView(HomeAssistantView):

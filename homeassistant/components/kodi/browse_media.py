@@ -71,7 +71,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
         return None
 
     children = await asyncio.gather(
-        *[item_payload(item, get_thumbnail_url) for item in media]
+        *(item_payload(item, get_thumbnail_url) for item in media)
     )
 
     if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
@@ -209,7 +209,7 @@ async def library_payload():
     }
 
     library_info.children = await asyncio.gather(
-        *[
+        *(
             item_payload(
                 {
                     "label": item["label"],
@@ -220,7 +220,7 @@ async def library_payload():
             for item in [
                 {"label": name, "type": type_} for type_, name in library.items()
             ]
-        ]
+        )
     )
 
     return library_info

@@ -16,10 +16,10 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
         await hass.async_block_till_done()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    select_entity_livingroom = "select.netatmo_myhome"
+    select_entity = "select.netatmo_myhome"
 
-    assert hass.states.get(select_entity_livingroom).state == "Default"
-    assert hass.states.get(select_entity_livingroom).attributes[ATTR_OPTIONS] == [
+    assert hass.states.get(select_entity).state == "Default"
+    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == [
         "Default",
         "Winter",
     ]
@@ -33,7 +33,7 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(select_entity_livingroom).state == "Winter"
+    assert hass.states.get(select_entity).state == "Winter"
 
     # Test setting a different schedule
     with patch(
@@ -43,7 +43,7 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: select_entity_livingroom,
+                ATTR_ENTITY_ID: select_entity,
                 ATTR_OPTION: "Default",
             },
             blocking=True,
@@ -62,4 +62,4 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(select_entity_livingroom).state == "Default"
+    assert hass.states.get(select_entity).state == "Default"

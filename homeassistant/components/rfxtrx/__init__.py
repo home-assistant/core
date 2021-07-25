@@ -23,7 +23,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     DEGREE,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
     LENGTH_MILLIMETERS,
@@ -35,7 +36,6 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
-    VOLT,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -44,6 +44,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
+    COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_DEBUG,
@@ -87,11 +88,11 @@ DATA_TYPES = OrderedDict(
         ("Wind gust", SPEED_METERS_PER_SECOND),
         ("Chill", TEMP_CELSIUS),
         ("Count", "count"),
-        ("Current Ch. 1", ELECTRICAL_CURRENT_AMPERE),
-        ("Current Ch. 2", ELECTRICAL_CURRENT_AMPERE),
-        ("Current Ch. 3", ELECTRICAL_CURRENT_AMPERE),
-        ("Voltage", VOLT),
-        ("Current", ELECTRICAL_CURRENT_AMPERE),
+        ("Current Ch. 1", ELECTRIC_CURRENT_AMPERE),
+        ("Current Ch. 2", ELECTRIC_CURRENT_AMPERE),
+        ("Current Ch. 3", ELECTRIC_CURRENT_AMPERE),
+        ("Voltage", ELECTRIC_POTENTIAL_VOLT),
+        ("Current", ELECTRIC_CURRENT_AMPERE),
         ("Battery numeric", PERCENTAGE),
         ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
     ]
@@ -465,6 +466,9 @@ class RfxtrxEntity(RestoreEntity):
         self._event = event
         self._device_id = device_id
         self._unique_id = "_".join(x for x in self._device_id)
+        # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
+        # group events regardless of their group indices.
+        (self._group_id, _, _) = device.id_string.partition(":")
 
     async def async_added_to_hass(self):
         """Restore RFXtrx device state (ON/OFF)."""
@@ -519,6 +523,15 @@ class RfxtrxEntity(RestoreEntity):
             "name": f"{self._device.type_string} {self._device.id_string}",
             "model": self._device.type_string,
         }
+
+    def _event_applies(self, event, device_id):
+        """Check if event applies to me."""
+        if "Command" in event.values and event.values["Command"] in COMMAND_GROUP_LIST:
+            (group_id, _, _) = event.device.id_string.partition(":")
+            return group_id == self._group_id
+
+        # Otherwise, the event only applies to the matching device.
+        return device_id == self._device_id
 
     def _apply_event(self, event):
         """Apply a received event."""

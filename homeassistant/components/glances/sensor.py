@@ -4,7 +4,7 @@ from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
+from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorMetadata
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -14,45 +14,42 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config_entry.data[CONF_NAME]
     dev = []
 
-    for sensor_type, sensor_details in SENSOR_TYPES.items():
-        if sensor_details[0] not in client.api.data:
+    for sensor_type, metadata in SENSOR_TYPES.items():
+        if metadata.type not in client.api.data:
             continue
-        if sensor_details[0] == "fs":
+        if metadata.type == "fs":
             # fs will provide a list of disks attached
-            for disk in client.api.data[sensor_details[0]]:
+            for disk in client.api.data[metadata.type]:
                 dev.append(
                     GlancesSensor(
                         client,
                         name,
                         disk["mnt_point"],
-                        sensor_details[1],
                         sensor_type,
-                        sensor_details,
+                        metadata,
                     )
                 )
-        elif sensor_details[0] == "sensors":
+        elif metadata.type == "sensors":
             # sensors will provide temp for different devices
-            for sensor in client.api.data[sensor_details[0]]:
+            for sensor in client.api.data[metadata.type]:
                 if sensor["type"] == sensor_type:
                     dev.append(
                         GlancesSensor(
                             client,
                             name,
                             sensor["label"],
-                            sensor_details[1],
                             sensor_type,
-                            sensor_details,
+                            metadata,
                         )
                     )
-        elif client.api.data[sensor_details[0]]:
+        elif client.api.data[metadata.type]:
             dev.append(
                 GlancesSensor(
                     client,
                     name,
                     "",
-                    sensor_details[1],
                     sensor_type,
-                    sensor_details,
+                    metadata,
                 )
             )
 
@@ -67,44 +64,26 @@ class GlancesSensor(SensorEntity):
         glances_data,
         name,
         sensor_name_prefix,
-        sensor_name_suffix,
         sensor_type,
-        sensor_details,
+        metadata: GlancesSensorMetadata,
     ):
         """Initialize the sensor."""
         self.glances_data = glances_data
         self._sensor_name_prefix = sensor_name_prefix
-        self._sensor_name_suffix = sensor_name_suffix
-        self._name = name
         self.type = sensor_type
         self._state = None
-        self.sensor_details = sensor_details
+        self._metadata = metadata
         self.unsub_update = None
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {self._sensor_name_prefix} {self._sensor_name_suffix}"
+        self._attr_name = f"{name} {sensor_name_prefix} {metadata.name_suffix}"
+        self._attr_icon = metadata.icon
+        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self._attr_device_class = metadata.device_class
 
     @property
     def unique_id(self):
         """Set unique_id for sensor."""
         return f"{self.glances_data.host}-{self.name}"
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.sensor_details[4]
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self.sensor_details[3]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self.sensor_details[2]
 
     @property
     def available(self):
@@ -143,7 +122,7 @@ class GlancesSensor(SensorEntity):
         if value is None:
             return
 
-        if self.sensor_details[0] == "fs":
+        if self._metadata.type == "fs":
             for var in value["fs"]:
                 if var["mnt_point"] == self._sensor_name_prefix:
                     disk = var

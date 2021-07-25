@@ -78,7 +78,7 @@ async def async_setup_entry(
         )
     )
 
-    sensors = []
+    sensors: list[PairedSensorSensor | ValveControllerSensor] = []
 
     # Add all valve controller-specific binary sensors:
     for kind in VALVE_CONTROLLER_SENSORS:

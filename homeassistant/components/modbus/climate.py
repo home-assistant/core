@@ -11,9 +11,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
-    CONF_COUNT,
     CONF_NAME,
-    CONF_OFFSET,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
@@ -25,24 +23,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .base_platform import BasePlatform
+from .base_platform import BaseStructPlatform
 from .const import (
     ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
-    CONF_DATA_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_PRECISION,
-    CONF_SCALE,
     CONF_STEP,
-    CONF_SWAP,
-    CONF_SWAP_BYTE,
-    CONF_SWAP_WORD,
-    CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    DEFAULT_STRUCT_FORMAT,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT64,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT64,
     MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
@@ -69,7 +65,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
+class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
     def __init__(
@@ -82,17 +78,11 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._target_temperature = None
         self._current_temperature = None
-        self._data_type = config[CONF_DATA_TYPE]
         self._structure = config[CONF_STRUCTURE]
-        self._count = config[CONF_COUNT]
-        self._precision = config[CONF_PRECISION]
-        self._scale = config[CONF_SCALE]
-        self._offset = config[CONF_OFFSET]
         self._unit = config[CONF_TEMPERATURE_UNIT]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
-        self._swap = config[CONF_SWAP]
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -160,35 +150,32 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
-        target_temperature = int(
-            (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
-        )
-        byte_string = struct.pack(self._structure, target_temperature)
-        struct_string = f">{DEFAULT_STRUCT_FORMAT[self._data_type]}"
-        register_value = struct.unpack(struct_string, byte_string)[0]
+        target_temperature = (
+            float(kwargs.get(ATTR_TEMPERATURE)) - self._offset
+        ) / self._scale
+        if self._data_type in [
+            DATA_TYPE_INT16,
+            DATA_TYPE_INT32,
+            DATA_TYPE_INT64,
+            DATA_TYPE_UINT16,
+            DATA_TYPE_UINT32,
+            DATA_TYPE_UINT64,
+        ]:
+            target_temperature = int(target_temperature)
+        as_bytes = struct.pack(self._structure, target_temperature)
+        raw_regs = [
+            int.from_bytes(as_bytes[i : i + 2], "big")
+            for i in range(0, len(as_bytes), 2)
+        ]
+        registers = self._swap_registers(raw_regs)
         result = await self._hub.async_pymodbus_call(
             self._slave,
             self._target_temperature_register,
-            register_value,
+            registers,
             CALL_TYPE_WRITE_REGISTERS,
         )
         self._available = result is not None
         await self.async_update()
-
-    def _swap_registers(self, registers):
-        """Do swap as needed."""
-        if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE]:
-            # convert [12][34] --> [21][43]
-            for i, register in enumerate(registers):
-                registers[i] = int.from_bytes(
-                    register.to_bytes(2, byteorder="little"),
-                    byteorder="big",
-                    signed=False,
-                )
-        if self._swap in [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]:
-            # convert [12][34] ==> [34][12]
-            registers.reverse()
-        return registers
 
     async def async_update(self, now=None):
         """Update Target & Current Temperature."""
@@ -217,21 +204,10 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             self._available = False
             return -1
 
-        registers = self._swap_registers(result.registers)
-        byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
-        val = struct.unpack(self._structure, byte_string)
-        if len(val) != 1 or not isinstance(val[0], (float, int)):
-            _LOGGER.error(
-                "Unable to parse result as a single int or float value; adjust your configuration. Result: %s",
-                str(val),
-            )
-            return -1
+        self.unpack_structure_result(result.registers)
 
-        val2 = val[0]
-        register_value = format(
-            (self._scale * val2) + self._offset, f".{self._precision}f"
-        )
-        register_value2 = float(register_value)
         self._available = True
 
-        return register_value2
+        if self._value is None:
+            return None
+        return float(self._value)

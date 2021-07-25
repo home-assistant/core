@@ -56,6 +56,14 @@
             "config_parameter": "Wert des Konfigurationsparameters {subtype}",
             "node_status": "Status des Knotens",
             "value": "Aktueller Wert eines Z-Wave-Wertes"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Benachrichtigung zur Zugangskontrolle gesendet",
+            "event.notification.notification": "Benachrichtigung gesendet",
+            "event.value_notification.basic": "Grundlegendes CC-Ereignis auf {subtype}",
+            "event.value_notification.central_scene": "Zentrale Szenenaktion auf {subtype}",
+            "event.value_notification.scene_activation": "Szenenaktivierung auf {subtype}",
+            "state.node_status": "Knotenstatus ge\u00e4ndert"
         }
     },
     "options": {

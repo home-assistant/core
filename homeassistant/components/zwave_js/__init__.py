@@ -426,10 +426,10 @@ async def async_setup_entry(  # noqa: C901
 
         # run discovery on all ready nodes
         await asyncio.gather(
-            *[
+            *(
                 async_on_node_added(node)
                 for node in client.driver.controller.nodes.values()
-            ]
+            )
         )
 
         # listen for new nodes being added to the mesh

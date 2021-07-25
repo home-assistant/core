@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UnitTemperatureT,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -110,7 +109,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
         return const.SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def temperature_unit(self) -> UnitTemperatureT:
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         # Config schema only allows for: TEMP_CELSIUS and TEMP_FAHRENHEIT
         if self.unit == pypck.lcn_defs.VarUnit.FAHRENHEIT:

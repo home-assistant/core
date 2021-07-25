@@ -237,7 +237,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         )
         self._optimistic_mode = optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None
 
-        for tpl_dict in [self._command_templates, self._value_templates]:
+        for tpl_dict in (self._command_templates, self._value_templates):
             for key, tpl in tpl_dict.items():
                 if tpl is None:
                     tpl_dict[key] = lambda value: value

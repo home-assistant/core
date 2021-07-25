@@ -18,7 +18,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
-    UnitTemperatureT,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -196,7 +195,7 @@ class ClimateEntity(Entity):
     _attr_target_temperature_low: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
-    _attr_temperature_unit: UnitTemperatureT
+    _attr_temperature_unit: str
 
     @property
     def state(self) -> str:
@@ -304,7 +303,7 @@ class ClimateEntity(Entity):
         return data
 
     @property
-    def temperature_unit(self) -> UnitTemperatureT:
+    def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return self._attr_temperature_unit
 

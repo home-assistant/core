@@ -1,5 +1,8 @@
 """Support for AirVisual air quality sensors."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -18,7 +21,10 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import AirVisualEntity
 from .const import (
@@ -36,6 +42,9 @@ ATTR_COUNTRY = "country"
 ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
 ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
+
+DEVICE_CLASS_POLLUTANT_LABEL = "airvisual__pollutant_label"
+DEVICE_CLASS_POLLUTANT_LEVEL = "airvisual__pollutant_level"
 
 SENSOR_KIND_AQI = "air_quality_index"
 SENSOR_KIND_BATTERY_LEVEL = "battery_level"
@@ -105,22 +114,27 @@ NODE_PRO_SENSORS = [
     ),
 ]
 
-POLLUTANT_LABELS = {
-    "co": "Carbon Monoxide",
-    "n2": "Nitrogen Dioxide",
-    "o3": "Ozone",
-    "p1": "PM10",
-    "p2": "PM2.5",
-    "s2": "Sulfur Dioxide",
-}
+STATE_POLLUTANT_LABEL_CO = "co"
+STATE_POLLUTANT_LABEL_N2 = "n2"
+STATE_POLLUTANT_LABEL_O3 = "o3"
+STATE_POLLUTANT_LABEL_P1 = "p1"
+STATE_POLLUTANT_LABEL_P2 = "p2"
+STATE_POLLUTANT_LABEL_S2 = "s2"
+
+STATE_POLLUTANT_LEVEL_GOOD = "good"
+STATE_POLLUTANT_LEVEL_MODERATE = "moderate"
+STATE_POLLUTANT_LEVEL_UNHEALTHY_SENSITIVE = "unhealthy_sensitive"
+STATE_POLLUTANT_LEVEL_UNHEALTHY = "unhealthy"
+STATE_POLLUTANT_LEVEL_VERY_UNHEALTHY = "very_unhealthy"
+STATE_POLLUTANT_LEVEL_HAZARDOUS = "hazardous"
 
 POLLUTANT_LEVELS = {
-    (0, 50): ("Good", "mdi:emoticon-excited"),
-    (51, 100): ("Moderate", "mdi:emoticon-happy"),
-    (101, 150): ("Unhealthy for sensitive groups", "mdi:emoticon-neutral"),
-    (151, 200): ("Unhealthy", "mdi:emoticon-sad"),
-    (201, 300): ("Very unhealthy", "mdi:emoticon-dead"),
-    (301, 1000): ("Hazardous", "mdi:biohazard"),
+    (0, 50): (STATE_POLLUTANT_LEVEL_GOOD, "mdi:emoticon-excited"),
+    (51, 100): (STATE_POLLUTANT_LEVEL_MODERATE, "mdi:emoticon-happy"),
+    (101, 150): (STATE_POLLUTANT_LEVEL_UNHEALTHY_SENSITIVE, "mdi:emoticon-neutral"),
+    (151, 200): (STATE_POLLUTANT_LEVEL_UNHEALTHY, "mdi:emoticon-sad"),
+    (201, 300): (STATE_POLLUTANT_LEVEL_VERY_UNHEALTHY, "mdi:emoticon-dead"),
+    (301, 1000): (STATE_POLLUTANT_LEVEL_HAZARDOUS, "mdi:biohazard"),
 }
 
 POLLUTANT_UNITS = {
@@ -133,10 +147,15 @@ POLLUTANT_UNITS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AirVisual sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
+    sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
     if config_entry.data[CONF_INTEGRATION_TYPE] in [
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
@@ -166,10 +185,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to geography data via the Cloud API."""
 
-    def __init__(self, coordinator, config_entry, kind, name, icon, unit, locale):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        kind: str,
+        name: str,
+        icon: str,
+        unit: str | None,
+        locale: str,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
+        if kind == SENSOR_KIND_LEVEL:
+            self._attr_device_class = DEVICE_CLASS_POLLUTANT_LEVEL
+        elif kind == SENSOR_KIND_POLLUTANT:
+            self._attr_device_class = DEVICE_CLASS_POLLUTANT_LABEL
         self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: config_entry.data.get(CONF_CITY),
@@ -191,7 +223,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         return super().available and self.coordinator.data["current"]["pollution"]
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         try:
             data = self.coordinator.data["current"]["pollution"]
@@ -209,7 +241,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             self._attr_state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._attr_state = POLLUTANT_LABELS[symbol]
+            self._attr_state = symbol
             self._attr_extra_state_attributes.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
@@ -248,18 +280,29 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to a Node/Pro unit."""
 
-    def __init__(self, coordinator, kind, name, device_class, icon, unit):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        kind: str,
+        name: str,
+        device_class: str | None,
+        icon: str | None,
+        unit: str,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_device_class = device_class
         self._attr_icon = icon
+        self._attr_name = (
+            f"{coordinator.data['settings']['node_name']} Node/Pro: {name}"
+        )
+        self._attr_unique_id = f"{coordinator.data['serial_number']}_{kind}"
         self._attr_unit_of_measurement = unit
         self._kind = kind
-        self._name = name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return {
             "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
@@ -272,19 +315,8 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
             ),
         }
 
-    @property
-    def name(self):
-        """Return the name."""
-        node_name = self.coordinator.data["settings"]["node_name"]
-        return f"{node_name} Node/Pro: {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['serial_number']}_{self._kind}"
-
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         if self._kind == SENSOR_KIND_AQI:
             if self.coordinator.data["settings"]["is_aqi_usa"]:
