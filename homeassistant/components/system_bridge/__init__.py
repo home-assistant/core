@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(60):
+        async with async_timeout.timeout(30):
             await bridge.async_get_information()
     except BridgeAuthenticationException as exception:
         raise ConfigEntryAuthFailed(
@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Wait for initial data
     try:
-        async with async_timeout.timeout(120):
+        async with async_timeout.timeout(60):
             while (
                 coordinator.bridge.battery is None
                 or coordinator.bridge.cpu is None
