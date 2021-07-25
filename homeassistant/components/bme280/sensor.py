@@ -137,12 +137,13 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
             temperature = round(self.coordinator.data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:
                 temperature = round(celsius_to_fahrenheit(temperature), 1)
-            self._attr_state = temperature
+            state = temperature
         elif self.type == SENSOR_HUMID:
-            self._attr_state = round(self.coordinator.data.humidity, 1)
+            state = round(self.coordinator.data.humidity, 1)
         elif self.type == SENSOR_PRESS:
-            self._attr_state = round(self.coordinator.data.pressure, 1)
-        return self._attr_state
+            state = round(self.coordinator.data.pressure, 1)
+        self._attr_state = state
+        return state
 
     @property
     def should_poll(self) -> bool:
