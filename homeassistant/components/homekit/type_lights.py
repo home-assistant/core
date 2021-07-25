@@ -230,13 +230,10 @@ class Light(HomeAccessory):
                 # order to avoid this incorrect behavior.
                 if brightness == 0 and state == STATE_ON:
                     brightness = 1
-                if (
-                    CHAR_BRIGHTNESS in self.primary_chars
-                    and self.char_brightness_primary.value != brightness
-                ):
+                if self.char_brightness_primary.value != brightness:
                     self.char_brightness_primary.set_value(brightness)
                 if (
-                    CHAR_BRIGHTNESS in self.secondary_chars
+                    self.color_and_temp_supported
                     and self.char_brightness_secondary.value != brightness
                 ):
                     self.char_brightness_secondary.set_value(brightness)
