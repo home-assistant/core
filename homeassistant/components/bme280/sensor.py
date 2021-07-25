@@ -142,7 +142,6 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
             state = round(self.coordinator.data.humidity, 1)
         elif self.type == SENSOR_PRESS:
             state = round(self.coordinator.data.pressure, 1)
-        self._attr_state = state
         return state
 
     @property
