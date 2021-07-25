@@ -8,7 +8,7 @@ PLATFORMS = ["cover", "sensor"]
 CONF_WAIT_FOR_PUSH = "wait_for_push"
 CONF_FAST_UPDATE = "fast_update"
 CONF_INTERFACE = "interface"
-DEFAULT_WAIT_FOR_PUSH = True
+DEFAULT_WAIT_FOR_PUSH = False
 DEFAULT_FAST_UPDATE = False
 DEFAULT_INTERFACE = "any"
 
