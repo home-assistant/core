@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -131,9 +130,9 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
         self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
+    @property
+    def state(self):
+        """Return the state of the sensor."""
         if self.type == SENSOR_TEMP:
             temperature = round(self.coordinator.data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:
@@ -143,19 +142,7 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
             self._attr_state = round(self.coordinator.data.humidity, 1)
         elif self.type == SENSOR_PRESS:
             self._attr_state = round(self.coordinator.data.pressure, 1)
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-
-        self.update_from_latest_data()
+        return self._attr_state
 
     @property
     def should_poll(self) -> bool:
