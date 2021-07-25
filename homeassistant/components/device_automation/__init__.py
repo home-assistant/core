@@ -13,7 +13,11 @@ import voluptuous_serialize
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.loader import IntegrationNotFound, bind_hass
 from homeassistant.requirements import async_get_integration_with_requirements
 
@@ -126,16 +130,17 @@ async def _async_get_device_automations(
     hass: HomeAssistant, automation_type: str, device_ids: Iterable[str] | None
 ) -> Mapping[str, list[dict[str, Any]]]:
     """List device automations."""
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    entity_registry = hass.helpers.entity_registry.async_get(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     domain_devices: dict[str, set[str]] = {}
     device_entities_domains: dict[str, set[str]] = {}
+    combined_results: dict[str, list[dict[str, Any]]] = {}
     match_device_ids = set(device_ids or device_registry.devices)
+
     for entry in entity_registry.entities.values():
         if not entry.disabled_by and entry.device_id in match_device_ids:
             device_entities_domains.setdefault(entry.device_id, set()).add(entry.domain)
 
-    combined_results: dict[str, list[dict[str, Any]]] = {}
     for device_id in match_device_ids:
         combined_results[device_id] = []
         device = device_registry.async_get(device_id)
