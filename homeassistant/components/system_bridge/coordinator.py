@@ -109,14 +109,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
                 self.unsub()
                 self.unsub = None
             raise ConfigEntryAuthFailed(
-                "Authentication failed for %s (%s)", self.title, self.host
+                f"Authentication failed for {self.title} ({self.host})"
             ) from exception
         except (*BRIDGE_CONNECTION_ERRORS, ConnectionRefusedError) as exception:
             if self.unsub:
                 self.unsub()
                 self.unsub = None
             raise UpdateFailed(
-                "Could not connect to %s (%s).", self.title, self.host
+                f"Could not connect to {self.title} ({self.host})."
             ) from exception
         asyncio.create_task(self._listen_for_events())
 
