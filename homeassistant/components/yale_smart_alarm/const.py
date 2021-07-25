@@ -8,23 +8,27 @@ from yalesmartalarmclient.client import (
     YALE_STATE_DISARM,
 )
 
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
 
-CONF_AREA_ID = "area_id"
-DEFAULT_NAME = "Yale Smart Alarm"
-DEFAULT_AREA_ID = "1"
+CONF_AREA_ID: Final = "area_id"
+DEFAULT_NAME: Final = "Yale Smart Alarm"
+DEFAULT_AREA_ID: Final = "1"
 
 MANUFACTURER: Final = "Yale"
 MODEL: Final = "main"
 
-DOMAIN = "yale_smart_alarm"
-COORDINATOR = "coordinator"
+DOMAIN: Final = "yale_smart_alarm"
+COORDINATOR: Final = "coordinator"
 
-DEFAULT_SCAN_INTERVAL = 15
+DEFAULT_SCAN_INTERVAL: int = 15
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +36,7 @@ ATTR_ONLINE: Final = "online"
 ATTR_STATUS: Final = "status"
 ATTR_VIA_DEVICE: Final = "via_device"
 
-PLATFORMS = ["alarm_control_panel", "lock"]
+PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN, LOCK_DOMAIN]
 
 STATE_MAP = {
     YALE_STATE_DISARM: STATE_ALARM_DISARMED,

@@ -77,9 +77,9 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
     def set_lock_state(self, code: str, state: str) -> None:
         """Send set lock state command."""
-        get_lock = self.coordinator.yale.lock_api.get(self.name)  # type: ignore[attr-defined]
+        get_lock = self.coordinator.lock.get(self.name)  # type: ignore[attr-defined]
 
         if state == "lock":
-            self.coordinator.yale.lock_api.close_lock(get_lock)  # type: ignore[attr-defined]
+            self.coordinator.lock.close_lock(get_lock)  # type: ignore[attr-defined]
         if state == "unlock":
-            self.coordinator.yale.lock_api.open_lock(get_lock, code)  # type: ignore[attr-defined]
+            self.coordinator.lock.open_lock(get_lock, code)  # type: ignore[attr-defined]
