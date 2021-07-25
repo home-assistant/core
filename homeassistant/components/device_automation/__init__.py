@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import ChainMap
 from collections.abc import Iterable, Mapping
 from functools import wraps
 from types import ModuleType
@@ -118,16 +117,14 @@ async def _async_get_device_automations_from_domain(
 
     function_name = TYPES[automation_type][1]
 
-    tasks = [
-        getattr(platform, function_name)(hass, device_id) for device_id in device_ids
-    ]
-    results = await asyncio.gather(*tasks)
-    return {device_id: results[idx] for idx, device_id in enumerate(device_ids)}
+    return await asyncio.gather(
+        *(getattr(platform, function_name)(hass, device_id) for device_id in device_ids)
+    )
 
 
 async def _async_get_device_automations(
     hass: HomeAssistant, automation_type: str, device_ids: Iterable[str] | None
-) -> Mapping[str, Any]:
+) -> Mapping[str, list[dict[str, Any]]]:
     """List device automations."""
     device_registry = hass.helpers.device_registry.async_get(hass)
     entity_registry = hass.helpers.entity_registry.async_get(hass)
@@ -138,7 +135,9 @@ async def _async_get_device_automations(
         if not entry.disabled_by and entry.device_id in match_device_ids:
             device_entities_domains.setdefault(entry.device_id, set()).add(entry.domain)
 
+    combined_results: dict[str, list[dict[str, Any]]] = {}
     for device_id in match_device_ids:
+        combined_results[device_id] = []
         device = device_registry.async_get(device_id)
         if device is None:
             raise DeviceNotFound
@@ -148,18 +147,20 @@ async def _async_get_device_automations(
         for domain in device_entities_domains.get(device_id, []):
             domain_devices.setdefault(domain, set()).add(device_id)
 
-    return dict(
-        ChainMap(
-            *await asyncio.gather(
-                *(
-                    _async_get_device_automations_from_domain(
-                        hass, domain, automation_type, devices
-                    )
-                    for domain, devices in domain_devices.items()
-                )
+    all_results = await asyncio.gather(
+        *(
+            _async_get_device_automations_from_domain(
+                hass, domain, automation_type, device_ids
             )
+            for domain, device_ids in domain_devices.items()
         )
     )
+    for domain_results in all_results:
+        for device_results in domain_results:
+            for automation in device_results:
+                combined_results[automation["device_id"]].append(automation)
+
+    return combined_results
 
 
 async def _async_get_device_automation_capabilities(hass, automation_type, automation):

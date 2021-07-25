@@ -75,9 +75,6 @@ async def async_get_device_automations(
     automations = await device_automation.async_get_device_automations(
         hass, automation_type, [device_id]
     )
-    import pprint
-
-    pprint.pprint([automations, device_id])
     return automations.get(device_id)
 
 
