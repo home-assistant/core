@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ACTIONS, KEY_NAME
@@ -11,6 +11,7 @@ from motioneye_client.const import KEY_ACTIONS, KEY_NAME
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
@@ -55,8 +56,7 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         options: MappingProxyType[str, str],
     ) -> None:
         """Initialize an action sensor."""
-        MotionEyeEntity.__init__(
-            self,
+        super().__init__(
             config_entry_id,
             TYPE_MOTIONEYE_ACTION_SENSOR,
             camera,
@@ -69,8 +69,8 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        camera_name = self._camera[KEY_NAME] if self._camera else ""
-        return f"{camera_name} Actions"
+        camera_prepend = f"{self._camera[KEY_NAME]} " if self._camera else ""
+        return f"{camera_prepend}Actions"
 
     @property
     def state(self) -> int:
