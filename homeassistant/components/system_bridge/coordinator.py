@@ -51,7 +51,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
     async def async_handle_event(self, event: Event):
         """Handle System Bridge events from the WebSocket."""
         # No need to update anything, as everything is updated in the caller
-        self.logger.debug("New event from System Bridge: %s", event.name)
+        self.logger.debug("New event from %s: %s", self.host, event.name)
         self.async_set_updated_data(self.bridge)
 
     async def _listen_for_events(self) -> None:
@@ -80,7 +80,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
             self.logger.warning("Exception occurred. Will retry. %s", exception)
 
     async def _setup_websocket(self) -> None:
-        """Use WebSocket for updates, instead of polling."""
+        """Use WebSocket for updates."""
 
         try:
             self.logger.debug(
