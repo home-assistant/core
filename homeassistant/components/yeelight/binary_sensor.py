@@ -33,6 +33,7 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
                 self.async_write_ha_state,
             )
         )
+        await super().async_added_to_hass()
 
     @property
     def unique_id(self) -> str:

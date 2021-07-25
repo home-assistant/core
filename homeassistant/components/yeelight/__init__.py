@@ -6,7 +6,8 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
-from yeelight import Bulb, BulbException, discover_bulbs
+from yeelight import BulbException, discover_bulbs
+from yeelight.aio import AsyncBulb
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
@@ -14,7 +15,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -46,7 +47,6 @@ CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
 
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
-DATA_SCAN_INTERVAL = "scan_interval"
 DATA_DEVICE = "device"
 DATA_REMOVE_INIT_DISPATCHER = "remove_init_dispatcher"
 DATA_PLATFORMS_LOADED = "platforms_loaded"
@@ -65,7 +65,6 @@ ACTIVE_COLOR_FLOWING = "1"
 
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
-SCAN_INTERVAL = timedelta(seconds=30)
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
@@ -114,7 +113,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
                 vol.Optional(CONF_CUSTOM_EFFECTS): [
                     {
                         vol.Required(CONF_NAME): cv.string,
@@ -158,7 +156,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.data[DOMAIN] = {
         DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
         DATA_CONFIG_ENTRIES: {},
-        DATA_SCAN_INTERVAL: conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
     }
 
     # Import manually configured devices
@@ -195,6 +192,26 @@ async def _async_initialize(
     if not device:
         device = await _async_get_device(hass, host, entry)
     entry_data[DATA_DEVICE] = device
+
+    # start listening for local pushes
+    try:
+        await device.bulb.async_listen(device.update_callback)
+    except BulbException as ex:
+        raise ConfigEntryNotReady from ex
+
+    # register stop callback to shutdown listening for local pushes
+    def stop_listen_task(event):
+        """Stop listen thread."""
+        device_bulb = (
+            hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+            .get(entry.entry_id, {})
+            .get(DATA_DEVICE)
+        )
+        if device_bulb is not None:
+            _LOGGER.debug("Shutting down Yeelight Listener")
+            hass.loop.create_task(device.bulb.async_stop_listening())
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen_task)
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -275,6 +292,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
 
+    device = entry_data[DATA_DEVICE]
+    _LOGGER.debug("Shutting down Yeelight Listener")
+    await device.bulb.async_stop_listening()
+    _LOGGER.debug("Yeelight Listener stopped")
+
     data_config_entries.pop(entry.entry_id)
 
     return True
@@ -331,7 +353,7 @@ class YeelightScanner:
                     if len(self._callbacks) == 0:
                         self._async_stop_scan()
 
-        await asyncio.sleep(SCAN_INTERVAL.total_seconds())
+        await asyncio.sleep(DISCOVERY_INTERVAL.total_seconds())
         self._scan_task = self._hass.loop.create_task(self._async_scan())
 
     @callback
@@ -382,7 +404,6 @@ class YeelightDevice:
         self._capabilities = capabilities or {}
         self._device_type = None
         self._available = False
-        self._remove_time_tracker = None
         self._initialized = False
 
         self._name = host  # Default name is host
@@ -543,21 +564,11 @@ class YeelightDevice:
         self._update_properties()
         dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
-    async def async_setup(self):
-        """Set up the device."""
-
-        async def _async_update(_):
-            await self._hass.async_add_executor_job(self.update)
-
-        await _async_update(None)
-        self._remove_time_tracker = async_track_time_interval(
-            self._hass, _async_update, self._hass.data[DOMAIN][DATA_SCAN_INTERVAL]
-        )
-
     @callback
-    def async_unload(self):
-        """Unload the device."""
-        self._remove_time_tracker()
+    def update_callback(self, data):
+        """Update push from device."""
+        self._available = True
+        dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 
 class YeelightEntity(Entity):
@@ -609,7 +620,7 @@ async def _async_get_device(
     model = entry.options.get(CONF_MODEL)
 
     # Set up device
-    bulb = Bulb(host, model=model or None)
+    bulb = AsyncBulb(host, model=model or None)
     capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
 
     return YeelightDevice(hass, host, entry.options, bulb, capabilities)

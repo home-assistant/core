@@ -219,7 +219,7 @@ async def test_options(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -241,7 +241,7 @@ async def test_options(hass: HomeAssistant):
     config[CONF_NIGHTLIGHT_SWITCH] = True
     user_input = {**config}
     user_input.pop(CONF_NAME)
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input
         )
