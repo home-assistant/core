@@ -33,6 +33,10 @@ async def async_setup_entry(hass, config, async_add_entities):
 class SpiderPowerPlugEnergy(SensorEntity):
     """Representation of a Spider Power Plug (energy)."""
 
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, api, power_plug) -> None:
         """Initialize the Spider Power Plug."""
         self.api = api
