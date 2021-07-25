@@ -218,6 +218,9 @@ async def _async_initialize(
         )
     )
 
+    # fetch initial state
+    await hass.async_add_executor_job(device.update)
+
 
 @callback
 def _async_populate_entry_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
