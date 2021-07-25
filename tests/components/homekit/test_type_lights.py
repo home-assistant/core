@@ -310,16 +310,19 @@ async def test_light_color_temperature_and_rgb_color(
         {
             ATTR_SUPPORTED_COLOR_MODES: supported_color_modes,
             ATTR_COLOR_TEMP: 190,
+            ATTR_BRIGHTNESS: 255,
             ATTR_COLOR_MODE: COLOR_MODE_RGB,
             ATTR_HS_COLOR: (260, 90),
         },
     )
     await hass.async_block_till_done()
-    acc = Light(hass, hk_driver, "Light", entity_id, 2, None)
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
     assert acc.char_hue.value == 260
     assert acc.char_saturation.value == 90
     assert acc.char_on_primary.value == 1
     assert acc.char_on_secondary.value == 0
+    assert acc.char_brightness_primary.value == 100
+    assert acc.char_brightness_secondary.value == 100
 
     assert hasattr(acc, "char_color_temperature")
 
@@ -329,6 +332,7 @@ async def test_light_color_temperature_and_rgb_color(
         {
             ATTR_COLOR_TEMP: 224,
             ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+            ATTR_BRIGHTNESS: 127,
         },
     )
     await hass.async_block_till_done()
@@ -337,6 +341,8 @@ async def test_light_color_temperature_and_rgb_color(
     assert acc.char_color_temperature.value == 224
     assert acc.char_on_primary.value == 0
     assert acc.char_on_secondary.value == 1
+    assert acc.char_brightness_primary.value == 50
+    assert acc.char_brightness_secondary.value == 50
 
     hass.states.async_set(
         entity_id,
@@ -352,6 +358,45 @@ async def test_light_color_temperature_and_rgb_color(
     assert acc.char_color_temperature.value == 352
     assert acc.char_on_primary.value == 0
     assert acc.char_on_secondary.value == 1
+    hk_driver.add_accessory(acc)
+
+    char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
+    char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
+    char_color_temperature_iid = acc.char_color_temperature.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_hue_iid,
+                    HAP_REPR_VALUE: 145,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_saturation_iid,
+                    HAP_REPR_VALUE: 75,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    assert acc.char_hue.value == 145
+    assert acc.char_saturation.value == 75
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temperature_iid,
+                    HAP_REPR_VALUE: 200,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    assert acc.char_color_temperature.value == 200
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
