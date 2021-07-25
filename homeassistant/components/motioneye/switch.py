@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import (
@@ -18,6 +18,7 @@ from motioneye_client.const import (
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
@@ -34,8 +35,8 @@ MOTIONEYE_SWITCHES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
-) -> bool:
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
@@ -59,7 +60,6 @@ async def async_setup_entry(
         )
 
     listen_for_new_cameras(hass, entry, camera_add)
-    return True
 
 
 class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
@@ -79,8 +79,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         """Initialize the switch."""
         self._switch_key = switch_key
         self._switch_key_friendly_name = switch_key_friendly_name
-        MotionEyeEntity.__init__(
-            self,
+        super().__init__(
             config_entry_id,
             f"{TYPE_MOTIONEYE_SWITCH_BASE}_{switch_key}",
             camera,
@@ -93,8 +92,8 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        camera_name = self._camera[KEY_NAME] if self._camera else ""
-        return f"{camera_name} {self._switch_key_friendly_name}"
+        camera_prepend = f"{self._camera[KEY_NAME]} " if self._camera else ""
+        return f"{camera_prepend}{self._switch_key_friendly_name}"
 
     @property
     def is_on(self) -> bool:
