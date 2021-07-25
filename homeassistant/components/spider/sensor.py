@@ -128,16 +128,6 @@ class SpiderPowerPlugPower(SensorEntity):
         """Return the current power usage in W."""
         return round(self.power_plug.current_energy_consumption)
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return POWER_WATT
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return DEVICE_CLASS_POWER
-
     def update(self) -> None:
         """Get the latest data."""
         self.power_plug = self.api.get_power_plug(self.power_plug.id)
