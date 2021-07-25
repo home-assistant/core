@@ -99,7 +99,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
                 vol.Optional(CONF_TRACK_NEW): cv.boolean,
-                vol.Optional(CONF_CALENDAR_ACCESS, default='read_write'): cv.enum(
+                vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
                     FeatureAccess
                 ),
             }
@@ -246,7 +246,7 @@ def check_correct_scopes(token_file, config):
     """Check for the correct scopes in file."""
     with open(token_file) as tokenfile:
         contents = tokenfile.read()
-        
+
         # Check for quoted scope as our scopes can be subsets of other scopes
         target_scope = f'"{config.get(CONF_CALENDAR_ACCESS).scope}"'
         if target_scope not in contents:
