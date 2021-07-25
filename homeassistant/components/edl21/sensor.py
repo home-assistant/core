@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, Tuple
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ class EDL21:
 
     def __init__(self, hass, config, async_add_entities) -> None:
         """Initialize an EDL21 object."""
-        self._registered_obis: set[()] = set()
+        self._registered_obis: set[Tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._name = config[CONF_NAME]
