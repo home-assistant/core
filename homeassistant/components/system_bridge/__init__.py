@@ -88,7 +88,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 or coordinator.bridge.processes is None
                 or coordinator.bridge.system is None
             ):
-                _LOGGER.debug("Waiting for initial data from %s", entry.data[CONF_HOST])
+                _LOGGER.debug(
+                    "Waiting for initial data from %s (%s)",
+                    entry.title,
+                    entry.data[CONF_HOST],
+                )
                 await asyncio.sleep(1)
     except asyncio.TimeoutError as exception:
         raise ConfigEntryNotReady("Timed out waiting for System Bridge.") from exception

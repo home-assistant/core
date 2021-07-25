@@ -36,6 +36,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
     ) -> None:
         """Initialize global System Bridge data updater."""
         self.bridge = bridge
+        self.title = entry.title
         self.host = entry.data[CONF_HOST]
         self.unsub: Callable | None = None
 
@@ -51,7 +52,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
     async def async_handle_event(self, event: Event):
         """Handle System Bridge events from the WebSocket."""
         # No need to update anything, as everything is updated in the caller
-        self.logger.debug("New event from %s: %s", self.host, event.name)
+        self.logger.debug(
+            "New event from %s (%s): %s", self.title, self.host, event.name
+        )
         self.async_set_updated_data(self.bridge)
 
     async def _listen_for_events(self) -> None:
