@@ -24,5 +24,17 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "[%key:component::yale_smart_alarm::options::step::init::data::code%]"
+        }
+      }
+    },
+    "error": {
+      "code_format_mismatch": "[%key:component::yale_smart_alarm::options::error::code_format_mismatch%]"
+    }
   }
 }

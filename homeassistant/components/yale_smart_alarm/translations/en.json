@@ -24,5 +24,17 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "Default code for locks, used if none is given"
+        }
+      }
+    },
+    "error": {
+      "code_format_mismatch": "The code does not match the required number of digits"
+    }
   }
 }
