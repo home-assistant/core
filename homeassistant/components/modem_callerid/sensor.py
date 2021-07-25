@@ -76,7 +76,6 @@ async def async_setup_entry(
         ]
     )
 
-    @callback
     async def _async_on_hass_stop(self):
         """HA is shutting down, close modem port."""
         if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
