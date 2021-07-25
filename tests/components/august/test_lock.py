@@ -333,13 +333,15 @@ async def test_lock_update_via_pubnub(hass):
         pubnub,
         Mock(
             channel=lock_one.pubsub_channel,
-            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
             message={
                 "status": "kAugLockState_Unlocking",
             },
         ),
     )
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_UNLOCKING
 
