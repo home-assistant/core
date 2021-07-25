@@ -93,6 +93,9 @@ class SpiderPowerPlugEnergy(SensorEntity):
 class SpiderPowerPlugPower(SensorEntity):
     """Representation of a Spider Power Plug (power)."""
 
+    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_unit_of_measurement = POWER_WATT
     def __init__(self, api, power_plug) -> None:
         """Initialize the Spider Power Plug."""
         self.api = api
