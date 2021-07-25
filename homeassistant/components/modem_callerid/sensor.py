@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
+    CID,
     DATA_KEY_API,
     DEFAULT_DEVICE,
     DEFAULT_NAME,
@@ -95,9 +96,9 @@ class ModemCalleridSensor(SensorEntity):
     def __init__(self, api, name, device, server_unique_id):
         """Initialize the sensor."""
         self._attr_extra_state_attributes = {
-            "cid_time": 0,
-            "cid_number": "",
-            "cid_name": "",
+            CID.CID_TIME: 0,
+            CID.CID_NUMBER: "",
+            CID.CID_NAME: "",
         }
         self.device = device
         self.api = api
@@ -115,17 +116,17 @@ class ModemCalleridSensor(SensorEntity):
         if new_state == self.api.STATE_RING:
             if self.state == self.api.STATE_IDLE:
                 self._attr_extra_state_attributes = {
-                    "cid_time": self.api.get_cidtime,
-                    "cid_number": "",
-                    "cid_name": "",
+                    CID.CID_TIME: self.api.get_cidtime,
+                    CID.CID_NUMBER: "",
+                    CID.CID_NAME: "",
                 }
             self._attr_state = STATE_RING
             self.async_schedule_update_ha_state()
         elif new_state == self.api.STATE_CALLERID:
             self._attr_extra_state_attributes = {
-                "cid_time": self.api.get_cidtime,
-                "cid_number": self.api.get_cidnumber,
-                "cid_name": self.api.get_cidname,
+                CID.CID_TIME: self.api.get_cidtime,
+                CID.CID_NUMBER: self.api.get_cidnumber,
+                CID.CID_NAME: self.api.get_cidname,
             }
             self._attr_state = STATE_CALLERID
             self.async_schedule_update_ha_state()

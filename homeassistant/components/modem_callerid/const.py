@@ -15,3 +15,11 @@ STATE_RING = "ring"
 SERVICE_REJECT_CALL = "reject_call"
 
 EXCEPTIONS: Final = FileNotFoundError, exceptions.SerialError, SerialException
+
+
+class CID:
+    """CID Attributes."""
+
+    CID_TIME = "cid_time"
+    CID_NUMBER = "cid_number"
+    CID_NAME = "cid_name"

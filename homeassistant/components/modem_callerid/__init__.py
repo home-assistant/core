@@ -1,8 +1,7 @@
 """The Modem Caller ID integration."""
 import logging
 
-from phone_modem import PhoneModem, exceptions
-import serial
+from phone_modem import PhoneModem
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +9,7 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DATA_KEY_API, DOMAIN
+from .const import DATA_KEY_API, DOMAIN, EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,12 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         api = PhoneModem(device)
         await api.initialize(device)
-    except (
-        FileNotFoundError,
-        exceptions.SerialError,
-        serial.SerialException,
-        serial.serialutil.SerialException,
-    ) as ex:
+    except EXCEPTIONS as ex:
         _LOGGER.error("Unable to open port %s", device)
         raise ConfigEntryNotReady from ex
 
