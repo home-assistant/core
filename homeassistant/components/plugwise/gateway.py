@@ -3,19 +3,26 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import async_timeout
-import voluptuous as vol
 from plugwise.exceptions import (
     InvalidAuthentication,
     PlugwiseException,
     XMLDataMissingError,
 )
 from plugwise.smile import Smile
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,13 +30,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
 )
 
 from .const import (
