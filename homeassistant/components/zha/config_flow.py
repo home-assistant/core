@@ -238,7 +238,10 @@ async def detect_radios(dev_path: str) -> dict[str, Any] | None:
     """Probe all radio types on the device port."""
     for radio in RadioType:
         dev_config = radio.controller.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
-        if await radio.controller.probe(dev_config):
+        probe_result = await radio.controller.probe(dev_config)
+        if type(probe_result) is dict:
+            return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: probe_result}
+        elif probe_result:
             return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: dev_config}
 
     return None
