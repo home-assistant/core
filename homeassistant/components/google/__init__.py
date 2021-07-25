@@ -1,8 +1,8 @@
 """Support for Google - Calendar Event Devices."""
 from datetime import datetime, timedelta
+from enum import Enum
 import logging
 import os
-from enum import Enum
 
 from googleapiclient import discovery as google_discovery
 import httplib2
@@ -79,8 +79,8 @@ TOKEN_FILE = f".{DOMAIN}.token"
 class FeatureAccess(Enum):
     """Class to represent different access scopes."""
 
-    read_only = ("https://www.googleapis.com/auth/calendar.readonly")
-    read_write = ("https://www.googleapis.com/auth/calendar")
+    read_only = "https://www.googleapis.com/auth/calendar.readonly"
+    read_write = "https://www.googleapis.com/auth/calendar"
 
     def __init__(self, scope: str) -> None:
         """Init instance."""
@@ -88,7 +88,7 @@ class FeatureAccess(Enum):
 
     @property
     def scope(self) -> str:
-        """The token scope for the feature."""
+        """Google calendar scope for the feature."""
         return self._scope
 
 
@@ -99,7 +99,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
                 vol.Optional(CONF_TRACK_NEW): cv.boolean,
-                vol.Optional(CONF_CALENDAR_ACCESS, default='read_write'): cv.enum(FeatureAccess),
+                vol.Optional(CONF_CALENDAR_ACCESS, default='read_write'): cv.enum(
+                    FeatureAccess
+                ),
             }
         )
     },
@@ -244,14 +246,18 @@ def check_correct_scopes(token_file, config):
     """Check for the correct scopes in file."""
     with open(token_file) as tokenfile:
         contents = tokenfile.read()
-        target_scope = f"\"scope\": \"{config.get(CONF_CALENDAR_ACCESS).scope}\""
+        
+        # Check for quoted scope as our scopes can be subsets of other scopes
+        target_scope = f'"{config.get(CONF_CALENDAR_ACCESS).scope}"'
         if target_scope not in contents:
             _LOGGER.warning("Please re-authenticate with Google")
             return False
     return True
 
 
-def setup_services(hass, hass_config, config, track_new_found_calendars, calendar_service):
+def setup_services(
+    hass, hass_config, config, track_new_found_calendars, calendar_service
+):
     """Set up the service listeners."""
 
     def _found_calendar(call):
@@ -350,7 +356,9 @@ def do_setup(hass, hass_config, config):
     track_new_found_calendars = convert(
         config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
     )
-    setup_services(hass, hass_config, config, track_new_found_calendars, calendar_service)
+    setup_services(
+        hass, hass_config, config, track_new_found_calendars, calendar_service
+    )
 
     for calendar in hass.data[DATA_INDEX].values():
         discovery.load_platform(hass, "calendar", DOMAIN, calendar, hass_config)
