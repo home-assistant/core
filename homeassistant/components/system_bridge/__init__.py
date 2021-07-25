@@ -67,9 +67,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(60):
             await bridge.async_get_information()
     except BridgeAuthenticationException as exception:
-        raise ConfigEntryAuthFailed from exception
+        raise ConfigEntryAuthFailed(
+            "Authentication failed for %s (%s)",
+            entry.title,
+            entry.data[CONF_HOST],
+        ) from exception
     except BRIDGE_CONNECTION_ERRORS as exception:
-        raise ConfigEntryNotReady("Could not connect to System Bridge.") from exception
+        raise ConfigEntryNotReady(
+            "Could not connect to %s (%s).",
+            entry.title,
+            entry.data[CONF_HOST],
+        ) from exception
 
     coordinator = SystemBridgeDataUpdateCoordinator(hass, bridge, _LOGGER, entry=entry)
     await coordinator.async_config_entry_first_refresh()
@@ -95,7 +103,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 await asyncio.sleep(1)
     except asyncio.TimeoutError as exception:
-        raise ConfigEntryNotReady("Timed out waiting for System Bridge.") from exception
+        raise ConfigEntryNotReady(
+            "Timed out waiting for %s (%s).",
+            entry.title,
+            entry.data[CONF_HOST],
+        ) from exception
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
