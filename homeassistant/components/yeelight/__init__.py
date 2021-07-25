@@ -193,24 +193,15 @@ async def _async_initialize(
     entry_data[DATA_DEVICE] = device
 
     # start listening for local pushes
-    try:
-        await device.bulb.async_listen(device.update_callback)
-    except BulbException as ex:
-        raise ConfigEntryNotReady from ex
+    await device.bulb.async_listen(device.update_callback)
 
     # register stop callback to shutdown listening for local pushes
-    def stop_listen_task(event):
+    async def async_stop_listen_task(event):
         """Stop listen thread."""
-        device_bulb = (
-            hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
-            .get(entry.entry_id, {})
-            .get(DATA_DEVICE)
-        )
-        if device_bulb is not None:
-            _LOGGER.debug("Shutting down Yeelight Listener")
-            hass.loop.create_task(device.bulb.async_stop_listening())
+        _LOGGER.debug("Shutting down Yeelight Listener")
+        await device.bulb.async_stop_listening()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen_task)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_listen_task)
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -264,14 +255,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Otherwise fall through to discovery
         else:
             # manually added device
-            await _async_initialize(hass, entry, entry.data[CONF_HOST], device=device)
+            try:
+                await _async_initialize(
+                    hass, entry, entry.data[CONF_HOST], device=device
+                )
+            except BulbException as ex:
+                raise ConfigEntryNotReady from ex
             return True
 
     # discovery
     scanner = YeelightScanner.async_get(hass)
 
     async def _async_from_discovery(host: str) -> None:
-        await _async_initialize(hass, entry, host)
+        try:
+            await _async_initialize(hass, entry, host)
+        except BulbException:
+            _LOGGER.exception("Failed to connect to bulb at %s", host)
 
     scanner.async_register_callback(entry.data[CONF_ID], _async_from_discovery)
     return True

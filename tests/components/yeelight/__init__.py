@@ -1,6 +1,6 @@
 """Tests for the Yeelight integration."""
 from asyncio import Future, coroutine
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
@@ -97,6 +97,7 @@ def _mocked_bulb(cannot_connect=False):
     bulb.music_mode = False
     bulb.async_listen = MagicMock(return_value=Future())
     bulb.async_listen.return_value.set_result(True)
+    bulb.async_update = AsyncMock()
 
     @coroutine
     def mocked_stop_listen(*args, **kwargs):
