@@ -7,7 +7,6 @@ import logging
 from typing import Callable
 
 from systembridge import Bridge
-from systembridge.client import BridgeClient
 from systembridge.exceptions import (
     BridgeAuthenticationException,
     BridgeConnectionClosedException,
@@ -16,15 +15,9 @@ from systembridge.exceptions import (
 from systembridge.objects.events import Event
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
@@ -35,17 +28,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
 
     def __init__(
         self,
+        bridge: Bridge,
         hass: HomeAssistant,
         LOGGER: logging.Logger,
         *,
         entry: ConfigEntry,
     ) -> None:
         """Initialize global System Bridge data updater."""
-        self.bridge = Bridge(
-            BridgeClient(async_get_clientsession(hass)),
-            f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
-            entry.data[CONF_API_KEY],
-        )
+        self.bridge = bridge
         self.host = entry.data[CONF_HOST]
         self.unsub: Callable | None = None
 
@@ -69,7 +59,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         """Use WebSocket for updates, instead of polling."""
 
         try:
-            await self.bridge.async_get_information()
             self.logger.debug(
                 "Connecting to ws://%s:%s",
                 self.host,

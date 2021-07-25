@@ -57,7 +57,7 @@ SERVICE_OPEN_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Bridge from a config entry."""
-    client = Bridge(
+    bridge = Bridge(
         BridgeClient(aiohttp_client.async_get_clientsession(hass)),
         f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
         entry.data[CONF_API_KEY],
@@ -65,14 +65,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         async with async_timeout.timeout(60):
-            await client.async_get_information()
-            await client.async_get_system()
+            await bridge.async_get_information()
     except BridgeAuthenticationException as exception:
         raise ConfigEntryAuthFailed from exception
     except BRIDGE_CONNECTION_ERRORS as exception:
         raise ConfigEntryNotReady("Could not connect to System Bridge.") from exception
 
-    coordinator = SystemBridgeDataUpdateCoordinator(hass, _LOGGER, entry=entry)
+    coordinator = SystemBridgeDataUpdateCoordinator(bridge, hass, _LOGGER, entry=entry)
     await coordinator.async_config_entry_first_refresh()
 
     # Wait for initial data
