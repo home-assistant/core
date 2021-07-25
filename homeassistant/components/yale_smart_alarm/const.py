@@ -14,17 +14,17 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 
-CONF_AREA_ID: Final = "area_id"
-DEFAULT_NAME: Final = "Yale Smart Alarm"
-DEFAULT_AREA_ID: Final = "1"
+CONF_AREA_ID = "area_id"
+DEFAULT_NAME = "Yale Smart Alarm"
+DEFAULT_AREA_ID = "1"
 
 MANUFACTURER: Final = "Yale"
 MODEL: Final = "main"
 
-DOMAIN: Final = "yale_smart_alarm"
-COORDINATOR: Final = "coordinator"
+DOMAIN = "yale_smart_alarm"
+COORDINATOR = "coordinator"
 
-DEFAULT_SCAN_INTERVAL: int = 15
+DEFAULT_SCAN_INTERVAL = 15
 
 LOGGER = logging.getLogger(__name__)
 

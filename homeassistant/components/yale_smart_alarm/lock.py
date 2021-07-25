@@ -49,7 +49,7 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
         self._attr_is_locked: bool = self._key["_state"] == "locked"
         self._attr_code_format: str = "^\\d{6}$"
         self._identifier: str = coordinator.entry.data[CONF_USERNAME]
-        self._code: str = coordinator.entry.data[CONF_CODE]
+        self._code: str | None = coordinator.entry.options.get(CONF_CODE)
         super().__init__(self.coordinator)
 
     @property
