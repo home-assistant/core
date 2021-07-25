@@ -81,8 +81,17 @@ TOKEN_FILE = f".{DOMAIN}.token"
 class FeatureAccess(Enum):
     """Class to represent different access scopes."""
 
-    Read = "read"
-    ReadWrite = "readwrite"
+    read_only = ("https://www.googleapis.com/auth/calendar.readonly")
+    read_write = ("https://www.googleapis.com/auth/calendar")
+
+    def __init__(self, scope: str) -> None:
+        """Init instance."""
+        self._scope = scope
+
+    @property
+    def scope(self) -> str:
+        """The token scope for the feature."""
+        return self._scope
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -92,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
                 vol.Optional(CONF_TRACK_NEW): cv.boolean,
-                vol.Optional(CONF_CALENDAR_ACCESS, default='ReadWrite'): cv.enum(FeatureAccess),
+                vol.Optional(CONF_CALENDAR_ACCESS, default='read_write'): cv.enum(FeatureAccess),
             }
         )
     },
@@ -142,20 +151,6 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-def get_scope(conf):
-    """Gets the google calendar scope based on the defined access level."""
-
-    scopes = ""
-    if conf.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite:
-        scopes = READ_WRITE_SCOPES
-    elif conf.get(CONF_CALENDAR_ACCESS) is FeatureAccess.Read:
-        scopes = READ_SCOPES
-
-    _LOGGER.info(f"Required scopes: {scopes}")
-
-    return scopes
-
-
 def do_authentication(hass, hass_config, config):
     """Notify user of actions and authenticate.
 
@@ -165,7 +160,7 @@ def do_authentication(hass, hass_config, config):
     oauth = OAuth2WebServerFlow(
         client_id=config[CONF_CLIENT_ID],
         client_secret=config[CONF_CLIENT_SECRET],
-        scope=get_scope(config),
+        scope=config[CONF_CALENDAR_ACCESS].scope,
         redirect_uri="Home-Assistant.io",
     )
     try:
@@ -251,7 +246,8 @@ def check_correct_scopes(token_file, config):
     """Check for the correct scopes in file."""
     with open(token_file) as tokenfile:
         contents = tokenfile.read()
-        if (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite and "readonly" in contents) or (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.Read and "readonly" not in contents):
+        target_scope = f"\"scope\": \"{config.get(CONF_CALENDAR_ACCESS).scope}\""
+        if target_scope not in contents:
             _LOGGER.warning("Please re-authenticate with Google")
             return False
     return True
@@ -340,7 +336,7 @@ def setup_services(hass, hass_config, config, track_new_found_calendars, calenda
         event = service.events().insert(**service_data).execute()
 
     # Only expose the add event service if we have the correct permissions
-    if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite:
+    if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.read_write:
         hass.services.register(
             DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
         )
