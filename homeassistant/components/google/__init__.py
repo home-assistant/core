@@ -72,8 +72,6 @@ SERVICE_ADD_EVENT = "add_event"
 DATA_INDEX = "google_calendars"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
-READ_SCOPES = "https://www.googleapis.com/auth/calendar.readonly"
-READ_WRITE_SCOPES = "https://www.googleapis.com/auth/calendar"
 
 TOKEN_FILE = f".{DOMAIN}.token"
 
