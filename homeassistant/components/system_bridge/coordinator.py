@@ -16,7 +16,7 @@ from systembridge.objects.events import Event
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -54,7 +54,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         self.logger.debug("New event from System Bridge: %s", event.name)
         self.async_set_updated_data(self.bridge)
 
-    @callback
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
 
