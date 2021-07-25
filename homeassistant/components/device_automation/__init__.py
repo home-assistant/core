@@ -134,8 +134,8 @@ async def _async_get_device_automations(
     entity_registry = er.async_get(hass)
     domain_devices: dict[str, set[str]] = {}
     device_entities_domains: dict[str, set[str]] = {}
-    combined_results: dict[str, list[dict[str, Any]]] = {}
     match_device_ids = set(device_ids or device_registry.devices)
+    combined_results: dict[str, list[dict[str, Any]]] = {}
 
     for entry in entity_registry.entities.values():
         if not entry.disabled_by and entry.device_id in match_device_ids:
@@ -152,15 +152,14 @@ async def _async_get_device_automations(
         for domain in device_entities_domains.get(device_id, []):
             domain_devices.setdefault(domain, set()).add(device_id)
 
-    all_results = await asyncio.gather(
+    for domain_results in await asyncio.gather(
         *(
             _async_get_device_automations_from_domain(
                 hass, domain, automation_type, device_ids
             )
             for domain, device_ids in domain_devices.items()
         )
-    )
-    for domain_results in all_results:
+    ):
         for device_results in domain_results:
             for automation in device_results:
                 combined_results[automation["device_id"]].append(automation)
