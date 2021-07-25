@@ -1,6 +1,8 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -27,6 +29,7 @@ from .const import (
     STATE_RING,
 )
 
+# Deprecated in Home Assistant 2021.8
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
@@ -37,6 +40,8 @@ PLATFORM_SCHEMA = cv.deprecated(
         )
     )
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -51,6 +56,9 @@ async def async_setup_platform(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
     )
+    _LOGGER.warning(
+        "Loading Modem_callerid via platform setup is deprecated; Please remove it from your configuration"
+    )
 
 
 async def async_setup_entry(
@@ -64,19 +72,18 @@ async def async_setup_entry(
         [
             ModemCalleridSensor(
                 api,
-                entry.data.get(CONF_NAME),
+                DEFAULT_NAME,
                 entry.data[CONF_DEVICE],
                 entry.entry_id,
             )
-        ],
+        ]
     )
 
     @callback
-    def _async_on_hass_stop(self, _):
+    async def _async_on_hass_stop(self):
         """HA is shutting down, close modem port."""
-        if self.api:
-            self.api.close()
-            self.api = None
+        if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
+            await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
@@ -95,15 +102,16 @@ class ModemCalleridSensor(SensorEntity):
 
     def __init__(self, api, name, device, server_unique_id):
         """Initialize the sensor."""
+        self.device = device
+        self.api = api
+        self._attr_name = name
+        self._attr_unique_id = f"{server_unique_id}_modem"
+        self._attr_state = STATE_IDLE
         self._attr_extra_state_attributes = {
             CID.CID_TIME: 0,
             CID.CID_NUMBER: "",
             CID.CID_NAME: "",
         }
-        self.device = device
-        self.api = api
-        self._attr_name = name
-        self._attr_server_unique_id = f"{server_unique_id}_modem"
 
     async def async_added_to_hass(self):
         """Call when the modem sensor is added to Home Assistant."""
