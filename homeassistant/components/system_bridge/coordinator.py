@@ -54,6 +54,31 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         self.logger.debug("New event from System Bridge: %s", event.name)
         self.async_set_updated_data(self.bridge)
 
+    async def _listen_for_events(self) -> None:
+        """Listen for events from the WebSocket."""
+        try:
+            await self.bridge.async_send_event(
+                "get-data",
+                [
+                    "battery",
+                    "cpu",
+                    "filesystem",
+                    "memory",
+                    "network",
+                    "os",
+                    "processes",
+                    "system",
+                ],
+            )
+            await self.bridge.listen_for_events(callback=self.async_handle_event)
+        except BridgeConnectionClosedException as exception:
+            self.last_update_success = False
+            self.logger.info("Websocket Connection Closed. Will retry. %s", exception)
+        except BridgeException as exception:
+            self.last_update_success = False
+            self.update_listeners()
+            self.logger.warning("Exception occurred. Will retry. %s", exception)
+
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
 
@@ -78,30 +103,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
                 self.unsub = None
             raise UpdateFailed("Could not connect to System Bridge.") from exception
 
-        try:
-            asyncio.create_task(
-                self.bridge.listen_for_events(callback=self.async_handle_event)
-            )
-            await self.bridge.async_send_event(
-                "get-data",
-                [
-                    "battery",
-                    "cpu",
-                    "filesystem",
-                    "memory",
-                    "network",
-                    "os",
-                    "processes",
-                    "system",
-                ],
-            )
-        except BridgeConnectionClosedException as exception:
-            self.last_update_success = False
-            self.logger.info(exception)
-        except BridgeException as exception:
-            self.last_update_success = False
-            self.update_listeners()
-            self.logger.error(exception)
+        asyncio.create_task(self._listen_for_events())
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
