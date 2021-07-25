@@ -246,3 +246,20 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
 
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
+
+async def test_async_listen_error(hass: HomeAssistant):
+    """Test the async listen error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    mocked_bulb.async_listen = MagicMock(return_value=Future())
+    mocked_bulb.async_listen.return_value.set_exception(BulbException)
+    
+    with _patch_discovery(MODULE), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
