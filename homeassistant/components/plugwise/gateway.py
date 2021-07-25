@@ -108,12 +108,8 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             async with async_timeout.timeout(update_interval.seconds):
                 await api.update_gw_devices()
-                _LOGGER.debug("Successfully updated %s", api.smile_name)
                 return True
         except XMLDataMissingError as err:
-            _LOGGER.debug(
-                "Updating Smile failed, expected XML data for %s", api.smile_name
-            )
             raise UpdateFailed("Smile update failed") from err
         except PlugwiseException as err:
             _LOGGER.debug("Updating failed, generic failure for %s", api.smile_name)
@@ -127,7 +123,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=update_interval,
     )
 
-    await coordinator.async_refresh()
+    await coordinator.ry_first_refresh()()
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
@@ -142,11 +138,6 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     api.get_all_devices()
-    _LOGGER.debug("Gateway is %s", api.gateway_id)
-    _LOGGER.debug("Gateway software version is %s", api.smile_version[0])
-    _LOGGER.debug("Appliances are %s", api.gw_devices)
-
-    _LOGGER.debug("Single master thermostat = %s", api.single_master_thermostat())
 
     platforms = GATEWAY_PLATFORMS
     if api.single_master_thermostat() is None:
@@ -154,7 +145,6 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def delete_notification(self):
         """Service: delete the Plugwise Notification."""
-        _LOGGER.debug("Service delete PW Notification called for %s", api.smile_name)
         try:
             deleted = await api.delete_notification()
             _LOGGER.debug("PW Notification deleted: %s", deleted)
