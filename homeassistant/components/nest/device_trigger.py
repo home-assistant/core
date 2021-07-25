@@ -33,6 +33,7 @@ async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str |
     device = device_registry.async_get(device_id)
     for (domain, unique_id) in device.identifiers:
         if domain == DOMAIN:
+            assert isinstance(unique_id, str)
             return unique_id
     return None
 

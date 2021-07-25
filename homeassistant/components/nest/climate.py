@@ -1,5 +1,7 @@
 """Support for Nest climate that dispatches between API versions."""
 
+from typing import Callable
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -9,7 +11,7 @@ from .legacy.climate import async_setup_legacy_entry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the climate platform."""
     if DATA_SDM not in entry.data:
