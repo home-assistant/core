@@ -88,7 +88,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
                     "battery",
                     "cpu",
                     "filesystem",
-                    "information",
                     "memory",
                     "network",
                     "os",
