@@ -1,15 +1,27 @@
 """Support for Amcrest IP camera sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, Callable
 
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
 from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
+
+if TYPE_CHECKING:
+    from . import AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +31,17 @@ SENSOR_PTZ_PRESET = "ptz_preset"
 SENSOR_SDCARD = "sdcard"
 # Sensor types are defined like: Name, units, icon
 SENSORS = {
-    SENSOR_PTZ_PRESET: ["PTZ Preset", None, "mdi:camera-iris"],
-    SENSOR_SDCARD: ["SD Used", PERCENTAGE, "mdi:sd"],
+    SENSOR_PTZ_PRESET: ("PTZ Preset", None, "mdi:camera-iris"),
+    SENSOR_SDCARD: ("SD Used", PERCENTAGE, "mdi:sd"),
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a sensor for an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -43,49 +60,49 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
 
-    def __init__(self, name, device, sensor_type):
+    def __init__(self, name: str, device: AmcrestDevice, sensor_type: str) -> None:
         """Initialize a sensor for Amcrest camera."""
         self._name = f"{name} {SENSORS[sensor_type][0]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
-        self._state = None
-        self._attrs = {}
-        self._unit_of_measurement = SENSORS[sensor_type][1]
-        self._icon = SENSORS[sensor_type][2]
-        self._unsub_dispatcher = None
+        self._state: int | str | None = None
+        self._attrs: dict[str, str | None] = {}
+        self._unit_of_measurement: str | None = SENSORS[sensor_type][1]
+        self._icon: str = SENSORS[sensor_type][2]
+        self._unsub_dispatcher: Callable[[], None] | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> int | str | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return self._attrs
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return self._unit_of_measurement
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         if not self.available:
             return
@@ -118,18 +135,20 @@ class AmcrestSensor(SensorEntity):
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
-    async def async_on_demand_update(self):
+    async def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to update signal."""
+        assert self.hass is not None
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass,
             service_signal(SERVICE_UPDATE, self._signal_name),
             self.async_on_demand_update,
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect from update signal."""
+        assert self._unsub_dispatcher is not None
         self._unsub_dispatcher()
