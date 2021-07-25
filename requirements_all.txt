@@ -1095,7 +1095,7 @@ onkyo-eiscp==1.2.7
 onvif-zeep-async==1.0.0
 
 # homeassistant.components.opengarage
-open-garage==0.1.4
+open-garage==0.1.5
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.5.2.54
@@ -1260,6 +1260,9 @@ py-nightscout==1.2.2
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
+
+# homeassistant.components.synology_dsm
+py-synologydsm-api==1.0.3
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2229,9 +2232,6 @@ swisshydrodata==0.1.0
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
 
-# homeassistant.components.synology_dsm
-synologydsm-api==1.0.2
-
 # homeassistant.components.system_bridge
 systembridge==1.1.5
 
@@ -2414,7 +2414,7 @@ xmltodict==0.12.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.3.3
+yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
 yalexs==1.1.12
