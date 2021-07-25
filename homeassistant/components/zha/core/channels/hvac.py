@@ -70,7 +70,7 @@ class FanChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid: int, value: Any) -> None:
         """Handle attribute update from fan cluster."""
-        attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
+        attr_name = self._get_attribute_name(attrid)
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
@@ -229,7 +229,7 @@ class ThermostatChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute update cluster."""
-        attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
+        attr_name = self._get_attribute_name(attrid)
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )

@@ -592,7 +592,7 @@ async def test_zll_device_groups(
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0
@@ -608,7 +608,7 @@ async def test_zll_device_groups(
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0

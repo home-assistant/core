@@ -6,6 +6,7 @@ import pytest
 import zhaquirks.sinope.thermostat
 import zhaquirks.tuya.ts0601_trv
 import zigpy.profiles
+import zigpy.types
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
@@ -1119,7 +1120,7 @@ async def test_occupancy_reset(hass, device_climate_sinope):
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
 
     await send_attributes_report(
-        hass, thrm_cluster, {"occupied_heating_setpoint": 1950}
+        hass, thrm_cluster, {"occupied_heating_setpoint": zigpy.types.uint16_t(1950)}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
