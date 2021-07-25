@@ -68,11 +68,10 @@ async def async_setup_entry(
                 entry.entry_id,
             )
         ],
-        True,
     )
 
     @callback
-    async def _async_on_hass_stop(self, _):
+    def _async_on_hass_stop(self, _):
         """HA is shutting down, close modem port."""
         if self.api:
             self.api.close()
