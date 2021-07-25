@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -48,7 +47,6 @@ CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
 
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
-DATA_SCAN_INTERVAL = "scan_interval"
 DATA_DEVICE = "device"
 DATA_REMOVE_INIT_DISPATCHER = "remove_init_dispatcher"
 DATA_PLATFORMS_LOADED = "platforms_loaded"
@@ -67,7 +65,6 @@ ACTIVE_COLOR_FLOWING = "1"
 
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
-SCAN_INTERVAL = timedelta(seconds=600)
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
@@ -116,7 +113,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
                 vol.Optional(CONF_CUSTOM_EFFECTS): [
                     {
                         vol.Required(CONF_NAME): cv.string,
@@ -160,7 +156,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.data[DOMAIN] = {
         DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
         DATA_CONFIG_ENTRIES: {},
-        DATA_SCAN_INTERVAL: conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
     }
 
     # Import manually configured devices
@@ -358,7 +353,7 @@ class YeelightScanner:
                     if len(self._callbacks) == 0:
                         self._async_stop_scan()
 
-        await asyncio.sleep(SCAN_INTERVAL.total_seconds())
+        await asyncio.sleep(DISCOVERY_INTERVAL.total_seconds())
         self._scan_task = self._hass.loop.create_task(self._async_scan())
 
     @callback
@@ -409,7 +404,6 @@ class YeelightDevice:
         self._capabilities = capabilities or {}
         self._device_type = None
         self._available = False
-        self._remove_time_tracker = None
         self._initialized = False
 
         self._name = host  # Default name is host
@@ -570,27 +564,11 @@ class YeelightDevice:
         self._update_properties()
         dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
-    async def async_setup(self):
-        """Set up the device."""
-
-        async def _async_update(_):
-            await self._hass.async_add_executor_job(self.update)
-
-        await _async_update(None)
-        self._remove_time_tracker = async_track_time_interval(
-            self._hass, _async_update, self._hass.data[DOMAIN][DATA_SCAN_INTERVAL]
-        )
-
     @callback
     def update_callback(self, data):
         """Update push from device."""
         self._available = True
         dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
-
-    @callback
-    def async_unload(self):
-        """Unload the device."""
-        self._remove_time_tracker()
 
 
 class YeelightEntity(Entity):
