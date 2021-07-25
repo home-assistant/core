@@ -28,8 +28,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
 
     def __init__(
         self,
-        bridge: Bridge,
         hass: HomeAssistant,
+        bridge: Bridge,
         LOGGER: logging.Logger,
         *,
         entry: ConfigEntry,
