@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except BRIDGE_CONNECTION_ERRORS as exception:
         raise ConfigEntryNotReady("Could not connect to System Bridge.") from exception
 
-    coordinator = SystemBridgeDataUpdateCoordinator(bridge, hass, _LOGGER, entry=entry)
+    coordinator = SystemBridgeDataUpdateCoordinator(hass, bridge, _LOGGER, entry=entry)
     await coordinator.async_config_entry_first_refresh()
 
     # Wait for initial data
