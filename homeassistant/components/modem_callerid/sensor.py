@@ -1,4 +1,6 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -11,6 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     DATA_KEY_API,
@@ -36,8 +39,11 @@ PLATFORM_SCHEMA = cv.deprecated(
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Modem Caller ID component."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -47,8 +53,10 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
     """Set up the Modem Caller ID sensor."""
     api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     async_add_entities(
@@ -126,6 +134,6 @@ class ModemCalleridSensor(SensorEntity):
             self._attr_state = STATE_IDLE
             self.async_schedule_update_ha_state()
 
-    async def reject_call(self):
+    async def reject_call(self) -> None:
         """Reject Incoming Call."""
         await self.api.reject_call(self.device)
