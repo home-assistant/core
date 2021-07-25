@@ -8,6 +8,9 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "link": {
+                "title": "Enged\u00e9lyezze a HomeAssistant alkalmaz\u00e1st Roon-ban"
+            },
             "user": {
                 "data": {
                     "host": "Hoszt"

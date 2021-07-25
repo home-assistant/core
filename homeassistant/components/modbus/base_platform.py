@@ -4,17 +4,21 @@ from __future__ import annotations
 from abc import abstractmethod
 from datetime import timedelta
 import logging
+import struct
 from typing import Any
 
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_COUNT,
     CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    CONF_STRUCTURE,
     STATE_ON,
 )
 from homeassistant.helpers.entity import Entity
@@ -30,11 +34,19 @@ from .const import (
     CALL_TYPE_WRITE_REGISTERS,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
+    CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_PRECISION,
+    CONF_SCALE,
     CONF_STATE_OFF,
     CONF_STATE_ON,
+    CONF_SWAP,
+    CONF_SWAP_BYTE,
+    CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    DATA_TYPE_STRING,
 )
 from .modbus import ModbusHub
 
@@ -56,6 +68,7 @@ class BasePlatform(Entity):
         self._value = None
         self._available = True
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
+        self._available = self._scan_interval == 0
         self._call_active = False
 
     @abstractmethod
@@ -88,6 +101,75 @@ class BasePlatform(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
+
+
+class BaseStructPlatform(BasePlatform, RestoreEntity):
+    """Base class representing a sensor/climate."""
+
+    def __init__(self, hub: ModbusHub, config: dict) -> None:
+        """Initialize the switch."""
+        super().__init__(hub, config)
+        self._swap = config[CONF_SWAP]
+        self._data_type = config[CONF_DATA_TYPE]
+        self._structure = config.get(CONF_STRUCTURE)
+        self._precision = config[CONF_PRECISION]
+        self._scale = config[CONF_SCALE]
+        self._offset = config[CONF_OFFSET]
+        self._count = config[CONF_COUNT]
+
+    def _swap_registers(self, registers):
+        """Do swap as needed."""
+        if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE]:
+            # convert [12][34] --> [21][43]
+            for i, register in enumerate(registers):
+                registers[i] = int.from_bytes(
+                    register.to_bytes(2, byteorder="little"),
+                    byteorder="big",
+                    signed=False,
+                )
+        if self._swap in [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]:
+            # convert [12][34] ==> [34][12]
+            registers.reverse()
+        return registers
+
+    def unpack_structure_result(self, registers):
+        """Convert registers to proper result."""
+
+        registers = self._swap_registers(registers)
+        byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
+        if self._data_type == DATA_TYPE_STRING:
+            self._value = byte_string.decode()
+        else:
+            val = struct.unpack(self._structure, byte_string)
+
+            # Issue: https://github.com/home-assistant/core/issues/41944
+            # If unpack() returns a tuple greater than 1, don't try to process the value.
+            # Instead, return the values of unpack(...) separated by commas.
+            if len(val) > 1:
+                # Apply scale and precision to floats and ints
+                v_result = []
+                for entry in val:
+                    v_temp = self._scale * entry + self._offset
+
+                    # We could convert int to float, and the code would still work; however
+                    # we lose some precision, and unit tests will fail. Therefore, we do
+                    # the conversion only when it's absolutely necessary.
+                    if isinstance(v_temp, int) and self._precision == 0:
+                        v_result.append(str(v_temp))
+                    else:
+                        v_result.append(f"{float(v_temp):.{self._precision}f}")
+                self._value = ",".join(map(str, v_result))
+            else:
+                # Apply scale and precision to floats and ints
+                val = self._scale * val[0] + self._offset
+
+                # We could convert int to float, and the code would still work; however
+                # we lose some precision, and unit tests will fail. Therefore, we do
+                # the conversion only when it's absolutely necessary.
+                if isinstance(val, int) and self._precision == 0:
+                    self._value = str(val)
+                else:
+                    self._value = f"{float(val):.{self._precision}f}"
 
 
 class BaseSwitch(BasePlatform, RestoreEntity):

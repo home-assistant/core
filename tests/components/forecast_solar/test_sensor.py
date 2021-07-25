@@ -40,7 +40,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_production_today"
-    assert state.state == "100"
+    assert state.state == "100.0"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - Today"
@@ -55,7 +55,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_production_tomorrow"
-    assert state.state == "200"
+    assert state.state == "200.0"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - Tomorrow"
@@ -96,7 +96,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_production_now"
-    assert state.state == "300"
+    assert state.state == "300.0"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Estimated Power Production - Now"
     )
@@ -110,7 +110,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_current_hour"
-    assert state.state == "800"
+    assert state.state == "800.0"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - This Hour"
@@ -125,7 +125,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_next_hour"
-    assert state.state == "900"
+    assert state.state == "900.0"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - Next Hour"
@@ -175,17 +175,17 @@ async def test_disabled_by_default(
         (
             "power_production_next_12hours",
             "Estimated Power Production - Next 12 Hours",
-            "600",
+            "600.0",
         ),
         (
             "power_production_next_24hours",
             "Estimated Power Production - Next 24 Hours",
-            "700",
+            "700.0",
         ),
         (
             "power_production_next_hour",
             "Estimated Power Production - Next Hour",
-            "400",
+            "400.0",
         ),
     ],
 )

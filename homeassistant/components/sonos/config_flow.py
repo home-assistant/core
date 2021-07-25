@@ -1,7 +1,7 @@
 """Config flow for SONOS."""
 import logging
 
-import pysonos
+import soco
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
-    result = await hass.async_add_executor_job(pysonos.discover)
+    result = await hass.async_add_executor_job(soco.discover)
     return bool(result)
 
 
@@ -50,7 +50,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         )
         if discovery_manager := self.hass.data.get(DATA_SONOS_DISCOVERY_MANAGER):
             discovery_manager.async_discovered_player(
-                properties, host, uid, boot_seqnum, model
+                "Zeroconf", properties, host, uid, boot_seqnum, model
             )
         return await self.async_step_discovery(discovery_info)
 

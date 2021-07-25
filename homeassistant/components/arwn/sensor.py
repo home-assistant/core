@@ -7,6 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_TEMPERATURE,
+    PRECIPITATION_INCHES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -44,7 +45,11 @@ def discover_sensors(topic, payload):
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
             return ArwnSensor(
-                topic, "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+                topic,
+                "Rain Since Midnight",
+                "since_midnight",
+                PRECIPITATION_INCHES,
+                "mdi:water",
             )
         return (
             ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
@@ -124,64 +129,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ArwnSensor(SensorEntity):
     """Representation of an ARWN sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, topic, name, state_key, units, icon=None, device_class=None):
         """Initialize the sensor."""
-        self.hass = None
         self.entity_id = _slug(name)
-        self._name = name
+        self._attr_name = name
         # This mqtt topic for the sensor which is its uid
-        self._uid = topic
+        self._attr_unique_id = topic
         self._state_key = state_key
-        self.event = {}
-        self._unit_of_measurement = units
-        self._icon = icon
-        self._device_class = device_class
+        self._attr_unit_of_measurement = units
+        self._attr_icon = icon
+        self._attr_device_class = device_class
 
     def set_event(self, event):
         """Update the sensor with the most recent event."""
-        self.event = {}
-        self.event.update(event)
+        ev = {}
+        ev.update(event)
+        self._attr_extra_state_attributes = ev
+        self._attr_state = ev.get(self._state_key, None)
         self.async_write_ha_state()
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self.event.get(self._state_key, None)
-
-    @property
-    def name(self):
-        """Get the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID.
-
-        This is based on the topic that comes from mqtt
-        """
-        return self._uid
-
-    @property
-    def extra_state_attributes(self):
-        """Return all the state attributes."""
-        return self.event
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement the state is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
-
-    @property
-    def icon(self):
-        """Return the icon of device based on its type."""
-        return self._icon

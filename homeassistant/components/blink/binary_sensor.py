@@ -33,31 +33,10 @@ class BlinkBinarySensor(BinarySensorEntity):
         self.data = data
         self._type = sensor_type
         name, device_class = BINARY_SENSORS[sensor_type]
-        self._name = f"{DOMAIN} {camera} {name}"
-        self._device_class = device_class
+        self._attr_name = f"{DOMAIN} {camera} {name}"
+        self._attr_device_class = device_class
         self._camera = data.cameras[camera]
-        self._state = None
-        self._unique_id = f"{self._camera.serial}-{self._type}"
-
-    @property
-    def name(self):
-        """Return the name of the blink sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return self._unique_id
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state
+        self._attr_unique_id = f"{self._camera.serial}-{sensor_type}"
 
     def update(self):
         """Update sensor state."""
@@ -65,4 +44,4 @@ class BlinkBinarySensor(BinarySensorEntity):
         state = self._camera.attributes[self._type]
         if self._type == TYPE_BATTERY:
             state = state != "ok"
-        self._state = state
+        self._attr_is_on = state

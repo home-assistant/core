@@ -231,10 +231,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def finish() -> None:
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS_WITH_ENTRY_SUPPORT
-            ]
+            )
         )
         await finish_setup(hass, entry, gateway)
 

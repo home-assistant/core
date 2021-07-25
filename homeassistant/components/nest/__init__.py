@@ -33,7 +33,6 @@ from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_T
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"

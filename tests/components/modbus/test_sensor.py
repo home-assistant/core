@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -173,7 +174,7 @@ async def test_config_sensor(hass, mock_modbus):
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_STRUCTURE: "",
             },
-            "Error in sensor test_sensor. The `structure` field can not be empty if the parameter `data_type` is set to the `custom`",
+            "Error in sensor test_sensor. The `structure` field can not be empty",
         ),
         (
             {
@@ -578,6 +579,7 @@ async def test_struct_sensor(hass, cfg, regs, expected):
                 {
                     CONF_NAME: SENSOR_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },

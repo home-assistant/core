@@ -3,6 +3,7 @@
         "abort": {
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
             "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rlek, k\u00f6vesd a dokument\u00e1ci\u00f3t.",
+            "no_agreements": "Ennek a fi\u00f3knak nincsenek Toon kijelz\u0151i.",
             "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz.",
             "unknown_authorize_url_generation": "Ismeretlen hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u00e9si link gener\u00e1l\u00e1sa sor\u00e1n."
         }
