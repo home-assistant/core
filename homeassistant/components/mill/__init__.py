@@ -24,7 +24,6 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         *,
-        update_interval: timedelta,
         mill_data_connection: Mill,
     ) -> None:
         """Initialize global Mill data updater."""
@@ -35,7 +34,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_method=mill_data_connection.fetch_heater_data,
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=30),
         )
 
 
@@ -52,7 +51,6 @@ async def async_setup_entry(hass, entry):
     hass.data[DOMAIN] = MillDataUpdateCoordinator(
         hass,
         mill_data_connection=mill_data_connection,
-        update_interval=timedelta(seconds=30),
     )
 
     await hass.data[DOMAIN].async_config_entry_first_refresh()

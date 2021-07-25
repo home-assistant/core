@@ -75,7 +75,7 @@ class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
             self.async_write_ha_state()
             return
 
-        if self.state not in (STATE_UNKNOWN, None) and _state < self.state:
+        if self.state not in [STATE_UNKNOWN, None] and _state < self.state:
             if self._sensor_type == CONSUMPTION_TODAY:
                 self._attr_last_reset = dt_util.as_utc(
                     dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
