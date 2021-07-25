@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,8 +217,6 @@ async def _async_initialize(
             hass, DEVICE_INITIALIZED.format(host), _async_load_platforms
         )
     )
-
-    await device.async_setup()
 
 
 @callback
