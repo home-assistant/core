@@ -179,10 +179,10 @@ async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_unload(entry, component)
                 for component in GATEWAY_PLATFORMS
-            ]
+            )
         )
     )
 
