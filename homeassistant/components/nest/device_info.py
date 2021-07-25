@@ -1,6 +1,6 @@
 """Library for extracting device specific information common to entities."""
 
-from typing import Dict
+from __future__ import annotations
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import InfoTrait
@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
-DEVICE_TYPE_MAP: Dict[str, str] = {
+DEVICE_TYPE_MAP: dict[str, str] = {
     "sdm.devices.types.CAMERA": "Camera",
     "sdm.devices.types.DISPLAY": "Display",
     "sdm.devices.types.DOORBELL": "Doorbell",
