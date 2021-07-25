@@ -72,11 +72,13 @@ async def async_get_device_automations(
     hass: HomeAssistant, automation_type: str, device_id: str
 ) -> Any:
     """Get a device automation for a single device id."""
-    return (
-        await device_automation.async_get_device_automations(
-            hass, automation_type, [device_id]
-        )
-    ).get(device_id)
+    automations = await device_automation.async_get_device_automations(
+        hass, automation_type, [device_id]
+    )
+    import pprint
+
+    pprint.pprint([automations, device_id])
+    return automations.get(device_id)
 
 
 def threadsafe_callback_factory(func):
