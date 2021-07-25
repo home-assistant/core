@@ -75,20 +75,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Wait for initial data
-    async with async_timeout.timeout(60):
-        while (
-            coordinator.bridge.battery is None
-            or coordinator.bridge.cpu is None
-            or coordinator.bridge.filesystem is None
-            or coordinator.bridge.information is None
-            or coordinator.bridge.memory is None
-            or coordinator.bridge.network is None
-            or coordinator.bridge.os is None
-            or coordinator.bridge.processes is None
-            or coordinator.bridge.system is None
-        ):
-            _LOGGER.debug("Waiting for initial data")
-            await asyncio.sleep(1)
+    try:
+        async with async_timeout.timeout(120):
+            while (
+                coordinator.bridge.battery is None
+                or coordinator.bridge.cpu is None
+                or coordinator.bridge.filesystem is None
+                or coordinator.bridge.information is None
+                or coordinator.bridge.memory is None
+                or coordinator.bridge.network is None
+                or coordinator.bridge.os is None
+                or coordinator.bridge.processes is None
+                or coordinator.bridge.system is None
+            ):
+                _LOGGER.debug("Waiting for initial data")
+                await asyncio.sleep(1)
+    except asyncio.TimeoutError as exception:
+        raise ConfigEntryNotReady("Timed out waiting for System Bridge.") from exception
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
