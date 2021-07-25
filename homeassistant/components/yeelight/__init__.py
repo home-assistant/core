@@ -219,7 +219,6 @@ async def _async_initialize(
         )
     )
 
-    entry.async_on_unload(device.async_unload)
     await device.async_setup()
 
 
