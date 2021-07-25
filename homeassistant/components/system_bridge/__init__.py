@@ -193,7 +193,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
 
         # Ensure disconnected and cleanup stop sub
-        await coordinator.bridge.disconnect()
+        await coordinator.bridge.async_close_websocket()
         if coordinator.unsub:
             coordinator.unsub()
 
