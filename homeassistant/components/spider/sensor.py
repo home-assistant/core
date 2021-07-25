@@ -70,21 +70,6 @@ class SpiderPowerPlugEnergy(SensorEntity):
         return round(self.power_plug.today_energy_consumption / 1000, 2)
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return DEVICE_CLASS_ENERGY
-
-    @property
-    def state_class(self) -> str:
-        """Return the state class."""
-        return STATE_CLASS_MEASUREMENT
-
-    @property
     def last_reset(self) -> datetime:
         """Return the time when the sensor was last reset, if any."""
         return datetime.combine(date.today(), datetime.min.time())
