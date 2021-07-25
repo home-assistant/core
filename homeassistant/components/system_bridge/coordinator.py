@@ -8,7 +8,11 @@ from typing import Callable
 
 from systembridge import Bridge
 from systembridge.client import BridgeClient
-from systembridge.exceptions import BridgeConnectionClosedException, BridgeException
+from systembridge.exceptions import (
+    BridgeAuthenticationException,
+    BridgeConnectionClosedException,
+    BridgeException,
+)
 from systembridge.objects.events import Event
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,10 +23,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
@@ -74,12 +79,16 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
                 self.host,
                 self.bridge.information.websocketPort,
             )
-        except BridgeException as exception:
-            self.logger.error(exception)
+        except BridgeAuthenticationException as exception:
             if self.unsub:
                 self.unsub()
                 self.unsub = None
-            return
+            raise ConfigEntryAuthFailed from exception
+        except BRIDGE_CONNECTION_ERRORS as exception:
+            if self.unsub:
+                self.unsub()
+                self.unsub = None
+            raise UpdateFailed("Could not connect to System Bridge.") from exception
 
         try:
             asyncio.create_task(
