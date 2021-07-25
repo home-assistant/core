@@ -207,12 +207,12 @@ async def _async_initialize(
     # register stop callback to shutdown listening for local pushes
     def stop_listen_task(event):
         """Stop listen thread."""
-        device_bulp = (
+        device_bulb = (
             hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
             .get(entry.entry_id, {})
             .get(DATA_DEVICE)
         )
-        if device_bulp is not None:
+        if device_bulb is not None:
             _LOGGER.debug("Shutting down Yeelight Listener")
             hass.loop.create_task(device.bulb.async_stop_listening())
 
