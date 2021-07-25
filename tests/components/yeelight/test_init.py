@@ -1,7 +1,7 @@
 """Test Yeelight."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from yeelight import BulbType
+from yeelight import BulbException, BulbType
 
 from homeassistant.components.yeelight import (
     CONF_NIGHTLIGHT_SWITCH,
@@ -246,3 +246,37 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
 
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
+
+async def test_async_listen_error_late_discovery(hass, caplog):
+    """Test the async listen error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    mocked_bulb.async_listen = AsyncMock(side_effect=BulbException)
+
+    with _patch_discovery(MODULE), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert "Failed to connect to bulb at" in caplog.text
+
+
+async def test_async_listen_error_has_host(hass: HomeAssistant):
+    """Test the async listen error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "127.0.0.1"}
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    mocked_bulb.async_listen = AsyncMock(side_effect=BulbException)
+
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
