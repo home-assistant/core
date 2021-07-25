@@ -153,9 +153,9 @@ async def _async_get_device_automations(
             *await asyncio.gather(
                 *(
                     _async_get_device_automations_from_domain(
-                        hass, domain, automation_type, domain_devices[domain]
+                        hass, domain, automation_type, devices
                     )
-                    for domain in domain_devices
+                    for domain, devices in domain_devices.items()
                 )
             )
         )
