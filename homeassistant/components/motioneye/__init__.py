@@ -47,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -274,6 +275,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         admin_password=entry.data.get(CONF_ADMIN_PASSWORD),
         surveillance_username=entry.data.get(CONF_SURVEILLANCE_USERNAME),
         surveillance_password=entry.data.get(CONF_SURVEILLANCE_PASSWORD),
+        session=async_get_clientsession(hass),
     )
 
     try:
