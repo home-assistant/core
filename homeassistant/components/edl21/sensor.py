@@ -41,8 +41,8 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType = None,
-):
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the EDL21 sensor."""
     hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
     await hass.data[DOMAIN].connect()
