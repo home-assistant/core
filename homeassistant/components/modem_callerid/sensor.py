@@ -56,9 +56,6 @@ async def async_setup_platform(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
     )
-    _LOGGER.warning(
-        "Loading Modem_callerid via platform setup is deprecated; Please remove it from your configuration"
-    )
 
 
 async def async_setup_entry(
@@ -72,7 +69,7 @@ async def async_setup_entry(
         [
             ModemCalleridSensor(
                 api,
-                DEFAULT_NAME,
+                entry.title,
                 entry.data[CONF_DEVICE],
                 entry.entry_id,
             )
