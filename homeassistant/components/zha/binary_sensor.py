@@ -20,6 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core import discovery
 from .core.const import (
     CHANNEL_ACCELEROMETER,
+    CHANNEL_BINARY_INPUT,
     CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     CHANNEL_ZONE,
@@ -134,6 +135,13 @@ class Opening(BinarySensor):
 
     SENSOR_ATTR = "on_off"
     DEVICE_CLASS = DEVICE_CLASS_OPENING
+
+
+@STRICT_MATCH(channel_names=CHANNEL_BINARY_INPUT)
+class BinaryInput(BinarySensor):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "present_value"
 
 
 @STRICT_MATCH(
