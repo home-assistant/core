@@ -269,8 +269,12 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
         if self._zone.get_requested_mode() == OPERATION_MODE_OFF:
             return CURRENT_HVAC_OFF
-        if not zone_called:
+
+        is_native_zone = self._zone.get_name().endswith("NativeZone")
+        if not zone_called and not is_native_zone:
+            # this is a non-native zone which is not currently calling for heating/cooling
             return CURRENT_HVAC_IDLE
+
         if system_status == SYSTEM_STATUS_COOL:
             return CURRENT_HVAC_COOL
         if system_status == SYSTEM_STATUS_HEAT:
