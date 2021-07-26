@@ -19,13 +19,20 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Yale hub."""
         self.entry = entry
-        self.yale: YaleSmartAlarmClient | None = None
+        self.yale: YaleSmartAlarmClient = None
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
+
+    def get_client(self) -> YaleSmartAlarmClient:
+        """Connect to Yale API."""
+        self.yale = YaleSmartAlarmClient(
+            self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
+        )
+        return self.yale
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Yale."""
@@ -108,11 +115,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
     def get_updates(self) -> dict:
         """Fetch data from Yale."""
-
-        if self.yale is None:
-            self.yale = YaleSmartAlarmClient(
-                self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
-            )
 
         try:
             arm_status = self.yale.get_armed_status()

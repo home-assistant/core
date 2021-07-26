@@ -43,13 +43,14 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
     ) -> None:
         """Initialize the Yale Alarm Device."""
         self.coordinator = coordinator
+        self._entry = coordinator.entry
+        self._yale = coordinator.yale
         self._key = key
         self._attr_name: str = key["name"]
         self._attr_unique_id: str = key["address"].replace(":", "")
         self._attr_is_locked: bool = self._key["_state"] == "locked"
         self._attr_code_format: str = "^\\d{6}$"
         self._identifier: str = coordinator.entry.data[CONF_USERNAME]
-        self._code: str | None = coordinator.entry.options.get(CONF_CODE)
         super().__init__(self.coordinator)
 
     @property
@@ -65,7 +66,7 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
     def unlock(self, **kwargs) -> None:
         """Send unlock command."""
-        code = kwargs.get(ATTR_CODE, self._code)
+        code = kwargs.get(ATTR_CODE, self._entry.options.get(CONF_CODE))
         if code is None:
             LOGGER.error("Code required but none provided")
 
@@ -77,9 +78,9 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
     def set_lock_state(self, code: str, state: str) -> None:
         """Send set lock state command."""
-        get_lock = self.coordinator.lock.get(self.name)  # type: ignore[attr-defined]
+        get_lock = self._yale.lock_api.get(self.name)
 
         if state == "lock":
-            self.coordinator.lock.close_lock(get_lock)  # type: ignore[attr-defined]
+            self._yale.lock_api.close_lock(get_lock)
         if state == "unlock":
-            self.coordinator.lock.open_lock(get_lock, code)  # type: ignore[attr-defined]
+            self._yale.lock_api.open_lock(get_lock, code)
