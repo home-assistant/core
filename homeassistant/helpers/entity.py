@@ -181,7 +181,7 @@ class DeviceInfo(TypedDict, total=False):
 
 @dataclass
 class EntityDescription:
-    """An class that describes Home Assistant entities."""
+    """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
     key: str
@@ -859,7 +859,7 @@ class Entity(ABC):
 
 @dataclass
 class ToggleEntityDescription(EntityDescription):
-    """An class that describes toggle entities."""
+    """A class that describes toggle entities."""
 
 
 class ToggleEntity(Entity):

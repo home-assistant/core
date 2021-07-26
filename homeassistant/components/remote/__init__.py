@@ -145,7 +145,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class RemoteEntityDescription(ToggleEntityDescription):
-    """An class that describes remote entities."""
+    """A class that describes remote entities."""
 
 
 class RemoteEntity(ToggleEntity):

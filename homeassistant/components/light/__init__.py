@@ -640,7 +640,7 @@ class Profiles:
 
 @dataclasses.dataclass
 class LightEntityDescription(ToggleEntityDescription):
-    """An class that describes binary sensor entities."""
+    """A class that describes binary sensor entities."""
 
 
 class LightEntity(ToggleEntity):

@@ -261,7 +261,7 @@ class _BaseVacuum(Entity):
 
 @dataclass
 class VacuumEntityDescription(ToggleEntityDescription):
-    """An class that describes vacuum entities."""
+    """A class that describes vacuum entities."""
 
 
 class VacuumEntity(_BaseVacuum, ToggleEntity):

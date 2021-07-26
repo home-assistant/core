@@ -124,7 +124,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 @dataclass
 class SirenEntityDescription(ToggleEntityDescription):
-    """An class that describes siren entities."""
+    """A class that describes siren entities."""
 
 
 class SirenEntity(ToggleEntity):

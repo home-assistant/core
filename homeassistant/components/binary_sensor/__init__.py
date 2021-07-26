@@ -152,7 +152,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class BinarySensorEntityDescription(EntityDescription):
-    """An class that describes binary sensor entities."""
+    """A class that describes binary sensor entities."""
 
 
 class BinarySensorEntity(Entity):

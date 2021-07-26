@@ -60,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class SelectEntityDescription(EntityDescription):
-    """An class that describes select entities."""
+    """A class that describes select entities."""
 
 
 class SelectEntity(Entity):

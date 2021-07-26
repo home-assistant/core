@@ -172,7 +172,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class ClimateEntityDescription(EntityDescription):
-    """An class that describes climate entities."""
+    """A class that describes climate entities."""
 
 
 class ClimateEntity(Entity):

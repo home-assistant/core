@@ -104,7 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class HumidifierEntityDescription(ToggleEntityDescription):
-    """An class that describes humidifier entities."""
+    """A class that describes humidifier entities."""
 
 
 class HumidifierEntity(ToggleEntity):

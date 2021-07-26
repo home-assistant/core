@@ -227,7 +227,7 @@ def _fan_native(method):
 
 @dataclass
 class FanEntityDescription(ToggleEntityDescription):
-    """An class that describes fan entities."""
+    """A class that describes fan entities."""
 
 
 class FanEntity(ToggleEntity):

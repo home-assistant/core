@@ -87,7 +87,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class SwitchEntityDescription(ToggleEntityDescription):
-    """An class that describes switch entities."""
+    """A class that describes switch entities."""
 
 
 class SwitchEntity(ToggleEntity):
