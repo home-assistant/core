@@ -944,7 +944,7 @@ lyft_rides==0.2
 magicseaweed==1.0.3
 
 # homeassistant.components.matrix
-matrix-client==0.3.2
+matrix-client==0.4.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
