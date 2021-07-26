@@ -504,7 +504,7 @@ class _ScriptRun:
                 task.cancel()
             unsub()
 
-    async def _async_run_long_action(self, long_task: asyncio.tasks.Task) -> None:
+    async def _async_run_long_action(self, long_task: asyncio.Task) -> None:
         """Run a long task while monitoring for stop request."""
 
         async def async_cancel_long_task() -> None:
