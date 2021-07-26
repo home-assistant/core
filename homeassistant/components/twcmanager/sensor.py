@@ -6,6 +6,7 @@ import re
 from aiohttp.web import HTTPError
 import async_timeout
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -79,7 +80,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class TwcSensor(CoordinatorEntity):
+class TwcSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, coordinator, uuid, twc, prop):
