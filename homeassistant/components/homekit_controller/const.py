@@ -49,4 +49,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
     CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): "sensor",
+    CharacteristicsTypes.get_uuid(
+        CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
+    ): "sensor",
 }
