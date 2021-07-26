@@ -1,4 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
@@ -24,7 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.entity import Entity, ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.loader import bind_hass
@@ -258,8 +259,15 @@ class _BaseVacuum(Entity):
         )
 
 
+@dataclass
+class VacuumEntityDescription(ToggleEntityDescription):
+    """An class that describes vacuum entities."""
+
+
 class VacuumEntity(_BaseVacuum, ToggleEntity):
     """Representation of a vacuum cleaner robot."""
+
+    entity_description: VacuumEntityDescription
 
     @property
     def status(self):

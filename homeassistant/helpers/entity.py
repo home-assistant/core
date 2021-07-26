@@ -857,9 +857,15 @@ class Entity(ABC):
                 self.parallel_updates.release()
 
 
+@dataclass
+class ToggleEntityDescription(EntityDescription):
+    """An class that describes toggle entities."""
+
+
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
+    entity_description: ToggleEntityDescription
     _attr_is_on: bool
     _attr_state: None = None
 
