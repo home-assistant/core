@@ -15,6 +15,7 @@ from homeassistant.const import (
     DATA_RATE_KILOBITS_PER_SECOND,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
+    SIGNAL_STRENGTH_DECIBELS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -99,22 +100,30 @@ def _retrieve_link_kb_s_received_state(status: FritzStatus, last_value: str) -> 
     return round(status.max_linked_bit_rate[1] / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_link_noise_margin_sent_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_link_noise_margin_sent_state(
+    status: FritzStatus, last_value: str
+) -> float:
     """Return upload noise margin."""
     return status.noise_margin[0]  # type: ignore[no-any-return]
 
 
-def _retrieve_link_noise_margin_received_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_link_noise_margin_received_state(
+    status: FritzStatus, last_value: str
+) -> float:
     """Return download noise margin."""
     return status.noise_margin[1]  # type: ignore[no-any-return]
 
 
-def _retrieve_link_attenuation_sent_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_link_attenuation_sent_state(
+    status: FritzStatus, last_value: str
+) -> float:
     """Return upload line attenuation."""
     return status.attenuation[0]  # type: ignore[no-any-return]
 
 
-def _retrieve_link_attenuation_received_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_link_attenuation_received_state(
+    status: FritzStatus, last_value: str
+) -> float:
     """Return download line attenuation."""
     return status.attenuation[1]  # type: ignore[no-any-return]
 
@@ -193,7 +202,7 @@ SENSOR_DATA = {
         name="Line capacity kbit/s sent",
         unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
-        state_provider=_retrieve_link_kb_s_sent_state
+        state_provider=_retrieve_link_kb_s_sent_state,
     ),
     "line_kb_s_received": SensorData(
         name="Line capacity kbit/s received",
