@@ -1,0 +1,21 @@
+"""Common fixtures and objects for the LG webOS integration tests."""
+from unittest.mock import patch
+
+import pytest
+
+
+@pytest.fixture(name="client")
+def client_fixture():
+    """Patch of client library for tests."""
+    with patch(
+        "homeassistant.components.webostv.WebOsClient", autospec=True
+    ) as mock_client_class:
+        mock_client_class.create.return_value = mock_client_class.return_value
+        client = mock_client_class.return_value
+        client.software_info = {"device_id": "00:01:02:03:04:05"}
+        client.system_info = {"modelName": "TVFAKE"}
+        client.client_key = "0123456789"
+        client.apps = {0: {"title": "Applicaiton01"}}
+        client.inputs = {0: {"label": "Input01"}, 1: {"label": "Input02"}}
+
+        yield client

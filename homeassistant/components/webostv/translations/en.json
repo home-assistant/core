@@ -1,0 +1,42 @@
+{
+  "config": {
+    "flow_title": "LG webOS Smart TV",
+    "step": {
+      "user": {
+        "title": "Connect to webOS TV",
+        "description": "Turn on TV, fill the following fields click submit",
+        "data": {
+          "host": "Hostname",
+          "name": "Name"
+        }
+      },
+      "pairing": {
+        "title": "webOS TV Pairing",
+        "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please turn on your TV or check ip address"
+    },
+    "abort": {
+      "error_pairing": "Connected to LG webOS TV but not paired",
+      "already_in_progress": "Configuration flow is already in progress",
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options for Webos Smart TV",
+        "description": "Select enabled sources",
+        "data": {
+          "sources": "Sources list"
+        }
+      }
+    },
+    "error": {
+      "script_not_found": "Script not found",
+      "cannot_retrieve": "Unable to retrieve the list of sources. Make sure device is switched on"
+    }
+  }
+}

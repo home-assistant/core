@@ -246,6 +246,16 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
         }
     ],
+    "webostv": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "LG Electronics."
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "LG Electronics"
+        }
+    ],
     "wemo": [
         {
             "manufacturer": "Belkin International Inc."
