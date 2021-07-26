@@ -14,14 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from . import async_control_connect
-from .const import (
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DEFAULT_NAME,
-    DOMAIN,
-    ON_ACTION_DOCS,
-    WEBOSTV_EXCEPTIONS,
-)
+from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -143,36 +136,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            on_action = user_input.get(CONF_ON_ACTION)
-
-            if on_action:
-                action_state = self.hass.states.get(on_action)
-
-                if not action_state or action_state.domain != "script":
-                    errors["base"] = "script_not_found"
-
-            if not errors:
-                options_input = {
-                    CONF_ON_ACTION: on_action,
-                    CONF_SOURCES: user_input[CONF_SOURCES],
-                }
-                return self.async_create_entry(title="", data=options_input)
-
-        # Get turn on service
-        script_turn_on = self.options.get(CONF_ON_ACTION, "")
-
+            options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
+            return self.async_create_entry(title="", data=options_input)
         # Get sources
         sources = self.options.get(CONF_SOURCES, "")
-        sources_list = await async_default_sources(self.host, self.key)
+        sources_list = await async_get_sources(self.host, self.key)
         if sources_list is None:
             errors["base"] = "cannot_retrieve"
 
         options_schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_ON_ACTION,
-                    description={"suggested_value": script_turn_on},
-                ): str,
                 vol.Optional(
                     CONF_SOURCES,
                     description={"suggested_value": sources},
@@ -181,14 +154,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=options_schema,
-            errors=errors,
-            description_placeholders={"docs_url": ON_ACTION_DOCS},
+            step_id="init", data_schema=options_schema, errors=errors
         )
 
 
-async def async_default_sources(host, key):
+async def async_get_sources(host, key):
     """Construct sources list."""
     try:
         client = await async_control_connect(host, key)

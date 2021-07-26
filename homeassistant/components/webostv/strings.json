@@ -28,9 +28,8 @@
     "step": {
       "init": {
         "title": "Options for webOS Smart TV",
-        "description": "Home Assistant is able to turn on a LG webOS Smart TV if you specify a script. [Read documentation]({docs_url})",
+        "description": "Select enabled sources",
         "data": {
-          "turn_on_action": "Script used to turn on the TV (ex: script.wake_on_lan)",
           "sources": "Sources list"
         }
       }

@@ -5,7 +5,7 @@ from aiopylgtv import PyLGTVPairException
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.webostv.const import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
+from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_ICON, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import (
@@ -102,15 +102,12 @@ async def test_options_flow(hass, client):
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_ON_ACTION: "script.test",
-            CONF_SOURCES: ["Input01", "Input02"],
-        },
+        user_input={CONF_SOURCES: ["Input01", "Input02"]},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"][CONF_ON_ACTION] == "script.test"
+    assert result2["data"][CONF_SOURCES] == ["Input01", "Input02"]
 
     client.connect = Mock(side_effect=ConnectionRefusedError())
     result3 = await hass.config_entries.options.async_init(entry.entry_id)
@@ -119,41 +116,6 @@ async def test_options_flow(hass, client):
 
     assert result3["type"] == RESULT_TYPE_FORM
     assert result3["errors"] == {"base": "cannot_retrieve"}
-
-
-async def test_options_script_incorrect_flow(hass, client):
-    """Test json format incorrect in options config flow."""
-    entry = await setup_webostv(hass)
-    assert client
-
-    hass.states.async_set("script.fake", "off", {"domain": "script"})
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ON_ACTION: "script.test"},
-    )
-
-    await hass.async_block_till_done()
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "script_not_found"}
-
-    hass.states.async_set("fake.test", "off", {"domain": "fake"})
-
-    result3 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_ON_ACTION: "fake.test"},
-    )
-
-    await hass.async_block_till_done()
-
-    assert result3["type"] == RESULT_TYPE_FORM
-    assert result3["errors"] == {"base": "script_not_found"}
 
 
 async def test_form_cannot_connect(hass, client):

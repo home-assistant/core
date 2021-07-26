@@ -24,8 +24,6 @@ SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 
 LIVE_TV_APP_ID = "com.webos.app.livetv"
 
-ON_ACTION_DOCS = "https://www.home-assistant.io/integrations/webostv#turn-on-action"
-
 WEBOSTV_EXCEPTIONS = (
     OSError,
     ConnectionClosed,

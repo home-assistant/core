@@ -116,9 +116,6 @@ def _async_migrate_options_from_data(hass, config_entry):
     config = config_entry.data
     options = {}
 
-    # Get Turn_on service
-    options[CONF_ON_ACTION] = config.get(CONF_ON_ACTION)
-
     # Get Preferred Sources
     if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
         options[CONF_SOURCES] = sources

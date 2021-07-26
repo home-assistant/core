@@ -17,7 +17,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -30,12 +29,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.script import Script
 
 from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
-    CONF_ON_ACTION,
     CONF_SOURCES,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -67,16 +64,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     unique_id = config_entry.unique_id
     name = config_entry.title
     sources = config_entry.options.get(CONF_SOURCES)
-    turn_on_action = config_entry.options.get(CONF_ON_ACTION)
     client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
-    on_script = None
 
-    if turn_on_action:
-        on_script = Script(hass, [{"service": turn_on_action}], name, DOMAIN)
-
-    async_add_entities(
-        [LgWebOSMediaPlayerEntity(client, name, sources, unique_id, on_script)]
-    )
+    async_add_entities([LgWebOSMediaPlayerEntity(client, name, sources, unique_id)])
 
 
 def cmd(func):
@@ -107,13 +97,12 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
-    def __init__(self, client: WebOsClient, name: str, sources, unique_id, on_script):
+    def __init__(self, client: WebOsClient, name: str, sources, unique_id):
         """Initialize the webos device."""
         self._client = client
         self._name = name
         self._unique_id = unique_id
         self._sources = sources
-        self._on_script = on_script
 
         # Assume that the TV is not paused
         self._paused = False
@@ -299,9 +288,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
 
-        if self._on_script:
-            supported = supported | SUPPORT_TURN_ON
-
         return supported
 
     @property
@@ -338,11 +324,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     async def async_turn_off(self):
         """Turn off media player."""
         await self._client.power_off()
-
-    async def async_turn_on(self):
-        """Turn on the media player."""
-        if self._on_script:
-            await self._on_script.async_run(context=self._context)
 
     @cmd
     async def async_volume_up(self):
