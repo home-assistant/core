@@ -61,11 +61,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             CONF_ENTITY_ID: entry.entity_id,
             CONF_TYPE: conf_type,
         }
-        for conf_type in [
-            SERVICE_SELECT_OPTION,
-            SERVICE_SELECT_NEXT,
-            SERVICE_SELECT_PREVIOUS,
-        ]
+        for conf_type in ACTION_TYPES
         for entry in entity_registry.async_entries_for_device(registry, device_id)
         if entry.domain == DOMAIN
     ]
@@ -114,7 +110,4 @@ async def async_get_action_capabilities(
         return {
             "extra_fields": vol.Schema({vol.Required(CONF_OPTION): vol.In(options)})
         }
-    else:
-        return {
-            "extra_fields": vol.Schema({vol.Optional(CONF_CYCLE, default=True): bool})
-        }
+    return {"extra_fields": vol.Schema({vol.Optional(CONF_CYCLE, default=True): bool})}
