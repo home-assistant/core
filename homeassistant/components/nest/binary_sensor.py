@@ -1,9 +1,8 @@
 """Support for Nest binary sensors that dispatches between API versions."""
 
-from typing import Callable
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_SDM
 from .legacy.binary_sensor import async_setup_legacy_entry
