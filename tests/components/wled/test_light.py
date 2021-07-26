@@ -566,7 +566,10 @@ async def test_effect_service_error(
 
 
 async def test_preset_service(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the preset service of a WLED light."""
     await hass.services.async_call(
@@ -594,6 +597,8 @@ async def test_preset_service(
     await hass.async_block_till_done()
     assert mock_wled.preset.call_count == 2
     mock_wled.preset.assert_called_with(preset=2)
+
+    assert "The 'wled.preset' service is deprecated" in caplog.text
 
 
 async def test_preset_service_error(
