@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -632,15 +633,16 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         for client in entities:
             if client != self:
                 try:
-                    if await client.async_client_join(group, self):
-                        ip_addresses.add(client.ip_address)
+                    network_join = await client.async_client_join(group, self)
                 except MusicCastGroupException:
                     _LOGGER.warning(
                         "%s is struggling to update its group data. Will retry perform the update",
                         client.entity_id,
                     )
-                    if await client.async_client_join(group, self):
-                        ip_addresses.add(client.ip_address)
+                    network_join = await client.async_client_join(group, self)
+
+                if network_join:
+                    ip_addresses.add(client.ip_address)
 
         if ip_addresses:
             await self.coordinator.musiccast.mc_server_group_extend(
@@ -772,30 +774,32 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_check_client_list(self):
         """Let the server check if all its clients are still part of his group."""
-        if self.is_server and not self.coordinator.data.group_update_lock.locked():
-            _LOGGER.debug("%s updates his group members", self.entity_id)
-            client_ips_for_removal = []
-            for expected_client_ip in self.coordinator.data.group_client_list:
-                if expected_client_ip not in [
-                    entity.ip_address for entity in self.musiccast_group
-                ]:
-                    # The client is no longer part of the group. Prepare removal.
-                    client_ips_for_removal.append(expected_client_ip)
+        if not self.is_server or self.coordinator.data.group_update_lock.locked():
+            return
 
-            if client_ips_for_removal:
-                _LOGGER.debug(
-                    "%s says good bye to the following members %s",
-                    self.entity_id,
-                    str(client_ips_for_removal),
-                )
-                await self.coordinator.musiccast.mc_server_group_reduce(
-                    self._zone_id, client_ips_for_removal, self.get_distribution_num()
-                )
-            if len(self.musiccast_group) < 2:
-                # The group is empty, stop distribution.
-                await self.async_server_close_group()
+        _LOGGER.debug("%s updates his group members", self.entity_id)
+        client_ips_for_removal = []
+        for expected_client_ip in self.coordinator.data.group_client_list:
+            if expected_client_ip not in [
+                entity.ip_address for entity in self.musiccast_group
+            ]:
+                # The client is no longer part of the group. Prepare removal.
+                client_ips_for_removal.append(expected_client_ip)
 
-            self.async_write_ha_state()
+        if client_ips_for_removal:
+            _LOGGER.debug(
+                "%s says good bye to the following members %s",
+                self.entity_id,
+                str(client_ips_for_removal),
+            )
+            await self.coordinator.musiccast.mc_server_group_reduce(
+                self._zone_id, client_ips_for_removal, self.get_distribution_num()
+            )
+        if len(self.musiccast_group) < 2:
+            # The group is empty, stop distribution.
+            await self.async_server_close_group()
+
+        self.async_write_ha_state()
 
     @callback
     def async_schedule_check_client_list(self):
