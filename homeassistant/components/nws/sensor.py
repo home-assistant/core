@@ -54,6 +54,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
 
+    entity_description: NWSSensorEntityDescription
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -67,6 +69,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         self._nws = hass_data[NWS_DATA]
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
+        self.entity_description = description
 
         self._attr_name = f"{station} {description.name}"
         if not hass.config.units.is_metric:
