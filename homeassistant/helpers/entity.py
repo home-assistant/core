@@ -239,19 +239,20 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
-    _attr_device_class: str | None = None
+    _attr_description: EntityDescription | None = None
+    _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_picture: str | None = None
-    _attr_entity_registry_enabled_default: bool = True
+    _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any] | None = None
-    _attr_force_update: bool = False
-    _attr_icon: str | None = None
-    _attr_name: str | None = None
+    _attr_force_update: bool
+    _attr_icon: str | None
+    _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
     _attr_unique_id: str | None = None
-    _attr_unit_of_measurement: str | None = None
+    _attr_unit_of_measurement: str | None
 
     @property
     def should_poll(self) -> bool:
@@ -269,7 +270,11 @@ class Entity(ABC):
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return self._attr_name
+        if hasattr(self, "_attr_name"):
+            return self._attr_name
+        if self._attr_description:
+            return self._attr_description.name
+        return None
 
     @property
     def state(self) -> StateType:
@@ -325,17 +330,29 @@ class Entity(ABC):
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._attr_device_class
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if self._attr_description:
+            return self._attr_description.device_class
+        return None
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self._attr_unit_of_measurement
+        if hasattr(self, "_attr_unit_of_measurement"):
+            return self._attr_unit_of_measurement
+        if self._attr_description:
+            return self._attr_description.unit_of_measurement
+        return None
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        return self._attr_icon
+        if hasattr(self, "_attr_icon"):
+            return self._attr_icon
+        if self._attr_description:
+            return self._attr_description.icon
+        return None
 
     @property
     def entity_picture(self) -> str | None:
@@ -359,7 +376,11 @@ class Entity(ABC):
         If True, a state change will be triggered anytime the state property is
         updated, not just when the value changes.
         """
-        return self._attr_force_update
+        if hasattr(self, "_attr_force_update"):
+            return self._attr_force_update
+        if self._attr_description:
+            return self._attr_description.force_update
+        return False
 
     @property
     def supported_features(self) -> int | None:
@@ -374,7 +395,11 @@ class Entity(ABC):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._attr_entity_registry_enabled_default
+        if hasattr(self, "_attr_entity_registry_enabled_default"):
+            return self._attr_entity_registry_enabled_default
+        if self._attr_description:
+            return self._attr_description.entity_registry_enabled_default
+        return True
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they

@@ -107,18 +107,27 @@ class SensorEntityDescription(EntityDescription):
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
-    _attr_state_class: str | None = None
-    _attr_last_reset: datetime | None = None
+    _attr_description: SensorEntityDescription | None = None
+    _attr_state_class: str | None
+    _attr_last_reset: datetime | None
 
     @property
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return self._attr_state_class
+        if hasattr(self, "_attr_state_class"):
+            return self._attr_state_class
+        if self._attr_description:
+            return self._attr_description.state_class
+        return None
 
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        return self._attr_last_reset
+        if hasattr(self, "_attr_last_reset"):
+            return self._attr_last_reset
+        if self._attr_description:
+            return self._attr_description.last_reset
+        return None
 
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
