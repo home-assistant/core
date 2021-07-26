@@ -11,7 +11,12 @@ from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -19,10 +24,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-# pylint: disable=import-error
 from .const import (
     ATTR_FLAP_ID,
     ATTR_LOCK_STATE,
+    CONF_FEEDERS,
+    CONF_FLAPS,
+    CONF_PETS,
     DOMAIN,
     SERVICE_SET_LOCK_STATE,
     SPC,
@@ -42,7 +49,19 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
-                }
+                    vol.Optional(CONF_FEEDERS): vol.All(
+                        cv.ensure_list, [cv.positive_int]
+                    ),
+                    vol.Optional(CONF_FLAPS): vol.All(
+                        cv.ensure_list, [cv.positive_int]
+                    ),
+                    vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
+                    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+                },
+                cv.deprecated(CONF_FEEDERS),
+                cv.deprecated(CONF_FLAPS),
+                cv.deprecated(CONF_PETS),
+                cv.deprecated(CONF_SCAN_INTERVAL),
             )
         )
     },
