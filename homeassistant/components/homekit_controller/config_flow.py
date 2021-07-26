@@ -289,7 +289,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_remove(existing.entry_id)
             else:
                 _LOGGER.debug(
-                    "%s (%s - %s) claims to be unpaired but isn't. It's implementation of HomeKit is defective or a zeroconf relay is broadcasting stale data",
+                    "%s (%s - %s) claims to be unpaired but isn't. "
+                    "It's implementation of HomeKit is defective "
+                    "or a zeroconf relay is broadcasting stale data",
                     name,
                     model,
                     hkid,
