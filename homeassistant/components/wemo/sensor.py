@@ -3,7 +3,6 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Callable
 
-from homeassistant import util
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
@@ -14,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import convert, dt
+from homeassistant.util import Throttle, convert, dt
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoSubscriptionEntity
@@ -29,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def _discovered_wemo(device: DeviceWrapper):
         """Handle a discovered Wemo device."""
 
-        @util.Throttle(SCAN_INTERVAL)
+        @Throttle(SCAN_INTERVAL)
         def update_insight_params():
             device.wemo.update_insight_params()
 
