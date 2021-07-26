@@ -286,8 +286,7 @@ def load_data(
             _LOGGER.warning("Can't load data in %s after %s retries", url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
-                with open(filepath, "rb") as fp:
-                    return fp
+                return open(filepath, "rb")  # pylint: disable=consider-using-with
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
