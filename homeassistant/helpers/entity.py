@@ -210,6 +210,9 @@ class Entity(ABC):
     # Owning platform instance. Will be set by EntityPlatform
     platform: EntityPlatform | None = None
 
+    # Entity description instance for this Entity
+    entity_description: EntityDescription
+
     # If we reported if this entity was slow
     _slow_reported = False
 
@@ -241,7 +244,6 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_description: EntityDescription
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any] | None = None
@@ -253,11 +255,6 @@ class Entity(ABC):
     _attr_supported_features: int | None = None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
-
-    @property
-    def entity_description(self) -> EntityDescription:
-        """Return the entity description of this entity."""
-        return self._attr_entity_description
 
     @property
     def should_poll(self) -> bool:
@@ -277,7 +274,7 @@ class Entity(ABC):
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
-        if self.entity_description:
+        if hasattr(self, "entity_description"):
             return self.entity_description.name
         return None
 
@@ -337,7 +334,7 @@ class Entity(ABC):
         """Return the class of this device, from component DEVICE_CLASSES."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
-        if self.entity_description:
+        if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
 
@@ -346,7 +343,7 @@ class Entity(ABC):
         """Return the unit of measurement of this entity, if any."""
         if hasattr(self, "_attr_unit_of_measurement"):
             return self._attr_unit_of_measurement
-        if self.entity_description:
+        if hasattr(self, "entity_description"):
             return self.entity_description.unit_of_measurement
         return None
 
@@ -355,7 +352,7 @@ class Entity(ABC):
         """Return the icon to use in the frontend, if any."""
         if hasattr(self, "_attr_icon"):
             return self._attr_icon
-        if self.entity_description:
+        if hasattr(self, "entity_description"):
             return self.entity_description.icon
         return None
 
@@ -383,7 +380,7 @@ class Entity(ABC):
         """
         if hasattr(self, "_attr_force_update"):
             return self._attr_force_update
-        if self.entity_description:
+        if hasattr(self, "entity_description"):
             return self.entity_description.force_update
         return False
 
@@ -402,7 +399,7 @@ class Entity(ABC):
         """Return if the entity should be enabled when first added to the entity registry."""
         if hasattr(self, "_attr_entity_registry_enabled_default"):
             return self._attr_entity_registry_enabled_default
-        if self.entity_description:
+        if hasattr(self, "entity_description"):
             return self.entity_description.entity_registry_enabled_default
         return True
 

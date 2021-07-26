@@ -55,7 +55,7 @@ class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
         self._service_key = service_key
 
         self.entity_id = f"{SENSOR_DOMAIN}.{service_key}_{description.key}"
-        self._attr_entity_description = description
+        self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{service_key}_{description.key}"
 
         self._attr_device_info = {
