@@ -181,7 +181,7 @@ class DeviceInfo(TypedDict, total=False):
 
 @dataclass
 class EntityDescription:
-    """An class that describes Home Assistant entities."""
+    """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
     key: str
@@ -857,9 +857,15 @@ class Entity(ABC):
                 self.parallel_updates.release()
 
 
+@dataclass
+class ToggleEntityDescription(EntityDescription):
+    """A class that describes toggle entities."""
+
+
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
+    entity_description: ToggleEntityDescription
     _attr_is_on: bool
     _attr_state: None = None
 

@@ -1,6 +1,7 @@
 """Component to interface with various sirens/chimes."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, TypedDict, cast, final
@@ -15,7 +16,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -121,9 +122,15 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class SirenEntityDescription(ToggleEntityDescription):
+    """A class that describes siren entities."""
+
+
 class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
 
+    entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | None = None
 
     @final
