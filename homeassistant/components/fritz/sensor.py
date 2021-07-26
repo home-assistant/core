@@ -191,7 +191,7 @@ SENSOR_DATA = {
     ),
     "line_kb_s_sent": SensorData(
         name="Line capacity kb/s sent",
-        unit_of_measurement="kb/s",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_link_kb_s_sent_state
     ),
