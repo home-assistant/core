@@ -107,17 +107,22 @@ class SensorEntityDescription(EntityDescription):
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
-    _attr_description: SensorEntityDescription | None = None
+    _attr_entity_description: SensorEntityDescription | None = None
     _attr_state_class: str | None
     _attr_last_reset: datetime | None
+
+    @property
+    def entity_description(self) -> SensorEntityDescription | None:
+        """Return the entity description of this entity."""
+        return self._attr_entity_description
 
     @property
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
         if hasattr(self, "_attr_state_class"):
             return self._attr_state_class
-        if self._attr_description:
-            return self._attr_description.state_class
+        if self.entity_description:
+            return self.entity_description.state_class
         return None
 
     @property
@@ -125,8 +130,8 @@ class SensorEntity(Entity):
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
             return self._attr_last_reset
-        if self._attr_description:
-            return self._attr_description.last_reset
+        if self.entity_description:
+            return self.entity_description.last_reset
         return None
 
     @property

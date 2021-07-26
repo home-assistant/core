@@ -239,9 +239,9 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
-    _attr_description: EntityDescription | None = None
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
+    _attr_entity_description: EntityDescription | None = None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any] | None = None
@@ -253,6 +253,11 @@ class Entity(ABC):
     _attr_supported_features: int | None = None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
+
+    @property
+    def entity_description(self) -> EntityDescription | None:
+        """Return the entity description of this entity."""
+        return self._attr_entity_description
 
     @property
     def should_poll(self) -> bool:
@@ -272,8 +277,8 @@ class Entity(ABC):
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
-        if self._attr_description:
-            return self._attr_description.name
+        if self.entity_description:
+            return self.entity_description.name
         return None
 
     @property
@@ -332,8 +337,8 @@ class Entity(ABC):
         """Return the class of this device, from component DEVICE_CLASSES."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
-        if self._attr_description:
-            return self._attr_description.device_class
+        if self.entity_description:
+            return self.entity_description.device_class
         return None
 
     @property
@@ -341,8 +346,8 @@ class Entity(ABC):
         """Return the unit of measurement of this entity, if any."""
         if hasattr(self, "_attr_unit_of_measurement"):
             return self._attr_unit_of_measurement
-        if self._attr_description:
-            return self._attr_description.unit_of_measurement
+        if self.entity_description:
+            return self.entity_description.unit_of_measurement
         return None
 
     @property
@@ -350,8 +355,8 @@ class Entity(ABC):
         """Return the icon to use in the frontend, if any."""
         if hasattr(self, "_attr_icon"):
             return self._attr_icon
-        if self._attr_description:
-            return self._attr_description.icon
+        if self.entity_description:
+            return self.entity_description.icon
         return None
 
     @property
@@ -378,8 +383,8 @@ class Entity(ABC):
         """
         if hasattr(self, "_attr_force_update"):
             return self._attr_force_update
-        if self._attr_description:
-            return self._attr_description.force_update
+        if self.entity_description:
+            return self.entity_description.force_update
         return False
 
     @property
@@ -397,8 +402,8 @@ class Entity(ABC):
         """Return if the entity should be enabled when first added to the entity registry."""
         if hasattr(self, "_attr_entity_registry_enabled_default"):
             return self._attr_entity_registry_enabled_default
-        if self._attr_description:
-            return self._attr_description.entity_registry_enabled_default
+        if self.entity_description:
+            return self.entity_description.entity_registry_enabled_default
         return True
 
     # DO NOT OVERWRITE
