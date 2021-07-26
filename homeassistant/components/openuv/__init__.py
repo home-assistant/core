@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import MutableMapping
 from typing import Any
 
 from pyopenuv import Client
@@ -169,9 +168,7 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv: OpenUV, sensor_type: str) -> None:
         """Initialize."""
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_should_poll = False
         self._attr_unique_id = (
             f"{openuv.client.latitude}_{openuv.client.longitude}_{sensor_type}"
