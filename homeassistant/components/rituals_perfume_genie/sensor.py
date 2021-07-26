@@ -51,9 +51,12 @@ class DiffuserPerfumeSensor(DiffuserEntity):
         """Initialize the perfume sensor."""
         super().__init__(diffuser, coordinator, PERFUME_SUFFIX)
 
-        self._attr_icon = "mdi:tag-remove"
-        if diffuser.has_cartridge:
-            self._attr_icon = "mdi:tag-text"
+    @property
+    def icon(self) -> str:
+        """Return the perfume sensor icon."""
+        if self._diffuser.has_cartridge:
+            return "mdi:tag-text"
+        return "mdi:tag-remove"
 
     @property
     def state(self) -> str:
@@ -70,9 +73,12 @@ class DiffuserFillSensor(DiffuserEntity):
         """Initialize the fill sensor."""
         super().__init__(diffuser, coordinator, FILL_SUFFIX)
 
-        self._attr_icon = "mdi:beaker-question"
-        if diffuser.has_cartridge:
-            self.attr_icon = "mdi:beaker"
+    @property
+    def icon(self) -> str:
+        """Return the fill sensor icon."""
+        if self._diffuser.has_cartridge:
+            return "mdi:beaker"
+        return "mdi:beaker-question"
 
     @property
     def state(self) -> str:
