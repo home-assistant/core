@@ -246,7 +246,7 @@ class Entity(ABC):
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
-    _attr_extra_state_attributes: MutableMapping[str, Any] | None = None
+    _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
     _attr_name: str | None
@@ -319,7 +319,9 @@ class Entity(ABC):
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
-        return self._attr_extra_state_attributes
+        if hasattr(self, "_attr_extra_state_attributes"):
+            return self._attr_extra_state_attributes
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:
