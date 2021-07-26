@@ -11,12 +11,7 @@ import socket
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
-from zeroconf import (
-    InterfaceChoice,
-    IPVersion,
-    NonUniqueNameException,
-    ServiceStateChange,
-)
+from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
@@ -242,12 +237,7 @@ async def _async_register_hass_zc_service(
     )
 
     _LOGGER.info("Starting Zeroconf broadcast")
-    try:
-        await aio_zc.async_register_service(info)
-    except NonUniqueNameException:
-        _LOGGER.error(
-            "Home Assistant instance with identical name present in the local network"
-        )
+    await aio_zc.async_register_service(info, allow_name_change=True)
 
 
 class FlowDispatcher:
