@@ -279,13 +279,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             try:
                 await pairing.list_accessories_and_characteristics()
-                _LOGGER.debug(
-                    "%s (%s - %s) claims to be unpaired but isn't. It's implementation of HomeKit is defective or a zeroconf relay is broadcasting stale data",
-                    name,
-                    model,
-                    hkid,
-                )
-                return self.async_abort(reason="already_paired")
             except AuthenticationError:
                 _LOGGER.debug(
                     "%s (%s - %s) is unpaired. Removing invalid pairing for this device",
@@ -294,6 +287,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     hkid,
                 )
                 await self.hass.config_entries.async_remove(existing.entry_id)
+            else:
+                _LOGGER.debug(
+                    "%s (%s - %s) claims to be unpaired but isn't. It's implementation of HomeKit is defective or a zeroconf relay is broadcasting stale data",
+                    name,
+                    model,
+                    hkid,
+                )
+                return self.async_abort(reason="already_paired")
 
         # Set unique-id and error out if it's already configured
         self._abort_if_unique_id_configured(updates=updated_ip_port)
