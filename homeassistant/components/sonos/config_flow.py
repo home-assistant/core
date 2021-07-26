@@ -42,12 +42,6 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         boot_seqnum = properties.get("bootseq")
         model = properties.get("model")
         uid = hostname_to_uid(hostname)
-        _LOGGER.debug(
-            "Calling async_discovered_player for %s with uid=%s and boot_seqnum=%s",
-            host,
-            uid,
-            boot_seqnum,
-        )
         if discovery_manager := self.hass.data.get(DATA_SONOS_DISCOVERY_MANAGER):
             discovery_manager.async_discovered_player(
                 "Zeroconf", properties, host, uid, boot_seqnum, model
