@@ -60,16 +60,18 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        self._name = entry[CONF_NAME]
         self._slave = entry.get(CONF_SLAVE)
         self._address = int(entry[CONF_ADDRESS])
-        self._device_class = entry.get(CONF_DEVICE_CLASS)
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value = None
-        self._available = True
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
-        self._available = self._scan_interval == 0
         self._call_active = False
+
+        self._attr_name = entry[CONF_NAME]
+        self._attr_should_poll = False
+        self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
+        self._attr_available = True
+        self._attr_unit_of_measurement = None
 
     @abstractmethod
     async def async_update(self, now=None):
@@ -81,26 +83,6 @@ class BasePlatform(Entity):
             async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):
@@ -229,11 +211,11 @@ class BaseSwitch(BasePlatform, RestoreEntity):
             self._slave, self._address, command, self._write_type
         )
         if result is None:
-            self._available = False
+            self._attr_available = False
             self.async_write_ha_state()
             return
 
-        self._available = True
+        self._attr_available = True
         if not self._verify_active:
             self._is_on = command == self.command_on
             self.async_write_ha_state()
@@ -253,7 +235,7 @@ class BaseSwitch(BasePlatform, RestoreEntity):
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
         if not self._verify_active:
-            self._available = True
+            self._attr_available = True
             self.async_write_ha_state()
             return
 
@@ -266,11 +248,11 @@ class BaseSwitch(BasePlatform, RestoreEntity):
         )
         self._call_active = False
         if result is None:
-            self._available = False
+            self._attr_available = False
             self.async_write_ha_state()
             return
 
-        self._available = True
+        self._attr_available = True
         if self._verify_type == CALL_TYPE_COIL:
             self._is_on = bool(result.bits[0] & 1)
         else:
