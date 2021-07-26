@@ -11,7 +11,7 @@ from .sensor_sdm import async_setup_sdm_entry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
     if DATA_SDM not in entry.data:
