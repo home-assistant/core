@@ -53,6 +53,16 @@ SIMPLE_SENSOR = {
         "probe": lambda char: char.service.type
         != ServicesTypes.get_uuid(ServicesTypes.TEMPERATURE_SENSOR),
     },
+    CharacteristicsTypes.get_uuid(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT): {
+        "name": "Current Humidity",
+        "device_class": DEVICE_CLASS_HUMIDITY,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": PERCENTAGE,
+        # This sensor is only for humidity characteristics that are not part
+        # of a temperature sensor service.
+        "probe": lambda char: char.service.type
+        != ServicesTypes.get_uuid(ServicesTypes.HUMIDITY_SENSOR),
+    },
 }
 
 
