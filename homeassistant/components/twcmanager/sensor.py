@@ -57,9 +57,9 @@ class TwcSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, uuid, twc, prop):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self.uuid = uuid
-        self.twc = twc
-        self.prop = prop
+        self._uuid = uuid
+        self._twc = twc
+        self._prop = prop
         self.entity_id = (
             "sensor." + DOMAIN + "_" + twc + "_" + self.__camel_to_snake(prop)
         )
@@ -67,17 +67,17 @@ class TwcSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "TWC " + self.twc + " " + self.prop
+        return "TWC " + self._twc + " " + self._prop
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.uuid + "-" + self.twc + "-" + self.prop
+        return self._uuid + "-" + self._twc + "-" + self._prop
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[self.twc][self.prop]
+        return self.coordinator.data[self._twc][self._prop]
 
     @property
     def unit_of_measurement(self):
