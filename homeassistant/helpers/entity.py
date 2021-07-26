@@ -241,7 +241,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_description: EntityDescription | None = None
+    _attr_entity_description: EntityDescription
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any] | None = None
@@ -255,7 +255,7 @@ class Entity(ABC):
     _attr_unit_of_measurement: str | None
 
     @property
-    def entity_description(self) -> EntityDescription | None:
+    def entity_description(self) -> EntityDescription:
         """Return the entity description of this entity."""
         return self._attr_entity_description
 

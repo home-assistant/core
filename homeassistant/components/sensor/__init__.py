@@ -107,12 +107,12 @@ class SensorEntityDescription(EntityDescription):
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
-    _attr_entity_description: SensorEntityDescription | None = None
+    _attr_entity_description: SensorEntityDescription
     _attr_state_class: str | None
     _attr_last_reset: datetime | None
 
     @property
-    def entity_description(self) -> SensorEntityDescription | None:
+    def entity_description(self) -> SensorEntityDescription:
         """Return the entity description of this entity."""
         return self._attr_entity_description
 

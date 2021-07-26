@@ -52,7 +52,6 @@ class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize Ambee sensor."""
         super().__init__(coordinator=coordinator)
-        self._sensor_key = description.key
         self._service_key = service_key
 
         self.entity_id = f"{SENSOR_DOMAIN}.{service_key}_{description.key}"
@@ -69,7 +68,7 @@ class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the sensor."""
-        value = getattr(self.coordinator.data, self._sensor_key)
+        value = getattr(self.coordinator.data, self.entity_description.key)
         if isinstance(value, str):
             return value.lower()
         return value  # type: ignore[no-any-return]
