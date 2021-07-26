@@ -34,6 +34,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
+homeassistant.components.energy.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.forecast_solar.*
