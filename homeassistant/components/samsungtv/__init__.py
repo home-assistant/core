@@ -1,6 +1,8 @@
 """The Samsung TV integration."""
+from functools import partial
 import socket
 
+import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -140,13 +142,19 @@ async def _async_create_bridge_with_updated_data(hass, entry):
 
     bridge = _async_get_device_bridge({**entry.data, **updated_data})
 
-    if not entry.data.get(CONF_MAC) and bridge.method == METHOD_WEBSOCKET:
+    mac = entry.data.get(CONF_MAC)
+    if not mac and bridge.method == METHOD_WEBSOCKET:
         if info:
             mac = mac_from_device_info(info)
         else:
             mac = await hass.async_add_executor_job(bridge.mac_from_device)
-        if mac:
-            updated_data[CONF_MAC] = mac
+
+    if not mac:
+        mac = await hass.async_add_executor_job(
+            partial(getmac.get_mac_address, ip=host)
+        )
+    if mac:
+        updated_data[CONF_MAC] = mac
 
     if updated_data:
         data = {**entry.data, **updated_data}
