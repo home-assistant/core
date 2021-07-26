@@ -1337,6 +1337,16 @@ async def websocket_abort_firmware_update(
     connection.send_result(msg[ID])
 
 
+def _get_firmware_update_progress_dict(
+    progress: FirmwareUpdateProgress,
+) -> dict[str, int]:
+    """Get a dictionary of firmware update progress."""
+    return {
+        "sent_fragments": progress.sent_fragments,
+        "total_fragments": progress.total_fragments,
+    }
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -1354,15 +1364,6 @@ async def websocket_subscribe_firmware_update_status(
     node: Node,
 ) -> None:
     """Subscribe to the status of a firmware update."""
-
-    def _get_firmware_update_progress_dict(
-        progress: FirmwareUpdateProgress,
-    ) -> dict[str, int]:
-        """Get a dictionary of firmware update progress."""
-        return {
-            "sent_fragments": progress.sent_fragments,
-            "total_fragments": progress.total_fragments,
-        }
 
     @callback
     def async_cleanup() -> None:
@@ -1505,6 +1506,23 @@ async def websocket_install_config_update(
     connection.send_result(msg[ID], success)
 
 
+def _get_controller_statistics_dict(
+    statistics: ControllerStatistics,
+) -> dict[str, int]:
+    """Get dictionary of controller statistics."""
+    return {
+        "messages_tx": statistics.messages_tx,
+        "messages_rx": statistics.messages_rx,
+        "messages_dropped_tx": statistics.messages_dropped_tx,
+        "messages_dropped_rx": statistics.messages_dropped_rx,
+        "nak": statistics.nak,
+        "can": statistics.can,
+        "timeout_ack": statistics.timeout_ack,
+        "timout_response": statistics.timeout_response,
+        "timeout_callback": statistics.timeout_callback,
+    }
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -1522,22 +1540,6 @@ async def websocket_subscribe_controller_statistics(
     client: Client,
 ) -> None:
     """Subsribe to the statistics updates for a controller."""
-
-    def _get_controller_statistics_dict(
-        statistics: ControllerStatistics,
-    ) -> dict[str, int]:
-        """Get dictionary of controller statistics."""
-        return {
-            "messages_tx": statistics.messages_tx,
-            "messages_rx": statistics.messages_rx,
-            "messages_dropped_tx": statistics.messages_dropped_tx,
-            "messages_dropped_rx": statistics.messages_dropped_rx,
-            "nak": statistics.nak,
-            "can": statistics.can,
-            "timeout_ack": statistics.timeout_ack,
-            "timout_response": statistics.timeout_response,
-            "timeout_callback": statistics.timeout_callback,
-        }
 
     @callback
     def async_cleanup() -> None:
@@ -1571,6 +1573,17 @@ async def websocket_subscribe_controller_statistics(
     )
 
 
+def _get_node_statistics_dict(statistics: NodeStatistics) -> dict[str, int]:
+    """Get dictionary of node statistics."""
+    return {
+        "commands_tx": statistics.commands_tx,
+        "commands_rx": statistics.commands_rx,
+        "commands_dropped_tx": statistics.commands_dropped_tx,
+        "commands_dropped_rx": statistics.commands_dropped_rx,
+        "timeout_response": statistics.timeout_response,
+    }
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -1588,16 +1601,6 @@ async def websocket_subscribe_node_statistics(
     node: Node,
 ) -> None:
     """Subsribe to the statistics updates for a node."""
-
-    def _get_node_statistics_dict(statistics: NodeStatistics) -> dict[str, int]:
-        """Get dictionary of node statistics."""
-        return {
-            "commands_tx": statistics.commands_tx,
-            "commands_rx": statistics.commands_rx,
-            "commands_dropped_tx": statistics.commands_dropped_tx,
-            "commands_dropped_rx": statistics.commands_dropped_rx,
-            "timeout_response": statistics.timeout_response,
-        }
 
     @callback
     def async_cleanup() -> None:
