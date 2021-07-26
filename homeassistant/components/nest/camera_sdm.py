@@ -35,7 +35,7 @@ STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the cameras."""
 

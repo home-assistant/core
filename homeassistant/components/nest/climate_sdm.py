@@ -81,7 +81,7 @@ MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the client entities."""
 
