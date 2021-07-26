@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Koneksi Gagal",
+            "invalid_auth": "Otentikasi Salah",
+            "single_instance_allowed": "Sudah terkonfigurasi. Anda hanya bisa melakukan satu konfigurasi saja."
+        },
+        "error": {
+            "invalid_auth": "Otentikasi Salah"
+        },
+        "flow_title": "Konfigurasi Tuya",
+        "step": {
+            "project_type":{
+                "title":"Integrasi Tuya",
+                "data":{
+                  "tuya_project_type": "Tipe dari Projek Tuya cloud"
+                }
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Zona yang Tersedia",
+                    "access_id": "Akses ID",
+                    "access_secret": "Akses Rahasia",
+                    "tuya_app_type": "Aplikasi Mobil",
+                    "country_code": "Kode Negara",
+                    "username": "Akun",
+                    "password": "Password"
+                },
+                "description": "Masukkan kredensial dari Tuya Anda.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

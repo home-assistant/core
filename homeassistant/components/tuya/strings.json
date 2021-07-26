@@ -1,0 +1,34 @@
+{
+  "config": {
+    "flow_title": "Tuya configuration",
+    "step": {
+      "project_type":{
+        "title":"Tuya Integration",
+        "data":{
+          "tuya_project_type": "Tuya cloud project type"
+        }
+      },
+      "user": {
+        "title": "Tuya",
+        "description": "Enter your Tuya credential",
+        "data": {
+          "endpoint": "Availability Zone",
+          "access_id": "Access ID",
+          "access_secret": "Access Secret",
+          "tuya_app_type": "Mobile App",
+          "country_code": "Country Code",
+          "username": "Account",
+          "password": "Password"
+        }
+      }
+    },
+    "abort": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  }
+}

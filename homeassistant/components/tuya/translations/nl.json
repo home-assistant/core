@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Verbindingsfout",
+            "invalid_auth": "Authenticatiefout",
+            "single_instance_allowed": "Reeds geconfigureerd. Slechts één configuratie is mogelijk."
+        },
+        "error": {
+            "invalid_auth": "Authenticatiefout"
+        },
+        "flow_title": "Tuya Configuratie",
+        "step": {
+            "project_type":{
+                "title":"Tuya Integratie",
+                "data":{
+                  "tuya_project_type": "Tuya cloud projecttype"
+                }
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Availability Zone",
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "tuya_app_type": "Mobile App",
+                    "country_code": "Landscode",
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord"
+                },
+                "description": "Voer je Tuya aanmeldgegevens in.",
+                "title": "Tuya"
+            }
+        }
+    }
+}
