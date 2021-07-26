@@ -52,6 +52,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         update_interval=SCAN_INTERVAL,
     )
 
+    uuid = await api.async_get_uuid()
+
     #
     # Fetch initial data so we have data when entities subscribe
     #
@@ -73,16 +75,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 "lastTimeToFullCharge",
             ]:
                 continue
-            sensors.append(TwcSensor(coordinator, twc, prop))
+            sensors.append(TwcSensor(coordinator, uuid, twc, prop))
     async_add_entities(sensors)
 
 
 class TwcSensor(CoordinatorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator, twc, prop):
+    def __init__(self, coordinator, uuid, twc, prop):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
+        self.uuid = uuid
         self.twc = twc
         self.prop = prop
         self.entity_id = (
@@ -93,6 +96,11 @@ class TwcSensor(CoordinatorEntity):
     def name(self):
         """Return the name of the sensor."""
         return "TWC " + self.twc + " " + self.prop
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.uuid + "-" + self.twc + "-" + self.prop
 
     @property
     def state(self):
