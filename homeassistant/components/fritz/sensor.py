@@ -202,8 +202,8 @@ SENSOR_DATA = {
         state_provider=_retrieve_link_kb_s_received_state,
     ),
     "line_noise_margin_sent": SensorData(
-        name="Line noise margin sent in dB",
-        unit_of_measurement="dB",
+        name="Line noise margin sent",
+        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
         state_provider=_retrieve_link_noise_margin_sent_state,
     ),
