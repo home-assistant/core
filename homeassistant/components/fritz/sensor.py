@@ -196,7 +196,7 @@ SENSOR_DATA = {
         state_provider=_retrieve_link_kb_s_sent_state
     ),
     "line_kb_s_received": SensorData(
-        name="Line capacity kb/s received",
+        name="Line capacity kbit/s received",
         unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_link_kb_s_received_state,
