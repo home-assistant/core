@@ -6,12 +6,13 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.const import CONF_HOST, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import CONF_HOST, PERCENTAGE, POWER_WATT, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
@@ -37,6 +38,12 @@ SENSOR_TYPES = {
     ),
     "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE, None),
     "noise": ("Noise", None, None, None),
+    "power": (
+        "Current power",
+        POWER_WATT,
+        DEVICE_CLASS_POWER,
+        STATE_CLASS_MEASUREMENT,
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
