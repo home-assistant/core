@@ -4,15 +4,6 @@ from aiohomekit.model.services import ServicesTypes
 
 from tests.components.homekit_controller.common import Helper, setup_test_component
 
-TEMPERATURE = ("temperature", "temperature.current")
-HUMIDITY = ("humidity", "relative-humidity.current")
-LIGHT_LEVEL = ("light", "light-level.current")
-CARBON_DIOXIDE_LEVEL = ("carbon-dioxide", "carbon-dioxide.level")
-BATTERY_LEVEL = ("battery", "battery-level")
-CHARGING_STATE = ("battery", "charging-state")
-LO_BATT = ("battery", "status-lo-batt")
-ON = ("outlet", "on")
-
 
 def create_switch_with_spray_level(accessory):
     """Define battery level characteristics."""
