@@ -1,17 +1,13 @@
 """Platform for sensor integration."""
 
-import re
-
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -37,70 +33,96 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = []
     for twc in coordinator.data:
         for prop in coordinator.data[twc]:
-            if prop in [
-                "TWCID",
-                "lastHeartbeat",
-                # Skip properties retrieved from the car itself via Tesla's API
-                "lastBatterySOC",
-                "lastChargeLimit",
-                "lastAtHome",
-                "lastTimeToFullCharge",
-            ]:
-                continue
-            sensors.append(TwcSensor(coordinator, uuid, twc, prop))
+            if prop == "carsCharging":
+                sensors.append(TwcSensor(coordinator, uuid, twc, prop, "Cars Charging"))
+            if prop == "currentVIN":
+                sensors.append(
+                    TwcSensor(coordinator, uuid, twc, prop, "Current VIN", False)
+                )
+            if prop == "lastAmpsOffered":
+                sensors.append(
+                    CurrentSensor(coordinator, uuid, twc, prop, "Last Amps Offered")
+                )
+            if prop == "lastVIN":
+                sensors.append(
+                    TwcSensor(coordinator, uuid, twc, prop, "Last VIN", False)
+                )
+            if prop == "lifetimekWh":
+                sensors.append(
+                    EnergySensor(coordinator, uuid, twc, prop, "Lifetime Energy")
+                )
+            if prop == "maxAmps":
+                sensors.append(CurrentSensor(coordinator, uuid, twc, prop, "Max Amps"))
+            if prop == "reportedAmpsActual":
+                sensors.append(
+                    CurrentSensor(coordinator, uuid, twc, prop, "Reported Amps")
+                )
+            if prop == "state":
+                sensors.append(TwcSensor(coordinator, uuid, twc, prop, "State", False))
+            if prop == "version":
+                sensors.append(
+                    TwcSensor(coordinator, uuid, twc, prop, "Version", False)
+                )
+            if prop == "voltsPhaseA":
+                sensors.append(
+                    VoltageSensor(coordinator, uuid, twc, prop, "Voltage (Phase A)")
+                )
+            if prop == "voltsPhaseB":
+                sensors.append(
+                    VoltageSensor(coordinator, uuid, twc, prop, "Voltage (Phase B)")
+                )
+            if prop == "voltsPhaseC":
+                sensors.append(
+                    VoltageSensor(coordinator, uuid, twc, prop, "Voltage (Phase C)")
+                )
+
     async_add_entities(sensors)
 
 
 class TwcSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator, uuid, twc, prop):
+    def __init__(self, coordinator, uuid, twc, prop, name, isMeasurement=True):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._twc = twc
         self._prop = prop
-        self._attr_name = "TWC " + twc + " " + prop
         self._attr_unique_id = uuid + "-" + twc + "-" + prop
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self.entity_id = (
-            "sensor." + DOMAIN + "_" + twc + "_" + self.__camel_to_snake(prop)
-        )
+        self._attr_name = "TWC " + str(twc).capitalize() + " " + name
+        if isMeasurement:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self.coordinator.data[self._twc][self._prop]
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if "amps" in self.entity_id:
-            return ELECTRIC_CURRENT_AMPERE
-        elif "volts" in self.entity_id:
-            return (ELECTRIC_POTENTIAL_VOLT,)
-        elif self.entity_id.endswith("_w"):
-            return POWER_WATT
-        elif "kwh" in self.entity_id:
-            return ENERGY_KILO_WATT_HOUR
-        else:
-            return None
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        if "amps" in self.entity_id:
-            return DEVICE_CLASS_CURRENT
-        elif "volts" in self.entity_id:
-            return DEVICE_CLASS_VOLTAGE
-        elif self.entity_id.endswith("_w"):
-            return DEVICE_CLASS_POWER
-        elif "kwh" in self.entity_id:
-            return DEVICE_CLASS_ENERGY
-        else:
-            return None
+class CurrentSensor(TwcSensor):
+    """Representation of a Sensor that measures current."""
 
-    @staticmethod
-    def __camel_to_snake(name: str):
-        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-        name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
-        return name.replace("k_wh", "_kwh")
+    def __init__(self, coordinator, uuid, twc, prop, name):
+        """Pass coordinator, uuid, twc, prop and name to TwcSensor."""
+        super().__init__(coordinator, uuid, twc, prop, name)
+        self._attr_unit_of_measurement = ELECTRIC_CURRENT_AMPERE
+        self._attr_device_class = DEVICE_CLASS_CURRENT
+
+
+class VoltageSensor(TwcSensor):
+    """Representation of a Sensor that measures volage."""
+
+    def __init__(self, coordinator, uuid, twc, prop, name):
+        """Pass coordinator, uuid, twc, prop and name to TwcSensor."""
+        super().__init__(coordinator, uuid, twc, prop, name)
+        self._attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+        self._attr_device_class = DEVICE_CLASS_VOLTAGE
+
+
+class EnergySensor(TwcSensor):
+    """Representation of a Sensor that measures energy."""
+
+    def __init__(self, coordinator, uuid, twc, prop, name):
+        """Pass coordinator, uuid, twc, prop and name to TwcSensor."""
+        super().__init__(coordinator, uuid, twc, prop, name)
+        self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+        self._attr_device_class = DEVICE_CLASS_ENERGY
