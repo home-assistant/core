@@ -98,7 +98,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class SensorEntityDescription(EntityDescription):
-    """An class that describes sensor entities."""
+    """A class that describes sensor entities."""
 
     state_class: str | None = None
     last_reset: datetime | None = None
