@@ -1,9 +1,9 @@
 """Support for power sensors in WeMo Insight devices."""
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Callable
 
-import pywemo
-
+from homeassistant import util
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
@@ -18,14 +18,27 @@ from homeassistant.util import convert, dt
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoSubscriptionEntity
+from .wemo_device import DeviceWrapper
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo sensors."""
 
-    async def _discovered_wemo(device: pywemo.Insight):
+    async def _discovered_wemo(device: DeviceWrapper):
         """Handle a discovered Wemo device."""
-        async_add_entities([InsightCurrentPower(device), InsightTodayEnergy(device)])
+
+        @util.Throttle(SCAN_INTERVAL)
+        def update_insight_params():
+            device.wemo.update_insight_params()
+
+        async_add_entities(
+            [
+                InsightCurrentPower(device, update_insight_params),
+                InsightTodayEnergy(device, update_insight_params),
+            ]
+        )
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
 
@@ -42,13 +55,15 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
 
     def __init__(
         self,
-        device: pywemo.Insight,
+        device: DeviceWrapper,
+        update_insight_params: Callable,
         name_suffix: str,
         device_class: str,
         unit_of_measurement: str,
     ) -> None:
         """Initialize the WeMo Insight power sensor."""
         super().__init__(device)
+        self._update_insight_params = update_insight_params
         self._name_suffix = name_suffix
         self._attr_device_class = device_class
         self._attr_state_class = STATE_CLASS_MEASUREMENT
@@ -67,15 +82,21 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
     def _update(self, force_update=True) -> None:
         with self._wemo_exception_handler("update status"):
             if force_update or not self.wemo.insight_params:
-                self.wemo.update_insight_params()
+                self._update_insight_params()
 
 
 class InsightCurrentPower(InsightSensor):
     """Current instantaineous power consumption."""
 
-    def __init__(self, device: pywemo.Insight) -> None:
+    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
         """Initialize the WeMo Insight power sensor."""
-        super().__init__(device, "Current Power", DEVICE_CLASS_POWER, POWER_WATT)
+        super().__init__(
+            device,
+            update_insight_params,
+            "Current Power",
+            DEVICE_CLASS_POWER,
+            POWER_WATT,
+        )
 
     @property
     def state(self) -> StateType:
@@ -88,10 +109,14 @@ class InsightCurrentPower(InsightSensor):
 class InsightTodayEnergy(InsightSensor):
     """Energy used today."""
 
-    def __init__(self, device: pywemo.Insight) -> None:
+    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
         """Initialize the WeMo Insight power sensor."""
         super().__init__(
-            device, "Today Energy", DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
+            device,
+            update_insight_params,
+            "Today Energy",
+            DEVICE_CLASS_ENERGY,
+            ENERGY_KILO_WATT_HOUR,
         )
 
     @property
