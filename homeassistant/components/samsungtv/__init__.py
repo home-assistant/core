@@ -1,4 +1,5 @@
 """The Samsung TV integration."""
+from functools import partial
 import socket
 
 import getmac
@@ -149,7 +150,9 @@ async def _async_create_bridge_with_updated_data(hass, entry):
             mac = await hass.async_add_executor_job(bridge.mac_from_device)
 
     if not mac:
-        mac = getmac.get_mac_address(entry.data.get(CONF_HOST))
+        mac = await hass.async_add_executor_job(
+            partial(getmac.get_mac_address, ip=host)
+        )
     if mac:
         updated_data[CONF_MAC] = mac
 
