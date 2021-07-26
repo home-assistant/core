@@ -80,7 +80,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         bval = math.floor(self._brightness / 256.0 * 100.0)
         if bval == 0:
             bval = 1
-        command = [0xA5, 0x02, bval, 0x01, 0x09]
+        command = [0xA5, 0x02, bval, 0x00, 0x09]
         command.extend(self._sender_id)
         command.extend([0x00])
         self.send_command(command, [], 0x01)
@@ -88,7 +88,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     def turn_off(self, **kwargs):
         """Turn the light source off."""
-        command = [0xA5, 0x02, 0x00, 0x01, 0x09]
+        command = [0xA5, 0x02, 0x00, 0x00, 0x08]
         command.extend(self._sender_id)
         command.extend([0x00])
         self.send_command(command, [], 0x01)
