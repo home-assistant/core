@@ -41,7 +41,7 @@ async def _async_reproduce_states(
         data = data or {}
         data["entity_id"] = state.entity_id
         for key in keys:
-            if key in state.attributes:
+            if key in state.attributes and state.attributes[key] is not None:
                 data[key] = state.attributes[key]
 
         await hass.services.async_call(
