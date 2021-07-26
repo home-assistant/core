@@ -81,15 +81,17 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         value = self._nws.observation.get(self.entity_description.key)
         if value is None:
             return None
-        if self._attr_unit_of_measurement == SPEED_MILES_PER_HOUR:
+        # Set alias to unit property -> prevent unnecessary hasattr calls
+        unit_of_measurement = self.unit_of_measurement
+        if unit_of_measurement == SPEED_MILES_PER_HOUR:
             return round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
-        if self._attr_unit_of_measurement == LENGTH_MILES:
+        if unit_of_measurement == LENGTH_MILES:
             return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
-        if self._attr_unit_of_measurement == PRESSURE_INHG:
+        if unit_of_measurement == PRESSURE_INHG:
             return round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
-        if self._attr_unit_of_measurement == TEMP_CELSIUS:
+        if unit_of_measurement == TEMP_CELSIUS:
             return round(value, 1)
-        if self._attr_unit_of_measurement == PERCENTAGE:
+        if unit_of_measurement == PERCENTAGE:
             return round(value)
         return value
 
