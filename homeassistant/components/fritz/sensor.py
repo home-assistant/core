@@ -214,8 +214,8 @@ SENSOR_DATA = {
         state_provider=_retrieve_link_noise_margin_received_state,
     ),
     "line_attenuation_sent": SensorData(
-        name="Line power attenuation sent in dB",
-        unit_of_measurement="dB",
+        name="Line power attenuation sent",
+        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
         state_provider=_retrieve_link_attenuation_sent_state,
     ),
