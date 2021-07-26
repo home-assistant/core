@@ -220,7 +220,7 @@ SENSOR_DATA = {
         state_provider=_retrieve_link_attenuation_sent_state,
     ),
     "line_attenuation_received": SensorData(
-        name="Line power received",
+        name="Line power attenuation received",
         unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:download",
         state_provider=_retrieve_link_attenuation_received_state,
