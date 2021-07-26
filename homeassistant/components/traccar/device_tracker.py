@@ -324,7 +324,7 @@ class TraccarScanner:
                         "device_traccar_id": event["deviceId"],
                         "device_name": device_name,
                         "type": event["type"],
-                        "serverTime": event["serverTime"],
+                        "serverTime": event.get("eventTime") or event.get("serverTime"),
                         "attributes": event["attributes"],
                     },
                 )
