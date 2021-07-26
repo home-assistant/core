@@ -93,8 +93,10 @@ def ws_list_forecasts(
 
     for config_entry_id, coordinator in hass.data[DOMAIN].items():
         forecasts[config_entry_id] = {
-            timestamp.isoformat(): val
-            for timestamp, val in coordinator.data.watts.items()
+            "wh_hours": {
+                timestamp.isoformat(): val
+                for timestamp, val in coordinator.data.wh_hours.items()
+            }
         }
 
     connection.send_result(msg["id"], forecasts)

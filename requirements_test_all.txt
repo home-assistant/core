@@ -137,7 +137,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.8.0
+aiomusiccast==0.8.2
 
 # homeassistant.components.notion
 aionotion==3.0.2
@@ -388,6 +388,7 @@ georss_qld_bushfire_alert_client==0.5
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
+# homeassistant.components.samsungtv
 getmac==0.8.2
 
 # homeassistant.components.gios
@@ -561,7 +562,7 @@ minio==4.0.9
 motionblinds==0.4.10
 
 # homeassistant.components.motioneye
-motioneye-client==0.3.10
+motioneye-client==0.3.11
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1321,7 +1322,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.18.8
+xknx==0.18.9
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

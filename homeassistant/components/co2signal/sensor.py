@@ -100,7 +100,10 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
             name = f"{extra_name} - {name}"
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_extra_state_attributes = {
+            "country_code": coordinator.data["countryCode"],
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, coordinator.entry_id)},
             ATTR_NAME: "CO2 signal",
