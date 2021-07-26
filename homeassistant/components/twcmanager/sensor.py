@@ -2,7 +2,7 @@
 
 import re
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -57,22 +57,14 @@ class TwcSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, uuid, twc, prop):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self._uuid = uuid
         self._twc = twc
         self._prop = prop
+        self._attr_name = "TWC " + twc + " " + prop
+        self._attr_unique_id = uuid + "-" + twc + "-" + prop
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
         self.entity_id = (
             "sensor." + DOMAIN + "_" + twc + "_" + self.__camel_to_snake(prop)
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "TWC " + self._twc + " " + self._prop
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._uuid + "-" + self._twc + "-" + self._prop
 
     @property
     def state(self):
@@ -106,11 +98,6 @@ class TwcSensor(CoordinatorEntity, SensorEntity):
             return DEVICE_CLASS_ENERGY
         else:
             return None
-
-    @property
-    def state_class(self):
-        """Return the state class."""
-        return "measurement"
 
     @staticmethod
     def __camel_to_snake(name: str):
