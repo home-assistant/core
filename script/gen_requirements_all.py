@@ -47,10 +47,15 @@ COMMENT_REQUIREMENTS = (
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
-URL_PIN = "https://developers.home-assistant.io/docs/" "creating_platform_code_review.html#1-requirements"
+URL_PIN = (
+    "https://developers.home-assistant.io/docs/"
+    "creating_platform_code_review.html#1-requirements"
+)
 
 
-CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__), "../homeassistant/package_constraints.txt")
+CONSTRAINT_PATH = os.path.join(
+    os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
+)
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
@@ -132,7 +137,9 @@ def explore_module(package, explore_children):
 
 def core_requirements():
     """Gather core requirements out of setup.py."""
-    reqs_raw = re.search(r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S).group(1)
+    reqs_raw = re.search(
+        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
+    ).group(1)
     return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
 
 
@@ -188,13 +195,16 @@ def gather_requirements_from_manifests(errors, reqs):
         if integration.disabled:
             continue
 
-        process_requirements(errors, integration.requirements, f"homeassistant.components.{domain}", reqs)
+        process_requirements(
+            errors, integration.requirements, f"homeassistant.components.{domain}", reqs
+        )
 
 
 def gather_requirements_from_modules(errors, reqs):
     """Collect the requirements from the modules directly."""
     for package in sorted(
-        explore_module("homeassistant.scripts", True) + explore_module("homeassistant.auth", True)
+        explore_module("homeassistant.scripts", True)
+        + explore_module("homeassistant.auth", True)
     ):
         try:
             module = importlib.import_module(package)
@@ -291,7 +301,8 @@ def requirements_pre_commit_output():
                 reqs.append(f"{hook['id']}=={repo['rev'].lstrip('v')}")
                 reqs.extend(x for x in hook.get("additional_dependencies", ()))
     output = [
-        f"# Automatically generated " f"from {source} by {Path(__file__).name}, do not edit",
+        f"# Automatically generated "
+        f"from {source} by {Path(__file__).name}, do not edit",
         "",
     ]
     output.extend(sorted(reqs))
