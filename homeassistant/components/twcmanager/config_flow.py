@@ -4,12 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiohttp import ClientConnectorError
 from twcmanager_client import client
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -41,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             api = client.TWCManagerClient(user_input["host"])
             uuid = await api.async_get_uuid()
-        except CannotConnect:
+        except ClientConnectorError:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -54,7 +54,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
