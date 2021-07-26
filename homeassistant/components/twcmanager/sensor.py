@@ -1,10 +1,6 @@
 """Platform for sensor integration."""
 
-import logging
 import re
-
-from aiohttp.web import HTTPError
-import async_timeout
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
@@ -17,41 +13,16 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SCAN_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
-    # assuming API object stored here by __init__.py
-    api = hass.data[DOMAIN][entry.entry_id]
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
-                return await api.async_get_slave_twcs()
-        except HTTPError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="sensor",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=SCAN_INTERVAL,
-    )
+    # objects stored here by __init__.py
+    api = hass.data[DOMAIN][entry.entry_id]["api"]
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
     uuid = await api.async_get_uuid()
 
