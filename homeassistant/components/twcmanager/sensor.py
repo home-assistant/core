@@ -11,10 +11,10 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    VOLT,
 )
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -103,9 +103,9 @@ class TwcSensor(CoordinatorEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         if "amps" in self.entity_id:
-            return ELECTRICAL_CURRENT_AMPERE
+            return ELECTRIC_CURRENT_AMPERE
         elif "volts" in self.entity_id:
-            return VOLT
+            return (ELECTRIC_POTENTIAL_VOLT,)
         elif self.entity_id.endswith("_w"):
             return POWER_WATT
         elif "kwh" in self.entity_id:
