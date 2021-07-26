@@ -36,7 +36,6 @@ from .const import (
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
-    UNKNOWN,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_NACAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
@@ -132,9 +131,7 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         self._id = camera_id
         self._home_id = home_id
-        self._device_name = self._data.get_camera(camera_id=camera_id).get(
-            "name", UNKNOWN
-        )
+        self._device_name = self._data.get_camera(camera_id=camera_id)["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._model = camera_type
         self._attr_unique_id = f"{self._id}-{self._model}"
