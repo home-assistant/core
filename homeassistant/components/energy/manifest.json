@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/energy",
   "codeowners": ["@home_assistant/core"],
   "iot_class": "calculated",
-  "dependencies": ["websocket_api", "history"]
+  "dependencies": ["websocket_api", "history"],
+  "quality_scale": "internal"
 }
