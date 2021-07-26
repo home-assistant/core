@@ -1,9 +1,8 @@
 """Support for Nest cameras that dispatches between API versions."""
 
-from typing import Callable
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .camera_sdm import async_setup_sdm_entry
 from .const import DATA_SDM

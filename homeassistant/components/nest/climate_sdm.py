@@ -1,7 +1,7 @@
 """Support for Google Nest SDM climate devices."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
@@ -40,6 +40,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import NestDeviceInfo
