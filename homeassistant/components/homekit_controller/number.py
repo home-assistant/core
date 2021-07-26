@@ -14,7 +14,7 @@ from . import KNOWN_DEVICES, CharacteristicEntity
 NUMBER_ENTITIES = {
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: {
         "name": "Spray Quantity",
-        "device_class": "",
+        "icon": "mdi:water",
     }
 }
 
