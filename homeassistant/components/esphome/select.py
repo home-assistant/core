@@ -51,7 +51,7 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
-        return super()._static_info.options
+        return self._static_info.options
 
     @esphome_state_property
     def current_option(self) -> str | None:
