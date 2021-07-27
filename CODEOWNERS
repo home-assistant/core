@@ -99,7 +99,7 @@ homeassistant/components/configurator/* @home-assistant/core
 homeassistant/components/control4/* @lawtancool
 homeassistant/components/conversation/* @home-assistant/core
 homeassistant/components/coolmaster/* @OnFreund
-homeassistant/components/coronavirus/* @home_assistant/core
+homeassistant/components/coronavirus/* @home-assistant/core
 homeassistant/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 homeassistant/components/cpuspeed/* @fabaff
@@ -141,7 +141,7 @@ homeassistant/components/emby/* @mezz64
 homeassistant/components/emoncms/* @borpin
 homeassistant/components/emonitor/* @bdraco
 homeassistant/components/emulated_kasa/* @kbickar
-homeassistant/components/energy/* @home_assistant/core
+homeassistant/components/energy/* @home-assistant/core
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/enphase_envoy/* @gtdiehl

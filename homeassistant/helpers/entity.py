@@ -181,7 +181,7 @@ class DeviceInfo(TypedDict, total=False):
 
 @dataclass
 class EntityDescription:
-    """An class that describes Home Assistant entities."""
+    """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
     key: str
@@ -246,7 +246,7 @@ class Entity(ABC):
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
-    _attr_extra_state_attributes: MutableMapping[str, Any] | None = None
+    _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
     _attr_name: str | None
@@ -319,7 +319,9 @@ class Entity(ABC):
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
-        return self._attr_extra_state_attributes
+        if hasattr(self, "_attr_extra_state_attributes"):
+            return self._attr_extra_state_attributes
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -857,9 +859,15 @@ class Entity(ABC):
                 self.parallel_updates.release()
 
 
+@dataclass
+class ToggleEntityDescription(EntityDescription):
+    """A class that describes toggle entities."""
+
+
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
+    entity_description: ToggleEntityDescription
     _attr_is_on: bool
     _attr_state: None = None
 

@@ -163,7 +163,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==5.0.1
+aioesphomeapi==5.1.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -1032,7 +1032,7 @@ nettigo-air-monitor==1.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.10
+nexia==0.9.11
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1453,7 +1453,7 @@ pyflic==2.0.3
 pyflume==0.5.5
 
 # homeassistant.components.flunearyou
-pyflunearyou==1.0.7
+pyflunearyou==2.0.2
 
 # homeassistant.components.futurenow
 pyfnip==0.2
@@ -1726,7 +1726,7 @@ pyrepetier==3.0.5
 pyrisco==0.3.1
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.5
+pyrituals==0.0.6
 
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
@@ -1932,7 +1932,7 @@ python_opendata_transport==0.2.1
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==5.2.2
+pytile==5.2.3
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -2014,7 +2014,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==3.0.0
+regenmaschine==3.1.5
 
 # homeassistant.components.python_script
 restrictedpython==5.1

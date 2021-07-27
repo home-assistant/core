@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, MutableMapping
-from typing import Any, cast
+from collections.abc import Awaitable
+from typing import cast
 
 from aioguardian import Client
 
@@ -221,9 +221,7 @@ class GuardianEntity(CoordinatorEntity):
         """Initialize."""
         self._attr_device_class = device_class
         self._attr_device_info = {"manufacturer": "Elexa"}
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: "Data provided by Elexa"
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
         self._attr_icon = icon
         self._attr_name = name
         self._entry = entry
