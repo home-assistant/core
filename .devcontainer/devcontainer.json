@@ -11,7 +11,8 @@
     "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",
     "redhat.vscode-yaml",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "kdcro101.favorites"
   ],
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
@@ -25,6 +26,7 @@
     "editor.formatOnType": true,
     "files.trimTrailingWhitespace": true,
     "terminal.integrated.shell.linux": "/usr/bin/zsh",
+    "favorites.storageFilePath": ".vscode/.favorites.json",
     "yaml.customTags": [
       "!input scalar",
       "!secret scalar",
