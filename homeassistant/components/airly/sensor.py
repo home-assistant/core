@@ -3,14 +3,9 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    CONF_NAME,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,12 +22,9 @@ from .const import (
     ATTR_API_PM10,
     ATTR_API_PM25,
     ATTR_DESCRIPTION,
-    ATTR_LABEL,
     ATTR_LEVEL,
     ATTR_LIMIT,
     ATTR_PERCENT,
-    ATTR_UNIT,
-    ATTR_VALUE,
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
@@ -41,6 +33,7 @@ from .const import (
     SUFFIX_LIMIT,
     SUFFIX_PERCENT,
 )
+from .model import AirlySensorEntityDescription
 
 PARALLEL_UPDATES = 1
 
@@ -54,10 +47,10 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
-    for sensor in SENSOR_TYPES:
+    for description in SENSOR_TYPES:
         # When we use the nearest method, we are not sure which sensors are available
-        if coordinator.data.get(sensor):
-            sensors.append(AirlySensor(coordinator, name, sensor))
+        if coordinator.data.get(description.key):
+            sensors.append(AirlySensor(coordinator, name, description))
 
     async_add_entities(sensors, False)
 
@@ -66,47 +59,46 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
     """Define an Airly sensor."""
 
     coordinator: AirlyDataUpdateCoordinator
+    entity_description: AirlySensorEntityDescription
 
     def __init__(
-        self, coordinator: AirlyDataUpdateCoordinator, name: str, kind: str
+        self,
+        coordinator: AirlyDataUpdateCoordinator,
+        name: str,
+        description: AirlySensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._description = description = SENSOR_TYPES[kind]
-        self._attr_device_class = description.get(ATTR_DEVICE_CLASS)
-        self._attr_icon = description.get(ATTR_ICON)
-        self._attr_name = f"{name} {description[ATTR_LABEL]}"
-        self._attr_state_class = description.get(ATTR_STATE_CLASS)
+        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = (
-            f"{coordinator.latitude}-{coordinator.longitude}-{kind.lower()}"
+            f"{coordinator.latitude}-{coordinator.longitude}-{description.key}".lower()
         )
-        self._attr_unit_of_measurement = description.get(ATTR_UNIT)
         self._attrs: dict[str, Any] = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self.kind = kind
+        self.entity_description = description
 
     @property
     def state(self) -> StateType:
         """Return the state."""
-        state = self.coordinator.data[self.kind]
-        return cast(StateType, self._description[ATTR_VALUE](state))
+        state = self.coordinator.data[self.entity_description.key]
+        return cast(StateType, self.entity_description.value(state))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.kind == ATTR_API_CAQI:
+        if self.entity_description.key == ATTR_API_CAQI:
             self._attrs[ATTR_LEVEL] = self.coordinator.data[ATTR_API_CAQI_LEVEL]
             self._attrs[ATTR_ADVICE] = self.coordinator.data[ATTR_API_ADVICE]
             self._attrs[ATTR_DESCRIPTION] = self.coordinator.data[
                 ATTR_API_CAQI_DESCRIPTION
             ]
-        if self.kind == ATTR_API_PM25:
+        if self.entity_description.key == ATTR_API_PM25:
             self._attrs[ATTR_LIMIT] = self.coordinator.data[
                 f"{ATTR_API_PM25}_{SUFFIX_LIMIT}"
             ]
             self._attrs[ATTR_PERCENT] = round(
                 self.coordinator.data[f"{ATTR_API_PM25}_{SUFFIX_PERCENT}"]
             )
-        if self.kind == ATTR_API_PM10:
+        if self.entity_description.key == ATTR_API_PM10:
             self._attrs[ATTR_LIMIT] = self.coordinator.data[
                 f"{ATTR_API_PM10}_{SUFFIX_LIMIT}"
             ]
