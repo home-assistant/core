@@ -52,7 +52,6 @@ from .const import (
 )
 from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings
 from .hls import HlsStreamOutput, async_setup_hls
-from .recorder import RecorderOutput
 
 _LOGGER = logging.getLogger(__name__)
 
