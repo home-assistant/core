@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_services_found": "No services were found for this account"
+        },
+        "error": {
+            "invalid_auth": "Invalid credentials"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "service": {
+                "title": "Select Service",
+                "data": {
+                    "service_id": "Service"
+                }
+            }
+        }
+    }
+}

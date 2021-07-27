@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "service": {
+        "title": "[%key:common::config_flow::title%]",
+        "data": {
+          "service_id": "[%key:common::config_flow::data::service_id%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured%]",
+      "no_services_found": "[%key:common::config_flow::abort::no_services_found%]"
+    }
+  }
+}
