@@ -170,8 +170,7 @@ class ClimaCellSensorEntityDescription(SensorEntityDescription):
                 "`unit_imperial` and `unit_metric` both need to be None or both need "
                 "to be defined."
             )
-        if self.name is None:
-            # pragma: no cover
+        if self.name is None:  # pragma: no cover
             raise TypeError
         self.name_ = self.name
 
