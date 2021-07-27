@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, MutableMapping
-from typing import Any, Callable, cast
+from collections.abc import Awaitable
+from typing import Callable, cast
 from uuid import UUID
 
 from simplipy import get_api
@@ -427,9 +427,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             self._serial = system.serial
 
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_SYSTEM_ID: system.system_id
-        }
+        self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
         self._attr_device_info = {
             "identifiers": {(DOMAIN, system.system_id)},
             "manufacturer": "SimpliSafe",
