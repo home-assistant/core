@@ -683,7 +683,7 @@ georss_qld_bushfire_alert_client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==1.0.2
+gios==2.0.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -948,7 +948,7 @@ mac-vendor-lookup==0.1.11
 magicseaweed==1.0.3
 
 # homeassistant.components.matrix
-matrix-client==0.3.2
+matrix-client==0.4.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -2418,13 +2418,16 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
-yalexs==1.1.12
+yalexs==1.1.13
 
 # homeassistant.components.yeelight
 yeelight==0.7.0b0
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
+
+# homeassistant.components.youless
+youless-api==0.10
 
 # homeassistant.components.media_extractor
 youtube_dl==2021.04.26

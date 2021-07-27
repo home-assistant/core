@@ -392,7 +392,7 @@ georss_qld_bushfire_alert_client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==1.0.2
+gios==2.0.0
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -1336,10 +1336,13 @@ xmltodict==0.12.0
 yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
-yalexs==1.1.12
+yalexs==1.1.13
 
 # homeassistant.components.yeelight
 yeelight==0.7.0b0
+
+# homeassistant.components.youless
+youless-api==0.10
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
