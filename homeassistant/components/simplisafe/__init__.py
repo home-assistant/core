@@ -226,7 +226,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async def decorator(call: ServiceCall) -> None:
             """Decorate."""
             system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
-            if not isinstance(system, SystemV3):
+            if system.version != 3:
                 LOGGER.error("Service only available on V3 systems")
                 return
             await coro(call)
