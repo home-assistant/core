@@ -64,7 +64,7 @@ class Flexit(ClimateEntity):
         self._heating = None
         self._cooling = None
         self._alarm = False
-        self.unit = pyflexit(hub, modbus_slave)
+        self.unit = pyflexit(hub._client, modbus_slave)
 
     @property
     def supported_features(self):
