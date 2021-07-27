@@ -586,7 +586,7 @@ class Profiles:
         for profile_path in profile_paths:
             if not os.path.isfile(profile_path):
                 continue
-            with open(profile_path) as inp:
+            with open(profile_path, encoding="utf8") as inp:
                 reader = csv.reader(inp)
 
                 # Skip the header
