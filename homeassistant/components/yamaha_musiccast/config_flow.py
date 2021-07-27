@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError
@@ -13,7 +14,6 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -29,7 +29,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
 
     async def async_step_user(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by the user."""
         # Request user input, unless we are preparing discovery flow

@@ -103,7 +103,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==5.0.1
+aioesphomeapi==5.1.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -582,7 +582,7 @@ netdisco==2.9.0
 nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
-nexia==0.9.10
+nexia==0.9.11
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.2
@@ -811,7 +811,7 @@ pyfireservicerota==0.0.43
 pyflume==0.5.5
 
 # homeassistant.components.flunearyou
-pyflunearyou==1.0.7
+pyflunearyou==2.0.2
 
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11
@@ -1071,7 +1071,7 @@ python-velbus==2.1.2
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==5.2.2
+pytile==5.2.3
 
 # homeassistant.components.traccar
 pytraccar==0.9.0
@@ -1107,7 +1107,7 @@ pyzerproc==0.4.8
 rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
-regenmaschine==3.0.0
+regenmaschine==3.1.5
 
 # homeassistant.components.python_script
 restrictedpython==5.1

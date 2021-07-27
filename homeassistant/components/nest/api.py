@@ -29,13 +29,13 @@ class AsyncConfigEntryAuth(AbstractAuth):
         self._client_id = client_id
         self._client_secret = client_secret
 
-    async def async_get_access_token(self):
+    async def async_get_access_token(self) -> str:
         """Return a valid access token for SDM API."""
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
         return self._oauth_session.token["access_token"]
 
-    async def async_get_creds(self):
+    async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential for Pub/Sub Subscriber."""
         # We don't have a way for Home Assistant to refresh creds on behalf
         # of the google pub/sub subscriber. Instead, build a full
