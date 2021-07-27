@@ -190,10 +190,12 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
         pres = self.gateway.const.Presentation
         set_req = self.gateway.const.SetReq
 
-        _sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None, None])
+        _sensor_type = SENSORS.get(
+            set_req(self.value_type).name, [None, None, None, None]
+        )
         if isinstance(_sensor_type, dict):
             sensor_type = _sensor_type.get(
-                pres(self.child_type).name, [None, None, None]
+                pres(self.child_type).name, [None, None, None, None]
             )
         else:
             sensor_type = _sensor_type
