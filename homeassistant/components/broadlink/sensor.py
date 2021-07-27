@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import CONF_HOST, PERCENTAGE, POWER_WATT, TEMP_CELSIUS
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -81,7 +80,6 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
     def __init__(self, device, monitored_condition):
         """Initialize the sensor."""
         super().__init__(device)
-        self._coordinator = device.update_manager.coordinator
         self._monitored_condition = monitored_condition
 
         self._attr_device_class = SENSOR_TYPES[monitored_condition][2]
@@ -91,17 +89,6 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
         self._attr_unique_id = f"{device.unique_id}-{monitored_condition}"
         self._attr_unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
 
-    @callback
-    def update_data(self):
-        """Update data."""
-        if self._coordinator.last_update_success:
-            self._attr_state = self._coordinator.data[self._monitored_condition]
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Call when the sensor is added to hass."""
-        self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
-
-    async def async_update(self):
-        """Update the sensor."""
-        await self._coordinator.async_request_refresh()
+    def _update_state(self, data):
+        """Update the state of the entity."""
+        self._attr_state = data[self._monitored_condition]
