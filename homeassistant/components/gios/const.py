@@ -22,8 +22,6 @@ API_TIMEOUT: Final = 30
 
 ATTR_INDEX: Final = "index"
 ATTR_STATION: Final = "station"
-ATTR_STATION_NAME: Final = "station_name"
-ATTR_VALUE: Final = "value"
 
 ATTR_C6H6: Final = "c6h6"
 ATTR_CO: Final = "co"
