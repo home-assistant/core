@@ -238,7 +238,7 @@ class StatisticData(TypedDict, total=False):
 class StatisticsBase:
     """Statistics base class."""
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     @declared_attr
@@ -309,7 +309,7 @@ class StatisticsMeta(Base):  # type: ignore
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATISTICS_META
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Identity(), primary_key=True)
     statistic_id = Column(String(255), index=True)
     source = Column(String(32))
     unit_of_measurement = Column(String(255))
