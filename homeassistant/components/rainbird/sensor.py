@@ -36,12 +36,12 @@ class RainBirdSensor(SensorEntity):
         self,
         controller: RainbirdController,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Rain Bird sensor."""
         self.entity_description = description
         self._controller = controller
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self.name)
         if self.entity_description.key == SENSOR_TYPE_RAINSENSOR:

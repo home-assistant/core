@@ -41,12 +41,12 @@ class RainBirdSensor(BinarySensorEntity):
         self,
         controller: RainbirdController,
         description: BinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Rain Bird sensor."""
         self.entity_description = description
         self._controller = controller
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self.name)
         state = None
