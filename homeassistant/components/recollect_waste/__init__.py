@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import List, cast
 
 from aiorecollect.client import Client, PickupEvent
 from aiorecollect.errors import RecollectError
@@ -40,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 f"Error while requesting data from ReCollect: {err}"
             ) from err
 
-        return cast(List[PickupEvent], data)
+        return data
 
     coordinator = DataUpdateCoordinator(
         hass,
