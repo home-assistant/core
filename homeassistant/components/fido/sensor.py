@@ -4,6 +4,7 @@ Support for Fido.
 Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
 """
+from collections import namedtuple
 from datetime import timedelta
 import logging
 
@@ -37,109 +38,133 @@ DEFAULT_NAME = "Fido"
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-
-SENSOR_TYPES = {
-    "fido_dollar": SensorEntityDescription(
+SENSOR_ENTRY = namedtuple(
+    "SENSOR_ENTRY",
+    [
+        "fido_dollar",
+        "balance",
+        "data_used",
+        "data_limit",
+        "data_remaining",
+        "text_used",
+        "text_limit",
+        "text_remaining",
+        "mms_used",
+        "mms_limit",
+        "mms_remaining",
+        "text_int_used",
+        "text_int_limit",
+        "text_int_remaining",
+        "talk_used",
+        "talk_limit",
+        "talk_remaining",
+        "other_talk_used",
+        "other_talk_limit",
+        "other_talk_remaining",
+    ],
+)
+SENSOR_TYPES = SENSOR_ENTRY(
+    fido_dollar=SensorEntityDescription(
         key="Fido dollar",
         unit_of_measurement=PRICE,
         icon="mdi:cash-usd",
     ),
-    "balance": SensorEntityDescription(
+    balance=SensorEntityDescription(
         key="Balance",
         unit_of_measurement=PRICE,
         icon="mdi:cash-usd",
     ),
-    "data_used": SensorEntityDescription(
+    data_used=SensorEntityDescription(
         key="Data used",
         unit_of_measurement=DATA_KILOBITS,
         icon="mdi:download",
     ),
-    "data_limit": SensorEntityDescription(
+    data_limit=SensorEntityDescription(
         key="Data limit",
         unit_of_measurement=DATA_KILOBITS,
         icon="mdi:download",
     ),
-    "data_remaining": SensorEntityDescription(
+    data_remaining=SensorEntityDescription(
         key="Data remaining",
         unit_of_measurement=DATA_KILOBITS,
         icon="mdi:download",
     ),
-    "text_used": SensorEntityDescription(
+    text_used=SensorEntityDescription(
         key="Text used",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-text",
     ),
-    "text_limit": SensorEntityDescription(
+    text_limit=SensorEntityDescription(
         key="Text limit",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-text",
     ),
-    "text_remaining": SensorEntityDescription(
+    text_remaining=SensorEntityDescription(
         key="Text remaining",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-text",
     ),
-    "mms_used": SensorEntityDescription(
+    mms_used=SensorEntityDescription(
         key="MMS used",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-image",
     ),
-    "mms_limit": SensorEntityDescription(
+    mms_limit=SensorEntityDescription(
         key="MMS limit",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-image",
     ),
-    "mms_remaining": SensorEntityDescription(
+    mms_remaining=SensorEntityDescription(
         key="MMS remaining",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-image",
     ),
-    "text_int_used": SensorEntityDescription(
+    text_int_used=SensorEntityDescription(
         key="International text used",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-alert",
     ),
-    "text_int_limit": SensorEntityDescription(
+    text_int_limit=SensorEntityDescription(
         key="International text limit",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-alert",
     ),
-    "text_int_remaining": SensorEntityDescription(
+    text_int_remaining=SensorEntityDescription(
         key="International remaining",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-alert",
     ),
-    "talk_used": SensorEntityDescription(
+    talk_used=SensorEntityDescription(
         key="Talk used",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "talk_limit": SensorEntityDescription(
+    talk_limit=SensorEntityDescription(
         key="Talk limit",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "talk_remaining": SensorEntityDescription(
+    talk_remaining=SensorEntityDescription(
         key="Talk remaining",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "other_talk_used": SensorEntityDescription(
+    other_talk_used=SensorEntityDescription(
         key="Other Talk used",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "other_talk_limit": SensorEntityDescription(
+    other_talk_limit=SensorEntityDescription(
         key="Other Talk limit",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "other_talk_remaining": SensorEntityDescription(
+    other_talk_remaining=SensorEntityDescription(
         key="Other Talk remaining",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-}
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
