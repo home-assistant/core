@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 import voluptuous as vol
 
@@ -71,7 +72,7 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         super().__init__(device)
         self.entity_description = description
         self._attr_name = f"{self._device.name} {description.name}"
-        self._event = {}
+        self._event: dict[Any, Any] = {}
 
     @property
     def extra_state_attributes(self):

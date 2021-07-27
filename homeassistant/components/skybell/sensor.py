@@ -1,4 +1,6 @@
 """Sensor support for Skybell Doorbells."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import voluptuous as vol
