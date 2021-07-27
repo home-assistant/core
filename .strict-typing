@@ -37,6 +37,7 @@ homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
+homeassistant.components.flunearyou.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
