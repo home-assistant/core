@@ -30,7 +30,6 @@ async def async_setup_entry(
         entities.append(TuyaHAScene(__home_manager, scene))
 
     async_add_entities(entities)
-    print("scene remote ok")
 
 
 class TuyaHAScene(Scene):
@@ -71,7 +70,6 @@ class TuyaHAScene(Scene):
     @property
     def available(self) -> bool:
         """Return if the scene is enabled."""
-        print(f"remove available->{self.scene.enabled}")
         return self.scene.enabled
 
     @property

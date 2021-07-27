@@ -2,14 +2,14 @@
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
-import asyncio
-
 from tuya_iot import TuyaDevice, TuyaDeviceManager
+
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
 
-class TuyaHaDevice:
+class TuyaHaDevice(Entity):
     """Tuya base device."""
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager):
@@ -18,9 +18,6 @@ class TuyaHaDevice:
 
         self.tuya_device = device
         self.tuya_device_manager = device_manager
-
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
 
     @staticmethod
     def remap(old_value, old_min, old_max, new_min, new_max):
@@ -50,18 +47,11 @@ class TuyaHaDevice:
         """Return a device description for device registry."""
         _device_info = {
             "identifiers": {(DOMAIN, f"{self.unique_id}")},
-            "manufacturer": "tuya",
+            "manufacturer": "Tuya",
             "name": self.tuya_device.name,
             "model": self.tuya_device.product_name,
         }
         return _device_info
-
-    # @property
-    # def icon(self) -> Optional[str]:
-    #     """Return Tuya device icon."""
-    #     cdn_url = 'https://images.tuyacn.com/'
-    #     # customize cdn url
-    #     return cdn_url + self.tuyaDevice.icon
 
     @property
     def available(self) -> bool:
@@ -69,6 +59,6 @@ class TuyaHaDevice:
         return self.tuya_device.online
 
     def _send_command(self, commands) -> None:
-        self.loop.run_in_executor(
-            None, self.tuya_device_manager.send_commands, self.tuya_device.id, commands
+        self.hass.async_add_executor_job(
+            self.tuya_device_manager.send_commands, self.tuya_device.id, commands
         )

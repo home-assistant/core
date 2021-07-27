@@ -143,11 +143,7 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
         """Turn on or control the light."""
         commands = []
         _LOGGER.debug(f"light kwargs-> {kwargs}")
-        # if (
-        #     ATTR_BRIGHTNESS not in kwargs
-        #     and ATTR_HS_COLOR not in kwargs
-        #     and ATTR_COLOR_TEMP not in kwargs
-        # ):
+
         commands += [{"code": DPCODE_SWITCH, "value": True}]
 
         if ATTR_BRIGHTNESS in kwargs:

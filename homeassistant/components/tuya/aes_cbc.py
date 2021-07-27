@@ -4,7 +4,7 @@
 import base64 as b64
 from binascii import a2b_hex, b2a_hex
 import json
-import random
+import secrets
 
 from Crypto.Cipher import AES
 
@@ -20,7 +20,7 @@ class AesCBC:
         """Return random 16."""
         str = ""
         return str.join(
-            random.choice("abcdefghijklmnopqrstuvwxyz!@#$%^&*1234567890")
+            secrets.choice("abcdefghijklmnopqrstuvwxyz!@#$%^&*1234567890")
             for i in range(16)
         )
 

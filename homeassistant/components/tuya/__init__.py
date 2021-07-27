@@ -94,7 +94,7 @@ def entry_decrypt(hass: HomeAssistant, entry: ConfigEntry, init_entry_data):
         c_xor_entry = aes.xor_encrypt(c, access_id_entry)
         # account info encrypted with AES-CBC
         user_input_encrpt = aes.cbc_encrypt(
-            cbc_key, cbc_iv, json.dumps(init_entry_data)
+            cbc_key, cbc_iv, json.dumps(dict(init_entry_data))
         )
         # update old account info
         hass.config_entries.async_update_entry(

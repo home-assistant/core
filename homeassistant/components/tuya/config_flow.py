@@ -67,8 +67,8 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.project_type = ProjectType.SMART_HOME
         self.is_import = False
 
-    @classmethod
-    def _try_login(cls, user_input):
+    @staticmethod
+    def _try_login(user_input):
         _LOGGER.info(f"TuyaConfigFlow._try_login start, user_input: {user_input}")
         project_type = ProjectType(user_input[CONF_PROJECT_TYPE])
         api = TuyaOpenAPI(
