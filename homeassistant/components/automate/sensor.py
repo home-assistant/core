@@ -81,6 +81,7 @@ class AutomateSignal(AutomateBase):
 
     device_class = DEVICE_CLASS_SIGNAL_STRENGTH
     unit_of_measurement = "dB"
+    entity_registry_enabled_default = False
 
     @property
     def name(self):
