@@ -212,6 +212,8 @@ class PeekIterator(Iterator):
         """Initialize PeekIterator."""
         self._iterator = iterator
         self._buffer: deque[av.Packet] = deque()
+        # A pointer to either _iterator or _buffer
+        self._next = self._iterator.__next__
 
     def __iter__(self) -> Iterator:
         """Return an iterator."""
@@ -219,14 +221,21 @@ class PeekIterator(Iterator):
 
     def __next__(self) -> av.Packet:
         """Return and consume the next item available."""
+        return self._next()
+
+    def _pop_buffer(self) -> av.Packet:
+        """Consume items from the buffer until exhausted."""
         if self._buffer:
             return self._buffer.popleft()
-        return next(self._iterator)
+        # The buffer is empty, so change to consume from the iterator
+        self._next = self._iterator.__next__
+        return self._next()
 
     def peek(self) -> Generator[av.Packet, None, None]:
         """Return items without consuming from the iterator."""
         # Items consumed are added to a buffer for future calls to __next__
         # or peek. First iterate over the buffer from previous calls to peek.
+        self._next = self._pop_buffer
         for packet in self._buffer:
             yield packet
         for packet in self._iterator:
