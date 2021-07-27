@@ -173,8 +173,9 @@ class HlsInitView(StreamView):
         track = stream.add_provider(HLS_PROVIDER)
         if not (segments := track.get_segments()):
             return web.HTTPNotFound()
-        headers = {"Content-Type": "video/mp4"}
-        return web.Response(body=segments[0].init, headers=headers)
+        return web.Response(
+            body=segments[0].init, headers={"Content-Type": "video/mp4"}
+        )
 
 
 class HlsSegmentView(StreamView):

@@ -9,8 +9,24 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "Add meg a Sentry DSN-t",
                 "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "A k\u00f6rnyezet v\u00e1laszthat\u00f3 neve.",
+                    "event_custom_components": "Esem\u00e9nyek k\u00fcld\u00e9se egy\u00e9ni \u00f6sszetev\u0151kb\u0151l",
+                    "event_handled": "K\u00fcldj\u00f6n kezelt esem\u00e9nyeket",
+                    "event_third_party_packages": "K\u00fcldj\u00f6n esem\u00e9nyeket harmadik f\u00e9l csomagjaib\u00f3l",
+                    "tracing": "Enged\u00e9lyezze a teljes\u00edtm\u00e9nyk\u00f6vet\u00e9st"
+                }
             }
         }
     }

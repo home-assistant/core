@@ -128,18 +128,13 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             value: key for key, value in self._hvac_mode_to_deconz.items()
         }
 
-        self._features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
 
         if "fanmode" in device.raw["config"]:
-            self._features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= SUPPORT_FAN_MODE
 
         if "preset" in device.raw["config"]:
-            self._features |= SUPPORT_PRESET_MODE
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._features
+            self._attr_supported_features |= SUPPORT_PRESET_MODE
 
     # Fan control
 

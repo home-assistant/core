@@ -2,11 +2,15 @@
 import asyncio
 from uuid import UUID
 
-from simplipy import API
-from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
+from simplipy import get_api
+from simplipy.errors import (
+    EndpointUnavailableError,
+    InvalidCredentialsError,
+    SimplipyError,
+)
 import voluptuous as vol
 
-from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -40,8 +44,6 @@ from .const import (
     LOGGER,
     VOLUMES,
 )
-
-DATA_LISTENER = "listener"
 
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
@@ -107,14 +109,6 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-@callback
-def _async_save_refresh_token(hass, config_entry, token):
-    """Save a refresh token to the config entry."""
-    hass.config_entries.async_update_entry(
-        config_entry, data={**config_entry.data, CONF_TOKEN: token}
-    )
-
-
 async def async_get_client_id(hass):
     """Get a client ID (based on the HASS unique ID) for the SimpliSafe API.
 
@@ -136,15 +130,13 @@ async def async_register_base_station(hass, system, config_entry_id):
     )
 
 
-async def async_setup(hass, config):
-    """Set up the SimpliSafe component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
-    return True
-
-
 async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
+    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = []
+
+    if CONF_PASSWORD not in config_entry.data:
+        raise ConfigEntryAuthFailed("Config schema change requires re-authentication")
 
     entry_updates = {}
     if not config_entry.unique_id:
@@ -168,19 +160,19 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        api = await API.login_via_token(
-            config_entry.data[CONF_TOKEN], client_id=client_id, session=websession
+        api = await get_api(
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            client_id=client_id,
+            session=websession,
         )
-    except InvalidCredentialsError:
-        LOGGER.error("Invalid credentials provided")
-        return False
+    except InvalidCredentialsError as err:
+        raise ConfigEntryAuthFailed from err
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    _async_save_refresh_token(hass, config_entry, api.refresh_token)
-
-    simplisafe = SimpliSafe(hass, api, config_entry)
+    simplisafe = SimpliSafe(hass, config_entry, api)
 
     try:
         await simplisafe.async_init()
@@ -269,7 +261,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             LOGGER.error("Error during service call: %s", err)
             return
 
-    for service, method, schema in [
+    for service, method, schema in (
         ("clear_notifications", clear_notifications, None),
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
@@ -278,12 +270,10 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             set_system_properties,
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),
-    ]:
+    ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id].append(
-        config_entry.add_update_listener(async_reload_entry)
-    )
+    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -293,8 +283,6 @@ async def async_unload_entry(hass, entry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
-            remove_listener()
 
     return unload_ok
 
@@ -307,10 +295,9 @@ async def async_reload_entry(hass, config_entry):
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass, api, config_entry):
+    def __init__(self, hass, config_entry, api):
         """Initialize."""
         self._api = api
-        self._emergency_refresh_token_used = False
         self._hass = hass
         self._system_notifications = {}
         self.config_entry = config_entry
@@ -387,25 +374,9 @@ class SimpliSafe:
 
         for result in results:
             if isinstance(result, InvalidCredentialsError):
-                if self._emergency_refresh_token_used:
-                    raise ConfigEntryAuthFailed(
-                        "Update failed with stored refresh token"
-                    )
+                raise ConfigEntryAuthFailed("Invalid credentials") from result
 
-                LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
-                self._emergency_refresh_token_used = True
-
-                try:
-                    await self._api.refresh_access_token(
-                        self.config_entry.data[CONF_TOKEN]
-                    )
-                    return
-                except SimplipyError as err:
-                    raise UpdateFailed(  # pylint: disable=raise-missing-from
-                        f"Error while using stored refresh token: {err}"
-                    )
-
-            if isinstance(result, EndpointUnavailable):
+            if isinstance(result, EndpointUnavailableError):
                 # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):
@@ -414,16 +385,6 @@ class SimpliSafe:
             if isinstance(result, SimplipyError):
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
-        if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:
-            _async_save_refresh_token(
-                self._hass, self.config_entry, self._api.refresh_token
-            )
-
-        # If we've reached this point using an emergency refresh token, we're in the
-        # clear and we can discard it:
-        if self._emergency_refresh_token_used:
-            self._emergency_refresh_token_used = False
-
 
 class SimpliSafeEntity(CoordinatorEntity):
     """Define a base SimpliSafe entity."""
@@ -431,25 +392,25 @@ class SimpliSafeEntity(CoordinatorEntity):
     def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
         super().__init__(simplisafe.coordinator)
-        self._name = name
-        self._online = True
-        self._simplisafe = simplisafe
-        self._system = system
 
         if serial:
             self._serial = serial
         else:
             self._serial = system.serial
 
-        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
-
-        self._device_info = {
+        self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, system.system_id)},
             "manufacturer": "SimpliSafe",
             "model": system.version,
             "name": name,
             "via_device": (DOMAIN, system.serial),
         }
+        self._attr_name = f"{system.address} {name}"
+        self._attr_unique_id = self._serial
+        self._online = True
+        self._simplisafe = simplisafe
+        self._system = system
 
     @property
     def available(self):
@@ -459,27 +420,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         # the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
-        return not (self._system.version == 3 and self._system.offline) and self._online
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return self._device_info
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return f"{self._system.address} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._serial
+        return (
+            super().available
+            and self._online
+            and not (self._system.version == 3 and self._system.offline)
+        )
 
     @callback
     def _handle_coordinator_update(self):
@@ -504,15 +449,12 @@ class SimpliSafeBaseSensor(SimpliSafeEntity):
     def __init__(self, simplisafe, system, sensor):
         """Initialize."""
         super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
-        self._device_info["model"] = sensor.type.name
-        self._device_info["name"] = sensor.name
-        self._sensor = sensor
-        self._sensor_type_human_name = " ".join(
-            [w.title() for w in self._sensor.type.name.split("_")]
-        )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._system.address} {self._name} {self._sensor_type_human_name}"
+        self._attr_device_info["identifiers"] = {(DOMAIN, sensor.serial)}
+        self._attr_device_info["model"] = sensor.type.name
+        self._attr_device_info["name"] = sensor.name
+
+        human_friendly_name = " ".join([w.title() for w in sensor.type.name.split("_")])
+        self._attr_name = f"{super().name} {human_friendly_name}"
+
+        self._sensor = sensor

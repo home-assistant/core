@@ -112,8 +112,8 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {"client": client, "state_proxy": state_proxy, "name": name}
 
-    for vallox_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[vallox_service]["schema"]
+    for vallox_service, method in SERVICE_TO_METHOD.items():
+        schema = method["schema"]
         hass.services.async_register(
             DOMAIN, vallox_service, service_handler.async_handle, schema=schema
         )

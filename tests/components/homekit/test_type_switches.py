@@ -84,7 +84,6 @@ async def test_outlet_set_state(hass, hk_driver, events):
         ("automation.test", {}),
         ("input_boolean.test", {}),
         ("remote.test", {}),
-        ("script.test", {}),
         ("switch.test", {}),
     ],
 )
@@ -340,8 +339,9 @@ async def test_reset_switch(hass, hk_driver, events):
     assert len(events) == 1
 
 
-async def test_reset_switch_reload(hass, hk_driver, events):
-    """Test reset switch after script reload."""
+async def test_script_switch(hass, hk_driver, events):
+    """Test if script switch accessory is reset correctly."""
+    domain = "script"
     entity_id = "script.test"
 
     hass.states.async_set(entity_id, None)
@@ -350,8 +350,28 @@ async def test_reset_switch_reload(hass, hk_driver, events):
     await acc.run()
     await hass.async_block_till_done()
 
-    assert acc.activate_only is False
+    assert acc.activate_only is True
+    assert acc.char_on.value is False
 
-    hass.states.async_set(entity_id, None)
+    call_turn_on = async_mock_service(hass, domain, "test")
+    call_turn_off = async_mock_service(hass, domain, "turn_off")
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is True
+    assert call_turn_on
+    assert call_turn_on[0].data == {}
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    future = dt_util.utcnow() + timedelta(seconds=1)
+    async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
+    assert len(events) == 1
+    assert not call_turn_off
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is False
+    assert len(events) == 1

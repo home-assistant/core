@@ -14,6 +14,7 @@ import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.common import init_recorder_component
 from tests.components.recorder.common import trigger_db_commit, wait_recording_done
@@ -829,23 +830,46 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     assert response_json[1][0]["entity_id"] == "light.cow"
 
 
-async def test_statistics_during_period(hass, hass_ws_client):
+POWER_SENSOR_ATTRIBUTES = {
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit_of_measurement": "kW",
+}
+PRESSURE_SENSOR_ATTRIBUTES = {
+    "device_class": "pressure",
+    "state_class": "measurement",
+    "unit_of_measurement": "hPa",
+}
+TEMPERATURE_SENSOR_ATTRIBUTES = {
+    "device_class": "temperature",
+    "state_class": "measurement",
+    "unit_of_measurement": "°C",
+}
+
+
+@pytest.mark.parametrize(
+    "units, attributes, state, value",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
+    ],
+)
+async def test_statistics_during_period(
+    hass, hass_ws_client, units, attributes, state, value
+):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
+    hass.config.units = units
     await hass.async_add_executor_job(init_recorder_component, hass)
-    await async_setup_component(
-        hass,
-        "history",
-        {"history": {}},
-    )
+    await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
-    hass.states.async_set(
-        "sensor.test",
-        10,
-        attributes={"device_class": "temperature", "state_class": "measurement"},
-    )
+    hass.states.async_set("sensor.test", state, attributes=attributes)
     await hass.async_block_till_done()
 
     await hass.async_add_executor_job(trigger_db_commit, hass)
@@ -861,12 +885,12 @@ async def test_statistics_during_period(hass, hass_ws_client):
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "end_time": now.isoformat(),
-            "statistic_id": "sensor.test",
+            "statistic_ids": ["sensor.test"],
         }
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"statistics": {}}
+    assert response["result"] == {}
 
     client = await hass_ws_client()
     await client.send_json(
@@ -874,26 +898,24 @@ async def test_statistics_during_period(hass, hass_ws_client):
             "id": 1,
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
-            "statistic_id": "sensor.test",
+            "statistic_ids": ["sensor.test"],
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "statistics": {
-            "sensor.test": [
-                {
-                    "statistic_id": "sensor.test",
-                    "start": now.isoformat(),
-                    "mean": approx(10.0),
-                    "min": approx(10.0),
-                    "max": approx(10.0),
-                    "last_reset": None,
-                    "state": None,
-                    "sum": None,
-                }
-            ]
-        }
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": now.isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
     }
 
 
@@ -944,3 +966,79 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_end_time"
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
+    ],
+)
+async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit):
+    """Test list_statistic_ids."""
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {"history": {}})
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+    ]
+
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    # Remove the state, statistics will now be fetched from the database
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 3, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+    ]
+
+    await client.send_json(
+        {"id": 4, "type": "history/list_statistic_ids", "statistic_type": "dogs"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json(
+        {"id": 5, "type": "history/list_statistic_ids", "statistic_type": "mean"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+    ]
+
+    await client.send_json(
+        {"id": 6, "type": "history/list_statistic_ids", "statistic_type": "sum"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []

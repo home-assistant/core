@@ -3,8 +3,8 @@
     "on": true,
     "bri": 140,
     "transition": 7,
-    "ps": -1,
-    "pl": -1,
+    "ps": 1,
+    "pl": 3,
     "nl": {
       "on": false,
       "dur": 60,
@@ -200,5 +200,198 @@
     "Orangery",
     "C9",
     "Sakura"
-  ]
+  ],
+  "presets": {
+    "0": {},
+    "1": {
+      "on": false,
+      "bri": 255,
+      "transition": 7,
+      "mainseg": 0,
+      "seg": [
+        {
+          "id": 0,
+          "start": 0,
+          "stop": 13,
+          "grp": 1,
+          "spc": 0,
+          "on": true,
+          "bri": 255,
+          "col": [
+            [
+              97,
+              144,
+              255
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "fx": 9,
+          "sx": 183,
+          "ix": 255,
+          "pal": 1,
+          "sel": true,
+          "rev": false,
+          "mi": false
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        }
+      ],
+      "n": "Preset 1"
+    },
+    "2": {
+      "on": false,
+      "bri": 255,
+      "transition": 7,
+      "mainseg": 0,
+      "seg": [
+        {
+          "id": 0,
+          "start": 0,
+          "stop": 13,
+          "grp": 1,
+          "spc": 0,
+          "on": true,
+          "bri": 255,
+          "col": [
+            [
+              97,
+              144,
+              255
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "fx": 9,
+          "sx": 183,
+          "ix": 255,
+          "pal": 1,
+          "sel": true,
+          "rev": false,
+          "mi": false
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        },
+        {
+          "stop": 0
+        }
+      ],
+      "n": "Preset 2"
+    },
+    "3": {
+      "playlist": {
+          "ps": [
+              1,
+              2
+          ],
+          "dur": [
+              30,
+              30
+          ],
+          "transition": [
+              7,
+              7
+          ],
+          "repeat": 0,
+          "r": false,
+          "end": 0
+      },
+      "n": "Playlist 1"
+    },
+    "4": {
+      "playlist": {
+          "ps": [
+              1,
+              2
+          ],
+          "dur": [
+              30,
+              30
+          ],
+          "transition": [
+              7,
+              7
+          ],
+          "repeat": 0,
+          "r": false,
+          "end": 0
+      },
+      "n": "Playlist 2"
+    }
+  }
 }

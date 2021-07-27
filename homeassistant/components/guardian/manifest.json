@@ -3,7 +3,7 @@
   "name": "Elexa Guardian",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/guardian",
-  "requirements": ["aioguardian==1.0.4"],
+  "requirements": ["aioguardian==1.0.8"],
   "zeroconf": ["_api._udp.local."],
   "codeowners": ["@bachya"],
   "iot_class": "local_polling",

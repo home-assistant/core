@@ -53,9 +53,9 @@ EXTENDED_SENSOR_TYPE_MAPPING = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Flu Near You sensors based on a config entry."""
-    coordinators = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
+    coordinators = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
     sensors = []
 
@@ -63,7 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors.append(
             CdcSensor(
                 coordinators[CATEGORY_CDC_REPORT],
-                config_entry,
+                entry,
                 sensor_type,
                 name,
                 icon,
@@ -75,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors.append(
             UserSensor(
                 coordinators[CATEGORY_USER_REPORT],
-                config_entry,
+                entry,
                 sensor_type,
                 name,
                 icon,
@@ -89,49 +89,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     """Define a base Flu Near You sensor."""
 
-    def __init__(self, coordinator, config_entry, sensor_type, name, icon, unit):
+    def __init__(self, coordinator, entry, sensor_type, name, icon, unit):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._config_entry = config_entry
-        self._icon = icon
-        self._name = name
-        self._sensor_type = sensor_type
-        self._state = None
-        self._unit = unit
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return (
-            f"{self._config_entry.data[CONF_LATITUDE]},"
-            f"{self._config_entry.data[CONF_LONGITUDE]}_{self._sensor_type}"
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_icon = icon
+        self._attr_name = name
+        self._attr_unique_id = (
+            f"{entry.data[CONF_LATITUDE]},"
+            f"{entry.data[CONF_LONGITUDE]}_{sensor_type}"
         )
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
+        self._attr_unit_of_measurement = unit
+        self._entry = entry
+        self._sensor_type = sensor_type
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -156,13 +126,13 @@ class CdcSensor(FluNearYouSensor):
     @callback
     def update_from_latest_data(self):
         """Update the sensor."""
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_REPORTED_DATE: self.coordinator.data["week_date"],
                 ATTR_STATE: self.coordinator.data["name"],
             }
         )
-        self._state = self.coordinator.data[self._sensor_type]
+        self._attr_state = self.coordinator.data[self._sensor_type]
 
 
 class UserSensor(FluNearYouSensor):
@@ -171,7 +141,7 @@ class UserSensor(FluNearYouSensor):
     @callback
     def update_from_latest_data(self):
         """Update the sensor."""
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: self.coordinator.data["local"]["city"].split("(")[0],
                 ATTR_REPORTED_LATITUDE: self.coordinator.data["local"]["latitude"],
@@ -186,15 +156,15 @@ class UserSensor(FluNearYouSensor):
         elif self._sensor_type in EXTENDED_SENSOR_TYPE_MAPPING:
             states_key = EXTENDED_SENSOR_TYPE_MAPPING[self._sensor_type]
 
-        self._attrs[ATTR_STATE_REPORTS_THIS_WEEK] = self.coordinator.data["state"][
-            "data"
-        ][states_key]
-        self._attrs[ATTR_STATE_REPORTS_LAST_WEEK] = self.coordinator.data["state"][
-            "last_week_data"
-        ][states_key]
+        self._attr_extra_state_attributes[
+            ATTR_STATE_REPORTS_THIS_WEEK
+        ] = self.coordinator.data["state"]["data"][states_key]
+        self._attr_extra_state_attributes[
+            ATTR_STATE_REPORTS_LAST_WEEK
+        ] = self.coordinator.data["state"]["last_week_data"][states_key]
 
         if self._sensor_type == SENSOR_TYPE_USER_TOTAL:
-            self._state = sum(
+            self._attr_state = sum(
                 v
                 for k, v in self.coordinator.data["local"].items()
                 if k
@@ -207,4 +177,4 @@ class UserSensor(FluNearYouSensor):
                 )
             )
         else:
-            self._state = self.coordinator.data["local"][self._sensor_type]
+            self._attr_state = self.coordinator.data["local"][self._sensor_type]

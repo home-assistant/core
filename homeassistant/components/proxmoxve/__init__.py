@@ -124,6 +124,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
             except ConnectTimeout:
                 _LOGGER.warning("Connection to host %s timed out during setup", host)
                 continue
+            except requests.exceptions.ConnectionError:
+                _LOGGER.warning("Host %s is not reachable", host)
+                continue
 
             hass.data[PROXMOX_CLIENTS][host] = proxmox_client
 

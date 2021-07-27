@@ -69,6 +69,11 @@ class EcobeeHumidifier(HumidifierEntity):
             "model": model,
         }
 
+    @property
+    def available(self):
+        """Return if device is available."""
+        return self.thermostat["runtime"]["connected"]
+
     async def async_update(self):
         """Get the latest state from the thermostat."""
         if self.update_without_throttle:

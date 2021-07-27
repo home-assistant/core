@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "api_ratelimit": "Limite de d\u00e9bit API d\u00e9pass\u00e9e",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "Code pays"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Token d'acc\u00e8s"
+                }
+            }
+        }
+    }
+}

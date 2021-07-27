@@ -511,7 +511,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     if any(
         k in config
-        for k in [
+        for k in (
             CONF_LATITUDE,
             CONF_LONGITUDE,
             CONF_NAME,
@@ -520,7 +520,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
-        ]
+        )
     ):
         hac.config_source = SOURCE_YAML
 
@@ -899,7 +899,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     This method is a coroutine.
     """
     # pylint: disable=import-outside-toplevel
-    import homeassistant.helpers.check_config as check_config
+    from homeassistant.helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
 

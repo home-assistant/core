@@ -2,9 +2,7 @@
 import logging
 
 from pyvesync import VeSync
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -25,42 +23,7 @@ PLATFORMS = ["switch", "fan", "light"]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass, config):
-    """Set up the VeSync component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
-        return True
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: conf[CONF_USERNAME],
-                    CONF_PASSWORD: conf[CONF_PASSWORD],
-                },
-            )
-        )
-
-    return True
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup_entry(hass, config_entry):

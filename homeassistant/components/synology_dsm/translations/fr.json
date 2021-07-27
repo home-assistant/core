@@ -29,6 +29,13 @@
                 "description": "Voulez-vous configurer {name} ({host})?",
                 "title": "Synology DSM"
             },
+            "reauth": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Raison: {details}"
+            },
             "user": {
                 "data": {
                     "host": "Nom d'h\u00f4te ou adresse IP",

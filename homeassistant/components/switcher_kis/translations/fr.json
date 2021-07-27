@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau"
+        },
+        "step": {
+            "confirm": {
+                "description": "Voulez-vous commencer l'installation ?"
+            }
+        }
+    }
+}

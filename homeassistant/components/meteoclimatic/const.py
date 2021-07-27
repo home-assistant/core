@@ -34,8 +34,10 @@ from homeassistant.const import (
 )
 
 DOMAIN = "meteoclimatic"
-PLATFORMS = ["weather"]
+PLATFORMS = ["sensor", "weather"]
 ATTRIBUTION = "Data provided by Meteoclimatic"
+MODEL = "Meteoclimatic RSS feed"
+MANUFACTURER = "Meteoclimatic"
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -54,12 +56,12 @@ SENSOR_TYPES = {
         SENSOR_TYPE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
     "temp_max": {
-        SENSOR_TYPE_NAME: "Max Temp.",
+        SENSOR_TYPE_NAME: "Daily Max Temperature",
         SENSOR_TYPE_UNIT: TEMP_CELSIUS,
         SENSOR_TYPE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
     "temp_min": {
-        SENSOR_TYPE_NAME: "Min Temp.",
+        SENSOR_TYPE_NAME: "Daily Min Temperature",
         SENSOR_TYPE_UNIT: TEMP_CELSIUS,
         SENSOR_TYPE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
@@ -69,12 +71,12 @@ SENSOR_TYPES = {
         SENSOR_TYPE_CLASS: DEVICE_CLASS_HUMIDITY,
     },
     "humidity_max": {
-        SENSOR_TYPE_NAME: "Max Humidity",
+        SENSOR_TYPE_NAME: "Daily Max Humidity",
         SENSOR_TYPE_UNIT: PERCENTAGE,
         SENSOR_TYPE_CLASS: DEVICE_CLASS_HUMIDITY,
     },
     "humidity_min": {
-        SENSOR_TYPE_NAME: "Min Humidity",
+        SENSOR_TYPE_NAME: "Daily Min Humidity",
         SENSOR_TYPE_UNIT: PERCENTAGE,
         SENSOR_TYPE_CLASS: DEVICE_CLASS_HUMIDITY,
     },
@@ -84,12 +86,12 @@ SENSOR_TYPES = {
         SENSOR_TYPE_CLASS: DEVICE_CLASS_PRESSURE,
     },
     "pressure_max": {
-        SENSOR_TYPE_NAME: "Max Pressure",
+        SENSOR_TYPE_NAME: "Daily Max Pressure",
         SENSOR_TYPE_UNIT: PRESSURE_HPA,
         SENSOR_TYPE_CLASS: DEVICE_CLASS_PRESSURE,
     },
     "pressure_min": {
-        SENSOR_TYPE_NAME: "Min Pressure",
+        SENSOR_TYPE_NAME: "Daily Min Pressure",
         SENSOR_TYPE_UNIT: PRESSURE_HPA,
         SENSOR_TYPE_CLASS: DEVICE_CLASS_PRESSURE,
     },
@@ -99,7 +101,7 @@ SENSOR_TYPES = {
         SENSOR_TYPE_ICON: "mdi:weather-windy",
     },
     "wind_max": {
-        SENSOR_TYPE_NAME: "Max Wind Speed",
+        SENSOR_TYPE_NAME: "Daily Max Wind Speed",
         SENSOR_TYPE_UNIT: SPEED_KILOMETERS_PER_HOUR,
         SENSOR_TYPE_ICON: "mdi:weather-windy",
     },
@@ -109,9 +111,9 @@ SENSOR_TYPES = {
         SENSOR_TYPE_ICON: "mdi:weather-windy",
     },
     "rain": {
-        SENSOR_TYPE_NAME: "Rain",
+        SENSOR_TYPE_NAME: "Daily Precipitation",
         SENSOR_TYPE_UNIT: LENGTH_MILLIMETERS,
-        SENSOR_TYPE_ICON: "mdi:weather-rainy",
+        SENSOR_TYPE_ICON: "mdi:cup-water",
     },
 }
 

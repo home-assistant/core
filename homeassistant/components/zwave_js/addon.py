@@ -12,6 +12,7 @@ from homeassistant.components.hassio import (
     async_get_addon_discovery_info,
     async_get_addon_info,
     async_install_addon,
+    async_restart_addon,
     async_set_addon_options,
     async_start_addon,
     async_stop_addon,
@@ -89,6 +90,7 @@ class AddonManager:
         """Set up the add-on manager."""
         self._hass = hass
         self._install_task: asyncio.Task | None = None
+        self._restart_task: asyncio.Task | None = None
         self._start_task: asyncio.Task | None = None
         self._update_task: asyncio.Task | None = None
 
@@ -222,6 +224,11 @@ class AddonManager:
         """Start the Z-Wave JS add-on."""
         await async_start_addon(self._hass, ADDON_SLUG)
 
+    @api_error("Failed to restart the Z-Wave JS add-on")
+    async def async_restart_addon(self) -> None:
+        """Restart the Z-Wave JS add-on."""
+        await async_restart_addon(self._hass, ADDON_SLUG)
+
     @callback
     def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
         """Schedule a task that starts the Z-Wave JS add-on.
@@ -234,6 +241,19 @@ class AddonManager:
                 self.async_start_addon, catch_error=catch_error
             )
         return self._start_task
+
+    @callback
+    def async_schedule_restart_addon(self, catch_error: bool = False) -> asyncio.Task:
+        """Schedule a task that restarts the Z-Wave JS add-on.
+
+        Only schedule a new restart task if the there's no running task.
+        """
+        if not self._restart_task or self._restart_task.done():
+            LOGGER.info("Restarting Z-Wave JS add-on")
+            self._restart_task = self._async_schedule_addon_operation(
+                self.async_restart_addon, catch_error=catch_error
+            )
+        return self._restart_task
 
     @api_error("Failed to stop the Z-Wave JS add-on")
     async def async_stop_addon(self) -> None:

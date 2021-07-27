@@ -54,6 +54,8 @@ from .const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_X_COILS,
+    CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
@@ -69,7 +71,9 @@ from .const import (
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
     CONF_REVERSE_ORDER,
+    CONF_RTUOVERTCP,
     CONF_SCALE,
+    CONF_SERIAL,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -86,25 +90,31 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
+    CONF_TCP,
+    CONF_UDP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
+    DATA_TYPE_FLOAT16,
+    DATA_TYPE_FLOAT32,
+    DATA_TYPE_FLOAT64,
     DATA_TYPE_INT,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT64,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT64,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_STRUCTURE_PREFIX,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
 )
 from .modbus import async_modbus_setup
-from .validators import (
-    number_validator,
-    scan_interval_validator,
-    sensor_schema_validator,
-)
+from .validators import number_validator, scan_interval_validator, struct_validator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,9 +141,19 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_REGISTER_INPUT,
             ]
         ),
-        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_COUNT): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
             [
+                DATA_TYPE_INT16,
+                DATA_TYPE_INT32,
+                DATA_TYPE_INT64,
+                DATA_TYPE_UINT16,
+                DATA_TYPE_UINT32,
+                DATA_TYPE_UINT64,
+                DATA_TYPE_FLOAT16,
+                DATA_TYPE_FLOAT32,
+                DATA_TYPE_FLOAT64,
+                DATA_TYPE_STRING,
                 DATA_TYPE_INT,
                 DATA_TYPE_UINT,
                 DATA_TYPE_FLOAT,
@@ -163,6 +183,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,
+                CALL_TYPE_X_COILS,
+                CALL_TYPE_X_REGISTER_HOLDINGS,
             ]
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
@@ -189,30 +211,13 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 
 CLIMATE_SCHEMA = vol.All(
     cv.deprecated(CONF_DATA_COUNT, replacement_key=CONF_COUNT),
-    BASE_COMPONENT_SCHEMA.extend(
+    BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-                [
-                    CALL_TYPE_REGISTER_HOLDING,
-                    CALL_TYPE_REGISTER_INPUT,
-                ]
-            ),
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-            vol.Optional(CONF_COUNT, default=2): cv.positive_int,
-            vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
-                [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
-            ),
-            vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
-            vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-            vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
             vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
-            vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
-                [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
-            ),
         }
     ),
 )
@@ -279,11 +284,13 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
-        vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATE_SCHEMA]),
+        vol.Optional(CONF_CLIMATES): vol.All(
+            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, struct_validator)]
+        ),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, sensor_schema_validator)]
+            cv.ensure_list, [vol.All(SENSOR_SCHEMA, struct_validator)]
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
@@ -292,7 +299,7 @@ MODBUS_SCHEMA = vol.Schema(
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): "serial",
+        vol.Required(CONF_TYPE): CONF_SERIAL,
         vol.Required(CONF_BAUDRATE): cv.positive_int,
         vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
         vol.Required(CONF_METHOD): vol.Any("rtu", "ascii"),
@@ -306,7 +313,7 @@ ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp"),
+        vol.Required(CONF_TYPE): vol.Any(CONF_TCP, CONF_UDP, CONF_RTUOVERTCP),
     }
 )
 

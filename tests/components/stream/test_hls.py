@@ -264,7 +264,6 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
-
     for i in range(2):
         segment = Segment(sequence=i, duration=SEGMENT_DURATION, start_time=FAKE_TIME)
         hls.put(segment)

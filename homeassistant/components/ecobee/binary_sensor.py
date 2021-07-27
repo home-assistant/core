@@ -81,6 +81,12 @@ class EcobeeBinarySensor(BinarySensorEntity):
         return None
 
     @property
+    def available(self):
+        """Return true if device is available."""
+        thermostat = self.data.ecobee.get_thermostat(self.index)
+        return thermostat["runtime"]["connected"]
+
+    @property
     def is_on(self):
         """Return the status of the sensor."""
         return self._state == "true"
