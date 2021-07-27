@@ -36,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utc_from_timestamp
 
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
@@ -115,6 +116,8 @@ async def async_setup_entry(
 
 class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
+
+    _attr_last_reset = utc_from_timestamp(0)
 
     @property
     def force_update(self) -> bool:
