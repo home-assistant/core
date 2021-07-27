@@ -35,14 +35,14 @@ SCAN_INTERVAL = timedelta(hours=12)
 class RovaSensorEntityDescription(SensorEntityDescription):
     """Metadata for an individual rova sensor."""
 
-    json_key: str | None = None
+    json_key_required: str | None = None
 
     def __post_init__(self) -> None:
         """Check required keys are present."""
-        if self.json_key is None:
+        if self.json_key_required is None:
             # pragma: no cover
             raise TypeError
-        self._json_key = self.json_key
+        self.json_key = self.json_key_required
 
 
 SENSOR_TYPES: tuple[RovaSensorEntityDescription, ...] = (
@@ -50,25 +50,25 @@ SENSOR_TYPES: tuple[RovaSensorEntityDescription, ...] = (
         key="bio",
         name="Biowaste",
         icon="mdi:recycle",
-        json_key="gft",
+        json_key_required="gft",
     ),
     RovaSensorEntityDescription(
         key="paper",
         name="Paper",
         icon="mdi:recycle",
-        json_key="papier",
+        json_key_required="papier",
     ),
     RovaSensorEntityDescription(
         key="plastic",
         name="PET",
         icon="mdi:recycle",
-        json_key="pmd",
+        json_key_required="pmd",
     ),
     RovaSensorEntityDescription(
         key="residual",
         name="Residual",
         icon="mdi:recycle",
-        json_key="restafval",
+        json_key_required="restafval",
     ),
 )
 MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
@@ -152,7 +152,7 @@ class RovaSensor(SensorEntity):
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data_service.update()
-        pickup_date = self.data_service.data.get(self.entity_description._json_key)
+        pickup_date = self.data_service.data.get(self.entity_description.json_key)
         if pickup_date is not None:
             self._state = pickup_date.isoformat()
 
