@@ -1,9 +1,9 @@
 """Support for Tile device trackers."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, MutableMapping
+from collections.abc import Awaitable
 import logging
-from typing import Any, Callable, cast
+from typing import Any, Callable
 
 from pytile.tile import Tile
 
@@ -89,9 +89,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_name = tile.name
         self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{tile.uuid}"
         self._entry = entry
@@ -108,6 +106,8 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
 
         Value in meters.
         """
+        if not self._tile.accuracy:
+            return super().location_accuracy
         return int(self._tile.accuracy)
 
     @property
@@ -115,14 +115,14 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
         """Return latitude value of the device."""
         if not self._tile.latitude:
             return None
-        return cast(float, self._tile.latitude)
+        return self._tile.latitude
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         if not self._tile.longitude:
             return None
-        return cast(float, self._tile.longitude)
+        return self._tile.longitude
 
     @property
     def source_type(self) -> str:
