@@ -68,7 +68,7 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return the id of this entity."""
-        return f"{self.wemo.serialnumber}_{self._name_suffix}"
+        return f"{self.wemo.serialnumber}_{self._insight_params_key}"
 
     @property
     def available(self) -> str:
