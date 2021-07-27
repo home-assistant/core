@@ -5,8 +5,17 @@ from unittest.mock import patch
 
 from gios import ApiError
 
-from homeassistant.components.gios.const import ATTR_INDEX, ATTR_STATION, ATTRIBUTION
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.gios.const import (
+    ATTR_INDEX,
+    ATTR_STATION,
+    ATTRIBUTION,
+    DOMAIN,
+)
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ICON,
@@ -352,3 +361,22 @@ async def test_aqi_sensor_availability(hass):
         state = hass.states.get("sensor.home_aqi")
         assert state
         assert state.state == STATE_UNAVAILABLE
+
+
+async def test_unique_id_migration(hass):
+    """Test states of the unique_id migration."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "123-pm2.5",
+        suggested_object_id="home_pm2_5",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("sensor.home_pm2_5")
+    assert entry
+    assert entry.unique_id == "123-pm25"
