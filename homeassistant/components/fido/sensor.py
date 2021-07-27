@@ -194,7 +194,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = []
     for number in fido_data.client.get_phone_numbers():
         for variable in config[CONF_MONITORED_VARIABLES]:
-            sensors.append(FidoSensor(fido_data, variable, name, number))
+            sensors.append(
+                FidoSensor(fido_data, variable, name, number, SENSOR_TYPES[variable])
+            )
 
     async_add_entities(sensors, True)
 
@@ -202,15 +204,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FidoSensor(SensorEntity):
     """Implementation of a Fido sensor."""
 
-    def __init__(self, fido_data, sensor_type, name, number):
+    def __init__(self, fido_data, sensor_type, name, number, entity_description):
         """Initialize the sensor."""
+        self.entity_description = entity_description
         self.client_name = name
         self._number = number
         self.type = sensor_type
-        metadata = SENSOR_TYPES[sensor_type]
-        self._attr_name = f"{self.client_name} {self._number} {metadata.key}"
-        self._attr_unit_of_measurement = metadata.unit_of_measurement
-        self._attr_icon = metadata.icon
+        self._attr_name = f"{self.client_name} {self._number} {entity_description.key}"
         self.fido_data = fido_data
         self._state = None
 
