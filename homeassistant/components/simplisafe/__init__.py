@@ -8,13 +8,16 @@ from uuid import UUID
 
 from simplipy import get_api
 from simplipy.api import API
-from simplipy.entity import Entity as SimplipyEntity
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
 )
-from simplipy.system import System, SystemNotification
+from simplipy.sensor.v2 import SensorV2
+from simplipy.sensor.v3 import SensorV3
+from simplipy.system import SystemNotification
+from simplipy.system.v2 import SystemV2
+from simplipy.system.v3 import SystemV3
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -127,7 +130,7 @@ async def async_get_client_id(hass: HomeAssistant) -> str:
 
 
 async def async_register_base_station(
-    hass: HomeAssistant, system: System, config_entry_id: str
+    hass: HomeAssistant, system: SystemV2 | SystemV3, config_entry_id: str
 ) -> None:
     """Register a new bridge."""
     device_registry = await dr.async_get_registry(hass)
@@ -223,7 +226,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async def decorator(call: ServiceCall) -> None:
             """Decorate."""
             system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
-            if system.version != 3:
+            if not isinstance(system, SystemV3):
                 LOGGER.error("Service only available on V3 systems")
                 return
             await coro(call)
@@ -265,7 +268,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     @_verify_domain_control
     async def set_system_properties(call: ServiceCall) -> None:
         """Set one or more system parameters."""
-        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        system = cast(SystemV3, simplisafe.systems[call.data[ATTR_SYSTEM_ID]])
         try:
             await system.set_properties(
                 {
@@ -317,13 +320,13 @@ class SimpliSafe:
         """Initialize."""
         self._api = api
         self._hass = hass
-        self._system_notifications: dict[int, SystemNotification] = {}
+        self._system_notifications: dict[int, set[SystemNotification]] = {}
         self.config_entry = config_entry
         self.coordinator: DataUpdateCoordinator | None = None
-        self.systems: dict[int, System] = {}
+        self.systems: dict[int, SystemV2 | SystemV3] = {}
 
     @callback
-    def _async_process_new_notifications(self, system: System) -> None:
+    def _async_process_new_notifications(self, system: SystemV2 | SystemV3) -> None:
         """Act on any new system notifications."""
         if self._hass.state != CoreState.running:
             # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
@@ -342,8 +345,6 @@ class SimpliSafe:
 
         LOGGER.debug("New system notifications: %s", to_add)
 
-        self._system_notifications[system.system_id].update(to_add)
-
         for notification in to_add:
             text = notification.text
             if notification.link:
@@ -358,6 +359,8 @@ class SimpliSafe:
                     ATTR_TIMESTAMP: notification.timestamp,
                 },
             )
+
+        self._system_notifications[system.system_id] = latest_notifications
 
     async def async_init(self) -> None:
         """Initialize the data class."""
@@ -382,7 +385,7 @@ class SimpliSafe:
     async def async_update(self) -> None:
         """Get updated data from SimpliSafe."""
 
-        async def async_update_system(system: System) -> None:
+        async def async_update_system(system: SystemV2 | SystemV3) -> None:
             """Update a system."""
             await system.update(cached=system.version != 3)
             self._async_process_new_notifications(system)
@@ -410,14 +413,14 @@ class SimpliSafeEntity(CoordinatorEntity):
     def __init__(
         self,
         simplisafe: SimpliSafe,
-        system: System,
+        system: SystemV2 | SystemV3,
         name: str,
         *,
         serial: str | None = None,
     ) -> None:
         """Initialize."""
-        coordinator = cast(DataUpdateCoordinator, simplisafe.coordinator)
-        super().__init__(coordinator)
+        assert simplisafe.coordinator
+        super().__init__(simplisafe.coordinator)
 
         if serial:
             self._serial = serial
@@ -448,11 +451,12 @@ class SimpliSafeEntity(CoordinatorEntity):
         # the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
-        return (
-            super().available
-            and self._online
-            and not (self._system.version == 3 and self._system.offline)
-        )
+        if isinstance(self._system, SystemV3):
+            system_offline = self._system.offline
+        else:
+            system_offline = False
+
+        return super().available and self._online and not system_offline
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -475,7 +479,10 @@ class SimpliSafeBaseSensor(SimpliSafeEntity):
     """Define a SimpliSafe base (binary) sensor."""
 
     def __init__(
-        self, simplisafe: SimpliSafe, system: System, sensor: SimplipyEntity
+        self,
+        simplisafe: SimpliSafe,
+        system: SystemV2 | SystemV3,
+        sensor: SensorV2 | SensorV3,
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)

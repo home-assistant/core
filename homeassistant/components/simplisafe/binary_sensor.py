@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from simplipy.entity import Entity as SimplipyEntity, EntityTypes
-from simplipy.system import System
+from simplipy.system.v2 import SystemV2
+from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
@@ -79,7 +80,7 @@ class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     def __init__(
         self,
         simplisafe: SimpliSafe,
-        system: System,
+        system: SystemV2 | SystemV3,
         sensor: SimplipyEntity,
         device_class: str,
     ) -> None:
@@ -100,7 +101,10 @@ class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     _attr_device_class = DEVICE_CLASS_BATTERY
 
     def __init__(
-        self, simplisafe: SimpliSafe, system: System, sensor: SimplipyEntity
+        self,
+        simplisafe: SimpliSafe,
+        system: SystemV2 | SystemV3,
+        sensor: SimplipyEntity,
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, sensor)

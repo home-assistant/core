@@ -1,7 +1,7 @@
 """Config flow to configure the SimpliSafe component."""
 from __future__ import annotations
 
-from typing import Any, Dict, cast
+from typing import Any
 
 from simplipy import get_api
 from simplipy.api import API
@@ -18,7 +18,7 @@ from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType
 
 from . import async_get_client_id
 from .const import DOMAIN, LOGGER
@@ -40,9 +40,9 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._code = None
-        self._password = None
-        self._username = None
+        self._code: str | None = None
+        self._password: str | None = None
+        self._username: str | None = None
 
     @staticmethod
     @callback
@@ -54,6 +54,9 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_simplisafe_api(self) -> API:
         """Get an authenticated SimpliSafe API client."""
+        assert self._username
+        assert self._password
+
         client_id = await async_get_client_id(self.hass)
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -96,11 +99,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_finish(
-        self,
-        user_input: dict | UndefinedType = UNDEFINED,
-    ) -> FlowResult:
+    async def async_step_finish(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle finish config entry setup."""
+        assert self._username
+
         existing_entry = await self.async_set_unique_id(self._username)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
@@ -108,9 +110,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
             )
             return self.async_abort(reason="reauth_successful")
-        return self.async_create_entry(
-            title=cast(str, self._username), data=cast(Dict[str, Any], user_input)
-        )
+        return self.async_create_entry(title=self._username, data=user_input)
 
     async def async_step_mfa(
         self, user_input: dict[str, Any] | None = None

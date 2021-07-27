@@ -5,7 +5,7 @@ from typing import Any
 
 from simplipy.errors import SimplipyError
 from simplipy.lock import Lock, LockStates
-from simplipy.system import System
+from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -41,7 +41,7 @@ async def async_setup_entry(
 class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     """Define a SimpliSafe lock."""
 
-    def __init__(self, simplisafe: SimpliSafe, system: System, lock: Lock) -> None:
+    def __init__(self, simplisafe: SimpliSafe, system: SystemV3, lock: Lock) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, lock.name, serial=lock.serial)
 

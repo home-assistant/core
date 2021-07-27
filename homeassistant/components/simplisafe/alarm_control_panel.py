@@ -4,7 +4,9 @@ from __future__ import annotations
 import re
 
 from simplipy.errors import SimplipyError
-from simplipy.system import System, SystemStates
+from simplipy.system import SystemStates
+from simplipy.system.v2 import SystemV2
+from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -66,7 +68,7 @@ async def async_setup_entry(
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, simplisafe: SimpliSafe, system: System) -> None:
+    def __init__(self, simplisafe: SimpliSafe, system: SystemV2 | SystemV3) -> None:
         """Initialize the SimpliSafe alarm."""
         super().__init__(simplisafe, system, "Alarm Control Panel")
 
@@ -159,7 +161,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        if self._system.version == 3:
+        if isinstance(self._system, SystemV3):
             self._attr_extra_state_attributes.update(
                 {
                     ATTR_ALARM_DURATION: self._system.alarm_duration,
