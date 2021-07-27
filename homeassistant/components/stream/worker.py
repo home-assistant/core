@@ -236,12 +236,6 @@ class PeekIterator(Iterator):
             self._buffer.append(packet)
             yield packet
 
-    def rewind(self) -> None:
-        """Rebuffer a single item, unconsuming it similar to peek()."""
-        assert self._cursor
-        self._buffer.appendleft(self._cursor)
-        self._cursor = None
-
 
 class TimestampValidator:
     """Validate ordering of timestamps for packets in a stream."""
@@ -358,15 +352,11 @@ def stream_worker(
         # Advance to the first keyframe for muxing, then rewind so the muxing
         # loop below can consume.
         first_keyframe = next(filter(is_keyframe, filter(is_video, container_packets)))
-        container_packets.rewind()
-
         # Deal with problem #1 above (bad first packet pts/dts) by recalculating
         # using pts/dts from second packet. Use the peek iterator to advance
         # without consuming from container_packets. Skip over the first keyframe
         # then use the duration from the second video packet to adjust dts.
-        peek_iter = filter(is_video, container_packets.peek())
-        next(peek_iter)  # Skip keyframe again
-        next_video_packet = next(peek_iter)
+        next_video_packet = next(filter(is_video, container_packets.peek()))
         start_dts = next_video_packet.dts - next_video_packet.duration
         first_keyframe.dts = first_keyframe.pts = start_dts
     except (av.AVError, StopIteration) as ex:
@@ -376,6 +366,10 @@ def stream_worker(
 
     segment_buffer.set_streams(video_stream, audio_stream)
     segment_buffer.reset(start_dts)
+
+    # Mux the first keyframe, then proceed through the rest of the packets
+    segment_buffer.mux_packet(first_keyframe)
+
     while not quit_event.is_set():
         try:
             packet = next(container_packets)
