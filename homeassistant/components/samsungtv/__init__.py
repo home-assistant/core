@@ -1,7 +1,9 @@
 """The Samsung TV integration."""
+from __future__ import annotations
+
 from functools import partial
 import socket
-from typing import Any, Dict
+from typing import Any
 
 import getmac
 import voluptuous as vol
@@ -89,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 @callback
-def _async_get_device_bridge(data: Dict[str, Any]) -> Any:
+def _async_get_device_bridge(data: dict[str, Any]) -> Any:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
         data[CONF_METHOD],
