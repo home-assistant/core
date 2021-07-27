@@ -30,11 +30,9 @@ class MelcloudSensorEntityDescription(SensorEntityDescription):
 
     def __post_init__(self) -> None:
         """Ensure all required fields are set."""
-        if self._value_fn is None:
-            # pragma: no cover
+        if self._value_fn is None:  # pragma: no cover
             raise TypeError
-        if self._enabled is None:
-            # pragma: no cover
+        if self._enabled is None:  # pragma: no cover
             raise TypeError
         self.value_fn = self._value_fn
         self.enabled = self._enabled
