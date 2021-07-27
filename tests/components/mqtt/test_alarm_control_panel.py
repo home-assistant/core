@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
@@ -124,6 +125,7 @@ async def test_update_state_via_state_topic(hass, mqtt_mock):
         STATE_ALARM_ARMED_HOME,
         STATE_ALARM_ARMED_AWAY,
         STATE_ALARM_ARMED_NIGHT,
+        STATE_ALARM_ARMED_VACATION,
         STATE_ALARM_ARMED_CUSTOM_BYPASS,
         STATE_ALARM_PENDING,
         STATE_ALARM_ARMING,
@@ -301,6 +303,59 @@ async def test_arm_night_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
     await common.async_alarm_arm_night(hass)
     mqtt_mock.async_publish.assert_called_once_with(
         "alarm/command", "ARM_NIGHT", 0, False
+    )
+
+
+async def test_arm_vacation_publishes_mqtt(hass, mqtt_mock):
+    """Test publishing of MQTT messages while armed."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    await common.async_alarm_arm_vacation(hass)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", "ARM_VACATION", 0, False
+    )
+
+
+async def test_arm_vacation_not_publishes_mqtt_with_invalid_code_when_req(
+    hass, mqtt_mock
+):
+    """Test not publishing of MQTT messages with invalid code.
+
+    When code_arm_required = True
+    """
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG_CODE,
+    )
+
+    call_count = mqtt_mock.async_publish.call_count
+    await common.async_alarm_arm_vacation(hass, "abcd")
+    assert mqtt_mock.async_publish.call_count == call_count
+
+
+async def test_arm_vacation_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
+    """Test publishing of MQTT messages.
+
+    When code_arm_required = False
+    """
+    config = copy.deepcopy(DEFAULT_CONFIG_CODE)
+    config[alarm_control_panel.DOMAIN]["code_arm_required"] = False
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        config,
+    )
+    await hass.async_block_till_done()
+
+    await common.async_alarm_arm_vacation(hass)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "alarm/command", "ARM_VACATION", 0, False
     )
 
 
