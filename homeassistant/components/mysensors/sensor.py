@@ -73,7 +73,7 @@ SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
     ],
     "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny", None, None],
     "V_FLOW": [LENGTH_METERS, "mdi:gauge", None, None],
-    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None, None, None],
+    "V_VOLUME": [VOLUME_CUBIC_METERS, None, None, None],
     "V_LEVEL": {
         "S_SOUND": [SOUND_PRESSURE_DB, "mdi:volume-high", None, None],
         "S_VIBRATION": [FREQUENCY_HERTZ, None, None, None],
