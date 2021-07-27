@@ -1,8 +1,8 @@
 """Tests for the Sonos Media Player platform."""
 from unittest.mock import PropertyMock
 
-from pysonos.exceptions import NotSupportedException
 import pytest
+from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sonos import DATA_SONOS, DOMAIN, media_player
 from homeassistant.const import STATE_IDLE
