@@ -61,7 +61,7 @@ async def async_setup_entry(
 
     sensors: list[GiosSensor | GiosAqiSensor] = []
 
-    for sensor in SENSOR_TYPES.keys():
+    for sensor in SENSOR_TYPES:
         if getattr(coordinator.data, sensor) is None:
             continue
         if sensor == ATTR_AQI:
