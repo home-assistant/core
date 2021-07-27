@@ -55,12 +55,17 @@ class CVCGraphCamera(Camera):
         self._service_id = service_id
         self._url = url
         self._name = name
+        self._last_image = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def _update_image(self):
+        response = requests.get(self._url, timeout=10)
+        self._last_image = response.content
+
     def camera_image(self) -> bytes:
         """Return bytes of camera image."""
-        response = requests.get(self._url, timeout=10)
-        return response.content
+        self._update_image()
+        return self._last_image
 
     @property
     def name(self):
