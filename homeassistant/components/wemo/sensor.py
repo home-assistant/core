@@ -9,7 +9,6 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import StateType
@@ -52,21 +51,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class InsightSensor(WemoSubscriptionEntity, SensorEntity):
     """Common base for WeMo Insight power sensors."""
 
-    def __init__(
-        self,
-        device: DeviceWrapper,
-        update_insight_params: Callable,
-        name_suffix: str,
-        device_class: str,
-        unit_of_measurement: str,
-    ) -> None:
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _name_suffix: str
+    _insight_params_key: str
+
+    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
         """Initialize the WeMo Insight power sensor."""
         super().__init__(device)
         self._update_insight_params = update_insight_params
-        self._name_suffix = name_suffix
-        self._attr_device_class = device_class
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_unit_of_measurement = unit_of_measurement
 
     @property
     def name(self) -> str:
@@ -76,7 +68,14 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return the id of this entity."""
-        return f"{self.wemo.serialnumber}_{self._name_suffix}"
+        return f"{self.wemo.serialnumber}_{self._insight_params_key}"
+
+    @property
+    def available(self) -> str:
+        """Return true if sensor is available."""
+        return (
+            self._insight_params_key in self.wemo.insight_params and super().available
+        )
 
     def _update(self, force_update=True) -> None:
         with self._wemo_exception_handler("update status"):
@@ -87,36 +86,27 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
 class InsightCurrentPower(InsightSensor):
     """Current instantaineous power consumption."""
 
-    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
-        """Initialize the WeMo Insight power sensor."""
-        super().__init__(
-            device,
-            update_insight_params,
-            "Current Power",
-            DEVICE_CLASS_POWER,
-            POWER_WATT,
-        )
+    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_unit_of_measurement = POWER_WATT
+    _name_suffix = "Current Power"
+    _insight_params_key = "currentpower"
 
     @property
     def state(self) -> StateType:
         """Return the current power consumption."""
-        if "currentpower" not in self.wemo.insight_params:
-            return STATE_UNAVAILABLE
-        return convert(self.wemo.insight_params["currentpower"], float, 0.0) / 1000.0
+        return (
+            convert(self.wemo.insight_params[self._insight_params_key], float, 0.0)
+            / 1000.0
+        )
 
 
 class InsightTodayEnergy(InsightSensor):
     """Energy used today."""
 
-    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
-        """Initialize the WeMo Insight power sensor."""
-        super().__init__(
-            device,
-            update_insight_params,
-            "Today Energy",
-            DEVICE_CLASS_ENERGY,
-            ENERGY_KILO_WATT_HOUR,
-        )
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _name_suffix = "Today Energy"
+    _insight_params_key = "todaymw"
 
     @property
     def last_reset(self) -> datetime:
@@ -126,7 +116,7 @@ class InsightTodayEnergy(InsightSensor):
     @property
     def state(self) -> StateType:
         """Return the current energy use today."""
-        if "todaymw" not in self.wemo.insight_params:
-            return STATE_UNAVAILABLE
-        miliwatts = convert(self.wemo.insight_params["todaymw"], float, 0.0)
+        miliwatts = convert(
+            self.wemo.insight_params[self._insight_params_key], float, 0.0
+        )
         return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
