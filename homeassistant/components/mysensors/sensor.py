@@ -4,7 +4,11 @@ from __future__ import annotations
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components import mysensors
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
@@ -37,37 +41,47 @@ from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
-    "V_TEMP": [None, None, DEVICE_CLASS_TEMPERATURE],
-    "V_HUM": [PERCENTAGE, "mdi:water-percent", DEVICE_CLASS_HUMIDITY],
-    "V_DIMMER": [PERCENTAGE, "mdi:percent", None],
-    "V_PERCENTAGE": [PERCENTAGE, "mdi:percent", None],
-    "V_PRESSURE": [None, "mdi:gauge", None],
-    "V_FORECAST": [None, "mdi:weather-partly-cloudy", None],
-    "V_RAIN": [None, "mdi:weather-rainy", None],
-    "V_RAINRATE": [None, "mdi:weather-rainy", None],
-    "V_WIND": [None, "mdi:weather-windy", None],
-    "V_GUST": [None, "mdi:weather-windy", None],
-    "V_DIRECTION": [DEGREE, "mdi:compass", None],
-    "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram", None],
-    "V_DISTANCE": [LENGTH_METERS, "mdi:ruler", None],
-    "V_IMPEDANCE": ["ohm", None, None],
-    "V_WATT": [POWER_WATT, None, DEVICE_CLASS_POWER],
-    "V_KWH": [ENERGY_KILO_WATT_HOUR, None, DEVICE_CLASS_ENERGY],
-    "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny", None],
-    "V_FLOW": [LENGTH_METERS, "mdi:gauge", None],
-    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None, None],
+    "V_TEMP": [None, None, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT],
+    "V_HUM": [
+        PERCENTAGE,
+        "mdi:water-percent",
+        DEVICE_CLASS_HUMIDITY,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "V_DIMMER": [PERCENTAGE, "mdi:percent", None, None],
+    "V_PERCENTAGE": [PERCENTAGE, "mdi:percent", None, None],
+    "V_PRESSURE": [None, "mdi:gauge", None, None],
+    "V_FORECAST": [None, "mdi:weather-partly-cloudy", None, None],
+    "V_RAIN": [None, "mdi:weather-rainy", None, None],
+    "V_RAINRATE": [None, "mdi:weather-rainy", None, None],
+    "V_WIND": [None, "mdi:weather-windy", None, None],
+    "V_GUST": [None, "mdi:weather-windy", None, None],
+    "V_DIRECTION": [DEGREE, "mdi:compass", None, None],
+    "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram", None, None],
+    "V_DISTANCE": [LENGTH_METERS, "mdi:ruler", None, None],
+    "V_IMPEDANCE": ["ohm", None, None, None],
+    "V_WATT": [POWER_WATT, None, DEVICE_CLASS_POWER, STATE_CLASS_MEASUREMENT],
+    "V_KWH": [
+        ENERGY_KILO_WATT_HOUR,
+        None,
+        DEVICE_CLASS_ENERGY,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny", None, None],
+    "V_FLOW": [LENGTH_METERS, "mdi:gauge", None, None],
+    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None, None, None],
     "V_LEVEL": {
-        "S_SOUND": [SOUND_PRESSURE_DB, "mdi:volume-high", None],
-        "S_VIBRATION": [FREQUENCY_HERTZ, None, None],
-        "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny", None],
+        "S_SOUND": [SOUND_PRESSURE_DB, "mdi:volume-high", None, None],
+        "S_VIBRATION": [FREQUENCY_HERTZ, None, None, None],
+        "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny", None, None],
     },
-    "V_VOLTAGE": [ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "V_CURRENT": [ELECTRIC_CURRENT_AMPERE, "mdi:flash-auto", None],
-    "V_PH": ["pH", None, None],
-    "V_ORP": [ELECTRIC_POTENTIAL_MILLIVOLT, None, None],
-    "V_EC": [CONDUCTIVITY, None, None],
-    "V_VAR": ["var", None, None],
-    "V_VA": [POWER_VOLT_AMPERE, None, None],
+    "V_VOLTAGE": [ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None, None],
+    "V_CURRENT": [ELECTRIC_CURRENT_AMPERE, "mdi:flash-auto", None, None],
+    "V_PH": ["pH", None, None, None],
+    "V_ORP": [ELECTRIC_POTENTIAL_MILLIVOLT, None, None, None],
+    "V_EC": [CONDUCTIVITY, None, None, None],
+    "V_VAR": ["var", None, None, None],
+    "V_VA": [POWER_VOLT_AMPERE, None, None, None],
 }
 
 
@@ -125,6 +139,11 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         return self._get_sensor_type()[1]
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of this entity."""
+        return self._get_sensor_type()[3]
 
     @property
     def unit_of_measurement(self) -> str | None:
