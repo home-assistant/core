@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = YaleDataUpdateCoordinator(hass, entry=entry)
 
-    if not await hass.async_add_executor_job(coordinator.get_client):
+    if not await hass.async_add_executor_job(coordinator.get_updates):
         raise ConfigEntryAuthFailed
 
     await coordinator.async_config_entry_first_refresh()
