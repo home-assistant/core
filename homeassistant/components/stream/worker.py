@@ -205,13 +205,12 @@ class PeekIterator(Iterator):
     """An Iterator that may allow multiple passes.
 
     This may be consumed like a normal Iterator, however also supports a
-    peek() and rewind() methods that buffer consumed items from the iterator.
+    peek() method that buffers consumed items from the iterator.
     """
 
     def __init__(self, iterator: Iterator[av.Packet]) -> None:
         """Initialize PeekIterator."""
         self._iterator = iterator
-        self._cursor: av.Packet = None
         self._buffer: deque[av.Packet] = deque()
 
     def __iter__(self) -> Iterator:
@@ -221,10 +220,8 @@ class PeekIterator(Iterator):
     def __next__(self) -> av.Packet:
         """Return and consume the next item available."""
         if self._buffer:
-            self._cursor = self._buffer.popleft()
-        else:
-            self._cursor = next(self._iterator)
-        return self._cursor
+            return self._buffer.popleft()
+        return next(self._iterator)
 
     def peek(self) -> Generator[av.Packet, None, None]:
         """Return items without consuming from the iterator."""
