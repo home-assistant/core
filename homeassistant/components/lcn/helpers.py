@@ -25,7 +25,8 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_USERNAME,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CLIMATES,
@@ -68,7 +69,7 @@ DOMAIN_LOOKUP = {
 
 
 def get_device_connection(
-    hass: HomeAssistantType, address: AddressType, config_entry: ConfigEntry
+    hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
 ) -> DeviceConnectionType | None:
     """Return a lcn device_connection."""
     host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
