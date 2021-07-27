@@ -53,7 +53,7 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _name_suffix: str
-    _insight_device_key: str
+    _insight_params_key: str
 
     def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
         """Initialize the WeMo Insight power sensor."""
@@ -74,7 +74,7 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
     def available(self) -> str:
         """Return true if sensor is available."""
         return (
-            self._insight_device_key in self.wemo.insight_params and super().available
+            self._insight_params_key in self.wemo.insight_params and super().available
         )
 
     def _update(self, force_update=True) -> None:
@@ -89,13 +89,13 @@ class InsightCurrentPower(InsightSensor):
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_unit_of_measurement = POWER_WATT
     _name_suffix = "Current Power"
-    _insight_device_key = "currentpower"
+    _insight_params_key = "currentpower"
 
     @property
     def state(self) -> StateType:
         """Return the current power consumption."""
         return (
-            convert(self.wemo.insight_params[self._insight_device_key], float, 0.0)
+            convert(self.wemo.insight_params[self._insight_params_key], float, 0.0)
             / 1000.0
         )
 
@@ -106,7 +106,7 @@ class InsightTodayEnergy(InsightSensor):
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _name_suffix = "Today Energy"
-    _insight_device_key = "todaymw"
+    _insight_params_key = "todaymw"
 
     @property
     def last_reset(self) -> datetime:
@@ -117,6 +117,6 @@ class InsightTodayEnergy(InsightSensor):
     def state(self) -> StateType:
         """Return the current energy use today."""
         miliwatts = convert(
-            self.wemo.insight_params[self._insight_device_key], float, 0.0
+            self.wemo.insight_params[self._insight_params_key], float, 0.0
         )
         return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
