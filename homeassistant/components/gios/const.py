@@ -31,7 +31,7 @@ ATTR_CO: Final = "co"
 ATTR_NO2: Final = "no2"
 ATTR_O3: Final = "o3"
 ATTR_PM10: Final = "pm10"
-ATTR_PM25: Final = "pm2.5"
+ATTR_PM25: Final = "pm25"
 ATTR_SO2: Final = "so2"
 ATTR_AQI: Final = "aqi"
 
