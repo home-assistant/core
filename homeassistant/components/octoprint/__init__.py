@@ -1,14 +1,15 @@
 """Support for monitoring OctoPrint 3D printers."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 import time
-from typing import NamedTuple
 
 from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -54,26 +55,24 @@ def ensure_valid_path(value):
     return value
 
 
-class OctoprintBinarySensorMetadata(NamedTuple):
+@dataclass
+class OctoprintBinarySensorMetadata(BinarySensorEntityDescription):
     """Metadata for an individual Skybell binary_sensor."""
 
-    name: str
-    endpoint: str
-    group: str
-    key: str
-    unit_of_measurement: str | None = None
+    endpoint: str = ""
+    group: str = ""
 
 
 BINARY_SENSOR_TYPES = {
     "Printing": OctoprintBinarySensorMetadata(
-        "entry",
+        name="entry",
         endpoint="printer",
         group="state",
         key="printing",
         unit_of_measurement=None,
     ),
     "Printing Error": OctoprintBinarySensorMetadata(
-        "entry",
+        name="entry",
         endpoint="printer",
         group="state",
         key="error",
