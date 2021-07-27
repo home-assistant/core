@@ -6,13 +6,16 @@ https://www.fido.ca/pages/#/my-account/wireless
 """
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 
 from pyfido import FidoClient
 from pyfido.client import PyFidoError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -35,112 +38,104 @@ REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-class FidoSensorMetadata(NamedTuple):
-    """Metadata for an individual Fido sensor."""
-
-    name: str
-    unit_of_measurement: str
-    icon: str
-
-
 SENSOR_TYPES = {
-    "fido_dollar": FidoSensorMetadata(
-        "Fido dollar",
+    "fido_dollar": SensorEntityDescription(
+        key="Fido dollar",
         unit_of_measurement=PRICE,
         icon="mdi:cash-usd",
     ),
-    "balance": FidoSensorMetadata(
-        "Balance",
+    "balance": SensorEntityDescription(
+        key="Balance",
         unit_of_measurement=PRICE,
         icon="mdi:cash-usd",
     ),
-    "data_used": FidoSensorMetadata(
-        "Data used",
+    "data_used": SensorEntityDescription(
+        key="Data used",
         unit_of_measurement=DATA_KILOBITS,
         icon="mdi:download",
     ),
-    "data_limit": FidoSensorMetadata(
-        "Data limit",
+    "data_limit": SensorEntityDescription(
+        key="Data limit",
         unit_of_measurement=DATA_KILOBITS,
         icon="mdi:download",
     ),
-    "data_remaining": FidoSensorMetadata(
-        "Data remaining",
+    "data_remaining": SensorEntityDescription(
+        key="Data remaining",
         unit_of_measurement=DATA_KILOBITS,
         icon="mdi:download",
     ),
-    "text_used": FidoSensorMetadata(
-        "Text used",
+    "text_used": SensorEntityDescription(
+        key="Text used",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-text",
     ),
-    "text_limit": FidoSensorMetadata(
-        "Text limit",
+    "text_limit": SensorEntityDescription(
+        key="Text limit",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-text",
     ),
-    "text_remaining": FidoSensorMetadata(
-        "Text remaining",
+    "text_remaining": SensorEntityDescription(
+        key="Text remaining",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-text",
     ),
-    "mms_used": FidoSensorMetadata(
-        "MMS used",
+    "mms_used": SensorEntityDescription(
+        key="MMS used",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-image",
     ),
-    "mms_limit": FidoSensorMetadata(
-        "MMS limit",
+    "mms_limit": SensorEntityDescription(
+        key="MMS limit",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-image",
     ),
-    "mms_remaining": FidoSensorMetadata(
-        "MMS remaining",
+    "mms_remaining": SensorEntityDescription(
+        key="MMS remaining",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-image",
     ),
-    "text_int_used": FidoSensorMetadata(
-        "International text used",
+    "text_int_used": SensorEntityDescription(
+        key="International text used",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-alert",
     ),
-    "text_int_limit": FidoSensorMetadata(
-        "International text limit",
+    "text_int_limit": SensorEntityDescription(
+        key="International text limit",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-alert",
     ),
-    "text_int_remaining": FidoSensorMetadata(
-        "International remaining",
+    "text_int_remaining": SensorEntityDescription(
+        key="International remaining",
         unit_of_measurement=MESSAGES,
         icon="mdi:message-alert",
     ),
-    "talk_used": FidoSensorMetadata(
-        "Talk used",
+    "talk_used": SensorEntityDescription(
+        key="Talk used",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "talk_limit": FidoSensorMetadata(
-        "Talk limit",
+    "talk_limit": SensorEntityDescription(
+        key="Talk limit",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "talk_remaining": FidoSensorMetadata(
-        "Talk remaining",
+    "talk_remaining": SensorEntityDescription(
+        key="Talk remaining",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "other_talk_used": FidoSensorMetadata(
-        "Other Talk used",
+    "other_talk_used": SensorEntityDescription(
+        key="Other Talk used",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "other_talk_limit": FidoSensorMetadata(
-        "Other Talk limit",
+    "other_talk_limit": SensorEntityDescription(
+        key="Other Talk limit",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
-    "other_talk_remaining": FidoSensorMetadata(
-        "Other Talk remaining",
+    "other_talk_remaining": SensorEntityDescription(
+        key="Other Talk remaining",
         unit_of_measurement=TIME_MINUTES,
         icon="mdi:cellphone",
     ),
@@ -188,7 +183,7 @@ class FidoSensor(SensorEntity):
         self._number = number
         self.type = sensor_type
         metadata = SENSOR_TYPES[sensor_type]
-        self._attr_name = f"{self.client_name} {self._number} {metadata.name}"
+        self._attr_name = f"{self.client_name} {self._number} {metadata.key}"
         self._attr_unit_of_measurement = metadata.unit_of_measurement
         self._attr_icon = metadata.icon
         self.fido_data = fido_data
