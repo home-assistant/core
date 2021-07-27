@@ -101,7 +101,6 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
                 """Check the states to see if last_reset should be set to now."""
                 old_state = event.data.get("old_state")
                 new_state = event.data.get("new_state")
-                _LOGGER.warning(f"Checking states {old_state} -> {new_state}")
 
                 reset = old_state is None
                 old = None
@@ -112,30 +111,20 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
                 except DecimalException:
                     return
 
-                _LOGGER.error(f"Reset? {reset}")
-
                 if not reset:
                     assert old_state is not None
                     try:
                         old = Decimal(old_state.state)
-                    except DecimalException as err:
-                        _LOGGER.warning(
-                            "Invalid old state (%s > %s): %s",
-                            old_state.state,
-                            new,
-                            err,
-                        )
+                    except DecimalException:
+                        pass
+
                 if old == 0 and new == 0:
                     return
 
                 if not reset:
-                    _LOGGER.warning(
-                        f"new == 0? {new == 0}; old is None? {True if old is None else f'False; new < (old / 2)? {new < (old / 2)}'}"
-                    )
                     reset = new == 0 or (old is not None and new < (old / 2))
 
                 if reset:
-                    _LOGGER.warning("Setting last_reset to now")
                     self._attr_last_reset = datetime.now()
                     self.async_write_ha_state()
 
