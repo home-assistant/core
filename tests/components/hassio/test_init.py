@@ -380,7 +380,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     await hass.services.async_call("hassio", "restore_full", {"snapshot": "test"})
     await hass.async_block_till_done()
     assert (
-        "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.9, use 'slug' instead"
+        "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.10, use 'slug' instead"
         in caplog.text
     )
 
