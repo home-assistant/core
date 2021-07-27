@@ -1,9 +1,10 @@
 """Support for RainMachine devices."""
+from __future__ import annotations
+
 import asyncio
-from collections.abc import MutableMapping
 from datetime import timedelta
 from functools import partial
-from typing import Any, Dict, cast
+from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -95,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.entry_id
     ] = get_client_controller(client)
 
-    entry_updates = {}
+    entry_updates: dict[str, Any] = {}
     if not entry.unique_id or is_ip_address(entry.unique_id):
         # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = controller.mac
@@ -113,6 +114,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update(api_category: str) -> dict:
         """Update the appropriate API data based on a category."""
+        data: dict = {}
+
         try:
             if api_category == DATA_PROGRAMS:
                 data = await controller.programs.all(include_inactive=True)
@@ -124,10 +127,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = await controller.restrictions.universal()
             else:
                 data = await controller.zones.all(details=True, include_inactive=True)
-
-            return cast(Dict[str, Any], data)
         except RainMachineError as err:
             raise UpdateFailed(err) from err
+
+        return data
 
     controller_init_tasks = []
     for api_category in (
@@ -193,9 +196,7 @@ class RainMachineEntity(CoordinatorEntity):
             ),
             "sw_version": controller.software_version,
         }
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:
