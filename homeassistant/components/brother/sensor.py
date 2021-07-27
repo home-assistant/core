@@ -1,13 +1,14 @@
 """Support for the Brother service."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BrotherDataUpdateCoordinator
@@ -63,13 +64,16 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self) -> Any:
+    def state(self) -> StateType:
         """Return the state."""
         if self.entity_description.key == ATTR_UPTIME:
-            return getattr(
-                self.coordinator.data, self.entity_description.key
-            ).isoformat()
-        return getattr(self.coordinator.data, self.entity_description.key)
+            return cast(
+                StateType,
+                getattr(self.coordinator.data, self.entity_description.key).isoformat(),
+            )
+        return cast(
+            StateType, getattr(self.coordinator.data, self.entity_description.key)
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
