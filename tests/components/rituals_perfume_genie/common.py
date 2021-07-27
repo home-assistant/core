@@ -3,26 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.rituals_perfume_genie.const import (
-    ACCOUNT_HASH,
-    DOMAIN,
-    HUBLOT,
-    SENSORS,
-)
-from homeassistant.components.rituals_perfume_genie.entity import (
-    ATTRIBUTES,
-    AVAILABLE_STATE,
-    ROOMNAME,
-    STATUS,
-    VERSION,
-)
-from homeassistant.components.rituals_perfume_genie.sensor import (
-    FILL,
-    FILL_NO_CARTRIDGE_ID,
-    ID,
-    PERFUME,
-    PERFUME_NO_CARTRIDGE_ID,
-)
+from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -56,25 +37,20 @@ def mock_diffuser(
 ) -> MagicMock:
     """Return a mock Diffuser initialized with the given data."""
     diffuser_mock = MagicMock()
+    diffuser_mock.available = available
     diffuser_mock.battery_percentage = battery_percentage
     diffuser_mock.charging = charging
     diffuser_mock.fill = fill
     diffuser_mock.has_battery = has_battery
-    diffuser_mock.hub_data = {
-        ATTRIBUTES: {ROOMNAME: name},
-        HUBLOT: hublot,
-        STATUS: AVAILABLE_STATE if available else 0,
-        SENSORS: {
-            FILL: {ID: 0 if has_cartridge else FILL_NO_CARTRIDGE_ID},
-            PERFUME: {ID: 0 if has_cartridge else PERFUME_NO_CARTRIDGE_ID},
-            VERSION: version,
-        },
-    }
+    diffuser_mock.has_cartridge = has_cartridge
+    diffuser_mock.hublot = hublot
     diffuser_mock.is_on = is_on
+    diffuser_mock.name = name
     diffuser_mock.perfume = perfume
     diffuser_mock.turn_off = AsyncMock()
     diffuser_mock.turn_on = AsyncMock()
     diffuser_mock.update_data = AsyncMock()
+    diffuser_mock.version = version
     diffuser_mock.wifi_percentage = wifi_percentage
     return diffuser_mock
 

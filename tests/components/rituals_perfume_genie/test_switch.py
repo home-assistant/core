@@ -4,11 +4,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.rituals_perfume_genie.const import (
-    COORDINATORS,
-    DOMAIN,
-    HUBLOT,
-)
+from homeassistant.components.rituals_perfume_genie.const import COORDINATORS, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -44,7 +40,7 @@ async def test_switch_entity(hass: HomeAssistant) -> None:
 
     entry = registry.async_get("switch.genie")
     assert entry
-    assert entry.unique_id == diffuser.hub_data[HUBLOT]
+    assert entry.unique_id == diffuser.hublot
 
 
 async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:

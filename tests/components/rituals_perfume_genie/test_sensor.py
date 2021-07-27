@@ -1,5 +1,4 @@
 """Tests for the Rituals Perfume Genie sensor platform."""
-from homeassistant.components.rituals_perfume_genie.const import HUBLOT
 from homeassistant.components.rituals_perfume_genie.sensor import (
     BATTERY_SUFFIX,
     FILL_SUFFIX,
@@ -31,7 +30,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     diffuser = mock_diffuser_v1_battery_cartridge()
     await init_integration(hass, config_entry, [diffuser])
     registry = entity_registry.async_get(hass)
-    hublot = diffuser.hub_data[HUBLOT]
+    hublot = diffuser.hublot
 
     state = hass.states.get("sensor.genie_perfume")
     assert state
