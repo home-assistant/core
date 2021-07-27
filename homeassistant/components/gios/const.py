@@ -33,7 +33,11 @@ ATTR_SO2: Final = "so2"
 ATTR_AQI: Final = "aqi"
 
 SENSOR_TYPES: Final[tuple[GiosSensorEntityDescription, ...]] = (
-    GiosSensorEntityDescription(key=ATTR_AQI, name="AQI", value=None),
+    GiosSensorEntityDescription(
+        key=ATTR_AQI,
+        name="AQI",
+        value=None,
+    ),
     GiosSensorEntityDescription(
         key=ATTR_C6H6,
         name="C6H6",
