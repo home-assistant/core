@@ -1,6 +1,8 @@
 """Support for MySensors sensors."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components import mysensors
@@ -135,8 +137,6 @@ async def async_setup_entry(
 class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
-    _attr_last_reset = utc_from_timestamp(0)
-
     @property
     def force_update(self) -> bool:
         """Return True if state updates should be forced.
@@ -160,6 +160,15 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         return self._get_sensor_type()[1]
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        set_req = self.gateway.const.SetReq
+
+        if set_req(self.value_type).name == "V_KWH":
+            return utc_from_timestamp(0)
+        return None
 
     @property
     def state_class(self) -> str | None:
