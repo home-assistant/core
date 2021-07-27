@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, DecimalException
-import logging
 import math
 from typing import cast
 
@@ -17,7 +16,6 @@ from aioesphomeapi import (
 from aioesphomeapi.model import LastResetType
 import voluptuous as vol
 
-from homeassistant.components.esphome.entry_data import RuntimeEntryData
 from homeassistant.components.sensor import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASSES,
@@ -39,8 +37,6 @@ from . import (
 )
 
 ICON_SCHEMA = vol.Schema(cv.icon)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -81,12 +77,6 @@ _STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMap
 
 class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
-
-    def __init__(
-        self, entry_data: RuntimeEntryData, component_key: str, key: int
-    ) -> None:
-        """Initialize."""
-        super().__init__(entry_data, component_key, key)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
