@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, MutableMapping
+from collections.abc import Awaitable
 from datetime import timedelta
 from functools import partial
 from typing import Any, Callable, Dict, cast
@@ -121,9 +121,7 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_icon = icon
         self._attr_name = name
         self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{sensor_type}"
