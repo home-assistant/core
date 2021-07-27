@@ -2010,7 +2010,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==3.0.0
+regenmaschine==3.1.5
 
 # homeassistant.components.python_script
 restrictedpython==5.1
