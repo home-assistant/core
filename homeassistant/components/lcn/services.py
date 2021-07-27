@@ -11,8 +11,9 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     TIME_SECONDS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ServiceCallType
 
 from .const import (
     CONF_KEYS,
@@ -54,7 +55,7 @@ class LcnServiceCall:
 
     schema = vol.Schema({vol.Required(CONF_ADDRESS): is_address})
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize service call."""
         self.hass = hass
 

@@ -14,8 +14,9 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
@@ -30,7 +31,7 @@ from .helpers import DeviceConnectionType, InputType, get_device_connection
 
 
 def create_lcn_sensor_entity(
-    hass: HomeAssistantType, entity_config: ConfigType, config_entry: ConfigEntry
+    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
 ) -> LcnEntity:
     """Set up an entity for this domain."""
     device_connection = get_device_connection(
@@ -49,7 +50,7 @@ def create_lcn_sensor_entity(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
