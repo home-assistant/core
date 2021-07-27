@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
+    CONF_CURRENCY,
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
@@ -238,6 +239,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         # pylint: disable=no-value-for-parameter
         vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
         vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
+        vol.Optional(CONF_CURRENCY): cv.string,
     }
 )
 
@@ -520,6 +522,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
+            CONF_CURRENCY,
         )
     ):
         hac.config_source = SOURCE_YAML
@@ -533,6 +536,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_EXTERNAL_URL, "external_url"),
         (CONF_MEDIA_DIRS, "media_dirs"),
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
+        (CONF_CURRENCY, "currency"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
