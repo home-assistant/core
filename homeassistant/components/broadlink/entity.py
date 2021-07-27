@@ -32,7 +32,7 @@ class BroadlinkEntity(Entity):
 
         It works as a template for the _update_state() method, which should
         be overridden by child classes in order to update the state of the
-        entity, when applicable.
+        entities, when applicable.
         """
         if self._coordinator.last_update_success:
             self._update_state(self._coordinator.data)
