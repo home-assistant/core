@@ -505,7 +505,7 @@ async def test_arm_vacation_no_pending(hass, mqtt_mock):
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await common.async_alarm_arm_night(hass, CODE, entity_id)
+    await common.async_alarm_arm_vacation(hass, CODE, entity_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
@@ -535,7 +535,7 @@ async def test_arm_vacation_no_pending_when_code_not_req(hass, mqtt_mock):
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await common.async_alarm_arm_night(hass, 0, entity_id)
+    await common.async_alarm_arm_vacation(hass, 0, entity_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
@@ -583,7 +583,7 @@ async def test_arm_vacation_with_pending(hass, mqtt_mock):
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
 
     # Do not go to the pending state when updating to the same state
-    await common.async_alarm_arm_night(hass, CODE, entity_id)
+    await common.async_alarm_arm_vacation(hass, CODE, entity_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
@@ -1765,7 +1765,7 @@ async def test_arm_vacation_via_command_topic(hass, mqtt_mock):
                 "pending_time": 1,
                 "state_topic": "alarm/state",
                 "command_topic": "alarm/command",
-                "payload_arm_night": "ARM_VACATION",
+                "payload_arm_vacation": "ARM_VACATION",
             }
         },
     )
