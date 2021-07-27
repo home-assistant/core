@@ -811,7 +811,7 @@ pyfireservicerota==0.0.43
 pyflume==0.5.5
 
 # homeassistant.components.flunearyou
-pyflunearyou==2.0.1
+pyflunearyou==2.0.2
 
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11

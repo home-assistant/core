@@ -1,9 +1,6 @@
 """Support for user- and CDC-based flu info sensors from Flu Near You."""
 from __future__ import annotations
 
-from collections.abc import MutableMapping
-from typing import Any
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -112,9 +109,7 @@ class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_icon = icon
         self._attr_name = name
         self._attr_unique_id = (
