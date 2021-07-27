@@ -1447,7 +1447,7 @@ async def test_armed_vacation_with_specific_pending(hass, mqtt_mock):
                 "platform": "manual_mqtt",
                 "name": "test",
                 "pending_time": 10,
-                "armed_night": {"pending_time": 2},
+                "armed_vacation": {"pending_time": 2},
                 "command_topic": "alarm/command",
                 "state_topic": "alarm/state",
             }
