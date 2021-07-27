@@ -70,6 +70,7 @@ class NetatmoSensorEntityDescription(SensorEntityDescription):
     def __post_init__(self) -> None:
         """Ensure all required attributes are set."""
         if self._netatmo_name is None:
+            # pragma: no cover
             raise TypeError
         self.netatmo_name = self._netatmo_name
 
