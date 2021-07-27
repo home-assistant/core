@@ -1,14 +1,17 @@
 """Support for Start.ca Bandwidth Monitor."""
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 from xml.parsers.expat import ExpatError
 
 import async_timeout
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_VARIABLES,
@@ -30,72 +33,64 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 
-class StartcaSensorMetadata(NamedTuple):
-    """Metadata for an individual Startca sensor."""
-
-    name: str
-    unit_of_measurement: str
-    icon: str
-
-
 SENSOR_TYPES = {
-    "usage": StartcaSensorMetadata(
-        "Usage Ratio",
+    "usage": SensorEntityDescription(
+        key="Usage Ratio",
         unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
     ),
-    "usage_gb": StartcaSensorMetadata(
-        "Usage",
+    "usage_gb": SensorEntityDescription(
+        key="Usage",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "limit": StartcaSensorMetadata(
-        "Data limit",
+    "limit": SensorEntityDescription(
+        key="Data limit",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "used_download": StartcaSensorMetadata(
-        "Used Download",
+    "used_download": SensorEntityDescription(
+        key="Used Download",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "used_upload": StartcaSensorMetadata(
-        "Used Upload",
+    "used_upload": SensorEntityDescription(
+        key="Used Upload",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
     ),
-    "used_total": StartcaSensorMetadata(
-        "Used Total",
+    "used_total": SensorEntityDescription(
+        key="Used Total",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "grace_download": StartcaSensorMetadata(
-        "Grace Download",
+    "grace_download": SensorEntityDescription(
+        key="Grace Download",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "grace_upload": StartcaSensorMetadata(
-        "Grace Upload",
+    "grace_upload": SensorEntityDescription(
+        key="Grace Upload",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
     ),
-    "grace_total": StartcaSensorMetadata(
-        "Grace Total",
+    "grace_total": SensorEntityDescription(
+        key="Grace Total",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "total_download": StartcaSensorMetadata(
-        "Total Download",
+    "total_download": SensorEntityDescription(
+        key="Total Download",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "total_upload": StartcaSensorMetadata(
-        "Total Upload",
+    "total_upload": SensorEntityDescription(
+        key="Total Upload",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
-    "used_remaining": StartcaSensorMetadata(
-        "Remaining",
+    "used_remaining": SensorEntityDescription(
+        key="Remaining",
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
     ),
@@ -140,7 +135,7 @@ class StartcaSensor(SensorEntity):
         self.client_name = name
         self.type = sensor_type
         metadata = SENSOR_TYPES[sensor_type]
-        self._attr_name = f"{self.client_name} {metadata.name}"
+        self._attr_name = f"{self.client_name} {metadata.key}"
         self._attr_unit_of_measurement = metadata.unit_of_measurement
         self._attr_icon = metadata.icon
         self.startcadata = startcadata
