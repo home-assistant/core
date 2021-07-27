@@ -1,8 +1,8 @@
 """Binary sensor support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import NamedTuple
 
 import voluptuous as vol
 
@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
@@ -20,12 +21,11 @@ from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-class SkybellBinarySensorMetadata(NamedTuple):
+@dataclass
+class SkybellBinarySensorMetadata(BinarySensorEntityDescription):
     """Metadata for an individual Skybell binary_sensor."""
 
-    name: str
-    device_class: str
-    event: str
+    event: str = ""
 
 
 SENSOR_TYPES = {

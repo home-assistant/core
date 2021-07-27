@@ -7,13 +7,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 
 from pyebox import EboxClient
 from pyebox.client import PyEboxError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -38,77 +41,69 @@ SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-class EboxSensorMetadata(NamedTuple):
-    """Metadata for an individual ebox sensor."""
-
-    name: str
-    unit_of_measurement: str
-    icon: str
-
-
 SENSOR_TYPES = {
-    "usage": EboxSensorMetadata(
-        "Usage",
+    "usage": SensorEntityDescription(
+        key="Usage",
         unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
     ),
-    "balance": EboxSensorMetadata(
-        "Balance",
+    "balance": SensorEntityDescription(
+        key="Balance",
         unit_of_measurement=PRICE,
         icon="mdi:cash-usd",
     ),
-    "limit": EboxSensorMetadata(
-        "Data limit",
+    "limit": SensorEntityDescription(
+        key="Data limit",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
-    "days_left": EboxSensorMetadata(
-        "Days left",
+    "days_left": SensorEntityDescription(
+        key="Days left",
         unit_of_measurement=TIME_DAYS,
         icon="mdi:calendar-today",
     ),
-    "before_offpeak_download": EboxSensorMetadata(
-        "Download before offpeak",
+    "before_offpeak_download": SensorEntityDescription(
+        key="Download before offpeak",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
-    "before_offpeak_upload": EboxSensorMetadata(
-        "Upload before offpeak",
+    "before_offpeak_upload": SensorEntityDescription(
+        key="Upload before offpeak",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:upload",
     ),
-    "before_offpeak_total": EboxSensorMetadata(
-        "Total before offpeak",
+    "before_offpeak_total": SensorEntityDescription(
+        key="Total before offpeak",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
-    "offpeak_download": EboxSensorMetadata(
-        "Offpeak download",
+    "offpeak_download": SensorEntityDescription(
+        key="Offpeak download",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
-    "offpeak_upload": EboxSensorMetadata(
-        "Offpeak Upload",
+    "offpeak_upload": SensorEntityDescription(
+        key="Offpeak Upload",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:upload",
     ),
-    "offpeak_total": EboxSensorMetadata(
-        "Offpeak Total",
+    "offpeak_total": SensorEntityDescription(
+        key="Offpeak Total",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
-    "download": EboxSensorMetadata(
-        "Download",
+    "download": SensorEntityDescription(
+        key="Download",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
-    "upload": EboxSensorMetadata(
-        "Upload",
+    "upload": SensorEntityDescription(
+        key="Upload",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:upload",
     ),
-    "total": EboxSensorMetadata(
-        "Total",
+    "total": SensorEntityDescription(
+        key="Total",
         unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
@@ -156,7 +151,7 @@ class EBoxSensor(SensorEntity):
         """Initialize the sensor."""
         self.type = sensor_type
         metadata = SENSOR_TYPES[sensor_type]
-        self._attr_name = f"{name} {metadata.name}"
+        self._attr_name = f"{name} {metadata.key}"
         self._attr_unit_of_measurement = metadata.unit_of_measurement
         self._attr_icon = metadata.icon
         self.ebox_data = ebox_data
