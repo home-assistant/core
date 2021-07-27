@@ -147,7 +147,7 @@ class MelDeviceSensor(SensorEntity):
         self,
         api: MelCloudDevice,
         description: MelcloudSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._api = api
         self.entity_description = description
@@ -182,7 +182,7 @@ class AtwZoneSensor(MelDeviceSensor):
         api: MelCloudDevice,
         zone: Zone,
         description: MelcloudSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         if zone.zone_index != 1:
             description.key = f"{description.key}-zone-{zone.zone_index}"
