@@ -126,7 +126,7 @@ async def test_sensor(hass):
 
     entry = registry.async_get("sensor.home_pm2_5")
     assert entry
-    assert entry.unique_id == "123-pm2.5"
+    assert entry.unique_id == "123-pm25"
 
     state = hass.states.get("sensor.home_so2")
     assert state
@@ -306,7 +306,7 @@ async def test_invalid_indexes(hass):
 
     entry = registry.async_get("sensor.home_pm2_5")
     assert entry
-    assert entry.unique_id == "123-pm2.5"
+    assert entry.unique_id == "123-pm25"
 
     state = hass.states.get("sensor.home_so2")
     assert state
