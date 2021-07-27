@@ -77,20 +77,22 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the alarm entry."""
-
-    async_add_entities(
-        [YaleAlarmDevice(coordinator=hass.data[DOMAIN][entry.entry_id][COORDINATOR])]
-    )
+    coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
+    async_add_entities([YaleAlarmDevice(coordinator)])
 
 
 class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
-    coordinator: YaleDataUpdateCoordinator
-
-    _attr_name: str = coordinator.entry.data[CONF_NAME]
-    _attr_unique_id: str = coordinator.entry.entry_id
-    _identifier: str = coordinator.entry.data[CONF_USERNAME]
+    def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
+        """Initialize the Yale Alarm Device."""
+        self.coordinator = coordinator
+        self._attr_name: str = self.coordinator.entry.data[CONF_NAME]
+        self._attr_unique_id: str = self.coordinator.entry.entry_id
+        self._identifier: str = self.coordinator.entry.data[CONF_USERNAME]
+        super().__init__(self.coordinator)
 
     @property
     def device_info(self) -> DeviceInfo:
