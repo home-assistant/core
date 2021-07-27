@@ -1,7 +1,7 @@
 """The Panasonic Viera integration."""
 from functools import partial
 import logging
-from urllib.request import URLError
+from urllib.request import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry):
         params["app_id"] = config[CONF_APP_ID]
         params["encryption_key"] = config[CONF_ENCRYPTION_KEY]
 
-    remote = Remote(hass, host, port, on_action, **params)
+    remote = Device(hass, host, port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
     panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
@@ -119,8 +119,8 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-class Remote:
-    """The Remote class. It stores the TV properties and the remote control connection itself."""
+class Device:
+    """The Device class. It stores the TV properties and the remote control connection itself."""
 
     def __init__(
         self,
@@ -131,7 +131,7 @@ class Remote:
         app_id=None,
         encryption_key=None,
     ):
-        """Initialize the Remote class."""
+        """Initialize the Device class."""
         self._hass = hass
 
         self._host = host
@@ -247,11 +247,13 @@ class Remote:
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
             self.available = False
-        except (SOAPError):
+        except (SOAPError, HTTPError) as err:
+            _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = True
             await self.async_create_remote_control()
-        except (URLError, OSError):
+        except (URLError, OSError) as err:
+            _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()

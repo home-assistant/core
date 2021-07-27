@@ -74,20 +74,11 @@ def get_mock_remote(
 
     mock_remote.authorize_pin_code = authorize_pin_code
 
-    def get_device_info():
-        return device_info
+    mock_remote.get_device_info = Mock(return_value=device_info)
 
-    mock_remote.get_device_info = get_device_info
+    mock_remote.send_key = Mock()
 
-    def send_key(key):
-        return
-
-    mock_remote.send_key = Mock(send_key)
-
-    def get_volume(key):
-        return 100
-
-    mock_remote.get_volume = Mock(get_volume)
+    mock_remote.get_volume = Mock(return_value=100)
 
     return mock_remote
 
