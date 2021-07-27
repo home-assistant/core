@@ -1,7 +1,6 @@
 """Support for Rova garbage calendar."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
@@ -31,47 +30,28 @@ UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
 
 
-@dataclass
-class RovaSensorEntityDescription(SensorEntityDescription):
-    """Metadata for an individual rova sensor."""
-
-    json_key_required: str | None = None
-
-    def __post_init__(self) -> None:
-        """Check required keys are present."""
-        if self.json_key_required is None:
-            # pragma: no cover
-            raise TypeError
-        self.json_key = self.json_key_required
-
-
-SENSOR_TYPES: tuple[RovaSensorEntityDescription, ...] = (
-    RovaSensorEntityDescription(
-        key="bio",
-        name="Biowaste",
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "bio": SensorEntityDescription(
+        key="gft",
+        name="bio",
         icon="mdi:recycle",
-        json_key_required="gft",
     ),
-    RovaSensorEntityDescription(
-        key="paper",
-        name="Paper",
+    "paper": SensorEntityDescription(
+        key="papier",
+        name="paper",
         icon="mdi:recycle",
-        json_key_required="papier",
     ),
-    RovaSensorEntityDescription(
-        key="plastic",
-        name="PET",
+    "plastic": SensorEntityDescription(
+        key="pmd",
+        name="plastic",
         icon="mdi:recycle",
-        json_key_required="pmd",
     ),
-    RovaSensorEntityDescription(
-        key="residual",
-        name="Residual",
+    "residual": SensorEntityDescription(
+        key="restafval",
+        name="residual",
         icon="mdi:recycle",
-        json_key_required="restafval",
     ),
-)
-MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -80,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=""): cv.string,
         vol.Optional(CONF_NAME, default="Rova"): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["bio"]): vol.All(
-            cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
     }
 )
@@ -112,9 +92,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Create a new sensor for each garbage type.
     entities = [
-        RovaSensor(platform_name, description, data_service)
-        for description in SENSOR_TYPES
-        if description.key in config[CONF_MONITORED_CONDITIONS]
+        RovaSensor(platform_name, SENSOR_TYPES[sensor_key], data_service)
+        for sensor_key in config[CONF_MONITORED_CONDITIONS]
     ]
     add_entities(entities, True)
 
@@ -122,39 +101,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RovaSensor(SensorEntity):
     """Representation of a Rova sensor."""
 
-    entity_description: RovaSensorEntityDescription
-
     def __init__(
-        self, platform_name, description: RovaSensorEntityDescription, data_service
+        self, platform_name, description: SensorEntityDescription, data_service
     ):
         """Initialize the sensor."""
         self.entity_description = description
-        self.platform_name = platform_name
         self.data_service = data_service
 
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"{self.platform_name}_{self.entity_description.key}"
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        self._attr_name = f"{platform_name}_{description.name}"
+        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data_service.update()
-        pickup_date = self.data_service.data.get(self.entity_description.json_key)
+        pickup_date = self.data_service.data.get(self.entity_description.key)
         if pickup_date is not None:
-            self._state = pickup_date.isoformat()
+            self._attr_state = pickup_date.isoformat()
 
 
 class RovaData:
