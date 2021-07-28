@@ -30,11 +30,10 @@ uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*TWMYQKL3UVED4HSIIB9GXJWJZBQCX
 
 async def test_climate_get_state(hass, init_integration):
     """Test states of the climate."""
-    init_integration
-    registry = er.async_get(hass)
-    registry_device = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
-    device = registry_device.async_get_device({("freedompro", uid)})
+    device = device_registry.async_get_device({("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -59,7 +58,7 @@ async def test_climate_get_state(hass, init_integration):
 
     assert state.state == HVAC_MODE_HEAT
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -79,7 +78,7 @@ async def test_climate_get_state(hass, init_integration):
         assert state
         assert state.attributes.get("friendly_name") == "thermostat"
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 
@@ -90,14 +89,14 @@ async def test_climate_get_state(hass, init_integration):
 async def test_climate_set_off(hass, init_integration):
     """Test set off climate."""
     init_integration
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("friendly_name") == "thermostat"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -120,14 +119,14 @@ async def test_climate_set_off(hass, init_integration):
 async def test_climate_set_unsupported_hvac_mode(hass, init_integration):
     """Test set unsupported hvac mode climate."""
     init_integration
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("friendly_name") == "thermostat"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -142,14 +141,14 @@ async def test_climate_set_unsupported_hvac_mode(hass, init_integration):
 async def test_climate_set_temperature(hass, init_integration):
     """Test set temperature climate."""
     init_integration
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("friendly_name") == "thermostat"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -178,14 +177,14 @@ async def test_climate_set_temperature(hass, init_integration):
 async def test_climate_set_temperature_unsupported_hvac_mode(hass, init_integration):
     """Test set temperature climate unsupported hvac mode."""
     init_integration
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("friendly_name") == "thermostat"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
