@@ -25,7 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
@@ -586,7 +586,7 @@ class Profiles:
         for profile_path in profile_paths:
             if not os.path.isfile(profile_path):
                 continue
-            with open(profile_path) as inp:
+            with open(profile_path, encoding="utf8") as inp:
                 reader = csv.reader(inp)
 
                 # Skip the header
@@ -638,9 +638,15 @@ class Profiles:
             params.setdefault(ATTR_TRANSITION, profile.transition)
 
 
+@dataclasses.dataclass
+class LightEntityDescription(ToggleEntityDescription):
+    """A class that describes binary sensor entities."""
+
+
 class LightEntity(ToggleEntity):
     """Base class for light entities."""
 
+    entity_description: LightEntityDescription
     _attr_brightness: int | None = None
     _attr_color_mode: str | None = None
     _attr_color_temp: int | None = None
