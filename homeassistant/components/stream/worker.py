@@ -117,7 +117,6 @@ class SegmentBuffer:
 
         # Check for end of segment
         if packet.stream == self._input_video_stream:
-
             if (
                 packet.is_keyframe
                 and (packet.dts - self._segment_start_dts) * packet.time_base
@@ -253,7 +252,7 @@ class TimestampValidator:
         # Number of consecutive missing decompression timestamps
         self._missing_dts = 0
 
-    def is_valid(self, packet: av.Packet) -> float:
+    def is_valid(self, packet: av.Packet) -> bool:
         """Validate the packet timestamp based on ordering within the stream."""
         # Discard packets missing DTS. Terminate if too many are missing.
         if packet.dts is None:
