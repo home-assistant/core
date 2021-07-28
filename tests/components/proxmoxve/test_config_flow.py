@@ -29,6 +29,12 @@ USER_INPUT_OK = {
     CONF_VERIFY_SSL: True,
 }
 
+USER_INPUT_REQONLY = {
+    CONF_HOST: "192.168.10.11",
+    CONF_USERNAME: "root",
+    CONF_PASSWORD: "secret",
+}
+
 USER_INPUT_PORT_TOO_BIG = {
     CONF_HOST: "192.168.10.11",
     CONF_PORT: 255555,
@@ -178,6 +184,26 @@ async def test_flow_import_ok(hass: HomeAssistant):
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
+        )
+
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_flow_import_ok_onlyrequired(hass: HomeAssistant):
+    """Test flow ok."""
+
+    with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
+        "proxmoxer.backends.https.ProxmoxHTTPAuth._getNewTokens",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
+        return_value=True,
+    ):
+
+        # imported config is identical to the one generated from config flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_REQONLY
         )
 
         assert result["type"] == RESULT_TYPE_ABORT

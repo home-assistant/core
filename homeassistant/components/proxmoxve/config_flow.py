@@ -35,8 +35,6 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config=None):
         """Import existing configuration."""
-        _LOGGER.info("Importing ProxmoxVE config")
-
         return await self.async_step_init(import_config, True)
 
     async def async_step_user(self, user_input=None) -> FlowResult:

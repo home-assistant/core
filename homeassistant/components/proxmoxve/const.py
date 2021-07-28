@@ -7,6 +7,10 @@ PLATFORMS = ["binary_sensor"]
 PROXMOX_CLIENTS = "proxmox_clients"
 PROXMOX_CLIENT = "proxmox_client"
 
+DEFAULT_PORT = 8006
+DEFAULT_REALM = "pam"
+DEFAULT_VERIFY_SSL = True
+
 COORDINATORS = "coordinators"
 API_DATA = "api_data"
 

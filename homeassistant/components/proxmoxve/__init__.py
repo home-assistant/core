@@ -29,6 +29,9 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_REALM,
     COORDINATORS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLATFORMS,
     PROXMOX_CLIENT,
@@ -53,11 +56,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         for entry in config[DOMAIN]:
             host = entry[CONF_HOST]
-            port = entry[CONF_PORT] if CONF_PORT in entry else 8006
+            port = entry.get(CONF_PORT, DEFAULT_PORT)
             user = entry[CONF_USERNAME]
-            realm = entry[CONF_REALM] if CONF_REALM in entry else "pam"
+            realm = entry.get(CONF_REALM, DEFAULT_REALM)
             password = entry[CONF_PASSWORD]
-            verify_ssl = entry[CONF_VERIFY_SSL] if CONF_VERIFY_SSL in entry else True
+            verify_ssl = entry.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
             hass.data[PROXMOX_CLIENTS][host] = None
 
