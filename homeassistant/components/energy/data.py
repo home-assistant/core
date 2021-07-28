@@ -224,6 +224,8 @@ class EnergyManager:
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
         self.data = cast(Optional[EnergyPreferences], await self._store.async_load())
+        # We used to have a currency setting in energy, but it was moved to core config
+        del self.data["currency"]  # type: ignore
 
     @staticmethod
     def default_preferences() -> EnergyPreferences:
