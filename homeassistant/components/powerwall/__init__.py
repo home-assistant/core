@@ -138,10 +138,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 login_failed_count += 1
                 if login_failed_count == MAX_LOGIN_FAILURES:
                     raise ConfigEntryAuthFailed from ex
-                else:
-                    raise UpdateFailed(
-                        f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry"
-                    )
+                raise UpdateFailed(
+                    f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry"
+                ) from ex
         else:
             login_failed_count = 0
             return data
