@@ -132,6 +132,7 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
         {
             "entity_id": "media_player.something",
             tts.ATTR_MESSAGE: "There is someone at the door.",
+            ATTR_MEDIA_EXTRA: {"volume": 30},
         },
         blocking=True,
     )
@@ -142,6 +143,7 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
         calls[0].data[ATTR_MEDIA_CONTENT_ID]
         == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     )
+    assert calls[0].data[ATTR_MEDIA_EXTRA] == {"volume": 30}
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
@@ -699,7 +701,6 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     data = {
         "platform": "demo",
         "message": "There is someone at the door.",
-        ATTR_MEDIA_EXTRA: {"volume": 30},
     }
 
     req = await client.post(url, json=data)
