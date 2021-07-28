@@ -244,7 +244,7 @@ def setup(hass, config):
 
 def check_correct_scopes(token_file, config):
     """Check for the correct scopes in file."""
-    with open(token_file) as tokenfile:
+    with open(token_file, encoding="utf8") as tokenfile:
         contents = tokenfile.read()
 
         # Check for quoted scope as our scopes can be subsets of other scopes
@@ -408,7 +408,7 @@ def load_config(path):
     """Load the google_calendar_devices.yaml."""
     calendars = {}
     try:
-        with open(path) as file:
+        with open(path, encoding="utf8") as file:
             data = yaml.safe_load(file)
             for calendar in data:
                 try:
@@ -425,6 +425,6 @@ def load_config(path):
 
 def update_config(path, calendar):
     """Write the google_calendar_devices.yaml."""
-    with open(path, "a") as out:
+    with open(path, "a", encoding="utf8") as out:
         out.write("\n")
         yaml.dump([calendar], out, default_flow_style=False)
