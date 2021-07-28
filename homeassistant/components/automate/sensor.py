@@ -1,8 +1,8 @@
 """Support for Automate Roller Blind Batteries."""
 from homeassistant.const import (
-    ATTR_VOLTAGE,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -17,12 +17,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
     current_battery = set()
+    current_voltage = set()
     current_signal = set()
 
     @callback
     def async_add_automate_sensors():
         async_add_automate_entities(
             hass, AutomateBattery, config_entry, current_battery, async_add_entities
+        )
+        async_add_automate_entities(
+            hass, AutomateVoltage, config_entry, current_voltage, async_add_entities
         )
         async_add_automate_entities(
             hass, AutomateSignal, config_entry, current_signal, async_add_entities
@@ -40,8 +44,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AutomateBattery(AutomateBase):
     """Representation of a Automate cover battery sensor."""
 
-    device_class = DEVICE_CLASS_BATTERY
-    unit_of_measurement = "%"
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = "%"
 
     @property
     def name(self):
@@ -60,27 +64,37 @@ class AutomateBattery(AutomateBase):
         """Return a unique identifier for this device."""
         return f"{self.roller.id}_battery"
 
-    @property
-    def device_state_attributes(self):
-        """Additional information about the battery state."""
-        attrs = super().device_state_attributes
-        if attrs is None:
-            attrs = {}
-        else:
-            attrs = attrs.copy()
-        attrs[ATTR_VOLTAGE] = self.roller.battery
-        return attrs
 
-    def include_entity(self) -> bool:
-        """Return True if roller has a battery."""
-        return self.roller.has_battery
+class AutomateVoltage(AutomateBase):
+    """Representation of a Automate cover battery voltage sensor."""
+
+    _attr_device_class = DEVICE_CLASS_VOLTAGE
+    _attr_unit_of_measurement = "V"
+    entity_registry_enabled_default = False
+
+    @property
+    def name(self):
+        """Return the name of roller Battery."""
+        if super().name is None:
+            return None
+        return f"{super().name} Battery Voltage"
+
+    @property
+    def state(self):
+        """Return the state of the device battery."""
+        return self.roller.battery
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return f"{self.roller.id}_battery_voltage"
 
 
 class AutomateSignal(AutomateBase):
     """Representation of a Automate cover WiFi signal sensor."""
 
-    device_class = DEVICE_CLASS_SIGNAL_STRENGTH
-    unit_of_measurement = "dB"
+    _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+    _attr_unit_of_measurement = "dB"
     entity_registry_enabled_default = False
 
     @property
