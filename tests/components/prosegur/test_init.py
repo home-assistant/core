@@ -18,7 +18,6 @@ from tests.common import MockConfigEntry
 async def test_setup_entry_fail_retrieve(hass, error):
     """Test loading the Prosegur entry."""
 
-    hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
