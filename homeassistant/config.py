@@ -239,7 +239,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         # pylint: disable=no-value-for-parameter
         vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
         vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
-        vol.Optional(CONF_CURRENCY): cv.string,
+        vol.Optional(CONF_CURRENCY): cv.currency,
     }
 )
 

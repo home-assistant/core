@@ -46,7 +46,7 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("time_zone"): cv.time_zone,
         vol.Optional("external_url"): vol.Any(cv.url, None),
         vol.Optional("internal_url"): vol.Any(cv.url, None),
-        vol.Optional("currency"): str,
+        vol.Optional("currency"): cv.currency,
     }
 )
 async def websocket_update_config(hass, connection, msg):

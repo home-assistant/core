@@ -491,7 +491,7 @@ async def test_loading_configuration(hass):
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
-            "currency": "fl.",
+            "currency": "EUR",
         },
     )
 
@@ -509,7 +509,7 @@ async def test_loading_configuration(hass):
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
     assert hass.config.legacy_templates is True
-    assert hass.config.currency == "fl."
+    assert hass.config.currency == "EUR"
 
 
 async def test_loading_configuration_temperature_unit(hass):

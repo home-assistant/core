@@ -75,7 +75,7 @@ async def test_websocket_core_update(hass, client):
                 "time_zone": "America/New_York",
                 "external_url": "https://www.example.com",
                 "internal_url": "http://example.local",
-                "currency": "fl.",
+                "currency": "EUR",
             }
         )
 
@@ -91,7 +91,7 @@ async def test_websocket_core_update(hass, client):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert hass.config.currency == "fl."
+    assert hass.config.currency == "EUR"
 
     assert len(mock_set_tz.mock_calls) == 1
     assert mock_set_tz.mock_calls[0][1][0] == dt_util.get_time_zone("America/New_York")
