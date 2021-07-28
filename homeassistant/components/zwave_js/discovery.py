@@ -433,12 +433,33 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # binary sensors
+    # When CC is Sensor Binary and device class generic is Binary Sensor, entity should
+    # be enabled by default
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="boolean",
+        device_class_generic={"Binary Sensor"},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_BINARY},
+            type={"boolean"},
+        ),
+    ),
+    # Legacy binary sensors are phased out (replaced by notification sensors)
+    # Disable by default to not confuse users
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="boolean",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_BINARY},
+            type={"boolean"},
+        ),
+        entity_registry_enabled_default=False,
+    ),
     ZWaveDiscoverySchema(
         platform="binary_sensor",
         hint="boolean",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
-                CommandClass.SENSOR_BINARY,
                 CommandClass.BATTERY,
                 CommandClass.SENSOR_ALARM,
             },
@@ -482,11 +503,19 @@ DISCOVERY_SCHEMAS = [
             command_class={
                 CommandClass.SENSOR_MULTILEVEL,
                 CommandClass.SENSOR_ALARM,
-                CommandClass.INDICATOR,
                 CommandClass.BATTERY,
             },
             type={"number"},
         ),
+    ),
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={"number"},
+        ),
+        entity_registry_enabled_default=False,
     ),
     # numeric sensors for Meter CC
     ZWaveDiscoverySchema(
