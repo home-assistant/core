@@ -19,7 +19,7 @@ NAME = "name"
 SENSORS = (
     SensorEntityDescription(
         key="production",
-        name="Current Energy Production",
+        name="Current Power Production",
         unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -47,7 +47,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="consumption",
-        name="Current Energy Consumption",
+        name="Current Power Consumption",
         unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
