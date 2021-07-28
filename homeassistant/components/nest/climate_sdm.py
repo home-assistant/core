@@ -1,13 +1,14 @@
 """Support for Google Nest SDM climate devices."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.exceptions import GoogleNestException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
+    ThermostatHeatCoolTrait,
     ThermostatHvacTrait,
     ThermostatModeTrait,
     ThermostatTemperatureSetpointTrait,
@@ -184,15 +185,20 @@ class ThermostatEntity(ClimateEntity):
     @property
     def _target_temperature_trait(
         self,
-    ) -> ThermostatEcoTrait | ThermostatTemperatureSetpointTrait | None:
+    ) -> ThermostatHeatCoolTrait | None:
         """Return the correct trait with a target temp depending on mode."""
         if (
             self.preset_mode == PRESET_ECO
             and ThermostatEcoTrait.NAME in self._device.traits
         ):
-            return self._device.traits[ThermostatEcoTrait.NAME]
+            return cast(
+                ThermostatEcoTrait, self._device.traits[ThermostatEcoTrait.NAME]
+            )
         if ThermostatTemperatureSetpointTrait.NAME in self._device.traits:
-            return self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
+            return cast(
+                ThermostatTemperatureSetpointTrait,
+                self._device.traits[ThermostatTemperatureSetpointTrait.NAME],
+            )
         return None
 
     @property
