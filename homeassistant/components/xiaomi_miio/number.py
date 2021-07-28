@@ -1,10 +1,8 @@
 """Motor speed support for Xiaomi Mi Air Humidifier."""
 from dataclasses import dataclass
 from enum import Enum
-import logging
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
 
 from .const import (
@@ -19,8 +17,6 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
 )
 from .device import XiaomiCoordinatedMiioEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MOTOR_SPEED = "motor_speed"
 
@@ -59,8 +55,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
-    host = config_entry.data[CONF_HOST]
-    token = config_entry.data[CONF_TOKEN]
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -69,7 +63,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     else:
         name = config_entry.title
 
-    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
     if model not in [MODEL_AIRHUMIDIFIER_CA4]:
         return
 
