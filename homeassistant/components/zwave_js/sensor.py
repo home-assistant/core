@@ -106,15 +106,6 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         self._attr_name = self.generate_name(include_value_name=True)
         self._attr_device_class = self._get_device_class()
         self._attr_state_class = self._get_state_class()
-        self._attr_entity_registry_enabled_default = True
-        # We hide some of the more advanced sensors by default to not overwhelm users
-        if self.info.primary_value.command_class in [
-            CommandClass.BASIC,
-            CommandClass.CONFIGURATION,
-            CommandClass.INDICATOR,
-            CommandClass.NOTIFICATION,
-        ]:
-            self._attr_entity_registry_enabled_default = False
 
     def _get_device_class(self) -> str | None:
         """
