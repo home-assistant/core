@@ -1,10 +1,11 @@
 """Support for Amcrest IP camera sensors."""
 from datetime import timedelta
 import logging
+from typing import NamedTuple
 
 from amcrest import AmcrestError
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -17,11 +18,21 @@ SCAN_INTERVAL = timedelta(seconds=SENSOR_SCAN_INTERVAL_SECS)
 
 SENSOR_PTZ_PRESET = "ptz_preset"
 SENSOR_SDCARD = "sdcard"
-# Sensor types are defined like: Name, units, icon
-SENSORS = {
-    SENSOR_PTZ_PRESET: ["PTZ Preset", None, "mdi:camera-iris"],
-    SENSOR_SDCARD: ["SD Used", PERCENTAGE, "mdi:sd"],
-}
+
+
+class SensorMeta(NamedTuple):
+    """Meta data for sensor types."""
+
+    SENSOR_PTZ_PRESET: SensorEntityDescription
+    SENSOR_SDCARD: SensorEntityDescription
+
+
+SENSORS = SensorMeta(
+    SENSOR_PTZ_PRESET=SensorEntityDescription(key="PTZ Preset", icon="mdi:camera-iris"),
+    SENSOR_SDCARD=SensorEntityDescription(
+        key="SD Used", unit_of_measurement=PERCENTAGE, icon="mdi:sd"
+    ),
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -45,14 +56,13 @@ class AmcrestSensor(SensorEntity):
 
     def __init__(self, name, device, sensor_type):
         """Initialize a sensor for Amcrest camera."""
-        self._attr_name = f"{name} {SENSORS[sensor_type][0]}"
+        self.entity_description = SENSORS[sensor_type]
+        self.entity_description.name = f"{name} {SENSORS[sensor_type].key}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
         self._attr_state = None
         self._attr_extra_state_attributes = {}
-        self._attr_unit_of_measurement = SENSORS[sensor_type][1]
-        self._attr_icon = SENSORS[sensor_type][2]
         self._unsub_dispatcher = None
 
     @property
@@ -64,7 +74,7 @@ class AmcrestSensor(SensorEntity):
         """Get the latest data and updates the state."""
         if not self.available:
             return
-        _LOGGER.debug("Updating %s sensor", self._attr_name)
+        _LOGGER.debug("Updating %s sensor", self.entity_description.name)
 
         try:
             if self._sensor_type == SENSOR_PTZ_PRESET:
