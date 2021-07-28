@@ -537,7 +537,7 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
-    assert hass.config.currency is None
+    assert hass.config.currency == "EUR"
 
 
 async def test_loading_configuration_default_media_dirs_docker(hass):

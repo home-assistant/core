@@ -1431,5 +1431,5 @@ currency = vol.In(
         "ZMK",
         "ZWL",
     },
-    msg="invalid currency",
+    msg="invalid ISO 4217 formatted currency",
 )

@@ -1545,7 +1545,7 @@ class Config:
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None
-        self.currency: str | None = None
+        self.currency: str = "EUR"
 
         self.config_source: str = "default"
 
