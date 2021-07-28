@@ -7,6 +7,7 @@ import re
 
 import aiohttp
 from aiohttp import web
+from aiohttp.client import ClientError, ClientTimeout
 from aiohttp.hdrs import CONTENT_TYPE
 from aiohttp.web_exceptions import HTTPBadGateway
 
@@ -99,7 +100,7 @@ class HassIOView(HomeAssistantView):
 
             return response
 
-        except aiohttp.ClientError as err:
+        except ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
 
         raise HTTPBadGateway()
@@ -121,11 +122,11 @@ def _init_header(request: web.Request) -> dict[str, str]:
     return headers
 
 
-def _get_timeout(path: str) -> int:
+def _get_timeout(path: str) -> ClientTimeout:
     """Return timeout for a URL path."""
     if NO_TIMEOUT.match(path):
-        return 0
-    return 300
+        return ClientTimeout(connect=5)
+    return ClientTimeout(connect=5, total=300)
 
 
 def _need_auth(hass, path: str) -> bool:
