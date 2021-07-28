@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from .account import IcloudAccount, IcloudDevice
@@ -52,7 +53,10 @@ def add_entities(account, async_add_entities, tracked):
 class IcloudDeviceBatterySensor(SensorEntity):
     """Representation of a iCloud device battery sensor."""
 
-    def __init__(self, account: IcloudAccount, device: IcloudDevice):
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
         self._account = account
         self._device = device
@@ -69,19 +73,9 @@ class IcloudDeviceBatterySensor(SensorEntity):
         return f"{self._device.name} battery state"
 
     @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
     def state(self) -> int:
         """Battery state percentage."""
         return self._device.battery_level
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Battery state measured in percentage."""
-        return PERCENTAGE
 
     @property
     def icon(self) -> str:
@@ -97,7 +91,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
         return self._device.extra_state_attributes
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device.unique_id)},

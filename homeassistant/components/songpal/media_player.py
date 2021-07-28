@@ -82,7 +82,7 @@ async def async_setup_entry(
     songpal_entity = SongpalEntity(name, device)
     async_add_entities([songpal_entity], True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SET_SOUND_SETTING,
         {vol.Required(PARAM_NAME): cv.string, vol.Required(PARAM_VALUE): cv.string},

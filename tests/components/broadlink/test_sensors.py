@@ -22,12 +22,14 @@ async def test_a1_sensor_setup(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors_raw.call_count == 1
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensors) == 5
 
     sensors_and_states = {
@@ -58,14 +60,16 @@ async def test_a1_sensor_update(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensors) == 5
 
-    mock_api.check_sensors_raw.return_value = {
+    mock_setup.api.check_sensors_raw.return_value = {
         "temperature": 22.5,
         "humidity": 47.4,
         "air_quality": 2,
@@ -75,7 +79,7 @@ async def test_a1_sensor_update(hass):
     await hass.helpers.entity_component.async_update_entity(
         next(iter(sensors)).entity_id
     )
-    assert mock_api.check_sensors_raw.call_count == 2
+    assert mock_setup.api.check_sensors_raw.call_count == 2
 
     sensors_and_states = {
         (sensor.original_name, hass.states.get(sensor.entity_id).state)
@@ -99,12 +103,14 @@ async def test_rm_pro_sensor_setup(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count == 1
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensors) == 1
 
     sensors_and_states = {
@@ -123,24 +129,60 @@ async def test_rm_pro_sensor_update(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensors) == 1
 
-    mock_api.check_sensors.return_value = {"temperature": 25.8}
+    mock_setup.api.check_sensors.return_value = {"temperature": 25.8}
     await hass.helpers.entity_component.async_update_entity(
         next(iter(sensors)).entity_id
     )
-    assert mock_api.check_sensors.call_count == 2
+    assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
         (sensor.original_name, hass.states.get(sensor.entity_id).state)
         for sensor in sensors
     }
     assert sensors_and_states == {(f"{device.name} Temperature", "25.8")}
+
+
+async def test_rm_pro_filter_crazy_temperature(hass):
+    """Test we filter a crazy temperature variation.
+
+    Firmware issue. See https://github.com/home-assistant/core/issues/42100.
+    """
+    device = get_device("Office")
+    mock_api = device.get_mock_api()
+    mock_api.check_sensors.return_value = {"temperature": 22.9}
+
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
+    entries = async_entries_for_device(entity_registry, device_entry.id)
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    assert len(sensors) == 1
+
+    mock_setup.api.check_sensors.return_value = {"temperature": -7}
+    await hass.helpers.entity_component.async_update_entity(
+        next(iter(sensors)).entity_id
+    )
+    assert mock_setup.api.check_sensors.call_count == 2
+
+    sensors_and_states = {
+        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        for sensor in sensors
+    }
+    assert sensors_and_states == {(f"{device.name} Temperature", "22.9")}
 
 
 async def test_rm_mini3_no_sensor(hass):
@@ -152,12 +194,14 @@ async def test_rm_mini3_no_sensor(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count <= 1
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensors) == 0
 
 
@@ -170,12 +214,14 @@ async def test_rm4_pro_hts2_sensor_setup(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count == 1
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensors) == 2
 
     sensors_and_states = {
@@ -197,18 +243,20 @@ async def test_rm4_pro_hts2_sensor_update(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensors) == 2
 
-    mock_api.check_sensors.return_value = {"temperature": 16.8, "humidity": 34.0}
+    mock_setup.api.check_sensors.return_value = {"temperature": 16.8, "humidity": 34.0}
     await hass.helpers.entity_component.async_update_entity(
         next(iter(sensors)).entity_id
     )
-    assert mock_api.check_sensors.call_count == 2
+    assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
         (sensor.original_name, hass.states.get(sensor.entity_id).state)
@@ -229,10 +277,12 @@ async def test_rm4_pro_no_sensor(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_api.check_sensors.call_count <= 1
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     entries = async_entries_for_device(entity_registry, device_entry.id)
     sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
     assert len(sensors) == 0

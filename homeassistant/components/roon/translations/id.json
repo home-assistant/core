@@ -4,7 +4,6 @@
             "already_configured": "Perangkat sudah dikonfigurasi"
         },
         "error": {
-            "duplicate_entry": "Host ini telah ditambahkan.",
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },

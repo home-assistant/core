@@ -193,6 +193,7 @@ def test_core_config_schema():
         {"longitude": -181},
         {"external_url": "not an url"},
         {"internal_url": "not an url"},
+        {"currency", 100},
         {"customize": "bla"},
         {"customize": {"light.sensor": 100}},
         {"customize": {"entity_id": []}},
@@ -208,6 +209,7 @@ def test_core_config_schema():
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            "currency": "USD",
             "customize": {"sensor.temperature": {"hidden": True}},
         }
     )
@@ -218,7 +220,6 @@ def test_customize_dict_schema():
     values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
 
     for val in values:
-        print(val)
         with pytest.raises(MultipleInvalid):
             config_util.CUSTOMIZE_DICT_SCHEMA(val)
 
@@ -361,6 +362,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
             "unit_system": "metric",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "currency": "EUR",
         },
         "key": "core.config",
         "version": 1,
@@ -374,9 +376,10 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.time_zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
+    assert hass.config.currency == "EUR"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
@@ -405,7 +408,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
@@ -424,6 +427,7 @@ async def test_updating_configuration(hass, hass_storage):
             "unit_system": "metric",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "currency": "BTC",
         },
         "key": "core.config",
         "version": 1,
@@ -432,12 +436,14 @@ async def test_updating_configuration(hass, hass_storage):
     await config_util.async_process_ha_core_config(
         hass, {"allowlist_external_dirs": "/etc"}
     )
-    await hass.config.async_update(latitude=50)
+    await hass.config.async_update(latitude=50, currency="USD")
 
     new_core_data = copy.deepcopy(core_data)
     new_core_data["data"]["latitude"] = 50
+    new_core_data["data"]["currency"] = "USD"
     assert hass_storage["core.config"] == new_core_data
     assert hass.config.latitude == 50
+    assert hass.config.currency == "USD"
 
 
 async def test_override_stored_configuration(hass, hass_storage):
@@ -463,7 +469,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "Europe/Copenhagen"
+    assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
@@ -485,6 +491,7 @@ async def test_loading_configuration(hass):
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
             "legacy_templates": True,
+            "currency": "EUR",
         },
     )
 
@@ -493,7 +500,7 @@ async def test_loading_configuration(hass):
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
-    assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert len(hass.config.allowlist_external_dirs) == 3
@@ -502,6 +509,7 @@ async def test_loading_configuration(hass):
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
     assert hass.config.legacy_templates is True
+    assert hass.config.currency == "EUR"
 
 
 async def test_loading_configuration_temperature_unit(hass):
@@ -525,10 +533,11 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone.zone == "America/New_York"
+    assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.currency == "EUR"
 
 
 async def test_loading_configuration_default_media_dirs_docker(hass):

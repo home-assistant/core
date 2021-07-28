@@ -74,7 +74,7 @@ class XboxSource(MediaSource):
 
     name: str = "Xbox Game Media"
 
-    def __init__(self, hass: HomeAssistant, client: XboxLiveClient):
+    def __init__(self, hass: HomeAssistant, client: XboxLiveClient) -> None:
         """Initialize Xbox source."""
         super().__init__(DOMAIN)
 

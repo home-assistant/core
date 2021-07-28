@@ -8,7 +8,6 @@
             "is_pressure": "Trenutni tlak {entity_name}",
             "is_signal_strength": "Trenutna jakost signala {entity_name}",
             "is_temperature": "Trenutna temperatura {entity_name}",
-            "is_timestamp": "Trenutni {entity_name} \u010dasovni \u017eig",
             "is_value": "Trenutna vrednost {entity_name}"
         },
         "trigger_type": {
@@ -19,7 +18,6 @@
             "pressure": "{entity_name} spremembe tlaka",
             "signal_strength": "{entity_name} spremembe mo\u010di signala",
             "temperature": "{entity_name} spremembe temperatur",
-            "timestamp": "{entity_name} spremembe \u010dasovnega \u017eiga",
             "value": "{entity_name} spremembe vrednosti"
         }
     },

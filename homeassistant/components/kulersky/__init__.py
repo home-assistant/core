@@ -8,7 +8,7 @@ from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
 PLATFORMS = ["light"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Kuler Sky from a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}

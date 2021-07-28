@@ -4,12 +4,13 @@ set_aux_heat:
   name: Turn on/off auxiliary heater
   description: Turn auxiliary heater on/off for climate device.
   target:
+    entity:
+      domain: climate
   fields:
     aux_heat:
       name: Auxiliary heating
       description: New value of auxiliary heater.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -17,6 +18,8 @@ set_preset_mode:
   name: Set preset mode
   description: Set preset mode for climate device.
   target:
+    entity:
+      domain: climate
   fields:
     preset_mode:
       name: Preset mode
@@ -30,11 +33,12 @@ set_temperature:
   name: Set temperature
   description: Set target temperature of climate device.
   target:
+    entity:
+      domain: climate
   fields:
     temperature:
       name: Temperature
       description: New target temperature for HVAC.
-      example: 25
       selector:
         number:
           min: 0
@@ -45,7 +49,6 @@ set_temperature:
       name: Target temperature high
       description: New target high temperature for HVAC.
       advanced: true
-      example: 26
       selector:
         number:
           min: 0
@@ -56,7 +59,6 @@ set_temperature:
       name: Target temperature low
       description: New target low temperature for HVAC.
       advanced: true
-      example: 20
       selector:
         number:
           min: 0
@@ -66,7 +68,6 @@ set_temperature:
     hvac_mode:
       name: HVAC mode
       description: HVAC operation mode to set temperature to.
-      example: "heat"
       selector:
         select:
           options:
@@ -82,24 +83,25 @@ set_humidity:
   name: Set target humidity
   description: Set target humidity of climate device.
   target:
+    entity:
+      domain: climate
   fields:
     humidity:
       name: Humidity
       description: New target humidity for climate device.
       required: true
-      example: 60
       selector:
         number:
           min: 30
           max: 99
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
 
 set_fan_mode:
   name: Set fan mode
   description: Set fan operation for climate device.
   target:
+    entity:
+      domain: climate
   fields:
     fan_mode:
       name: Fan mode
@@ -113,11 +115,12 @@ set_hvac_mode:
   name: Set HVAC mode
   description: Set HVAC operation mode for climate device.
   target:
+    entity:
+      domain: climate
   fields:
     hvac_mode:
       name: HVAC mode
       description: New value of operation mode.
-      example: "heat"
       selector:
         select:
           options:
@@ -133,6 +136,8 @@ set_swing_mode:
   name: Set swing mode
   description: Set swing operation for climate device.
   target:
+    entity:
+      domain: climate
   fields:
     swing_mode:
       name: Swing mode
@@ -146,8 +151,12 @@ turn_on:
   name: Turn on
   description: Turn climate device on.
   target:
+    entity:
+      domain: climate
 
 turn_off:
   name: Turn off
   description: Turn climate device off.
   target:
+    entity:
+      domain: climate

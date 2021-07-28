@@ -15,7 +15,7 @@
             "response_error": "Ukjent feil fra enheten",
             "unknown": "Uventet feil"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

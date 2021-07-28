@@ -326,3 +326,36 @@ def test_forgiving_add_index_with_other_db_types(caplog, exception_type):
 
     assert "already exists on states" in caplog.text
     assert "continuing" in caplog.text
+
+
+class MockPyODBCProgrammingError(Exception):
+    """A mock pyodbc error."""
+
+
+def test_raise_if_exception_missing_str():
+    """Test we raise an exception if strings are not present."""
+    programming_exc = ProgrammingError("select * from;", Mock(), Mock())
+    programming_exc.__cause__ = MockPyODBCProgrammingError(
+        "[42S11] [FreeTDS][SQL Server]The operation failed because an index or statistics with name 'ix_states_old_state_id' already exists on table 'states'. (1913) (SQLExecDirectW)"
+    )
+
+    migration.raise_if_exception_missing_str(
+        programming_exc, ["already exists", "duplicate"]
+    )
+
+    with pytest.raises(ProgrammingError):
+        migration.raise_if_exception_missing_str(programming_exc, ["not present"])
+
+
+def test_raise_if_exception_missing_empty_cause_str():
+    """Test we raise an exception if strings are not present with an empty cause."""
+    programming_exc = ProgrammingError("select * from;", Mock(), Mock())
+    programming_exc.__cause__ = MockPyODBCProgrammingError()
+
+    with pytest.raises(ProgrammingError):
+        migration.raise_if_exception_missing_str(
+            programming_exc, ["already exists", "duplicate"]
+        )
+
+    with pytest.raises(ProgrammingError):
+        migration.raise_if_exception_missing_str(programming_exc, ["not present"])

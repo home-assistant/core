@@ -77,9 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-
-    neato_session = api.ConfigEntryAuth(hass, entry, session)
+    neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hass.data[NEATO_DOMAIN][entry.entry_id] = neato_session
     hub = NeatoHub(hass, Account(neato_session))
 
@@ -108,7 +106,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
 class NeatoHub:
     """A My Neato hub wrapper class."""
 
-    def __init__(self, hass: HomeAssistant, neato: Account):
+    def __init__(self, hass: HomeAssistant, neato: Account) -> None:
         """Initialize the Neato hub."""
         self._hass = hass
         self.my_neato: Account = neato

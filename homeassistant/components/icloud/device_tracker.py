@@ -8,6 +8,7 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .account import IcloudAccount, IcloudDevice
 from .const import (
@@ -60,7 +61,7 @@ def add_entities(account, async_add_entities, tracked):
 class IcloudTrackerEntity(TrackerEntity):
     """Represent a tracked device."""
 
-    def __init__(self, account: IcloudAccount, device: IcloudDevice):
+    def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Set up the iCloud tracker entity."""
         self._account = account
         self._device = device
@@ -112,7 +113,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.extra_state_attributes
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device.unique_id)},

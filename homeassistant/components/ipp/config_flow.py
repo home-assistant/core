@@ -15,7 +15,7 @@ from pyipp import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID, DOMAIN
 
@@ -57,13 +56,14 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an IPP config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Set up the instance."""
         self.discovery_info = {}
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -99,7 +99,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-    async def async_step_zeroconf(self, discovery_info: ConfigType) -> FlowResult:
+    async def async_step_zeroconf(self, discovery_info: dict[str, Any]) -> FlowResult:
         """Handle zeroconf discovery."""
         port = discovery_info[CONF_PORT]
         zctype = discovery_info["type"]
@@ -166,7 +166,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
-        self, user_input: ConfigType = None
+        self, user_input: dict[str, Any] = None
     ) -> FlowResult:
         """Handle a confirmation flow initiated by zeroconf."""
         if user_input is None:

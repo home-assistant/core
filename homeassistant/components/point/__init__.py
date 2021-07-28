@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from httpx import ConnectTimeout
 from pypoint import PointSession
 import voluptuous as vol
 
@@ -14,7 +15,8 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -74,7 +76,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Point from a config entry."""
 
     async def token_saver(token, **kwargs):
@@ -92,6 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     try:
         await session.ensure_active_token()
+    except ConnectTimeout as err:
+        _LOGGER.debug("Connection Timeout")
+        raise ConfigEntryNotReady from err
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Authentication Error")
         return False
@@ -307,7 +312,9 @@ class MinutPointEntity(Entity):
         """Return a device description for device registry."""
         device = self.device.device
         return {
-            "connections": {("mac", device["device_mac"])},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
+            },
             "identifieres": device["device_id"],
             "manufacturer": "Minut",
             "model": f"Point v{device['hardware_version']}",

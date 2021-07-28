@@ -1222,11 +1222,11 @@ async def test_disable_config_entry_disables_devices(hass, registry):
 
     entry1 = registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entry2 = registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "34:56:AB:CD:EF:12")},
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
         disabled_by=device_registry.DISABLED_USER,
     )
 

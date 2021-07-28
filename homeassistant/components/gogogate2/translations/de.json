@@ -7,6 +7,7 @@
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
+        "flow_title": "{device} ({ip_address})",
         "step": {
             "user": {
                 "data": {

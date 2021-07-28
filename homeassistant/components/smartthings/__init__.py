@@ -62,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle migration of a previous version config entry.
 
     A config entry created under a previous version must go through the
@@ -84,7 +84,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry):
     return False
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initialize config entry which represents an installed SmartApp."""
     # For backwards compat
     if entry.unique_id is None:

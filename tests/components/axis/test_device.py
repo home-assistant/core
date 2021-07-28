@@ -8,7 +8,6 @@ from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 import respx
 
-from homeassistant import config_entries
 from homeassistant.components import axis
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
@@ -283,7 +282,6 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
     config_entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
         data=deepcopy(config),
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
         version=3,
         unique_id=FORMATTED_MAC,

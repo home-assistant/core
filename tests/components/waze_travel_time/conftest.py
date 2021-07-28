@@ -5,6 +5,13 @@ from WazeRouteCalculator import WRCError
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def mock_wrc():
+    """Mock out WazeRouteCalculator."""
+    with patch("homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator"):
+        yield
+
+
 @pytest.fixture(name="skip_notifications", autouse=True)
 def skip_notifications_fixture():
     """Skip notification calls."""
@@ -30,6 +37,16 @@ def bypass_setup_fixture():
     """Bypass entry setup."""
     with patch(
         "homeassistant.components.waze_travel_time.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="bypass_platform_setup")
+def bypass_platform_setup_fixture():
+    """Bypass platform setup."""
+    with patch(
+        "homeassistant.components.waze_travel_time.sensor.async_setup_entry",
         return_value=True,
     ):
         yield

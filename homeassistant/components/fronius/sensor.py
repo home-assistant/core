@@ -290,6 +290,8 @@ class FroniusTemplateSensor(SensorEntity):
         """Update the internal state."""
         state = self.parent.data.get(self._name)
         self._state = state.get("value")
+        if isinstance(self._state, float):
+            self._state = round(self._state, 2)
         self._unit = state.get("unit")
 
     async def async_added_to_hass(self):

@@ -50,8 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    platform = entity_platform.current_platform.get()
-    assert platform
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(  # type: ignore
         SERVICE_SET_LOCK_USER_CODE,

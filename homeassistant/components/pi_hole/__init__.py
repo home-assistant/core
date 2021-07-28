@@ -1,11 +1,13 @@
 """The pi_hole component."""
+from __future__ import annotations
+
 import logging
 
 from hole import Hole
 from hole.exceptions import HoleError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -13,10 +15,12 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -52,12 +56,15 @@ PI_HOLE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Pi-hole integration."""
 
     hass.data[DOMAIN] = {}
@@ -74,7 +81,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pi-hole entry."""
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
@@ -106,7 +113,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
 
-    async def async_update_data():
+    async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
             await api.get_data()
@@ -130,7 +137,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Pi-hole entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, _async_platforms(entry)
@@ -141,7 +148,7 @@ async def async_unload_entry(hass, entry):
 
 
 @callback
-def _async_platforms(entry):
+def _async_platforms(entry: ConfigEntry) -> list[str]:
     """Return platforms to be loaded / unloaded."""
     platforms = ["sensor"]
     if not entry.data[CONF_STATISTICS_ONLY]:
@@ -154,7 +161,13 @@ def _async_platforms(entry):
 class PiHoleEntity(CoordinatorEntity):
     """Representation of a Pi-hole entity."""
 
-    def __init__(self, api, coordinator, name, server_unique_id):
+    def __init__(
+        self,
+        api: Hole,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        server_unique_id: str,
+    ) -> None:
         """Initialize a Pi-hole entity."""
         super().__init__(coordinator)
         self.api = api
@@ -162,12 +175,12 @@ class PiHoleEntity(CoordinatorEntity):
         self._server_unique_id = server_unique_id
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return "mdi:pi-hole"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         return {
             "identifiers": {(DOMAIN, self._server_unique_id)},

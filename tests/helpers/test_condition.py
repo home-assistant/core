@@ -1,12 +1,20 @@
 """Test the condition helper."""
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
-from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+)
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import condition, trace
 from homeassistant.helpers.template import Template
@@ -27,7 +35,7 @@ def calls(hass):
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
     """Initialize components."""
-    dt_util.set_default_time_zone(hass.config.time_zone)
+    hass.config.set_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(
         async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
     )
@@ -791,11 +799,123 @@ async def test_time_using_input_datetime(hass):
             hass, after="input_datetime.pm", before="input_datetime.am"
         )
 
+    # Trigger on PM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=18, minute=0, second=0),
+    ):
+        assert condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+        assert not condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.time(hass, after="input_datetime.pm")
+        assert not condition.time(hass, before="input_datetime.pm")
+
+    # Trigger on AM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=6, minute=0, second=0),
+    ):
+        assert not condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+        assert condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.time(hass, after="input_datetime.am")
+        assert not condition.time(hass, before="input_datetime.am")
+
     with pytest.raises(ConditionError):
         condition.time(hass, after="input_datetime.not_existing")
 
     with pytest.raises(ConditionError):
         condition.time(hass, before="input_datetime.not_existing")
+
+
+async def test_time_using_sensor(hass):
+    """Test time conditions using sensor entities."""
+    hass.states.async_set(
+        "sensor.am",
+        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+    )
+    hass.states.async_set(
+        "sensor.pm",
+        "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+    )
+    hass.states.async_set(
+        "sensor.no_device_class",
+        "2020-06-01 01:00:00.000000+00:00",
+    )
+    hass.states.async_set(
+        "sensor.invalid_timestamp",
+        "This is not a timestamp",
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=3),
+    ):
+        assert not condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=9),
+    ):
+        assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=15),
+    ):
+        assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=21),
+    ):
+        assert not condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    # Trigger on PM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=18, minute=0, second=0),
+    ):
+        assert condition.time(hass, after="sensor.pm", before="sensor.am")
+        assert not condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.pm")
+        assert not condition.time(hass, before="sensor.pm")
+
+        # Even though valid, the device class is missing
+        assert not condition.time(hass, after="sensor.no_device_class")
+        assert not condition.time(hass, before="sensor.no_device_class")
+
+    # Trigger on AM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=6, minute=0, second=0),
+    ):
+        assert not condition.time(hass, after="sensor.pm", before="sensor.am")
+        assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.am")
+        assert not condition.time(hass, before="sensor.am")
+
+    assert not condition.time(hass, after="sensor.invalid_timestamp")
+    assert not condition.time(hass, before="sensor.invalid_timestamp")
+
+    with pytest.raises(ConditionError):
+        condition.time(hass, after="sensor.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.time(hass, before="sensor.not_existing")
 
 
 async def test_state_raises(hass):
@@ -921,7 +1041,7 @@ async def test_state_attribute(hass):
         },
     )
 
-    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 200})
+    hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 200})
     with pytest.raises(ConditionError):
         test(hass)
 
@@ -1217,7 +1337,7 @@ async def test_numeric_state_attribute(hass):
         },
     )
 
-    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 10})
+    hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 10})
     with pytest.raises(ConditionError):
         assert test(hass)
 
@@ -1237,12 +1357,12 @@ async def test_numeric_state_attribute(hass):
 
 async def test_numeric_state_using_input_number(hass):
     """Test numeric_state conditions using input_number entities."""
+    hass.states.async_set("number.low", 10)
     await async_setup_component(
         hass,
         "input_number",
         {
             "input_number": {
-                "low": {"min": 0, "max": 255, "initial": 10},
                 "high": {"min": 0, "max": 255, "initial": 100},
             }
         },
@@ -1257,7 +1377,7 @@ async def test_numeric_state_using_input_number(hass):
                     "condition": "numeric_state",
                     "entity_id": "sensor.temperature",
                     "below": "input_number.high",
-                    "above": "input_number.low",
+                    "above": "number.low",
                 },
             ],
         },
@@ -1289,10 +1409,10 @@ async def test_numeric_state_using_input_number(hass):
     )
     assert test(hass)
 
-    hass.states.async_set("input_number.low", "unknown")
+    hass.states.async_set("number.low", "unknown")
     assert not test(hass)
 
-    hass.states.async_set("input_number.low", "unavailable")
+    hass.states.async_set("number.low", "unavailable")
     assert not test(hass)
 
     with pytest.raises(ConditionError):
@@ -2716,3 +2836,30 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
         "sun",
         {"result": True, "wanted_time_after": "2015-07-23T11:22:18.467277+00:00"},
     )
+
+
+async def test_trigger(hass):
+    """Test trigger condition."""
+    test = await condition.async_from_config(
+        hass,
+        {"alias": "Trigger Cond", "condition": "trigger", "id": "123456"},
+    )
+
+    assert not test(hass)
+    assert not test(hass, {})
+    assert not test(hass, {"other_var": "123456"})
+    assert not test(hass, {"trigger": {"trigger_id": "123456"}})
+    assert test(hass, {"trigger": {"id": "123456"}})
+
+
+async def test_platform_async_validate_condition_config(hass):
+    """Test platform.async_validate_condition_config will be called if it exists."""
+    config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
+    platform = AsyncMock()
+    with patch(
+        "homeassistant.helpers.condition.async_get_device_automation_platform",
+        return_value=platform,
+    ):
+        platform.async_validate_condition_config.return_value = config
+        await condition.async_validate_condition_config(hass, config)
+        platform.async_validate_condition_config.assert_awaited()

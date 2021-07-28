@@ -4,51 +4,71 @@ turn_on:
   name: Turn on
   description: Start a new cleaning task.
   target:
+    entity:
+      domain: vacuum
 
 turn_off:
   name: Turn off
   description: Stop the current cleaning task and return to home.
   target:
+    entity:
+      domain: vacuum
 
 stop:
   name: Stop
   description: Stop the current cleaning task.
   target:
+    entity:
+      domain: vacuum
 
 locate:
   name: Locate
   description: Locate the vacuum cleaner robot.
   target:
+    entity:
+      domain: vacuum
 
 start_pause:
   name: Start/Pause
   description: Start, pause, or resume the cleaning task.
   target:
+    entity:
+      domain: vacuum
 
 start:
   name: Start
   description: Start or resume the cleaning task.
   target:
+    entity:
+      domain: vacuum
 
 pause:
   name: Pause
   description: Pause the cleaning task.
   target:
+    entity:
+      domain: vacuum
 
 return_to_base:
   name: Return to base
   description: Tell the vacuum cleaner to return to its dock.
   target:
+    entity:
+      domain: vacuum
 
 clean_spot:
   name: Clean spot
   description: Tell the vacuum cleaner to do a spot clean-up.
   target:
+    entity:
+      domain: vacuum
 
 send_command:
   name: Send command
   description: Send a raw command to the vacuum cleaner.
   target:
+    entity:
+      domain: vacuum
   fields:
     command:
       name: Command
@@ -68,6 +88,8 @@ set_fan_speed:
   name: Set fan speed
   description: Set the fan speed of the vacuum cleaner.
   target:
+    entity:
+      domain: vacuum
   fields:
     fan_speed:
       name: Fan speed

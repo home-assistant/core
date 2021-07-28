@@ -5,6 +5,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -13,7 +14,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
     with patch(
@@ -33,7 +34,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -62,7 +63,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -85,5 +86,5 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}

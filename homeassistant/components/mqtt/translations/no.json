@@ -62,7 +62,8 @@
                     "port": "Port",
                     "username": "Brukernavn"
                 },
-                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler."
+                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler.",
+                "title": "Megleralternativer"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Testament melding behold",
                     "will_topic": "Testament melding emne"
                 },
-                "description": "Vennligst velg MQTT-alternativer."
+                "description": "Discovery - Hvis oppdagelse er aktivert (anbefales), vil Home Assistant automatisk oppdage enheter og enheter som publiserer konfigurasjonen p\u00e5 MQTT-megleren. Hvis s\u00f8k er deaktivert, m\u00e5 all konfigurasjon utf\u00f8res manuelt.\nF\u00f8dselsmelding - F\u00f8dselsmeldingen vil bli sendt hver gang Home Assistant (re) kobles til MQTT megleren.\nWill message - Will-meldingen vil bli sendt hver gang Home Assistant mister forbindelsen til megleren, b\u00e5de i tilfelle en ren (f.eks. at Home Assistant avsluttes) og i tilfelle en uren (f.eks. hjemmeassistent krasjer eller mister nettverkstilkoblingen) koble fra.",
+                "title": "MQTT-alternativer"
             }
         }
     }

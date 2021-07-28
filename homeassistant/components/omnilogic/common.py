@@ -35,7 +35,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         config_entry: ConfigEntry,
         polling_interval: int,
-    ):
+    ) -> None:
         """Initialize the global Omnilogic data updater."""
         self.api = api
         self.config_entry = config_entry
@@ -89,7 +89,7 @@ class OmniLogicEntity(CoordinatorEntity):
         name: str,
         item_id: tuple,
         icon: str,
-    ):
+    ) -> None:
         """Initialize the OmniLogic Entity."""
         super().__init__(coordinator)
 
@@ -176,3 +176,5 @@ def check_guard(state_key, item, entity_setting):
             for guard_key, guard_value in guard_condition.items()
         ):
             return True
+
+    return False

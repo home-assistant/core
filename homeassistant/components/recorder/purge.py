@@ -1,76 +1,55 @@
 """Purge old data helper."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
-
-import homeassistant.util.dt as dt_util
 
 from .const import MAX_ROWS_TO_PURGE
 from .models import Events, RecorderRuns, States
 from .repack import repack_database
-from .util import session_scope
+from .util import retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
 
-# Retry when one of the following MySQL errors occurred:
-RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
-# 1205: Lock wait timeout exceeded; try restarting transaction
-# 1206: The total number of locks exceeds the lock table size
-# 1213: Deadlock found when trying to get lock; try restarting transaction
 
-
+@retryable_database_job("purge")
 def purge_old_data(
-    instance: Recorder, purge_days: int, repack: bool, apply_filter: bool = False
+    instance: Recorder, purge_before: datetime, repack: bool, apply_filter: bool = False
 ) -> bool:
-    """Purge events and states older than purge_days ago.
+    """Purge events and states older than purge_before.
 
     Cleans up an timeframe of an hour, based on the oldest record.
     """
-    purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug(
         "Purging states and events before target %s",
         purge_before.isoformat(sep=" ", timespec="seconds"),
     )
-    try:
-        with session_scope(session=instance.get_session()) as session:  # type: ignore
-            # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-            event_ids = _select_event_ids_to_purge(session, purge_before)
-            state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
-            if state_ids:
-                _purge_state_ids(session, state_ids)
-            if event_ids:
-                _purge_event_ids(session, event_ids)
-                # If states or events purging isn't processing the purge_before yet,
-                # return false, as we are not done yet.
-                _LOGGER.debug("Purging hasn't fully completed yet")
-                return False
-            if apply_filter and _purge_filtered_data(instance, session) is False:
-                _LOGGER.debug("Cleanup filtered data hasn't fully completed yet")
-                return False
-            _purge_old_recorder_runs(instance, session, purge_before)
-        if repack:
-            repack_database(instance)
-    except OperationalError as err:
-        if (
-            instance.engine.dialect.name == "mysql"
-            and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
-        ):
-            _LOGGER.info("%s; purge not completed, retrying", err.orig.args[1])
-            time.sleep(instance.db_retry_wait)
+
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
+        # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
+        event_ids = _select_event_ids_to_purge(session, purge_before)
+        state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
+        if state_ids:
+            _purge_state_ids(session, state_ids)
+        if event_ids:
+            _purge_event_ids(session, event_ids)
+            # If states or events purging isn't processing the purge_before yet,
+            # return false, as we are not done yet.
+            _LOGGER.debug("Purging hasn't fully completed yet")
             return False
-
-        _LOGGER.warning("Error purging history: %s", err)
-
+        if apply_filter and _purge_filtered_data(instance, session) is False:
+            _LOGGER.debug("Cleanup filtered data hasn't fully completed yet")
+            return False
+        _purge_old_recorder_runs(instance, session, purge_before)
+    if repack:
+        repack_database(instance)
     return True
 
 
@@ -213,3 +192,22 @@ def _purge_filtered_events(session: Session, excluded_event_types: list[str]) ->
     state_ids: list[int] = [state.state_id for state in states]
     _purge_state_ids(session, state_ids)
     _purge_event_ids(session, event_ids)
+
+
+@retryable_database_job("purge")
+def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
+    """Purge states and events of specified entities."""
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
+        selected_entity_ids: list[str] = [
+            entity_id
+            for (entity_id,) in session.query(distinct(States.entity_id)).all()
+            if entity_filter(entity_id)
+        ]
+        _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
+        if len(selected_entity_ids) > 0:
+            # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
+            _purge_filtered_states(session, selected_entity_ids)
+            _LOGGER.debug("Purging entity data hasn't fully completed yet")
+            return False
+
+    return True

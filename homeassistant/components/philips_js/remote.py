@@ -37,7 +37,7 @@ class PhilipsTVRemote(RemoteEntity):
         coordinator: PhilipsTVDataUpdateCoordinator,
         system: SystemType,
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
         self._coordinator = coordinator

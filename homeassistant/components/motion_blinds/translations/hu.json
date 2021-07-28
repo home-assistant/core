@@ -5,11 +5,15 @@
             "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
             "connection_error": "Sikertelen csatlakoz\u00e1s"
         },
+        "error": {
+            "discovery_error": "Nem siker\u00fclt felfedezni a Motion Gateway-t"
+        },
         "step": {
             "connect": {
                 "data": {
                     "api_key": "API kulcs"
-                }
+                },
+                "description": "Sz\u00fcks\u00e9ge lesz a 16 karakteres API kulcsra, \u00fatmutat\u00e1s\u00e9rt l\u00e1sd: https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key"
             },
             "select": {
                 "data": {
@@ -20,7 +24,8 @@
                 "data": {
                     "api_key": "API kulcs",
                     "host": "IP c\u00edm"
-                }
+                },
+                "description": "Csatlakozzon a Motion Gateway-hez, ha az IP-c\u00edm nincs be\u00e1ll\u00edtva, akkor az automatikus felder\u00edt\u00e9st haszn\u00e1lja"
             }
         }
     }

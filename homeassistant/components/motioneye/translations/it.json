@@ -11,6 +11,10 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Vuoi configurare Home Assistant per connettersi al servizio motionEye fornito dal componente aggiuntivo: {addon}?",
+                "title": "motionEye tramite il componente aggiuntivo Home Assistant"
+            },
             "user": {
                 "data": {
                     "admin_password": "Amministratore Password",
@@ -18,6 +22,16 @@
                     "surveillance_password": "Sorveglianza Password",
                     "surveillance_username": "Sorveglianza Nome utente",
                     "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "Configura i webhooks di motionEye per segnalare gli eventi a Home Assistant",
+                    "webhook_set_overwrite": "Sovrascrivi webhook non riconosciuti"
                 }
             }
         }

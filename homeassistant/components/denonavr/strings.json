@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Denon AVR Network Receiver: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Denon AVR Network Receivers",

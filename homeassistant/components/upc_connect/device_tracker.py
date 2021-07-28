@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = "192.168.0.1"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
@@ -54,7 +54,7 @@ async def async_get_scanner(hass, config):
 class UPCDeviceScanner(DeviceScanner):
     """This class queries a router running UPC ConnectBox firmware."""
 
-    def __init__(self, connect_box: ConnectBox):
+    def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""
         self.connect_box: ConnectBox = connect_box
 

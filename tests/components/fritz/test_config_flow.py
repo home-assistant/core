@@ -4,10 +4,14 @@ from unittest.mock import patch
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import pytest
 
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.components.fritz.const import (
     DOMAIN,
     ERROR_AUTH_INVALID,
-    ERROR_CONNECTION_ERROR,
+    ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
 )
 from homeassistant.components.ssdp import (
@@ -52,13 +56,15 @@ MOCK_SSDP_DATA = {
     ATTR_UPNP_UDN: "uuid:only-a-test",
 }
 
+MOCK_REQUEST = b'<?xml version="1.0" encoding="utf-8"?><SessionInfo><SID>xxxxxxxxxxxxxxxx</SID><Challenge>xxxxxxxx</Challenge><BlockTime>0</BlockTime><Rights><Name>Dial</Name><Access>2</Access><Name>App</Name><Access>2</Access><Name>HomeAuto</Name><Access>2</Access><Name>BoxAdmin</Name><Access>2</Access><Name>Phone</Name><Access>2</Access><Name>NAS</Name><Access>2</Access></Rights><Users><User last="1">FakeFritzUser</User></Users></SessionInfo>\n'
+
 
 @pytest.fixture()
-def fc_class_mock(mocker):
+def fc_class_mock():
     """Fixture that sets up a mocked FritzConnection class."""
-    result = mocker.patch("fritzconnection.FritzConnection", autospec=True)
-    result.return_value = FritzConnectionMock()
-    yield result
+    with patch("fritzconnection.FritzConnection", autospec=True) as result:
+        result.return_value = FritzConnectionMock()
+        yield result
 
 
 async def test_user(hass: HomeAssistant, fc_class_mock):
@@ -68,7 +74,16 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -83,6 +98,10 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
+        assert (
+            result["options"][CONF_CONSIDER_HOME]
+            == DEFAULT_CONSIDER_HOME.total_seconds()
+        )
         assert not result["result"].unique_id
         await hass.async_block_till_done()
 
@@ -98,7 +117,16 @@ async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -111,6 +139,7 @@ async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
+        assert result["errors"]["base"] == "already_configured"
 
 
 async def test_exception_security(hass: HomeAssistant):
@@ -156,7 +185,7 @@ async def test_exception_connection(hass: HomeAssistant):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"]["base"] == ERROR_CONNECTION_ERROR
+        assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
 
 
 async def test_exception_unknown(hass: HomeAssistant):
@@ -193,7 +222,16 @@ async def test_reauth_successful(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -248,6 +286,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, fc_class_mock):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "reauth_confirm"
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_ssdp_already_configured(hass: HomeAssistant, fc_class_mock):
@@ -295,7 +334,7 @@ async def test_ssdp_already_configured_host(hass: HomeAssistant, fc_class_mock):
 
 
 async def test_ssdp_already_configured_host_uuid(hass: HomeAssistant, fc_class_mock):
-    """Test starting a flow from discovery with a laready configured uuid."""
+    """Test starting a flow from discovery with an already configured uuid."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -345,7 +384,16 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -401,7 +449,16 @@ async def test_import(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG
@@ -414,3 +471,30 @@ async def test_import(hass: HomeAssistant, fc_class_mock):
         await hass.async_block_till_done()
 
     assert mock_setup_entry.called
+
+
+async def test_options_flow(hass: HomeAssistant, fc_class_mock):
+    """Test options flow."""
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools"
+    ):
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CONSIDER_HOME: 37,
+            },
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert mock_config.options[CONF_CONSIDER_HOME] == 37

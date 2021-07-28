@@ -11,15 +11,6 @@
             "unknown": "Error inesperado"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "Correo electr\u00f3nico",
-                    "password": "Contrase\u00f1a",
-                    "region": "Regi\u00f3n"
-                },
-                "description": "Ha fallado la autenticaci\u00f3n para los Servicios Conectados de Mazda. Por favor, introduce tus credenciales actuales.",
-                "title": "Servicios Conectados de Mazda - Fallo de autenticaci\u00f3n"
-            },
             "user": {
                 "data": {
                     "email": "Correo electronico",

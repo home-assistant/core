@@ -22,10 +22,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     ombi = hass.data[DOMAIN]["instance"]
 
-    for sensor in SENSOR_TYPES:
+    for sensor, sensor_val in SENSOR_TYPES.items():
         sensor_label = sensor
-        sensor_type = SENSOR_TYPES[sensor]["type"]
-        sensor_icon = SENSOR_TYPES[sensor]["icon"]
+        sensor_type = sensor_val["type"]
+        sensor_icon = sensor_val["icon"]
         sensors.append(OmbiSensor(sensor_label, sensor_type, ombi, sensor_icon))
 
     add_entities(sensors, True)

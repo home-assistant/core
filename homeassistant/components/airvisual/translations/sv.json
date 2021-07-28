@@ -12,10 +12,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "cloud_api": "Geografisk Plats",
-                    "type": "Integrationstyp"
-                },
                 "title": "Konfigurera AirVisual"
             }
         }

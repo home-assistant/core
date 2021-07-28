@@ -7,7 +7,7 @@ from typing import Any
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BASE_PATH,
@@ -62,7 +61,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sonarr."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the flow."""
@@ -76,7 +74,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, data: ConfigType | None = None) -> FlowResult:
+    async def async_step_reauth(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Handle configuration by re-auth."""
         self._reauth = True
         self._entry_data = dict(data)
@@ -86,7 +84,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
@@ -99,7 +97,9 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -172,7 +172,7 @@ class SonarrOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: ConfigType | None = None):
+    async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Manage Sonarr options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

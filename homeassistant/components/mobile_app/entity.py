@@ -26,7 +26,7 @@ def unique_id(webhook_id, sensor_unique_id):
 class MobileAppEntity(RestoreEntity):
     """Representation of an mobile app entity."""
 
-    def __init__(self, config: dict, device: DeviceEntry, entry: ConfigEntry):
+    def __init__(self, config: dict, device: DeviceEntry, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._config = config
         self._device = device

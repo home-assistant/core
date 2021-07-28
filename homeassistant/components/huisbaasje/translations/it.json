@@ -5,9 +5,7 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "connection_exception": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "unauthenticated_exception": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
         "step": {

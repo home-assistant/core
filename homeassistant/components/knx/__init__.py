@@ -3,18 +3,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
-from xknx.io import (
-    DEFAULT_MCAST_GRP,
-    DEFAULT_MCAST_PORT,
-    ConnectionConfig,
-    ConnectionType,
-)
+from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
@@ -34,9 +30,16 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
+from .const import (
+    CONF_KNX_EXPOSE,
+    CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_ROUTING,
+    CONF_KNX_TUNNELING,
+    DOMAIN,
+    KNX_ADDRESS,
+    SupportedPlatforms,
+)
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
-from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
@@ -46,35 +49,29 @@ from .schema import (
     FanSchema,
     LightSchema,
     NotifySchema,
+    NumberSchema,
     SceneSchema,
+    SelectSchema,
     SensorSchema,
     SwitchSchema,
     WeatherSchema,
     ga_validator,
-    ia_validator,
     sensor_type_validator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_KNX_ROUTING = "routing"
-CONF_KNX_TUNNELING = "tunneling"
-CONF_KNX_FIRE_EVENT = "fire_event"
-CONF_KNX_EVENT_FILTER = "event_filter"
-CONF_KNX_INDIVIDUAL_ADDRESS = "individual_address"
-CONF_KNX_MCAST_GRP = "multicast_group"
-CONF_KNX_MCAST_PORT = "multicast_port"
-CONF_KNX_STATE_UPDATER = "state_updater"
-CONF_KNX_RATE_LIMIT = "rate_limit"
-CONF_KNX_EXPOSE = "expose"
 
-SERVICE_KNX_SEND = "send"
-SERVICE_KNX_ATTR_PAYLOAD = "payload"
-SERVICE_KNX_ATTR_TYPE = "type"
-SERVICE_KNX_ATTR_REMOVE = "remove"
-SERVICE_KNX_EVENT_REGISTER = "event_register"
-SERVICE_KNX_EXPOSURE_REGISTER = "exposure_register"
-SERVICE_KNX_READ = "read"
+CONF_KNX_FIRE_EVENT: Final = "fire_event"
+CONF_KNX_EVENT_FILTER: Final = "event_filter"
+
+SERVICE_KNX_SEND: Final = "send"
+SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
+SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_REMOVE: Final = "remove"
+SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
+SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
+SERVICE_KNX_READ: Final = "read"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -86,62 +83,24 @@ CONFIG_SCHEMA = vol.Schema(
             cv.deprecated("fire_event_filter", replacement_key=CONF_KNX_EVENT_FILTER),
             vol.Schema(
                 {
-                    vol.Exclusive(
-                        CONF_KNX_ROUTING, "connection_type"
-                    ): ConnectionSchema.ROUTING_SCHEMA,
-                    vol.Exclusive(
-                        CONF_KNX_TUNNELING, "connection_type"
-                    ): ConnectionSchema.TUNNELING_SCHEMA,
+                    **ConnectionSchema.SCHEMA,
                     vol.Optional(CONF_KNX_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_KNX_EVENT_FILTER, default=[]): vol.All(
                         cv.ensure_list, [cv.string]
                     ),
-                    vol.Optional(
-                        CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
-                    ): ia_validator,
-                    vol.Optional(
-                        CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
-                    ): cv.port,
-                    vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
-                    vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=100)
-                    ),
-                    vol.Optional(CONF_KNX_EXPOSE): vol.All(
-                        cv.ensure_list, [ExposeSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.COVER.value): vol.All(
-                        cv.ensure_list, [CoverSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.BINARY_SENSOR.value): vol.All(
-                        cv.ensure_list, [BinarySensorSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.LIGHT.value): vol.All(
-                        cv.ensure_list, [LightSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.CLIMATE.value): vol.All(
-                        cv.ensure_list, [ClimateSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.NOTIFY.value): vol.All(
-                        cv.ensure_list, [NotifySchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.SWITCH.value): vol.All(
-                        cv.ensure_list, [SwitchSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.SENSOR.value): vol.All(
-                        cv.ensure_list, [SensorSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.SCENE.value): vol.All(
-                        cv.ensure_list, [SceneSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.WEATHER.value): vol.All(
-                        cv.ensure_list, [WeatherSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.FAN.value): vol.All(
-                        cv.ensure_list, [FanSchema.SCHEMA]
-                    ),
+                    **ExposeSchema.platform_node(),
+                    **BinarySensorSchema.platform_node(),
+                    **ClimateSchema.platform_node(),
+                    **CoverSchema.platform_node(),
+                    **FanSchema.platform_node(),
+                    **LightSchema.platform_node(),
+                    **NotifySchema.platform_node(),
+                    **NumberSchema.platform_node(),
+                    **SceneSchema.platform_node(),
+                    **SelectSchema.platform_node(),
+                    **SensorSchema.platform_node(),
+                    **SwitchSchema.platform_node(),
+                    **WeatherSchema.platform_node(),
                 }
             ),
         )
@@ -229,19 +188,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     for platform in SupportedPlatforms:
-        if platform.value in config[DOMAIN]:
-            for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(platform, knx_module.xknx, device_config)
-
-    # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
-    for platform in SupportedPlatforms:
+        if platform.value not in config[DOMAIN]:
+            continue
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,
                 platform.value,
                 DOMAIN,
                 {
-                    "platform_config": config[DOMAIN].get(platform.value),
+                    "platform_config": config[DOMAIN][platform.value],
                 },
                 config,
             )
@@ -290,7 +245,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await knx_module.xknx.stop()
 
         await asyncio.gather(
-            *[platform.async_reset() for platform in async_get_platforms(hass, DOMAIN)]
+            *(platform.async_reset() for platform in async_get_platforms(hass, DOMAIN))
         )
 
         await async_setup(hass, config)
@@ -320,11 +275,11 @@ class KNXModule:
         """Initialize XKNX object."""
         self.xknx = XKNX(
             own_address=self.config[DOMAIN][CONF_KNX_INDIVIDUAL_ADDRESS],
-            rate_limit=self.config[DOMAIN][CONF_KNX_RATE_LIMIT],
-            multicast_group=self.config[DOMAIN][CONF_KNX_MCAST_GRP],
-            multicast_port=self.config[DOMAIN][CONF_KNX_MCAST_PORT],
+            rate_limit=self.config[DOMAIN][ConnectionSchema.CONF_KNX_RATE_LIMIT],
+            multicast_group=self.config[DOMAIN][ConnectionSchema.CONF_KNX_MCAST_GRP],
+            multicast_port=self.config[DOMAIN][ConnectionSchema.CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
-            state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
+            state_updater=self.config[DOMAIN][ConnectionSchema.CONF_KNX_STATE_UPDATER],
         )
 
     async def start(self) -> None:
@@ -343,7 +298,6 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_KNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        # config from xknx.yaml always has priority later on
         return ConnectionConfig(auto_reconnect=True)
 
     def connection_config_routing(self) -> ConnectionConfig:
@@ -424,14 +378,16 @@ class KNXModule:
                         "Service event_register could not remove event for '%s'",
                         str(group_address),
                     )
-        else:
-            for group_address in group_addresses:
-                if group_address not in self._knx_event_callback.group_addresses:
-                    self._knx_event_callback.group_addresses.append(group_address)
-                    _LOGGER.debug(
-                        "Service event_register registered event for '%s'",
-                        str(group_address),
-                    )
+            return
+
+        for group_address in group_addresses:
+            if group_address in self._knx_event_callback.group_addresses:
+                continue
+            self._knx_event_callback.group_addresses.append(group_address)
+            _LOGGER.debug(
+                "Service event_register registered event for '%s'",
+                str(group_address),
+            )
 
     async def service_exposure_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing an exposure to KNX bus."""
@@ -450,7 +406,6 @@ class KNXModule:
 
         if group_address in self.service_exposures:
             replaced_exposure = self.service_exposures.pop(group_address)
-            assert replaced_exposure.device is not None
             _LOGGER.warning(
                 "Service exposure_register replacing already registered exposure for '%s' - %s",
                 group_address,

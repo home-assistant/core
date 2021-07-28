@@ -11,12 +11,7 @@ from verisure import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigEntry,
-    ConfigFlow,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -35,20 +30,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Verisure."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     email: str
     entry: ConfigEntry
     installations: dict[str, str]
     password: str
-
-    # These can be removed after YAML import has been removed.
-    giid: str | None = None
-    settings: dict[str, int | str]
-
-    def __init__(self):
-        """Initialize."""
-        self.settings = {}
 
     @staticmethod
     @callback
@@ -101,8 +87,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Select Verisure installation to add."""
         if len(self.installations) == 1:
             user_input = {CONF_GIID: list(self.installations)[0]}
-        elif self.giid and self.giid in self.installations:
-            user_input = {CONF_GIID: self.giid}
 
         if user_input is None:
             return self.async_show_form(
@@ -121,7 +105,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_EMAIL: self.email,
                 CONF_PASSWORD: self.password,
                 CONF_GIID: user_input[CONF_GIID],
-                **self.settings,
             },
         )
 
@@ -173,26 +156,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Import Verisure YAML configuration."""
-        if user_input[CONF_GIID]:
-            self.giid = user_input[CONF_GIID]
-            await self.async_set_unique_id(self.giid)
-            self._abort_if_unique_id_configured()
-        else:
-            # The old YAML configuration could handle 1 single Verisure instance.
-            # Therefore, if we don't know the GIID, we can use the discovery
-            # without a unique ID logic, to prevent re-import/discovery.
-            await self._async_handle_discovery_without_unique_id()
-
-        # Settings, later to be converted to config entry options
-        if user_input[CONF_LOCK_CODE_DIGITS]:
-            self.settings[CONF_LOCK_CODE_DIGITS] = user_input[CONF_LOCK_CODE_DIGITS]
-        if user_input[CONF_LOCK_DEFAULT_CODE]:
-            self.settings[CONF_LOCK_DEFAULT_CODE] = user_input[CONF_LOCK_DEFAULT_CODE]
-
-        return await self.async_step_user(user_input)
 
 
 class VerisureOptionsFlowHandler(OptionsFlow):

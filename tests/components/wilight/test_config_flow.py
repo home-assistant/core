@@ -21,9 +21,9 @@ from tests.common import MockConfigEntry
 from tests.components.wilight import (
     CONF_COMPONENTS,
     HOST,
-    MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTORER,
+    MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTURER,
     MOCK_SSDP_DISCOVERY_INFO_P_B,
-    MOCK_SSDP_DISCOVERY_INFO_WRONG_MANUFACTORER,
+    MOCK_SSDP_DISCOVERY_INFO_WRONG_MANUFACTURER,
     UPNP_MODEL_NAME_P_B,
     UPNP_SERIAL,
     WILIGHT_ID,
@@ -71,7 +71,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
 async def test_ssdp_not_wilight_abort_1(hass: HomeAssistant) -> None:
     """Test that the ssdp aborts not_wilight."""
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO_WRONG_MANUFACTORER.copy()
+    discovery_info = MOCK_SSDP_DISCOVERY_INFO_WRONG_MANUFACTURER.copy()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
@@ -83,7 +83,7 @@ async def test_ssdp_not_wilight_abort_1(hass: HomeAssistant) -> None:
 async def test_ssdp_not_wilight_abort_2(hass: HomeAssistant) -> None:
     """Test that the ssdp aborts not_wilight."""
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTORER.copy()
+    discovery_info = MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTURER.copy()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )

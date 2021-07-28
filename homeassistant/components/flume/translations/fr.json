@@ -9,6 +9,13 @@
             "unknown": "Erreur inattendue"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Le mot de passe de {username} n'est plus valide.",
+                "title": "R\u00e9authentifiez votre compte Flume"
+            },
             "user": {
                 "data": {
                     "client_id": "ID du client",

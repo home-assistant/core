@@ -2,22 +2,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
 
-from homeassistant.components.azure_devops.const import (
-    CONF_ORG,
-    CONF_PAT,
-    CONF_PROJECT,
-    DATA_AZURE_DEVOPS_CLIENT,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
+
+from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DATA_AZURE_DEVOPS_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,40 +55,24 @@ class AzureDevOpsEntity(Entity):
 
     def __init__(self, organization: str, project: str, name: str, icon: str) -> None:
         """Initialize the Azure DevOps entity."""
-        self._name = name
-        self._icon = icon
-        self._available = True
+        self._attr_name = name
+        self._attr_icon = icon
         self.organization = organization
         self.project = project
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     async def async_update(self) -> None:
         """Update Azure DevOps entity."""
         if await self._azure_devops_update():
-            self._available = True
+            self._attr_available = True
         else:
-            if self._available:
+            if self._attr_available:
                 _LOGGER.debug(
                     "An error occurred while updating Azure DevOps sensor",
                     exc_info=True,
                 )
-            self._available = False
+            self._attr_available = False
 
-    async def _azure_devops_update(self) -> None:
+    async def _azure_devops_update(self) -> bool:
         """Update Azure DevOps entity."""
         raise NotImplementedError()
 
@@ -103,11 +81,11 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     """Defines a Azure DevOps device entity."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this Azure DevOps instance."""
         return {
             "identifiers": {
-                (
+                (  # type: ignore
                     DOMAIN,
                     self.organization,
                     self.project,

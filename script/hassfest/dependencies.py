@@ -136,6 +136,8 @@ IGNORE_VIOLATIONS = {
     ("demo", "openalpr_local"),
     # Migration wizard from zwave to ozw.
     "ozw",
+    # Migration of settings from zeroconf to network
+    ("network", "zeroconf"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),

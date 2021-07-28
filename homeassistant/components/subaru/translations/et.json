@@ -8,8 +8,7 @@
             "bad_pin_format": "PIN-kood peaks olema 4-kohaline",
             "cannot_connect": "\u00dchendamine nurjus",
             "incorrect_pin": "Vale PIN-kood",
-            "invalid_auth": "Vigane autentimine",
-            "unknown": "Ootamatu t\u00f5rge"
+            "invalid_auth": "Vigane autentimine"
         },
         "step": {
             "pin": {

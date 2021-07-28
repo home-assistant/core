@@ -15,32 +15,3 @@ RUN ln -sv /opt/vc/bin/raspistill /usr/local/bin/raspistill \
     && ln -sv /opt/vc/bin/raspivid /usr/local/bin/raspivid \
     && ln -sv /opt/vc/bin/raspividyuv /usr/local/bin/raspividyuv \
     && ln -sv /opt/vc/bin/raspiyuv /usr/local/bin/raspiyuv
-
-##
-# Build libcec with RPi support for HDMI-CEC
-ARG LIBCEC_VERSION=6.0.2
-RUN apk add --no-cache \
-        eudev-libs \
-        p8-platform \
-    && apk add --no-cache --virtual .build-dependencies \
-        build-base \
-        cmake \
-        eudev-dev \
-        swig \
-        raspberrypi-dev \
-        p8-platform-dev \
-    && git clone --depth 1 -b libcec-${LIBCEC_VERSION} https://github.com/Pulse-Eight/libcec /usr/src/libcec \
-    && mkdir -p /usr/src/libcec/build \
-    && cd /usr/src/libcec/build \
-    && cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \
-        -DRPI_INCLUDE_DIR=/opt/vc/include \
-        -DRPI_LIB_DIR=/opt/vc/lib \
-        -DPYTHON_LIBRARY="/usr/local/lib/libpython3.8.so" \
-        -DPYTHON_INCLUDE_DIR="/usr/local/include/python3.8" \
-        .. \
-    && make -j$(nproc) \
-    && make install \
-    && echo "cec" > "/usr/local/lib/python3.8/site-packages/cec.pth" \
-    && apk del .build-dependencies \
-    && rm -rf /usr/src/libcec
-ENV LD_LIBRARY_PATH=/opt/vc/lib:${LD_LIBRARY_PATH}

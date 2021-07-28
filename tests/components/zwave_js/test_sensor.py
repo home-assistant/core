@@ -1,5 +1,14 @@
 """Test the Z-Wave JS sensor platform."""
+from zwave_js_server.event import Event
+
+from homeassistant.components.zwave_js.const import (
+    ATTR_METER_TYPE,
+    ATTR_VALUE,
+    DOMAIN,
+    SERVICE_RESET_METER,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
@@ -85,3 +94,99 @@ async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration)
     entity_entry = ent_reg.async_get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
     assert entity_entry
     assert entity_entry.disabled
+
+
+async def test_node_status_sensor(hass, lock_id_lock_as_id150, integration):
+    """Test node status sensor is created and gets updated on node state changes."""
+    NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
+    node = lock_id_lock_as_id150
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    updated_entry = ent_reg.async_update_entity(
+        entity_entry.entity_id, **{"disabled_by": None}
+    )
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert not updated_entry.disabled
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+    # Test transitions work
+    event = Event(
+        "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "dead"
+
+    event = Event(
+        "wake up", data={"source": "node", "event": "wake up", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "awake"
+
+    event = Event(
+        "sleep", data={"source": "node", "event": "sleep", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "asleep"
+
+    event = Event(
+        "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+
+async def test_reset_meter(
+    hass,
+    client,
+    aeon_smart_switch_6,
+    integration,
+):
+    """Test reset_meter service."""
+    SENSOR = "sensor.smart_switch_6_electric_consumed_v"
+    client.async_send_command.return_value = {}
+    client.async_send_command_no_wait.return_value = {}
+
+    # Test successful meter reset call
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RESET_METER,
+        {
+            ATTR_ENTITY_ID: SENSOR,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["endpoint"] == 0
+    assert args["args"] == []
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test successful meter reset call with options
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RESET_METER,
+        {
+            ATTR_ENTITY_ID: SENSOR,
+            ATTR_METER_TYPE: 1,
+            ATTR_VALUE: 2,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["endpoint"] == 0
+    assert args["args"] == [{"type": 1, "targetValue": 2}]
+
+    client.async_send_command_no_wait.reset_mock()

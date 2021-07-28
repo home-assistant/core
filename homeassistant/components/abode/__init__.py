@@ -1,5 +1,4 @@
 """Support for the Abode Security System."""
-from copy import deepcopy
 from functools import partial
 
 from abodepy import Abode
@@ -8,7 +7,6 @@ import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
@@ -44,18 +42,7 @@ ATTR_APP_TYPE = "app_type"
 ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_POLLING, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 CHANGE_SETTING_SCHEMA = vol.Schema(
     {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
@@ -86,22 +73,6 @@ class AbodeSystem:
         self.polling = polling
         self.entity_ids = set()
         self.logout_listener = None
-
-
-async def async_setup(hass, config):
-    """Set up Abode integration."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -280,16 +251,12 @@ class AbodeEntity(Entity):
         """Initialize Abode entity."""
         self._data = data
         self._available = True
+        self._attr_should_poll = data.polling
 
     @property
     def available(self):
         """Return the available state."""
         return self._available
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return self._data.polling
 
     async def async_added_to_hass(self):
         """Subscribe to Abode connection status updates."""
@@ -320,6 +287,8 @@ class AbodeDevice(AbodeEntity):
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
+        self._attr_name = device.name
+        self._attr_unique_id = device.device_uuid
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -342,11 +311,6 @@ class AbodeDevice(AbodeEntity):
         self._device.refresh()
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -356,11 +320,6 @@ class AbodeDevice(AbodeEntity):
             "no_response": self._device.no_response,
             "device_type": self._device.type,
         }
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this device."""
-        return self._device.device_uuid
 
     @property
     def device_info(self):
@@ -384,22 +343,13 @@ class AbodeAutomation(AbodeEntity):
         """Initialize for Abode automation."""
         super().__init__(data)
         self._automation = automation
+        self._attr_name = automation.name
+        self._attr_unique_id = automation.automation_id
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            "type": "CUE automation",
+        }
 
     def update(self):
         """Update automation state."""
         self._automation.refresh()
-
-    @property
-    def name(self):
-        """Return the name of the automation."""
-        return self._automation.name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION, "type": "CUE automation"}
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this automation."""
-        return self._automation.automation_id

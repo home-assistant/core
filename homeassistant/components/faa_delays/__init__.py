@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FAA Delays from a config entry."""
     code = entry.data[CONF_ID]
 

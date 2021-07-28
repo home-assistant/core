@@ -13,7 +13,6 @@
             "is_pressure": "{entity_name} Druck",
             "is_signal_strength": "Aktuelle {entity_name} Signalst\u00e4rke",
             "is_temperature": "Aktuelle {entity_name} Temperatur",
-            "is_timestamp": "Aktueller Zeitstempel von {entity_name}",
             "is_value": "Aktueller {entity_name} Wert",
             "is_voltage": "Aktuelle Spannung von {entity_name}"
         },
@@ -30,7 +29,6 @@
             "pressure": "{entity_name} Druck\u00e4nderungen",
             "signal_strength": "{entity_name} Signalst\u00e4rke\u00e4nderungen",
             "temperature": "{entity_name} Temperatur\u00e4nderungen",
-            "timestamp": "{entity_name} Zeitstempel\u00e4nderungen",
             "value": "{entity_name} Wert\u00e4nderungen",
             "voltage": "{entity_name} Spannungs\u00e4nderungen"
         }

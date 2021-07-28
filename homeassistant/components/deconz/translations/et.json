@@ -11,7 +11,7 @@
         "error": {
             "no_key": "API v\u00f5tit ei leitud"
         },
-        "flow_title": "deCONZ Zigbee l\u00fc\u00fcs ( {host} )",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "Kas soovid seadistada Home Assistant-i \u00fchenduse deCONZ-l\u00fc\u00fcsiga, mida pakub lisandmoodul {addon} ?",

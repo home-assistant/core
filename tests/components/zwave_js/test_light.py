@@ -5,11 +5,15 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
-    ATTR_WHITE_VALUE,
+    ATTR_RGBW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ATTR_TRANSITION,
+    SUPPORT_TRANSITION,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
@@ -30,7 +34,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_MIN_MIREDS] == 153
     assert state.attributes[ATTR_MAX_MIREDS] == 370
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 51
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
     # Test turning on
     await hass.services.async_call(
@@ -58,9 +63,44 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
             "readable": True,
             "writeable": True,
             "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
         },
     }
     assert args["value"] == 255
+
+    client.async_send_command.reset_mock()
+
+    # Test turning on with transition
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_TRANSITION: 10},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 39
+    assert args["valueId"] == {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "metadata": {
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
+        },
+    }
+    assert args["value"] == 255
+    assert args["options"]["transitionDuration"] == "10s"
 
     client.async_send_command.reset_mock()
 
@@ -86,8 +126,10 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 370
+    assert ATTR_RGB_COLOR not in state.attributes
 
     # Test turning on with same brightness
     await hass.services.async_call(
@@ -127,9 +169,49 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
             "readable": True,
             "writeable": True,
             "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
         },
     }
     assert args["value"] == 50
+    assert args["options"]["transitionDuration"] == "default"
+
+    client.async_send_command.reset_mock()
+
+    # Test turning on with brightness and transition
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY,
+            ATTR_BRIGHTNESS: 129,
+            ATTR_TRANSITION: 20,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 39
+    assert args["valueId"] == {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "metadata": {
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
+        },
+    }
+    assert args["value"] == 50
+    assert args["options"]["transitionDuration"] == "20s"
 
     client.async_send_command.reset_mock()
 
@@ -231,8 +313,10 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_RGB_COLOR] == (255, 76, 255)
+    assert ATTR_COLOR_TEMP not in state.attributes
 
     client.async_send_command.reset_mock()
 
@@ -246,6 +330,23 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
 
     assert len(client.async_send_command.call_args_list) == 6
 
+    client.async_send_command.reset_mock()
+
+    # Test turning on with rgb color and transition
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY,
+            ATTR_RGB_COLOR: (128, 76, 255),
+            ATTR_TRANSITION: 20,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 6
+    args = client.async_send_command.call_args_list[5][0][0]
+    assert args["options"]["transitionDuration"] == "20s"
     client.async_send_command.reset_mock()
 
     # Test turning on with color temp
@@ -352,9 +453,10 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 170
-    assert state.attributes[ATTR_RGB_COLOR] == (255, 255, 255)
+    assert ATTR_RGB_COLOR not in state.attributes
 
     # Test turning on with same color temp
     await hass.services.async_call(
@@ -365,6 +467,24 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     )
 
     assert len(client.async_send_command.call_args_list) == 6
+
+    client.async_send_command.reset_mock()
+
+    # Test turning on with color temp and transition
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY,
+            ATTR_COLOR_TEMP: 170,
+            ATTR_TRANSITION: 35,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 6
+    args = client.async_send_command.call_args_list[5][0][0]
+    assert args["options"]["transitionDuration"] == "35s"
 
     client.async_send_command.reset_mock()
 
@@ -394,6 +514,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
             "readable": True,
             "writeable": True,
             "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
         },
     }
     assert args["value"] == 0
@@ -415,20 +536,20 @@ async def test_optional_light(hass, client, aeon_smart_switch_6, integration):
     assert state.state == STATE_ON
 
 
-async def test_white_value_light(hass, client, zen_31, integration):
+async def test_rgbw_light(hass, client, zen_31, integration):
     """Test the light entity."""
     zen_31
     state = hass.states.get(ZEN_31_ENTITY)
 
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 177
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
 
     # Test turning on
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": ZEN_31_ENTITY, ATTR_WHITE_VALUE: 128},
+        {"entity_id": ZEN_31_ENTITY, ATTR_RGBW_COLOR: (0, 0, 0, 128)},
         blocking=True,
     )
 
@@ -448,10 +569,11 @@ async def test_white_value_light(hass, client, zen_31, integration):
             "type": "any",
             "readable": True,
             "writeable": True,
+            "valueChangeOptions": ["transitionDuration"],
         },
         "value": {"blue": 70, "green": 159, "red": 255, "warmWhite": 141},
     }
-    assert args["value"] == {"warmWhite": 128}
+    assert args["value"] == {"blue": 0, "green": 0, "red": 0, "warmWhite": 128}
 
     args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
@@ -471,9 +593,21 @@ async def test_white_value_light(hass, client, zen_31, integration):
             "readable": True,
             "writeable": True,
             "label": "Target value",
+            "valueChangeOptions": ["transitionDuration"],
         },
         "value": 59,
     }
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
+
+
+async def test_light_none_color_value(hass, light_color_null_values, integration):
+    """Test the light entity can handle None value in current color Value."""
+    entity_id = "light.repeater"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]

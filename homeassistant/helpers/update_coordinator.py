@@ -6,7 +6,7 @@ from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Callable, Generic, TypeVar
+from typing import Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp
@@ -25,8 +25,6 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
 
-# mypy: disallow-any-generics
-
 
 class UpdateFailed(Exception):
     """Raised when an update has failed."""
@@ -44,13 +42,14 @@ class DataUpdateCoordinator(Generic[T]):
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[T]] | None = None,
         request_refresh_debouncer: Debouncer | None = None,
-    ):
+    ) -> None:
         """Initialize global data updater."""
         self.hass = hass
         self.logger = logger
         self.name = name
         self.update_method = update_method
         self.update_interval = update_interval
+        self.config_entry = config_entries.current_entry.get()
 
         # It's None before the first successful update.
         # Components should call async_config_entry_first_refresh
@@ -110,6 +109,9 @@ class DataUpdateCoordinator(Generic[T]):
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
         if self.update_interval is None:
+            return
+
+        if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
         if self._unsub_refresh:
@@ -231,9 +233,8 @@ class DataUpdateCoordinator(Generic[T]):
             if raise_on_auth_failed:
                 raise
 
-            config_entry = config_entries.current_entry.get()
-            if config_entry:
-                config_entry.async_start_reauth(self.hass)
+            if self.config_entry:
+                self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             raise err
@@ -294,10 +295,10 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
 
-class CoordinatorEntity(entity.Entity):
+class CoordinatorEntity(Generic[T], entity.Entity):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[T]) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
 

@@ -1,7 +1,7 @@
 """Provides device automations for Philips Hue events."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -55,6 +55,12 @@ HUE_BUTTON_REMOTE = {
     (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
 }
 
+HUE_WALL_REMOTE_MODEL = "Hue wall switch module"  # ZLLSWITCH/RDM001
+HUE_WALL_REMOTE = {
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2002},
+}
+
 HUE_TAP_REMOTE_MODEL = "Hue tap switch"  # ZGPSWITCH
 HUE_TAP_REMOTE = {
     (CONF_SHORT_PRESS, CONF_BUTTON_1): {CONF_EVENT: 34},
@@ -84,10 +90,11 @@ REMOTES = {
     HUE_DIMMER_REMOTE_MODEL: HUE_DIMMER_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
     HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
+    HUE_WALL_REMOTE_MODEL: HUE_WALL_REMOTE,
     HUE_FOHSWITCH_REMOTE_MODEL: HUE_FOHSWITCH_REMOTE,
 }
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 

@@ -1,9 +1,9 @@
 {
     "state": {
         "_": {
-            "active": "aktiv",
-            "idle": "Leerlauf",
-            "paused": "pausiert"
+            "active": "Aktiv",
+            "idle": "Unt\u00e4tig",
+            "paused": "Pausiert"
         }
     }
 }

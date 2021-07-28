@@ -9,12 +9,12 @@ from directv import DIRECTV, DIRECTVError
 import voluptuous as vol
 
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_RECEIVER_ID, DOMAIN
 
@@ -40,13 +40,14 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DirecTV."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Set up the instance."""
         self.discovery_info = {}
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -98,7 +99,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
-        self, user_input: ConfigType = None
+        self, user_input: dict[str, Any] = None
     ) -> FlowResult:
         """Handle a confirmation flow initiated by SSDP."""
         if user_input is None:

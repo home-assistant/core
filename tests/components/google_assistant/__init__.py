@@ -247,14 +247,20 @@ DEMO_DEVICES = [
     {
         "id": "fan.living_room_fan",
         "name": {"name": "Living Room Fan"},
-        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "traits": [
+            "action.devices.traits.FanSpeed",
+            "action.devices.traits.OnOff",
+        ],
         "type": "action.devices.types.FAN",
         "willReportState": False,
     },
     {
         "id": "fan.ceiling_fan",
         "name": {"name": "Ceiling Fan"},
-        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "traits": [
+            "action.devices.traits.FanSpeed",
+            "action.devices.traits.OnOff",
+        ],
         "type": "action.devices.types.FAN",
         "willReportState": False,
     },
@@ -275,7 +281,10 @@ DEMO_DEVICES = [
     {
         "id": "fan.preset_only_limited_fan",
         "name": {"name": "Preset Only Limited Fan"},
-        "traits": ["action.devices.traits.OnOff"],
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Modes",
+        ],
         "type": "action.devices.types.FAN",
         "willReportState": False,
     },
@@ -374,6 +383,13 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "lock.poorly_installed_door",
+        "name": {"name": "Poorly Installed Door"},
+        "traits": ["action.devices.traits.LockUnlock"],
+        "type": "action.devices.types.LOCK",
+        "willReportState": False,
+    },
+    {
         "id": "alarm_control_panel.alarm",
         "name": {"name": "Alarm"},
         "traits": ["action.devices.traits.ArmDisarm"],
@@ -394,6 +410,17 @@ DEMO_DEVICES = [
     {
         "id": "light.office_rgbw_lights",
         "name": {"name": "Office RGBW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
+    {
+        "id": "light.entrance_color_white_lights",
+        "name": {"name": "Entrance Color + White Lights"},
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",

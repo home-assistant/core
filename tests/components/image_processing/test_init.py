@@ -6,6 +6,7 @@ import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import DATA_CUSTOM_COMPONENTS
 from homeassistant.setup import setup_component
 
 from tests.common import (
@@ -50,6 +51,7 @@ class TestImageProcessing:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.data.pop(DATA_CUSTOM_COMPONENTS)
 
         setup_component(
             self.hass,

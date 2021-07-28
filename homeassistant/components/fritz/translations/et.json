@@ -8,10 +8,11 @@
         "error": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4ivitatud",
+            "cannot_connect": "\u00dchendamine nurjus",
             "connection_error": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus"
         },
-        "flow_title": "FRITZ!Box t\u00f6\u00f6riistad: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
@@ -38,6 +39,25 @@
                 },
                 "description": "Seadista FRITZ!Boxi t\u00f6\u00f6riistad oma FRITZ!Boxi juhtimiseks.\n Minimaalselt vaja: kasutajanimi ja salas\u00f5na.",
                 "title": "FRITZ! Boxi t\u00f6\u00f6riistade seadistamine - kohustuslik"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Salas\u00f5ma",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Seadista FRITZ!Box Tools oma FRITZ!Boxi juhtimiseks.\n Minimaalselt vajalik: kasutajanimi ja salas\u00f5na.",
+                "title": "Seadista FRITZ! Box Tools"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Millal m\u00e4\u00e4rata seade olema kodus (sekundites)"
+                }
             }
         }
     }

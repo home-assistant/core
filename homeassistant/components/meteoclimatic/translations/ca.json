@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "not_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Codi d'estaci\u00f3"
+                },
+                "description": "Introdueix el codi d'estaci\u00f3 meteorol\u00f2gica (per exemple, ESCAT4300000043206B)",
+                "title": "Meteoclimatic"
+            }
+        }
+    }
+}

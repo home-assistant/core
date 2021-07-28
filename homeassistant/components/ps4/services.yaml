@@ -6,7 +6,6 @@ send_command:
       name: Entity
       description: Name of entity to send command.
       required: true
-      example: "media_player.playstation_4"
       selector:
         entity:
           integration: ps4
@@ -15,7 +14,6 @@ send_command:
       name: Command
       description: Button to press.
       required: true
-      example: "ps"
       selector:
         select:
           options:

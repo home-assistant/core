@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
@@ -16,7 +16,7 @@ from .const import DOMAIN
 TRIGGER_TYPE_TURN_ON = "turn_on"
 
 TRIGGER_TYPES = {TRIGGER_TYPE_TURN_ON}
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
     }
@@ -45,16 +45,16 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     registry: DeviceRegistry = await async_get_registry(hass)
     if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
         variables = {
             "trigger": {
+                **trigger_data,
                 "platform": "device",
                 "domain": DOMAIN,
                 "device_id": config[CONF_DEVICE_ID],
                 "description": f"philips_js '{config[CONF_TYPE]}' event",
-                "id": trigger_id,
             }
         }
 

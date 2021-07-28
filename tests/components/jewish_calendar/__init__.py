@@ -26,7 +26,9 @@ def make_nyc_test_params(dtime, results, havdalah_offset=0):
     if isinstance(results, dict):
         time_zone = dt_util.get_time_zone("America/New_York")
         results = {
-            key: time_zone.localize(value) if isinstance(value, datetime) else value
+            key: value.replace(tzinfo=time_zone)
+            if isinstance(value, datetime)
+            else value
             for key, value in results.items()
         }
     return (
@@ -46,7 +48,9 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
     if isinstance(results, dict):
         time_zone = dt_util.get_time_zone("Asia/Jerusalem")
         results = {
-            key: time_zone.localize(value) if isinstance(value, datetime) else value
+            key: value.replace(tzinfo=time_zone)
+            if isinstance(value, datetime)
+            else value
             for key, value in results.items()
         }
     return (

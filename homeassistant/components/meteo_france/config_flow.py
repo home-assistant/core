@@ -18,7 +18,6 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Meteo-France config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Init MeteoFranceFlowHandler."""
@@ -114,7 +113,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class MeteoFranceOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

@@ -83,8 +83,18 @@ class Integration:
 
     @property
     def disabled(self) -> str | None:
-        """List of disabled."""
+        """Return if integration is disabled."""
         return self.manifest.get("disabled")
+
+    @property
+    def name(self) -> str:
+        """Return name of the integration."""
+        return self.manifest["name"]
+
+    @property
+    def quality_scale(self) -> str:
+        """Return quality scale of the integration."""
+        return self.manifest.get("quality_scale")
 
     @property
     def requirements(self) -> list[str]:

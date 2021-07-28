@@ -1,11 +1,6 @@
 {
     "config": {
         "step": {
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "Dom\u00e4ner att inkludera"
-                }
-            },
             "pairing": {
                 "title": "Para HomeKit"
             },

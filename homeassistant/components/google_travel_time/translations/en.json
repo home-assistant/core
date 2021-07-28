@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "API Key",
                     "destination": "Destination",
+                    "name": "Name",
                     "origin": "Origin"
                 },
                 "description": "When specifying the origin and destination, you can supply one or more locations separated by the pipe character, in the form of an address, latitude/longitude coordinates, or a Google place ID. When specifying the location using a Google place ID, the ID must be prefixed with `place_id:`."

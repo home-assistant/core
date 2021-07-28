@@ -40,12 +40,10 @@ def register_flow_implementation(hass, domain, client_id, client_secret):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class PointFlowHandler(config_entries.ConfigFlow):
+class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -53,7 +51,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         self.flow_impl = DOMAIN
@@ -64,7 +62,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         if not flows:
@@ -86,7 +84,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="external_setup")
 
         errors = {}
@@ -125,7 +123,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_code(self, code=None):
         """Received code for authentication."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         if code is None:

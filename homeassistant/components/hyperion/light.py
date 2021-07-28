@@ -24,6 +24,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from . import (
@@ -80,7 +82,9 @@ ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up a Hyperion platform from config entry."""
 
@@ -234,7 +238,7 @@ class HyperionBaseLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
@@ -523,10 +527,10 @@ class HyperionLight(HyperionBaseLight):
         # color, effect), but this is not possible due to:
         # https://github.com/hyperion-project/hyperion.ng/issues/967
         if not bool(self._client.is_on()):
-            for component in [
+            for component in (
                 const.KEY_COMPONENTID_ALL,
                 const.KEY_COMPONENTID_LEDDEVICE,
-            ]:
+            ):
                 if not await self._client.async_send_set_component(
                     **{
                         const.KEY_COMPONENTSTATE: {

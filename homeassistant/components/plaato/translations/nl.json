@@ -19,7 +19,7 @@
                     "token": "Plak hier de verificatie-token",
                     "use_webhook": "Webhook gebruiken"
                 },
-                "description": "Om de API te kunnenopvragen is een `auth_token` nodig, die kan worden verkregen door [deze] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instructies te volgen\n\n Geselecteerd apparaat: **{device_type}** \n\nIndien u liever de ingebouwde webhook methode gebruikt (alleen Airlock) vink dan het vakje hieronder aan en laat Auth Token leeg",
+                "description": "Om de API te kunnen opvragen is een `auth_token` nodig, die kan worden verkregen door [deze] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instructies te volgen\n\n Geselecteerd apparaat: **{device_type}** \n\nIndien u liever de ingebouwde webhook methode gebruikt (alleen Airlock) vink dan het vakje hieronder aan en laat Auth Token leeg",
                 "title": "Selecteer API-methode"
             },
             "user": {

@@ -36,7 +36,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a iCloud config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize iCloud config flow."""

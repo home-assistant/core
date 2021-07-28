@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -117,7 +118,7 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> dict | None:
+    def device_info(self) -> DeviceInfo | None:
         """Return the device information."""
         if self.is_connected:
             return {

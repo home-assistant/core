@@ -60,6 +60,9 @@
                     "port": "Port",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 }
+            },
+            "options": {
+                "title": "MQTT opci\u00f3k"
             }
         }
     }

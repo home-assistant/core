@@ -35,7 +35,7 @@ class CloudClient(Interface):
         websession: aiohttp.ClientSession,
         alexa_user_config: dict[str, Any],
         google_user_config: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize client interface to Cloud."""
         self._hass = hass
         self._prefs = prefs
@@ -148,7 +148,7 @@ class CloudClient(Interface):
             tasks.append(enable_google)
 
         if tasks:
-            await asyncio.gather(*[task(None) for task in tasks])
+            await asyncio.gather(*(task(None) for task in tasks))
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""

@@ -48,11 +48,10 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
-ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
-DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
-ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
-
+ENTITY_ID_JSON_TEMPLATE = '"entity_id": ?"{}"'
+ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
+DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
+ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
 CONTINUOUS_DOMAINS = ["proximity", "sensor"]
@@ -500,10 +499,10 @@ def _generate_events_query(session):
 def _generate_events_query_without_states(session):
     return session.query(
         *EVENT_COLUMNS,
-        literal(None).label("state"),
-        literal(None).label("entity_id"),
-        literal(None).label("domain"),
-        literal(None).label("attributes"),
+        literal(value=None, type_=sqlalchemy.String).label("state"),
+        literal(value=None, type_=sqlalchemy.String).label("entity_id"),
+        literal(value=None, type_=sqlalchemy.String).label("domain"),
+        literal(value=None, type_=sqlalchemy.Text).label("attributes"),
     )
 
 
@@ -574,10 +573,10 @@ def _apply_event_types_filter(hass, query, event_types):
 def _apply_event_entity_id_matchers(events_query, entity_ids):
     return events_query.filter(
         sqlalchemy.or_(
-            *[
+            *(
                 Events.event_data.contains(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
                 for entity_id in entity_ids
-            ]
+            )
         )
     )
 
@@ -647,7 +646,7 @@ def _augment_data_with_context(
         return
 
     attr_entity_id = event_data.get(ATTR_ENTITY_ID)
-    if not attr_entity_id or (
+    if not isinstance(attr_entity_id, str) or (
         event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
     ):
         return

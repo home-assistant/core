@@ -10,7 +10,7 @@ from . import MOCK_CUSTOM_SENSOR
 
 async def test_sensors(hass, init_integration):
     """Test states of the sensors."""
-    state = hass.states.get("sensor.current_consumption")
+    state = hass.states.get("sensor.grid_power")
     assert state
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
 

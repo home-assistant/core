@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "iRobot {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "data": {
@@ -45,8 +45,8 @@
                     "host": "Host",
                     "password": "Password"
                 },
-                "description": "Attualmente il recupero del BLID e della password \u00e8 un processo manuale. Si prega di seguire i passi descritti nella documentazione all'indirizzo: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Connettersi al dispositivo"
+                "description": "Seleziona un Roomba o un Braava.",
+                "title": "Connetti automaticamente al dispositivo"
             }
         }
     },

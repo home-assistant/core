@@ -15,10 +15,12 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -101,6 +103,7 @@ class Sensor(ZhaEntity, SensorEntity):
     _device_class: str | None = None
     _divisor: int = 1
     _multiplier: int = 1
+    _state_class: str | None = None
     _unit: str | None = None
 
     def __init__(
@@ -109,7 +112,7 @@ class Sensor(ZhaEntity, SensorEntity):
         zha_device: ZhaDeviceType,
         channels: list[ChannelType],
         **kwargs,
-    ):
+    ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel: ChannelType = channels[0]
@@ -125,6 +128,11 @@ class Sensor(ZhaEntity, SensorEntity):
     def device_class(self) -> str:
         """Return device class from component DEVICE_CLASSES."""
         return self._device_class
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return self._state_class
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -172,6 +180,7 @@ class Battery(Sensor):
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
     @staticmethod
@@ -234,6 +243,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
 
@@ -275,6 +285,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PRESSURE_HPA
 
 
@@ -285,6 +296,7 @@ class Temperature(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = TEMP_CELSIUS
 
 
@@ -305,6 +317,27 @@ class CarbonMonoxideConcentration(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_CO
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_PARTS_PER_MILLION
+
+
+@STRICT_MATCH(generic_ids="channel_0x042e")
+@STRICT_MATCH(channel_names="voc_level")
+class VOCLevel(Sensor):
+    """VOC Level sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
+@STRICT_MATCH(channel_names="formaldehyde_concentration")
+class FormaldehydeConcentration(Sensor):
+    """Formaldehyde Concentration sensor."""
+
+    SENSOR_ATTR = "measured_value"
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION

@@ -41,6 +41,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CurrentEnergyUsageSensor(SensorEntity):
     """Representation of the sensor."""
 
+    _attr_icon = SENSOR_ICON
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
     def __init__(self, meter):
         """Initialize the sensor."""
         self._state = None
@@ -58,19 +61,9 @@ class CurrentEnergyUsageSensor(SensorEntity):
         return SENSOR_NAME
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return SENSOR_ICON
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
 
     def update(self):
         """Fetch new state data for the sensor."""

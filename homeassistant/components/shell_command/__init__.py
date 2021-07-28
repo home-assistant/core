@@ -1,4 +1,6 @@
 """Expose regular shell commands as services."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 import logging
@@ -26,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the shell_command component."""
     conf = config.get(DOMAIN, {})
 
-    cache = {}
+    cache: dict[str, tuple[str, str | None, template.Template | None]] = {}
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Execute a shell command service."""
@@ -58,8 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if rendered_args == args:
             # No template used. default behavior
 
-            # pylint: disable=no-member
-            create_process = asyncio.subprocess.create_subprocess_shell(
+            create_process = asyncio.create_subprocess_shell(
                 cmd,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
@@ -70,8 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # (which uses shell=False) for security
             shlexed_cmd = [prog] + shlex.split(rendered_args)
 
-            # pylint: disable=no-member
-            create_process = asyncio.subprocess.create_subprocess_exec(
+            create_process = asyncio.create_subprocess_exec(
                 *shlexed_cmd,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
@@ -89,7 +89,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             if process:
                 with suppress(TypeError):
-                    await process.kill()
+                    process.kill()
+                    # https://bugs.python.org/issue43884
+                    # pylint: disable=protected-access
+                    process._transport.close()  # type: ignore[attr-defined]
                 del process
 
             return

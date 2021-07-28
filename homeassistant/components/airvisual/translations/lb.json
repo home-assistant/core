@@ -11,15 +11,6 @@
             "location_not_found": "Standuert net fonnt."
         },
         "step": {
-            "geography": {
-                "data": {
-                    "api_key": "API Schl\u00ebssel",
-                    "latitude": "Breedegrad",
-                    "longitude": "L\u00e4ngegrad"
-                },
-                "description": "Benotz Airvisual cloud API fir eng geografescher Lag z'iwwerwaachen.",
-                "title": "Geografie ariichten"
-            },
             "geography_by_name": {
                 "data": {
                     "city": "Stad",
@@ -42,11 +33,6 @@
                 "title": "AirVisual re-authentifiz\u00e9ieren"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Geografesche Standuert",
-                    "node_pro": "Airvisual Node Pro",
-                    "type": "Typ vun der Integratioun"
-                },
                 "description": "Typ vun Airvisual Donn\u00e9\u00eb fir d'Iwwerwachung auswielen.",
                 "title": "AirVisual konfigur\u00e9ieren"
             }

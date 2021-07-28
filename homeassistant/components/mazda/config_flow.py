@@ -30,7 +30,6 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Mazda Connected Services."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Start the mazda config flow."""

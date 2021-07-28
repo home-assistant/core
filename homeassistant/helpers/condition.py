@@ -16,7 +16,9 @@ from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
     async_get_device_automation_platform,
 )
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -29,6 +31,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_ID,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
@@ -112,15 +115,22 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 @contextmanager
 def trace_condition(variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
-    trace_element = condition_trace_append(variables, trace_path_get())
-    trace_stack_push(trace_stack_cv, trace_element)
+    should_pop = True
+    trace_element = trace_stack_top(trace_stack_cv)
+    if trace_element and trace_element.reuse_by_child:
+        should_pop = False
+        trace_element.reuse_by_child = False
+    else:
+        trace_element = condition_trace_append(variables, trace_path_get())
+        trace_stack_push(trace_stack_cv, trace_element)
     try:
         yield trace_element
     except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
-        trace_stack_pop(trace_stack_cv)
+        if should_pop:
+            trace_stack_pop(trace_stack_cv)
 
 
 def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
@@ -729,11 +739,24 @@ def time(
         after_entity = hass.states.get(after)
         if not after_entity:
             raise ConditionErrorMessage("time", f"unknown 'after' entity {after}")
-        after = dt_util.dt.time(
-            after_entity.attributes.get("hour", 23),
-            after_entity.attributes.get("minute", 59),
-            after_entity.attributes.get("second", 59),
-        )
+        if after_entity.domain == "input_datetime":
+            after = dt_util.dt.time(
+                after_entity.attributes.get("hour", 23),
+                after_entity.attributes.get("minute", 59),
+                after_entity.attributes.get("second", 59),
+            )
+        elif after_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after_datetime = dt_util.parse_datetime(after_entity.state)
+            if after_datetime is None:
+                return False
+            after = dt_util.as_local(after_datetime).time()
+        else:
+            return False
 
     if before is None:
         before = dt_util.dt.time(23, 59, 59, 999999)
@@ -741,23 +764,38 @@ def time(
         before_entity = hass.states.get(before)
         if not before_entity:
             raise ConditionErrorMessage("time", f"unknown 'before' entity {before}")
-        before = dt_util.dt.time(
-            before_entity.attributes.get("hour", 23),
-            before_entity.attributes.get("minute", 59),
-            before_entity.attributes.get("second", 59),
-            999999,
-        )
+        if before_entity.domain == "input_datetime":
+            before = dt_util.dt.time(
+                before_entity.attributes.get("hour", 23),
+                before_entity.attributes.get("minute", 59),
+                before_entity.attributes.get("second", 59),
+            )
+        elif before_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and before_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            before_timedatime = dt_util.parse_datetime(before_entity.state)
+            if before_timedatime is None:
+                return False
+            before = dt_util.as_local(before_timedatime).time()
+        else:
+            return False
 
     if after < before:
+        condition_trace_update_result(after=after, now_time=now_time, before=before)
         if not after <= now_time < before:
             return False
     else:
+        condition_trace_update_result(after=after, now_time=now_time, before=before)
         if before <= now_time < after:
             return False
 
     if weekday is not None:
         now_weekday = WEEKDAYS[now.weekday()]
 
+        condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
         if (
             isinstance(weekday, str)
             and weekday != now_weekday
@@ -893,6 +931,26 @@ async def async_device_from_config(
     )
 
 
+async def async_trigger_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
+    """Test a trigger condition."""
+    if config_validation:
+        config = cv.TRIGGER_CONDITION_SCHEMA(config)
+    trigger_id = config[CONF_ID]
+
+    @trace_condition_function
+    def trigger_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Validate trigger based if-condition."""
+        return (
+            variables is not None
+            and "trigger" in variables
+            and variables["trigger"].get("id") in trigger_id
+        )
+
+    return trigger_if
+
+
 async def async_validate_condition_config(
     hass: HomeAssistant, config: ConfigType | Template
 ) -> ConfigType | Template:
@@ -914,6 +972,8 @@ async def async_validate_condition_config(
         platform = await async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "condition"
         )
+        if hasattr(platform, "async_validate_condition_config"):
+            return await platform.async_validate_condition_config(hass, config)  # type: ignore
         return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
 
     return config

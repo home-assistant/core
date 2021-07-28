@@ -34,14 +34,13 @@ set:
         object:
     add_entities:
       name: Add Entities
-      description: List of members they will change on group listening.
+      description: List of members that will change on group listening.
       example: domain.entity_id1, domain.entity_id2
       selector:
         object:
     all:
       name: All
       description: Enable this option if the group should only turn on when all entities are on.
-      example: true
       selector:
         boolean:
 
@@ -55,5 +54,4 @@ remove:
       required: true
       example: "test_group"
       selector:
-        entity:
-          domain: group
+        object:

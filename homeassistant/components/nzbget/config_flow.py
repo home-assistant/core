@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -57,7 +57,6 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NZBGet."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -76,7 +75,9 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -130,7 +131,7 @@ class NZBGetOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: ConfigType | None = None):
+    async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Manage NZBGet options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

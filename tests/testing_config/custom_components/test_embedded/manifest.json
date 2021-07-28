@@ -1,0 +1,9 @@
+{
+  "domain": "test_embedded",
+  "name": "Test Embedded",
+  "documentation": "http://test-package.io",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "version": "1.2.3"
+}

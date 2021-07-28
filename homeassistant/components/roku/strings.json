@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Roku: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "Enter your Roku information.",
@@ -10,8 +10,7 @@
       },
       "discovery_confirm": {
         "title": "Roku",
-        "description": "Do you want to set up {name}?",
-        "data": {}
+        "description": "Do you want to set up {name}?"
       }
     },
     "error": {

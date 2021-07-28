@@ -5,9 +5,6 @@ import logging
 from zigpy.zcl.clusters.security import IasAce
 
 from homeassistant.components.alarm_control_panel import (
-    ATTR_CHANGED_BY,
-    ATTR_CODE_ARM_REQUIRED,
-    ATTR_CODE_FORMAT,
     DOMAIN,
     FORMAT_TEXT,
     SUPPORT_ALARM_ARM_AWAY,
@@ -162,13 +159,3 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     def state(self):
         """Return the state of the entity."""
         return IAS_ACE_STATE_MAP.get(self._channel.armed_state)
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        state_attr = {
-            ATTR_CODE_FORMAT: self.code_format,
-            ATTR_CHANGED_BY: self.changed_by,
-            ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
-        }
-        return state_attr

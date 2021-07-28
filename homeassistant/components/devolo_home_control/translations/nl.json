@@ -1,15 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is al geconfigureerd"
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
-            "invalid_auth": "Ongeldige authenticatie"
+            "invalid_auth": "Ongeldige authenticatie",
+            "reauth_failed": "Gelieve dezelfde mydevolo-gebruiker te gebruiken als voorheen."
         },
         "step": {
             "user": {
                 "data": {
-                    "home_control_url": "Home Control URL",
                     "mydevolo_url": "mydevolo URL",
                     "password": "Wachtwoord",
                     "username": "E-mail adres / devolo ID"

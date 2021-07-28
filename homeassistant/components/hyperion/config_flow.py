@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
     SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
@@ -29,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from . import create_hyperion_client
 from .const import (
@@ -110,7 +108,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Hyperion config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Instantiate config flow."""
@@ -145,7 +142,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self,
-        config_data: ConfigType,
+        config_data: dict[str, Any],
     ) -> FlowResult:
         """Handle a reauthentication flow."""
         self._data = dict(config_data)
@@ -224,7 +221,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self,
-        user_input: ConfigType | None = None,
+        user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
@@ -295,7 +292,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(
         self,
-        user_input: ConfigType | None = None,
+        user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Handle the auth step of a flow."""
         errors = {}
@@ -324,7 +321,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_create_token(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Send a request for a new token."""
         if user_input is None:
@@ -350,7 +347,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_create_token_external(
-        self, auth_resp: ConfigType | None = None
+        self, auth_resp: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle completion of the request for a new token."""
         if auth_resp is not None and client.ResponseOK(auth_resp):
@@ -363,7 +360,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_external_step_done(next_step_id="create_token_fail")
 
     async def async_step_create_token_success(
-        self, _: ConfigType | None = None
+        self, _: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create an entry after successful token creation."""
         # Clean-up the request task.
@@ -379,7 +376,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_create_token_fail(
-        self, _: ConfigType | None = None
+        self, _: dict[str, Any] | None = None
     ) -> FlowResult:
         """Show an error on the auth form."""
         # Clean-up the request task.
@@ -387,7 +384,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="auth_new_token_not_granted_error")
 
     async def async_step_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Get final confirmation before entry creation."""
         if user_input is None and self._require_confirm:
@@ -434,7 +431,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 class HyperionOptionsFlow(OptionsFlow):
     """Hyperion options flow."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize a Hyperion options flow."""
         self._config_entry = config_entry
 

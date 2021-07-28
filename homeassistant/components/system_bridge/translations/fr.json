@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "flow_title": "Pont syst\u00e8me: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "api_key": "Clef d'API"
+                },
+                "description": "Veuillez saisir la cl\u00e9 API que vous avez d\u00e9finie dans votre configuration pour {name} ."
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clef d'API",
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                },
+                "description": "Veuillez saisir vos informations de connexion."
+            }
+        }
+    },
+    "title": "Pont syst\u00e8me"
+}

@@ -36,7 +36,7 @@
                 "data": {
                     "brightness_range_mode": "Helderheidsbereik gebruikt door apparaat",
                     "curr_temp_divider": "Huidige temperatuurwaarde deler (0 = standaardwaarde)",
-                    "max_kelvin": "Max ondersteunde kleurtemperatuur in kelvin",
+                    "max_kelvin": "Max kleurtemperatuur in kelvin",
                     "max_temp": "Maximale doeltemperatuur (gebruik min en max = 0 voor standaardwaarde)",
                     "min_kelvin": "Minimaal ondersteunde kleurtemperatuur in kelvin",
                     "min_temp": "Min. gewenste temperatuur (gebruik min en max = 0 voor standaard)",
@@ -44,7 +44,7 @@
                     "support_color": "Forceer kleurenondersteuning",
                     "temp_divider": "Temperatuurwaarde deler (0 = standaardwaarde)",
                     "temp_step_override": "Doeltemperatuur stap",
-                    "tuya_max_coltemp": "Max. Kleurtemperatuur gerapporteerd door apparaat",
+                    "tuya_max_coltemp": "Max. kleurtemperatuur gerapporteerd door apparaat",
                     "unit_of_measurement": "Temperatuureenheid gebruikt door apparaat"
                 },
                 "description": "Configureer opties om weergegeven informatie aan te passen voor {device_type} apparaat `{device_name}`",

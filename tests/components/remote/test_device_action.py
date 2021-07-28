@@ -70,7 +70,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert actions == expected_actions
 
 
-async def test_action(hass, calls):
+async def test_action(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

@@ -113,7 +113,7 @@ async def async_setup_entry(
     )
 
     # Register additional services
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_GET_COMMAND,
         {vol.Required(ATTR_COMMAND): cv.string},
@@ -142,7 +142,7 @@ class DenonDevice(MediaPlayerEntity):
         unique_id: str,
         config_entry: config_entries.ConfigEntry,
         update_audyssey: bool,
-    ):
+    ) -> None:
         """Initialize the device."""
         self._receiver = receiver
         self._unique_id = unique_id
@@ -246,7 +246,6 @@ class DenonDevice(MediaPlayerEntity):
             "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
             "name": self._config_entry.title,
             "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
-            "serial_number": self._config_entry.data[CONF_SERIAL_NUMBER],
         }
 
         return device_info

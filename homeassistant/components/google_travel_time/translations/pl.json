@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "Klucz API",
                     "destination": "Punkt docelowy",
+                    "name": "Nazwa",
                     "origin": "Punkt pocz\u0105tkowy"
                 },
                 "description": "Okre\u015blaj\u0105c punkt pocz\u0105tkowy i docelowy, mo\u017cesz poda\u0107 jedn\u0105 lub wi\u0119cej lokalizacji oddzielonych pionow\u0105 kresk\u0105, w postaci adresu, wsp\u00f3\u0142rz\u0119dnych szeroko\u015bci / d\u0142ugo\u015bci geograficznej lub identyfikatora miejsca Google. Okre\u015blaj\u0105c lokalizacj\u0119 za pomoc\u0105 identyfikatora miejsca Google, identyfikator musi by\u0107 poprzedzony przedrostkiem \u201eplace_id:\u201d."

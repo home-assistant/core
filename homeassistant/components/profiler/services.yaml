@@ -5,7 +5,6 @@ start:
     seconds:
       name: Seconds
       description: The number of seconds to run the profiler.
-      example: 60.0
       default: 60.0
       selector:
         number:
@@ -19,7 +18,6 @@ memory:
     seconds:
       name: Seconds
       description: The number of seconds to run the memory profiler.
-      example: 60.0
       default: 60.0
       selector:
         number:
@@ -33,7 +31,6 @@ start_log_objects:
     scan_interval:
       name: Scan interval
       description: The number of seconds between logging objects.
-      example: 60.0
       default: 30.0
       selector:
         number:

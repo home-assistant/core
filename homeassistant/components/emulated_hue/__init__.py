@@ -1,5 +1,4 @@
 """Support for local control of entities by emulating a Philips Hue bridge."""
-from contextlib import suppress
 import logging
 
 from aiohttp import web
@@ -12,9 +11,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.json import load_json, save_json
 
 from .hue_api import (
     HueAllGroupsStateView,
@@ -34,6 +32,9 @@ DOMAIN = "emulated_hue"
 _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_FILE = "emulated_hue_ids.json"
+DATA_KEY = "emulated_hue.ids"
+DATA_VERSION = "1"
+SAVE_DELAY = 60
 
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_ADVERTISE_PORT = "advertise_port"
@@ -155,6 +156,7 @@ async def async_setup(hass, yaml_config):
         nonlocal protocol
         nonlocal site
         nonlocal runner
+        await config.async_setup()
 
         _, protocol = await listen
 
@@ -189,6 +191,7 @@ class Config:
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
         self.numbers = None
+        self.store = None
         self.cached_states = {}
         self._exposed_cache = {}
 
@@ -257,13 +260,20 @@ class Config:
         # for compatibility with older installations.
         self.lights_all_dimmable = conf.get(CONF_LIGHTS_ALL_DIMMABLE)
 
+    async def async_setup(self):
+        """Set up and migrate to storage."""
+        self.store = storage.Store(self.hass, DATA_VERSION, DATA_KEY)
+        self.numbers = (
+            await storage.async_migrator(
+                self.hass, self.hass.config.path(NUMBERS_FILE), self.store
+            )
+            or {}
+        )
+
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
             return entity_id
-
-        if self.numbers is None:
-            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         for number, ent_id in self.numbers.items():
@@ -274,16 +284,13 @@ class Config:
         if self.numbers:
             number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
-        save_json(self.hass.config.path(NUMBERS_FILE), self.numbers)
+        self.store.async_delay_save(lambda: self.numbers, SAVE_DELAY)
         return number
 
     def number_to_entity_id(self, number):
         """Convert unique number to entity id."""
         if self.type == TYPE_ALEXA:
             return number
-
-        if self.numbers is None:
-            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         assert isinstance(number, str)
@@ -338,10 +345,3 @@ class Config:
             return True
 
         return False
-
-
-def _load_json(filename):
-    """Load JSON, handling invalid syntax."""
-    with suppress(HomeAssistantError):
-        return load_json(filename)
-    return {}

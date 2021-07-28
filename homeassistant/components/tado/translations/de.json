@@ -15,7 +15,7 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "title": "Stellen eine Verbindung zu deinem Tado-Konto her"
+                "title": "Stelle eine Verbindung zu deinem Tado-Konto her"
             }
         }
     },
@@ -23,7 +23,7 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Aktivieren den Fallback-Modus."
+                    "fallback": "Aktiviert den Fallback-Modus."
                 },
                 "description": "Der Fallback-Modus wechselt beim n\u00e4chsten Zeitplanwechsel nach dem manuellen Anpassen einer Zone zu Smart Schedule.",
                 "title": "Passe die Tado-Optionen an."

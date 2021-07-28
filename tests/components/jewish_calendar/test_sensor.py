@@ -163,9 +163,9 @@ async def test_jewish_calendar_sensor(
 ):
     """Test Jewish calendar sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
-    test_time = time_zone.localize(now)
+    test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = time_zone
+    hass.config.time_zone = tzname
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -188,11 +188,13 @@ async def test_jewish_calendar_sensor(
         await hass.async_block_till_done()
 
     result = (
-        dt_util.as_utc(time_zone.localize(result)) if isinstance(result, dt) else result
+        dt_util.as_utc(result.replace(tzinfo=time_zone)).isoformat()
+        if isinstance(result, dt)
+        else result
     )
 
     sensor_object = hass.states.get(f"sensor.test_{sensor}")
-    assert sensor_object.state == str(result)
+    assert sensor_object.state == result
 
     if sensor == "holiday":
         assert sensor_object.attributes.get("id") == "rosh_hashana_i"
@@ -506,9 +508,9 @@ async def test_shabbat_times_sensor(
 ):
     """Test sensor output for upcoming shabbat/yomtov times."""
     time_zone = dt_util.get_time_zone(tzname)
-    test_time = time_zone.localize(now)
+    test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = time_zone
+    hass.config.time_zone = tzname
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -542,7 +544,7 @@ async def test_shabbat_times_sensor(
         sensor_type = sensor_type.replace(f"{language}_", "")
 
         result_value = (
-            dt_util.as_utc(result_value)
+            dt_util.as_utc(result_value).isoformat()
             if isinstance(result_value, dt)
             else result_value
         )
@@ -559,7 +561,7 @@ async def test_shabbat_times_sensor(
                 [
                     latitude,
                     longitude,
-                    time_zone,
+                    tzname,
                     HDATE_DEFAULT_ALTITUDE,
                     diaspora,
                     language,
@@ -593,7 +595,7 @@ OMER_TEST_IDS = [
 @pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
 async def test_omer_sensor(hass, legacy_patchable_time, test_time, result):
     """Test Omer Count sensor output."""
-    test_time = hass.config.time_zone.localize(test_time)
+    test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with alter_time(test_time):
         assert await async_setup_component(
@@ -627,7 +629,7 @@ DAFYOMI_TEST_IDS = [
 @pytest.mark.parametrize(["test_time", "result"], DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
 async def test_dafyomi_sensor(hass, legacy_patchable_time, test_time, result):
     """Test Daf Yomi sensor output."""
-    test_time = hass.config.time_zone.localize(test_time)
+    test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with alter_time(test_time):
         assert await async_setup_component(

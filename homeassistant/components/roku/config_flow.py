@@ -12,11 +12,12 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -47,7 +48,6 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Roku config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Set up the instance."""
@@ -89,8 +89,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
-        if self._host_already_configured(discovery_info[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: discovery_info[CONF_HOST]})
 
         self.discovery_info.update({CONF_HOST: discovery_info[CONF_HOST]})
 
@@ -113,7 +112,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_ssdp(self, discovery_info: dict | None = None) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         name = discovery_info[ATTR_UPNP_FRIENDLY_NAME]
@@ -152,12 +151,3 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             title=self.discovery_info[CONF_NAME],
             data=self.discovery_info,
         )
-
-    def _host_already_configured(self, host):
-        """See if we already have a hub with the host address configured."""
-        existing_hosts = {
-            entry.data[CONF_HOST]
-            for entry in self._async_current_entries()
-            if CONF_HOST in entry.data
-        }
-        return host in existing_hosts

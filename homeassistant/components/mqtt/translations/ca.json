@@ -50,7 +50,7 @@
     },
     "options": {
         "error": {
-            "bad_birth": "Topic missatge de naixement inv\u00e0lid.",
+            "bad_birth": "Topic del missatge de naixement inv\u00e0lid.",
             "bad_will": "Topic missatge d'\u00faltima voluntat inv\u00e0lid.",
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
@@ -62,23 +62,25 @@
                     "port": "Port",
                     "username": "Nom d'usuari"
                 },
-                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
+                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT.",
+                "title": "Opcions del broker"
             },
             "options": {
                 "data": {
                     "birth_enable": "Activa el missatge de naixement",
-                    "birth_payload": "Dades (payload) missatge de naixement",
-                    "birth_qos": "QoS missatge de naixement",
-                    "birth_retain": "Retenci\u00f3 missatge de naixement",
-                    "birth_topic": "Topic missatge de naixement",
+                    "birth_payload": "Dades (payload) del missatge de naixement",
+                    "birth_qos": "QoS del missatge de naixement",
+                    "birth_retain": "Retenci\u00f3 del missatge de naixement",
+                    "birth_topic": "Topic del missatge de naixement",
                     "discovery": "Activar descobriment",
                     "will_enable": "Activa el missatge d'\u00faltima voluntat",
-                    "will_payload": "Dades (payload) missatge d'\u00faltima voluntat",
-                    "will_qos": "QoS missatge d'\u00faltima voluntat",
-                    "will_retain": "Retenci\u00f3 missatge d'\u00faltima voluntat",
-                    "will_topic": "Topic missatge d'\u00faltima voluntat"
+                    "will_payload": "Dades (payload) del missatge d'\u00faltima voluntat",
+                    "will_qos": "QoS del missatge d'\u00faltima voluntat",
+                    "will_retain": "Retenci\u00f3 del missatge d'\u00faltima voluntat",
+                    "will_topic": "Topic del missatge d'\u00faltima voluntat"
                 },
-                "description": "Selecciona les opcions MQTT."
+                "description": "Descobriment - Si est\u00e0 activat (recomanat), Home Assistant descobrir\u00e0 autom\u00e0ticament dispositius i entitats que publiquin la seva configuraci\u00f3 al broker MQTT. Si est\u00e0 desactivat, les configuracions s'han de fer manualment.\nMissatge de naixement - S'enviar\u00e0 cada vegada que Home Assistant \u00e9s connecti al broker MQTT.\nMissatge d'\u00faltima voluntat - S'enviar\u00e0 cada vegada que Home Assistant perdi la connexi\u00f3 amb el broker, tant si \u00e9s una desconnexi\u00f3 neta (per exemple si s'apaga Home Assistant) com si \u00e9s una desconnexi\u00f3 dolenta (per exemple si Home Assistant falla o perd la connexi\u00f3 a Internet).",
+                "title": "Opcions d'MQTT"
             }
         }
     }

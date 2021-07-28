@@ -60,7 +60,7 @@ class ActionTrace:
         config: dict[str, Any],
         blueprint_inputs: dict[str, Any],
         context: Context,
-    ):
+    ) -> None:
         """Container for script trace."""
         self._trace: dict[str, deque[TraceElement]] | None = None
         self._config: dict[str, Any] = config

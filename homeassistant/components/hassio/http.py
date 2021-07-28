@@ -29,6 +29,9 @@ NO_TIMEOUT = re.compile(
     r"|hassos/update/cli"
     r"|supervisor/update"
     r"|addons/[^/]+/(?:update|install|rebuild)"
+    r"|backups/.+/full"
+    r"|backups/.+/partial"
+    r"|backups/[^/]+/(?:upload|download)"
     r"|snapshots/.+/full"
     r"|snapshots/.+/partial"
     r"|snapshots/[^/]+/(?:upload|download)"
@@ -36,7 +39,7 @@ NO_TIMEOUT = re.compile(
 )
 
 NO_AUTH_ONBOARDING = re.compile(
-    r"^(?:" r"|supervisor/logs" r"|snapshots/[^/]+/.+" r")$"
+    r"^(?:" r"|supervisor/logs" r"|backups/[^/]+/.+" r"|snapshots/[^/]+/.+" r")$"
 )
 
 NO_AUTH = re.compile(
@@ -51,7 +54,7 @@ class HassIOView(HomeAssistantView):
     url = "/api/hassio/{path:.+}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession):
+    def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
         """Initialize a Hass.io base view."""
         self._host = host
         self._websession = websession
@@ -81,13 +84,13 @@ class HassIOView(HomeAssistantView):
         client_timeout = 10
         data = None
         headers = _init_header(request)
-        if path == "snapshots/new/upload":
+        if path in ("snapshots/new/upload", "backups/new/upload"):
             # We need to reuse the full content type that includes the boundary
             headers[
                 "Content-Type"
             ] = request._stored_content_type  # pylint: disable=protected-access
 
-            # Snapshots are big, so we need to adjust the allowed size
+            # Backups are big, so we need to adjust the allowed size
             request._client_max_size = (  # pylint: disable=protected-access
                 MAX_UPLOAD_SIZE
             )

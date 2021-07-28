@@ -168,7 +168,7 @@ class PersonStorageCollection(collection.StorageCollection):
         logger: logging.Logger,
         id_manager: collection.IDManager,
         yaml_collection: collection.YamlCollection,
-    ):
+    ) -> None:
         """Initialize a person storage collection."""
         super().__init__(store, logger, id_manager)
         self.yaml_collection = yaml_collection

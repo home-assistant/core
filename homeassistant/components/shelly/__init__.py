@@ -1,10 +1,14 @@
 """The Shelly integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any, Final, cast
 
 import aioshelly
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,9 +18,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
@@ -25,7 +31,9 @@ from .const import (
     ATTR_DEVICE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
+    CONF_COAP_PORT,
     DATA_CONFIG_ENTRY,
+    DEFAULT_COAP_PORT,
     DEVICE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
@@ -39,19 +47,43 @@ from .const import (
 )
 from .utils import get_coap_context, get_device_name, get_device_sleep_period
 
-PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
-SLEEPING_PLATFORMS = ["binary_sensor", "sensor"]
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
+SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
+_LOGGER: Final = logging.getLogger(__name__)
+
+COAP_SCHEMA: Final = vol.Schema(
+    {
+        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+    }
+)
+CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+
+    conf = config.get(DOMAIN)
+    if conf is not None:
+        hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly from a config entry."""
+    # The custom component for Shelly devices uses shelly domain as well as core
+    # integration. If the user removes the custom component but doesn't remove the
+    # config entry, core integration will try to configure that config entry with an
+    # error. The config entry data for this custom component doesn't contain host
+    # value, so if host isn't present, config entry will not be configured.
+    if not entry.data.get(CONF_HOST):
+        _LOGGER.warning(
+            "The config entry %s probably comes from a custom integration, please remove it if you want to use core Shelly integration",
+            entry.title,
+        )
+        return False
+
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
 
@@ -74,15 +106,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     dev_reg = await device_registry.async_get_registry(hass)
-    identifier = (DOMAIN, entry.unique_id)
-    device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+    device_entry = None
+    if entry.unique_id is not None:
+        device_entry = dev_reg.async_get_device(
+            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
+        )
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
     sleep_period = entry.data.get("sleep_period")
 
     @callback
-    def _async_device_online(_):
+    def _async_device_online(_: Any) -> None:
         _LOGGER.debug("Device %s is online, resuming setup", entry.title)
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
 
@@ -122,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_device_setup(
     hass: HomeAssistant, entry: ConfigEntry, device: aioshelly.Device
-):
+) -> None:
     """Set up a device that is online."""
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         COAP
@@ -143,9 +178,11 @@ async def async_device_setup(
 class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     """Wrapper for a Shelly device with Home Assistant specific functions."""
 
-    def __init__(self, hass, entry, device: aioshelly.Device):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, device: aioshelly.Device
+    ) -> None:
         """Initialize the Shelly device wrapper."""
-        self.device_id = None
+        self.device_id: str | None = None
         sleep_period = entry.data["sleep_period"]
 
         if sleep_period:
@@ -169,12 +206,12 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self._async_remove_device_updates_handler = self.async_add_listener(
             self._async_device_updates_handler
         )
-        self._last_input_events_count = {}
+        self._last_input_events_count: dict = {}
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
     @callback
-    def _async_device_updates_handler(self):
+    def _async_device_updates_handler(self) -> None:
         """Handle device updates."""
         if not self.device.initialized:
             return
@@ -227,7 +264,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     self.name,
                 )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data."""
         if self.entry.data.get("sleep_period"):
             # Sleeping device, no point polling it, just mark it unavailable
@@ -236,21 +273,21 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         _LOGGER.debug("Polling Shelly Device - %s", self.name)
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
-                return await self.device.update()
+                await self.device.update()
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property
-    def model(self):
+    def model(self) -> str:
         """Model of the device."""
-        return self.entry.data["model"]
+        return cast(str, self.entry.data["model"])
 
     @property
-    def mac(self):
+    def mac(self) -> str:
         """Mac address of the device."""
-        return self.entry.unique_id
+        return cast(str, self.entry.unique_id)
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Set up the wrapper."""
         dev_reg = await device_registry.async_get_registry(self.hass)
         sw_version = self.device.settings["fw"] if self.device.initialized else ""
@@ -267,13 +304,15 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown the wrapper."""
-        self.device.shutdown()
-        self._async_remove_device_updates_handler()
+        if self.device:
+            self.device.shutdown()
+            self._async_remove_device_updates_handler()
+            self.device = None
 
     @callback
-    def _handle_ha_stop(self, _):
+    def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
         _LOGGER.debug("Stopping ShellyDeviceWrapper for %s", self.name)
         self.shutdown()
@@ -282,7 +321,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
     """Rest Wrapper for a Shelly device with Home Assistant specific functions."""
 
-    def __init__(self, hass, device: aioshelly.Device):
+    def __init__(self, hass: HomeAssistant, device: aioshelly.Device) -> None:
         """Initialize the Shelly device wrapper."""
         if (
             device.settings["device"]["type"]
@@ -302,22 +341,22 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.device = device
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data."""
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 _LOGGER.debug("REST update for %s", self.name)
-                return await self.device.update_status()
+                await self.device.update_status()
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property
-    def mac(self):
+    def mac(self) -> str:
         """Mac address of the device."""
-        return self.device.settings["device"]["mac"]
+        return cast(str, self.device.settings["device"]["mac"])
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id].get(DEVICE)
     if device is not None:
@@ -337,3 +376,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
 
     return unload_ok
+
+
+def get_device_wrapper(
+    hass: HomeAssistant, device_id: str
+) -> ShellyDeviceWrapper | None:
+    """Get a Shelly device wrapper for the given device id."""
+    if not hass.data.get(DOMAIN):
+        return None
+
+    for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
+        wrapper: ShellyDeviceWrapper | None = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+            config_entry
+        ].get(COAP)
+
+        if wrapper and wrapper.device_id == device_id:
+            return wrapper
+
+    return None

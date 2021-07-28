@@ -177,13 +177,15 @@ class ZhaCover(ZhaEntity, CoverEntity):
 class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
+    _attr_device_class = DEVICE_CLASS_SHADE
+
     def __init__(
         self,
         unique_id: str,
         zha_device: ZhaDeviceType,
         channels: list[ChannelType],
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
@@ -198,11 +200,6 @@ class Shade(ZhaEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._position
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SHADE
 
     @property
     def is_closed(self) -> bool | None:
@@ -289,10 +286,7 @@ class Shade(ZhaEntity, CoverEntity):
 class KeenVent(Shade):
     """Keen vent cover."""
 
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_DAMPER
+    _attr_device_class = DEVICE_CLASS_DAMPER
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""

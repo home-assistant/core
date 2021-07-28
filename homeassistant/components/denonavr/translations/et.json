@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Denon AVR Network Receiver'i avastamine nurjus"
         },
-        "flow_title": "Denon AVR v\u00f5rguvastuv\u00f5tja: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Palun kinnita vastuv\u00f5tja lisamine",

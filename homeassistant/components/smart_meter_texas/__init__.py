@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Smart Meter Texas from a config entry."""
 
     username = entry.data[CONF_USERNAME]
@@ -86,7 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SmartMeterTexasData:
     """Manages coordinatation of API data updates."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, account: Account):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, account: Account
+    ) -> None:
         """Initialize the data coordintator."""
         self._entry = entry
         self.account = account

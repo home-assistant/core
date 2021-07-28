@@ -4,29 +4,13 @@
             "port_name_in_use": "Et tilbeh\u00f8r eller bro med samme navn eller port er allerede konfigurert."
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Enhet"
-                },
-                "description": "Velg enheten som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert.",
-                "title": "Velg enhet som skal inkluderes"
-            },
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "Domener \u00e5 inkludere"
-                },
-                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert.",
-                "title": "Velg domener som skal inkluderes"
-            },
             "pairing": {
                 "description": "For \u00e5 fullf\u00f8re sammenkoblingen ved \u00e5 f\u00f8lge instruksjonene i \"Varsler\" under \"Sammenkobling av HomeKit\".",
                 "title": "Koble sammen HomeKit"
             },
             "user": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
-                    "include_domains": "Domener \u00e5 inkludere",
-                    "mode": "Modus"
+                    "include_domains": "Domener \u00e5 inkludere"
                 },
                 "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert. Det opprettes en egen HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediaspiller og kamera.",
                 "title": "Velg domener som skal inkluderes"
@@ -37,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)",
-                    "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)"
+                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)"
                 },
                 "description": "Disse innstillingene m\u00e5 bare justeres hvis HomeKit ikke fungerer.",
                 "title": "Avansert konfigurasjon"

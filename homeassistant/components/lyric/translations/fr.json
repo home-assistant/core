@@ -10,6 +10,9 @@
         "step": {
             "pick_implementation": {
                 "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
+            },
+            "reauth_confirm": {
+                "description": "L'int\u00e9gration Lyric doit authentifier \u00e0 nouveau votre compte."
             }
         }
     }

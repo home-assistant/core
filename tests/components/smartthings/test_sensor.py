@@ -9,6 +9,7 @@ from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smartthings import sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -116,6 +117,7 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
     config_entry = await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    config_entry.state = ConfigEntryState.LOADED
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
     # Assert

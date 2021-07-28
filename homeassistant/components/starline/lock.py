@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineLock(StarlineEntity, LockEntity):
     """Representation of a StarLine lock."""
 
-    def __init__(self, account: StarlineAccount, device: StarlineDevice):
+    def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
         """Initialize the lock."""
         super().__init__(account, device, "lock", "Security")
 
