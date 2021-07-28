@@ -58,7 +58,7 @@ async def async_setup_entry(
         if not switch.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
             continue
         for sensor, attributes in ENERGY_SENSORS.items():
-            if coordinator.data[CONF_EMETER_PARAMS].get(sensor):
+            if coordinator.data[CONF_EMETER_PARAMS].get(sensor) is not None:
                 entities.append(
                     SmartPlugSensor(switch, coordinator, sensor, attributes)
                 )
