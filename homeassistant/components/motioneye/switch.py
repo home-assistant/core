@@ -18,6 +18,7 @@ from motioneye_client.const import (
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -25,12 +26,30 @@ from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
 
 MOTIONEYE_SWITCHES = [
-    (KEY_MOTION_DETECTION, "Motion Detection", True),
-    (KEY_TEXT_OVERLAY, "Text Overlay", False),
-    (KEY_VIDEO_STREAMING, "Video Streaming", False),
-    (KEY_STILL_IMAGES, "Still Images", True),
-    (KEY_MOVIES, "Movies", True),
-    (KEY_UPLOAD_ENABLED, "Upload Enabled", False),
+    EntityDescription(
+        key=KEY_MOTION_DETECTION,
+        name="Motion Detection",
+        entity_registry_enabled_default=True,
+    ),
+    EntityDescription(
+        key=KEY_TEXT_OVERLAY, name="Text Overlay", entity_registry_enabled_default=False
+    ),
+    EntityDescription(
+        key=KEY_VIDEO_STREAMING,
+        name="Video Streaming",
+        entity_registry_enabled_default=False,
+    ),
+    EntityDescription(
+        key=KEY_STILL_IMAGES, name="Still Images", entity_registry_enabled_default=True
+    ),
+    EntityDescription(
+        key=KEY_MOVIES, name="Movies", entity_registry_enabled_default=True
+    ),
+    EntityDescription(
+        key=KEY_UPLOAD_ENABLED,
+        name="Upload Enabled",
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 
@@ -48,14 +67,12 @@ async def async_setup_entry(
                 MotionEyeSwitch(
                     entry.entry_id,
                     camera,
-                    switch_key,
-                    switch_key_friendly_name,
                     entry_data[CONF_CLIENT],
                     entry_data[CONF_COORDINATOR],
                     entry.options,
-                    enabled,
+                    entity_description,
                 )
-                for switch_key, switch_key_friendly_name, enabled in MOTIONEYE_SWITCHES
+                for entity_description in MOTIONEYE_SWITCHES
             ]
         )
 
@@ -69,36 +86,34 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         self,
         config_entry_id: str,
         camera: dict[str, Any],
-        switch_key: str,
-        switch_key_friendly_name: str,
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, str],
-        enabled_by_default: bool,
+        entity_description: EntityDescription,
     ) -> None:
         """Initialize the switch."""
-        self._switch_key = switch_key
-        self._switch_key_friendly_name = switch_key_friendly_name
         super().__init__(
             config_entry_id,
-            f"{TYPE_MOTIONEYE_SWITCH_BASE}_{switch_key}",
+            f"{TYPE_MOTIONEYE_SWITCH_BASE}_{entity_description.key}",
             camera,
             client,
             coordinator,
             options,
-            enabled_by_default,
+            entity_description,
         )
 
     @property
     def name(self) -> str:
         """Return the name of the switch."""
         camera_prepend = f"{self._camera[KEY_NAME]} " if self._camera else ""
-        return f"{camera_prepend}{self._switch_key_friendly_name}"
+        return f"{camera_prepend}{self.entity_description.name}"
 
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return bool(self._camera and self._camera.get(self._switch_key, False))
+        return bool(
+            self._camera and self._camera.get(self.entity_description.key, False)
+        )
 
     async def _async_send_set_camera(self, value: bool) -> None:
         """Set a switch value."""
@@ -107,7 +122,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         # stale configuration.
         camera = await self._client.async_get_camera(self._camera_id)
         if camera:
-            camera[self._switch_key] = value
+            camera[self.entity_description.key] = value
             await self._client.async_set_camera(self._camera_id, camera)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
