@@ -144,6 +144,7 @@ async def test_detect_config_fail(hass, client):
         return_value=location.LocationInfo(
             ip=None,
             country_code=None,
+            currency=None,
             region_code=None,
             region_name=None,
             city=None,

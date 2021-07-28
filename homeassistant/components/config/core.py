@@ -89,4 +89,7 @@ async def websocket_detect_config(hass, connection, msg):
     if location_info.time_zone:
         info["time_zone"] = location_info.time_zone
 
+    if location_info.currency:
+        info["currency"] = location_info.currency
+
     connection.send_result(msg["id"], info)
