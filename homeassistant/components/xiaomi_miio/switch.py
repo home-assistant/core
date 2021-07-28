@@ -35,6 +35,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
+    FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ,
     FEATURE_SET_BUZZER,
     FEATURE_SET_CHILD_LOCK,
     FEATURE_SET_CLEAN,
@@ -45,6 +46,7 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODELS_HUMIDIFIER,
+    MODELS_HUMIDIFIER_MJJSQ,
     SERVICE_SET_BUZZER,
     SERVICE_SET_CHILD_LOCK,
     SERVICE_SET_CLEAN,
@@ -241,6 +243,8 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
     elif model in [MODEL_AIRHUMIDIFIER_CA4]:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
+    elif model in MODELS_HUMIDIFIER_MJJSQ:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ
     elif model in MODELS_HUMIDIFIER:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
 
