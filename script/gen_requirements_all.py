@@ -89,7 +89,7 @@ httpcore==0.13.3
 
 # Temporary constraint on pandas, to unblock 2021.7 releases
 # until we have fixed the wheels builds for newer versions.
-pandas==1.2.5
+pandas==1.3.0
 
 """
 
