@@ -1,5 +1,7 @@
 """Component to embed TP-Link smart home devices."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
 import time
 
@@ -8,6 +10,7 @@ from pyHS100.smartplug import SmartPlug
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -24,6 +27,7 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.dt import utc_from_timestamp
 
 from .common import SmartDevices, async_discover_devices, get_static_devices
 from .const import (
@@ -207,10 +211,15 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                 ATTR_TOTAL_ENERGY_KWH: round(float(emeter_readings["total"]), 3),
                 ATTR_VOLTAGE: round(float(emeter_readings["voltage"]), 1),
                 ATTR_CURRENT_A: round(float(emeter_readings["current"]), 2),
+                ATTR_LAST_RESET: {ATTR_TOTAL_ENERGY_KWH: utc_from_timestamp(0)},
             }
             emeter_statics = self.smartplug.get_emeter_daily()
             if emeter_statics.get(int(time.strftime("%e"))):
+                data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
+                    ATTR_TODAY_ENERGY_KWH
+                ] = datetime.utcnow().date()
                 data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
                     float(emeter_statics[int(time.strftime("%e"))]), 3
                 )
+
         return data

@@ -1,7 +1,6 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from pyHS100 import SmartPlug
@@ -20,7 +19,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_EMETER_PARAMS,
     CONF_MODEL,
     CONF_SW_VERSION,
     CONF_SWITCH,
@@ -88,23 +86,12 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.data[CONF_STATE]
 
-    def _do_update(self, update_data: dict) -> None:
-        """Manually update data."""
-        self.coordinator.async_set_updated_data(data={**self.data}.update(update_data))
-
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.smartplug.turn_on()
-        # self._do_update({CONF_STATE: True})
-        self.hass.async_add_job(self.coordinator.async_refresh)
+        await self.hass.async_add_job(self.smartplug.turn_on)
+        await self.coordinator.async_refresh()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self.smartplug.turn_off()
-        # self._do_update({CONF_STATE: False})
-        self.hass.async_add_job(self.coordinator.async_refresh)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes of the device."""
-        return self.data[CONF_EMETER_PARAMS]
+        await self.hass.async_add_job(self.smartplug.turn_off)
+        await self.coordinator.async_refresh()
