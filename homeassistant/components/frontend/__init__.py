@@ -569,8 +569,8 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Get template."""
         tpl = self._template_cache
         if tpl is None:
-            with open(
-                str(_frontend_root(self.repo_path) / "index.html"), encoding="utf8"
+            with (_frontend_root(self.repo_path) / "index.html").open(
+                encoding="utf8"
             ) as file:
                 tpl = jinja2.Template(file.read())
 
