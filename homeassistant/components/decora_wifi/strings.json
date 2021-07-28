@@ -10,7 +10,7 @@
                 }
             },
             "reauth": {
-                "title": "myLeviton Login",
+                "title": "[%key:component::decora_wifi::config::step::user::title%]",
                 "description": "Re-Enter your myLeviton login information.",
                 "data": {
                     "username": "[%key:common::config_flow::data::username%]",
