@@ -1,13 +1,11 @@
 """Support led_brightness for Mi Air Humidifier."""
 from dataclasses import dataclass
 from enum import Enum
-import logging
 
 from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
 from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
 
 from .const import (
@@ -26,8 +24,6 @@ from .const import (
     SERVICE_SET_LED_BRIGHTNESS,
 )
 from .device import XiaomiCoordinatedMiioEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_LED_BRIGHTNESS = "led_brightness"
 
@@ -68,8 +64,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return
 
     entities = []
-    host = config_entry.data[CONF_HOST]
-    token = config_entry.data[CONF_TOKEN]
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -77,8 +71,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
     else:
         name = config_entry.title
-
-    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
     if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
         entity_class = XiaomiAirHumidifierSelector
