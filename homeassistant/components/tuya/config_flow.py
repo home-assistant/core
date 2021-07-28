@@ -33,8 +33,8 @@ DATA_SCHEMA_PROJECT_TYPE = vol.Schema(
     {vol.Required(CONF_PROJECT_TYPE, default=0): vol.In(TUYA_PROJECT_TYPE)}
 )
 
-# INDUSTRY_SOLUTIONS Schema
-DATA_SCHEMA_INDUSTRY_SOLUTIONS = vol.Schema(
+# INDUSTY_SOLUTIONS Schema
+DATA_SCHEMA_INDUSTY_SOLUTIONS = vol.Schema(
     {
         vol.Required(CONF_ENDPOINT): vol.In(TUYA_ENDPOINT),
         vol.Required(CONF_ACCESS_ID): str,
@@ -69,7 +69,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def _try_login(user_input):
-        _LOGGER.info(f"TuyaConfigFlow._try_login start, user_input: {user_input}")
+        _LOGGER.debug(f"TuyaConfigFlow._try_login start, user_input: {user_input}")
         project_type = ProjectType(user_input[CONF_PROJECT_TYPE])
         api = TuyaOpenAPI(
             user_input[CONF_ENDPOINT]
@@ -95,7 +95,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api.endpoint = api.token_info.platform_url
                 user_input[CONF_ENDPOINT] = api.token_info.platform_url
 
-        _LOGGER.info(f"TuyaConfigFlow._try_login finish, response:, {response}")
+        _LOGGER.debug(f"TuyaConfigFlow._try_login finish, response:, {response}")
         return response
 
     async def async_step_import(self, user_input=None):
@@ -111,16 +111,16 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_SMART_HOME)
             if self.project_type == ProjectType.SMART_HOME
             else self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS
+                step_id="user", data_schema=DATA_SCHEMA_INDUSTY_SOLUTIONS
             )
         )
 
     async def async_step_user(self, user_input=None):
         """Step user."""
-        _LOGGER.info(
+        _LOGGER.debug(
             f"TuyaConfigFlow.async_step_user start, is_import= {self.is_import}"
         )
-        _LOGGER.info(f"TuyaConfigFlow.async_step_user start, user_input= {user_input}")
+        _LOGGER.debug(f"TuyaConfigFlow.async_step_user start, user_input= {user_input}")
 
         if self._async_current_entries():
             return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
@@ -135,7 +135,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if response.get("success", False):
-                _LOGGER.info("TuyaConfigFlow.async_step_user login success")
+                _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data=user_input,
@@ -152,7 +152,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.project_type == ProjectType.SMART_HOME
                 else self.async_show_form(
                     step_id="user",
-                    data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
+                    data_schema=DATA_SCHEMA_INDUSTY_SOLUTIONS,
                     errors=errors,
                 )
             )

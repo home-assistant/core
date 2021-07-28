@@ -20,8 +20,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .aes_cbc import AES_ACCOUNT_KEY, KEY_KEY, XOR_KEY, AesCBC as Aes
 from .const import (
@@ -75,16 +76,16 @@ def entry_decrypt(hass: HomeAssistant, entry: ConfigEntry, init_entry_data):
     aes = Aes()
     # decrypt the new account info
     if XOR_KEY in init_entry_data:
-        _LOGGER.info("tuya.__init__.exist_xor_cache-->True")
+        _LOGGER.debug("tuya.__init__.exist_xor_cache-->True")
         key_iv = aes.xor_decrypt(init_entry_data[XOR_KEY], init_entry_data[KEY_KEY])
         cbc_key = key_iv[0:16]
         cbc_iv = key_iv[16:32]
         decrpyt_str = aes.cbc_decrypt(cbc_key, cbc_iv, init_entry_data[AES_ACCOUNT_KEY])
-        # _LOGGER.info(f"tuya.__init__.exist_xor_cache:::decrpyt_str-->{decrpyt_str}")
+        # _LOGGER.debug(f"tuya.__init__.exist_xor_cache:::decrpyt_str-->{decrpyt_str}")
         entry_data = aes.json_to_dict(decrpyt_str)
     else:
         # if not exist xor cache, use old account info
-        _LOGGER.info("tuya.__init__.exist_xor_cache-->False")
+        _LOGGER.debug("tuya.__init__.exist_xor_cache-->False")
         entry_data = init_entry_data
         cbc_key = aes.random_16()
         cbc_iv = aes.random_16()
@@ -122,19 +123,19 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api.set_dev_channel("hass")
 
-    response = (
-        await hass.async_add_executor_job(
+    if project_type == ProjectType.INDUSTY_SOLUTIONS:
+        response = await hass.async_add_executor_job(
             api.login, entry_data[CONF_USERNAME], entry_data[CONF_PASSWORD]
         )
-        if project_type == ProjectType.INDUSTY_SOLUTIONS
-        else await hass.async_add_executor_job(
+    else:
+        response = await hass.async_add_executor_job(
             api.login,
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
             entry_data[CONF_COUNTRY_CODE],
             entry_data[CONF_APP_TYPE],
         )
-    )
+
     if response.get("success", False) is False:
         _LOGGER.error(f"Tuya login error response: {response}")
         return False
@@ -162,7 +163,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             device_add = False
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 f"""add device category->{device.category}; keys->,
                 {hass.data[DOMAIN][TUYA_HA_TUYA_MAP].keys()}"""
             )
@@ -176,7 +177,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for key, tuya_list in ha_tuya_map.items():
                     if device.category in tuya_list:
                         device_add = True
-                        async_dispatcher_send(
+                        dispatcher_send(
                             hass, TUYA_DISCOVERY_NEW.format(key), [device.id]
                         )
 
@@ -190,7 +191,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 tuya_mq.add_message_listener(device_manager._on_message)
 
         def remove_device(self, device_id: str):
-            _LOGGER.info(f"tuya remove device:{device_id}")
+            _LOGGER.debug(f"tuya remove device:{device_id}")
             remove_hass_device(hass, device_id)
 
     __listener = DeviceListener()
@@ -201,10 +202,10 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Clean up device entities
     await cleanup_device_registry(hass)
 
-    _LOGGER.info(f"init support type->{TUYA_SUPPORT_HA_TYPE}")
+    _LOGGER.debug(f"init support type->{TUYA_SUPPORT_HA_TYPE}")
 
     for platform in TUYA_SUPPORT_HA_TYPE:
-        _LOGGER.info(f"tuya async platform-->{platform}")
+        _LOGGER.debug(f"tuya async platform-->{platform}")
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -216,25 +217,23 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def cleanup_device_registry(hass: HomeAssistant):
     """Remove deleted device registry entry if there are no remaining entities."""
 
-    device_registry = hass.helpers.device_registry.async_get(hass)
+    __device_registry = device_registry.async_get(hass)
     device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
 
-    for dev_id, device_entity in list(device_registry.devices.items()):
+    for dev_id, device_entity in list(__device_registry.devices.items()):
         for item in device_entity.identifiers:
-            if DOMAIN == item[0] and item[1] not in device_manager.device_map.keys():
-                device_registry.async_remove_device(dev_id)
+            if DOMAIN == item[0] and item[1] not in device_manager.device_map:
+                __device_registry.async_remove_device(dev_id)
                 break
 
 
 def remove_hass_device(hass: HomeAssistant, device_id: str):
     """Remove device from hass cache."""
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    entity_registry = hass.helpers.entity_registry.async_get(hass)
-    for entity in list(entity_registry.entities.values()):
-        if entity.unique_id.startswith(f"ty{device_id}"):
-            entity_registry.async_remove(entity.entity_id)
-            if device_registry.async_get(entity.device_id):
-                device_registry.async_remove_device(entity.device_id)
+    __device_registry = device_registry.async_get(hass)
+    for entity in list(__device_registry.devices.values()):
+        print(f"inde->>{entity.identifiers}")
+        if device_id in list(entity.identifiers)[0]:
+            __device_registry.async_remove_device(entity.id)
 
 
 async def async_setup(hass, config):
@@ -242,7 +241,7 @@ async def async_setup(hass, config):
     tuya_logger.setLevel(_LOGGER.level)
     conf = config.get(DOMAIN)
 
-    _LOGGER.info(f"Tuya async setup conf {conf}")
+    _LOGGER.debug(f"Tuya async setup conf {conf}")
     if conf is not None:
 
         async def flow_init() -> Any:
@@ -252,7 +251,7 @@ async def async_setup(hass, config):
                 )
             except Exception as inst:
                 _LOGGER.error(inst.args)
-            _LOGGER.info("Tuya async setup flow_init")
+            _LOGGER.debug("Tuya async setup flow_init")
             return result
 
         hass.async_create_task(flow_init())
@@ -262,7 +261,7 @@ async def async_setup(hass, config):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unloading the Tuya platforms."""
-    _LOGGER.info("integration unload")
+    _LOGGER.debug("integration unload")
     unload = await hass.config_entries.async_unload_platforms(
         entry, hass.data[DOMAIN]["setup_platform"]
     )
@@ -278,7 +277,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Async setup hass config entry."""
-    _LOGGER.info(f"tuya.__init__.async_setup_entry-->{entry.data}")
+    _LOGGER.debug(f"tuya.__init__.async_setup_entry-->{entry.data}")
 
     hass.data[DOMAIN] = {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: []}
     hass.data[DOMAIN][TUYA_SETUP_PLATFORM] = set()

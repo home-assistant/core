@@ -20,7 +20,7 @@ async def async_setup_entry(
     hass: HomeAssistant, _entry: ConfigEntry, async_add_entities
 ):
     """Set up tuya scenes."""
-    _LOGGER.info("scenes init")
+    _LOGGER.debug("scenes init")
 
     entities = []
 

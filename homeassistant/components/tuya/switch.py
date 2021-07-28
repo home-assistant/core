@@ -61,13 +61,13 @@ async def async_setup_entry(
     hass: HomeAssistant, _entry: ConfigEntry, async_add_entities
 ):
     """Set up tuya sensors dynamically through tuya discovery."""
-    _LOGGER.info("switch init")
+    _LOGGER.debug("switch init")
 
     hass.data[DOMAIN][TUYA_HA_TUYA_MAP].update({DEVICE_DOMAIN: TUYA_SUPPORT_TYPE})
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya sensor."""
-        _LOGGER.info(f"switch add-> {dev_ids}")
+        _LOGGER.debug(f"switch add-> {dev_ids}")
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)

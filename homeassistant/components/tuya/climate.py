@@ -96,13 +96,13 @@ async def async_setup_entry(
     hass: HomeAssistant, _entry: ConfigEntry, async_add_entities
 ):
     """Set up tuya climate dynamically through tuya discovery."""
-    _LOGGER.info("climate init")
+    _LOGGER.debug("climate init")
 
     hass.data[DOMAIN][TUYA_HA_TUYA_MAP].update({DEVICE_DOMAIN: TUYA_SUPPORT_TYPE})
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya climate."""
-        _LOGGER.info(f"climate add->{dev_ids}")
+        _LOGGER.debug(f"climate add->{dev_ids}")
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)
@@ -369,7 +369,7 @@ class TuyaHaClimate(TuyaHaDevice, ClimateEntity):
         modes = json.loads(self.tuya_device.function.get(DPCODE_MODE, {}).values).get(
             "range"
         )
-        preset_modes = filter(lambda d: d not in TUYA_HVAC_TO_HA.keys(), modes)
+        preset_modes = filter(lambda d: d not in TUYA_HVAC_TO_HA, modes)
         return list(preset_modes)
 
     @property
