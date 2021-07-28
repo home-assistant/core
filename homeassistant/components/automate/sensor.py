@@ -3,6 +3,9 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_POTENTIAL_VOLT,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,7 +48,7 @@ class AutomateBattery(AutomateBase):
     """Representation of a Automate cover battery sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = "%"
+    _attr_unit_of_measurement = PERCENTAGE
 
     @property
     def name(self):
@@ -69,7 +72,7 @@ class AutomateVoltage(AutomateBase):
     """Representation of a Automate cover battery voltage sensor."""
 
     _attr_device_class = DEVICE_CLASS_VOLTAGE
-    _attr_unit_of_measurement = "V"
+    _attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
     entity_registry_enabled_default = False
 
     @property
@@ -94,7 +97,7 @@ class AutomateSignal(AutomateBase):
     """Representation of a Automate cover WiFi signal sensor."""
 
     _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
-    _attr_unit_of_measurement = "dB"
+    _attr_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
     entity_registry_enabled_default = False
 
     @property
