@@ -496,8 +496,12 @@ class LightSchema(KNXPlatformSchema):
     CONF_COLOR_TEMP_ADDRESS = "color_temperature_address"
     CONF_COLOR_TEMP_STATE_ADDRESS = "color_temperature_state_address"
     CONF_COLOR_TEMP_MODE = "color_temperature_mode"
+    CONF_HUE_ADDRESS = "hue_address"
+    CONF_HUE_STATE_ADDRESS = "hue_state_address"
     CONF_RGBW_ADDRESS = "rgbw_address"
     CONF_RGBW_STATE_ADDRESS = "rgbw_state_address"
+    CONF_SATURATION_ADDRESS = "saturation_address"
+    CONF_SATURATION_STATE_ADDRESS = "saturation_state_address"
     CONF_XYY_ADDRESS = "xyy_address"
     CONF_XYY_STATE_ADDRESS = "xyy_state_address"
     CONF_MIN_KELVIN = "min_kelvin"
@@ -514,7 +518,18 @@ class LightSchema(KNXPlatformSchema):
     CONF_BLUE = "blue"
     CONF_WHITE = "white"
 
-    COLOR_SCHEMA = vol.Schema(
+    _hs_color_inclusion_msg = (
+        "'hue_address', 'saturation_address' and 'brightness_address'"
+        " are required for hs_color configuration"
+    )
+    HS_COLOR_SCHEMA = {
+        vol.Optional(CONF_HUE_ADDRESS): ga_list_validator,
+        vol.Optional(CONF_HUE_STATE_ADDRESS): ga_list_validator,
+        vol.Optional(CONF_SATURATION_ADDRESS): ga_list_validator,
+        vol.Optional(CONF_SATURATION_STATE_ADDRESS): ga_list_validator,
+    }
+
+    INDIVIDUAL_COLOR_SCHEMA = vol.Schema(
         {
             vol.Optional(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
@@ -536,18 +551,18 @@ class LightSchema(KNXPlatformSchema):
                         CONF_RED,
                         "individual_colors",
                         msg="'red', 'green' and 'blue' are required for individual colors configuration",
-                    ): COLOR_SCHEMA,
+                    ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
                         CONF_GREEN,
                         "individual_colors",
                         msg="'red', 'green' and 'blue' are required for individual colors configuration",
-                    ): COLOR_SCHEMA,
+                    ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
                         CONF_BLUE,
                         "individual_colors",
                         msg="'red', 'green' and 'blue' are required for individual colors configuration",
-                    ): COLOR_SCHEMA,
-                    vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+                    ): INDIVIDUAL_COLOR_SCHEMA,
+                    vol.Optional(CONF_WHITE): INDIVIDUAL_COLOR_SCHEMA,
                 },
                 vol.Exclusive(CONF_COLOR_ADDRESS, "color"): ga_list_validator,
                 vol.Optional(CONF_COLOR_STATE_ADDRESS): ga_list_validator,
@@ -556,6 +571,7 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(
                     CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
                 ): vol.All(vol.Upper, cv.enum(ColorTempModes)),
+                **HS_COLOR_SCHEMA,
                 vol.Exclusive(CONF_RGBW_ADDRESS, "color"): ga_list_validator,
                 vol.Optional(CONF_RGBW_STATE_ADDRESS): ga_list_validator,
                 vol.Exclusive(CONF_XYY_ADDRESS, "color"): ga_list_validator,
@@ -569,20 +585,39 @@ class LightSchema(KNXPlatformSchema):
             }
         ),
         vol.Any(
-            # either global "address" or "individual_colors" is required
             vol.Schema(
+                {vol.Required(KNX_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(  # brightness addresses are required in INDIVIDUAL_COLOR_SCHEMA
+                {vol.Required(CONF_INDIVIDUAL_COLORS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            msg="either 'address' or 'individual_colors' is required",
+        ),
+        vol.Any(
+            vol.Schema(  # 'brightness' is non-optional for hs-color
                 {
-                    # brightness addresses are required in COLOR_SCHEMA
-                    vol.Required(CONF_INDIVIDUAL_COLORS): object,
+                    vol.Inclusive(
+                        CONF_BRIGHTNESS_ADDRESS, "hs_color", msg=_hs_color_inclusion_msg
+                    ): object,
+                    vol.Inclusive(
+                        CONF_HUE_ADDRESS, "hs_color", msg=_hs_color_inclusion_msg
+                    ): object,
+                    vol.Inclusive(
+                        CONF_SATURATION_ADDRESS, "hs_color", msg=_hs_color_inclusion_msg
+                    ): object,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
-            vol.Schema(
+            vol.Schema(  # hs-colors not used
                 {
-                    vol.Required(KNX_ADDRESS): object,
+                    vol.Optional(CONF_HUE_ADDRESS): None,
+                    vol.Optional(CONF_SATURATION_ADDRESS): None,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
+            msg=_hs_color_inclusion_msg,
         ),
     )
 

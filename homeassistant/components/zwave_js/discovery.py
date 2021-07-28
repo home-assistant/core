@@ -175,6 +175,10 @@ SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
 )
 
+SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SOUND_SWITCH}, property={"toneId"}, type={"number"}
+)
+
 # For device class mapping see:
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
 DISCOVERY_SCHEMAS = [
@@ -581,6 +585,11 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="light",
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # sirens
+    ZWaveDiscoverySchema(
+        platform="siren",
+        primary_value=SIREN_TONE_SCHEMA,
     ),
 ]
 

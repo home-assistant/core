@@ -18,6 +18,8 @@ from homeassistant.components.homekit.const import (
     HK_DOOR_CLOSING,
     HK_DOOR_OPEN,
     HK_DOOR_OPENING,
+    PROP_MAX_VALUE,
+    PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_covers import (
     GarageDoorOpener,
@@ -133,7 +135,9 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "cover.window"
 
-    hass.states.async_set(entity_id, None)
+    hass.states.async_set(
+        entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION}
+    )
     await hass.async_block_till_done()
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run()
@@ -145,31 +149,51 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_CURRENT_POSITION: None})
+    hass.states.async_set(
+        entity_id,
+        STATE_UNKNOWN,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: None},
+    )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_OPENING, {ATTR_CURRENT_POSITION: 60})
+    hass.states.async_set(
+        entity_id,
+        STATE_OPENING,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 60},
+    )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 60
     assert acc.char_target_position.value == 60
     assert acc.char_position_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_OPENING, {ATTR_CURRENT_POSITION: 70.0})
+    hass.states.async_set(
+        entity_id,
+        STATE_OPENING,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 70.0},
+    )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 70
     assert acc.char_target_position.value == 70
     assert acc.char_position_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_CLOSING, {ATTR_CURRENT_POSITION: 50})
+    hass.states.async_set(
+        entity_id,
+        STATE_CLOSING,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 50},
+    )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 50
     assert acc.char_position_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_OPEN, {ATTR_CURRENT_POSITION: 50})
+    hass.states.async_set(
+        entity_id,
+        STATE_OPEN,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 50},
+    )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 50
@@ -281,6 +305,27 @@ async def test_windowcovering_cover_set_tilt(hass, hk_driver, events):
     assert acc.char_target_tilt.value == 45
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == 75
+
+
+async def test_windowcovering_tilt_only(hass, hk_driver, events):
+    """Test we lock the window covering closed when its tilt only."""
+    entity_id = "cover.window"
+
+    hass.states.async_set(
+        entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_TILT_POSITION}
+    )
+    await hass.async_block_till_done()
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 14  # WindowCovering
+
+    assert acc.char_current_position.value == 0
+    assert acc.char_target_position.value == 0
+    assert acc.char_target_position.properties[PROP_MIN_VALUE] == 0
+    assert acc.char_target_position.properties[PROP_MAX_VALUE] == 0
 
 
 async def test_windowcovering_open_close(hass, hk_driver, events):

@@ -92,8 +92,8 @@ async def async_setup(hass, config):
         data["method"] = method["method"]
         async_dispatcher_send(hass, DOMAIN, data)
 
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
+    for service, method in SERVICE_TO_METHOD.items():
+        schema = method["schema"]
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=schema
         )
@@ -112,7 +112,7 @@ def convert_client_keys(config_file):
         return
 
     # Try to parse the file as being JSON
-    with open(config_file) as json_file:
+    with open(config_file, encoding="utf8") as json_file:
         try:
             json_conf = json.load(json_file)
         except (json.JSONDecodeError, UnicodeDecodeError):

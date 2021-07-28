@@ -977,10 +977,10 @@ class _TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _suppress_domain_all_in_render_info(self._info[template])
+                        _suppress_domain_all_in_render_info(info)
                         if self._rate_limit.async_has_timer(template)
-                        else self._info[template]
-                        for template in self._info
+                        else info
+                        for template, info in self._info.items()
                     ]
                 )
             )

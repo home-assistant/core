@@ -1,5 +1,6 @@
 """Support for Modbus."""
 import asyncio
+from copy import deepcopy
 import logging
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
@@ -196,7 +197,7 @@ class ModbusHub:
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
-        self._pb_call = PYMODBUS_CALL.copy()
+        self._pb_call = deepcopy(PYMODBUS_CALL)
         self._pb_class = {
             CONF_SERIAL: ModbusSerialClient,
             CONF_TCP: ModbusTcpClient,
@@ -248,17 +249,22 @@ class ModbusHub:
         for entry in self._pb_call.values():
             entry[ENTRY_FUNC] = getattr(self._client, entry[ENTRY_NAME])
 
+        await self.async_connect_task()
+        return True
+
+    async def async_connect_task(self):
+        """Try to connect, and retry if needed."""
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                self._log_error("initial connect failed, no retry", error_state=False)
-                return False
+                err = f"{self._config_name} connect failed, retry in pymodbus"
+                self._log_error(err, error_state=False)
+                return
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
             self._async_cancel_listener = async_call_later(
                 self.hass, self._config_delay, self.async_end_delay
             )
-        return True
 
     @callback
     def async_end_delay(self, args):
@@ -310,7 +316,7 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
-        if not self._client.is_socket_open():
+        if not self._client:
             return None
         async with self._lock:
             result = await self.hass.async_add_executor_job(

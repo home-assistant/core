@@ -1,5 +1,5 @@
 """Measurement channels module for Zigbee Home Automation."""
-import zigpy.zcl.clusters.measurement as measurement
+from zigpy.zcl.clusters import measurement
 
 from .. import registries
 from ..const import (

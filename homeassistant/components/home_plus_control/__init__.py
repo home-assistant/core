@@ -133,17 +133,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="home_plus_control_module",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=300),
     )
     hass_entry_data[DATA_COORDINATOR] = coordinator
 
     async def start_platforms():
         """Continue setting up the platforms."""
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         # Only refresh the coordinator after all platforms are loaded.
         await coordinator.async_refresh()

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "account_id": "Konto ID",
+                    "host": "Host",
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

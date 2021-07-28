@@ -126,6 +126,7 @@ PLATFORMS = [
     "climate",
     "cover",
     "fan",
+    "humidifier",
     "light",
     "lock",
     "number",
@@ -521,7 +522,7 @@ async def async_setup_entry(hass, entry):
         unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
 
         def write_dump():
-            with open(hass.config.path("mqtt_dump.txt"), "wt") as fp:
+            with open(hass.config.path("mqtt_dump.txt"), "wt", encoding="utf8") as fp:
                 for msg in messages:
                     fp.write(",".join(msg) + "\n")
 

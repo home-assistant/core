@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import partial
 
-from wled import Preset
+from wled import Playlist, Preset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +26,7 @@ async def async_setup_entry(
     """Set up WLED select based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([WLEDPresetSelect(coordinator)])
+    async_add_entities([WLEDPlaylistSelect(coordinator), WLEDPresetSelect(coordinator)])
 
     update_segments = partial(
         async_update_segments,
@@ -67,6 +67,39 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set WLED segment to the selected preset."""
         await self.coordinator.wled.preset(preset=option)
+
+
+class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
+    """Define a WLED Playlist select."""
+
+    _attr_icon = "mdi:play-speed"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED playlist."""
+        super().__init__(coordinator=coordinator)
+
+        self._attr_name = f"{coordinator.data.info.name} Playlist"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_playlist"
+        self._attr_options = [
+            playlist.name for playlist in self.coordinator.data.playlists
+        ]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return len(self.coordinator.data.playlists) > 0 and super().available
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the currently selected playlist."""
+        if not isinstance(self.coordinator.data.state.playlist, Playlist):
+            return None
+        return self.coordinator.data.state.playlist.name
+
+    @wled_exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set WLED segment to the selected playlist."""
+        await self.coordinator.wled.playlist(playlist=option)
 
 
 class WLEDPaletteSelect(WLEDEntity, SelectEntity):

@@ -1,6 +1,9 @@
 """Support for Notion."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
+from typing import Any
 
 from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
@@ -46,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         client = await async_get_client(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
     except InvalidCredentialsError:
         LOGGER.error("Invalid username and/or password")
@@ -55,9 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    async def async_update():
+    async def async_update() -> dict[str, dict[str, Any]]:
         """Get the latest data from the Notion API."""
-        data = {"bridges": {}, "sensors": {}, "tasks": {}}
+        data: dict[str, dict[str, Any]] = {"bridges": {}, "sensors": {}, "tasks": {}}
         tasks = {
             "bridges": client.bridge.async_all(),
             "sensors": client.sensor.async_all(),
@@ -111,7 +114,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
-):
+) -> None:
     """Register a new bridge."""
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
@@ -190,13 +193,16 @@ class NotionEntity(CoordinatorEntity):
         self._bridge_id = sensor["bridge"]["id"]
 
         device_registry = await dr.async_get_registry(self.hass)
+        this_device = device_registry.async_get_device(
+            {(DOMAIN, sensor["hardware_id"])}
+        )
         bridge = self.coordinator.data["bridges"][self._bridge_id]
         bridge_device = device_registry.async_get_device(
             {(DOMAIN, bridge["hardware_id"])}
         )
-        this_device = device_registry.async_get_device(
-            {(DOMAIN, sensor["hardware_id"])}
-        )
+
+        if not bridge_device or not this_device:
+            return
 
         device_registry.async_update_device(
             this_device.id, via_device_id=bridge_device.id
@@ -208,7 +214,7 @@ class NotionEntity(CoordinatorEntity):
         raise NotImplementedError
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         if self._task_id in self.coordinator.data["tasks"]:
             self.hass.async_create_task(self._async_update_bridge_id())
@@ -216,7 +222,7 @@ class NotionEntity(CoordinatorEntity):
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._async_update_from_latest_data()
