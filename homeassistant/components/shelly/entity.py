@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import Any, Callable, Final, cast
 
@@ -179,6 +180,7 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, aioshelly.Block], bool] | None = None
     extra_state_attributes: Callable[[aioshelly.Block], dict | None] | None = None
+    last_reset: datetime | None = None
 
 
 @dataclass
