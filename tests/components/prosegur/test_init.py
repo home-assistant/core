@@ -46,7 +46,6 @@ async def test_unload_entry(hass, aioclient_mock):
         json={"data": {"token": "123456789"}},
     )
 
-    hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
