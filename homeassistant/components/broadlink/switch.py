@@ -146,7 +146,6 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._attr_assumed_state = True
         self._attr_device_class = DEVICE_CLASS_SWITCH
         self._attr_name = f"{device.name} Switch"
-        self._attr_unique_id = device.unique_id
 
     async def async_added_to_hass(self):
         """Call when the switch is added to hass."""
