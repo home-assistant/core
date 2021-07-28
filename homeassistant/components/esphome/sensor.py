@@ -87,13 +87,6 @@ class EsphomeSensor(
             return
 
         # Logic to restore old state for last_reset_type AUTO:
-
-        # FIXME: edge case: last state before HA restart was "unavailable", but we'd like to
-        #   restore the last non-unavailable state
-        #   -> figure out how to only send non-unavailable states to storage?
-        # FIXME: This enables restore saving for _all_ esphome sensors, but we only need it
-        #   for the ones with last_reset_type==AUTO
-        #   -> figure out how we can selectively enable restore entities
         last_state = await self.async_get_last_state()
         if last_state is None:
             return
