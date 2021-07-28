@@ -60,6 +60,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     """Define an AccuWeather entity."""
 
     coordinator: AccuWeatherDataUpdateCoordinator
+    entity_description: AccuWeatherSensorDescription
 
     def __init__(
         self,
