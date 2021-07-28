@@ -8,6 +8,7 @@ from homeassistant.components.demo.tts import DemoProvider
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
@@ -695,7 +696,11 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     client = await hass_client()
 
     url = "/api/tts_get_url"
-    data = {"platform": "demo", "message": "There is someone at the door."}
+    data = {
+        "platform": "demo",
+        "message": "There is someone at the door.",
+        ATTR_MEDIA_EXTRA: {"volume": 30},
+    }
 
     req = await client.post(url, json=data)
     assert req.status == 200
