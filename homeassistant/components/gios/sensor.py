@@ -4,11 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN as PLATFORM,
-    SensorEntity,
-)
+from homeassistant.components.sensor import DOMAIN as PLATFORM, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -23,14 +19,13 @@ from .const import (
     ATTR_INDEX,
     ATTR_PM25,
     ATTR_STATION,
-    ATTR_UNIT,
-    ATTR_VALUE,
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
     SENSOR_TYPES,
 )
+from .model import GiosSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,13 +56,13 @@ async def async_setup_entry(
 
     sensors: list[GiosSensor | GiosAqiSensor] = []
 
-    for sensor in SENSOR_TYPES:
-        if getattr(coordinator.data, sensor) is None:
+    for description in SENSOR_TYPES:
+        if getattr(coordinator.data, description.key) is None:
             continue
-        if sensor == ATTR_AQI:
-            sensors.append(GiosAqiSensor(name, sensor, coordinator))
+        if description.key == ATTR_AQI:
+            sensors.append(GiosAqiSensor(name, coordinator, description))
         else:
-            sensors.append(GiosSensor(name, sensor, coordinator))
+            sensors.append(GiosSensor(name, coordinator, description))
     async_add_entities(sensors)
 
 
@@ -75,13 +70,16 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
     """Define an GIOS sensor."""
 
     coordinator: GiosDataUpdateCoordinator
+    entity_description: GiosSensorEntityDescription
 
     def __init__(
-        self, name: str, sensor_type: str, coordinator: GiosDataUpdateCoordinator
+        self,
+        name: str,
+        coordinator: GiosDataUpdateCoordinator,
+        description: GiosSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._description = SENSOR_TYPES[sensor_type]
         self._attr_device_info = {
             "identifiers": {(DOMAIN, str(coordinator.gios.station_id))},
             "name": DEFAULT_NAME,
@@ -89,33 +87,31 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
             "entry_type": "service",
         }
         self._attr_icon = "mdi:blur"
-        if sensor_type == ATTR_PM25:
-            self._attr_name = f"{name} PM2.5"
-        else:
-            self._attr_name = f"{name} {sensor_type.upper()}"
-        self._attr_state_class = self._description.get(ATTR_STATE_CLASS)
-        self._attr_unique_id = f"{coordinator.gios.station_id}-{sensor_type}"
-        self._attr_unit_of_measurement = self._description.get(ATTR_UNIT)
-        self._sensor_type = sensor_type
+        self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self._attrs: dict[str, Any] = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.coordinator.gios.station_name,
         }
+        self.entity_description = description
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        self._attrs[ATTR_NAME] = getattr(self.coordinator.data, self._sensor_type).name
+        self._attrs[ATTR_NAME] = getattr(
+            self.coordinator.data, self.entity_description.key
+        ).name
         self._attrs[ATTR_INDEX] = getattr(
-            self.coordinator.data, self._sensor_type
+            self.coordinator.data, self.entity_description.key
         ).index
         return self._attrs
 
     @property
     def state(self) -> StateType:
         """Return the state."""
-        state = getattr(self.coordinator.data, self._sensor_type).value
-        return cast(StateType, self._description[ATTR_VALUE](state))
+        state = getattr(self.coordinator.data, self.entity_description.key).value
+        assert self.entity_description.value is not None
+        return cast(StateType, self.entity_description.value(state))
 
 
 class GiosAqiSensor(GiosSensor):
@@ -124,10 +120,14 @@ class GiosAqiSensor(GiosSensor):
     @property
     def state(self) -> StateType:
         """Return the state."""
-        return cast(StateType, getattr(self.coordinator.data, self._sensor_type).value)
+        return cast(
+            StateType, getattr(self.coordinator.data, self.entity_description.key).value
+        )
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         available = super().available
-        return available and bool(getattr(self.coordinator.data, self._sensor_type))
+        return available and bool(
+            getattr(self.coordinator.data, self.entity_description.key)
+        )
