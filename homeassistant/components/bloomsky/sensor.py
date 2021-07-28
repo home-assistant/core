@@ -1,65 +1,102 @@
 """Support the sensor of a BloomSky weather station."""
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
-    CONF_MONITORED_CONDITIONS,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
+    LENGTH_INCHES,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_INCHES_PER_HOUR,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_INHG,
     PRESSURE_MBAR,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UV_INDEX,
 )
-import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 
+# See http://weatherlution.com/bloomsky-api/
+# http://weatherlution.com/wp-content/uploads/2016/01/v1.6BloomskyDeviceOwnerAPIDocumentationforBusinessOwners.pdf
+
 # These are the available sensors
-SENSOR_TYPES = [
-    "Temperature",
+SKY_SENSORS = [
     "Humidity",
-    "Pressure",
     "Luminance",
-    "UVIndex",
+    "Pressure",
+    "Temperature",
+    "UVIndex",  # Also on storm
     "Voltage",
+]
+
+STORM_SENSORS = [
+    "24hRain",  # last 24hs
+    "RainDaily",  # 12a-1159p
+    "RainRate",  # last 10m
+    "SustainedWindSpeed",
+    "WindDirection",  # NW, etc
+    "WindGust",
 ]
 
 # Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS_IMPERIAL = {
-    "Temperature": TEMP_FAHRENHEIT,
+    "24hRain": LENGTH_INCHES,
     "Humidity": PERCENTAGE,
-    "Pressure": PRESSURE_INHG,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
+    "Pressure": PRESSURE_INHG,
+    "RainDaily": LENGTH_INCHES,
+    "RainRate": PRECIPITATION_INCHES_PER_HOUR,
+    "SustainedWindSpeed": SPEED_MILES_PER_HOUR,
+    "Temperature": TEMP_FAHRENHEIT,
+    "UVIndex": UV_INDEX,
     "Voltage": ELECTRIC_POTENTIAL_MILLIVOLT,
+    "WindGust": SPEED_MILES_PER_HOUR,
 }
 
 # Metric units
 SENSOR_UNITS_METRIC = {
-    "Temperature": TEMP_CELSIUS,
+    "24hRain": LENGTH_MILLIMETERS,
     "Humidity": PERCENTAGE,
-    "Pressure": PRESSURE_MBAR,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
+    "Pressure": PRESSURE_MBAR,
+    "RainDaily": LENGTH_MILLIMETERS,
+    "RainRate": PRECIPITATION_MILLIMETERS_PER_HOUR,
+    "SustainedWindSpeed": SPEED_METERS_PER_SECOND,
+    "Temperature": TEMP_CELSIUS,
+    "UVIndex": UV_INDEX,
     "Voltage": ELECTRIC_POTENTIAL_MILLIVOLT,
+    "WindGust": SPEED_METERS_PER_SECOND,
 }
 
 # Device class
 SENSOR_DEVICE_CLASS = {
+    "Humidity": DEVICE_CLASS_HUMIDITY,
+    "Luminance": DEVICE_CLASS_ILLUMINANCE,
+    "Pressure": DEVICE_CLASS_PRESSURE,
     "Temperature": DEVICE_CLASS_TEMPERATURE,
+    "Voltage": DEVICE_CLASS_BATTERY,
 }
 
 # Which sensors to format numerically
-FORMAT_NUMBERS = ["Temperature", "Pressure", "Voltage"]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        )
-    }
-)
+FORMAT_NUMBERS = [
+    "24hRain",
+    "Pressure",
+    "RainDaily",
+    "RainRate",
+    "SustainedWindSpeed",
+    "Temperature",
+    "Voltage",
+    "WindGust",
+]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -68,12 +105,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is not None:
         return
 
-    sensors = config[CONF_MONITORED_CONDITIONS]
     bloomsky = hass.data[DOMAIN]
+    bloomsky.refresh_devices()
 
     for device in bloomsky.devices.values():
-        for variable in sensors:
-            add_entities([BloomSkySensor(bloomsky, device, variable)], True)
+        add_entities(
+            (BloomSkySensor(bloomsky, device, what) for what in SKY_SENSORS), True
+        )
+        if "Storm" in device:
+            add_entities(
+                (BloomSkySensor(bloomsky, device, what) for what in STORM_SENSORS), True
+            )
 
 
 class BloomSkySensor(SensorEntity):
@@ -102,7 +144,12 @@ class BloomSkySensor(SensorEntity):
     def update(self):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
-        state = self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
+        device = self._bloomsky.devices[self._device_id]
+        data = {}
+        data.update(device["Data"])
+        # Storm supersedes sky data.
+        data.update(device.get("Storm", {}))
+        state = data[self._sensor_name]
         self._attr_native_value = (
             f"{state:.2f}" if self._sensor_name in FORMAT_NUMBERS else state
         )
