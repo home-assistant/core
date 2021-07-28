@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
+import pytest
+
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
@@ -130,12 +132,13 @@ async def test_climate_set_unsupported_hvac_mode(hass, init_integration):
     assert entry
     assert entry.unique_id == uid
 
-    assert await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_AUTO},
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+            blocking=True,
+        )
 
 
 async def test_climate_set_temperature(hass, init_integration):

@@ -48,6 +48,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class Device(CoordinatorEntity, ClimateEntity):
     """Representation of an Freedompro climate."""
 
+    _attr_hvac_modes = SUPPORTED_HVAC_MODES
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, session, api_key, device, coordinator):
         """Initialize the Freedompro climate."""
         super().__init__(coordinator)
@@ -67,9 +70,7 @@ class Device(CoordinatorEntity, ClimateEntity):
         self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         self._attr_current_temperature = 0
         self._attr_target_temperature = 0
-        self._attr_temperature_unit = TEMP_CELSIUS
         self._attr_hvac_mode = HVAC_MODE_OFF
-        self._attr_hvac_modes = SUPPORTED_HVAC_MODES
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -100,12 +101,11 @@ class Device(CoordinatorEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Async function to set mode to climate."""
         if hvac_mode not in SUPPORTED_HVAC_MODES:
-            _LOGGER.error(
+            raise ValueError(
                 "Got unsupported hvac_mode %s, expected one of %s",
                 hvac_mode,
                 SUPPORTED_HVAC_MODES,
             )
-            return
 
         payload = {}
         payload["heatingCoolingState"] = HVAC_INVERT_MAP[hvac_mode]
