@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import FlowResult
 
 from . import ProxmoxClient
 from .const import CONF_REALM, DEFAULT_PORT, DEFAULT_REALM, DEFAULT_VERIFY_SSL, DOMAIN
@@ -38,7 +39,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_init(import_config, True)
 
-    async def async_step_user(self, user_input):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Manual user configuration."""
         return await self.async_step_init(user_input, False)
 
@@ -87,7 +88,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_VERIFY_SSL] = "ssl_rejection"
                 except ConnectTimeout:
                     errors[CONF_HOST] = "cant_connect"
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     errors["base"] = "general_error"
 
                 else:
