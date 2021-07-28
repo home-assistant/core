@@ -37,7 +37,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        Device(hass, api_key, device, coordinator)
+        Device(
+            aiohttp_client.async_get_clientsession(hass), api_key, device, coordinator
+        )
         for device in coordinator.data
         if device["type"] == "thermostat"
     )
@@ -46,10 +48,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class Device(CoordinatorEntity, ClimateEntity):
     """Representation of an Freedompro climate."""
 
-    def __init__(self, hass, api_key, device, coordinator):
+    def __init__(self, session, api_key, device, coordinator):
         """Initialize the Freedompro climate."""
         super().__init__(coordinator)
-        self._session = aiohttp_client.async_get_clientsession(hass)
+        self._session = session
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
