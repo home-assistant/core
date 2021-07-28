@@ -10,7 +10,6 @@ from zwave_js_server.model.value import ConfigurationValue
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.zwave_js.device_trigger import NODE_STATUSES
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -25,18 +24,19 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
 )
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    CONF_VALUE_ID,
+    NODE_STATUSES,
+    VALUE_SCHEMA,
+    get_config_parameter_value_schema,
+)
 from .helpers import (
     async_get_node_from_device_id,
     async_is_device_config_entry_not_loaded,
     check_type_schema_map,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
-)
-from .device_automation_helpers import (
-    CONF_SUBTYPE,
-    CONF_VALUE_ID,
-    VALUE_SCHEMA,
-    get_config_parameter_value_schema,
 )
 
 CONF_STATUS = "status"
