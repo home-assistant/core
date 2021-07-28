@@ -128,8 +128,8 @@ def _init_header(request: web.Request) -> dict[str, str]:
 def _get_timeout(path: str) -> ClientTimeout:
     """Return timeout for a URL path."""
     if NO_TIMEOUT.match(path):
-        return ClientTimeout(connect=5)
-    return ClientTimeout(connect=5, total=300)
+        return ClientTimeout(connect=10)
+    return ClientTimeout(connect=10, total=300)
 
 
 def _need_auth(hass, path: str) -> bool:
