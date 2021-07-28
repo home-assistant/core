@@ -239,7 +239,7 @@ def plextv_resources_base_fixture():
 @pytest.fixture(name="plextv_resources", scope="session")
 def plextv_resources_fixture(plextv_resources_base):
     """Load default payload for plex.tv resources and return it."""
-    return plextv_resources_base.format(second_server_enabled=0)
+    return plextv_resources_base.format(first_server_enabled=1, second_server_enabled=0)
 
 
 @pytest.fixture(name="plextv_shared_users", scope="session")
