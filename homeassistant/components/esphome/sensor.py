@@ -86,41 +86,43 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             self._attr_last_reset = datetime.min
         elif self._static_info.last_reset_type is LastResetType.AUTO:
 
-            @callback
-            def check_last_state(event: Event) -> None:
-                """Check the states to see if last_reset should be set to now."""
-                old_state = event.data.get("old_state")
-                new_state = event.data.get("new_state")
-
-                reset = old_state is None
-                old = None
-                new = None
-                try:
-                    assert new_state is not None
-                    new = Decimal(new_state.state)
-                except DecimalException:
-                    return
-
-                if not reset:
-                    assert old_state is not None
-                    try:
-                        old = Decimal(old_state.state)
-                    except DecimalException:
-                        pass
-
-                if old == 0 and new == 0:
-                    return
-
-                if not reset:
-                    reset = new == 0 or (old is not None and new < (old / 2))
-
-                if reset:
-                    self._attr_last_reset = datetime.now()
-                    self.async_write_ha_state()
-
-            async_track_state_change_event(
-                self.hass, [self.entity_id], check_last_state
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self.entity_id], self.check_last_state
+                )
             )
+
+    @callback
+    def check_last_state(self, event: Event) -> None:
+        """Check the states to see if last_reset should be set to now."""
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+
+        reset = old_state is None
+        old = None
+        new = None
+        try:
+            assert new_state is not None
+            new = Decimal(new_state.state)
+        except DecimalException:
+            return
+
+        if not reset:
+            assert old_state is not None
+            try:
+                old = Decimal(old_state.state)
+            except DecimalException:
+                pass
+
+        if old == 0 and new == 0:
+            return
+
+        if not reset:
+            reset = new == 0 or (old is not None and new < (old / 2))
+
+        if reset:
+            self._attr_last_reset = datetime.now()
+            self.async_write_ha_state()
 
     @property
     def icon(self) -> str | None:
