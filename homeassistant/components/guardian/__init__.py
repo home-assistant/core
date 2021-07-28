@@ -297,7 +297,6 @@ class ValveControllerEntity(GuardianEntity):
         return any(
             coordinator.last_update_success
             for coordinator in self.coordinators.values()
-            if coordinator
         )
 
     async def _async_continue_entity_setup(self) -> None:

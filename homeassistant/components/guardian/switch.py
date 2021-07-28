@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import ValveControllerEntity
 from .const import (
+    API_SENSOR_PAIRED_SENSOR_STATUS,
     API_VALVE_STATUS,
     CONF_UID,
     DATA_CLIENT,
@@ -74,7 +75,16 @@ async def async_setup_entry(
             ValveControllerSwitch(
                 entry,
                 hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
+                # ValveControllerEntity objects don't need to know about
+                # DataUpdateCoordinators related to paired sensors, so we make sure to
+                # exclude them from our global storage:
+                {
+                    api: coordinator
+                    for api, coordinator in hass.data[DOMAIN][DATA_COORDINATOR][
+                        entry.entry_id
+                    ].items()
+                    if api != API_SENSOR_PAIRED_SENSOR_STATUS
+                },
             )
         ]
     )

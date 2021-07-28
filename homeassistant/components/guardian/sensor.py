@@ -86,7 +86,16 @@ async def async_setup_entry(
         sensors.append(
             ValveControllerSensor(
                 entry,
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
+                # ValveControllerEntity objects don't need to know about
+                # DataUpdateCoordinators related to paired sensors, so we make sure to
+                # exclude them from our global storage:
+                {
+                    api: coordinator
+                    for api, coordinator in hass.data[DOMAIN][DATA_COORDINATOR][
+                        entry.entry_id
+                    ].items()
+                    if api != API_SENSOR_PAIRED_SENSOR_STATUS
+                },
                 kind,
                 name,
                 device_class,
