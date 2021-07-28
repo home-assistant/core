@@ -1,9 +1,9 @@
 """Support for the Meraki CMX location service."""
+from decimal import Decimal
 import json
 import logging
 
 import voluptuous as vol
-from decimal import Decimal
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
