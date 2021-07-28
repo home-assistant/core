@@ -71,6 +71,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._sensor_data = _get_sensor_data(
             coordinator.data, forecast_day, description.key
         )
@@ -98,7 +99,6 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             "entry_type": "service",
         }
         self.forecast_day = forecast_day
-        self.entity_description = description
 
     @property
     def state(self) -> StateType:
