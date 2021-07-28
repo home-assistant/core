@@ -190,10 +190,7 @@ class NestCamera(Camera):
         stream_url = await self.stream_source()
         if not stream_url:
             return None
-        image_bytes: bytes | None = await async_get_image(
-            self.hass, stream_url, output_format=IMAGE_JPEG
-        )
-        return image_bytes
+        return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
     async def _async_active_event_image(self) -> bytes | None:
         """Return image from any active events happening."""
