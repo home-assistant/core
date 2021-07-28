@@ -45,40 +45,15 @@ class AmcrestSensor(SensorEntity):
 
     def __init__(self, name, device, sensor_type):
         """Initialize a sensor for Amcrest camera."""
-        self._name = f"{name} {SENSORS[sensor_type][0]}"
+        self._attr_name = f"{name} {SENSORS[sensor_type][0]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
-        self._state = None
-        self._attrs = {}
-        self._unit_of_measurement = SENSORS[sensor_type][1]
-        self._icon = SENSORS[sensor_type][2]
+        self._attr_state = None
+        self._attr_extra_state_attributes = {}
+        self._attr_unit_of_measurement = SENSORS[sensor_type][1]
+        self._attr_icon = SENSORS[sensor_type][2]
         self._unsub_dispatcher = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit_of_measurement
 
     @property
     def available(self):
@@ -89,32 +64,34 @@ class AmcrestSensor(SensorEntity):
         """Get the latest data and updates the state."""
         if not self.available:
             return
-        _LOGGER.debug("Updating %s sensor", self._name)
+        _LOGGER.debug("Updating %s sensor", self._attr_name)
 
         try:
             if self._sensor_type == SENSOR_PTZ_PRESET:
-                self._state = self._api.ptz_presets_count
+                self._attr_state = self._api.ptz_presets_count
 
             elif self._sensor_type == SENSOR_SDCARD:
                 storage = self._api.storage_all
                 try:
-                    self._attrs[
+                    self._attr_extra_state_attributes[
                         "Total"
                     ] = f"{storage['total'][0]:.2f} {storage['total'][1]}"
                 except ValueError:
-                    self._attrs[
+                    self._attr_extra_state_attributes[
                         "Total"
                     ] = f"{storage['total'][0]} {storage['total'][1]}"
                 try:
-                    self._attrs[
+                    self._attr_extra_state_attributes[
                         "Used"
                     ] = f"{storage['used'][0]:.2f} {storage['used'][1]}"
                 except ValueError:
-                    self._attrs["Used"] = f"{storage['used'][0]} {storage['used'][1]}"
+                    self._attr_extra_state_attributes[
+                        "Used"
+                    ] = f"{storage['used'][0]} {storage['used'][1]}"
                 try:
-                    self._state = f"{storage['used_percent']:.2f}"
+                    self._attr_state = f"{storage['used_percent']:.2f}"
                 except ValueError:
-                    self._state = storage["used_percent"]
+                    self._attr_state = storage["used_percent"]
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 

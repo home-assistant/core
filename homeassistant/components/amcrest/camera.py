@@ -134,7 +134,7 @@ class AmcrestCam(Camera):
     def __init__(self, name, device, ffmpeg):
         """Initialize an Amcrest camera."""
         super().__init__()
-        self._name = name
+        self._attr_name = name
         self._api = device.api
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
@@ -153,6 +153,8 @@ class AmcrestCam(Camera):
         self._snapshot_task = None
         self._unsub_dispatcher = []
         self._update_succeeded = False
+        self._attr_should_poll = True
+        self._attr_supported_features = SUPPORT_ON_OFF | SUPPORT_STREAM
 
     def _check_snapshot_ok(self):
         available = self.available
@@ -183,7 +185,7 @@ class AmcrestCam(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        _LOGGER.debug("Take snapshot from %s", self._name)
+        _LOGGER.debug("Take snapshot from %s", self._attr_name)
         try:
             # Amcrest cameras only support one snapshot command at a time.
             # Hence need to wait if a previous snapshot has not yet finished.
@@ -191,7 +193,7 @@ class AmcrestCam(Camera):
             # and before initiating shapshot.
             while self._snapshot_task:
                 self._check_snapshot_ok()
-                _LOGGER.debug("Waiting for previous snapshot from %s", self._name)
+                _LOGGER.debug("Waiting for previous snapshot from %s", self._attr_name)
                 await self._snapshot_task
             self._check_snapshot_ok()
             # Run snapshot command in separate Task that can't be cancelled so
@@ -247,19 +249,6 @@ class AmcrestCam(Camera):
     # Entity property overrides
 
     @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
     def extra_state_attributes(self):
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
@@ -277,11 +266,6 @@ class AmcrestCam(Camera):
     def available(self):
         """Return True if entity is available."""
         return self._api.available
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_ON_OFF | SUPPORT_STREAM
 
     # Camera property overrides
 
@@ -333,7 +317,7 @@ class AmcrestCam(Camera):
         self._unsub_dispatcher.append(
             async_dispatcher_connect(
                 self.hass,
-                service_signal(SERVICE_UPDATE, self._name),
+                service_signal(SERVICE_UPDATE, self._attr_name),
                 self.async_on_demand_update,
             )
         )

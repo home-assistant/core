@@ -105,34 +105,20 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     def __init__(self, name, device, sensor_type):
         """Initialize entity."""
-        self._name = f"{name} {BINARY_SENSORS[sensor_type][SENSOR_NAME]}"
+        self._attr_name = f"{name} {BINARY_SENSORS[sensor_type][SENSOR_NAME]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
         self._state = None
-        self._device_class = BINARY_SENSORS[sensor_type][SENSOR_DEVICE_CLASS]
+        self._attr_device_class = BINARY_SENSORS[sensor_type][SENSOR_DEVICE_CLASS]
         self._event_code = BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
         self._unsub_dispatcher = []
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return self._sensor_type in BINARY_POLLED_SENSORS
-
-    @property
-    def name(self):
-        """Return entity name."""
-        return self._name
+        self._attr_should_poll = self._sensor_type in BINARY_POLLED_SENSORS
 
     @property
     def is_on(self):
         """Return if entity is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return self._device_class
 
     @property
     def available(self):
@@ -150,7 +136,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
     def _update_online(self):
         if not (self._api.available or self.is_on):
             return
-        _LOGGER.debug(_UPDATE_MSG, self._name)
+        _LOGGER.debug(_UPDATE_MSG, self._attr_name)
         if self._api.available:
             # Send a command to the camera to test if we can still communicate with it.
             # Override of Http.command() in __init__.py will set self._api.available
@@ -162,7 +148,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
     def _update_others(self):
         if not self.available:
             return
-        _LOGGER.debug(_UPDATE_MSG, self._name)
+        _LOGGER.debug(_UPDATE_MSG, self._attr_name)
 
         try:
             self._state = "channels" in self._api.event_channels_happened(
@@ -174,7 +160,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
     async def async_on_demand_update(self):
         """Update state."""
         if self._sensor_type == BINARY_SENSOR_ONLINE:
-            _LOGGER.debug(_UPDATE_MSG, self._name)
+            _LOGGER.debug(_UPDATE_MSG, self._attr_name)
             self._state = self._api.available
             self.async_write_ha_state()
             return
@@ -183,7 +169,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
     @callback
     def async_event_received(self, start):
         """Update state from received event."""
-        _LOGGER.debug(_UPDATE_MSG, self._name)
+        _LOGGER.debug(_UPDATE_MSG, self._attr_name)
         self._state = start
         self.async_write_ha_state()
 
