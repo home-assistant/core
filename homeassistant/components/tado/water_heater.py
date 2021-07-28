@@ -1,4 +1,6 @@
 """Support for Tado hot water zones."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -97,6 +99,9 @@ def create_water_heater_entity(tado, name: str, zone_id: int, zone: str):
     capabilities = tado.get_capabilities(zone_id)
 
     supports_temperature_control = capabilities["canSetTemperature"]
+
+    min_temp: float | None
+    max_temp: float | None
 
     if supports_temperature_control and "temperatures" in capabilities:
         temperatures = capabilities["temperatures"]

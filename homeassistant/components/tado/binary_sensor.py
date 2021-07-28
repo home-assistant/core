@@ -1,4 +1,6 @@
 """Support for Tado sensors for each zone."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.binary_sensor import (
@@ -62,7 +64,7 @@ async def async_setup_entry(
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     devices = tado.devices
     zones = tado.zones
-    entities = []
+    entities: list[BinarySensorEntity] = []
 
     # Create device sensors
     for device in devices:
