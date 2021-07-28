@@ -115,6 +115,11 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
         )
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._description.key in self.coordinator.data["data"]
+
+    @property
     def state(self) -> StateType:
         """Return sensor state."""
         return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore[misc]
