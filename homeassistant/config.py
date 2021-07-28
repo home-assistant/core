@@ -290,30 +290,30 @@ def _write_default_config(config_dir: str) -> bool:
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
-        with open(config_path, "wt") as config_file:
+        with open(config_path, "wt", encoding="utf8") as config_file:
             config_file.write(DEFAULT_CONFIG)
 
         if not os.path.isfile(secret_path):
-            with open(secret_path, "wt") as secret_file:
+            with open(secret_path, "wt", encoding="utf8") as secret_file:
                 secret_file.write(DEFAULT_SECRETS)
 
-        with open(version_path, "wt") as version_file:
+        with open(version_path, "wt", encoding="utf8") as version_file:
             version_file.write(__version__)
 
         if not os.path.isfile(group_yaml_path):
-            with open(group_yaml_path, "wt"):
+            with open(group_yaml_path, "wt", encoding="utf8"):
                 pass
 
         if not os.path.isfile(automation_yaml_path):
-            with open(automation_yaml_path, "wt") as automation_file:
+            with open(automation_yaml_path, "wt", encoding="utf8") as automation_file:
                 automation_file.write("[]")
 
         if not os.path.isfile(script_yaml_path):
-            with open(script_yaml_path, "wt"):
+            with open(script_yaml_path, "wt", encoding="utf8"):
                 pass
 
         if not os.path.isfile(scene_yaml_path):
-            with open(scene_yaml_path, "wt"):
+            with open(scene_yaml_path, "wt", encoding="utf8"):
                 pass
 
         return True
@@ -379,7 +379,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     version_path = hass.config.path(VERSION_FILE)
 
     try:
-        with open(version_path) as inp:
+        with open(version_path, encoding="utf8") as inp:
             conf_version = inp.readline().strip()
     except FileNotFoundError:
         # Last version to not have this file
@@ -423,7 +423,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
-    with open(version_path, "wt") as outp:
+    with open(version_path, "wt", encoding="utf8") as outp:
         outp.write(__version__)
 
 

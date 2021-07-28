@@ -898,7 +898,7 @@ async def async_load_config(
 
 def update_config(path: str, dev_id: str, device: Device) -> None:
     """Add device to YAML configuration file."""
-    with open(path, "a") as out:
+    with open(path, "a", encoding="utf8") as out:
         device_config = {
             device.dev_id: {
                 ATTR_NAME: device.name,
