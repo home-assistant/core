@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal, DecimalException
 import math
 from typing import cast
 
@@ -23,10 +22,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt
 
 from . import (
@@ -75,54 +74,90 @@ _STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMap
 )
 
 
-class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
+class EsphomeSensor(
+    EsphomeEntity[SensorInfo, SensorState], SensorEntity, RestoreEntity
+):
     """A sensor implementation for esphome."""
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        if self._static_info.last_reset_type is LastResetType.NEVER:
-            self._attr_last_reset = datetime.min
-        elif self._static_info.last_reset_type is LastResetType.AUTO:
+        if self._static_info.last_reset_type != LastResetType.AUTO:
+            return
 
-            self.async_on_remove(
-                async_track_state_change_event(
-                    self.hass, [self.entity_id], self.check_last_state
-                )
+        # Logic to restore old state for last_reset_type AUTO:
+
+        # FIXME: edge case: last state before HA restart was "unavailable", but we'd like to
+        #   restore the last non-unavailable state
+        #   -> figure out how to only send non-unavailable states to storage?
+        # FIXME: This enables restore saving for _all_ esphome sensors, but we only need it
+        #   for the ones with last_reset_type==AUTO
+        #   -> figure out how we can selectively enable restore entities
+        last_state = await self.async_get_last_state()
+        if last_state is None:
+            return
+
+        if "last_reset" in last_state.attributes:
+            self._attr_last_reset = datetime.fromisoformat(
+                last_state.attributes["last_reset"]
             )
 
-    @callback
-    def check_last_state(self, event: Event) -> None:
-        """Check the states to see if last_reset should be set to now."""
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
-
-        reset = old_state is None
-        old = None
-        new = None
         try:
-            assert new_state is not None
-            new = Decimal(new_state.state)
-        except DecimalException:
+            self._old_state = float(last_state.state)
+        except ValueError:
+            pass
+
+    _old_state: float | None = None
+
+    @callback
+    def _on_state_update(self) -> None:
+        """Check last_reset when new state arrives."""
+        if self._static_info.last_reset_type == LastResetType.NEVER:
+            self._attr_last_reset = datetime.min
+
+        if self._static_info.last_reset_type != LastResetType.AUTO:
+            super()._on_state_update()
             return
 
-        if not reset:
-            assert old_state is not None
+        # Last reset type AUTO logic for the last_reset property
+        # In this mode we automatically determine if an accumulator reset
+        # has taken place.
+        # We compare the last valid value (_old_state) with the new one.
+        # If the value has reset to 0 or has significantly reduced we say
+        # it has reset.
+        new_state: float | None = None
+        state = cast("str | None", self.state)
+        if state is not None:
             try:
-                old = Decimal(old_state.state)
-            except DecimalException:
+                new_state = float(state)
+            except ValueError:
                 pass
 
-        if old == 0 and new == 0:
-            return
+        did_reset = False
+        if new_state is None:
+            # New state is not a float - we'll detect the reset once we get valid data again
+            did_reset = False
+        elif self._old_state is None:
+            # First measurement we ever got for this sensor, always a reset
+            did_reset = True
+        elif new_state == 0:
+            # don't set reset if both old and new are 0
+            # we would already have detected the reset on the last state
+            did_reset = self._old_state != 0
+        elif new_state < self._old_state / 2:
+            # Significantly decreased new state
+            did_reset = True
 
-        if not reset:
-            reset = new == 0 or (old is not None and new < (old / 2))
-
-        if reset:
+        # Set last_reset to now if we detected a reset
+        if did_reset:
             self._attr_last_reset = datetime.now()
-            self.async_write_ha_state()
+
+        if new_state is not None:
+            # Only write to old_state if the new one contains actual data
+            self._old_state = new_state
+
+        super()._on_state_update()
 
     @property
     def icon(self) -> str | None:
