@@ -52,7 +52,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -442,7 +442,7 @@ class MotionEyeEntity(CoordinatorEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, Any],
-        enabled_by_default: bool = True,
+        entity_description: EntityDescription = None,
     ) -> None:
         """Initialize a motionEye entity."""
         self._camera_id = camera[KEY_ID]
@@ -457,13 +457,9 @@ class MotionEyeEntity(CoordinatorEntity):
         self._client = client
         self._camera: dict[str, Any] | None = camera
         self._options = options
-        self._enabled_by_default = enabled_by_default
+        if entity_description is not None:
+            self.entity_description = entity_description
         super().__init__(coordinator)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Whether or not the entity is enabled by default."""
-        return self._enabled_by_default
 
     @property
     def unique_id(self) -> str:
