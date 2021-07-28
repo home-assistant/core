@@ -128,7 +128,7 @@ aiohue==2.5.1
 aiokafka==0.6.0
 
 # homeassistant.components.lutron_caseta
-aiolip==1.1.4
+aiolip==1.1.6
 
 # homeassistant.components.lyric
 aiolyric==1.0.7
