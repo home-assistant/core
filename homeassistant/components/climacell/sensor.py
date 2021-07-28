@@ -65,7 +65,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         self._attr_entity_registry_enabled_default = False
         self._attr_name = f"{self._config_entry.data[CONF_NAME]} - {description.name}"
         self._attr_unique_id = (
-            f"{self._config_entry.unique_id}_{slugify(description.name_)}"
+            f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
         self._attr_unit_of_measurement = (
