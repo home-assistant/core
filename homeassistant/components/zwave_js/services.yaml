@@ -238,13 +238,6 @@ reset_meter:
       domain: sensor
       integration: zwave_js
   fields:
-    endpoint:
-      name: Endpoint
-      description: The endpoint to target.
-      example: 1
-      required: false
-      selector:
-        text:
     meter_type:
       name: Meter Type
       description: The type of meter to reset. Not all meters support the ability to pick a meter type to reset.
