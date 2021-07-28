@@ -65,12 +65,12 @@ async def async_setup_entry(
         async_add_entities(
             [
                 MotionEyeSwitch(
-                    entity_description,
                     entry.entry_id,
                     camera,
                     entry_data[CONF_CLIENT],
                     entry_data[CONF_COORDINATOR],
                     entry.options,
+                    entity_description,
                 )
                 for entity_description in MOTIONEYE_SWITCHES
             ]
@@ -84,36 +84,35 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
 
     def __init__(
         self,
-        entity_description: EntityDescription,
         config_entry_id: str,
         camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, str],
+        entity_description: EntityDescription,
     ) -> None:
         """Initialize the switch."""
-        self._entity_description = entity_description
         super().__init__(
             config_entry_id,
-            f"{TYPE_MOTIONEYE_SWITCH_BASE}_{self._entity_description.key}",
+            f"{TYPE_MOTIONEYE_SWITCH_BASE}_{entity_description.key}",
             camera,
             client,
             coordinator,
             options,
-            entity_description.entity_registry_enabled_default,
+            entity_description,
         )
 
     @property
     def name(self) -> str:
         """Return the name of the switch."""
         camera_prepend = f"{self._camera[KEY_NAME]} " if self._camera else ""
-        return f"{camera_prepend}{self._entity_description.name}"
+        return f"{camera_prepend}{self.entity_description.name}"
 
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return bool(
-            self._camera and self._camera.get(self._entity_description.key, False)
+            self._camera and self._camera.get(self.entity_description.key, False)
         )
 
     async def _async_send_set_camera(self, value: bool) -> None:
@@ -123,7 +122,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         # stale configuration.
         camera = await self._client.async_get_camera(self._camera_id)
         if camera:
-            camera[self._entity_description.key] = value
+            camera[self.entity_description.key] = value
             await self._client.async_set_camera(self._camera_id, camera)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
