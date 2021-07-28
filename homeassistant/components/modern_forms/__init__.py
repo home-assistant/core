@@ -11,6 +11,7 @@ from aiomodernforms import (
 )
 from aiomodernforms.models import Device as ModernFormsDeviceState
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -30,6 +31,7 @@ from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
+    BINARY_SENSOR_DOMAIN,
     LIGHT_DOMAIN,
     FAN_DOMAIN,
     SENSOR_DOMAIN,

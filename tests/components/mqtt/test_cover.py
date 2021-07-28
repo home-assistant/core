@@ -393,6 +393,34 @@ async def test_position_via_template_and_entity_id(hass, mqtt_mock):
     assert current_cover_position == 20
 
 
+@pytest.mark.parametrize(
+    "config, assumed_state",
+    [
+        ({"command_topic": "abc"}, True),
+        ({"command_topic": "abc", "state_topic": "abc"}, False),
+        # ({"set_position_topic": "abc"}, True), - not a valid configuration
+        ({"set_position_topic": "abc", "position_topic": "abc"}, False),
+        ({"tilt_command_topic": "abc"}, True),
+        ({"tilt_command_topic": "abc", "tilt_status_topic": "abc"}, False),
+    ],
+)
+async def test_optimistic_flag(hass, mqtt_mock, config, assumed_state):
+    """Test assumed_state is set correctly."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {cover.DOMAIN: {**config, "platform": "mqtt", "name": "test", "qos": 0}},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    if assumed_state:
+        assert ATTR_ASSUMED_STATE in state.attributes
+    else:
+        assert ATTR_ASSUMED_STATE not in state.attributes
+
+
 async def test_optimistic_state_change(hass, mqtt_mock):
     """Test changing state optimistically."""
     assert await async_setup_component(

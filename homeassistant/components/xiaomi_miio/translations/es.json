@@ -57,7 +57,8 @@
                 "title": "Con\u00e9ctese a un dispositivo Xiaomi Miio o una puerta de enlace Xiaomi"
             },
             "reauth_confirm": {
-                "description": "La integraci\u00f3n de Xiaomi Miio necesita volver a autenticar tu cuenta para actualizar los tokens o a\u00f1adir las credenciales de la nube que faltan."
+                "description": "La integraci\u00f3n de Xiaomi Miio necesita volver a autenticar tu cuenta para actualizar los tokens o a\u00f1adir las credenciales de la nube que faltan.",
+                "title": "Volver a autenticar la integraci\u00f3n"
             },
             "select": {
                 "data": {

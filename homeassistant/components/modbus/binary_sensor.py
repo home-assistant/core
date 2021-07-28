@@ -54,14 +54,20 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
 
     async def async_update(self, now=None):
         """Update the state of the sensor."""
+
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, 1, self._input_type
         )
+        self._call_active = False
         if result is None:
-            self._available = False
+            self._attr_available = False
             self.async_write_ha_state()
             return
 
         self._value = result.bits[0] & 1
-        self._available = True
+        self._attr_available = True
         self.async_write_ha_state()

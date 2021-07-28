@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "general_error": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
-            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs"
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
+            "location_not_found": "A hely nem tal\u00e1lhat\u00f3"
         },
         "step": {
             "geography_by_coords": {
@@ -15,14 +16,19 @@
                     "api_key": "API kulcs",
                     "latitude": "Sz\u00e9less\u00e9g",
                     "longitude": "Hossz\u00fas\u00e1g"
-                }
+                },
+                "description": "Haszn\u00e1lja az AirVisual felh\u0151 API-t a sz\u00e9less\u00e9g / hossz\u00fas\u00e1g figyel\u00e9s\u00e9hez.",
+                "title": "Konfigur\u00e1lja a geogr\u00e1fi\u00e1t"
             },
             "geography_by_name": {
                 "data": {
                     "api_key": "API kulcs",
                     "city": "V\u00e1ros",
-                    "country": "Orsz\u00e1g"
-                }
+                    "country": "Orsz\u00e1g",
+                    "state": "\u00e1llapot"
+                },
+                "description": "Haszn\u00e1lja az AirVisual felh\u0151 API-t egy v\u00e1ros / \u00e1llam / orsz\u00e1g figyel\u00e9s\u00e9hez.",
+                "title": "Konfigur\u00e1lja a geogr\u00e1fi\u00e1t"
             },
             "node_pro": {
                 "data": {
@@ -33,7 +39,8 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API kulcs"
-                }
+                },
+                "title": "Az AirVisual \u00fajb\u00f3li hiteles\u00edt\u00e9se"
             }
         }
     }

@@ -164,7 +164,7 @@ async def ws_get_statistics_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "history/list_statistic_ids",
-        vol.Optional("statistic_type"): str,
+        vol.Optional("statistic_type"): vol.Any("sum", "mean"),
     }
 )
 @websocket_api.require_admin
@@ -173,12 +173,12 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistics = await hass.async_add_executor_job(
+    statistic_ids = await hass.async_add_executor_job(
         list_statistic_ids,
         hass,
         msg.get("statistic_type"),
     )
-    connection.send_result(msg["id"], {"statistic_ids": statistics})
+    connection.send_result(msg["id"], statistic_ids)
 
 
 class HistoryPeriodView(HomeAssistantView):

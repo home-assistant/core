@@ -167,7 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             pysma.exceptions.SmaReadException,
             pysma.exceptions.SmaConnectionException,
         ) as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed(exc) from exc
 
     interval = timedelta(
         seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
