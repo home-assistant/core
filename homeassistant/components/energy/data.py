@@ -92,7 +92,6 @@ class DeviceConsumption(TypedDict):
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
 
-    currency: str
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
 
@@ -230,7 +229,6 @@ class EnergyManager:
     def default_preferences() -> EnergyPreferences:
         """Return default preferences."""
         return {
-            "currency": "€",
             "energy_sources": [],
             "device_consumption": [],
         }
@@ -243,7 +241,6 @@ class EnergyManager:
             data = self.data.copy()
 
         for key in (
-            "currency",
             "energy_sources",
             "device_consumption",
         ):
