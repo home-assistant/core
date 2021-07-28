@@ -80,6 +80,8 @@ class EsphomeSensor(
 ):
     """A sensor implementation for esphome."""
 
+    _old_state: float | None = None
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -99,8 +101,6 @@ class EsphomeSensor(
 
         with suppress(ValueError):
             self._old_state = float(last_state.state)
-
-    _old_state: float | None = None
 
     @callback
     def _on_state_update(self) -> None:
@@ -135,8 +135,7 @@ class EsphomeSensor(
             # don't set reset if both old and new are 0
             # we would already have detected the reset on the last state
             did_reset = self._old_state != 0
-        elif new_state < self._old_state / 2:
-            # Significantly decreased new state
+        elif new_state < self._old_state:
             did_reset = True
 
         # Set last_reset to now if we detected a reset
