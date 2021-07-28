@@ -656,7 +656,7 @@ pilight==0.1.1
 pillow==8.2.0
 
 # homeassistant.components.plex
-plexapi==4.6.1
+plexapi==4.7.0
 
 # homeassistant.components.plex
 plexauth==0.0.6
