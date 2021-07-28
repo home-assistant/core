@@ -136,7 +136,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.profiler.*",
     "homeassistant.components.proxmoxve.*",
     "homeassistant.components.rachio.*",
-    "homeassistant.components.recollect_waste.*",
     "homeassistant.components.reddit.*",
     "homeassistant.components.ring.*",
     "homeassistant.components.rpi_power.*",
