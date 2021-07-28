@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with async_timeout.timeout(10):
                 return await api.async_get_slave_twcs()
         except HTTPError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed("Error communicating with API") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
