@@ -37,8 +37,8 @@ class SwitchBot(SwitchEntity, RestoreEntity):
     def __init__(self, mac, name, password) -> None:
         """Initialize the Switchbot."""
 
-        self._state = None
-        self._last_run_success = None
+        self._state: bool | None = None
+        self._last_run_success: bool | None = None
         self._name = name
         self._mac = mac
         self._device = switchbot.Switchbot(mac=mac, password=password)
@@ -73,7 +73,7 @@ class SwitchBot(SwitchEntity, RestoreEntity):
         return True
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self):
         """Return true if device is on."""
         return self._state
 
