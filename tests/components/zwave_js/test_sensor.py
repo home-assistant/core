@@ -1,7 +1,14 @@
 """Test the Z-Wave JS sensor platform."""
 from zwave_js_server.event import Event
 
+from homeassistant.components.zwave_js.const import (
+    ATTR_METER_TYPE,
+    ATTR_VALUE,
+    DOMAIN,
+    SERVICE_RESET_METER,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
@@ -131,3 +138,55 @@ async def test_node_status_sensor(hass, lock_id_lock_as_id150, integration):
     )
     node.receive_event(event)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+
+async def test_reset_meter(
+    hass,
+    client,
+    aeon_smart_switch_6,
+    integration,
+):
+    """Test reset_meter service."""
+    SENSOR = "sensor.smart_switch_6_electric_consumed_v"
+    client.async_send_command.return_value = {}
+    client.async_send_command_no_wait.return_value = {}
+
+    # Test successful meter reset call
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RESET_METER,
+        {
+            ATTR_ENTITY_ID: SENSOR,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["endpoint"] == 0
+    assert args["args"] == []
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test successful meter reset call with options
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RESET_METER,
+        {
+            ATTR_ENTITY_ID: SENSOR,
+            ATTR_METER_TYPE: 1,
+            ATTR_VALUE: 2,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["endpoint"] == 0
+    assert args["args"] == [{"type": 1, "targetValue": 2}]
+
+    client.async_send_command_no_wait.reset_mock()
