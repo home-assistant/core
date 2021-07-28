@@ -101,11 +101,7 @@ class Device(CoordinatorEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Async function to set mode to climate."""
         if hvac_mode not in SUPPORTED_HVAC_MODES:
-            raise ValueError(
-                "Got unsupported hvac_mode %s, expected one of %s",
-                hvac_mode,
-                SUPPORTED_HVAC_MODES,
-            )
+            raise ValueError(f"Got unsupported hvac_mode {hvac_mode}")
 
         payload = {}
         payload["heatingCoolingState"] = HVAC_INVERT_MAP[hvac_mode]
