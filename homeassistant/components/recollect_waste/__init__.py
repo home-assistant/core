@@ -31,15 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_get_pickup_events() -> list[PickupEvent]:
         """Get the next pickup."""
         try:
-            data = await client.async_get_pickup_events(
+            return await client.async_get_pickup_events(
                 start_date=date.today(), end_date=date.today() + timedelta(weeks=4)
             )
         except RecollectError as err:
             raise UpdateFailed(
                 f"Error while requesting data from ReCollect: {err}"
             ) from err
-
-        return data
 
     coordinator = DataUpdateCoordinator(
         hass,
