@@ -303,6 +303,7 @@ FLOWS = [
     "yale_smart_alarm",
     "yamaha_musiccast",
     "yeelight",
+    "youless",
     "zerproc",
     "zha",
     "zwave",

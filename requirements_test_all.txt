@@ -392,7 +392,7 @@ georss_qld_bushfire_alert_client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==1.0.2
+gios==2.0.0
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -1177,7 +1177,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.23.1
+soco==0.23.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1333,6 +1333,9 @@ yalexs==1.1.12
 
 # homeassistant.components.yeelight
 yeelight==0.6.3
+
+# homeassistant.components.youless
+youless-api==0.10
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
