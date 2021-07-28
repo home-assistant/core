@@ -62,23 +62,22 @@ SUPPORTED_PUBLIC_SENSOR_TYPES: tuple[str, ...] = (
 
 
 @dataclass
-class NetatmoSensorEntityDescription(SensorEntityDescription):
+class NetatmoRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    netatmo_name: str
+
+
+@dataclass
+class NetatmoSensorEntityDescription(SensorEntityDescription, NetatmoRequiredKeysMixin):
     """Describes Netatmo sensor entity."""
-
-    _netatmo_name: str | None = None
-
-    def __post_init__(self) -> None:
-        """Ensure all required attributes are set."""
-        if self._netatmo_name is None:  # pragma: no cover
-            raise TypeError
-        self.netatmo_name = self._netatmo_name
 
 
 SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="temperature",
         name="Temperature",
-        _netatmo_name="Temperature",
+        netatmo_name="Temperature",
         entity_registry_enabled_default=True,
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -86,14 +85,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="temp_trend",
         name="Temperature trend",
-        _netatmo_name="temp_trend",
+        netatmo_name="temp_trend",
         entity_registry_enabled_default=False,
         icon="mdi:trending-up",
     ),
     NetatmoSensorEntityDescription(
         key="co2",
         name="CO2",
-        _netatmo_name="CO2",
+        netatmo_name="CO2",
         unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CO2,
@@ -101,7 +100,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="pressure",
         name="Pressure",
-        _netatmo_name="Pressure",
+        netatmo_name="Pressure",
         entity_registry_enabled_default=True,
         unit_of_measurement=PRESSURE_MBAR,
         device_class=DEVICE_CLASS_PRESSURE,
@@ -109,14 +108,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="pressure_trend",
         name="Pressure trend",
-        _netatmo_name="pressure_trend",
+        netatmo_name="pressure_trend",
         entity_registry_enabled_default=False,
         icon="mdi:trending-up",
     ),
     NetatmoSensorEntityDescription(
         key="noise",
         name="Noise",
-        _netatmo_name="Noise",
+        netatmo_name="Noise",
         entity_registry_enabled_default=True,
         unit_of_measurement=SOUND_PRESSURE_DB,
         icon="mdi:volume-high",
@@ -124,7 +123,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="humidity",
         name="Humidity",
-        _netatmo_name="Humidity",
+        netatmo_name="Humidity",
         entity_registry_enabled_default=True,
         unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
@@ -132,7 +131,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="rain",
         name="Rain",
-        _netatmo_name="Rain",
+        netatmo_name="Rain",
         entity_registry_enabled_default=True,
         unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:weather-rainy",
@@ -140,7 +139,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="sum_rain_1",
         name="Rain last hour",
-        _netatmo_name="sum_rain_1",
+        netatmo_name="sum_rain_1",
         entity_registry_enabled_default=False,
         unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:weather-rainy",
@@ -148,7 +147,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="sum_rain_24",
         name="Rain today",
-        _netatmo_name="sum_rain_24",
+        netatmo_name="sum_rain_24",
         entity_registry_enabled_default=True,
         unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:weather-rainy",
@@ -156,7 +155,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="battery_percent",
         name="Battery Percent",
-        _netatmo_name="battery_percent",
+        netatmo_name="battery_percent",
         entity_registry_enabled_default=True,
         unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
@@ -164,14 +163,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="windangle",
         name="Direction",
-        _netatmo_name="WindAngle",
+        netatmo_name="WindAngle",
         entity_registry_enabled_default=True,
         icon="mdi:compass-outline",
     ),
     NetatmoSensorEntityDescription(
         key="windangle_value",
         name="Angle",
-        _netatmo_name="WindAngle",
+        netatmo_name="WindAngle",
         entity_registry_enabled_default=False,
         unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
@@ -179,7 +178,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="windstrength",
         name="Wind Strength",
-        _netatmo_name="WindStrength",
+        netatmo_name="WindStrength",
         entity_registry_enabled_default=True,
         unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
@@ -187,14 +186,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="gustangle",
         name="Gust Direction",
-        _netatmo_name="GustAngle",
+        netatmo_name="GustAngle",
         entity_registry_enabled_default=False,
         icon="mdi:compass-outline",
     ),
     NetatmoSensorEntityDescription(
         key="gustangle_value",
         name="Gust Angle",
-        _netatmo_name="GustAngle",
+        netatmo_name="GustAngle",
         entity_registry_enabled_default=False,
         unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
@@ -202,7 +201,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="guststrength",
         name="Gust Strength",
-        _netatmo_name="GustStrength",
+        netatmo_name="GustStrength",
         entity_registry_enabled_default=False,
         unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
@@ -210,21 +209,21 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="reachable",
         name="Reachability",
-        _netatmo_name="reachable",
+        netatmo_name="reachable",
         entity_registry_enabled_default=False,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
         key="rf_status",
         name="Radio",
-        _netatmo_name="rf_status",
+        netatmo_name="rf_status",
         entity_registry_enabled_default=False,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
         key="rf_status_lvl",
         name="Radio Level",
-        _netatmo_name="rf_status",
+        netatmo_name="rf_status",
         entity_registry_enabled_default=False,
         unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -232,14 +231,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="wifi_status",
         name="Wifi",
-        _netatmo_name="wifi_status",
+        netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
         icon="mdi:wifi",
     ),
     NetatmoSensorEntityDescription(
         key="wifi_status_lvl",
         name="Wifi Level",
-        _netatmo_name="wifi_status",
+        netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
         unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -247,7 +246,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="health_idx",
         name="Health",
-        _netatmo_name="health_idx",
+        netatmo_name="health_idx",
         entity_registry_enabled_default=True,
         icon="mdi:cloud",
     ),
