@@ -109,7 +109,6 @@ class Balance(CoordinatorEntity):
         self._name = f"Bitvavo Balance - {self._balance}"
         self._unique_id = f"bitvavo_balance_{self._balance})"
         self._icon = CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
-        self._unit_of_measurement = self._get_data_property("symbol")
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -136,7 +135,7 @@ class Balance(CoordinatorEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return self._get_data_property("symbol")
 
     @property
     def icon(self):
