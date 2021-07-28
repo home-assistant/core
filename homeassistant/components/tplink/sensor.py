@@ -16,6 +16,7 @@ from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ALIAS,
     CONF_DEVICE_ID,
@@ -83,6 +84,7 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
         self._attr_unit_of_measurement = attributes[ATTR_UNIT_OF_MEASUREMENT]
         self._attr_device_class = attributes[ATTR_DEVICE_CLASS]
         self._attr_state_class = attributes[ATTR_STATE_CLASS]
+        self.friendly_name = attributes[ATTR_FRIENDLY_NAME]
 
     @property
     def data(self) -> dict[str, Any]:
@@ -109,7 +111,7 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str | None:
         """Return the name of the Smart Plug energy sensor."""
-        return f"{self.data[CONF_ALIAS]} {self.data_key}"
+        return f"{self.data[CONF_ALIAS]} {self.friendly_name}"
 
     @property
     def device_info(self) -> DeviceInfo:
