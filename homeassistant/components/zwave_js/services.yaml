@@ -235,6 +235,7 @@ reset_meter:
   description: Resets the meter(s) on a node.
   target:
     entity:
+      domain: sensor
       integration: zwave_js
   fields:
     endpoint:

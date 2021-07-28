@@ -7,7 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, CommandStatus
+from zwave_js_server.const import CommandStatus
 from zwave_js_server.exceptions import SetValueFailed
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import get_value_id
@@ -313,27 +313,6 @@ class ZWaveServices:
             ),
         )
 
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_RESET_METER,
-            self.async_reset_meter,
-            schema=vol.Schema(
-                vol.All(
-                    {
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Optional(const.ATTR_METER_TYPE): vol.Coerce(int),
-                        vol.Optional(const.ATTR_VALUE): vol.Coerce(int),
-                    },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-                    get_nodes_from_service_data,
-                ),
-            ),
-        )
-
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes = service.data[const.ATTR_NODES]
@@ -475,51 +454,3 @@ class ZWaveServices:
         """Ping node(s)."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         await asyncio.gather(*(node.async_ping() for node in nodes))
-
-    async def async_reset_meter(self, service: ServiceCall) -> None:
-        """Reset meter(s)."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        endpoint = service.data.get(const.ATTR_ENDPOINT)
-        options = {}
-        if (type_ := service.data.get(const.ATTR_METER_TYPE)) is not None:
-            options["type"] = type_
-        if (target_value := service.data.get(const.ATTR_VALUE)) is not None:
-            options["targetValue"] = target_value
-
-        for node in nodes:
-            value = next(
-                (
-                    value
-                    for value in node.get_command_class_values(
-                        CommandClass.METER
-                    ).values()
-                    if value.property_ == "reset"
-                    and (endpoint is None or value.endpoint == endpoint)
-                ),
-                None,
-            )
-            if value:
-                args = [options] if options else []
-                await node.endpoints[value.endpoint].async_invoke_cc_api(
-                    CommandClass.METER, "reset", *args, wait_for_result=False
-                )
-                continue
-
-            # We only get here if we couldn't find a value
-            if endpoint is None:
-                const.LOGGER.warning(
-                    (
-                        "Node %s either doesn't support the Meter CC or doesn't "
-                        "support meter resets."
-                    ),
-                    node,
-                )
-            else:
-                const.LOGGER.warning(
-                    (
-                        "Node %s endpoint %s either doesn't support the Meter CC or "
-                        "doesn't support meter resets."
-                    ),
-                    node,
-                    endpoint,
-                )
