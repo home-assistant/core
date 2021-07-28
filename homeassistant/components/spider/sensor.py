@@ -1,24 +1,38 @@
 """Support for Spider Powerplugs (energy & power)."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
+
+from typing import Any
+
+from spiderpy.devices.powerplug import SpiderPowerPlug
+from spiderpy.spiderapi import SpiderApi
+
+from homeassistant.config_entries import ConfigEntry
+
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize a Spider Power Plug."""
-    api = hass.data[DOMAIN][config.entry_id]
-    entities = []
+    api: SpiderApi = hass.data[DOMAIN][entry.entry_id]
+    entities: list[SpiderPowerPlugEnergy | SpiderPowerPlugPower] = []
 
     for entity in await hass.async_add_executor_job(api.get_power_plugs):
         entities.append(SpiderPowerPlugEnergy(api, entity))
@@ -34,10 +48,10 @@ class SpiderPowerPlugEnergy(SensorEntity):
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
-    def __init__(self, api, power_plug) -> None:
+    def __init__(self, api: SpiderApi, power_plug: SpiderPowerPlug) -> None:
         """Initialize the Spider Power Plug."""
-        self.api = api
-        self.power_plug = power_plug
+        self.api: SpiderApi = api
+        self.power_plug: SpiderPowerPlug = power_plug
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -60,7 +74,7 @@ class SpiderPowerPlugEnergy(SensorEntity):
         return f"{self.power_plug.name} Total Energy Today"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | Any:
         """Return todays energy usage in Kwh."""
         return round(self.power_plug.today_energy_consumption / 1000, 2)
 
@@ -76,10 +90,10 @@ class SpiderPowerPlugPower(SensorEntity):
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_native_unit_of_measurement = POWER_WATT
 
-    def __init__(self, api, power_plug) -> None:
+    def __init__(self, api: SpiderApi, power_plug: SpiderPowerPlug) -> None:
         """Initialize the Spider Power Plug."""
-        self.api = api
-        self.power_plug = power_plug
+        self.api: SpiderApi = api
+        self.power_plug: SpiderPowerPlug = power_plug
 
     @property
     def device_info(self) -> DeviceInfo:

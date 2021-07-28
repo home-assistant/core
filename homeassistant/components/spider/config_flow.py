@@ -1,11 +1,15 @@
 """Config flow for Spider."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from spiderpy.spiderapi import SpiderApi, SpiderApiException, UnauthorizedException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -20,12 +24,12 @@ RESULT_CONN_ERROR = "conn_error"
 RESULT_SUCCESS = "success"
 
 
-class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SpiderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Spider config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Spider flow."""
         self.data = {
             CONF_USERNAME: "",
@@ -33,7 +37,7 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         }
 
-    def _try_connect(self):
+    def _try_connect(self) -> str:
         """Try to connect and check auth."""
         try:
             SpiderApi(
@@ -48,7 +52,9 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return RESULT_SUCCESS
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -78,6 +84,8 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(
+        self, import_data: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Import spider config from configuration.yaml."""
         return await self.async_step_user(import_data)

@@ -112,6 +112,7 @@ homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
+homeassistant.components.spider.*
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
 homeassistant.components.stream.*
