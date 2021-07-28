@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, ENERGY_WATT_HOUR
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -178,6 +179,10 @@ class EnergyCostSensor(SensorEntity):
         except ValueError:
             return
 
+        # convert to kWh
+        if energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR:
+            energy /= 1000.0
+
         # Determine energy price
         if self._flow["entity_energy_price"] is not None:
             energy_price_state = self.hass.states.get(self._flow["entity_energy_price"])
@@ -189,8 +194,11 @@ class EnergyCostSensor(SensorEntity):
                 energy_price = float(energy_price_state.state)
             except ValueError:
                 return
+
+            unit = energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "")
+            if len(unit) > 2 and unit[-3:] == f"/{ENERGY_WATT_HOUR}":
+                energy_price *= 1000.0
         else:
-            energy_price_state = None
             energy_price = cast(float, self._flow["number_energy_price"])
 
         if self._last_energy_sensor_state is None:
