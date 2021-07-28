@@ -35,14 +35,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    nanoleaf: Nanoleaf
-
-    # For discovery integration import
-    discovery_conf: dict
-    device_id: str
-
     def __init__(self) -> None:
         """Initialize a Nanoleaf flow."""
+        self.nanoleaf: Nanoleaf
+
+        # For discovery integration import
+        self.discovery_conf: dict
+        self.device_id: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
