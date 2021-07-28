@@ -44,6 +44,7 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,mean,min,max",
     [
+        (None, "%", "%", 16.440677, 10, 30),
         ("battery", "%", "%", 16.440677, 10, 30),
         ("battery", None, None, 16.440677, 10, 30),
         ("humidity", "%", "%", 16.440677, 10, 30),

@@ -441,8 +441,6 @@ async def test_unique_id_migration(hass):
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_temperature"
 
-    await init_integration(hass)
-
     entry = registry.async_get("sensor.nettigo_air_monitor_dht22_humidity")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_humidity"

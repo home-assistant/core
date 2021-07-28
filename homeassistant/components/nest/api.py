@@ -1,6 +1,7 @@
 """API for Google Nest Device Access bound to Home Assistant OAuth."""
 
 import datetime
+from typing import cast
 
 from aiohttp import ClientSession
 from google.oauth2.credentials import Credentials
@@ -33,7 +34,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         """Return a valid access token for SDM API."""
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
-        return self._oauth_session.token["access_token"]
+        return cast(str, self._oauth_session.token["access_token"])
 
     async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential for Pub/Sub Subscriber."""

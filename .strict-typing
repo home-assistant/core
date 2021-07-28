@@ -63,6 +63,7 @@ homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
+homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
 homeassistant.components.no_ip.*
@@ -75,6 +76,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
 homeassistant.components.rainmachine.*
+homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
@@ -84,6 +86,7 @@ homeassistant.components.scene.*
 homeassistant.components.select.*
 homeassistant.components.sensor.*
 homeassistant.components.shelly.*
+homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
