@@ -1,6 +1,7 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import datetime
 import math
 from typing import cast
@@ -92,14 +93,12 @@ class EsphomeSensor(
             return
 
         if "last_reset" in last_state.attributes:
-            self._attr_last_reset = datetime.fromisoformat(
-                last_state.attributes["last_reset"]
+            self._attr_last_reset = dt.as_utc(
+                datetime.fromisoformat(last_state.attributes["last_reset"])
             )
 
-        try:
+        with suppress(ValueError):
             self._old_state = float(last_state.state)
-        except ValueError:
-            pass
 
     _old_state: float | None = None
 
@@ -107,7 +106,7 @@ class EsphomeSensor(
     def _on_state_update(self) -> None:
         """Check last_reset when new state arrives."""
         if self._static_info.last_reset_type == LastResetType.NEVER:
-            self._attr_last_reset = datetime.min
+            self._attr_last_reset = dt.utc_from_timestamp(0)
 
         if self._static_info.last_reset_type != LastResetType.AUTO:
             super()._on_state_update()
@@ -122,10 +121,8 @@ class EsphomeSensor(
         new_state: float | None = None
         state = cast("str | None", self.state)
         if state is not None:
-            try:
+            with suppress(ValueError):
                 new_state = float(state)
-            except ValueError:
-                pass
 
         did_reset = False
         if new_state is None:
@@ -144,7 +141,7 @@ class EsphomeSensor(
 
         # Set last_reset to now if we detected a reset
         if did_reset:
-            self._attr_last_reset = datetime.now()
+            self._attr_last_reset = dt.utcnow()
 
         if new_state is not None:
             # Only write to old_state if the new one contains actual data
