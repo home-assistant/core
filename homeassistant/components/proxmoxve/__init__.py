@@ -9,7 +9,6 @@ from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -28,15 +27,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_CONTAINERS,
-    CONF_NODE,
-    CONF_NODES,
     CONF_REALM,
-    CONF_VMS,
     COORDINATORS,
-    DEFAULT_PORT,
-    DEFAULT_REALM,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLATFORMS,
     PROXMOX_CLIENT,
@@ -48,44 +40,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
-                        vol.Optional(
-                            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-                        ): cv.boolean,
-                        vol.Required(CONF_NODES): vol.All(
-                            cv.ensure_list,
-                            [
-                                vol.Schema(
-                                    {
-                                        vol.Required(CONF_NODE): cv.string,
-                                        vol.Optional(CONF_VMS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                        vol.Optional(CONF_CONTAINERS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                    }
-                                )
-                            ],
-                        ),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -98,11 +53,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         for entry in config[DOMAIN]:
             host = entry[CONF_HOST]
-            port = entry[CONF_PORT]
+            port = entry[CONF_PORT] if CONF_PORT in entry else 8006
             user = entry[CONF_USERNAME]
-            realm = entry[CONF_REALM]
+            realm = entry[CONF_REALM] if CONF_REALM in entry else "pam"
             password = entry[CONF_PASSWORD]
-            verify_ssl = entry[CONF_VERIFY_SSL]
+            verify_ssl = entry[CONF_VERIFY_SSL] if CONF_VERIFY_SSL in entry else True
 
             hass.data[PROXMOX_CLIENTS][host] = None
 
