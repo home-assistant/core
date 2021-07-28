@@ -108,7 +108,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
                 return cast(float, self._sensor_data["Value"])
             if self.entity_description.key == "UVIndex":
                 return cast(int, self._sensor_data["Value"])
-        if self.entity_description.key in ["Grass", "Mold", "Ragweed", "Tree", "Ozone"]:
+        if self.entity_description.key in ("Grass", "Mold", "Ragweed", "Tree", "Ozone"):
             return cast(int, self._sensor_data["Value"])
         if self.entity_description.key == "Ceiling":
             return round(self._sensor_data[self._unit_system]["Value"])
@@ -118,14 +118,14 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             return cast(float, self._sensor_data[self._unit_system]["Value"])
         if self.entity_description.key == "Precipitation":
             return cast(float, self._sensor_data[self._unit_system]["Value"])
-        if self.entity_description.key in ["Wind", "WindGust"]:
+        if self.entity_description.key in ("Wind", "WindGust"):
             return cast(float, self._sensor_data["Speed"][self._unit_system]["Value"])
-        if self.entity_description.key in [
+        if self.entity_description.key in (
             "WindDay",
             "WindNight",
             "WindGustDay",
             "WindGustNight",
-        ]:
+        ):
             return cast(StateType, self._sensor_data["Speed"]["Value"])
         return cast(StateType, self._sensor_data)
 
@@ -133,21 +133,21 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.forecast_day is not None:
-            if self.entity_description.key in [
+            if self.entity_description.key in (
                 "WindDay",
                 "WindNight",
                 "WindGustDay",
                 "WindGustNight",
-            ]:
+            ):
                 self._attrs["direction"] = self._sensor_data["Direction"]["English"]
-            elif self.entity_description.key in [
+            elif self.entity_description.key in (
                 "Grass",
                 "Mold",
                 "Ozone",
                 "Ragweed",
                 "Tree",
                 "UVIndex",
-            ]:
+            ):
                 self._attrs["level"] = self._sensor_data["Category"]
             return self._attrs
         if self.entity_description.key == "UVIndex":
