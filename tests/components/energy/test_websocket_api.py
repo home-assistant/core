@@ -59,7 +59,6 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
     assert msg["result"] == default_prefs
 
     new_prefs = {
-        "currency": "$",
         "energy_sources": [
             {
                 "type": "grid",

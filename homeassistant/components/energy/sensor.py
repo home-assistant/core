@@ -124,7 +124,6 @@ async def _process_manager_data(
 
                 current_entities[key] = EnergyCostSensor(
                     adapter,
-                    manager.data["currency"],
                     untyped_flow,
                 )
                 to_add.append(current_entities[key])
@@ -142,7 +141,6 @@ class EnergyCostSensor(SensorEntity):
     def __init__(
         self,
         adapter: FlowAdapter,
-        currency: str,
         flow: dict,
     ) -> None:
         """Initialize the sensor."""
@@ -152,7 +150,6 @@ class EnergyCostSensor(SensorEntity):
         self.entity_id = f"{flow[adapter.entity_energy_key]}_{adapter.entity_id_suffix}"
         self._attr_device_class = DEVICE_CLASS_MONETARY
         self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_unit_of_measurement = currency
         self._flow = flow
         self._last_energy_sensor_state: State | None = None
 
@@ -256,3 +253,8 @@ class EnergyCostSensor(SensorEntity):
     def update_config(self, flow: dict) -> None:
         """Update the config."""
         self._flow = flow
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the units of measurement."""
+        return self.hass.config.currency
