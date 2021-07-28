@@ -6,6 +6,7 @@ import base64
 import collections
 from collections.abc import Awaitable, Mapping
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import hashlib
 import logging
@@ -46,7 +47,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, entity_sources
+from homeassistant.helpers.entity import Entity, EntityDescription, entity_sources
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
@@ -115,6 +116,11 @@ SCHEMA_WS_CAMERA_THUMBNAIL: Final = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.ex
         vol.Required("entity_id"): cv.entity_id,
     }
 )
+
+
+@dataclass
+class CameraEntityDescription(EntityDescription):
+    """A class that describes camera entities."""
 
 
 @attr.s
