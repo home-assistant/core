@@ -5,7 +5,12 @@ from unittest.mock import patch
 from bitvavo.BitvavoExceptions import BitvavoException
 
 from homeassistant import data_entry_flow, setup
-from homeassistant.components.bitvavo.const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
+from homeassistant.components.bitvavo.const import (
+    CONF_API_SECRET,
+    CONF_MARKETS,
+    CONF_SHOW_EMPTY_ASSETS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 
@@ -155,3 +160,28 @@ async def test_integration_already_exists(hass):
 
         assert result["type"] == "abort"
         assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
+        data=USER_INPUT,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.bitvavo.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_SHOW_EMPTY_ASSETS: True}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {CONF_SHOW_EMPTY_ASSETS: True}
