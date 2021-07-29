@@ -114,6 +114,9 @@ async def test_energy_sensors_for_switch_device(hass, device_factory):
     # Act
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
+    state = hass.states.get("sensor.switch_1_energy_meter")
+    assert state
+    assert state.state == "11.422"
     entry = entity_registry.async_get("sensor.switch_1_energy_meter")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.energy}"
@@ -123,6 +126,9 @@ async def test_energy_sensors_for_switch_device(hass, device_factory):
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
 
+    state = hass.states.get("sensor.switch_1_power_meter")
+    assert state
+    assert state.state == "355"
     entry = entity_registry.async_get("sensor.switch_1_power_meter")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.power}"
