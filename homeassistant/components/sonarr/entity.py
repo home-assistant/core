@@ -3,10 +3,15 @@ from __future__ import annotations
 
 from sonarr import Sonarr
 
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_SOFTWARE_VERSION, DOMAIN
+from .const import DOMAIN
 
 
 class SonarrEntity(Entity):
@@ -34,6 +39,6 @@ class SonarrEntity(Entity):
             ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
             ATTR_NAME: "Activity Sensor",
             ATTR_MANUFACTURER: "Sonarr",
-            ATTR_SOFTWARE_VERSION: self.sonarr.app.info.version,
+            ATTR_SW_VERSION: self.sonarr.app.info.version,
             "entry_type": "service",
         }
