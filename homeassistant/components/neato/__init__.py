@@ -4,7 +4,7 @@ import logging
 import aiohttp
 from pybotvac import Account, Neato
 from pybotvac.exceptions import NeatoException
-import urllib3
+from urllib3.response import HTTPResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

@@ -7,7 +7,7 @@ from typing import Any
 
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
-import urllib3
+from urllib3.response import HTTPResponse
 
 from homeassistant.components.camera import Camera
 from homeassistant.components.neato import NeatoHub
@@ -98,7 +98,7 @@ class NeatoCleaningMap(Camera):
             return
 
         try:
-            image: urllib3.response.HTTPResponse = self.neato.download_map(image_url)
+            image: HTTPResponse = self.neato.download_map(image_url)
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
                 _LOGGER.error(
