@@ -1,6 +1,7 @@
 """Tests for the TP-Link component."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -10,16 +11,31 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
+from homeassistant.components.sensor import ATTR_LAST_RESET
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH
 from homeassistant.components.tplink.common import SmartDevices
 from homeassistant.components.tplink.const import (
+    ATTR_CURRENT_A,
+    ATTR_TOTAL_ENERGY_KWH,
     CONF_DIMMER,
     CONF_DISCOVERY,
+    CONF_EMETER_PARAMS,
     CONF_LIGHT,
+    CONF_MODEL,
+    CONF_SW_VERSION,
     CONF_SWITCH,
+    COORDINATORS,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    ATTR_VOLTAGE,
+    CONF_ALIAS,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MAC,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utc_from_timestamp
 
 from tests.common import MockConfigEntry, mock_coro
 from tests.components.tplink.consts import SMARTPLUGSWITCH_DATA
@@ -190,7 +206,7 @@ async def test_configuring_discovery_disabled(hass):
     assert mock_setup.call_count == 1
 
 
-async def test_platforms_are_initialized(hass):
+async def test_platforms_are_initialized(hass: HomeAssistant):
     """Test that platforms are initialized per configuration array."""
     config = {
         tplink.DOMAIN: {
@@ -227,6 +243,43 @@ async def test_platforms_are_initialized(hass):
         # patching is_dimmable is necessray to avoid misdetection as light.
         await async_setup_component(hass, tplink.DOMAIN, config)
         await hass.async_block_till_done()
+
+        assert hass.data.get(tplink.DOMAIN)
+        assert hass.data[tplink.DOMAIN].get(COORDINATORS)
+        assert hass.data[tplink.DOMAIN][COORDINATORS].get(switch.mac)
+        assert isinstance(
+            hass.data[tplink.DOMAIN][COORDINATORS][switch.mac],
+            tplink.SmartPlugDataUpdateCoordinator,
+        )
+        data = hass.data[tplink.DOMAIN][COORDINATORS][switch.mac].data
+        assert data[CONF_HOST] == switch.host
+        assert data[CONF_MAC] == switch.sys_info["mac"]
+        assert data[CONF_MODEL] == switch.sys_info["model"]
+        assert data[CONF_SW_VERSION] == switch.sys_info["sw_ver"]
+        assert data[CONF_ALIAS] == switch.sys_info["alias"]
+        assert data[CONF_DEVICE_ID] == switch.sys_info["mac"]
+
+        emeter_readings = switch.get_emeter_realtime()
+        assert data[CONF_EMETER_PARAMS][ATTR_VOLTAGE] == round(
+            float(emeter_readings["voltage"]), 1
+        )
+        assert data[CONF_EMETER_PARAMS][ATTR_CURRENT_A] == round(
+            float(emeter_readings["current"]), 2
+        )
+        assert data[CONF_EMETER_PARAMS][ATTR_CURRENT_POWER_W] == round(
+            float(emeter_readings["power"]), 2
+        )
+        assert data[CONF_EMETER_PARAMS][ATTR_TOTAL_ENERGY_KWH] == round(
+            float(emeter_readings["total"]), 3
+        )
+        assert data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
+            ATTR_TOTAL_ENERGY_KWH
+        ] == utc_from_timestamp(0)
+
+        assert data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] == 0.0
+        assert data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
+            ATTR_TODAY_ENERGY_KWH
+        ] == datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
         assert discover.call_count == 0
         assert get_static_devices.call_count == 1
