@@ -265,6 +265,7 @@ class SenseTrendsSensor(SensorEntity):
         """Return if entity is available."""
         return self._had_any_update and self._coordinator.last_update_success
 
+    @property
     def last_reset(self) -> datetime.datetime:
         """Return the time when the sensor was last reset, if any."""
         return pendulum.now().start_of(TIME_PERIODS[self._sensor_type])
