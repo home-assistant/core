@@ -1,6 +1,9 @@
 """Test the Z-Wave JS sensor platform."""
+from unittest.mock import patch
+
 from zwave_js_server.event import Event
 
+from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_VALUE,
@@ -22,10 +25,13 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     AIR_TEMPERATURE_SENSOR,
     BASIC_SENSOR,
+    DATETIME_LAST_RESET,
+    DATETIME_ZERO,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
     ID_LOCK_CONFIG_PARAMETER_SENSOR,
     INDICATOR_SENSOR,
+    METER_SENSOR,
     NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
 )
@@ -171,18 +177,30 @@ async def test_reset_meter(
     integration,
 ):
     """Test reset_meter service."""
-    SENSOR = "sensor.smart_switch_6_electric_consumed_v"
     client.async_send_command.return_value = {}
     client.async_send_command_no_wait.return_value = {}
 
-    # Test successful meter reset call
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_RESET_METER,
-        {
-            ATTR_ENTITY_ID: SENSOR,
-        },
-        blocking=True,
+    # Validate that the sensor last reset is starting from nothing
+    assert (
+        hass.states.get(METER_SENSOR).attributes[ATTR_LAST_RESET]
+        == DATETIME_ZERO.isoformat()
+    )
+
+    # Test successful meter reset call, patching utcnow so we can make sure the last
+    # reset gets updated
+    with patch("homeassistant.util.dt.utcnow", return_value=DATETIME_LAST_RESET):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RESET_METER,
+            {
+                ATTR_ENTITY_ID: METER_SENSOR,
+            },
+            blocking=True,
+        )
+
+    assert (
+        hass.states.get(METER_SENSOR).attributes[ATTR_LAST_RESET]
+        == DATETIME_LAST_RESET.isoformat()
     )
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
@@ -199,7 +217,7 @@ async def test_reset_meter(
         DOMAIN,
         SERVICE_RESET_METER,
         {
-            ATTR_ENTITY_ID: SENSOR,
+            ATTR_ENTITY_ID: METER_SENSOR,
             ATTR_METER_TYPE: 1,
             ATTR_VALUE: 2,
         },
@@ -214,3 +232,17 @@ async def test_reset_meter(
     assert args["args"] == [{"type": 1, "targetValue": 2}]
 
     client.async_send_command_no_wait.reset_mock()
+
+
+async def test_restore_last_reset(
+    hass,
+    client,
+    aeon_smart_switch_6,
+    restore_last_reset,
+    integration,
+):
+    """Test restoring last_reset on setup."""
+    assert (
+        hass.states.get(METER_SENSOR).attributes[ATTR_LAST_RESET]
+        == DATETIME_LAST_RESET.isoformat()
+    )
