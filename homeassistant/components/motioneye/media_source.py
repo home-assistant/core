@@ -10,6 +10,7 @@ from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_IMAGE,
+    MEDIA_CLASS_MOVIE,
     MEDIA_CLASS_VIDEO,
 )
 from homeassistant.components.media_source.const import MEDIA_MIME_TYPES
@@ -62,7 +63,6 @@ class MotionEyeMediaSource(MediaSource):
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize Xbox source."""
         super().__init__(DOMAIN)
-
         self.hass: HomeAssistantType = hass
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
@@ -243,12 +243,16 @@ class MotionEyeMediaSource(MediaSource):
             identifier=f"{config.entry_id}#{device.id}#{kind}",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type=MEDIA_CLASS_DIRECTORY,
-            title=f"{config.title} {device.name} {kind.title()}"
-            if full_title
-            else kind.title(),
+            title=(
+                f"{config.title} {device.name} {kind.title()}"
+                if full_title
+                else kind.title()
+            ),
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=(
+                MEDIA_CLASS_MOVIE if kind == "movies" else MEDIA_CLASS_IMAGE
+            ),
         )
 
     def _build_media_kinds(
@@ -320,7 +324,7 @@ class MotionEyeMediaSource(MediaSource):
                             media_class=MEDIA_CLASS_MAP[kind],
                             media_content_type=media[KEY_MIME_TYPE],
                             title=display_child_path,
-                            can_play=True,
+                            can_play=(kind == "movies"),
                             can_expand=False,
                             thumbnail=thumbnail_url,
                         )

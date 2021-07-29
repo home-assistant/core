@@ -166,7 +166,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "directory",
+                "children_media_class": "movie",
                 "thumbnail": None,
             },
             {
@@ -179,7 +179,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "directory",
+                "children_media_class": "image",
                 "thumbnail": None,
             },
         ],
@@ -200,7 +200,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "directory",
+        "children_media_class": "movie",
         "thumbnail": None,
         "children": [
             {
@@ -234,7 +234,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "directory",
+        "children_media_class": "movie",
         "thumbnail": None,
         "children": [
             {
@@ -312,7 +312,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "directory",
+        "children_media_class": "image",
         "thumbnail": None,
         "children": [
             {
@@ -324,7 +324,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
                     f"/74565ad414754616000674c87bdc876c#{device.id}#images#"
                     "/2021-04-12/20-13-39.jpg"
                 ),
-                "can_play": True,
+                "can_play": False,
                 "can_expand": False,
                 "children_media_class": None,
                 "thumbnail": "http://image",
@@ -476,7 +476,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "directory",
+        "children_media_class": "movie",
         "thumbnail": None,
         "children": [],
     }
