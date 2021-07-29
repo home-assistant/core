@@ -479,3 +479,8 @@ class MotionEyeEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(identifiers={self._device_identifier})
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._camera is not None and super().available
