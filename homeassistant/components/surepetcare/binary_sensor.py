@@ -112,12 +112,7 @@ class Hub(SurePetcareBinarySensor):
 
         self.async_write_ha_state()
 
-        _LOGGER.debug(
-            "🐾  %s updated to: %s %s",
-            surepy_entity.name,
-            self._attr_state,
-            self._attr_unit_of_measurement,
-        )
+        _LOGGER.debug("🐾  %s updated to: %s", surepy_entity.name, self._attr_state)
 
 
 class Pet(SurePetcareBinarySensor):
@@ -146,12 +141,7 @@ class Pet(SurePetcareBinarySensor):
 
         self.async_write_ha_state()
 
-        _LOGGER.debug(
-            "🐾  %s updated to: %s %s",
-            surepy_entity.name,
-            self._attr_state,
-            self._attr_unit_of_measurement,
-        )
+        _LOGGER.debug("🐾  %s updated to: %s", surepy_entity.name, self._attr_state)
 
 
 class DeviceConnectivity(SurePetcareBinarySensor):
@@ -190,9 +180,4 @@ class DeviceConnectivity(SurePetcareBinarySensor):
 
         self.async_write_ha_state()
 
-        _LOGGER.debug(
-            "🐾  %s updated to: %s %s",
-            surepy_entity.name,
-            self._attr_state,
-            self._attr_unit_of_measurement,
-        )
+        _LOGGER.debug("🐾  %s updated to: %s", surepy_entity.name, self._attr_state)
