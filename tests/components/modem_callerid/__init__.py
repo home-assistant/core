@@ -2,10 +2,11 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.modem_callerid.const import DEFAULT_DEVICE
+from phone_modem import DEFAULT_PORT
+
 from homeassistant.const import CONF_DEVICE
 
-CONF_DATA = {CONF_DEVICE: DEFAULT_DEVICE}
+CONF_DATA = {CONF_DEVICE: DEFAULT_PORT}
 
 IMPORT_DATA = {"sensor": {"platform": "modem_callerid"}}
 

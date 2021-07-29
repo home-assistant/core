@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from phone_modem import DEFAULT_PORT, PhoneModem
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -17,25 +18,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import (
-    CID,
-    DATA_KEY_API,
-    DEFAULT_DEVICE,
-    DEFAULT_NAME,
-    DOMAIN,
-    ICON,
-    SERVICE_REJECT_CALL,
-    STATE_CALLERID,
-    STATE_RING,
-)
+from .const import CID, DATA_KEY_API, DEFAULT_NAME, DOMAIN, ICON, SERVICE_REJECT_CALL
 
-# Deprecated in Home Assistant 2021.8
+# Deprecated in Home Assistant 2021.9
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+                vol.Optional(CONF_DEVICE, default=DEFAULT_PORT): cv.string,
             }
         )
     )
@@ -101,7 +92,7 @@ class ModemCalleridSensor(SensorEntity):
         self.device = device
         self.api = api
         self._attr_name = name
-        self._attr_unique_id = f"{server_unique_id}_modem"
+        self._attr_unique_id = server_unique_id
         self._attr_state = STATE_IDLE
         self._attr_extra_state_attributes = {
             CID.CID_TIME: 0,
@@ -117,26 +108,20 @@ class ModemCalleridSensor(SensorEntity):
     @callback
     def _async_incoming_call(self, new_state):
         """Handle new states."""
-        if new_state == self.api.STATE_RING:
-            if self.state == self.api.STATE_IDLE:
+        if new_state == PhoneModem.STATE_RING:
+            if self.state == PhoneModem.STATE_IDLE:
                 self._attr_extra_state_attributes = {
-                    CID.CID_TIME: self.api.get_cidtime,
                     CID.CID_NUMBER: "",
                     CID.CID_NAME: "",
                 }
-            self._attr_state = STATE_RING
-            self.async_schedule_update_ha_state()
-        elif new_state == self.api.STATE_CALLERID:
+        elif new_state == PhoneModem.STATE_CALLERID:
             self._attr_extra_state_attributes = {
-                CID.CID_TIME: self.api.get_cidtime,
-                CID.CID_NUMBER: self.api.get_cidnumber,
-                CID.CID_NAME: self.api.get_cidname,
+                CID.CID_NUMBER: self.api.cid_number,
+                CID.CID_NAME: self.api.cid_name,
             }
-            self._attr_state = STATE_CALLERID
-            self.async_schedule_update_ha_state()
-        elif new_state == self.api.STATE_IDLE:
-            self._attr_state = STATE_IDLE
-            self.async_schedule_update_ha_state()
+        self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
+        self._attr_state = self.api.state
+        self.async_schedule_update_ha_state()
 
     async def reject_call(self) -> None:
         """Reject Incoming Call."""
