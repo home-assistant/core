@@ -1,14 +1,14 @@
 """Support for Renault sensors."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     POWER_KILO_WATT,
@@ -76,6 +76,9 @@ def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultDataEntity
         entities.append(RenaultChargingPowerSensor(vehicle, "Charging Power"))
         entities.append(RenaultPlugStateSensor(vehicle, "Plug State"))
         entities.append(RenaultBatteryAutonomySensor(vehicle, "Battery Autonomy"))
+        entities.append(
+            RenaultBatteryAvailableEnergySensor(vehicle, "Battery Available Energy")
+        )
         entities.append(RenaultBatteryTemperatureSensor(vehicle, "Battery Temperature"))
     if "charge_mode" in vehicle.coordinators:
         entities.append(RenaultChargeModeSensor(vehicle, "Charge Mode"))
@@ -94,6 +97,18 @@ class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity, SensorEntity):
         return self.data.batteryAutonomy if self.data else None
 
 
+class RenaultBatteryAvailableEnergySensor(RenaultBatteryDataEntity, SensorEntity):
+    """Battery available energy sensor."""
+
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of this entity."""
+        return self.data.batteryAvailableEnergy if self.data else None
+
+
 class RenaultBatteryLevelSensor(RenaultBatteryDataEntity, SensorEntity):
     """Battery Level sensor."""
 
@@ -104,15 +119,6 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return the state of this entity."""
         return self.data.batteryLevel if self.data else None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of this entity."""
-        attrs = super().extra_state_attributes
-        attrs[ATTR_BATTERY_AVAILABLE_ENERGY] = (
-            self.data.batteryAvailableEnergy if self.data else None
-        )
-        return attrs
 
 
 class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity, SensorEntity):
