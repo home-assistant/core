@@ -1,4 +1,5 @@
 """Support for Automate Roller Blind Batteries."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -44,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AutomateBattery(AutomateBase):
+class AutomateBattery(AutomateBase, SensorEntity):
     """Representation of a Automate cover battery sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
@@ -68,7 +69,7 @@ class AutomateBattery(AutomateBase):
         return f"{self.roller.id}_battery"
 
 
-class AutomateVoltage(AutomateBase):
+class AutomateVoltage(AutomateBase, SensorEntity):
     """Representation of a Automate cover battery voltage sensor."""
 
     _attr_device_class = DEVICE_CLASS_VOLTAGE
@@ -93,7 +94,7 @@ class AutomateVoltage(AutomateBase):
         return f"{self.roller.id}_battery_voltage"
 
 
-class AutomateSignal(AutomateBase):
+class AutomateSignal(AutomateBase, SensorEntity):
     """Representation of a Automate cover WiFi signal sensor."""
 
     _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
