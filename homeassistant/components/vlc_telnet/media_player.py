@@ -41,7 +41,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
+from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
 
@@ -91,21 +91,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the vlc platform."""
     name = entry.data[CONF_NAME]
-    vlc = hass.data[DOMAIN][entry.entry_id]
-    available = True
-
-    try:
-        await hass.async_add_executor_job(vlc.connect)
-    except (ConnErr, EOFError) as err:
-        LOGGER.warning("Failed to connect to VLC: %s. Trying again", err)
-        available = False
-
-    if available:
-        try:
-            await hass.async_add_executor_job(vlc.login)
-        except AuthError:
-            LOGGER.error("Failed to login to VLC")
-            return
+    vlc = hass.data[DOMAIN][entry.entry_id][DATA_VLC]
+    available = hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE]
 
     async_add_entities([VlcDevice(vlc, name, available)], True)
 
