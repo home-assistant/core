@@ -96,7 +96,7 @@ async def async_setup_entry(
                         ATTR_ENTITY_ID: f"{device.ain}_total_energy",
                         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
                         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-                        ATTR_STATE_CLASS: None,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                     },
                     coordinator,
                     ain,
