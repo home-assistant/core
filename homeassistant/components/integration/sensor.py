@@ -140,8 +140,11 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 if state.attributes.get(ATTR_LAST_RESET) is None:
                     self._attr_last_reset = dt_util.utc_from_timestamp(0)
                 else:
-                    self._attr_last_reset = dt_util.parse_datetime(
+                    last_reset = dt_util.parse_datetime(
                         state.attributes[ATTR_LAST_RESET]
+                    )
+                    self._attr_last_reset = (
+                        last_reset if last_reset else dt_util.utc_from_timestamp(0)
                     )
 
         @callback
