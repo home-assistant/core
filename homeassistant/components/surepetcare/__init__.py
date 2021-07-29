@@ -152,6 +152,7 @@ class SurePetcareAPI:
             _LOGGER.debug("🐾  self.states: %s", self.states)
         except SurePetcareError as error:
             _LOGGER.error("🐾  unable to fetch data: %s", error)
+            return
 
         _LOGGER.debug("🐾  updated states of %d entities", len(self.states))
 
