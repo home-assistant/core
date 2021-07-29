@@ -2,44 +2,44 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from gandi_api_livedns import GandiApiLiveDNS
 from gandi_api_livedns.const import (
     AVAILABLE_TYPE,
     DEFAULT_IPV6,
-    DEFAULT_TIMEOUT,
     DEFAULT_TTL,
     DEFAULT_TYPE,
 )
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_DOMAIN,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_TTL,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_TTL
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_IPV6, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, DOMAIN
+from .const import (
+    CONF_FQDN,
+    CONF_IPV6,
+    CONF_RRNAME,
+    CONF_RRTYPE,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+REQUIRED_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): vol.In(AVAILABLE_TYPE),
-        vol.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
-        vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(
-            CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-        ): cv.positive_int,
+        vol.Required(CONF_FQDN): cv.string,
+        vol.Required(CONF_RRNAME): cv.string,
+        vol.Required(CONF_RRTYPE, default=DEFAULT_TYPE): vol.In(AVAILABLE_TYPE),
+        vol.Required(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
+        vol.Required(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
     }
 )
 
@@ -60,12 +60,11 @@ class GandiLiveDnsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         gandiApiLiveDNS = GandiApiLiveDNS(
             api_key=data[CONF_API_KEY],
-            domain=data[CONF_DOMAIN],
-            rrname=data[CONF_NAME],
-            rrtype=data[CONF_TYPE],
+            domain=data[CONF_FQDN],
+            rrname=data[CONF_RRNAME],
+            rrtype=data[CONF_RRTYPE],
             rrttl=data[CONF_TTL],
             ipv6=data[CONF_IPV6],
-            timeout=data[CONF_TIMEOUT],
             logger=_LOGGER,
         )
 
@@ -96,11 +95,11 @@ class GandiLiveDnsConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config.update(user_input)
 
                 title = (
-                    self._config[CONF_TYPE]
+                    self._config[CONF_RRTYPE]
                     + ":"
-                    + self._config[CONF_NAME]
+                    + self._config[CONF_RRNAME]
                     + "."
-                    + self._config[CONF_DOMAIN]
+                    + self._config[CONF_FQDN]
                 )
 
                 await self.async_set_unique_id(title)
@@ -109,7 +108,7 @@ class GandiLiveDnsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data=self._config)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=REQUIRED_SCHEMA, errors=errors
         )
 
     async def _async_validate_or_error(self, config):
@@ -125,3 +124,40 @@ class GandiLiveDnsConfigFlow(ConfigFlow, domain=DOMAIN):
             info["record"] = record
 
         return info, errors
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Config flow options for Gandi.net live DNS."""
+
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+        """Initialize Gandi.net live DNS options flow."""
+        self.config_entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_UPDATE_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                        ),
+                    ): cv.positive_int
+                }
+            ),
+        )
