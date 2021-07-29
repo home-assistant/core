@@ -11,6 +11,7 @@ from screenlogicpy.const import (
 from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 
@@ -123,6 +124,14 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         """Device class of the sensor."""
         device_type = self.sensor.get("device_type")
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
+
+    @property
+    def state_class(self):
+        """State class of the sensor."""
+        device_type = self.sensor.get("device_type")
+        if device_type == DEVICE_TYPE.ENERGY:
+            return STATE_CLASS_MEASUREMENT
+        return None
 
     @property
     def state(self):
