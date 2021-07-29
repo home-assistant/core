@@ -1,10 +1,12 @@
 """The tests for the hassio component."""
-import asyncio
-from unittest.mock import patch
-
+from aiohttp.client import ClientError
+from aiohttp.streams import StreamReader
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_forward_request(hassio_client, aioclient_mock):
@@ -106,16 +108,6 @@ async def test_forward_log_request(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_bad_gateway_when_cannot_find_supervisor(hassio_client):
-    """Test we get a bad gateway error if we can't find supervisor."""
-    with patch(
-        "homeassistant.components.hassio.http.async_timeout.timeout",
-        side_effect=asyncio.TimeoutError,
-    ):
-        resp = await hassio_client.get("/api/hassio/addons/test/info")
-    assert resp.status == 502
-
-
 async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mock):
     """Test that we forward user info correctly."""
     aioclient_mock.get("http://127.0.0.1/hello")
@@ -169,6 +161,37 @@ async def test_backup_download_headers(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     assert resp.headers["Content-Disposition"] == content_disposition
+
+
+async def test_supervisor_client_error(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+):
+    """Test any client error from the supervisor returns a 502."""
+    # Create a request that throws a ClientError
+    async def raise_client_error(*args):
+        raise ClientError()
+
+    aioclient_mock.get(
+        "http://127.0.0.1/test/raise/error",
+        side_effect=raise_client_error,
+    )
+
+    # Verify it returns bad gateway
+    resp = await hassio_client.get("/api/hassio/test/raise/error")
+    assert resp.status == 502
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_streamed_requests(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+):
+    """Test requests get proxied to the supervisor as a stream."""
+    aioclient_mock.get("http://127.0.0.1/test/stream")
+    await hassio_client.get("/api/hassio/test/stream", data="Test data")
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Verify the request body is passed as a StreamReader
+    assert isinstance(aioclient_mock.mock_calls[0][2], StreamReader)
 
 
 def test_need_auth(hass):
