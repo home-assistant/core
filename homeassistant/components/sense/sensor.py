@@ -1,7 +1,12 @@
 """Support for monitoring a Sense energy sensor."""
+import datetime
+
+import pendulum
+
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -27,6 +32,13 @@ from .const import (
     SENSE_DISCOVERED_DEVICES_DATA,
     SENSE_TRENDS_COORDINATOR,
 )
+
+TIME_PERIODS = {
+    "daily": "day",
+    "weekly": "week",
+    "monthly": "month",
+    "yearly": "year",
+}
 
 
 class SensorConfig:
@@ -218,6 +230,7 @@ class SenseVoltageSensor(SensorEntity):
 class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
+    _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
@@ -251,6 +264,10 @@ class SenseTrendsSensor(SensorEntity):
     def available(self):
         """Return if entity is available."""
         return self._had_any_update and self._coordinator.last_update_success
+
+    def last_reset(self) -> datetime.datetime:
+        """Return the time when the sensor was last reset, if any."""
+        return pendulum.now().start_of(TIME_PERIODS[self._sensor_type])
 
     @callback
     def _async_update(self):
