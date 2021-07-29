@@ -147,6 +147,7 @@ class ArestSensor(SensorEntity):
         if pin is not None:
             request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
             if request.status_code != HTTP_OK:
+                _LOGGER.error("Can't set mode of %s", resource)
 
     def update(self):
         """Get the latest data from aREST API."""

@@ -315,10 +315,6 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
             ),
         }
 
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['serial_number']}_{self._kind}"
-
     @callback
     def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
