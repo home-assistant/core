@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from zwave_js_server.event import Event
 
-from homeassistant.components.sensor import ATTR_LAST_RESET
+from homeassistant.components.sensor import ATTR_LAST_RESET, STATE_CLASS_MEASUREMENT
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_VALUE,
@@ -62,6 +62,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.0"
     assert state.attributes["unit_of_measurement"] == POWER_WATT
     assert state.attributes["device_class"] == DEVICE_CLASS_POWER
+    assert state.attributes["state_class"] == STATE_CLASS_MEASUREMENT
 
     state = hass.states.get(ENERGY_SENSOR)
 
@@ -69,6 +70,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.16"
     assert state.attributes["unit_of_measurement"] == ENERGY_KILO_WATT_HOUR
     assert state.attributes["device_class"] == DEVICE_CLASS_ENERGY
+    assert state.attributes["state_class"] == STATE_CLASS_MEASUREMENT
 
 
 async def test_disabled_notification_sensor(hass, multisensor_6, integration):
