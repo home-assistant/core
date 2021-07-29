@@ -239,30 +239,12 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
         super().__init__(config_entry, client, info)
 
         # Entity class attributes
-        self._attr_last_reset = dt.utc_from_timestamp(0)
-
-    def _get_device_class(self) -> str | None:
-        """
-        Get the device class of the sensor.
-
-        This should be run once during initialization so we don't have to calculate
-        this value on every state update.
-        """
+        self._attr_device_class = DEVICE_CLASS_POWER
         if self.info.primary_value.metadata.unit == "kWh":
-            return DEVICE_CLASS_ENERGY
-        return DEVICE_CLASS_POWER
+            self._attr_device_class = DEVICE_CLASS_ENERGY
 
-    def _get_state_class(self) -> str | None:
-        """
-        Get the state class of the sensor.
-
-        This should be run once during initialization so we don't have to calculate
-        this value on every state update.
-        """
-        if self.device_class == DEVICE_CLASS_ENERGY:
-            return STATE_CLASS_MEASUREMENT
-
-        return None
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_last_reset = dt.utc_from_timestamp(0)
 
     async def async_update_last_reset(
         self, node: ZwaveNode, endpoint: int, meter_type: int | None
