@@ -245,5 +245,6 @@ class NSDepartureSensor(SensorEntity):
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,
+            AttributeError,
         ) as error:
             _LOGGER.error("Couldn't fetch trip info: %s", error)
