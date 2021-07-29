@@ -1,4 +1,6 @@
 """Support for Google Maps location sharing."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -30,7 +32,10 @@ CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 
 CREDENTIALS_FILE = ".google_maps_location_sharing.cookies"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+# the parent "device_tracker" have marked the schemas as legacy, so this
+# need to be refactored as part of a bigger rewrite.
+# ignoring the mypy error to allow mypy to check the rest of the integration.
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(  # type: ignore
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
@@ -53,7 +58,7 @@ class GoogleMapsScanner:
         self.username = config[CONF_USERNAME]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
         self.scan_interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=60)
-        self._prev_seen = {}
+        self._prev_seen: dict[str, str] = {}
 
         credfile = f"{hass.config.path(CREDENTIALS_FILE)}.{slugify(self.username)}"
         try:
