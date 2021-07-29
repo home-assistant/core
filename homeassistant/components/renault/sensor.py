@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from .const import (
     DEVICE_CLASS_CHARGE_MODE,
@@ -155,7 +154,7 @@ class RenaultChargeStateSensor(RenaultBatteryDataEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the state of this entity."""
         charging_status = self.data.get_charging_status() if self.data else None
-        return slugify(charging_status.name) if charging_status is not None else None
+        return charging_status.name.lower() if charging_status is not None else None
 
     @property
     def icon(self) -> str:
@@ -261,7 +260,7 @@ class RenaultPlugStateSensor(RenaultBatteryDataEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the state of this entity."""
         plug_status = self.data.get_plug_status() if self.data else None
-        return slugify(plug_status.name) if plug_status is not None else None
+        return plug_status.name.lower() if plug_status is not None else None
 
     @property
     def icon(self) -> str:
