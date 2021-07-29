@@ -114,8 +114,8 @@ class SensorEntity(Entity):
 
     entity_description: SensorEntityDescription
     _attr_last_reset: datetime | None
-    _attr_native_unit_of_measurement: str | None = None
-    _attr_native_value: StateType
+    _attr_native_unit_of_measurement: str | None
+    _attr_native_value: StateType = None
     _attr_state_class: str | None
     _temperature_conversion_reported = False
 
