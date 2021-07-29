@@ -1,8 +1,6 @@
 """Provide functionality to interact with the vlc telnet interface."""
 from __future__ import annotations
 
-from typing import Callable
-
 from python_telnet_vlc import (
     AuthError,
     CommandError,
@@ -89,7 +87,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the vlc platform."""
     name = entry.data[CONF_NAME]
