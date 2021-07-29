@@ -3,6 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 import logging
 from typing import cast
 
@@ -33,11 +40,11 @@ class RenaultVehicleProxy:
         self._vehicle = vehicle
         self._details = details
         self._device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, cast(str, details.vin))},
-            "manufacturer": (details.get_brand_label() or "").capitalize(),
-            "model": (details.get_model_label() or "").capitalize(),
-            "name": details.registrationNumber or "",
-            "sw_version": details.get_model_code() or "",
+            ATTR_IDENTIFIERS: {(DOMAIN, cast(str, details.vin))},
+            ATTR_MANUFACTURER: (details.get_brand_label() or "").capitalize(),
+            ATTR_MODEL: (details.get_model_label() or "").capitalize(),
+            ATTR_NAME: details.registrationNumber or "",
+            ATTR_SW_VERSION: details.get_model_code() or "",
         }
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
