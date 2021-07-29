@@ -242,10 +242,5 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
             self._extra_state_attributes = {
                 _better_snakecase(k): v
                 for k, v in host.items()
-                if k
-                in {
-                    "AddressSource",
-                    "AssociatedSsid",
-                    "InterfaceType",
-                }
+                if k in ("AddressSource", "AssociatedSsid", "InterfaceType")
             }

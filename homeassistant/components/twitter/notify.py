@@ -206,7 +206,7 @@ class TwitterNotificationService(BaseNotificationService):
 
         _LOGGER.debug("media processing %s status: %s", media_id, processing_info)
 
-        if processing_info["state"] in {"succeeded", "failed"}:
+        if processing_info["state"] in ("succeeded", "failed"):
             return callback(media_id)
 
         check_after_secs = processing_info["check_after_secs"]

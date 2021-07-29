@@ -887,14 +887,14 @@ class DataManager:
     async def async_webhook_data_updated(self, data_category: NotifyAppli) -> None:
         """Handle scenario when data is updated from a webook."""
         _LOGGER.debug("Withings webhook triggered")
-        if data_category in {
+        if data_category in (
             NotifyAppli.WEIGHT,
             NotifyAppli.CIRCULATORY,
             NotifyAppli.SLEEP,
-        }:
+        ):
             await self.poll_data_update_coordinator.async_request_refresh()
 
-        elif data_category in {NotifyAppli.BED_IN, NotifyAppli.BED_OUT}:
+        elif data_category in (NotifyAppli.BED_IN, NotifyAppli.BED_OUT):
             self.webhook_update_coordinator.update_data(
                 Measurement.IN_BED, data_category == NotifyAppli.BED_IN
             )

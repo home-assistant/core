@@ -237,22 +237,22 @@ class TahomaCover(TahomaDevice, CoverEntity):
             == "io:RollerShutterWithLowSpeedManagementIOComponent"
         ):
             self.apply_action("setPosition", "secured")
-        elif self.tahoma_device.type in {
+        elif self.tahoma_device.type in (
             "io:ExteriorVenetianBlindIOComponent",
             "rts:BlindRTSComponent",
             "rts:DualCurtainRTSComponent",
             "rts:ExteriorVenetianBlindRTSComponent",
             "rts:VenetianBlindRTSComponent",
-        }:
+        ):
             self.apply_action("my")
-        elif self.tahoma_device.type in {
+        elif self.tahoma_device.type in (
             HORIZONTAL_AWNING,
             "io:AwningValanceIOComponent",
             "io:RollerShutterGenericIOComponent",
             "io:VerticalExteriorAwningIOComponent",
             "io:VerticalInteriorBlindVeluxIOComponent",
             "io:WindowOpenerVeluxIOComponent",
-        }:
+        ):
             self.apply_action("stop")
         else:
             self.apply_action("stopIdentify")

@@ -507,11 +507,11 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
 
         try:
             state = data[self.entity_description.netatmo_name]
-            if self.entity_description.key in {"temperature", "pressure", "sum_rain_1"}:
+            if self.entity_description.key in ("temperature", "pressure", "sum_rain_1"):
                 self._attr_state = round(state, 1)
-            elif self.entity_description.key in {"windangle_value", "gustangle_value"}:
+            elif self.entity_description.key in ("windangle_value", "gustangle_value"):
                 self._attr_state = fix_angle(state)
-            elif self.entity_description.key in {"windangle", "gustangle"}:
+            elif self.entity_description.key in ("windangle", "gustangle"):
                 self._attr_state = process_angle(fix_angle(state))
             elif self.entity_description.key == "rf_status":
                 self._attr_state = process_rf(state)

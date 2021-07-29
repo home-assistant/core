@@ -50,9 +50,9 @@ async def _async_reproduce_state(
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    if state.state in {STATE_LOCKED, STATE_LOCKING}:
+    if state.state in (STATE_LOCKED, STATE_LOCKING):
         service = SERVICE_LOCK
-    elif state.state in {STATE_UNLOCKED, STATE_UNLOCKING}:
+    elif state.state in (STATE_UNLOCKED, STATE_UNLOCKING):
         service = SERVICE_UNLOCK
 
     await hass.services.async_call(

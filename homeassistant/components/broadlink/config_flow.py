@@ -97,7 +97,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 err_msg = "Device not found"
 
             except OSError as err:
-                if err.errno in {errno.EINVAL, socket.EAI_NONAME}:
+                if err.errno in (errno.EINVAL, socket.EAI_NONAME):
                     errors["base"] = "invalid_host"
                     err_msg = "Invalid hostname or IP address"
                 elif err.errno == errno.ENETUNREACH:
