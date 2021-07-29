@@ -18,6 +18,7 @@ from homeassistant.components.tplink.const import (
     CONF_SWITCH,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
@@ -243,6 +244,42 @@ async def test_no_config_creates_no_entry(hass):
         await hass.async_block_till_done()
 
     assert mock_setup.call_count == 0
+
+
+async def test_not_ready(hass: HomeAssistant):
+    """Test for not ready when configured devices are not available."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_SWITCH: [{CONF_HOST: "321.321.321.321"}],
+        }
+    }
+
+    with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
+        "homeassistant.components.tplink.get_static_devices"
+    ) as get_static_devices, patch(
+        "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.switch.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+    ):
+
+        switch = SmartPlug("321.321.321.321")
+        switch.get_sysinfo = MagicMock(side_effect=SmartDeviceException())
+        get_static_devices.return_value = SmartDevices([], [switch])
+
+        await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        entries = hass.config_entries.async_entries(tplink.DOMAIN)
+
+        assert len(entries) == 1
+        assert entries[0].state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("platform", ["switch", "light"])
