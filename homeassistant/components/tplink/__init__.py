@@ -26,7 +26,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utc_from_timestamp
 
 from .common import SmartDevices, async_discover_devices, get_static_devices
@@ -185,45 +185,50 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
-        info = self.smartplug.sys_info
-        data = {
-            CONF_HOST: self.smartplug.host,
-            CONF_MAC: info["mac"],
-            CONF_MODEL: info["model"],
-            CONF_SW_VERSION: info["sw_ver"],
-        }
-        if self.smartplug.context is None:
-            data[CONF_ALIAS] = info["alias"]
-            data[CONF_DEVICE_ID] = info["mac"]
-            data[CONF_STATE] = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
-        else:
-            plug_from_context = next(
-                c
-                for c in self.smartplug.sys_info["children"]
-                if c["id"] == self.smartplug.context
-            )
-            data[CONF_ALIAS] = plug_from_context["alias"]
-            data[CONF_DEVICE_ID] = self.smartplug.context
-            data[CONF_STATE] = plug_from_context["state"] == 1
-        if self.smartplug.has_emeter:
-            emeter_readings = self.smartplug.get_emeter_realtime()
-            data[CONF_EMETER_PARAMS] = {
-                ATTR_CURRENT_POWER_W: round(float(emeter_readings["power"]), 2),
-                ATTR_TOTAL_ENERGY_KWH: round(float(emeter_readings["total"]), 3),
-                ATTR_VOLTAGE: round(float(emeter_readings["voltage"]), 1),
-                ATTR_CURRENT_A: round(float(emeter_readings["current"]), 2),
-                ATTR_LAST_RESET: {ATTR_TOTAL_ENERGY_KWH: utc_from_timestamp(0)},
+        try:
+            info = self.smartplug.sys_info
+            data = {
+                CONF_HOST: self.smartplug.host,
+                CONF_MAC: info["mac"],
+                CONF_MODEL: info["model"],
+                CONF_SW_VERSION: info["sw_ver"],
             }
-            emeter_statics = self.smartplug.get_emeter_daily()
-            data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
-                ATTR_TODAY_ENERGY_KWH
-            ] = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-            if emeter_statics.get(int(time.strftime("%e"))):
-                data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
-                    float(emeter_statics[int(time.strftime("%e"))]), 3
+            if self.smartplug.context is None:
+                data[CONF_ALIAS] = info["alias"]
+                data[CONF_DEVICE_ID] = info["mac"]
+                data[CONF_STATE] = (
+                    self.smartplug.state == self.smartplug.SWITCH_STATE_ON
                 )
             else:
-                # today's consumption not available, when device was off all the day
-                data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = 0.0
+                plug_from_context = next(
+                    c
+                    for c in self.smartplug.sys_info["children"]
+                    if c["id"] == self.smartplug.context
+                )
+                data[CONF_ALIAS] = plug_from_context["alias"]
+                data[CONF_DEVICE_ID] = self.smartplug.context
+                data[CONF_STATE] = plug_from_context["state"] == 1
+            if self.smartplug.has_emeter:
+                emeter_readings = self.smartplug.get_emeter_realtime()
+                data[CONF_EMETER_PARAMS] = {
+                    ATTR_CURRENT_POWER_W: round(float(emeter_readings["power"]), 2),
+                    ATTR_TOTAL_ENERGY_KWH: round(float(emeter_readings["total"]), 3),
+                    ATTR_VOLTAGE: round(float(emeter_readings["voltage"]), 1),
+                    ATTR_CURRENT_A: round(float(emeter_readings["current"]), 2),
+                    ATTR_LAST_RESET: {ATTR_TOTAL_ENERGY_KWH: utc_from_timestamp(0)},
+                }
+                emeter_statics = self.smartplug.get_emeter_daily()
+                data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
+                    ATTR_TODAY_ENERGY_KWH
+                ] = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                if emeter_statics.get(int(time.strftime("%e"))):
+                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
+                        float(emeter_statics[int(time.strftime("%e"))]), 3
+                    )
+                else:
+                    # today's consumption not available, when device was off all the day
+                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = 0.0
+        except SmartDeviceException as ex:
+            raise UpdateFailed(ex)
 
         return data
