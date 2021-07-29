@@ -8,7 +8,7 @@ from tests.common import MockConfigEntry
 CONTRACT = "1234abcd"
 
 
-async def setup_platform(hass, platform):
+async def setup_platform(hass):
     """Set up the Prosegur platform."""
     mock_entry = MockConfigEntry(
         domain=PROSEGUR_DOMAIN,
