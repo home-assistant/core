@@ -58,7 +58,7 @@ from .data_handler import (
     HOMESTATUS_DATA_CLASS_NAME,
     NetatmoDataHandler,
 )
-from .helper import get_all_home_ids
+from .helper import get_all_home_ids, update_climate_schedules
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -143,18 +143,12 @@ async def async_setup_entry(
             if home_status and room_id in home_status.rooms:
                 entities.append(NetatmoThermostat(data_handler, home_id, room_id))
 
-        hass.data[DOMAIN][DATA_SCHEDULES].update(
-            {
-                home_id: {
-                    schedule_id: schedule_data.get("name")
-                    for schedule_id, schedule_data in (
-                        data_handler.data[HOMEDATA_DATA_CLASS_NAME]
-                        .schedules[home_id]
-                        .items()
-                    )
-                }
-            }
+    hass.data[DOMAIN][DATA_SCHEDULES].update(
+        update_climate_schedules(
+            home_ids=get_all_home_ids(home_data),
+            schedules=data_handler.data[HOMEDATA_DATA_CLASS_NAME].schedules,
         )
+    )
 
     hass.data[DOMAIN][DATA_HOMES] = {
         home_id: home_data.get("name")

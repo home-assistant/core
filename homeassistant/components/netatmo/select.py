@@ -22,7 +22,7 @@ from .const import (
     SIGNAL_NAME,
 )
 from .data_handler import HOMEDATA_DATA_CLASS_NAME, NetatmoDataHandler
-from .helper import get_all_home_ids
+from .helper import get_all_home_ids, update_climate_schedules
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,20 +42,12 @@ async def async_setup_entry(
     if not home_data or home_data.raw_data == {}:
         raise PlatformNotReady
 
-    for home_id in get_all_home_ids(home_data):
-        hass.data[DOMAIN][DATA_SCHEDULES].update(
-            {
-                home_id: {
-                    schedule_id: schedule_data.get("name")
-                    for schedule_id, schedule_data in (
-                        data_handler.data[HOMEDATA_DATA_CLASS_NAME]
-                        .schedules[home_id]
-                        .items()
-                    )
-                }
-            }
+    hass.data[DOMAIN][DATA_SCHEDULES].update(
+        update_climate_schedules(
+            home_ids=get_all_home_ids(home_data),
+            schedules=data_handler.data[HOMEDATA_DATA_CLASS_NAME].schedules,
         )
-    _LOGGER.debug("Adding climate schedules %s", hass.data[DOMAIN][DATA_SCHEDULES])
+    )
 
     entities = [
         NetatmoScheduleSelect(
