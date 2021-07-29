@@ -3,10 +3,10 @@ import logging
 
 from pyprosegur.auth import Auth
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_COUNTRY, DOMAIN
@@ -32,12 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ConnectionRefusedError as error:
         _LOGGER.error("Configured credential are invalid, %s", error)
 
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH, "entry_id": entry.data["entry_id"]},
-            )
-        )
+        raise ConfigEntryAuthFailed from error
 
     except ConnectionError as error:
         _LOGGER.error("Could not connect with Prosegur backend: %s", error)
