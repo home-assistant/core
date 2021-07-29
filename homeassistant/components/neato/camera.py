@@ -111,8 +111,7 @@ class NeatoCleaningMap(Camera):
 
         self._image = image.read()
         self._image_url = image_url
-        if data := map_data["generated_at"]:
-            self._generated_at = data
+        self._generated_at = map_data.get("generated_at", None)
         self._available = True
 
     @property
