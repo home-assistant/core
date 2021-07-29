@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -90,7 +90,7 @@ MOCK_VEHICLES = {
                 "unique_id": "vf1aaaaa555777999_charging_power",
                 "result": "0.027",
                 "unit": POWER_KILO_WATT,
-                "class": DEVICE_CLASS_ENERGY,
+                "class": DEVICE_CLASS_POWER,
             },
             {
                 "entity_id": "sensor.charging_remaining_time",
@@ -176,7 +176,7 @@ MOCK_VEHICLES = {
                 "unique_id": "vf1aaaaa555777999_charging_power",
                 "result": STATE_UNKNOWN,
                 "unit": POWER_KILO_WATT,
-                "class": DEVICE_CLASS_ENERGY,
+                "class": DEVICE_CLASS_POWER,
             },
             {
                 "entity_id": "sensor.charging_remaining_time",
@@ -255,7 +255,7 @@ MOCK_VEHICLES = {
                 "unique_id": "vf1aaaaa555777123_charging_power",
                 "result": "27.0",
                 "unit": POWER_KILO_WATT,
-                "class": DEVICE_CLASS_ENERGY,
+                "class": DEVICE_CLASS_POWER,
             },
             {
                 "entity_id": "sensor.charging_remaining_time",
