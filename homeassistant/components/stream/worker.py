@@ -358,7 +358,9 @@ def stream_worker(
 
         # Advance to the first keyframe for muxing, then rewind so the muxing
         # loop below can consume.
-        first_keyframe = next(filter(is_keyframe, filter(is_video, container_packets)))
+        first_keyframe = next(
+            filter(lambda pkt: is_keyframe(pkt) and is_video(pkt), container_packets)
+        )
         # Deal with problem #1 above (bad first packet pts/dts) by recalculating
         # using pts/dts from second packet. Use the peek iterator to advance
         # without consuming from container_packets. Skip over the first keyframe
