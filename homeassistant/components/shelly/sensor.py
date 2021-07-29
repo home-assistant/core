@@ -268,13 +268,13 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """State class of sensor."""
-        if not self.description.last_reset:
-            return None
-
         if self.description.last_reset == LAST_RESET_UPTIME:
             return dt.utcnow() - timedelta(seconds=self.wrapper.device.status["uptime"])
 
-        return dt.utc_from_timestamp(0)
+        if self.description.last_reset == LAST_RESET_NEVER:
+            return dt.utc_from_timestamp(0)
+
+        return None
 
     @property
     def unit_of_measurement(self) -> str | None:
