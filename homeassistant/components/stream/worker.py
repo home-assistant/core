@@ -358,7 +358,9 @@ def stream_worker(
     try:
         if audio_stream and unsupported_audio(container_packets.peek(), audio_stream):
             audio_stream = None
-            container_packets.replace_underlying_iterator(container.demux(video_stream))
+            container_packets.replace_underlying_iterator(
+                filter(dts_validator.is_valid, container.demux(video_stream))
+            )
 
         # Advance to the first keyframe for muxing, then rewind so the muxing
         # loop below can consume.
