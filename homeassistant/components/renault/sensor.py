@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
 from .const import (
@@ -106,13 +105,6 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return the state of this entity."""
         return self.data.batteryLevel if self.data else None
-
-    @property
-    def icon(self) -> str:
-        """Icon handling."""
-        return icon_for_battery_level(
-            battery_level=self.state, charging=self.is_charging
-        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
