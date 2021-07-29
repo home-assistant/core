@@ -413,7 +413,7 @@ class DeviceBroker:
 class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
 
-    def __init__(self, device: DeviceEntity):
+    def __init__(self, device: DeviceEntity) -> None:
         """Initialize the instance."""
         self._device = device
         self._dispatcher_remove = None

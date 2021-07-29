@@ -404,7 +404,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
 
         if broker.any_assigned(device.device_id, "switch"):
-            for capability in [Capability.energy_meter, Capability.power_meter]:
+            for capability in (Capability.energy_meter, Capability.power_meter):
                 maps = CAPABILITY_TO_SENSORS[capability]
                 sensors.extend(
                     [
@@ -441,7 +441,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         default_unit: str,
         device_class: str,
         state_class: str | None,
-    ):
+    ) -> None:
         """Init the class."""
         super().__init__(device)
         self._attribute = attribute
