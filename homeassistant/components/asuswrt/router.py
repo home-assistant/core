@@ -299,9 +299,9 @@ class AsusWrtRouter:
         )
         track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
-        for device_mac in self._devices:
+        for device_mac, device in self._devices.items():
             dev_info = wrt_devices.get(device_mac)
-            self._devices[device_mac].update(dev_info, consider_home)
+            device.update(dev_info, consider_home)
 
         for device_mac, dev_info in wrt_devices.items():
             if device_mac in self._devices:

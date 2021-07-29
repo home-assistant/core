@@ -183,12 +183,12 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
-            for key in [
+            for key in (
                 ATTR_ATCOCODE,
                 ATTR_LOCALITY,
                 ATTR_STOP_NAME,
                 ATTR_REQUEST_TIME,
-            ]:
+            ):
                 attrs[key] = self._data.get(key)
             attrs[ATTR_NEXT_BUSES] = self._next_buses
             return attrs

@@ -29,15 +29,15 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Verwendet ein SSL Zertifikat"
+                    "ssl": "Verwendet ein SSL-Zertifikat"
                 },
-                "description": "Kodi-Verbindungsinformationen. Bitte stellen Sie sicher, dass Sie \"Steuerung von Kodi \u00fcber HTTP zulassen\" in System/Einstellungen/Netzwerk/Dienste aktivieren."
+                "description": "Kodi-Verbindungsinformationen. Bitte stelle sicher, dass du \"Steuerung von Kodi \u00fcber HTTP zulassen\" in System/Einstellungen/Netzwerk/Dienste aktiviert hast."
             },
             "ws_port": {
                 "data": {
                     "ws_port": "Port"
                 },
-                "description": "Der WebSocket-Port (in Kodi manchmal TCP-Port genannt). Um eine Verbindung \u00fcber WebSocket herzustellen, m\u00fcssen Sie unter System/Einstellungen/Netzwerk/Dienste \"Programme ... zur Steuerung von Kodi zulassen\" aktivieren. Wenn WebSocket nicht aktiviert ist, entfernen Sie den Port und lassen ihn leer."
+                "description": "Der WebSocket-Port (in Kodi manchmal TCP-Port genannt). Um eine Verbindung \u00fcber WebSocket herzustellen, musst du unter System/Einstellungen/Netzwerk/Dienste \"Programme ... zur Steuerung von Kodi zulassen\" aktivieren. Wenn WebSocket nicht aktiviert ist, entferne den Port und lasse ihn leer."
             }
         }
     },

@@ -244,11 +244,11 @@ def _async_import_options_from_data_if_missing(
 ):
     options = dict(entry.options)
     modified = False
-    for importable_option in [
+    for importable_option in (
         CONF_IGNORE_STRING,
         CONF_SENSOR_STRING,
         CONF_RESTORE_LIGHT_STATE,
-    ]:
+    ):
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
             modified = True

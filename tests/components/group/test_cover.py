@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
+    CONF_UNIQUE_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -77,6 +79,7 @@ CONFIG_ATTRIBUTES = {
     DOMAIN: {
         "platform": "group",
         CONF_ENTITIES: [DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT, DEMO_TILT],
+        CONF_UNIQUE_ID: "unique_identifier",
     }
 }
 
@@ -219,6 +222,11 @@ async def test_attributes(hass, setup_comp):
 
     state = hass.states.get(COVER_GROUP)
     assert state.attributes[ATTR_ASSUMED_STATE] is True
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(COVER_GROUP)
+    assert entry
+    assert entry.unique_id == "unique_identifier"
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_TILT_ONLY, 2)])

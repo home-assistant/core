@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     except RuntimeError as exc:
         _LOGGER.error("Failed to setup tado: %s", exc)
-        return ConfigEntryNotReady
+        return False
     except requests.exceptions.Timeout as ex:
         raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:

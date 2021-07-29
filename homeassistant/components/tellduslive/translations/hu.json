@@ -10,10 +10,15 @@
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
+            "auth": {
+                "description": "A TelldusLive-fi\u00f3k \u00f6sszekapcsol\u00e1sa:\n 1. Kattintson az al\u00e1bbi linkre\n 2. Jelentkezzen be a Telldus Live szolg\u00e1ltat\u00e1sba\n 3. Enged\u00e9lyezze ** {app_name} ** (kattintson a ** Yes ** gombra).\n 4. J\u00f6jj\u00f6n vissza ide, \u00e9s kattintson a ** SUBMIT ** gombra. \n\n [Link TelldusLive-fi\u00f3k] ( {auth_url} )",
+                "title": "Hiteles\u00edtsen a TelldusLive-on"
+            },
             "user": {
                 "data": {
                     "host": "Hoszt"
                 },
+                "description": "\u00dcres",
                 "title": "V\u00e1lassz v\u00e9gpontot."
             }
         }

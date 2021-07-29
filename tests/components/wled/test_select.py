@@ -358,6 +358,126 @@ async def test_preset_select_connection_error(
     mock_wled.preset.assert_called_with(preset="Preset 2")
 
 
+async def test_playlist_unavailable_without_playlists(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test WLED playlist entity is unavailable when playlists are not available."""
+    state = hass.states.get("select.wled_rgb_light_playlist")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+async def test_playlist_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test the creation and values of the WLED selects."""
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("select.wled_rgbw_light_playlist")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:play-speed"
+    assert state.attributes.get(ATTR_OPTIONS) == ["Playlist 1", "Playlist 2"]
+    assert state.state == "Playlist 1"
+
+    entry = entity_registry.async_get("select.wled_rgbw_light_playlist")
+    assert entry
+    assert entry.unique_id == "aabbccddee11_playlist"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
+            ATTR_OPTION: "Playlist 2",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.playlist.call_count == 1
+    mock_wled.playlist.assert_called_with(playlist="Playlist 2")
+
+
+@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+async def test_old_style_playlist_active(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when old style playlist cycle is active."""
+    # Set device playlist to 0, which meant "cycle" previously.
+    mock_wled.update.return_value.state.playlist = 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.wled_rgbw_light_playlist")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+async def test_playlist_select_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error handling of the WLED selects."""
+    mock_wled.playlist.side_effect = WLEDError
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
+            ATTR_OPTION: "Playlist 2",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.wled_rgbw_light_playlist")
+    assert state
+    assert state.state == "Playlist 1"
+    assert "Invalid response from API" in caplog.text
+    assert mock_wled.playlist.call_count == 1
+    mock_wled.playlist.assert_called_with(playlist="Playlist 2")
+
+
+@pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
+async def test_playlist_select_connection_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error handling of the WLED selects."""
+    mock_wled.playlist.side_effect = WLEDConnectionError
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
+            ATTR_OPTION: "Playlist 2",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.wled_rgbw_light_playlist")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "Error communicating with API" in caplog.text
+    assert mock_wled.playlist.call_count == 1
+    mock_wled.playlist.assert_called_with(playlist="Playlist 2")
+
+
 @pytest.mark.parametrize(
     "entity_id",
     (

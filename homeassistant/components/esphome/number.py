@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from typing import cast
 
 from aioesphomeapi import NumberInfo, NumberState
 import voluptuous as vol
@@ -38,23 +39,15 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeNumber(EsphomeEntity, NumberEntity):
+class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
-
-    @property
-    def _static_info(self) -> NumberInfo:
-        return super()._static_info
-
-    @property
-    def _state(self) -> NumberState | None:
-        return super()._state
 
     @property
     def icon(self) -> str | None:
         """Return the icon."""
         if not self._static_info.icon:
             return None
-        return ICON_SCHEMA(self._static_info.icon)
+        return cast(str, ICON_SCHEMA(self._static_info.icon))
 
     @property
     def min_value(self) -> float:
@@ -72,7 +65,7 @@ class EsphomeNumber(EsphomeEntity, NumberEntity):
         return super()._static_info.step
 
     @esphome_state_property
-    def value(self) -> float:
+    def value(self) -> float | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None

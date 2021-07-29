@@ -1,7 +1,10 @@
 """The Netatmo integration."""
 import logging
 
+from aiohttp.web import Request
+
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -25,7 +28,9 @@ SUBEVENT_TYPE_MAP = {
 }
 
 
-async def async_handle_webhook(hass, webhook_id, request):
+async def async_handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: Request
+) -> None:
     """Handle webhook callback."""
     try:
         data = await request.json()
@@ -47,12 +52,12 @@ async def async_handle_webhook(hass, webhook_id, request):
         async_evaluate_event(hass, data)
 
 
-def async_evaluate_event(hass, event_data):
+def async_evaluate_event(hass: HomeAssistant, event_data: dict) -> None:
     """Evaluate events from webhook."""
-    event_type = event_data.get(ATTR_EVENT_TYPE)
+    event_type = event_data.get(ATTR_EVENT_TYPE, "None")
 
     if event_type == "person":
-        for person in event_data.get(ATTR_PERSONS):
+        for person in event_data.get(ATTR_PERSONS, {}):
             person_event_data = dict(event_data)
             person_event_data[ATTR_ID] = person.get(ATTR_ID)
             person_event_data[ATTR_NAME] = hass.data[DOMAIN][DATA_PERSONS].get(
@@ -67,7 +72,7 @@ def async_evaluate_event(hass, event_data):
         async_send_event(hass, event_type, event_data)
 
 
-def async_send_event(hass, event_type, data):
+def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
     """Send events."""
     _LOGGER.debug("%s: %s", event_type, data)
     async_dispatcher_send(

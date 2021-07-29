@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Das Ger\u00e4t ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "unknown": "Unerwarteter Fehler"
         },
@@ -19,14 +19,14 @@
                     "one": "eins",
                     "other": "andere"
                 },
-                "description": "M\u00f6chten Sie {name} einrichten?",
+                "description": "M\u00f6chtest du {name} einrichten?",
                 "title": "Roku"
             },
             "user": {
                 "data": {
                     "host": "Host"
                 },
-                "description": "Geben Sie Ihre Roku-Informationen ein."
+                "description": "Gib deine Roku-Informationen ein."
             }
         }
     }
