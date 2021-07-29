@@ -54,12 +54,14 @@ ENERGY_SENSORS: list[SensorEntityDescription] = [
         key=ATTR_TOTAL_ENERGY_KWH,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
         name="Total Consumption",
     ),
     SensorEntityDescription(
         key=ATTR_TODAY_ENERGY_KWH,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
         name="Today's Consumption",
     ),
     SensorEntityDescription(
