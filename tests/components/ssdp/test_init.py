@@ -790,3 +790,65 @@ async def test_async_detect_interfaces_setting_empty_route(hass):
         (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
         (IPv4Address("192.168.1.5"), None),
     }
+
+
+async def test_bind_failure_skips_adapter(hass, caplog):
+    """Test that an adapter with a bind failure is skipped."""
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
+    create_args = []
+    did_search = 0
+
+    @callback
+    def _callback(*_):
+        nonlocal did_search
+        did_search += 1
+        pass
+
+    def _generate_failing_ssdp_listener(*args, **kwargs):
+        create_args.append([args, kwargs])
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            if kwargs["source_ip"] == IPv6Address("2001:db8::"):
+                raise OSError
+            pass
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_failing_ssdp_listener,
+    ), patch(
+        "homeassistant.components.ssdp.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    argset = set()
+    for argmap in create_args:
+        argset.add((argmap[1].get("source_ip"), argmap[1].get("target_ip")))
+
+    assert argset == {
+        (IPv6Address("2001:db8::"), None),
+        (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
+        (IPv4Address("192.168.1.5"), None),
+    }
+    assert "Failed to setup listener for" in caplog.text
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
+    assert did_search == 2
