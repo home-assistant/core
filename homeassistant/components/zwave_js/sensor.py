@@ -269,6 +269,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
         """Call when entity is added."""
         await super().async_added_to_hass()
 
+        # Restore the last reset time from stored state
         restored_state = await self.async_get_last_state()
         if restored_state and ATTR_LAST_RESET in restored_state.attributes:
             self._attr_last_reset = dt.parse_datetime(
