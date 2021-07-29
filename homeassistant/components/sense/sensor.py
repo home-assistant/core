@@ -34,13 +34,6 @@ from .const import (
     SENSE_TRENDS_COORDINATOR,
 )
 
-TIME_PERIODS = {
-    "daily": "day",
-    "weekly": "week",
-    "monthly": "month",
-    "yearly": "year",
-}
-
 
 class SensorConfig:
     """Data structure holding sensor configuration."""
@@ -270,7 +263,7 @@ class SenseTrendsSensor(SensorEntity):
     def last_reset(self) -> datetime.datetime:
         """Return the time when the sensor was last reset, if any."""
         return pendulum.now(dt_util.DEFAULT_TIME_ZONE).start_of(
-            TIME_PERIODS[self._sensor_type]
+            self._sensor_type.lower()
         )
 
     @callback
