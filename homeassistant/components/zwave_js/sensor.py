@@ -229,8 +229,6 @@ class ZWaveNumericSensor(ZwaveSensorBase):
 class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
     """Representation of a Z-Wave Meter CC sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -241,6 +239,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
         super().__init__(config_entry, client, info)
 
         # Entity class attributes
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_last_reset = dt.utc_from_timestamp(0)
         self._attr_device_class = DEVICE_CLASS_POWER
         if self.info.primary_value.metadata.unit == "kWh":
