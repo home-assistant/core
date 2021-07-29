@@ -8,7 +8,7 @@ from typing import Any
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ACTIONS, KEY_NAME
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,7 +63,9 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
             client,
             coordinator,
             options,
-            False,
+            SensorEntityDescription(
+                key=TYPE_MOTIONEYE_ACTION_SENSOR, entity_registry_enabled_default=False
+            ),
         )
 
     @property
