@@ -174,9 +174,15 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
-        if hasattr(self, "_attr_unit_of_measurement") and self._attr_unit_of_measurement is not None:
+        if (
+            hasattr(self, "_attr_unit_of_measurement")
+            and self._attr_unit_of_measurement is not None
+        ):
             return self._attr_unit_of_measurement
-        if hasattr(self, "entity_description") and self.entity_description.unit_of_measurement is not None:
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.unit_of_measurement is not None
+        ):
             return self.entity_description.unit_of_measurement
 
         native_unit_of_measurement = self.native_unit_of_measurement

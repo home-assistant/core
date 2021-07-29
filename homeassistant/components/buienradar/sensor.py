@@ -446,7 +446,9 @@ class BrSensor(SensorEntity):
             if self.type.startswith(WINDSPEED):
                 # hass wants windspeeds in km/h not m/s, so convert:
                 try:
-                    self._attr_native_value = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    self._attr_native_value = data.get(FORECAST)[fcday].get(
+                        self.type[:-3]
+                    )
                     if self.state is not None:
                         self._attr_native_value = round(self.state * 3.6, 1)
                     return True
@@ -490,7 +492,9 @@ class BrSensor(SensorEntity):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
-            self._attr_native_value = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
+            self._attr_native_value = nested.get(
+                self.type[len(PRECIPITATION_FORECAST) + 1 :]
+            )
             return True
 
         if self.type in [WINDSPEED, WINDGUST]:
