@@ -1,14 +1,18 @@
-"""Support for TPLink HS100/HS110/HS200 smart switch."""
+"""Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
 from typing import Any
 
 from pyHS100 import SmartPlug
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ALIAS, CONF_DEVICE_ID, CONF_MAC, CONF_STATE
+from homeassistant.const import CONF_ALIAS, CONF_DEVICE_ID, CONF_MAC
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -19,11 +23,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CONF_EMETER_PARAMS,
     CONF_MODEL,
     CONF_SW_VERSION,
     CONF_SWITCH,
     COORDINATORS,
     DOMAIN as TPLINK_DOMAIN,
+    ENERGY_SENSORS,
 )
 
 
@@ -33,27 +39,39 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    entities: list[SmartPlugSwitch] = []
+    entities: list[SmartPlugSensor] = []
     coordinators: list[SmartPlugDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
         COORDINATORS
     ]
     switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
     for switch in switches:
-        coordinator = coordinators[switch.mac]
-        entities.append(SmartPlugSwitch(switch, coordinator))
+        coordinator: SmartPlugDataUpdateCoordinator = coordinators[switch.mac]
+        if not switch.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
+            continue
+        for description in ENERGY_SENSORS:
+            if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
+                entities.append(SmartPlugSensor(switch, coordinator, description))
 
     async_add_entities(entities)
 
 
-class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
-    """Representation of a TPLink Smart Plug switch."""
+class SmartPlugSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a TPLink Smart Plug energy sensor."""
 
     def __init__(
-        self, smartplug: SmartPlug, coordinator: DataUpdateCoordinator
+        self,
+        smartplug: SmartPlug,
+        coordinator: DataUpdateCoordinator,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.smartplug = smartplug
+        self.entity_description = description
+        self._attr_name = f"{coordinator.data[CONF_ALIAS]} {description.name}"
+        self._attr_last_reset = coordinator.data[CONF_EMETER_PARAMS][
+            ATTR_LAST_RESET
+        ].get(description.key)
 
     @property
     def data(self) -> dict[str, Any]:
@@ -61,14 +79,14 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
         return self.coordinator.data
 
     @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self.data[CONF_DEVICE_ID]
+    def state(self) -> float | None:
+        """Return the sensors state."""
+        return self.data[CONF_EMETER_PARAMS][self.entity_description.key]
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the Smart Plug."""
-        return self.data[CONF_ALIAS]
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return f"{self.data[CONF_DEVICE_ID]}_{self.entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -80,18 +98,3 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.data[CONF_MAC])},
             "sw_version": self.data[CONF_SW_VERSION],
         }
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if switch is on."""
-        return self.data[CONF_STATE]
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
-        await self.hass.async_add_job(self.smartplug.turn_on)
-        await self.coordinator.async_refresh()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        await self.hass.async_add_job(self.smartplug.turn_off)
-        await self.coordinator.async_refresh()
