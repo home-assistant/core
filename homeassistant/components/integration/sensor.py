@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
@@ -120,22 +121,28 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             self._unit_of_measurement = None
         else:
             self._unit_of_measurement = unit_of_measurement
-            self._set_attributes()
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        self._attr_last_reset = dt_util.utc_from_timestamp(0)
         self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
+        self._attr_last_reset = dt_util.utcnow()
         if state:
             try:
                 self._state = Decimal(state.state)
             except ValueError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
+            else:
+                if state.attributes.get(ATTR_LAST_RESET) is None:
+                    self._attr_last_reset = dt_util.utc_from_timestamp(0)
+                else:
+                    self._attr_last_reset = dt_util.parse_datetime(
+                        state.attributes[ATTR_LAST_RESET]
+                    )
 
         @callback
         def calc_integration(event):
