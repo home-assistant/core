@@ -101,7 +101,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
     def _swap_registers(self, registers):
         """Do swap as needed."""
-        if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE]:
+        if self._swap in (CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE):
             # convert [12][34] --> [21][43]
             for i, register in enumerate(registers):
                 registers[i] = int.from_bytes(
@@ -109,7 +109,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                     byteorder="big",
                     signed=False,
                 )
-        if self._swap in [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]:
+        if self._swap in (CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE):
             # convert [12][34] ==> [34][12]
             registers.reverse()
         return registers

@@ -168,13 +168,13 @@ class NetatmoCamera(NetatmoBase, Camera):
             return
 
         if data["home_id"] == self._home_id and data["camera_id"] == self._id:
-            if data[WEBHOOK_PUSH_TYPE] in ["NACamera-off", "NACamera-disconnection"]:
+            if data[WEBHOOK_PUSH_TYPE] in ("NACamera-off", "NACamera-disconnection"):
                 self.is_streaming = False
                 self._status = "off"
-            elif data[WEBHOOK_PUSH_TYPE] in [
+            elif data[WEBHOOK_PUSH_TYPE] in (
                 "NACamera-on",
                 WEBHOOK_NACAMERA_CONNECTION,
-            ]:
+            ):
                 self.is_streaming = True
                 self._status = "on"
             elif data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE:

@@ -114,14 +114,14 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         target_temperature = (
             float(kwargs.get(ATTR_TEMPERATURE)) - self._offset
         ) / self._scale
-        if self._data_type in [
+        if self._data_type in (
             DATA_TYPE_INT16,
             DATA_TYPE_INT32,
             DATA_TYPE_INT64,
             DATA_TYPE_UINT16,
             DATA_TYPE_UINT32,
             DATA_TYPE_UINT64,
-        ]:
+        ):
             target_temperature = int(target_temperature)
         as_bytes = struct.pack(self._structure, target_temperature)
         raw_regs = [
