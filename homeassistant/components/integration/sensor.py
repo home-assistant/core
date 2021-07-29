@@ -4,11 +4,18 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ENERGY,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
     CONF_NAME,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TIME_DAYS,
@@ -20,6 +27,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -112,9 +120,16 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             self._unit_of_measurement = None
         else:
             self._unit_of_measurement = unit_of_measurement
+            self._set_attributes()
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
+
+    def _set_attributes(self):
+        if self._unit_of_measurement in [ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR]:
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -143,6 +158,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 self._unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
                 )
+                self._set_attributes()
 
             try:
                 # integration as the Riemann integral of previous measures.
