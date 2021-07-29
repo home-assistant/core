@@ -18,7 +18,6 @@ from tests.common import MockConfigEntry
 async def test_setup_entry_fail_retrieve(hass, error):
     """Test loading the Prosegur entry."""
 
-    hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -47,7 +46,6 @@ async def test_unload_entry(hass, aioclient_mock):
         json={"data": {"token": "123456789"}},
     )
 
-    hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
