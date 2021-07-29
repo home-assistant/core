@@ -134,7 +134,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         if state:
             try:
                 self._state = Decimal(state.state)
-            except ValueError as err:
+            except (DecimalException, ValueError) as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
             else:
                 last_reset = dt_util.parse_datetime(
