@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, Location
@@ -17,8 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import SurePetcareAPI
 from .const import DOMAIN, SPC, TOPIC_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -112,8 +109,6 @@ class Hub(SurePetcareBinarySensor):
 
         self.async_write_ha_state()
 
-        _LOGGER.debug("🐾  %s updated to: %s", surepy_entity.name, self._attr_state)
-
 
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
@@ -140,8 +135,6 @@ class Pet(SurePetcareBinarySensor):
             self._attr_extra_state_attributes = None
 
         self.async_write_ha_state()
-
-        _LOGGER.debug("🐾  %s updated to: %s", surepy_entity.name, self._attr_state)
 
 
 class DeviceConnectivity(SurePetcareBinarySensor):
@@ -179,5 +172,3 @@ class DeviceConnectivity(SurePetcareBinarySensor):
             self._attr_extra_state_attributes = None
 
         self.async_write_ha_state()
-
-        _LOGGER.debug("🐾  %s updated to: %s", surepy_entity.name, self._attr_state)
