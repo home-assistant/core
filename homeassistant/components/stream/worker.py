@@ -358,11 +358,7 @@ def stream_worker(
     muxer = StreamMuxer(video_stream, audio_stream)
     muxer.reset(stream_state.next_sequence())
 
-    segment = Segment(
-        sequence=stream_state.sequence,
-        dts=start_dts,
-        stream_id=stream_state.stream_id,
-    )
+    segment: Segment | None = None
     part_has_keyframe = False
 
     # Mux the first keyframe, then proceed through the rest of the packets
@@ -379,7 +375,7 @@ def stream_worker(
             continue
 
         # Check for end of segment
-        if packet.is_keyframe:
+        if segment and packet.is_keyframe:
             segment_duration = packet_interval(packet, segment.dts)
             if segment_duration >= MIN_SEGMENT_DURATION:
                 # Flush segment (also flushes the stub part segment)
@@ -397,20 +393,21 @@ def stream_worker(
                 segment.duration = segment_duration
                 # Reinitialize
                 muxer.reset(stream_state.next_sequence())
-                segment = Segment(
-                    sequence=stream_state.sequence,
-                    dts=packet.dts,
-                    stream_id=stream_state.stream_id,
-                )
+                segment = None
 
         # Mux the packet
         muxer.mux_packet(packet)
         data = muxer.read()
         if data:
-            if segment.init is None:
+            if segment is None:
                 # We have our first non-zero byte position. This means the init has just
                 # been written. Put the segment in the queue of each output.
-                segment.init = data
+                segment = Segment(
+                    sequence=stream_state.sequence,
+                    dts=packet.dts,
+                    stream_id=stream_state.stream_id,
+                    init=data,
+                )
                 # Fetch the latest StreamOutputs, which may have changed since the
                 # worker started.
                 for stream_output in stream_state.outputs():
