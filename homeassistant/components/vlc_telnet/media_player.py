@@ -1,4 +1,6 @@
 """Provide functionality to interact with the vlc telnet interface."""
+from __future__ import annotations
+
 from typing import Callable
 
 from python_telnet_vlc import (
@@ -7,7 +9,6 @@ from python_telnet_vlc import (
     ConnectionError as ConnErr,
     LuaError,
     ParseError,
-    VLCTelnet,
 )
 import voluptuous as vol
 
@@ -26,7 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -38,6 +39,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
@@ -67,23 +70,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the vlc platform."""
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    password = config[CONF_PASSWORD]
-
-    try:
-        vlc = VLCTelnet(host, password, port)
-    except AuthError:
-        LOGGER.error("Failed to login to VLC")
-        return
-    except (ConnErr, EOFError):
-        LOGGER.error("Failed to connect to VLC. Trying again")
-        vlc = None
-
-    add_entities([VlcDevice(vlc, name, host, port, password)], True)
+    LOGGER.warning(
+        "Loading VLC media player Telnet integration via platform setup is deprecated; "
+        "Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(

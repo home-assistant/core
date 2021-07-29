@@ -1,5 +1,8 @@
 """Config flow for VLC media player Telnet integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
 from python_telnet_vlc.vlctelnet import AuthError
@@ -7,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN  # pylint:disable=unused-import
 
@@ -78,6 +82,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle the import step."""
+        return await self.async_step_user(user_input)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
