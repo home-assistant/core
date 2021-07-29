@@ -1,7 +1,7 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Final, cast
 
 from homeassistant.components import sensor
@@ -269,7 +269,10 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     def last_reset(self) -> datetime | None:
         """State class of sensor."""
         if self.description.last_reset == LAST_RESET_UPTIME:
-            return dt.utcnow() - timedelta(seconds=self.wrapper.device.status["uptime"])
+            self._last_value = get_device_uptime(
+                self.wrapper.device.status, self._last_value
+            )
+            return dt.parse_datetime(self._last_value)
 
         if self.description.last_reset == LAST_RESET_NEVER:
             return dt.utc_from_timestamp(0)
