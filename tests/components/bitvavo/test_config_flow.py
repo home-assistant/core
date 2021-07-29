@@ -86,7 +86,12 @@ async def test_create_entry(hass):
     with patch(
         "homeassistant.components.bitvavo.BitvavoClient.get_price_ticker",
         return_value=json.loads(load_fixture("bitvavo/ticker_data.json")),
-    ), patch("homeassistant.components.bitvavo.async_setup_entry", return_value=True):
+    ), patch(
+        "homeassistant.components.bitvavo.BitvavoClient.get_balance",
+        return_value=json.loads(load_fixture("bitvavo/balance_data.json")),
+    ), patch(
+        "homeassistant.components.bitvavo.async_setup_entry", return_value=True
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
