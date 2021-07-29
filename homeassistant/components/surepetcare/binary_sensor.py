@@ -109,9 +109,16 @@ class Hub(SurePetcareBinarySensor):
                 ),
             }
         else:
-            self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
+            self._attr_extra_state_attributes = None
+
         self.async_write_ha_state()
+
+        _LOGGER.debug(
+            "🐾  %s updated to: %s %s",
+            surepy_entity.name,
+            self._attr_state,
+            self._attr_unit_of_measurement,
+        )
 
 
 class Pet(SurePetcareBinarySensor):
@@ -136,9 +143,16 @@ class Pet(SurePetcareBinarySensor):
                 "where": state.where,
             }
         else:
-            self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
+            self._attr_extra_state_attributes = None
+
         self.async_write_ha_state()
+
+        _LOGGER.debug(
+            "🐾  %s updated to: %s %s",
+            surepy_entity.name,
+            self._attr_state,
+            self._attr_unit_of_measurement,
+        )
 
 
 class DeviceConnectivity(SurePetcareBinarySensor):
@@ -169,6 +183,13 @@ class DeviceConnectivity(SurePetcareBinarySensor):
                 "hub_rssi": f'{state["signal"]["hub_rssi"]:.2f}',
             }
         else:
-            self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
+            self._attr_extra_state_attributes = None
+
         self.async_write_ha_state()
+
+        _LOGGER.debug(
+            "🐾  %s updated to: %s %s",
+            surepy_entity.name,
+            self._attr_state,
+            self._attr_unit_of_measurement,
+        )
