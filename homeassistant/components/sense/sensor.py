@@ -225,6 +225,7 @@ class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
