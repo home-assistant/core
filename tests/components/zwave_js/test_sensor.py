@@ -12,10 +12,14 @@ from homeassistant.components.zwave_js.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -25,6 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     AIR_TEMPERATURE_SENSOR,
     BASIC_SENSOR,
+    CURRENT_SENSOR,
     DATETIME_LAST_RESET,
     DATETIME_ZERO,
     ENERGY_SENSOR,
@@ -34,6 +39,7 @@ from .common import (
     METER_SENSOR,
     NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
+    VOLTAGE_SENSOR,
 )
 
 
@@ -71,6 +77,20 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.attributes["unit_of_measurement"] == ENERGY_KILO_WATT_HOUR
     assert state.attributes["device_class"] == DEVICE_CLASS_ENERGY
     assert state.attributes["state_class"] == STATE_CLASS_MEASUREMENT
+
+    state = hass.states.get(VOLTAGE_SENSOR)
+
+    assert state
+    assert state.state == "122.96"
+    assert state.attributes["unit_of_measurement"] == ELECTRIC_POTENTIAL_VOLT
+    assert state.attributes["device_class"] == DEVICE_CLASS_VOLTAGE
+
+    state = hass.states.get(CURRENT_SENSOR)
+
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes["unit_of_measurement"] == ELECTRIC_CURRENT_AMPERE
+    assert state.attributes["device_class"] == DEVICE_CLASS_CURRENT
 
 
 async def test_disabled_notification_sensor(hass, multisensor_6, integration):
