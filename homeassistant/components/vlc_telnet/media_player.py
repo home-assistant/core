@@ -139,6 +139,12 @@ class VlcDevice(MediaPlayerEntity):
                 LOGGER.debug("Connection error: %s", err)
                 return
 
+            try:
+                self._vlc.login()
+            except AuthError:
+                LOGGER.error("Failed to login to VLC")
+                return
+
             self._state = STATE_IDLE
             self._available = True
             LOGGER.info("Connected to vlc host: %s", self._vlc.host)
