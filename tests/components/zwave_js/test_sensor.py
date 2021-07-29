@@ -14,9 +14,11 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
+    BASIC_SENSOR,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
     ID_LOCK_CONFIG_PARAMETER_SENSOR,
+    INDICATOR_SENSOR,
     NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
 )
@@ -79,6 +81,28 @@ async def test_disabled_notification_sensor(hass, multisensor_6, integration):
     state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
     assert state.state == "Motion detection"
     assert state.attributes["value"] == 8
+
+
+async def test_disabled_indcator_sensor(
+    hass, climate_radio_thermostat_ct100_plus, integration
+):
+    """Test sensor is created from Indicator CC and is disabled."""
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(INDICATOR_SENSOR)
+
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+
+
+async def test_disabled_basic_sensor(hass, ge_in_wall_dimmer_switch, integration):
+    """Test sensor is created from Basic CC and is disabled."""
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BASIC_SENSOR)
+
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration):
