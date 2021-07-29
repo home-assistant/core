@@ -3,7 +3,7 @@
   "name": "RainMachine",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rainmachine",
-  "requirements": ["regenmaschine==3.0.0"],
+  "requirements": ["regenmaschine==3.1.5"],
   "codeowners": ["@bachya"],
   "iot_class": "local_polling",
   "homekit": {

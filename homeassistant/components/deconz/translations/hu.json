@@ -14,6 +14,7 @@
         "flow_title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 ({host})",
         "step": {
             "hassio_confirm": {
+                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a Home Assistant-ot, hogy csatlakozzon a (z) {addon} \u00e1ltal biztos\u00edtott deCONZ \u00e1tj\u00e1r\u00f3hoz?",
                 "title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 a Supervisor kieg\u00e9sz\u00edt\u0151 seg\u00edts\u00e9g\u00e9vel"
             },
             "link": {
@@ -89,7 +90,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Enged\u00e9lyezze a deCONZ CLIP \u00e9rz\u00e9kel\u0151ket",
-                    "allow_deconz_groups": "DeCONZ f\u00e9nycsoportok enged\u00e9lyez\u00e9se"
+                    "allow_deconz_groups": "DeCONZ f\u00e9nycsoportok enged\u00e9lyez\u00e9se",
+                    "allow_new_devices": "Enged\u00e9lyezze az \u00faj eszk\u00f6z\u00f6k automatikus hozz\u00e1ad\u00e1s\u00e1t"
                 },
                 "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa"
             }

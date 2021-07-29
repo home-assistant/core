@@ -2,9 +2,11 @@
 import json
 from unittest.mock import patch
 
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers import entity_registry as er
 
 from . import STATIONS
 
@@ -16,7 +18,7 @@ async def test_async_setup_entry(hass):
     """Test a successful setup entry."""
     await init_integration(hass)
 
-    state = hass.states.get("air_quality.home")
+    state = hass.states.get("sensor.home_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "4"
@@ -95,3 +97,21 @@ async def test_migrate_device_and_config_entry(hass):
             config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123")}
         )
         assert device_entry.id == migrated_device_entry.id
+
+
+async def test_remove_air_quality_entities(hass):
+    """Test remove air_quality entities from registry."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        AIR_QUALITY_PLATFORM,
+        DOMAIN,
+        "123",
+        suggested_object_id="home",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("air_quality.home")
+    assert entry is None

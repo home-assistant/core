@@ -368,7 +368,7 @@ class KonnectedView(HomeAssistantView):
 
         zone_data["device_id"] = device_id
 
-        for attr in ["state", "temp", "humi", "addr"]:
+        for attr in ("state", "temp", "humi", "addr"):
             value = payload.get(attr)
             handler = HANDLERS.get(attr)
             if value is not None and handler:

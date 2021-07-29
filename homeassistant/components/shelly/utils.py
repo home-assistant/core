@@ -3,19 +3,19 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import Any, Final, cast
 
 import aioshelly
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
-    COAP,
     CONF_COAP_PORT,
-    DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DOMAIN,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -24,10 +24,12 @@ from .const import (
     UPTIME_DEVIATION,
 )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
-async def async_remove_shelly_entity(hass, domain, unique_id):
+async def async_remove_shelly_entity(
+    hass: HomeAssistant, domain: str, unique_id: str
+) -> None:
     """Remove a Shelly entity."""
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
@@ -36,7 +38,7 @@ async def async_remove_shelly_entity(hass, domain, unique_id):
         entity_reg.async_remove(entity_id)
 
 
-def temperature_unit(block_info: dict) -> str:
+def temperature_unit(block_info: dict[str, Any]) -> str:
     """Detect temperature unit."""
     if block_info[aioshelly.BLOCK_VALUE_UNIT] == "F":
         return TEMP_FAHRENHEIT
@@ -45,7 +47,7 @@ def temperature_unit(block_info: dict) -> str:
 
 def get_device_name(device: aioshelly.Device) -> str:
     """Naming for device."""
-    return device.settings["name"] or device.settings["device"]["hostname"]
+    return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
 
 
 def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> int:
@@ -96,7 +98,7 @@ def get_device_channel_name(
     ):
         return entity_name
 
-    channel_name = None
+    channel_name: str | None = None
     mode = block.type + "s"
     if mode in device.settings:
         channel_name = device.settings[mode][int(block.channel)].get("name")
@@ -112,7 +114,7 @@ def get_device_channel_name(
     return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
-def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
+def is_momentary_input(settings: dict[str, Any], block: aioshelly.Block) -> bool:
     """Return true if input button settings is set to a momentary type."""
     # Shelly Button type is fixed to momentary and no btn_type
     if settings["device"]["type"] in SHBTN_MODELS:
@@ -134,7 +136,7 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
     return button_type in ["momentary", "momentary_on_release"]
 
 
-def get_device_uptime(status: dict, last_uptime: str) -> str:
+def get_device_uptime(status: dict[str, Any], last_uptime: str) -> str:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=status["uptime"])
 
@@ -178,22 +180,8 @@ def get_input_triggers(
     return triggers
 
 
-def get_device_wrapper(hass: HomeAssistant, device_id: str):
-    """Get a Shelly device wrapper for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
-    for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
-        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(COAP)
-
-        if wrapper and wrapper.device_id == device_id:
-            return wrapper
-
-    return None
-
-
 @singleton.singleton("shelly_coap")
-async def get_coap_context(hass):
+async def get_coap_context(hass: HomeAssistant) -> aioshelly.COAP:
     """Get CoAP context to be used in all Shelly devices."""
     context = aioshelly.COAP()
     if DOMAIN in hass.data:
@@ -204,7 +192,7 @@ async def get_coap_context(hass):
     await context.initialize(port)
 
     @callback
-    def shutdown_listener(ev):
+    def shutdown_listener(ev: EventType) -> None:
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
@@ -212,7 +200,7 @@ async def get_coap_context(hass):
     return context
 
 
-def get_device_sleep_period(settings: dict) -> int:
+def get_device_sleep_period(settings: dict[str, Any]) -> int:
     """Return the device sleep period in seconds or 0 for non sleeping devices."""
     sleep_period = 0
 

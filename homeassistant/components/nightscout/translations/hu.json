@@ -14,7 +14,9 @@
                 "data": {
                     "api_key": "API kulcs",
                     "url": "URL"
-                }
+                },
+                "description": "- URL: a nightcout p\u00e9ld\u00e1ny c\u00edme. Vagyis: https://myhomeassistant.duckdns.org:5423\n - API kulcs (opcion\u00e1lis): Csak akkor haszn\u00e1lja, ha a p\u00e9ld\u00e1nya v\u00e9dett (auth_default_roles! = Olvashat\u00f3).",
+                "title": "Adja meg a Nightscout szerver adatait."
             }
         }
     }

@@ -23,7 +23,7 @@
                     "url": "URL",
                     "username": "Nome utente"
                 },
-                "description": "Immettere i dettagli di accesso al dispositivo. La specifica di nome utente e password \u00e8 facoltativa, ma abilita il supporto per altre funzionalit\u00e0 di integrazione. D'altra parte, l'uso di una connessione autorizzata pu\u00f2 causare problemi di accesso all'interfaccia Web del dispositivo dall'esterno di Home Assistant mentre l'integrazione \u00e8 attiva e viceversa.",
+                "description": "Inserisci i dettagli di accesso al dispositivo.",
                 "title": "Configura Huawei LTE"
             }
         }
@@ -35,7 +35,8 @@
                     "name": "Nome del servizio di notifica (la modifica richiede il riavvio)",
                     "recipient": "Destinatari della notifica SMS",
                     "track_new_devices": "Traccia nuovi dispositivi",
-                    "track_wired_clients": "Tieni traccia dei client di rete cablata"
+                    "track_wired_clients": "Tieni traccia dei client di rete cablata",
+                    "unauthenticated_mode": "Modalit\u00e0 non autenticata (la modifica richiede il ricaricamento)"
                 }
             }
         }

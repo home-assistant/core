@@ -7,17 +7,17 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "unknown": "Unerwarteter Fehler",
-            "unsupported_version": "Das BleBox-Ger\u00e4t hat eine veraltete Firmware. Bitte aktualisieren Sie es zuerst."
+            "unsupported_version": "Das BleBox-Ger\u00e4t hat eine veraltete Firmware. Bitte aktualisiere es zuerst."
         },
         "flow_title": "{name} ( {host} )",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP Adresse",
+                    "host": "IP-Adresse",
                     "port": "Port"
                 },
-                "description": "Richten Sie Ihre BleBox f\u00fcr die Integration mit dem Home Assistant ein.",
-                "title": "Richten Sie Ihr BleBox-Ger\u00e4t ein"
+                "description": "Richte deine BleBox f\u00fcr die Integration mit dem Home Assistant ein.",
+                "title": "Richte dein BleBox-Ger\u00e4t ein"
             }
         }
     }

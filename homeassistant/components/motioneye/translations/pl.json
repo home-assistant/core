@@ -25,5 +25,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "Skonfiguruj webhook motionEye, aby zg\u0142asza\u0107 zdarzenia do Home Assistanta",
+                    "webhook_set_overwrite": "Nadpisz nierozpoznane webhooki"
+                }
+            }
+        }
     }
 }

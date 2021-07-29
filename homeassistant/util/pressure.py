@@ -1,4 +1,6 @@
 """Pressure util functions."""
+from __future__ import annotations
+
 from numbers import Number
 
 from homeassistant.const import (
@@ -11,9 +13,15 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
-VALID_UNITS = [PRESSURE_PA, PRESSURE_HPA, PRESSURE_MBAR, PRESSURE_INHG, PRESSURE_PSI]
+VALID_UNITS: tuple[str, ...] = (
+    PRESSURE_PA,
+    PRESSURE_HPA,
+    PRESSURE_MBAR,
+    PRESSURE_INHG,
+    PRESSURE_PSI,
+)
 
-UNIT_CONVERSION = {
+UNIT_CONVERSION: dict[str, float] = {
     PRESSURE_PA: 1,
     PRESSURE_HPA: 1 / 100,
     PRESSURE_MBAR: 1 / 100,

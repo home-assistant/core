@@ -207,7 +207,7 @@ class RadarrSensor(SensorEntity):
                         filter(lambda x: x["path"] in self.included, res.json())
                     )
                 self._state = "{:.2f}".format(
-                    to_unit(sum([data["freeSpace"] for data in self.data]), self._unit)
+                    to_unit(sum(data["freeSpace"] for data in self.data), self._unit)
                 )
             elif self.type == "status":
                 self.data = res.json()

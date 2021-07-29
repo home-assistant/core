@@ -383,6 +383,13 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "lock.poorly_installed_door",
+        "name": {"name": "Poorly Installed Door"},
+        "traits": ["action.devices.traits.LockUnlock"],
+        "type": "action.devices.types.LOCK",
+        "willReportState": False,
+    },
+    {
         "id": "alarm_control_panel.alarm",
         "name": {"name": "Alarm"},
         "traits": ["action.devices.traits.ArmDisarm"],

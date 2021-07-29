@@ -89,7 +89,7 @@ async def async_setup_entry(
         sensors.extend(
             [
                 ToonSolarDeviceSensor(coordinator, key=key)
-                for key in [
+                for key in (
                     "solar_value",
                     "solar_maximum",
                     "solar_produced",
@@ -98,7 +98,7 @@ async def async_setup_entry(
                     "power_usage_day_from_grid_usage",
                     "power_usage_day_to_grid_usage",
                     "power_usage_current_covered_by_solar",
-                ]
+                )
             ]
         )
 
