@@ -142,9 +142,6 @@ aiomusiccast==0.8.2
 # homeassistant.components.notion
 aionotion==3.0.2
 
-# homeassistant.components.automate
-aiopulse2==0.6.0
-
 # homeassistant.components.acmeda
 aiopulse==0.4.2
 
