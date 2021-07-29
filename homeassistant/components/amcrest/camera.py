@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import NamedTuple
 
 from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
@@ -89,18 +90,27 @@ _SRV_PTZ_SCHEMA = _SRV_SCHEMA.extend(
     }
 )
 
+
+class CameraEntry(NamedTuple):
+    """Metadata for camera."""
+
+    schema: str
+    func: str
+    params: tuple
+
+
 CAMERA_SERVICES = {
-    _SRV_EN_REC: (_SRV_SCHEMA, "async_enable_recording", ()),
-    _SRV_DS_REC: (_SRV_SCHEMA, "async_disable_recording", ()),
-    _SRV_EN_AUD: (_SRV_SCHEMA, "async_enable_audio", ()),
-    _SRV_DS_AUD: (_SRV_SCHEMA, "async_disable_audio", ()),
-    _SRV_EN_MOT_REC: (_SRV_SCHEMA, "async_enable_motion_recording", ()),
-    _SRV_DS_MOT_REC: (_SRV_SCHEMA, "async_disable_motion_recording", ()),
-    _SRV_GOTO: (_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
-    _SRV_CBW: (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
-    _SRV_TOUR_ON: (_SRV_SCHEMA, "async_start_tour", ()),
-    _SRV_TOUR_OFF: (_SRV_SCHEMA, "async_stop_tour", ()),
-    _SRV_PTZ_CTRL: (
+    _SRV_EN_REC: CameraEntry(_SRV_SCHEMA, "async_enable_recording", ()),
+    _SRV_DS_REC: CameraEntry(_SRV_SCHEMA, "async_disable_recording", ()),
+    _SRV_EN_AUD: CameraEntry(_SRV_SCHEMA, "async_enable_audio", ()),
+    _SRV_DS_AUD: CameraEntry(_SRV_SCHEMA, "async_disable_audio", ()),
+    _SRV_EN_MOT_REC: CameraEntry(_SRV_SCHEMA, "async_enable_motion_recording", ()),
+    _SRV_DS_MOT_REC: CameraEntry(_SRV_SCHEMA, "async_disable_motion_recording", ()),
+    _SRV_GOTO: CameraEntry(_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
+    _SRV_CBW: CameraEntry(_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
+    _SRV_TOUR_ON: CameraEntry(_SRV_SCHEMA, "async_start_tour", ()),
+    _SRV_TOUR_OFF: CameraEntry(_SRV_SCHEMA, "async_stop_tour", ()),
+    _SRV_PTZ_CTRL: CameraEntry(
         _SRV_PTZ_SCHEMA,
         "async_ptz_control",
         (_ATTR_PTZ_MOV, _ATTR_PTZ_TT),
@@ -311,7 +321,7 @@ class AmcrestCam(Camera):
                 async_dispatcher_connect(
                     self.hass,
                     service_signal(service, self.entity_id),
-                    getattr(self, params[1]),
+                    getattr(self, params.func),
                 )
             )
         self._unsub_dispatcher.append(

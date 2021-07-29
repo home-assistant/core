@@ -327,13 +327,13 @@ def setup(hass, config):
 
     async def async_service_handler(call):
         args = []
-        for arg in CAMERA_SERVICES[call.service][2]:
+        for arg in CAMERA_SERVICES[call.service].params:
             args.append(call.data[arg])
         for entity_id in await async_extract_from_service(call):
             async_dispatcher_send(hass, service_signal(call.service, entity_id), *args)
 
     for service, params in CAMERA_SERVICES.items():
-        hass.services.register(DOMAIN, service, async_service_handler, params[0])
+        hass.services.register(DOMAIN, service, async_service_handler, params.schema)
 
     return True
 
