@@ -6,16 +6,16 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
     CONF_NAME,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TIME_DAYS,
@@ -124,12 +124,8 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-
-    def _set_attributes(self):
-        if self._unit_of_measurement in [ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR]:
-            self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_last_reset = dt_util.utc_from_timestamp(0)
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -158,8 +154,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 self._unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
                 )
-                self._set_attributes()
-
+            if self.device_class is None:
+                device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+                if device_class == DEVICE_CLASS_POWER:
+                    self._attr_device_class = DEVICE_CLASS_ENERGY
             try:
                 # integration as the Riemann integral of previous measures.
                 area = 0
