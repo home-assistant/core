@@ -1,7 +1,7 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Final, cast
 
 from homeassistant.components import sensor
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt
 
-from .const import SHAIR_MAX_WORK_HOURS
+from .const import LAST_RESET_NEVER, LAST_RESET_UPTIME, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -114,6 +114,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        last_reset=LAST_RESET_UPTIME,
     ),
     ("emeter", "energy"): BlockAttributeDescription(
         name="Energy",
@@ -121,7 +122,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        last_reset=LAST_RESET_NEVER,
     ),
     ("emeter", "energyReturned"): BlockAttributeDescription(
         name="Energy Returned",
@@ -129,7 +130,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        last_reset=LAST_RESET_NEVER,
     ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
@@ -138,6 +139,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_ENERGY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        last_reset=LAST_RESET_UPTIME,
     ),
     ("relay", "energy"): BlockAttributeDescription(
         name="Energy",
@@ -145,6 +147,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        last_reset=LAST_RESET_UPTIME,
     ),
     ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
@@ -152,6 +155,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        last_reset=LAST_RESET_UPTIME,
     ),
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
@@ -264,7 +268,13 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """State class of sensor."""
-        return self.description.last_reset
+        if not self.description.last_reset:
+            return None
+
+        if self.description.last_reset == LAST_RESET_UPTIME:
+            return dt.utcnow() - timedelta(seconds=self.wrapper.device.status["uptime"])
+
+        return dt.utc_from_timestamp(0)
 
     @property
     def unit_of_measurement(self) -> str | None:
