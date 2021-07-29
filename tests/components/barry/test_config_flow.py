@@ -99,7 +99,7 @@ async def test_user_config(hass):
     flow.hass = hass
     user_input = {CONF_ACCESS_TOKEN: "valid"}
 
-    result = await flow.async_step_import(user_input)
+    result = await flow.async_step_user(user_input)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
 
