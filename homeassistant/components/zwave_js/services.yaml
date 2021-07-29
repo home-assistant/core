@@ -232,7 +232,7 @@ ping:
 
 reset_meter:
   name: Reset meter(s) on a node
-  description: Resets the meter(s) on a node.
+  description: The service will reset all meters on the same endpoint of the entity(s) you target, so you should only choose one meter entity for a given node, endpoint, and meter type (if applicable). If you target multiple entities on the same node, endpoint, and meter type, you will trigger multiple reset calls which will generate unnecessary traffic on your network.
   target:
     entity:
       domain: sensor
