@@ -139,6 +139,7 @@ class VlcDevice(MediaPlayerEntity):
 
             self._state = STATE_IDLE
             self._available = True
+            LOGGER.info("Connected to vlc host: %s", self._vlc.host)
 
         try:
             status = self._vlc.status()
