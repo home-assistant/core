@@ -1,6 +1,7 @@
 """Support for monitoring an SABnzbd NZB client."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -8,6 +9,7 @@ from pysabnzbd import SabnzbdApi, SabnzbdApiException
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_SABNZBD
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -52,18 +54,44 @@ SERVICE_SET_SPEED = "set_speed"
 
 SIGNAL_SABNZBD_UPDATED = "sabnzbd_updated"
 
+
+@dataclass
+class SensorEntry(SensorEntityDescription):
+    """Metadata for sensor."""
+
+
 SENSOR_TYPES = {
-    "current_status": ["Status", None, "status"],
-    "speed": ["Speed", DATA_RATE_MEGABYTES_PER_SECOND, "kbpersec"],
-    "queue_size": ["Queue", DATA_MEGABYTES, "mb"],
-    "queue_remaining": ["Left", DATA_MEGABYTES, "mbleft"],
-    "disk_size": ["Disk", DATA_GIGABYTES, "diskspacetotal1"],
-    "disk_free": ["Disk Free", DATA_GIGABYTES, "diskspace1"],
-    "queue_count": ["Queue Count", None, "noofslots_total"],
-    "day_size": ["Daily Total", DATA_GIGABYTES, "day_size"],
-    "week_size": ["Weekly Total", DATA_GIGABYTES, "week_size"],
-    "month_size": ["Monthly Total", DATA_GIGABYTES, "month_size"],
-    "total_size": ["Total", DATA_GIGABYTES, "total_size"],
+    "current_status": SensorEntry(name="Status", key="status"),
+    "speed": SensorEntry(
+        name="Speed", unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND, key="kbpersec"
+    ),
+    "queue_size": SensorEntry(
+        name="Queue", unit_of_measurement=DATA_MEGABYTES, key="mb"
+    ),
+    "queue_remaining": SensorEntry(
+        name="Left", unit_of_measurement=DATA_MEGABYTES, key="mbleft"
+    ),
+    "disk_size": SensorEntry(
+        name="Disk", unit_of_measurement=DATA_GIGABYTES, key="diskspacetotal1"
+    ),
+    "disk_free": SensorEntry(
+        name="Disk Free", unit_of_measurement=DATA_GIGABYTES, key="diskspace1"
+    ),
+    "queue_count": SensorEntry(
+        name="Queue Count", unit_of_measurement=None, key="noofslots_total"
+    ),
+    "day_size": SensorEntry(
+        name="Daily Total", unit_of_measurement=DATA_GIGABYTES, key="day_size"
+    ),
+    "week_size": SensorEntry(
+        name="Weekly Total", unit_of_measurement=DATA_GIGABYTES, key="week_size"
+    ),
+    "month_size": SensorEntry(
+        name="Monthly Total", unit_of_measurement=DATA_GIGABYTES, key="month_size"
+    ),
+    "total_size": SensorEntry(
+        name="Total", unit_of_measurement=DATA_GIGABYTES, key="total_size"
+    ),
 }
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
