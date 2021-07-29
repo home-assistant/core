@@ -1,0 +1,15 @@
+{
+  "domain": "pcf8574",
+  "name": "pcf8574",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/pcf8574",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@asauerwein"
+  ],
+  "iot_class": "local_polling"
+}
