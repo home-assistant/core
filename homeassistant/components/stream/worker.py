@@ -1,7 +1,7 @@
 """Provides the worker thread needed for processing streams."""
 from __future__ import annotations
 
-from collections import deque
+from collections import defaultdict, deque
 from collections.abc import Generator, Iterator, Mapping
 from io import BytesIO
 import logging
@@ -248,7 +248,9 @@ class TimestampValidator:
     def __init__(self) -> None:
         """Initialize the TimestampValidator."""
         # Decompression timestamp of last packet in each stream
-        self._last_dts: dict[av.stream.Stream, float] = {}
+        self._last_dts: dict[av.stream.Stream, int | float] = defaultdict(
+            lambda: float("-inf")
+        )
         # Number of consecutive missing decompression timestamps
         self._missing_dts = 0
 
@@ -264,7 +266,7 @@ class TimestampValidator:
             return False
         self._missing_dts = 0
         # Discard when dts is not monotonic. Terminate if gap is too wide.
-        prev_dts = self._last_dts.get(packet.stream, float("-inf"))
+        prev_dts = self._last_dts[packet.stream]
         if packet.dts <= prev_dts:
             gap = packet.time_base * (prev_dts - packet.dts)
             if gap > MAX_TIMESTAMP_GAP:
