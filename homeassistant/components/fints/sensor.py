@@ -1,8 +1,10 @@
 """Read the balance of your bank accounts via FinTS."""
+from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.dialog import FinTSDialogError
@@ -165,8 +167,8 @@ class FinTsAccount(SensorEntity):
         self._client = client
         self._account = account
         self._name = name
-        self._balance: float = None
-        self._currency: str = None
+        self._balance: float | None = None
+        self._currency: str | None = None
 
     def update(self) -> None:
         """Get the current balance and currency for the account."""
@@ -182,12 +184,12 @@ class FinTsAccount(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> float:
+    def state(self) -> float | None:
         """Return the balance of the account as state."""
         return self._balance
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Use the currency as unit of measurement."""
         return self._currency
 
@@ -217,8 +219,8 @@ class FinTsHoldingsAccount(SensorEntity):
         self._client = client
         self._name = name
         self._account = account
-        self._holdings = []
-        self._total: float = None
+        self._holdings: list[Any] = []
+        self._total: float | None = None
 
     def update(self) -> None:
         """Get the current holdings for the account."""
@@ -227,7 +229,7 @@ class FinTsHoldingsAccount(SensorEntity):
         self._total = sum(h.total_value for h in self._holdings)
 
     @property
-    def state(self) -> float:
+    def state(self) -> float | None:
         """Return total market value as state."""
         return self._total
 
