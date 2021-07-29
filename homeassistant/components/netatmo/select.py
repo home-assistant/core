@@ -13,7 +13,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .climate import get_all_home_ids
 from .const import (
     DATA_HANDLER,
     DATA_SCHEDULES,
@@ -23,6 +22,7 @@ from .const import (
     SIGNAL_NAME,
 )
 from .data_handler import HOMEDATA_DATA_CLASS_NAME, NetatmoDataHandler
+from .helper import get_all_home_ids
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,8 +42,20 @@ async def async_setup_entry(
     if not home_data or home_data.raw_data == {}:
         raise PlatformNotReady
 
-    if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
-        raise PlatformNotReady
+    for home_id in get_all_home_ids(home_data):
+        hass.data[DOMAIN][DATA_SCHEDULES].update(
+            {
+                home_id: {
+                    schedule_id: schedule_data.get("name")
+                    for schedule_id, schedule_data in (
+                        data_handler.data[HOMEDATA_DATA_CLASS_NAME]
+                        .schedules[home_id]
+                        .items()
+                    )
+                }
+            }
+        )
+    _LOGGER.debug("Adding climate schedules %s", hass.data[DOMAIN][DATA_SCHEDULES])
 
     entities = [
         NetatmoScheduleSelect(
@@ -51,8 +63,7 @@ async def async_setup_entry(
             home_id,
             list(hass.data[DOMAIN][DATA_SCHEDULES][home_id].values()),
         )
-        for home_id in get_all_home_ids(home_data)
-        if home_id in hass.data[DOMAIN][DATA_SCHEDULES]
+        for home_id in hass.data[DOMAIN][DATA_SCHEDULES]
     ]
 
     _LOGGER.debug("Adding climate schedule select entities %s", entities)
