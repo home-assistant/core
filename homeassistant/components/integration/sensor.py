@@ -161,9 +161,11 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 self._unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
                 )
-            if self.device_class is None:
-                if new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER:
-                    self._attr_device_class = DEVICE_CLASS_ENERGY
+            if (
+                self.device_class is None
+                and new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+            ):
+                self._attr_device_class = DEVICE_CLASS_ENERGY
             try:
                 # integration as the Riemann integral of previous measures.
                 area = 0
