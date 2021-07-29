@@ -18,7 +18,7 @@ async def test_load_unload_config_entry(
     hass_ws_client,
 ) -> None:
     """Test the Forecast.Solar configuration entry loading/unloading."""
-    mock_forecast_solar.estimate.return_value.watts = {
+    mock_forecast_solar.estimate.return_value.wh_hours = {
         datetime(2021, 6, 27, 13, 0, tzinfo=timezone.utc): 12,
         datetime(2021, 6, 27, 14, 0, tzinfo=timezone.utc): 8,
     }
@@ -41,8 +41,10 @@ async def test_load_unload_config_entry(
     assert result["success"]
     assert result["result"] == {
         mock_config_entry.entry_id: {
-            "2021-06-27T13:00:00+00:00": 12,
-            "2021-06-27T14:00:00+00:00": 8,
+            "wh_hours": {
+                "2021-06-27T13:00:00+00:00": 12,
+                "2021-06-27T14:00:00+00:00": 8,
+            }
         }
     }
 

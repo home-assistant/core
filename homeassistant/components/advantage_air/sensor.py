@@ -51,17 +51,11 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         """Initialize the Advantage Air timer control."""
         super().__init__(instance, ac_key)
         self.action = action
-        self._time_key = f"countDownTo{self.action}"
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._ac["name"]} Time To {self.action}'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{self.action}'
+        self._time_key = f"countDownTo{action}"
+        self._attr_name = f'{self._ac["name"]} Time To {action}'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{action}'
+        )
 
     @property
     def state(self):
@@ -87,15 +81,13 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     _attr_unit_of_measurement = PERCENTAGE
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} Vent'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-vent'
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Zone Vent Sensor."""
+        super().__init__(instance, ac_key, zone_key=zone_key)
+        self._attr_name = f'{self._zone["name"]} Vent'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
+        )
 
     @property
     def state(self):
@@ -118,15 +110,13 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     _attr_unit_of_measurement = PERCENTAGE
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} Signal'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-signal'
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Zone wireless signal sensor."""
+        super().__init__(instance, ac_key, zone_key=zone_key)
+        self._attr_name = f'{self._zone["name"]} Signal'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
+        )
 
     @property
     def state(self):

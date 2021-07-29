@@ -1,6 +1,7 @@
 """Config flow for Keenetic NDMS2."""
 from __future__ import annotations
 
+from typing import Any
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
@@ -50,7 +51,9 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return KeeneticOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -135,7 +138,9 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self._interface_options = {}
 
-    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
             ROUTER
@@ -152,7 +157,9 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         }
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

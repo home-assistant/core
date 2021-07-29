@@ -41,6 +41,7 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     gios = Gios(user_input[CONF_STATION_ID], websession)
                     await gios.async_update()
 
+                assert gios.station_name is not None
                 return self.async_create_entry(
                     title=gios.station_name,
                     data=user_input,

@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 
 from ondilo import OndiloError
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
@@ -25,60 +24,58 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-
-class OndiloIOCSensorMetadata(NamedTuple):
-    """Sensor metadata for an individual Ondilo IOC sensor."""
-
-    name: str
-    unit_of_measurement: str | None
-    icon: str | None
-    device_class: str | None
-
-
-SENSOR_TYPES: dict[str, OndiloIOCSensorMetadata] = {
-    "temperature": OndiloIOCSensorMetadata(
-        "Temperature",
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
         unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
-    "orp": OndiloIOCSensorMetadata(
-        "Oxydo Reduction Potential",
+    SensorEntityDescription(
+        key="orp",
+        name="Oxydo Reduction Potential",
         unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
         device_class=None,
     ),
-    "ph": OndiloIOCSensorMetadata(
-        "pH",
+    SensorEntityDescription(
+        key="ph",
+        name="pH",
         unit_of_measurement=None,
         icon="mdi:pool",
         device_class=None,
     ),
-    "tds": OndiloIOCSensorMetadata(
-        "TDS",
+    SensorEntityDescription(
+        key="tds",
+        name="TDS",
         unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:pool",
         device_class=None,
     ),
-    "battery": OndiloIOCSensorMetadata(
-        "Battery",
+    SensorEntityDescription(
+        key="battery",
+        name="Battery",
         unit_of_measurement=PERCENTAGE,
         icon=None,
         device_class=DEVICE_CLASS_BATTERY,
     ),
-    "rssi": OndiloIOCSensorMetadata(
-        "RSSI",
+    SensorEntityDescription(
+        key="rssi",
+        name="RSSI",
         unit_of_measurement=PERCENTAGE,
         icon=None,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
     ),
-    "salt": OndiloIOCSensorMetadata(
-        "Salt",
+    SensorEntityDescription(
+        key="salt",
+        name="Salt",
         unit_of_measurement="mg/L",
         icon="mdi:pool",
         device_class=None,
     ),
-}
+)
+
 
 SCAN_INTERVAL = timedelta(hours=1)
 _LOGGER = logging.getLogger(__name__)
@@ -116,9 +113,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
     for poolidx, pool in enumerate(coordinator.data):
-        for sensor_idx, sensor in enumerate(pool["sensors"]):
-            if sensor["data_type"] in SENSOR_TYPES:
-                entities.append(OndiloICO(coordinator, poolidx, sensor_idx))
+        entities.extend(
+            [
+                OndiloICO(coordinator, poolidx, description)
+                for sensor in pool["sensors"]
+                for description in SENSOR_TYPES
+                if description.key == sensor["data_type"]
+            ]
+        )
 
     async_add_entities(entities)
 
@@ -127,22 +129,21 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, poolidx: int, sensor_idx: int
+        self,
+        coordinator: DataUpdateCoordinator,
+        poolidx: int,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize sensor entity with data from coordinator."""
         super().__init__(coordinator)
+        self.entity_description = description
 
         self._poolid = self.coordinator.data[poolidx]["id"]
 
         pooldata = self._pooldata()
-        self._data_type = pooldata["sensors"][sensor_idx]["data_type"]
-        self._unique_id = f"{pooldata['ICO']['serial_number']}-{self._data_type}"
+        self._unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
         self._device_name = pooldata["name"]
-        metadata = SENSOR_TYPES[self._data_type]
-        self._name = f"{self._device_name} {metadata.name}"
-        self._attr_device_class = metadata.device_class
-        self._attr_icon = metadata.icon
-        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self._name = f"{self._device_name} {description.name}"
 
     def _pooldata(self):
         """Get pool data dict."""
@@ -157,7 +158,7 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
             (
                 data_type
                 for data_type in self._pooldata()["sensors"]
-                if data_type["data_type"] == self._data_type
+                if data_type["data_type"] == self.entity_description.key
             ),
             None,
         )

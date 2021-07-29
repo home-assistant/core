@@ -2,6 +2,7 @@
 import socket
 from urllib.parse import urlparse
 
+import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -153,6 +154,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = f"{self._name} ({self._model})"
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
         if mac := mac_from_device_info(info):
+            self._mac = mac
+        elif mac := getmac.get_mac_address(ip=self._host):
             self._mac = mac
         self._device_info = info
         return True

@@ -26,9 +26,14 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -63,11 +68,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    ENTITY_CLASS,
     ENTITY_ENABLE,
-    ENTITY_ICON,
-    ENTITY_NAME,
-    ENTITY_UNIT,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
     PLATFORMS,
@@ -131,7 +132,7 @@ async def async_setup_entry(  # noqa: C901
         for entity_key, entity_attrs in entries.items():
             if (
                 device_id
-                and entity_attrs[ENTITY_NAME] == "Status"
+                and entity_attrs[ATTR_NAME] == "Status"
                 and "Status" in entity_entry.unique_id
                 and "(Smart)" not in entity_entry.unique_id
             ):
@@ -142,7 +143,7 @@ async def async_setup_entry(  # noqa: C901
                     entity_type = entity_key
                     continue
 
-            if entity_attrs[ENTITY_NAME] == label:
+            if entity_attrs[ATTR_NAME] == label:
                 entity_type = entity_key
 
         if entity_type is None:
@@ -616,12 +617,13 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self._api = api
         self._api_key = entity_type.split(":")[0]
         self.entity_type = entity_type.split(":")[-1]
-        self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
-        self._class = entity_info[ENTITY_CLASS]
+        self._name = f"{api.network.hostname} {entity_info[ATTR_NAME]}"
+        self._class = entity_info[ATTR_DEVICE_CLASS]
         self._enable_default = entity_info[ENTITY_ENABLE]
-        self._icon = entity_info[ENTITY_ICON]
-        self._unit = entity_info[ENTITY_UNIT]
+        self._icon = entity_info[ATTR_ICON]
+        self._unit = entity_info[ATTR_UNIT_OF_MEASUREMENT]
         self._unique_id = f"{self._api.information.serial}_{entity_type}"
+        self._attr_state_class = entity_info[ATTR_STATE_CLASS]
 
     @property
     def unique_id(self) -> str:
@@ -710,7 +712,9 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
             self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
-        self._name = f"{self._api.network.hostname} {self._device_name} {entity_info[ENTITY_NAME]}"
+        self._name = (
+            f"{self._api.network.hostname} {self._device_name} {entity_info[ATTR_NAME]}"
+        )
         self._unique_id += f"_{self._device_id}"
 
     @property

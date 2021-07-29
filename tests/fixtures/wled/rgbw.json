@@ -4,7 +4,7 @@
     "bri": 140,
     "transition": 7,
     "ps": 1,
-    "pl": -1,
+    "pl": 3,
     "nl": {
       "on": false,
       "dur": 60,
@@ -352,6 +352,46 @@
         }
       ],
       "n": "Preset 2"
+    },
+    "3": {
+      "playlist": {
+          "ps": [
+              1,
+              2
+          ],
+          "dur": [
+              30,
+              30
+          ],
+          "transition": [
+              7,
+              7
+          ],
+          "repeat": 0,
+          "r": false,
+          "end": 0
+      },
+      "n": "Playlist 1"
+    },
+    "4": {
+      "playlist": {
+          "ps": [
+              1,
+              2
+          ],
+          "dur": [
+              30,
+              30
+          ],
+          "transition": [
+              7,
+              7
+          ],
+          "repeat": 0,
+          "r": false,
+          "end": 0
+      },
+      "n": "Playlist 2"
     }
   }
 }

@@ -569,6 +569,7 @@ async def test_rgbw_light(hass, client, zen_31, integration):
             "type": "any",
             "readable": True,
             "writeable": True,
+            "valueChangeOptions": ["transitionDuration"],
         },
         "value": {"blue": 70, "green": 159, "red": 255, "warmWhite": 141},
     }
