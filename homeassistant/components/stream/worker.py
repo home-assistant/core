@@ -370,7 +370,11 @@ def stream_worker(
         # without consuming from container_packets. Skip over the first keyframe
         # then use the duration from the second video packet to adjust dts.
         next_video_packet = next(filter(is_video, container_packets.peek()))
-        start_dts = next_video_packet.dts - next_video_packet.duration
+        # Since the is_valid filter has already been applied before the following
+        # adjustment, it does not filter out the case where the duration below is
+        # 0 and both the first_keyframe and next_video_packet end up with the same
+        # dts. Use "or 1" to deal with this.
+        start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
     except (av.AVError, StopIteration) as ex:
         _LOGGER.error("Error demuxing stream while finding first packet: %s", str(ex))
