@@ -23,7 +23,6 @@ class RenaultHub:
 
     def __init__(self, hass: HomeAssistant, locale: str) -> None:
         """Initialise proxy."""
-        LOGGER.debug("Creating RenaultHub")
         self._hass = hass
         self._client = RenaultClient(
             websession=async_get_clientsession(self._hass), locale=locale
