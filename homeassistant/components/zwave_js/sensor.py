@@ -250,8 +250,11 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
         self, node: ZwaveNode, endpoint: int, meter_type: int | None
     ) -> None:
         """Update last reset."""
+        # If the signal is not for this node or is for a different endpoint, ignore it
         if self.info.node != node or self.info.primary_value.endpoint != endpoint:
             return
+        # If a meter type was specified and doesn't match this entity's meter type,
+        # ignore it
         if (
             meter_type is not None
             and self.info.primary_value.metadata.cc_specific.get("meterType")
