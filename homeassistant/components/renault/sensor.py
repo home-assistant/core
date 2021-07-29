@@ -7,7 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -177,7 +177,7 @@ class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity, SensorEntity)
 class RenaultChargingPowerSensor(RenaultBatteryDataEntity, SensorEntity):
     """Charging Power sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_device_class = DEVICE_CLASS_POWER
     _attr_native_unit_of_measurement = POWER_KILO_WATT
 
     @property
