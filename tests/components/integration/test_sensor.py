@@ -131,7 +131,7 @@ async def test_restore_state_failed(hass: HomeAssistant) -> None:
     assert state.state == "0"
     assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
     assert state.attributes.get("state_class") == STATE_CLASS_MEASUREMENT
-    assert state.attributes.get("last_reset") != "2019-10-06T21:00:00.000000"
+    assert state.attributes.get("last_reset") != "2019-10-06T21:00:00"
     assert "device_class" not in state.attributes
 
 
