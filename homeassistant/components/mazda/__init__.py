@@ -28,7 +28,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICES
 
@@ -143,14 +142,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             vehicles = await with_timeout(mazda_client.get_vehicles())
 
-            vehicle_status_tasks = [
-                with_timeout(mazda_client.get_vehicle_status(vehicle["id"]))
-                for vehicle in vehicles
-            ]
-            statuses = await gather_with_concurrency(5, *vehicle_status_tasks)
-
-            for vehicle, status in zip(vehicles, statuses):
-                vehicle["status"] = status
+            for vehicle in vehicles:
+                vehicle["status"] = await with_timeout(
+                    mazda_client.get_vehicle_status(vehicle["id"])
+                )
 
             hass.data[DOMAIN][entry.entry_id][DATA_VEHICLES] = vehicles
 
