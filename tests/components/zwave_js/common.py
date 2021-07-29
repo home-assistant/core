@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
 HUMIDITY_SENSOR = "sensor.multisensor_6_humidity"
-ENERGY_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2"
 POWER_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
+ENERGY_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2"
+VOLTAGE_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_3"
+CURRENT_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_4"
 SWITCH_ENTITY = "switch.smart_plug_with_two_usb_ports"
 LOW_BATTERY_BINARY_SENSOR = "binary_sensor.multisensor_6_low_battery_level"
 ENABLED_LEGACY_BINARY_SENSOR = "binary_sensor.z_wave_door_window_sensor_any"
