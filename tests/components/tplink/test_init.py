@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -238,6 +239,9 @@ async def test_platforms_are_initialized(hass: HomeAssistant):
         switch.get_emeter_realtime = MagicMock(
             return_value=EmeterStatus(SMARTPLUGSWITCH_DATA["realtime"])
         )
+        switch.get_emeter_daily = MagicMock(
+            return_value={int(time.strftime("%e")): 1.123}
+        )
         get_static_devices.return_value = SmartDevices([light], [switch])
 
         # patching is_dimmable is necessray to avoid misdetection as light.
@@ -276,7 +280,7 @@ async def test_platforms_are_initialized(hass: HomeAssistant):
             ATTR_TOTAL_ENERGY_KWH
         ] == utc_from_timestamp(0)
 
-        assert data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] == 0.0
+        assert data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] == 1.123
         assert data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
             ATTR_TODAY_ENERGY_KWH
         ] == datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -285,6 +289,41 @@ async def test_platforms_are_initialized(hass: HomeAssistant):
         assert get_static_devices.call_count == 1
         assert light_setup.call_count == 1
         assert switch_setup.call_count == 1
+
+
+async def test_smartplug_without_consumption_sensors(hass: HomeAssistant):
+    """Test that platforms are initialized per configuration array."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_SWITCH: [{CONF_HOST: "321.321.321.321"}],
+        }
+    }
+
+    with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
+        "homeassistant.components.tplink.get_static_devices"
+    ) as get_static_devices, patch(
+        "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.switch.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.sensor.SmartPlugSensor.__init__"
+    ) as SmartPlugSensor, patch(
+        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+    ):
+
+        switch = SmartPlug("321.321.321.321")
+        switch.get_sysinfo = MagicMock(return_value=SMARTPLUGSWITCH_DATA["sysinfo"])
+        get_static_devices.return_value = SmartDevices([], [switch])
+
+        await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert SmartPlugSensor.call_count == 0
 
 
 async def test_no_config_creates_no_entry(hass):
