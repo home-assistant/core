@@ -54,6 +54,29 @@ async def test_flow_user(hass):
         assert result["data"] == {CONF_DEVICE: port.device}
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+async def test_flow_user_error(hass):
+    """Test user initialized flow with unreachable device."""
+    port = com_port()
+    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+    with _patch_config_flow_modem(AsyncMock()) as modemmock:
+        modemmock.side_effect = phone_modem.exceptions.SerialError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_DEVICE: port_select}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        modemmock.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_DEVICE: port_select},
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {CONF_DEVICE: port.device}
+
+
 async def test_flow_user_manual(hass):
     """Test user flow manual entry."""
     mocked_modem = AsyncMock()
@@ -79,21 +102,6 @@ async def test_flow_user_no_port_list(hass):
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user_manual"
         assert result["errors"] == {}
-
-
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_flow_user_error(hass):
-    """Test user initialized flow with unreachable device."""
-    port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
-    with _patch_config_flow_modem(AsyncMock()) as modemmock:
-        modemmock.side_effect = phone_modem.exceptions.SerialError
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_DEVICE: port_select}
-        )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_import(hass):

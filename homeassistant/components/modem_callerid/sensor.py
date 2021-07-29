@@ -1,8 +1,6 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 from __future__ import annotations
 
-import logging
-
 from phone_modem import DEFAULT_PORT, PhoneModem
 import voluptuous as vol
 
@@ -31,8 +29,6 @@ PLATFORM_SCHEMA = cv.deprecated(
         )
     )
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(

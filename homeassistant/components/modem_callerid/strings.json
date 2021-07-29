@@ -3,7 +3,7 @@
       "step": {
         "user": {
           "title": "Phone Modem",
-          "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller id information. There is also an optional service available to reject an incoming call.",
+          "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller ID information. There is also an optional service available to reject an incoming call.",
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "port": "[%key:common::config_flow::data::port%]"
@@ -11,7 +11,7 @@
         },
         "user_manual": {
           "title": "Phone Modem",
-          "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller id information. There is also an optional service available to reject an incoming call.",
+          "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller ID information. There is also an optional service available to reject an incoming call.",
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "port": "[%key:common::config_flow::data::port%]"
