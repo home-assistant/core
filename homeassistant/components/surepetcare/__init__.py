@@ -143,16 +143,16 @@ class SurePetcareAPI:
     async def async_update(self, _: Any = None) -> None:
         """Get the latest data from Sure Petcare."""
 
-        _LOGGER.debug("🐾 updating sure petcare data")
+        _LOGGER.debug("🐾  updating sure petcare data...")
 
         try:
             self.states = await self.surepy.get_entities(refresh=True)
-            _LOGGER.debug("🐾 self.states = %s", self.states)
-            _LOGGER.debug("🐾  updated states of %d entities", len(self.states))
+            _LOGGER.debug("🐾  self.states: %s", self.states)
         except SurePetcareError as error:
-            _LOGGER.error("Unable to fetch data: %s", error)
+            _LOGGER.error("🐾  unable to fetch data: %s", error)
 
-        _LOGGER.debug("🐾 sure petcare data updated")
+        _LOGGER.debug("🐾  updated states of %d entities", len(self.states))
+
         async_dispatcher_send(self.hass, TOPIC_UPDATE)
 
     async def set_lock_state(self, flap_id: int, state: str) -> None:
