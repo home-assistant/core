@@ -196,7 +196,6 @@ class EnergyCostSensor(SensorEntity):
             self._reset(energy_state)
             return
 
-        cur_value = self._cur_value
         if (
             energy_state.attributes[ATTR_LAST_RESET]
             != self._last_energy_sensor_state.attributes[ATTR_LAST_RESET]
@@ -206,7 +205,7 @@ class EnergyCostSensor(SensorEntity):
         else:
             # Update with newly incurred cost
             old_energy_value = float(self._last_energy_sensor_state.state)
-            self._cur_value = cur_value + (energy - old_energy_value) * energy_price
+            self._cur_value += (energy - old_energy_value) * energy_price
             self._attr_state = round(self._cur_value, 2)
 
         self._last_energy_sensor_state = energy_state
