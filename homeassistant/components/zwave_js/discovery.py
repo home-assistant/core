@@ -517,10 +517,10 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_registry_enabled_default=False,
     ),
-    # numeric sensors for Meter CC
+    # Meter sensors for Meter CC
     ZWaveDiscoverySchema(
         platform="sensor",
-        hint="numeric_sensor",
+        hint="meter",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.METER,
