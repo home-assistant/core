@@ -3,6 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import logging
+from typing import cast
+
+from renault_api.kamereon import models
+from renault_api.renault_vehicle import RenaultVehicle
+
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
@@ -10,12 +16,6 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SW_VERSION,
 )
-import logging
-from typing import cast
-
-from renault_api.kamereon import models
-from renault_api.renault_vehicle import RenaultVehicle
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
