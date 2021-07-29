@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ACTIVE_NAME,
@@ -268,7 +269,9 @@ class SenseTrendsSensor(SensorEntity):
     @property
     def last_reset(self) -> datetime.datetime:
         """Return the time when the sensor was last reset, if any."""
-        return pendulum.now().start_of(TIME_PERIODS[self._sensor_type])
+        return pendulum.now(dt_util.DEFAULT_TIME_ZONE).start_of(
+            TIME_PERIODS[self._sensor_type]
+        )
 
     @callback
     def _async_update(self):
