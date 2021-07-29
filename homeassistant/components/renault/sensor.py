@@ -47,19 +47,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.unique_id]
-    entities = await get_entities(proxy)
+    entities = get_entities(proxy)
     async_add_entities(entities)
 
 
-async def get_entities(proxy: RenaultHub) -> list[RenaultDataEntity]:
+def get_entities(proxy: RenaultHub) -> list[RenaultDataEntity]:
     """Create Renault entities for all vehicles."""
     entities = []
     for vehicle in proxy.vehicles.values():
-        entities.extend(await get_vehicle_entities(vehicle))
+        entities.extend(get_vehicle_entities(vehicle))
     return entities
 
 
-async def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultDataEntity]:
+def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultDataEntity]:
     """Create Renault entities for single vehicle."""
     entities: list[RenaultDataEntity] = []
     if "cockpit" in vehicle.coordinators:
