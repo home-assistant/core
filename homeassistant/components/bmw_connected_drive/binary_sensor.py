@@ -109,7 +109,9 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
             self._attr_state = vehicle_state.has_check_control_messages
         # device class power: On means power detected, Off means no power
         if self._attribute == "charging_status":
-            self._attr_state = vehicle_state.charging_status in [ChargingState.CHARGING]
+            self._attr_state = vehicle_state.charging_status in (
+                ChargingState.CHARGING,
+            )
         # device class plug: On means device is plugged in,
         #                    Off means device is unplugged
         if self._attribute == "connection_status":

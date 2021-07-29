@@ -78,7 +78,7 @@ async def _async_reproduce_state(
             service = SERVICE_TURN_OFF
         elif state.state == STATE_CLEANING:
             service = SERVICE_START
-        elif state.state in [STATE_DOCKED, STATE_RETURNING]:
+        elif state.state in (STATE_DOCKED, STATE_RETURNING):
             service = SERVICE_RETURN_TO_BASE
         elif state.state == STATE_IDLE:
             service = SERVICE_STOP

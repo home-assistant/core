@@ -102,7 +102,7 @@ class ThresholdSensor(BinarySensorEntity):
             try:
                 self.sensor_value = (
                     None
-                    if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                    if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
                     else float(new_state.state)
                 )
             except (ValueError, TypeError):

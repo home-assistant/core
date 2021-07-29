@@ -197,9 +197,9 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         self.cancel_queued_send_commands()
 
         command = event["command"]
-        if command in ["on", "allon"]:
+        if command in ("on", "allon"):
             self._state = True
-        elif command in ["off", "alloff"]:
+        elif command in ("off", "alloff"):
             self._state = False
         # dimmable device accept 'set_level=(0-15)' commands
         elif re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
@@ -258,7 +258,7 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
         if command == "on":
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
-            self._state = self._state in [None, False]
+            self._state = self._state in (None, False)
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

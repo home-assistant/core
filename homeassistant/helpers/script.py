@@ -727,7 +727,7 @@ class _ScriptRun:
                 try:
                     if self._stop.is_set():
                         break
-                    if self._test_conditions(conditions, "until") in [True, None]:
+                    if self._test_conditions(conditions, "until") in (True, None):
                         break
                 except exceptions.ConditionError as ex:
                     _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)

@@ -489,7 +489,7 @@ class LazyState(State):
     def __eq__(self, other):
         """Return the comparison."""
         return (
-            other.__class__ in [self.__class__, State]
+            other.__class__ in (self.__class__, State)
             and self.entity_id == other.entity_id
             and self.state == other.state
             and self.attributes == other.attributes

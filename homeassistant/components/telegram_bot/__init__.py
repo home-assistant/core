@@ -368,14 +368,14 @@ async def async_setup(hass, config):
             await hass.async_add_executor_job(
                 partial(notify_service.send_message, **kwargs)
             )
-        elif msgtype in [
+        elif msgtype in (
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_STICKER,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,
             SERVICE_SEND_DOCUMENT,
-        ]:
+        ):
             await hass.async_add_executor_job(
                 partial(notify_service.send_file, msgtype, **kwargs)
             )

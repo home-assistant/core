@@ -127,9 +127,9 @@ class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
         self.cancel_queued_send_commands()
 
         command = event["command"]
-        if command in ["on", "allon", "up"]:
+        if command in ("on", "allon", "up"):
             self._state = True
-        elif command in ["off", "alloff", "down"]:
+        elif command in ("off", "alloff", "down"):
             self._state = False
 
     @property

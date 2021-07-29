@@ -100,12 +100,12 @@ class PanasonicBluRay(MediaPlayerEntity):
 
         if state[0] == "error":
             self._state = None
-        elif state[0] in ["off", "standby"]:
+        elif state[0] in ("off", "standby"):
             # We map both of these to off. If it's really off we can't
             # turn it on, but from standby we can go to idle by pressing
             # POWER.
             self._state = STATE_OFF
-        elif state[0] in ["paused", "stopped"]:
+        elif state[0] in ("paused", "stopped"):
             self._state = STATE_IDLE
         elif state[0] == "playing":
             self._state = STATE_PLAYING

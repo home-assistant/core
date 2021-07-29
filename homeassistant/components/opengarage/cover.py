@@ -116,11 +116,11 @@ class OpenGarageCover(CoverEntity):
         """Return if the cover is closed."""
         if self._state is None:
             return None
-        return self._state in [STATE_CLOSED, STATE_OPENING]
+        return self._state in (STATE_CLOSED, STATE_OPENING)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        if self._state in [STATE_CLOSED, STATE_CLOSING]:
+        if self._state in (STATE_CLOSED, STATE_CLOSING):
             return
         self._state_before_move = self._state
         self._state = STATE_CLOSING
@@ -128,7 +128,7 @@ class OpenGarageCover(CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        if self._state in [STATE_OPEN, STATE_OPENING]:
+        if self._state in (STATE_OPEN, STATE_OPENING):
             return
         self._state_before_move = self._state
         self._state = STATE_OPENING

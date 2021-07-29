@@ -185,7 +185,7 @@ class CmusDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play command."""
-        if media_type in [MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST]:
+        if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST):
             self._remote.cmus.player_play_file(media_id)
         else:
             _LOGGER.error(

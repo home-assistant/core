@@ -42,7 +42,7 @@ def browse_media(zone_id, roon_server, media_content_type=None, media_content_id
     """Implement the websocket media browsing helper."""
     try:
         _LOGGER.debug("browse_media: %s: %s", media_content_type, media_content_id)
-        if media_content_type in [None, "library"]:
+        if media_content_type in (None, "library"):
             return library_payload(roon_server, zone_id, media_content_id)
 
     except UnknownMediaType as err:

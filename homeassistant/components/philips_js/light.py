@@ -219,7 +219,7 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         if current and current["isExpert"]:
             return COLOR_MODE_HS
 
-        if self._tv.ambilight_mode in ["manual", "expert"]:
+        if self._tv.ambilight_mode in ("manual", "expert"):
             return COLOR_MODE_HS
 
         return COLOR_MODE_ONOFF

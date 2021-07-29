@@ -140,7 +140,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._state = False
         elif self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(
             ATTR_VALUE, None
-        ) in [
+        ) in (
             "BSH.Common.EnumType.OperationState.Ready",
             "BSH.Common.EnumType.OperationState.DelayedStart",
             "BSH.Common.EnumType.OperationState.Run",
@@ -148,7 +148,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             "BSH.Common.EnumType.OperationState.ActionRequired",
             "BSH.Common.EnumType.OperationState.Aborting",
             "BSH.Common.EnumType.OperationState.Finished",
-        ]:
+        ):
             self._state = True
         elif (
             self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(ATTR_VALUE)

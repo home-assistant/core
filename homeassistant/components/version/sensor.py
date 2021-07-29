@@ -80,13 +80,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         haversion = VersionData(
             HaVersion(session, source=HaVersionSource.PYPI, channel=channel)
         )
-    elif source in ["hassio", "supervisor"]:
+    elif source in ("hassio", "supervisor"):
         haversion = VersionData(
             HaVersion(
                 session, source=HaVersionSource.SUPERVISOR, channel=channel, image=image
             )
         )
-    elif source in ["docker", "container"]:
+    elif source in ("docker", "container"):
         if image is not None and image != DEFAULT_IMAGE:
             image = f"{image}-homeassistant"
         haversion = VersionData(

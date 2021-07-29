@@ -163,11 +163,11 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         if self._device.controlMode == HMIP_ECO_CM:
             if self._indoor_climate.absenceType == AbsenceType.VACATION:
                 return PRESET_AWAY
-            if self._indoor_climate.absenceType in [
+            if self._indoor_climate.absenceType in (
                 AbsenceType.PARTY,
                 AbsenceType.PERIOD,
                 AbsenceType.PERMANENT,
-            ]:
+            ):
                 return PRESET_ECO
 
         return (
@@ -245,11 +245,11 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         state_attr = super().extra_state_attributes
 
         if self._device.controlMode == HMIP_ECO_CM:
-            if self._indoor_climate.absenceType in [
+            if self._indoor_climate.absenceType in (
                 AbsenceType.PARTY,
                 AbsenceType.PERIOD,
                 AbsenceType.VACATION,
-            ]:
+            ):
                 state_attr[ATTR_PRESET_END_TIME] = self._indoor_climate.absenceEndTime
             elif self._indoor_climate.absenceType == AbsenceType.PERMANENT:
                 state_attr[ATTR_PRESET_END_TIME] = PERMANENT_END_TIME

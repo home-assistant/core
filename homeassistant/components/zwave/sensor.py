@@ -82,7 +82,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
     @property
     def device_class(self):
         """Return the class of this device."""
-        if self._units in ["C", "F"]:
+        if self._units in ("C", "F"):
             return DEVICE_CLASS_TEMPERATURE
         return None
 

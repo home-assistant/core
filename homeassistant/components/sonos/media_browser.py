@@ -157,10 +157,10 @@ def get_media_type(item):
     if (
         item.item_class == "object.container.album.musicAlbum"
         and SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0])
-        in [
+        in (
             SONOS_ALBUM_ARTIST,
             SONOS_GENRE,
-        ]
+        )
     ):
         return SONOS_TYPES_MAPPING[item.item_class]
 

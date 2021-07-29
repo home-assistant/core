@@ -516,7 +516,7 @@ class RflinkCommand(RflinkDevice):
             cmd = "on"
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
-            self._state = self._state in [None, False]
+            self._state = self._state in (None, False)
 
         # Cover options for RFlink
         elif command == "close_cover":
@@ -590,9 +590,9 @@ class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
         self.cancel_queued_send_commands()
 
         command = event["command"]
-        if command in ["on", "allon"]:
+        if command in ("on", "allon"):
             self._state = True
-        elif command in ["off", "alloff"]:
+        elif command in ("off", "alloff"):
             self._state = False
 
     async def async_turn_on(self, **kwargs):

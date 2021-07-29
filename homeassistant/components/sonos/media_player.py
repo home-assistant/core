@@ -451,10 +451,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
-                if soco.music_source_from_uri(uri) in [
+                if soco.music_source_from_uri(uri) in (
                     MUSIC_SRC_RADIO,
                     MUSIC_SRC_LINE_IN,
-                ]:
+                ):
                     soco.play_uri(uri, title=source)
                 else:
                     soco.clear_queue()
@@ -668,7 +668,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     ) -> tuple[None | str, None | str]:
         """Fetch media browser image to serve via proxy."""
         if (
-            media_content_type in [MEDIA_TYPE_ALBUM, MEDIA_TYPE_ARTIST]
+            media_content_type in (MEDIA_TYPE_ALBUM, MEDIA_TYPE_ARTIST)
             and media_content_id
         ):
             item = await self.hass.async_add_executor_job(
@@ -709,7 +709,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_image_id,
             )
 
-        if media_content_type in [None, "library"]:
+        if media_content_type in (None, "library"):
             return await self.hass.async_add_executor_job(
                 library_payload, self.media.library, _get_thumbnail_url
             )

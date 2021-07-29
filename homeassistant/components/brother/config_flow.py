@@ -27,7 +27,7 @@ DATA_SCHEMA = vol.Schema(
 def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version in [4, 6]:
+        if ipaddress.ip_address(host).version in (4, 6):
             return True
     except ValueError:
         pass

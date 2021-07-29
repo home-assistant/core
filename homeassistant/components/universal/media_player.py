@@ -323,7 +323,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @property
     def is_volume_muted(self):
         """Boolean if volume is muted."""
-        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_MUTED) in [True, STATE_ON]
+        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_MUTED) in (True, STATE_ON)
 
     @property
     def media_content_id(self):

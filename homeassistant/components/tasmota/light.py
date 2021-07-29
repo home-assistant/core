@@ -129,7 +129,7 @@ class TasmotaLight(
         supported_features = 0
         light_type = self._tasmota_entity.light_type
 
-        if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
+        if light_type in (LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW):
             # Mark HS support for RGBW light because we don't have direct control over the
             # white channel, so the base component's RGB->RGBW translation does not work
             self._supported_color_modes.add(COLOR_MODE_HS)
@@ -138,7 +138,7 @@ class TasmotaLight(
         if light_type == LIGHT_TYPE_RGBW:
             self._supported_color_modes.add(COLOR_MODE_WHITE)
 
-        if light_type in [LIGHT_TYPE_COLDWARM, LIGHT_TYPE_RGBCW]:
+        if light_type in (LIGHT_TYPE_COLDWARM, LIGHT_TYPE_RGBCW):
             self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
             self._color_mode = COLOR_MODE_COLOR_TEMP
 
@@ -150,7 +150,7 @@ class TasmotaLight(
             self._supported_color_modes.add(COLOR_MODE_ONOFF)
             self._color_mode = COLOR_MODE_ONOFF
 
-        if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
+        if light_type in (LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW):
             supported_features |= SUPPORT_EFFECT
 
         if self._tasmota_entity.supports_transition:

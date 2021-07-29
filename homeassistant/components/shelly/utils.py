@@ -56,15 +56,15 @@ def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> 
 
     if block.type == "input":
         # Shelly Dimmer/1L has two input channels and missing "num_inputs"
-        if device.settings["device"]["type"] in ["SHDM-1", "SHDM-2", "SHSW-L"]:
+        if device.settings["device"]["type"] in ("SHDM-1", "SHDM-2", "SHSW-L"):
             channels = 2
         else:
             channels = device.shelly.get("num_inputs")
     elif block.type == "emeter":
         channels = device.shelly.get("num_emeters")
-    elif block.type in ["relay", "light"]:
+    elif block.type in ("relay", "light"):
         channels = device.shelly.get("num_outputs")
-    elif block.type in ["roller", "device"]:
+    elif block.type in ("roller", "device"):
         channels = 1
 
     return channels or 1
@@ -133,7 +133,7 @@ def is_momentary_input(settings: dict[str, Any], block: aioshelly.Block) -> bool
         channel = min(int(block.channel or 0), len(button) - 1)
         button_type = button[channel].get("btn_type")
 
-    return button_type in ["momentary", "momentary_on_release"]
+    return button_type in ("momentary", "momentary_on_release")
 
 
 def get_device_uptime(status: dict[str, Any], last_uptime: str) -> str:

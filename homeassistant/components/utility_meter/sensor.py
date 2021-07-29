@@ -152,8 +152,8 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         if (
             old_state is None
             or new_state is None
-            or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-            or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             return
 
@@ -268,7 +268,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 minute=self._period_offset.seconds // 60,
                 second=self._period_offset.seconds % 60,
             )
-        elif self._period in [DAILY, WEEKLY, MONTHLY, BIMONTHLY, QUARTERLY, YEARLY]:
+        elif self._period in (DAILY, WEEKLY, MONTHLY, BIMONTHLY, QUARTERLY, YEARLY):
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,

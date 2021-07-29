@@ -687,10 +687,10 @@ class DarkSkySensor(SensorEntity):
 
         # Some state data needs to be rounded to whole values or converted to
         # percentages
-        if self.type in ["precip_probability", "cloud_cover", "humidity"]:
+        if self.type in ("precip_probability", "cloud_cover", "humidity"):
             return round(state * 100, 1)
 
-        if self.type in [
+        if self.type in (
             "dew_point",
             "temperature",
             "apparent_temperature",
@@ -706,7 +706,7 @@ class DarkSkySensor(SensorEntity):
             "pressure",
             "ozone",
             "uvIndex",
-        ]:
+        ):
             return round(state, 1)
         return state
 

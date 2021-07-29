@@ -695,20 +695,20 @@ class KodiEntity(MediaPlayerEntity):
             await self._kodi.play_playlist(int(media_id))
         elif media_type_lower == "directory":
             await self._kodi.play_directory(str(media_id))
-        elif media_type_lower in [
+        elif media_type_lower in (
             MEDIA_TYPE_ARTIST,
             MEDIA_TYPE_ALBUM,
             MEDIA_TYPE_TRACK,
-        ]:
+        ):
             await self.async_clear_playlist()
             await self.async_add_to_playlist(media_type_lower, media_id)
             await self._kodi.play_playlist(0)
-        elif media_type_lower in [
+        elif media_type_lower in (
             MEDIA_TYPE_MOVIE,
             MEDIA_TYPE_EPISODE,
             MEDIA_TYPE_SEASON,
             MEDIA_TYPE_TVSHOW,
-        ]:
+        ):
             await self._kodi.play_item(
                 {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
             )
@@ -891,7 +891,7 @@ class KodiEntity(MediaPlayerEntity):
                 media_image_id,
             )
 
-        if media_content_type in [None, "library"]:
+        if media_content_type in (None, "library"):
             return await library_payload()
 
         payload = {

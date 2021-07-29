@@ -284,7 +284,7 @@ class AlarmPanel:
         return [
             self.format_zone(
                 data[CONF_ZONE],
-                {"trigger": (0 if data.get(CONF_ACTIVATION) in [0, STATE_LOW] else 1)},
+                {"trigger": (0 if data.get(CONF_ACTIVATION) in (0, STATE_LOW) else 1)},
             )
             for data in self.stored_configuration[CONF_SWITCHES]
         ]

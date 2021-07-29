@@ -73,9 +73,9 @@ async def _async_reproduce_state(
         == state.attributes.get(ATTR_CURRENT_POSITION)
     ):
         # Open/Close
-        if state.state in [STATE_CLOSED, STATE_CLOSING]:
+        if state.state in (STATE_CLOSED, STATE_CLOSING):
             service = SERVICE_CLOSE_COVER
-        elif state.state in [STATE_OPEN, STATE_OPENING]:
+        elif state.state in (STATE_OPEN, STATE_OPENING):
             if (
                 ATTR_CURRENT_POSITION in cur_state.attributes
                 and ATTR_CURRENT_POSITION in state.attributes

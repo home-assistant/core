@@ -409,14 +409,14 @@ class HueOneLightChangeView(HomeAssistantView):
                 parsed[STATE_BRIGHTNESS] = None
                 parsed[STATE_ON] = True
 
-            elif entity.domain in [
+            elif entity.domain in (
                 script.DOMAIN,
                 media_player.DOMAIN,
                 fan.DOMAIN,
                 cover.DOMAIN,
                 climate.DOMAIN,
                 humidifier.DOMAIN,
-            ]:
+            ):
                 # Convert 0-254 to 0-100
                 level = (parsed[STATE_BRIGHTNESS] / HUE_API_STATE_BRI_MAX) * 100
                 parsed[STATE_BRIGHTNESS] = round(level)

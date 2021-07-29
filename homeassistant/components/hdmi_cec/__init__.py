@@ -389,7 +389,7 @@ class CecEntity(Entity):
     def update(self):
         """Update device status."""
         device = self._device
-        if device.power_status in [POWER_OFF, 3]:
+        if device.power_status in (POWER_OFF, 3):
             self._state = STATE_OFF
         elif device.status == STATUS_PLAY:
             self._state = STATE_PLAYING
@@ -397,7 +397,7 @@ class CecEntity(Entity):
             self._state = STATE_IDLE
         elif device.status == STATUS_STILL:
             self._state = STATE_PAUSED
-        elif device.power_status in [POWER_ON, 4]:
+        elif device.power_status in (POWER_ON, 4):
             self._state = STATE_ON
         else:
             _LOGGER.warning("Unknown state: %d", device.power_status)

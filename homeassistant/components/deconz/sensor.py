@@ -267,12 +267,12 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         Normally there should only be one battery sensor per device from deCONZ.
         With specific Danfoss devices each endpoint can report its own battery state.
         """
-        if self._device.manufacturer == "Danfoss" and self._device.modelid in [
+        if self._device.manufacturer == "Danfoss" and self._device.modelid in (
             "0x8030",
             "0x8031",
             "0x8034",
             "0x8035",
-        ]:
+        ):
             return f"{super().unique_id}-battery"
         return f"{self.serial}-battery"
 

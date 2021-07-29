@@ -293,7 +293,7 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self._device.state.fan_mode in ["FAN", "AUTO"]
+        return self._device.state.fan_mode in ("FAN", "AUTO")
 
     def set_night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""

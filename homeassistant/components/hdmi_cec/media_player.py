@@ -156,10 +156,10 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def update(self):
         """Update device status."""
         device = self._device
-        if device.power_status in [POWER_OFF, 3]:
+        if device.power_status in (POWER_OFF, 3):
             self._state = STATE_OFF
         elif not self.support_pause:
-            if device.power_status in [POWER_ON, 4]:
+            if device.power_status in (POWER_ON, 4):
                 self._state = STATE_ON
         elif device.status == STATUS_PLAY:
             self._state = STATE_PLAYING

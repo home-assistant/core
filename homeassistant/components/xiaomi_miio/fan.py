@@ -732,7 +732,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._speed_count = 1
             # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO_V7
-        elif self._model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
+        elif self._model in (MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
             # SUPPORT_SET_SPEED was disabled

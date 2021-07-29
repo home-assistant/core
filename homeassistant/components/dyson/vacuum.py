@@ -102,11 +102,11 @@ class Dyson360EyeDevice(DysonEntity, VacuumEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self._device.state.state in [
+        return self._device.state.state in (
             Dyson360EyeMode.FULL_CLEAN_INITIATED,
             Dyson360EyeMode.FULL_CLEAN_ABORTED,
             Dyson360EyeMode.FULL_CLEAN_RUNNING,
-        ]
+        )
 
     @property
     def available(self) -> bool:
@@ -121,7 +121,7 @@ class Dyson360EyeDevice(DysonEntity, VacuumEntity):
     @property
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
-        charging = self._device.state.state in [Dyson360EyeMode.INACTIVE_CHARGING]
+        charging = self._device.state.state in (Dyson360EyeMode.INACTIVE_CHARGING,)
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
@@ -129,7 +129,7 @@ class Dyson360EyeDevice(DysonEntity, VacuumEntity):
     def turn_on(self, **kwargs):
         """Turn the vacuum on."""
         _LOGGER.debug("Turn on device %s", self.name)
-        if self._device.state.state in [Dyson360EyeMode.FULL_CLEAN_PAUSED]:
+        if self._device.state.state in (Dyson360EyeMode.FULL_CLEAN_PAUSED,):
             self._device.resume()
         else:
             self._device.start()
@@ -152,13 +152,13 @@ class Dyson360EyeDevice(DysonEntity, VacuumEntity):
 
     def start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
-        if self._device.state.state in [Dyson360EyeMode.FULL_CLEAN_PAUSED]:
+        if self._device.state.state in (Dyson360EyeMode.FULL_CLEAN_PAUSED,):
             _LOGGER.debug("Resume device %s", self.name)
             self._device.resume()
-        elif self._device.state.state in [
+        elif self._device.state.state in (
             Dyson360EyeMode.INACTIVE_CHARGED,
             Dyson360EyeMode.INACTIVE_CHARGING,
-        ]:
+        ):
             _LOGGER.debug("Start device %s", self.name)
             self._device.start()
         else:

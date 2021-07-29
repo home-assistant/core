@@ -58,7 +58,7 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
     def update(self):
         """Update state of the lock."""
         _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
-        if self._vehicle.state.door_lock_state in [LockState.LOCKED, LockState.SECURED]:
+        if self._vehicle.state.door_lock_state in (LockState.LOCKED, LockState.SECURED):
             self._attr_is_locked = True
         else:
             self._attr_is_locked = False

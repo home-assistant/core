@@ -103,7 +103,7 @@ def _generate_entities(tado):
     """Create all climate entities."""
     entities = []
     for zone in tado.zones:
-        if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
+        if zone["type"] in (TYPE_HEATING, TYPE_AIR_CONDITIONING):
             entity = create_climate_entity(
                 tado, zone["name"], zone["id"], zone["devices"][0]
             )

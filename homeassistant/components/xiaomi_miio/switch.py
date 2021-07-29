@@ -245,9 +245,9 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
 
     device_features = 0
 
-    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+    if model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
+    elif model in (MODEL_AIRHUMIDIFIER_CA4,):
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
     elif model in MODELS_HUMIDIFIER:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
@@ -304,7 +304,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
+        if model in ("chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"):
             plug = ChuangmiPlug(host, token, model=model)
 
             # The device has two switchable channels (mains and a USB port).
@@ -319,23 +319,23 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 )
                 entities.append(device)
                 hass.data[DATA_KEY][host] = device
-        elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
+        elif model in ("qmi.powerstrip.v1", "zimi.powerstrip.v2"):
             plug = PowerStrip(host, token, model=model)
             device = XiaomiPowerStripSwitch(name, plug, config_entry, unique_id)
             entities.append(device)
             hass.data[DATA_KEY][host] = device
-        elif model in [
+        elif model in (
             "chuangmi.plug.m1",
             "chuangmi.plug.m3",
             "chuangmi.plug.v2",
             "chuangmi.plug.hmi205",
             "chuangmi.plug.hmi206",
-        ]:
+        ):
             plug = ChuangmiPlug(host, token, model=model)
             device = XiaomiPlugGenericSwitch(name, plug, config_entry, unique_id)
             entities.append(device)
             hass.data[DATA_KEY][host] = device
-        elif model in ["lumi.acpartner.v3"]:
+        elif model in ("lumi.acpartner.v3",):
             plug = AirConditioningCompanionV3(host, token)
             device = XiaomiAirConditioningCompanionSwitch(
                 name, plug, config_entry, unique_id
@@ -586,7 +586,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             _LOGGER.debug("Response received from plug: %s", result)
 
             # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
-            if func in ["usb_on", "usb_off"] and result == 0:
+            if func in ("usb_on", "usb_off") and result == 0:
                 return True
 
             return result == SUCCESS

@@ -205,7 +205,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if self.hvac_mode in [HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL]:
+        if self.hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL):
             return self._device.raw_ui_data["CoolLowerSetptLimit"]
         if self.hvac_mode == HVAC_MODE_HEAT:
             return self._device.raw_ui_data["HeatLowerSetptLimit"]
@@ -216,7 +216,7 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the maximum temperature."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self._device.raw_ui_data["CoolUpperSetptLimit"]
-        if self.hvac_mode in [HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL]:
+        if self.hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL):
             return self._device.raw_ui_data["HeatUpperSetptLimit"]
         return None
 

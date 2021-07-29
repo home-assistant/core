@@ -74,7 +74,7 @@ class DovadoSensor(SensorEntity):
                 return None
         if self._sensor == SENSOR_SMS_UNREAD:
             return int(state)
-        if self._sensor in [SENSOR_UPLOAD, SENSOR_DOWNLOAD]:
+        if self._sensor in (SENSOR_UPLOAD, SENSOR_DOWNLOAD):
             return round(float(state) / 1e6, 1)
         return state
 

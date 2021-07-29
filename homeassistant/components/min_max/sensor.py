@@ -212,10 +212,10 @@ class MinMaxSensor(SensorEntity):
         new_state = event.data.get("new_state")
         entity = event.data.get("entity_id")
 
-        if new_state.state is None or new_state.state in [
+        if new_state.state is None or new_state.state in (
             STATE_UNKNOWN,
             STATE_UNAVAILABLE,
-        ]:
+        ):
             self.states[entity] = STATE_UNKNOWN
             self._calc_values()
             self.async_write_ha_state()

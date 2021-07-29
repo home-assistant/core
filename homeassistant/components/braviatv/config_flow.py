@@ -31,7 +31,7 @@ from .const import (
 def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
     with suppress(ValueError):
-        if ipaddress.ip_address(host).version in [4, 6]:
+        if ipaddress.ip_address(host).version in (4, 6):
             return True
     disallowed = re.compile(r"[^a-zA-Z\d\-]")
     return all(x and not disallowed.search(x) for x in host.split("."))

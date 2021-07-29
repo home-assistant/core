@@ -446,11 +446,11 @@ class RachioZone(RachioSwitch):
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
-        elif args[0][KEY_SUBTYPE] in [
+        elif args[0][KEY_SUBTYPE] in (
             SUBTYPE_ZONE_STOPPED,
             SUBTYPE_ZONE_COMPLETED,
             SUBTYPE_ZONE_PAUSED,
-        ]:
+        ):
             self._state = False
 
         self.async_write_ha_state()
@@ -529,12 +529,12 @@ class RachioSchedule(RachioSwitch):
         # Schedule ID not passed when running individual zones, so we catch that error
         with suppress(KeyError):
             if args[0][KEY_SCHEDULE_ID] == self._schedule_id:
-                if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
+                if args[0][KEY_SUBTYPE] in (SUBTYPE_SCHEDULE_STARTED,):
                     self._state = True
-                elif args[0][KEY_SUBTYPE] in [
+                elif args[0][KEY_SUBTYPE] in (
                     SUBTYPE_SCHEDULE_STOPPED,
                     SUBTYPE_SCHEDULE_COMPLETED,
-                ]:
+                ):
                     self._state = False
 
         self.async_write_ha_state()

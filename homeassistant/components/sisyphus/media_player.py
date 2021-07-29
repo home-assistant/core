@@ -87,7 +87,7 @@ class SisyphusPlayer(MediaPlayerEntity):
     @property
     def state(self):
         """Return the current state of the table; sleeping maps to off."""
-        if self._table.state in ["homing", "playing"]:
+        if self._table.state in ("homing", "playing"):
             return STATE_PLAYING
         if self._table.state == "paused":
             if self._table.is_sleeping:

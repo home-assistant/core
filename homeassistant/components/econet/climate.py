@@ -185,7 +185,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         econet_fan_mode = self._econet.fan_mode
 
         # Remove this after we figure out how to handle med lo and med hi
-        if econet_fan_mode in [ThermostatFanMode.MEDHI, ThermostatFanMode.MEDLO]:
+        if econet_fan_mode in (ThermostatFanMode.MEDHI, ThermostatFanMode.MEDLO):
             econet_fan_mode = ThermostatFanMode.MEDIUM
 
         _current_fan_mode = FAN_AUTO

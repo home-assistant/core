@@ -53,7 +53,7 @@ SENSORS: Final = {
     ("sensor", "gas"): BlockAttributeDescription(
         name="Gas",
         device_class=DEVICE_CLASS_GAS,
-        value=lambda value: value in ["mild", "heavy"],
+        value=lambda value: value in ("mild", "heavy"),
         extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockAttributeDescription(

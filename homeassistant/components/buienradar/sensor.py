@@ -493,7 +493,7 @@ class BrSensor(SensorEntity):
             self._attr_state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
             return True
 
-        if self.type in [WINDSPEED, WINDGUST]:
+        if self.type in (WINDSPEED, WINDGUST):
             # hass wants windspeeds in km/h not m/s, so convert:
             self._attr_state = data.get(self.type)
             if self.state is not None:

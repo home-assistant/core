@@ -26,7 +26,7 @@ async def async_setup_entry(
 
     # In roller mode the relay blocks exist but do not contain required info
     if (
-        wrapper.model in ["SHSW-21", "SHSW-25"]
+        wrapper.model in ("SHSW-21", "SHSW-25")
         and wrapper.device.settings["mode"] != "relay"
     ):
         return

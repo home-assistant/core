@@ -268,7 +268,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 media_content_type, media_content_id, media_image_id
             )
 
-        if media_content_type in [None, "library"]:
+        if media_content_type in (None, "library"):
             return library_payload(self.coordinator, _get_thumbnail_url)
 
         payload = {

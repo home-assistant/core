@@ -34,12 +34,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for surepy_entity in spc.states.values():
 
-        if surepy_entity.type in [
+        if surepy_entity.type in (
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
             EntityType.FEEDER,
             EntityType.FELAQUA,
-        ]:
+        ):
             entities.append(SureBattery(surepy_entity.id, spc))
 
     async_add_entities(entities)

@@ -116,12 +116,12 @@ def add_on_off_event_device(hass, device):
     for group in device.events:
         if isinstance(group, int):
             for event in device.events[group]:
-                if event in [
+                if event in (
                     OFF_EVENT,
                     ON_EVENT,
                     OFF_FAST_EVENT,
                     ON_FAST_EVENT,
-                ]:
+                ):
                     _LOGGER.debug(
                         "Registering on/off event for %s %d %s",
                         str(device.address),

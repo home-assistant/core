@@ -261,7 +261,7 @@ class RoonDevice(MediaPlayerEntity):
             for source in self.player_data["source_controls"]:
                 if source["supports_standby"] and source["status"] != "indeterminate":
                     self._supports_standby = True
-                    if source["status"] in ["standby", "deselected"]:
+                    if source["status"] in ("standby", "deselected"):
                         new_state = STATE_OFF
                     break
         # determine player state

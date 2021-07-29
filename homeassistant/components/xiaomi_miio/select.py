@@ -72,9 +72,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     else:
         name = config_entry.title
 
-    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+    if model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
         entity_class = XiaomiAirHumidifierSelector
-    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
+    elif model in (MODEL_AIRHUMIDIFIER_CA4,):
         entity_class = XiaomiAirHumidifierMiotSelector
     elif model in MODELS_HUMIDIFIER:
         entity_class = XiaomiAirHumidifierSelector

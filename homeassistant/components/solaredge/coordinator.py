@@ -78,9 +78,9 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         self.data = {}
 
         for key, value in overview.items():
-            if key in ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]:
+            if key in ("lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"):
                 data = value["energy"]
-            elif key in ["currentPower"]:
+            elif key in ("currentPower",):
                 data = value["power"]
             else:
                 data = value
@@ -118,16 +118,16 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
         for key, value in details.items():
             key = snakecase(key)
 
-            if key in ["primary_module"]:
+            if key in ("primary_module",):
                 for module_key, module_value in value.items():
                     self.attributes[snakecase(module_key)] = module_value
-            elif key in [
+            elif key in (
                 "peak_power",
                 "type",
                 "name",
                 "last_update_time",
                 "installation_date",
-            ]:
+            ):
                 self.attributes[key] = value
             elif key == "status":
                 self.data = value
@@ -262,16 +262,16 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         self.unit = power_flow["unit"]
 
         for key, value in power_flow.items():
-            if key in ["LOAD", "PV", "GRID", "STORAGE"]:
+            if key in ("LOAD", "PV", "GRID", "STORAGE"):
                 self.data[key] = value["currentPower"]
                 self.attributes[key] = {"status": value["status"]}
 
-            if key in ["GRID"]:
+            if key in ("GRID",):
                 export = key.lower() in power_to
                 self.data[key] *= -1 if export else 1
                 self.attributes[key]["flow"] = "export" if export else "import"
 
-            if key in ["STORAGE"]:
+            if key in ("STORAGE",):
                 charge = key.lower() in power_to
                 self.data[key] *= -1 if charge else 1
                 self.attributes[key]["flow"] = "charge" if charge else "discharge"

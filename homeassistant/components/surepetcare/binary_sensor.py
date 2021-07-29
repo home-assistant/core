@@ -35,12 +35,12 @@ async def async_setup_platform(
     for surepy_entity in spc.states.values():
 
         # connectivity
-        if surepy_entity.type in [
+        if surepy_entity.type in (
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
             EntityType.FEEDER,
             EntityType.FELAQUA,
-        ]:
+        ):
             entities.append(DeviceConnectivity(surepy_entity.id, spc))
 
         if surepy_entity.type == EntityType.PET:

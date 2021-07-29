@@ -120,11 +120,11 @@ class OneWireProxyEntity(OneWireBaseEntity):
         else:
             if self._entity_type == SENSOR_TYPE_COUNT:
                 self._state = int(self._value_raw)
-            elif self._entity_type in [
+            elif self._entity_type in (
                 SENSOR_TYPE_SENSED,
                 SWITCH_TYPE_LATCH,
                 SWITCH_TYPE_PIO,
-            ]:
+            ):
                 self._state = int(self._value_raw) == 1
             else:
                 self._state = round(self._value_raw, 1)
