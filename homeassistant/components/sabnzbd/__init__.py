@@ -1,6 +1,7 @@
 """Support for monitoring an SABnzbd NZB client."""
 from datetime import timedelta
 import logging
+from typing import Dict
 
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 import voluptuous as vol
@@ -31,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "sabnzbd"
 DATA_SABNZBD = "sabznbd"
 
-_CONFIGURING = {}
+_CONFIGURING: Dict[str, str] = {}
 
 ATTR_SPEED = "speed"
 BASE_URL_FORMAT = "{}://{}:{}/"
