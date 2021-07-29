@@ -156,7 +156,8 @@ class EnergyCostSensor(SensorEntity):
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
-        self._attr_state = self._cur_value = 0.0
+        self._attr_state = 0.0
+        self._cur_value = 0.0
         self._attr_last_reset = dt_util.utcnow()
         self._last_energy_sensor_state = energy_state
         self.async_write_ha_state()
