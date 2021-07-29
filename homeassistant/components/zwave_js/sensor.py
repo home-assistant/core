@@ -306,7 +306,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
             options,
         )
         self._attr_last_reset = dt.utcnow()
-        # Notify other meters that may have been reset
+        # Notify meters that may have been reset
         async_dispatcher_send(
             self.hass,
             f"{DOMAIN}_{SERVICE_RESET_METER}",
