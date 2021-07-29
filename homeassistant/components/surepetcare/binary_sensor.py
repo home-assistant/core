@@ -62,11 +62,10 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         surepy_entity: SurepyEntity = self._spc.states[self._id]
 
         # cover special case where a device has no name set
-        if surepy_entity.name:
-            name = surepy_entity.name
-        else:
-            name = f"Unnamed {surepy_entity.type.name.capitalize()}"
+        type_name = surepy_entity.type.name.replace("_", " ").title()
+        name = surepy_entity.name if surepy_entity.name else f"Unnamed {type_name}"
 
+        self._attr_name = f"{type_name} {name}"
         self._attr_device_class = device_class
         self._attr_name = f"{surepy_entity.type.name.capitalize()} {name.capitalize()}"
         self._attr_unique_id = f"{surepy_entity.household_id}-{self._id}"
@@ -166,10 +165,14 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     ) -> None:
         """Initialize a Sure Petcare Device."""
         super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY)
-        self._attr_name = f"{self.name}_connectivity"
         self._attr_unique_id = (
             f"{self._spc.states[self._id].household_id}-{self._id}-connectivity"
         )
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return f"{self._attr_name} Connectivity"
 
     @callback
     def _async_update(self) -> None:

@@ -169,7 +169,9 @@ class FeederBowl(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, _id: int, spc: SurePetcareAPI, bowl_data: dict[str, int | str]):
+    def __init__(
+        self, _id: int, spc: SurePetcareAPI, bowl_data: dict[str, int | str]
+    ) -> None:
         """Initialize a Sure Petcare Feeder-Bowl sensor."""
 
         self.feeder_id = _id
@@ -182,6 +184,8 @@ class FeederBowl(SensorEntity):
         self._surepy_entity: SureFeederBowl = self._spc.states[_id].bowls[self.bowl_id]
         self._state = bowl_data
 
+        # https://github.com/PyCQA/pylint/issues/2062
+        # pylint: disable=no-member
         self._attr_name = (
             f"{EntityType.FEEDER.name.replace('_', ' ').title()} "
             f"{self._surepy_entity.name.capitalize()}"
@@ -230,6 +234,10 @@ class Feeder(SensorEntity):
         self._spc = spc
         self._surepy_entity: SureFeeder = self._spc.states[self._id]
 
+        self._state = self._surepy_entity.raw_data()["status"]
+
+        # https://github.com/PyCQA/pylint/issues/2062
+        # pylint: disable=no-member
         self._attr_name = (
             f"{EntityType.FEEDER.name.replace('_', ' ').title()} "
             f"{self._surepy_entity.name.capitalize()}"
@@ -243,7 +251,7 @@ class Feeder(SensorEntity):
     def _async_update(self) -> None:
         """Get the latest data and update the state."""
 
-        _LOGGER.debug("🐾  updating %s...", self._surepy_entity.name)
+        _LOGGER.debug("🐾  updating %s... ", self._surepy_entity.name)
 
         self._state = self._surepy_entity.raw_data()["status"]
 
@@ -255,7 +263,9 @@ class Feeder(SensorEntity):
         if lunch_data := self._surepy_entity.raw_data().get("lunch"):
             _LOGGER.debug("🐾  lunch_data: %s", lunch_data)
             for bowl_data in lunch_data["weights"]:
-                self._surepy_entity.bowls[bowl_data["index"]]._data = bowl_data
+                self._surepy_entity.bowls[bowl_data["index"]] = SureFeederBowl(
+                    data=bowl_data, feeder=self._surepy_entity
+                )
 
         self.async_write_ha_state()
 

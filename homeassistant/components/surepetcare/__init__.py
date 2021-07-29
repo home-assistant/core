@@ -111,6 +111,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Lower,
                 vol.In(
                     [
+                        # https://github.com/PyCQA/pylint/issues/2062
+                        # pylint: disable=no-member
                         LockState.UNLOCKED.name.lower(),
                         LockState.LOCKED_IN.name.lower(),
                         LockState.LOCKED_OUT.name.lower(),
@@ -143,7 +145,7 @@ class SurePetcareAPI:
     async def async_update(self, _: Any = None) -> None:
         """Get the latest data from Sure Petcare."""
 
-        _LOGGER.debug("🐾  updating sure petcare data...")
+        _LOGGER.debug("🐾  updating sure petcare data... ")
 
         try:
             self.states = await self.surepy.get_entities(refresh=True)
@@ -158,6 +160,8 @@ class SurePetcareAPI:
     async def set_lock_state(self, flap_id: int, state: str) -> None:
         """Update the lock state of a flap."""
 
+        # https://github.com/PyCQA/pylint/issues/2062
+        # pylint: disable=no-member
         if state == LockState.UNLOCKED.name.lower():
             await self.surepy.sac.unlock(flap_id)
         elif state == LockState.LOCKED_IN.name.lower():
