@@ -162,8 +162,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     "" if unit is None else unit
                 )
             if self.device_class is None:
-                device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
-                if device_class == DEVICE_CLASS_POWER:
+                if new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER:
                     self._attr_device_class = DEVICE_CLASS_ENERGY
             try:
                 # integration as the Riemann integral of previous measures.
