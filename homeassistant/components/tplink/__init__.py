@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(switch.get_sysinfo)
         except SmartDeviceException as ex:
             _LOGGER.debug(ex)
-            raise PlatformNotReady from ex
+            raise ConfigEntryNotReady from ex
 
         hass.data[DOMAIN][COORDINATORS][
             switch.mac
@@ -186,11 +186,12 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
         info = self.smartplug.sys_info
-        data = {}
-        data[CONF_HOST] = self.smartplug.host
-        data[CONF_MAC] = info["mac"]
-        data[CONF_MODEL] = info["model"]
-        data[CONF_SW_VERSION] = info["sw_ver"]
+        data = {
+            CONF_HOST: self.smartplug.host,
+            CONF_MAC: info["mac"],
+            CONF_MODEL: info["model"],
+            CONF_SW_VERSION: info["sw_ver"],
+        }
         if self.smartplug.context is None:
             data[CONF_ALIAS] = info["alias"]
             data[CONF_DEVICE_ID] = info["mac"]
@@ -214,12 +215,15 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                 ATTR_LAST_RESET: {ATTR_TOTAL_ENERGY_KWH: utc_from_timestamp(0)},
             }
             emeter_statics = self.smartplug.get_emeter_daily()
+            data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
+                ATTR_TODAY_ENERGY_KWH
+            ] = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
             if emeter_statics.get(int(time.strftime("%e"))):
-                data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
-                    ATTR_TODAY_ENERGY_KWH
-                ] = datetime.utcnow().date()
                 data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
                     float(emeter_statics[int(time.strftime("%e"))]), 3
                 )
+            else:
+                # today's consumption not available, when device was off all the day
+                data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = 0.0
 
         return data

@@ -1,27 +1,18 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from pyHS100 import SmartPlug
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
-    ATTR_STATE_CLASS,
     SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.components.switch import ATTR_TODAY_ENERGY_KWH
 from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ALIAS,
-    CONF_DEVICE_ID,
-    CONF_MAC,
-)
+from homeassistant.const import CONF_ALIAS, CONF_DEVICE_ID, CONF_MAC
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -32,7 +23,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    ATTR_TOTAL_ENERGY_KWH,
     CONF_EMETER_PARAMS,
     CONF_MODEL,
     CONF_SW_VERSION,
@@ -58,11 +48,9 @@ async def async_setup_entry(
         coordinator: SmartPlugDataUpdateCoordinator = coordinators[switch.mac]
         if not switch.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
             continue
-        for sensor, attributes in ENERGY_SENSORS.items():
-            if coordinator.data[CONF_EMETER_PARAMS].get(sensor) is not None:
-                entities.append(
-                    SmartPlugSensor(switch, coordinator, sensor, attributes)
-                )
+        for description in ENERGY_SENSORS:
+            if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
+                entities.append(SmartPlugSensor(switch, coordinator, description))
 
     async_add_entities(entities)
 
@@ -74,17 +62,16 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
         self,
         smartplug: SmartPlug,
         coordinator: DataUpdateCoordinator,
-        data_key: str,
-        attributes: dict[str, str],
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.smartplug = smartplug
-        self.data_key = data_key
-        self._attr_unit_of_measurement = attributes[ATTR_UNIT_OF_MEASUREMENT]
-        self._attr_device_class = attributes[ATTR_DEVICE_CLASS]
-        self._attr_state_class = attributes[ATTR_STATE_CLASS]
-        self.friendly_name = attributes[ATTR_FRIENDLY_NAME]
+        self.entity_description = description
+        self._attr_name = f"{coordinator.data[CONF_ALIAS]} {description.name}"
+        self._attr_last_reset = coordinator.data[CONF_EMETER_PARAMS][
+            ATTR_LAST_RESET
+        ].get(description.key)
 
     @property
     def data(self) -> dict[str, Any]:
@@ -94,24 +81,12 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self) -> float | None:
         """Return the sensors state."""
-        return self.data[CONF_EMETER_PARAMS][self.data_key]
-
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return the time when the sensor was last reset, if any."""
-        if self.data_key in [ATTR_TODAY_ENERGY_KWH, ATTR_TOTAL_ENERGY_KWH]:
-            return self.data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][self.data_key]
-        return None
+        return self.data[CONF_EMETER_PARAMS][self.entity_description.key]
 
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return f"{self.data[CONF_DEVICE_ID]}_{self.data_key}"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the Smart Plug energy sensor."""
-        return f"{self.data[CONF_ALIAS]} {self.friendly_name}"
+        return f"{self.data[CONF_DEVICE_ID]}_{self.entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -1,12 +1,12 @@
 """Const for TP-Link."""
 import datetime
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription,
+)
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     ATTR_VOLTAGE,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -40,35 +40,38 @@ CONF_SENSOR = "sensor"
 
 PLATFORMS = [CONF_LIGHT, CONF_SENSOR, CONF_SWITCH]
 
-ENERGY_SENSORS = {
-    ATTR_CURRENT_POWER_W: {
-        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_FRIENDLY_NAME: "Current Consumption",
-    },
-    ATTR_TOTAL_ENERGY_KWH: {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-        ATTR_STATE_CLASS: None,
-        ATTR_FRIENDLY_NAME: "Total Consumption",
-    },
-    ATTR_TODAY_ENERGY_KWH: {
-        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-        ATTR_STATE_CLASS: None,
-        ATTR_FRIENDLY_NAME: "Today's Consumption",
-    },
-    ATTR_VOLTAGE: {
-        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_FRIENDLY_NAME: "Voltage",
-    },
-    ATTR_CURRENT_A: {
-        ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_FRIENDLY_NAME: "Current",
-    },
-}
+ENERGY_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key=ATTR_CURRENT_POWER_W,
+        unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+        name="Current Consumption",
+    ),
+    SensorEntityDescription(
+        key=ATTR_TOTAL_ENERGY_KWH,
+        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        name="Total Consumption",
+    ),
+    SensorEntityDescription(
+        key=ATTR_TODAY_ENERGY_KWH,
+        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        name="Today's Consumption",
+    ),
+    SensorEntityDescription(
+        key=ATTR_VOLTAGE,
+        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        name="Voltage",
+    ),
+    SensorEntityDescription(
+        key=ATTR_CURRENT_A,
+        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+        name="Current",
+    ),
+]
