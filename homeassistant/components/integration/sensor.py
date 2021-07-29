@@ -137,15 +137,12 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             except ValueError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
             else:
-                if state.attributes.get(ATTR_LAST_RESET) is None:
-                    self._attr_last_reset = dt_util.utc_from_timestamp(0)
-                else:
-                    last_reset = dt_util.parse_datetime(
-                        state.attributes[ATTR_LAST_RESET]
-                    )
-                    self._attr_last_reset = (
-                        last_reset if last_reset else dt_util.utc_from_timestamp(0)
-                    )
+                last_reset = dt_util.parse_datetime(
+                    state.attributes.get(ATTR_LAST_RESET, "")
+                )
+                self._attr_last_reset = (
+                    last_reset if last_reset else dt_util.utc_from_timestamp(0)
+                )
 
         @callback
         def calc_integration(event):
