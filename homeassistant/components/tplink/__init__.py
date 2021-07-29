@@ -229,6 +229,6 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                     # today's consumption not available, when device was off all the day
                     data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = 0.0
         except SmartDeviceException as ex:
-            raise UpdateFailed(ex)
+            raise UpdateFailed(ex) from ex
 
         return data
