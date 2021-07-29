@@ -1143,9 +1143,6 @@ pdunehd==1.3.2
 # homeassistant.components.pencom
 pencompy==0.0.3
 
-# homeassistant.components.sense
-pendulum==2.1.2
-
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora

@@ -1,8 +1,6 @@
 """Support for monitoring a Sense energy sensor."""
 import datetime
 
-import pendulum
-
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -263,9 +261,9 @@ class SenseTrendsSensor(SensorEntity):
     @property
     def last_reset(self) -> datetime.datetime:
         """Return the time when the sensor was last reset, if any."""
-        return pendulum.now(dt_util.DEFAULT_TIME_ZONE).start_of(
-            self._sensor_type.lower()
-        )
+        if self._sensor_type == "DAY":
+            return dt_util.start_of_local_day()
+        return None
 
     @callback
     def _async_update(self):
