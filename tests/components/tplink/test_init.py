@@ -6,7 +6,7 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from pyHS100 import SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
+from pyHS100 import SmartBulb, SmartDevice, SmartDeviceException, SmartPlug, smartstrip
 from pyHS100.smartdevice import EmeterStatus
 import pytest
 
@@ -39,7 +39,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utc_from_timestamp
 
 from tests.common import MockConfigEntry, mock_coro
-from tests.components.tplink.consts import SMARTPLUGSWITCH_DATA
+from tests.components.tplink.consts import SMARTPLUGSWITCH_DATA, SMARTSTRIPWITCH_DATA
 
 
 async def test_creating_entry_tries_discover(hass):
@@ -324,6 +324,49 @@ async def test_smartplug_without_consumption_sensors(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         assert SmartPlugSensor.call_count == 0
+
+
+async def test_smartstrip_device(hass: HomeAssistant):
+    """Test discover a SmartStrip devices."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: True,
+        }
+    }
+
+    class SmartStrip(smartstrip.SmartStrip):
+        """Moked SmartStrip class."""
+
+        def get_sysinfo(self):
+            return SMARTSTRIPWITCH_DATA["sysinfo"]
+
+    with patch(
+        "homeassistant.components.tplink.common.Discover.discover"
+    ) as discover, patch(
+        "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.common.SmartPlug.get_sysinfo",
+        return_value=SMARTSTRIPWITCH_DATA["sysinfo"],
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
+    ):
+
+        strip = SmartStrip("123.123.123.123")
+        discover.return_value = {"123.123.123.123": strip}
+
+        assert await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert hass.data.get(tplink.DOMAIN)
+        assert hass.data[tplink.DOMAIN].get(COORDINATORS)
+        assert hass.data[tplink.DOMAIN][COORDINATORS].get(strip.mac)
+        assert isinstance(
+            hass.data[tplink.DOMAIN][COORDINATORS][strip.mac],
+            tplink.SmartPlugDataUpdateCoordinator,
+        )
+        data = hass.data[tplink.DOMAIN][COORDINATORS][strip.mac].data
+        assert data[CONF_ALIAS] == strip.sys_info["children"][0]["alias"]
+        assert data[CONF_DEVICE_ID] == "1"
 
 
 async def test_no_config_creates_no_entry(hass):
