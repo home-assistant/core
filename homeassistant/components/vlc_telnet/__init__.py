@@ -10,12 +10,6 @@ from .const import DATA_AVAILABLE, DATA_VLC, DOMAIN, LOGGER
 PLATFORMS = ["media_player"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the VLC media player Telnet component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up VLC media player Telnet from a config entry."""
     config = entry.data
@@ -41,7 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.error("Failed to login to VLC")
             return False
 
-    hass.data[DOMAIN][entry.entry_id] = {DATA_VLC: vlc, DATA_AVAILABLE: available}
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data[entry.entry_id] = {DATA_VLC: vlc, DATA_AVAILABLE: available}
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
