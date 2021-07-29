@@ -116,7 +116,8 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
                 )
             )
 
-    async def handle_event(self, event: dict) -> None:
+    @callback
+    def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
 
