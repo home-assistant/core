@@ -396,7 +396,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             )
 
         if (
-            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+            preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
             and self._model == NA_VALVE
             and self.hvac_mode == HVAC_MODE_HEAT
         ):
@@ -405,7 +405,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 STATE_NETATMO_HOME,
             )
         elif (
-            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE
+            preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX) and self._model == NA_VALVE
         ):
             await self._home_status.async_set_room_thermpoint(
                 self._id,
@@ -413,17 +413,17 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 DEFAULT_MAX_TEMP,
             )
         elif (
-            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+            preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
             and self.hvac_mode == HVAC_MODE_HEAT
         ):
             await self._home_status.async_set_room_thermpoint(
                 self._id, STATE_NETATMO_HOME
             )
-        elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]:
+        elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self._home_status.async_set_room_thermpoint(
                 self._id, PRESET_MAP_NETATMO[preset_mode]
             )
-        elif preset_mode in [PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY]:
+        elif preset_mode in (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY):
             await self._home_status.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
