@@ -143,6 +143,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 self._attr_last_reset = (
                     last_reset if last_reset else dt_util.utc_from_timestamp(0)
                 )
+                self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         @callback
         def calc_integration(event):
