@@ -38,7 +38,7 @@ def _markets_schema(markets: list | None) -> dict[str, Any]:
     return vol.Schema({vol.Required(CONF_MARKETS): cv.multi_select(markets_dict)})
 
 
-async def validate_input(hass: HomeAssistant, data: dict):
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Get markets and balance data."""
 
     markets_list = []
@@ -134,8 +134,6 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, config)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except InvalidResponse:
-            errors["base"] = "invalid_response"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
