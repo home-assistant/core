@@ -58,6 +58,7 @@ from .data_handler import (
     HOMESTATUS_DATA_CLASS_NAME,
     NetatmoDataHandler,
 )
+from .helper import get_all_home_ids, update_climate_schedules
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,9 +132,6 @@ async def async_setup_entry(
     if not home_data or home_data.raw_data == {}:
         raise PlatformNotReady
 
-    if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
-        raise PlatformNotReady
-
     entities = []
     for home_id in get_all_home_ids(home_data):
         for room_id in home_data.rooms[home_id]:
@@ -145,12 +143,12 @@ async def async_setup_entry(
             if home_status and room_id in home_status.rooms:
                 entities.append(NetatmoThermostat(data_handler, home_id, room_id))
 
-        hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
-            schedule_id: schedule_data.get("name")
-            for schedule_id, schedule_data in (
-                data_handler.data[HOMEDATA_DATA_CLASS_NAME].schedules[home_id].items()
-            )
-        }
+    hass.data[DOMAIN][DATA_SCHEDULES].update(
+        update_climate_schedules(
+            home_ids=get_all_home_ids(home_data),
+            schedules=data_handler.data[HOMEDATA_DATA_CLASS_NAME].schedules,
+        )
+    )
 
     hass.data[DOMAIN][DATA_HOMES] = {
         home_id: home_data.get("name")
@@ -257,7 +255,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         assert device
         self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._home_id] = device.id
 
-    async def handle_event(self, event: dict) -> None:
+    @callback
+    def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
 
@@ -617,14 +616,3 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         device_info: DeviceInfo = super().device_info
         device_info["suggested_area"] = self._room_data["name"]
         return device_info
-
-
-def get_all_home_ids(home_data: pyatmo.HomeData | None) -> list[str]:
-    """Get all the home ids returned by NetAtmo API."""
-    if home_data is None:
-        return []
-    return [
-        home_data.homes[home_id]["id"]
-        for home_id in home_data.homes
-        if "modules" in home_data.homes[home_id]
-    ]
