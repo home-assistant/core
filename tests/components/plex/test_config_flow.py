@@ -12,6 +12,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex import config_flow
 from homeassistant.components.plex.const import (
     AUTOMATIC_SETUP_STRING,
+    CONF_CONFIGURED_HOST,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -407,6 +408,7 @@ async def test_option_flow(hass, entry, mock_plex_server):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: list(mock_plex_server.accounts),
@@ -415,6 +417,7 @@ async def test_option_flow(hass, entry, mock_plex_server):
     assert result["type"] == "create_entry"
     assert result["data"] == {
         MP_DOMAIN: {
+            CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: {
@@ -439,6 +442,7 @@ async def test_missing_option_flow(hass, entry, mock_plex_server):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: list(mock_plex_server.accounts),
@@ -447,6 +451,7 @@ async def test_missing_option_flow(hass, entry, mock_plex_server):
     assert result["type"] == "create_entry"
     assert result["data"] == {
         MP_DOMAIN: {
+            CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: {

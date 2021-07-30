@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
+    CONF_CONFIGURED_HOST,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
@@ -74,7 +75,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, entry):  # noqa: C901
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
@@ -87,6 +88,26 @@ async def async_setup_entry(hass, entry):
         options = dict(entry.options)
         options.setdefault(MP_DOMAIN, {})
         hass.config_entries.async_update_entry(entry, options=options)
+
+    # Update config entry with config option override
+    desired_hostname = entry.options[MP_DOMAIN].get(CONF_CONFIGURED_HOST)
+    if desired_hostname and desired_hostname != server_config[CONF_URL]:
+        _LOGGER.debug(
+            "Changing hostname from %s to %s", server_config[CONF_URL], desired_hostname
+        )
+        new_title = entry.title
+        if not entry.title or entry.title == server_config[CONF_URL]:
+            new_title = desired_hostname
+        new_server_config = {
+            **server_config,
+            CONF_URL: desired_hostname,
+        }
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, PLEX_SERVER_CONFIG: new_server_config},
+            title=new_title,
+        )
+        server_config = entry.data[PLEX_SERVER_CONFIG]
 
     plex_server = PlexServer(
         hass,

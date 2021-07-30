@@ -51,6 +51,7 @@
       "plex_mp_settings": {
         "description": "Options for Plex Media Players",
         "data": {
+          "configured_host": "Select connection hostname",
           "use_episode_art": "Use episode art",
           "ignore_new_shared_users": "Ignore new managed/shared users",
           "monitored_users": "Monitored users",

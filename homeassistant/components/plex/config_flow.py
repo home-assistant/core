@@ -31,6 +31,7 @@ from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     AUTOMATIC_SETUP_STRING,
+    CONF_CONFIGURED_HOST,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -340,6 +341,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Plex options flow."""
         self.options = copy.deepcopy(dict(config_entry.options))
         self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+        self.current_host_used = config_entry.data[PLEX_SERVER_CONFIG][CONF_URL]
 
     async def async_step_init(self, user_input=None):
         """Manage the Plex options."""
@@ -350,6 +352,14 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
 
         if user_input is not None:
+            new_host = user_input[CONF_CONFIGURED_HOST]
+            if new_host != self.current_host_used:
+                _LOGGER.warning(
+                    "Configured hostname changed to %s, reload the integration to take effect",
+                    new_host,
+                )
+
+            self.options[MP_DOMAIN][CONF_CONFIGURED_HOST] = new_host
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
                 CONF_USE_EPISODE_ART
             ]
@@ -372,6 +382,27 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         available_accounts = {name: name for name in plex_server.accounts}
         available_accounts[plex_server.owner] += " [Owner]"
 
+        available_connections = {}
+        if plex_server.account:
+            resource = await self.hass.async_add_executor_job(
+                plex_server.account.resource, plex_server.friendly_name
+            )
+            connections = {}
+            connections["local"] = resource.preferred_connections(
+                locations=["local"], schemes=["http", "https"]
+            )
+            connections["remote"] = resource.preferred_connections(locations=["remote"])
+            connections["relay"] = resource.preferred_connections(locations=["relay"])
+            for conn_type, known_connections in connections.items():
+                for host in known_connections:
+                    available_connections[host] = f"{host} [{conn_type}]"
+        else:
+            available_connections[self.current_host_used] = self.current_host_used
+        desired_or_current = (
+            self.options[MP_DOMAIN].get(CONF_CONFIGURED_HOST) or self.current_host_used
+        )
+        default_connection = available_connections.get(desired_or_current)
+
         default_accounts = plex_server.accounts
         known_accounts = set(plex_server.option_monitored_users)
         if known_accounts:
@@ -392,6 +423,10 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="plex_mp_settings",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_CONFIGURED_HOST,
+                        default=default_connection,
+                    ): vol.In(available_connections),
                     vol.Required(
                         CONF_USE_EPISODE_ART,
                         default=plex_server.option_use_episode_art,

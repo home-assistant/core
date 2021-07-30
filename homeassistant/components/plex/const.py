@@ -33,6 +33,7 @@ PLEX_UPDATE_SENSOR_SIGNAL = "plex_update_sensor_signal.{}"
 
 CONF_SERVER = "server"
 CONF_SERVER_IDENTIFIER = "server_id"
+CONF_CONFIGURED_HOST = "configured_host"
 CONF_USE_EPISODE_ART = "use_episode_art"
 CONF_IGNORE_NEW_SHARED_USERS = "ignore_new_shared_users"
 CONF_IGNORE_PLEX_WEB_CLIENTS = "ignore_plex_web_clients"
