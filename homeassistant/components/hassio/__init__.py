@@ -89,8 +89,6 @@ SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
 SERVICE_SNAPSHOT_FULL = "snapshot_full"
 SERVICE_SNAPSHOT_PARTIAL = "snapshot_partial"
-SERVICE_BACKUP_FULL = "backup_full"
-SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
@@ -103,11 +101,11 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
 )
 
-SCHEMA_BACKUP_FULL = vol.Schema(
+SCHEMA_SNAPSHOT_FULL = vol.Schema(
     {vol.Optional(ATTR_NAME): cv.string, vol.Optional(ATTR_PASSWORD): cv.string}
 )
 
-SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
+SCHEMA_SNAPSHOT_PARTIAL = SCHEMA_SNAPSHOT_FULL.extend(
     {
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
@@ -115,12 +113,7 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
 )
 
 SCHEMA_RESTORE_FULL = vol.Schema(
-    {
-        vol.Exclusive(ATTR_SLUG, ATTR_SLUG): cv.slug,
-        vol.Exclusive(ATTR_SNAPSHOT, ATTR_SLUG): cv.slug,
-        vol.Optional(ATTR_PASSWORD): cv.string,
-    },
-    cv.has_at_least_one_key(ATTR_SLUG, ATTR_SNAPSHOT),
+    {vol.Required(ATTR_SNAPSHOT): cv.slug, vol.Optional(ATTR_PASSWORD): cv.string}
 )
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
@@ -140,29 +133,22 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_STDIN: ("/addons/{addon}/stdin", SCHEMA_ADDON_STDIN, 60, False),
     SERVICE_HOST_SHUTDOWN: ("/host/shutdown", SCHEMA_NO_DATA, 60, False),
     SERVICE_HOST_REBOOT: ("/host/reboot", SCHEMA_NO_DATA, 60, False),
-    SERVICE_BACKUP_FULL: ("/backups/new/full", SCHEMA_BACKUP_FULL, 300, True),
-    SERVICE_BACKUP_PARTIAL: (
-        "/backups/new/partial",
-        SCHEMA_BACKUP_PARTIAL,
+    SERVICE_SNAPSHOT_FULL: ("/snapshots/new/full", SCHEMA_SNAPSHOT_FULL, 300, True),
+    SERVICE_SNAPSHOT_PARTIAL: (
+        "/snapshots/new/partial",
+        SCHEMA_SNAPSHOT_PARTIAL,
         300,
         True,
     ),
     SERVICE_RESTORE_FULL: (
-        "/backups/{slug}/restore/full",
+        "/snapshots/{snapshot}/restore/full",
         SCHEMA_RESTORE_FULL,
         300,
         True,
     ),
     SERVICE_RESTORE_PARTIAL: (
-        "/backups/{slug}/restore/partial",
+        "/snapshots/{snapshot}/restore/partial",
         SCHEMA_RESTORE_PARTIAL,
-        300,
-        True,
-    ),
-    SERVICE_SNAPSHOT_FULL: ("/backups/new/full", SCHEMA_BACKUP_FULL, 300, True),
-    SERVICE_SNAPSHOT_PARTIAL: (
-        "/backups/new/partial",
-        SCHEMA_BACKUP_PARTIAL,
         300,
         True,
     ),
@@ -286,16 +272,16 @@ async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict
 
 @bind_hass
 @api_data
-async def async_create_backup(
+async def async_create_snapshot(
     hass: HomeAssistant, payload: dict, partial: bool = False
 ) -> dict:
-    """Create a full or partial backup.
+    """Create a full or partial snapshot.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
-    backup_type = "partial" if partial else "full"
-    command = f"/backups/new/{backup_type}"
+    snapshot_type = "partial" if partial else "full"
+    command = f"/snapshots/new/{snapshot_type}"
     return await hassio.send_command(command, payload=payload, timeout=None)
 
 
@@ -467,22 +453,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async def async_service_handler(service):
         """Handle service calls for Hass.io."""
         api_command = MAP_SERVICE_API[service.service][0]
-        if "snapshot" in service.service:
-            _LOGGER.warning(
-                "The service '%s' is deprecated and will be removed in Home Assistant 2021.10, use '%s' instead",
-                service.service,
-                service.service.replace("snapshot", "backup"),
-            )
         data = service.data.copy()
         addon = data.pop(ATTR_ADDON, None)
-        slug = data.pop(ATTR_SLUG, None)
         snapshot = data.pop(ATTR_SNAPSHOT, None)
-        if snapshot is not None:
-            _LOGGER.warning(
-                "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.10, use 'slug' instead"
-            )
-            slug = snapshot
-
         payload = None
 
         # Pass data to Hass.io API
@@ -494,12 +467,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         # Call API
         try:
             await hassio.send_command(
-                api_command.format(addon=addon, slug=slug),
+                api_command.format(addon=addon, snapshot=snapshot),
                 payload=payload,
                 timeout=MAP_SERVICE_API[service.service][2],
             )
         except HassioAPIError as err:
-            _LOGGER.error("Error on Supervisor API: %s", err)
+            _LOGGER.error("Error on Hass.io API: %s", err)
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
