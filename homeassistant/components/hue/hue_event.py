@@ -58,7 +58,7 @@ class HueEvent(GenericHueDevice):
             # Filter out non-button events if last event type is available
             or (
                 self.sensor.last_event is not None
-                and self.sensor.last_event != EVENT_BUTTON
+                and self.sensor.last_event["type"] != EVENT_BUTTON
             )
             or
             # Filter out old states. Can happen when events fire while refreshing
