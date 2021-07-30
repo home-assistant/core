@@ -137,10 +137,10 @@ class ECSensor(SensorEntity):
         else:
             self._state = value
 
-        if sensor_data.get("unit") == "C" or self.sensor_type in [
+        if sensor_data.get("unit") == "C" or self.sensor_type in (
             "wind_chill",
             "humidex",
-        ]:
+        ):
             self._unit = TEMP_CELSIUS
             self._device_class = DEVICE_CLASS_TEMPERATURE
         else:

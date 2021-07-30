@@ -220,9 +220,6 @@ aionotify==0.2.0
 # homeassistant.components.notion
 aionotion==3.0.2
 
-# homeassistant.components.automate
-aiopulse2==0.6.0
-
 # homeassistant.components.acmeda
 aiopulse==0.4.2
 
@@ -367,7 +364,7 @@ beautifulsoup4==4.9.3
 bellows==0.26.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.15
+bimmer_connected==0.7.16
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -785,7 +782,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210728.0
+home-assistant-frontend==20210729.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2472,7 +2469,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.2
 
 # homeassistant.components.zha
-zigpy==0.36.0
+zigpy==0.36.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

@@ -22,8 +22,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -142,8 +144,14 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
                 return DEVICE_CLASS_HUMIDITY
             if "temperature" in property_lower:
                 return DEVICE_CLASS_TEMPERATURE
+        if self.info.primary_value.metadata.unit == "A":
+            return DEVICE_CLASS_CURRENT
         if self.info.primary_value.metadata.unit == "W":
             return DEVICE_CLASS_POWER
+        if self.info.primary_value.metadata.unit == "kWh":
+            return DEVICE_CLASS_ENERGY
+        if self.info.primary_value.metadata.unit == "V":
+            return DEVICE_CLASS_VOLTAGE
         if self.info.primary_value.metadata.unit == "Lux":
             return DEVICE_CLASS_ILLUMINANCE
         return None
@@ -229,8 +237,6 @@ class ZWaveNumericSensor(ZwaveSensorBase):
 class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
     """Representation of a Z-Wave Meter CC sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -241,10 +247,8 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
         super().__init__(config_entry, client, info)
 
         # Entity class attributes
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_last_reset = dt.utc_from_timestamp(0)
-        self._attr_device_class = DEVICE_CLASS_POWER
-        if self.info.primary_value.metadata.unit == "kWh":
-            self._attr_device_class = DEVICE_CLASS_ENERGY
 
     @callback
     def async_update_last_reset(

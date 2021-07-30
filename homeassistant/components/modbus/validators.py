@@ -67,7 +67,7 @@ def struct_validator(config):
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     swap_type = config.get(CONF_SWAP)
-    if data_type in [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]:
+    if data_type in (DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT):
         error = f"{name}  with {data_type} is not valid, trying to convert"
         _LOGGER.warning(error)
         try:

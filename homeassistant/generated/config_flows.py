@@ -28,7 +28,6 @@ FLOWS = [
     "atag",
     "august",
     "aurora",
-    "automate",
     "awair",
     "axis",
     "azure_devops",

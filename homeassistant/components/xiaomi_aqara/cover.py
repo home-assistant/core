@@ -16,7 +16,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["cover"]:
         model = device["model"]
-        if model in ["curtain", "curtain.aq2", "curtain.hagl04"]:
+        if model in ("curtain", "curtain.aq2", "curtain.hagl04"):
             if "proto" not in device or int(device["proto"][0:1]) == 1:
                 data_key = DATA_KEY_PROTO_V1
             else:

@@ -87,7 +87,7 @@ async def async_setup_entry(
             (
                 key
                 for key in config_entry.data.get(CONF_APPS, {})
-                if key in [CONF_INCLUDE, CONF_EXCLUDE]
+                if key in (CONF_INCLUDE, CONF_EXCLUDE)
             ),
             None,
         )
