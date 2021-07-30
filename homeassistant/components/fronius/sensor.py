@@ -223,16 +223,14 @@ class FroniusInverterSystem(FroniusAdapter):
 
     def entity_description(self, key):
         """Return the entity descriptor."""
-        if key.startswith(("energy_day", "energy_year")):
-            last_reset = None
-        else:
-            last_reset = dt.utc_from_timestamp(0)
+        if key != "energy_total":
+            return None
 
         return SensorEntityDescription(
             key=self._name,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=last_reset,
+            last_reset=dt.utc_from_timestamp(0),
         )
 
     async def _update(self):
@@ -245,16 +243,14 @@ class FroniusInverterDevice(FroniusAdapter):
 
     def entity_description(self, key):
         """Return the entity descriptor."""
-        if key.startswith(("energy_day", "energy_year")):
-            last_reset = None
-        else:
-            last_reset = dt.utc_from_timestamp(0)
+        if key != "energy_total":
+            return None
 
         return SensorEntityDescription(
             key=self._name,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=last_reset,
+            last_reset=dt.utc_from_timestamp(0),
         )
 
     async def _update(self):
@@ -275,16 +271,14 @@ class FroniusMeterSystem(FroniusAdapter):
 
     def entity_description(self, key):
         """Return the entity descriptor."""
-        if key.startswith(("energy_day", "energy_year")):
-            last_reset = None
-        else:
-            last_reset = dt.utc_from_timestamp(0)
+        if key != "energy_total":
+            return None
 
         return SensorEntityDescription(
             key=self._name,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=last_reset,
+            last_reset=dt.utc_from_timestamp(0),
         )
 
     async def _update(self):
@@ -297,16 +291,14 @@ class FroniusMeterDevice(FroniusAdapter):
 
     def entity_description(self, key):
         """Return the entity descriptor."""
-        if key.startswith(("energy_day", "energy_year")):
-            last_reset = None
-        else:
-            last_reset = dt.utc_from_timestamp(0)
+        if key != "energy_total":
+            return None
 
         return SensorEntityDescription(
             key=self._name,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=last_reset,
+            last_reset=dt.utc_from_timestamp(0),
         )
 
     async def _update(self):
