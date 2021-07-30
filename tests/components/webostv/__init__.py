@@ -10,7 +10,7 @@ TV_NAME = "fake"
 ENTITY_ID = f"{MP_DOMAIN}.{TV_NAME}"
 
 
-async def setup_webostv(hass):
+async def setup_webostv(hass, unique_id=None):
     """Initialize webostv and media_player for tests."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -19,6 +19,7 @@ async def setup_webostv(hass):
             CONF_CLIENT_SECRET: "0123456789",
         },
         title=TV_NAME,
+        unique_id=unique_id,
     )
     entry.add_to_hass(hass)
 
