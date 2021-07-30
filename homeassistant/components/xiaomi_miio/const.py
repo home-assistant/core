@@ -18,7 +18,6 @@ CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 # Keys
 KEY_COORDINATOR = "coordinator"
 KEY_DEVICE = "device"
-KEY_MIGRATE_ENTITY_NAME = "migrate_entity_name"
 
 # Attributes
 ATTR_AVAILABLE = "available"
