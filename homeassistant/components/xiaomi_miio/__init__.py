@@ -21,7 +21,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_MIGRATE_ENTITY_NAME,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -143,8 +142,6 @@ async def async_create_miio_device_and_coordinator(
         KEY_DEVICE: device,
         KEY_COORDINATOR: coordinator,
     }
-    if migrate_entity_name:
-        hass.data[DOMAIN][entry.entry_id][KEY_MIGRATE_ENTITY_NAME] = migrate_entity_name
 
     # Trigger first data fetch
     await coordinator.async_config_entry_first_refresh()
