@@ -500,11 +500,6 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         return self._device_class
 
     @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return self._attr_state_class
-
-    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         unit = self._device.status.attributes[self._attribute].unit
