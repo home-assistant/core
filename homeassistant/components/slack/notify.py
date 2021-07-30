@@ -149,15 +149,16 @@ def _async_sanitize_channel_names(channel_list: list[str]) -> list[str]:
 @callback
 def _async_templatize_blocks(hass: HomeAssistant, value: Any) -> Any:
     """Recursive template creator helper function."""
+    if isinstance(value, str):
+        tmpl = template.Template(value, hass=hass)  # type: ignore
+        return tmpl.async_render(parse_result=False)
     if isinstance(value, list):
         return [_async_templatize_blocks(hass, item) for item in value]
     if isinstance(value, dict):
         return {
             key: _async_templatize_blocks(hass, item) for key, item in value.items()
         }
-
-    tmpl = template.Template(value, hass=hass)  # type: ignore  # no-untyped-call
-    return tmpl.async_render(parse_result=False)
+    return value
 
 
 class SlackNotificationService(BaseNotificationService):
