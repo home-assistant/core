@@ -16,7 +16,6 @@ from .const import (
     FEATURE_SET_LED_BRIGHTNESS,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_MIGRATE_ENTITY_NAME,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -67,10 +66,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
-        name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
-    else:
-        name = config_entry.title
 
     if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
         entity_class = XiaomiAirHumidifierSelector
@@ -84,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for selector in SELECTOR_TYPES.values():
         entities.append(
             entity_class(
-                f"{name} {selector.name}",
+                f"{config_entry.title} {selector.name}",
                 device,
                 config_entry,
                 f"{selector.short_name}_{config_entry.unique_id}",
