@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectorError
-from twcmanager_client import client
+from twcmanager_client.client import TWCManagerClient
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,12 +39,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            api = client.TWCManagerClient(user_input["host"])
+            api = TWCManagerClient(user_input["host"])
             uuid = await api.async_get_uuid()
         except ClientConnectorError:
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+        except Exception as exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception: " + type(exception).__name__)
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(uuid)

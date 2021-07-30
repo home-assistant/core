@@ -5,7 +5,7 @@ import logging
 
 from aiohttp.web import HTTPError
 import async_timeout
-from twcmanager_client import client
+from twcmanager_client.client import TWCManagerClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    api = client.TWCManagerClient(entry.data["host"])
+    api = TWCManagerClient(entry.data["host"])
 
     async def async_update_data():
         """Fetch data from API endpoint."""
