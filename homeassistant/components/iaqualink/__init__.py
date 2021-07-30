@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from functools import wraps
 import logging
-from typing import Awaitable
 
 import aiohttp.client_exceptions
 from iaqualink.client import AqualinkClient
