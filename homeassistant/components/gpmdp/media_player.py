@@ -178,17 +178,14 @@ class GPMDP(MediaPlayerEntity):
         self._connection = create_connection
         self._url = url
         self._authorization_code = code
-        self._name = name
-        self._status = STATE_OFF
+        self._attr_name = name
+        self._attr_state = STATE_OFF
         self._ws = None
-        self._title = None
-        self._artist = None
-        self._albumart = None
         self._seek_position = None
-        self._duration = None
-        self._volume = None
         self._request_id = 0
-        self._available = True
+        self._attr_available = True
+        self._attr_media_content_type = MEDIA_TYPE_MUSIC
+        self._attr__attr_supported_features = SUPPORT_GPMDP
 
     def get_ws(self):
         """Check if the websocket is setup and connected."""
@@ -213,7 +210,7 @@ class GPMDP(MediaPlayerEntity):
         try:
             websocket = self.get_ws()
             if websocket is None:
-                self._status = STATE_OFF
+                self._attr_state = STATE_OFF
                 return
             self._request_id += 1
             websocket.send(
@@ -245,80 +242,30 @@ class GPMDP(MediaPlayerEntity):
         """Get the latest details from the player."""
         time.sleep(1)
         try:
-            self._available = True
+            self._attr_available = True
             playstate = self.send_gpmdp_msg("playback", "getPlaybackState")
             if playstate is None:
                 return
-            self._status = PLAYBACK_DICT[str(playstate["value"])]
+            self._attr_state = PLAYBACK_DICT[str(playstate["value"])]
             time_data = self.send_gpmdp_msg("playback", "getCurrentTime")
             if time_data is not None:
                 self._seek_position = int(time_data["value"] / 1000)
             track_data = self.send_gpmdp_msg("playback", "getCurrentTrack")
             if track_data is not None:
-                self._title = track_data["value"]["title"]
-                self._artist = track_data["value"]["artist"]
-                self._albumart = track_data["value"]["albumArt"]
-                self._duration = int(track_data["value"]["duration"] / 1000)
+                self._attr_media_title = track_data["value"]["title"]
+                self._attr_media_artist = track_data["value"]["artist"]
+                self._attr_media_image_url = track_data["value"]["albumArt"]
+                self._attr_media_duration = int(track_data["value"]["duration"] / 1000)
             volume_data = self.send_gpmdp_msg("volume", "getVolume")
             if volume_data is not None:
-                self._volume = volume_data["value"] / 100
+                self._attr_volume_level = volume_data["value"] / 100
         except OSError:
-            self._available = False
-
-    @property
-    def available(self):
-        """Return if media player is available."""
-        return self._available
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._status
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self._title
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media (Music track only)."""
-        return self._artist
-
-    @property
-    def media_image_url(self):
-        """Image url of current playing media."""
-        return self._albumart
+            self._attr_available = False
 
     @property
     def media_seek_position(self):
         """Time in seconds of current seek position."""
         return self._seek_position
-
-    @property
-    def media_duration(self):
-        """Time in seconds of current song duration."""
-        return self._duration
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_GPMDP
 
     def media_next_track(self):
         """Send media_next command to media player."""
@@ -331,13 +278,13 @@ class GPMDP(MediaPlayerEntity):
     def media_play(self):
         """Send media_play command to media player."""
         self.send_gpmdp_msg("playback", "playPause", False)
-        self._status = STATE_PLAYING
+        self._attr_state = STATE_PLAYING
         self.schedule_update_ha_state()
 
     def media_pause(self):
         """Send media_pause command to media player."""
         self.send_gpmdp_msg("playback", "playPause", False)
-        self._status = STATE_PAUSED
+        self._attr_state = STATE_PAUSED
         self.schedule_update_ha_state()
 
     def media_seek(self, position):
