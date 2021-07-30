@@ -277,12 +277,6 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             if self.info.primary_value.command_class == CommandClass.BATTERY
             else None
         )
-        # Legacy binary sensors are phased out (replaced by notification sensors)
-        # Disable by default to not confuse users
-        self._attr_entity_registry_enabled_default = bool(
-            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
-            or self.info.node.device_class.generic.key == 0x20
-        )
 
     @property
     def is_on(self) -> bool | None:

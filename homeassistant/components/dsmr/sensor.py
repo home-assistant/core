@@ -165,6 +165,9 @@ async def async_setup_entry(
                 LOGGER.exception("Error connecting to DSMR")
                 transport = None
                 protocol = None
+
+                # throttle reconnect attempts
+                await asyncio.sleep(entry.data[CONF_RECONNECT_INTERVAL])
             except CancelledError:
                 if stop_listener:
                     stop_listener()  # pylint: disable=not-callable
