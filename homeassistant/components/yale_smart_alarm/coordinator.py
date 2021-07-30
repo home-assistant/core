@@ -19,7 +19,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Yale hub."""
         self.entry = entry
-        self.yale: YaleSmartAlarmClient = None
+        self.yale: YaleSmartAlarmClient | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -27,12 +27,14 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    def get_client(self) -> YaleSmartAlarmClient:
+    def get_client(self) -> bool:
         """Connect to Yale API."""
         self.yale = YaleSmartAlarmClient(
             self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
         )
-        return self.yale
+        if self.yale:
+            return True
+        return False
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Yale."""
@@ -133,26 +135,38 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     def get_updates(self) -> dict:
         """Fetch data from Yale."""
 
-        try:
-            arm_status = self.yale.get_armed_status()
-            cycle = self.yale.get_cycle()
-            status = self.yale.get_status()
-            online = self.yale.get_online()
+        if self.yale:
+            try:
+                arm_status = self.yale.get_armed_status()
+                cycle = self.yale.get_cycle()
+                status = self.yale.get_status()
+                online = self.yale.get_online()
 
-        except AuthenticationError as error:
-            LOGGER.error("Authentication failed. Check credentials %s", error)
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH, "entry_id": self.entry.entry_id},
-                    data=self.entry.data,
+            except AuthenticationError as error:
+                LOGGER.error("Authentication failed. Check credentials %s", error)
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={
+                            "source": SOURCE_REAUTH,
+                            "entry_id": self.entry.entry_id,
+                        },
+                        data=self.entry.data,
+                    )
                 )
-            )
-            raise UpdateFailed from error
+                raise UpdateFailed from error
 
-        return {
-            "arm_status": arm_status,
-            "cycle": cycle,
-            "status": status,
-            "online": online,
-        }
+            return {
+                "arm_status": arm_status,
+                "cycle": cycle,
+                "status": status,
+                "online": online,
+            }
+
+        else:
+            return {
+                "arm_status": None,
+                "cycle": None,
+                "status": None,
+                "online": None,
+            }
