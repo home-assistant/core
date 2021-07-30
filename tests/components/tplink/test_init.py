@@ -346,8 +346,8 @@ async def test_no_config_creates_no_entry(hass):
     assert mock_setup.call_count == 0
 
 
-async def test_not_ready(hass: HomeAssistant):
-    """Test for not ready when configured devices are not available."""
+async def test_not_available_at_startup(hass: HomeAssistant):
+    """Test when configured devices are not available."""
     config = {
         tplink.DOMAIN: {
             CONF_DISCOVERY: False,
@@ -377,9 +377,11 @@ async def test_not_ready(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         entries = hass.config_entries.async_entries(tplink.DOMAIN)
-
         assert len(entries) == 1
-        assert entries[0].state is config_entries.ConfigEntryState.SETUP_RETRY
+        assert entries[0].state is config_entries.ConfigEntryState.LOADED
+
+        entities = hass.states.async_entity_ids(tplink.DOMAIN)
+        assert len(entities) == 0
 
 
 @pytest.mark.parametrize("platform", ["switch", "light"])
