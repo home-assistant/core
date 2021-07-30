@@ -206,7 +206,7 @@ class RenaultFuelAutonomySensor(RenaultCockpitDataEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of this entity."""
-        if not self.data or self.data.fuelAutonomy is None:  # pragma: no cover
+        if not self.data or self.data.fuelAutonomy is None:
             return None
         return round(self.data.fuelAutonomy)
 
@@ -220,7 +220,7 @@ class RenaultFuelQuantitySensor(RenaultCockpitDataEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of this entity."""
-        if not self.data or self.data.fuelQuantity is None:  # pragma: no cover
+        if not self.data or self.data.fuelQuantity is None:
             return None
         return round(self.data.fuelQuantity)
 
@@ -234,7 +234,7 @@ class RenaultMileageSensor(RenaultCockpitDataEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of this entity."""
-        if not self.data or self.data.totalMileage is None:  # pragma: no cover
+        if not self.data or self.data.totalMileage is None:
             return None
         return round(self.data.totalMileage)
 
