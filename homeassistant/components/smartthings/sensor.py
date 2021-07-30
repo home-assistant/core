@@ -389,6 +389,13 @@ CAPABILITY_TO_SENSORS = {
 UNITS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
+POWER_CONSUMPTION_REPORT_NAMES = [
+    "energy",
+    "power",
+    "deltaEnergy",
+    "powerEnergy",
+    "energySaved",
+]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -407,14 +414,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             elif capability == Capability.power_consumption_report:
                 sensors.extend(
                     [
-                        SmartThingsPowerConsumptionSensor(
-                            device,
-                            Attribute.power_consumption,
-                            "Energy Consumption",
-                            ENERGY_KILO_WATT_HOUR,
-                            DEVICE_CLASS_ENERGY,
-                            STATE_CLASS_MEASUREMENT,
-                        )
+                        SmartThingsPowerConsumptionSensor(device, index)
+                        for index in range(len(POWER_CONSUMPTION_REPORT_NAMES))
                     ]
                 )
             else:
@@ -548,50 +549,49 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     def __init__(
         self,
         device: DeviceEntity,
-        attribute: str,
-        name: str,
-        default_unit: str,
-        device_class: str,
-        state_class: str | None,
+        index: str,
     ) -> None:
         """Init the class."""
         super().__init__(device)
-        self._attribute = attribute
-        self._name = name
-        self._device_class = device_class
-        self._default_unit = default_unit
-        self._attr_state_class = state_class
+        self._index = index
 
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return f"{self._device.label} {self._name}"
+        return f"{self._device.label} {POWER_CONSUMPTION_REPORT_NAMES[self._index]}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{self._attribute}"
+        return f"{self._device.device_id}.{POWER_CONSUMPTION_REPORT_NAMES[self._index]}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = self._device.status.attributes[self._attribute].value
-        if value is not None:
-            return value["energy"] / 1000
-        return value
+        value = self._device.status.attributes[Attribute.power_consumption].value
+        if self._index == "power":
+            try:
+                return value[self._index]
+            except (TypeError, IndexError):
+                return None
+        else:
+            try:
+                return value[self._index] / 1000
+            except (TypeError, IndexError):
+                return None
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return self._device_class
+        if self._index == "power":
+            return DEVICE_CLASS_POWER
+        else:
+            return DEVICE_CLASS_ENERGY
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        unit = self._device.status.attributes[self._attribute].unit
-        return UNITS.get(unit, unit) if unit else self._default_unit
-
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return the time when the sensor was last reset, if any."""
-        return utc_from_timestamp(0)
+        if self._index == "power":
+            return POWER_WATT
+        else:
+            return ENERGY_KILO_WATT_HOUR
