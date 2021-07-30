@@ -8,17 +8,25 @@ import logging
 from pyfronius import Fronius
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_MONITORED_CONDITIONS,
     CONF_RESOURCE,
     CONF_SCAN_INTERVAL,
     CONF_SENSOR_TYPE,
+    DEVICE_CLASS_ENERGY,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,6 +133,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
+    entity_description: SensorEntityDescription | None = None
+
     def __init__(self, bridge, name, device, add_entities):
         """Initialize the sensor."""
         self.bridge = bridge
@@ -198,9 +208,11 @@ class FroniusAdapter:
     async def _update(self) -> dict:
         """Return values of interest."""
 
-    async def register(self, sensor):
+    @callback
+    def register(self, sensor):
         """Register child sensor for update subscriptions."""
         self._registered_sensors.add(sensor)
+        return lambda: self._registered_sensors.remove(sensor)
 
 
 class FroniusInverterSystem(FroniusAdapter):
@@ -230,6 +242,13 @@ class FroniusStorage(FroniusAdapter):
 class FroniusMeterSystem(FroniusAdapter):
     """Adapter for the fronius meter with system scope."""
 
+    entity_description = SensorEntityDescription(
+        key="",
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
+    )
+
     async def _update(self):
         """Get the values for the current state."""
         return await self.bridge.current_system_meter_data()
@@ -237,6 +256,13 @@ class FroniusMeterSystem(FroniusAdapter):
 
 class FroniusMeterDevice(FroniusAdapter):
     """Adapter for the fronius meter with device scope."""
+
+    entity_description = SensorEntityDescription(
+        key="",
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
+    )
 
     async def _update(self):
         """Get the values for the current state."""
@@ -257,24 +283,10 @@ class FroniusTemplateSensor(SensorEntity):
     def __init__(self, parent: FroniusAdapter, name):
         """Initialize a singular value sensor."""
         self._name = name
-        self.parent = parent
-        self._state = None
-        self._unit = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name.replace('_', ' ').capitalize()} {self.parent.name}"
-
-    @property
-    def state(self):
-        """Return the current state."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
+        self._attr_name = f"{name.replace('_', ' ').capitalize()} {parent.name}"
+        self._parent = parent
+        if parent.entity_description:
+            self.entity_description = parent.entity_description
 
     @property
     def should_poll(self):
@@ -284,19 +296,19 @@ class FroniusTemplateSensor(SensorEntity):
     @property
     def available(self):
         """Whether the fronius device is active."""
-        return self.parent.available
+        return self._parent.available
 
     async def async_update(self):
         """Update the internal state."""
-        state = self.parent.data.get(self._name)
-        self._state = state.get("value")
-        if isinstance(self._state, float):
-            self._state = round(self._state, 2)
-        self._unit = state.get("unit")
+        state = self._parent.data.get(self._name)
+        self._attr_state = state.get("value")
+        if isinstance(self._attr_state, float):
+            self._attr_state = round(self._attr_state, 2)
+        self._attr_unit_of_measurement = state.get("unit")
 
     async def async_added_to_hass(self):
         """Register at parent component for updates."""
-        await self.parent.register(self)
+        self.async_on_remove(self._parent.register(self))
 
     def __hash__(self):
         """Hash sensor by hashing its name."""
