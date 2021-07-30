@@ -21,7 +21,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_MIGRATE_ENTITY_NAME,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -112,12 +111,13 @@ async def async_create_miio_device_and_coordinator(
     else:
         device = AirHumidifier(host, token, model=model)
 
-    # Removing fan platform entity for humidifiers and cache the name and entity name for migration
+    # Removing fan platform entity for humidifiers and migrate the name to the config entry for migration
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
     if entity_id:
         # This check is entities that have a platform migration only and should be removed in the future
         migrate_entity_name = entity_registry.async_get(entity_id).name
+        hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
         entity_registry.async_remove(entity_id)
 
     async def async_update_data():
@@ -142,8 +142,6 @@ async def async_create_miio_device_and_coordinator(
         KEY_DEVICE: device,
         KEY_COORDINATOR: coordinator,
     }
-    if migrate_entity_name:
-        hass.data[DOMAIN][entry.entry_id][KEY_MIGRATE_ENTITY_NAME] = migrate_entity_name
 
     # Trigger first data fetch
     await coordinator.async_config_entry_first_refresh()
