@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
+import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
 from homeassistant.components.sensor import (
@@ -10,6 +11,11 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_MONETARY,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+)
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,6 +25,8 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -188,6 +196,12 @@ class EnergyCostSensor(SensorEntity):
                 energy_price = float(energy_price_state.state)
             except ValueError:
                 return
+
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_WATT_HOUR}"
+            ):
+                energy_price *= 1000.0
+
         else:
             energy_price_state = None
             energy_price = cast(float, self._flow["number_energy_price"])
@@ -195,6 +209,16 @@ class EnergyCostSensor(SensorEntity):
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
             self._reset(energy_state)
+            return
+
+        energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if energy_unit == ENERGY_WATT_HOUR:
+            energy_price /= 1000
+        elif energy_unit != ENERGY_KILO_WATT_HOUR:
+            _LOGGER.warning(
+                "Found unexpected unit %s for %s", energy_unit, energy_state.entity_id
+            )
             return
 
         if (
