@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSOR_TYPE,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -285,6 +286,12 @@ class FroniusMeterDevice(FroniusAdapter):
 
 class FroniusPowerFlow(FroniusAdapter):
     """Adapter for the fronius power flow."""
+
+    entity_description = SensorEntityDescription(
+        key="",
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    )
 
     async def _update(self):
         """Get the values for the current state."""
