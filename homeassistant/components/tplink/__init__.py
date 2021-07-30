@@ -46,7 +46,6 @@ from .const import (
     COORDINATORS,
     PLATFORMS,
     UNAVAILABLE_DEVICES,
-    UNAVAILABLE_REMOVE_LISTENER,
     UNAVAILABLE_RETRY_DELAY,
 )
 
@@ -164,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "at least one device is available again, so reload integration"
             )
             await hass.config_entries.async_reload(entry.entry_id)
+            break
 
     # prepare DataUpdateCoordinators
     hass_data[COORDINATORS] = {}
@@ -186,8 +186,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_config_entry_first_refresh()
 
     if unavailable_devices:
-        hass_data[UNAVAILABLE_REMOVE_LISTENER] = async_track_time_interval(
-            hass, async_retry_devices, UNAVAILABLE_RETRY_DELAY
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, async_retry_devices, UNAVAILABLE_RETRY_DELAY
+            )
         )
         unavailable_devices_hosts = [d.host for d in unavailable_devices]
         hass_data[CONF_SWITCH] = [
@@ -203,8 +205,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass_data: dict[str, Any] = hass.data[DOMAIN]
-    if callable(hass_data.get(UNAVAILABLE_REMOVE_LISTENER)):
-        hass_data[UNAVAILABLE_REMOVE_LISTENER]()
     if unload_ok:
         hass_data.clear()
 

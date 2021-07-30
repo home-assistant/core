@@ -7,7 +7,6 @@ DOMAIN = "tplink"
 COORDINATORS = "coordinators"
 UNAVAILABLE_DEVICES = "unavailable_devices"
 UNAVAILABLE_RETRY_DELAY = datetime.timedelta(seconds=300)
-UNAVAILABLE_REMOVE_LISTENER = "unavailable_remove_listener"
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=8)
 MAX_DISCOVERY_RETRIES = 4
