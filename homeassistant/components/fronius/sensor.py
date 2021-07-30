@@ -225,11 +225,16 @@ class FroniusInverterSystem(FroniusAdapter):
     @property
     def entity_description(self):
         """Return the entity descriptor."""
+        if self._name.startswith(("energy_day", "energy_year")):
+            last_reset = None
+        else:
+            last_reset = dt.utc_from_timestamp(0)
+
         return SensorEntityDescription(
             key=self._name,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=dt.utc_from_timestamp(0),
+            last_reset=last_reset,
         )
 
     async def _update(self):
@@ -243,11 +248,16 @@ class FroniusInverterDevice(FroniusAdapter):
     @property
     def entity_description(self):
         """Return the entity descriptor."""
+        if self._name.startswith(("energy_day", "energy_year")):
+            last_reset = None
+        else:
+            last_reset = dt.utc_from_timestamp(0)
+
         return SensorEntityDescription(
             key=self._name,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=dt.utc_from_timestamp(0),
+            last_reset=last_reset,
         )
 
     async def _update(self):
