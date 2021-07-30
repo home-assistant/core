@@ -495,7 +495,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        if self._attribute in [Attribute.power, Attribute.energy]:
+        if self._attribute == Attribute.energy:
             return utc_from_timestamp(0)
         return None
 
