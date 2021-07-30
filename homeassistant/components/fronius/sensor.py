@@ -161,7 +161,9 @@ class FroniusAdapter:
         """Whether the fronius device is active."""
         return self._available
 
-    def entity_description(self, key) -> SensorEntityDescription | None:
+    def entity_description(  # pylint: disable=no-self-use
+        self, key
+    ) -> SensorEntityDescription | None:
         """Create entity description for a key."""
         return None
 
