@@ -271,7 +271,7 @@ class FroniusMeterSystem(FroniusAdapter):
 
     def entity_description(self, key):
         """Return the entity descriptor."""
-        if key != "energy_total":
+        if key != "energy_real":
             return None
 
         return SensorEntityDescription(
@@ -291,7 +291,7 @@ class FroniusMeterDevice(FroniusAdapter):
 
     def entity_description(self, key):
         """Return the entity descriptor."""
-        if key != "energy_total":
+        if key != "energy_real":
             return None
 
         return SensorEntityDescription(
