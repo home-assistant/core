@@ -4,18 +4,19 @@ from __future__ import annotations
 import asyncio
 from functools import wraps
 import logging
+from typing import Awaitable
 
 import aiohttp.client_exceptions
-from iaqualink import (
+from iaqualink.client import AqualinkClient
+from iaqualink.device import (
     AqualinkBinarySensor,
-    AqualinkClient,
     AqualinkDevice,
     AqualinkLight,
-    AqualinkLoginException,
     AqualinkSensor,
     AqualinkThermostat,
     AqualinkToggle,
 )
+from iaqualink.exception import AqualinkServiceException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -78,7 +79,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if conf is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=conf,
             )
         )
 
@@ -89,6 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
+
+    hass.data.setdefault(DOMAIN, {})
 
     # These will contain the initialized devices
     binary_sensors = hass.data[DOMAIN][BINARY_SENSOR_DOMAIN] = []
@@ -101,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     aqualink = AqualinkClient(username, password, session)
     try:
         await aqualink.login()
-    except AqualinkLoginException as login_exception:
+    except AqualinkServiceException as login_exception:
         _LOGGER.error("Failed to login: %s", login_exception)
         return False
     except (
@@ -111,14 +116,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
         raise ConfigEntryNotReady from aio_exception
 
-    systems = await aqualink.get_systems()
+    try:
+        systems = await aqualink.get_systems()
+    except AqualinkServiceException as svc_exception:
+        _LOGGER.warning(
+            "Exception raised while attempting to retrieve systems list: %s",
+            svc_exception,
+        )
+        raise ConfigEntryNotReady from svc_exception
+
     systems = list(systems.values())
     if not systems:
         _LOGGER.error("No systems detected or supported")
         return False
 
     # Only supporting the first system for now.
-    devices = await systems[0].get_devices()
+    try:
+        devices = await systems[0].get_devices()
+    except AqualinkServiceException as svc_exception:
+        _LOGGER.warning(
+            "Exception raised while attempting to retrieve devices list: %s",
+            svc_exception,
+        )
+        raise ConfigEntryNotReady from svc_exception
 
     for dev in devices.values():
         if isinstance(dev, AqualinkThermostat):
@@ -151,15 +171,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""
-        prev = systems[0].last_run_success
+        prev = systems[0].online
 
-        await systems[0].update()
-        success = systems[0].last_run_success
-
-        if not success and prev:
-            _LOGGER.warning("Failed to refresh iAqualink state")
-        elif success and not prev:
-            _LOGGER.warning("Reconnected to iAqualink")
+        try:
+            await systems[0].update()
+            cur = systems[0].online
+        except AqualinkServiceException as svc_exception:
+            _LOGGER.warning("Failed to refresh iAqualink state: %s", svc_exception)
+        else:
+            if cur is True and prev is not True:
+                _LOGGER.warning("Reconnected to iAqualink")
 
         async_dispatcher_send(hass, DOMAIN)
 
@@ -174,7 +195,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         platform for platform in PLATFORMS if platform in hass.data[DOMAIN]
     ]
 
-    hass.data[DOMAIN].clear()
+    del hass.data[DOMAIN]
 
     return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
@@ -228,12 +249,19 @@ class AqualinkEntity(Entity):
     @property
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from the device."""
-        return not self.dev.system.last_run_success
+        return self.dev.system.online in [False, None]
 
     @property
     def available(self) -> bool:
         """Return whether the device is available or not."""
-        return self.dev.system.online
+        return self.dev.system.online is True
+
+    async def safe_exec(self, awaitable: Awaitable) -> None:
+        """Execute API call while catching service exceptions."""
+        try:
+            await awaitable
+        except AqualinkServiceException as svc_exception:
+            _LOGGER.warning("Aqualink Service Exception raised: %s", svc_exception)
 
     @property
     def device_info(self) -> DeviceInfo:
