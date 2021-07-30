@@ -139,6 +139,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         )
         if result:
             self._state = True
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
@@ -148,6 +149,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
         if result:
             self._state = False
+            self.async_write_ha_state()
 
     def translate_humidity(self, humidity):
         """Translate the target humidity to the first valid step."""
