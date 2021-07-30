@@ -20,6 +20,8 @@ VALID_PROFILE = {"profile": "relax"}
 VALID_RGB_COLOR = {"rgb_color": (255, 63, 111)}
 VALID_RGBW_COLOR = {"rgbw_color": (255, 63, 111, 10)}
 VALID_RGBWW_COLOR = {"rgbww_color": (255, 63, 111, 10, 20)}
+VALID_WHITE = {"white": 220}  # Specified in a scene
+VALID_WHITE_STATE = {"color_mode": "white", "brightness": 220}  # The light's state
 VALID_XY_COLOR = {"xy_color": (0.59, 0.274)}
 
 
@@ -27,7 +29,7 @@ async def test_reproducing_states(hass, caplog):
     """Test reproducing Light states."""
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
-    hass.states.async_set("light.entity_white", "on", VALID_WHITE_VALUE)
+    hass.states.async_set("light.entity_white_value", "on", VALID_WHITE_VALUE)
     hass.states.async_set("light.entity_flash", "on", VALID_FLASH)
     hass.states.async_set("light.entity_effect", "on", VALID_EFFECT)
     hass.states.async_set("light.entity_trans", "on", VALID_TRANSITION)
@@ -37,6 +39,7 @@ async def test_reproducing_states(hass, caplog):
     hass.states.async_set("light.entity_kelvin", "on", VALID_KELVIN)
     hass.states.async_set("light.entity_profile", "on", VALID_PROFILE)
     hass.states.async_set("light.entity_rgb", "on", VALID_RGB_COLOR)
+    hass.states.async_set("light.entity_white", "on", VALID_WHITE_STATE)
     hass.states.async_set("light.entity_xy", "on", VALID_XY_COLOR)
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
@@ -47,7 +50,7 @@ async def test_reproducing_states(hass, caplog):
         [
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
-            State("light.entity_white", "on", VALID_WHITE_VALUE),
+            State("light.entity_white_value", "on", VALID_WHITE_VALUE),
             State("light.entity_flash", "on", VALID_FLASH),
             State("light.entity_effect", "on", VALID_EFFECT),
             State("light.entity_trans", "on", VALID_TRANSITION),
@@ -57,6 +60,7 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_kelvin", "on", VALID_KELVIN),
             State("light.entity_profile", "on", VALID_PROFILE),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
+            State("light.entity_white", "on", VALID_WHITE),
             State("light.entity_xy", "on", VALID_XY_COLOR),
         ]
     )
@@ -79,7 +83,7 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_xy", "off"),
             State("light.entity_off", "on", VALID_BRIGHTNESS),
             State("light.entity_bright", "on", VALID_WHITE_VALUE),
-            State("light.entity_white", "on", VALID_FLASH),
+            State("light.entity_white_value", "on", VALID_FLASH),
             State("light.entity_flash", "on", VALID_EFFECT),
             State("light.entity_effect", "on", VALID_TRANSITION),
             State("light.entity_trans", "on", VALID_COLOR_NAME),
@@ -88,11 +92,12 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_hs", "on", VALID_KELVIN),
             State("light.entity_kelvin", "on", VALID_PROFILE),
             State("light.entity_profile", "on", VALID_RGB_COLOR),
-            State("light.entity_rgb", "on", VALID_XY_COLOR),
+            State("light.entity_rgb", "on", VALID_WHITE),
+            State("light.entity_white", "on", VALID_XY_COLOR),
         ],
     )
 
-    assert len(turn_on_calls) == 12
+    assert len(turn_on_calls) == 13
 
     expected_calls = []
 
@@ -104,9 +109,9 @@ async def test_reproducing_states(hass, caplog):
     expected_bright["entity_id"] = "light.entity_bright"
     expected_calls.append(expected_bright)
 
-    expected_white = dict(VALID_FLASH)
-    expected_white["entity_id"] = "light.entity_white"
-    expected_calls.append(expected_white)
+    expected_white_value = dict(VALID_FLASH)
+    expected_white_value["entity_id"] = "light.entity_white_value"
+    expected_calls.append(expected_white_value)
 
     expected_flash = dict(VALID_EFFECT)
     expected_flash["entity_id"] = "light.entity_flash"
@@ -140,9 +145,14 @@ async def test_reproducing_states(hass, caplog):
     expected_profile["entity_id"] = "light.entity_profile"
     expected_calls.append(expected_profile)
 
-    expected_rgb = dict(VALID_XY_COLOR)
+    expected_rgb = dict(VALID_WHITE)
     expected_rgb["entity_id"] = "light.entity_rgb"
+    expected_rgb["brightness"] = expected_rgb["white"]
     expected_calls.append(expected_rgb)
+
+    expected_white = dict(VALID_XY_COLOR)
+    expected_white["entity_id"] = "light.entity_white"
+    expected_calls.append(expected_white)
 
     for call in turn_on_calls:
         assert call.domain == "light"

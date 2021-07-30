@@ -132,6 +132,12 @@ async def _async_reproduce_state(
     if deprecated_attrs:
         _LOGGER.warning(DEPRECATION_WARNING, deprecated_attrs)
 
+    if ATTR_WHITE in state.attributes and ATTR_COLOR_MODE not in state.attributes:
+        state_dict = state.as_dict()
+        state_dict["attributes"][ATTR_BRIGHTNESS] = state.attributes[ATTR_WHITE]
+        state_dict["attributes"][ATTR_COLOR_MODE] = COLOR_MODE_WHITE
+        state = State.from_dict(state_dict)
+
     # Return if we are already at the right state.
     if (
         cur_state.state == state.state
