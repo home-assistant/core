@@ -196,6 +196,12 @@ class EnergyCostSensor(SensorEntity):
                 energy_price = float(energy_price_state.state)
             except ValueError:
                 return
+
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_WATT_HOUR}"
+            ):
+                energy_price *= 1000.0
+
         else:
             energy_price_state = None
             energy_price = cast(float, self._flow["number_energy_price"])
