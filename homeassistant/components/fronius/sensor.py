@@ -291,7 +291,7 @@ class FroniusMeterDevice(FroniusAdapter):
 
     def entity_description(self, key):
         """Return the entity descriptor."""
-        if key != "energy_real":
+        if not key.startswith("energy_real_"):
             return None
 
         return SensorEntityDescription(
