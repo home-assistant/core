@@ -156,17 +156,9 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 raise UpdateFailed from error
 
-            return {
-                "arm_status": arm_status,
-                "cycle": cycle,
-                "status": status,
-                "online": online,
-            }
-
-        else:
-            return {
-                "arm_status": None,
-                "cycle": None,
-                "status": None,
-                "online": None,
-            }
+        return {
+            "arm_status": arm_status,
+            "cycle": cycle,
+            "status": status,
+            "online": online,
+        }
