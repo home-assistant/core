@@ -117,9 +117,10 @@ class ZwaveMeterSensorEntityDescription(ZwaveSensorBaseEntityDescription):
         assert self.info
         cc_specific = self.info.primary_value.metadata.cc_specific
         meter_type_id = cc_specific[CC_SPECIFIC_METER_TYPE]
-        self.meter_type = MeterType(meter_type_id)
         scale_type_id = cc_specific[CC_SPECIFIC_SCALE]
-        self.scale_type = METER_TYPE_TO_SCALE_ENUM_MAP[self.meter_type](scale_type_id)
+        self.meter_type = MeterType(meter_type_id)
+        scale_enum = METER_TYPE_TO_SCALE_ENUM_MAP[self.meter_type]
+        self.scale_type = scale_enum(scale_type_id)
 
         # Static values
         self.state_class = STATE_CLASS_MEASUREMENT
