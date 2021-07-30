@@ -227,7 +227,7 @@ class FroniusInverterSystem(FroniusAdapter):
             return None
 
         return SensorEntityDescription(
-            key=self._name,
+            key=key,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
             last_reset=dt.utc_from_timestamp(0),
@@ -247,7 +247,7 @@ class FroniusInverterDevice(FroniusAdapter):
             return None
 
         return SensorEntityDescription(
-            key=self._name,
+            key=key,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
             last_reset=dt.utc_from_timestamp(0),
@@ -275,7 +275,7 @@ class FroniusMeterSystem(FroniusAdapter):
             return None
 
         return SensorEntityDescription(
-            key=self._name,
+            key=key,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
             last_reset=dt.utc_from_timestamp(0),
@@ -295,7 +295,7 @@ class FroniusMeterDevice(FroniusAdapter):
             return None
 
         return SensorEntityDescription(
-            key=self._name,
+            key=key,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_MEASUREMENT,
             last_reset=dt.utc_from_timestamp(0),
@@ -312,7 +312,7 @@ class FroniusPowerFlow(FroniusAdapter):
     def entity_description(self, key):
         """Return the entity descriptor."""
         return SensorEntityDescription(
-            key=self._name,
+            key=key,
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
         )
