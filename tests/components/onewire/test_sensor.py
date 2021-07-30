@@ -10,6 +10,7 @@ from homeassistant.components.onewire.const import (
     PLATFORMS,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -155,9 +156,9 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
         registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
         assert registry_entry.identifiers == {(DOMAIN, device_id)}
-        assert registry_entry.manufacturer == device_info["manufacturer"]
-        assert registry_entry.name == device_info["name"]
-        assert registry_entry.model == device_info["model"]
+        assert registry_entry.manufacturer == device_info[ATTR_MANUFACTURER]
+        assert registry_entry.name == device_info[ATTR_NAME]
+        assert registry_entry.model == device_info[ATTR_MODEL]
 
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
@@ -206,9 +207,9 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
         registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
         assert registry_entry.identifiers == {(DOMAIN, device_id)}
-        assert registry_entry.manufacturer == device_info["manufacturer"]
-        assert registry_entry.name == device_info["name"]
-        assert registry_entry.model == device_info["model"]
+        assert registry_entry.manufacturer == device_info[ATTR_MANUFACTURER]
+        assert registry_entry.name == device_info[ATTR_NAME]
+        assert registry_entry.model == device_info[ATTR_MODEL]
 
     for expected_sensor in expected_entities:
         entity_id = expected_sensor["entity_id"]
