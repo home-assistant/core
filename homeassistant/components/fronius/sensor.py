@@ -161,9 +161,8 @@ class FroniusAdapter:
         """Whether the fronius device is active."""
         return self._available
 
-    @property
-    def entity_description(self) -> SensorEntityDescription | None:
-        """Entity description."""
+    def entity_description(self, key) -> SensorEntityDescription | None:
+        """Create entity description for a key."""
         return None
 
     async def async_update(self):
@@ -222,10 +221,9 @@ class FroniusAdapter:
 class FroniusInverterSystem(FroniusAdapter):
     """Adapter for the fronius inverter with system scope."""
 
-    @property
-    def entity_description(self):
+    def entity_description(self, key):
         """Return the entity descriptor."""
-        if self._name.startswith(("energy_day", "energy_year")):
+        if key.startswith(("energy_day", "energy_year")):
             last_reset = None
         else:
             last_reset = dt.utc_from_timestamp(0)
@@ -245,10 +243,9 @@ class FroniusInverterSystem(FroniusAdapter):
 class FroniusInverterDevice(FroniusAdapter):
     """Adapter for the fronius inverter with device scope."""
 
-    @property
-    def entity_description(self):
+    def entity_description(self, key):
         """Return the entity descriptor."""
-        if self._name.startswith(("energy_day", "energy_year")):
+        if key.startswith(("energy_day", "energy_year")):
             last_reset = None
         else:
             last_reset = dt.utc_from_timestamp(0)
@@ -276,10 +273,9 @@ class FroniusStorage(FroniusAdapter):
 class FroniusMeterSystem(FroniusAdapter):
     """Adapter for the fronius meter with system scope."""
 
-    @property
-    def entity_description(self):
+    def entity_description(self, key):
         """Return the entity descriptor."""
-        if self._name.startswith(("energy_day", "energy_year")):
+        if key.startswith(("energy_day", "energy_year")):
             last_reset = None
         else:
             last_reset = dt.utc_from_timestamp(0)
@@ -299,10 +295,9 @@ class FroniusMeterSystem(FroniusAdapter):
 class FroniusMeterDevice(FroniusAdapter):
     """Adapter for the fronius meter with device scope."""
 
-    @property
-    def entity_description(self):
+    def entity_description(self, key):
         """Return the entity descriptor."""
-        if self._name.startswith(("energy_day", "energy_year")):
+        if key.startswith(("energy_day", "energy_year")):
             last_reset = None
         else:
             last_reset = dt.utc_from_timestamp(0)
@@ -322,8 +317,7 @@ class FroniusMeterDevice(FroniusAdapter):
 class FroniusPowerFlow(FroniusAdapter):
     """Adapter for the fronius power flow."""
 
-    @property
-    def entity_description(self):
+    def entity_description(self, key):
         """Return the entity descriptor."""
         return SensorEntityDescription(
             key=self._name,
@@ -339,13 +333,13 @@ class FroniusPowerFlow(FroniusAdapter):
 class FroniusTemplateSensor(SensorEntity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
-    def __init__(self, parent: FroniusAdapter, name):
+    def __init__(self, parent: FroniusAdapter, key):
         """Initialize a singular value sensor."""
-        self._name = name
-        self._attr_name = f"{name.replace('_', ' ').capitalize()} {parent.name}"
+        self._key = key
+        self._attr_name = f"{key.replace('_', ' ').capitalize()} {parent.name}"
         self._parent = parent
-        if parent.entity_description:
-            self.entity_description = parent.entity_description
+        if entity_description := parent.entity_description(key):
+            self.entity_description = entity_description
 
     @property
     def should_poll(self):
@@ -359,7 +353,7 @@ class FroniusTemplateSensor(SensorEntity):
 
     async def async_update(self):
         """Update the internal state."""
-        state = self._parent.data.get(self._name)
+        state = self._parent.data.get(self._key)
         self._attr_state = state.get("value")
         if isinstance(self._attr_state, float):
             self._attr_state = round(self._attr_state, 2)
