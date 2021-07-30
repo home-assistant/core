@@ -576,7 +576,7 @@ def test_home_bridge(hk_driver):
     assert bridge.hass == "hass"
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
@@ -587,7 +587,7 @@ def test_home_bridge(hk_driver):
 
     bridge = HomeBridge("hass", hk_driver, "test_name")
     assert bridge.display_name == "test_name"
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
 
     # setup_message
