@@ -490,7 +490,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         """Return the state of the sensor."""
         value = self._device.status.attributes[self._attribute].value
         if self._device_class == DEVICE_CLASS_ENERGY:
-            if value is not None and "energy" in value:
+            if value is not None and isinstance(value, dict) and "energy" in value:
                 return value["energy"] / 1000  # return kWh rather than Wh
         return value
 
