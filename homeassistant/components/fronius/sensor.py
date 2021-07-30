@@ -218,6 +218,13 @@ class FroniusAdapter:
 class FroniusInverterSystem(FroniusAdapter):
     """Adapter for the fronius inverter with system scope."""
 
+    entity_description = SensorEntityDescription(
+        key="",
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
+    )
+
     async def _update(self):
         """Get the values for the current state."""
         return await self.bridge.current_system_inverter_data()
@@ -225,6 +232,13 @@ class FroniusInverterSystem(FroniusAdapter):
 
 class FroniusInverterDevice(FroniusAdapter):
     """Adapter for the fronius inverter with device scope."""
+
+    entity_description = SensorEntityDescription(
+        key="",
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
+    )
 
     async def _update(self):
         """Get the values for the current state."""
