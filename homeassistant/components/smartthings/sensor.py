@@ -220,6 +220,15 @@ CAPABILITY_TO_SENSORS = {
     Capability.oven_setpoint: [
         Map(Attribute.oven_setpoint, "Oven Set Point", None, None, None)
     ],
+    Capability.power_consumption_report: [
+        Map(
+            Attribute.power_consumption,
+            "Energy Consumption",
+            ENERGY_KILO_WATT_HOUR,
+            DEVICE_CLASS_ENERGY,
+            STATE_CLASS_MEASUREMENT,
+        )
+    ],
     Capability.power_meter: [
         Map(
             Attribute.power,
@@ -479,12 +488,21 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.status.attributes[self._attribute].value
+        value = self._device.status.attributes[self._attribute].value
+        if self._device_class == DEVICE_CLASS_ENERGY:
+            if value is not None and "energy" in value:
+                return value["energy"] / 1000  # return kWh rather than Wh
+        return value
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return self._attr_state_class
 
     @property
     def unit_of_measurement(self):
@@ -495,7 +513,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        if self._attribute == Attribute.energy:
+        if (
+            self._attribute == Attribute.energy
+            or self._device_class == DEVICE_CLASS_ENERGY
+        ):
             return utc_from_timestamp(0)
         return None
 
