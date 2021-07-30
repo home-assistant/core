@@ -3729,6 +3729,10 @@ def _process_command_from_frame(hass, service):
             hass.services.call("recorder", "purge", {"keep_days": 0, "repack": True})
             _LOGGER.warning("ais -> flush_logs")
             hass.services.call("ais_shell_command", "flush_logs")
+    elif service.data["topic"] == "ais/sip_event":
+        sip_event = service.data["payload"]
+        hass.bus.fire("ais_sip_event", sip_event)
+        _LOGGER.info("sip_event " + sip_event)
     else:
         # TODO process this without mqtt
         # player_status and speech_status
