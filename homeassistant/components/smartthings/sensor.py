@@ -220,15 +220,7 @@ CAPABILITY_TO_SENSORS = {
     Capability.oven_setpoint: [
         Map(Attribute.oven_setpoint, "Oven Set Point", None, None, None)
     ],
-    Capability.power_consumption_report: [
-        Map(
-            Attribute.power_consumption,
-            "Energy Consumption",
-            ENERGY_KILO_WATT_HOUR,
-            DEVICE_CLASS_ENERGY,
-            STATE_CLASS_MEASUREMENT,
-        )
-    ],
+    Capability.power_consumption_report: [],
     Capability.power_meter: [
         Map(
             Attribute.power,
@@ -412,6 +404,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         for index in range(len(THREE_AXIS_NAMES))
                     ]
                 )
+            elif capability == Capability.power_consumption_report:
+                sensors.extend(
+                    [
+                        SmartThingsPowerConsumtionSensor(
+                            device,
+                            Attribute.power_consumption,
+                            "Energy Consumption",
+                            ENERGY_KILO_WATT_HOUR,
+                            DEVICE_CLASS_ENERGY,
+                            STATE_CLASS_MEASUREMENT,
+                        )
+                    ]
+                )
             else:
                 maps = CAPABILITY_TO_SENSORS[capability]
                 sensors.extend(
@@ -488,11 +493,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = self._device.status.attributes[self._attribute].value
-        if self._device_class == DEVICE_CLASS_ENERGY:
-            if value is not None and isinstance(value, dict) and "energy" in value:
-                return value["energy"] / 1000  # return kWh rather than Wh
-        return value
+        return self._device.status.attributes[self._attribute].value
 
     @property
     def device_class(self):
@@ -508,10 +509,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        if (
-            self._attribute == Attribute.energy
-            or self._device_class == DEVICE_CLASS_ENERGY
-        ):
+        if self._attribute == Attribute.energy:
             return utc_from_timestamp(0)
         return None
 
@@ -542,3 +540,58 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
             return three_axis[self._index]
         except (TypeError, IndexError):
             return None
+
+
+class SmartThingsPowerConsumtionSensor(SmartThingsEntity, SensorEntity):
+    """Define a SmartThings Sensor."""
+
+    def __init__(
+        self,
+        device: DeviceEntity,
+        attribute: str,
+        name: str,
+        default_unit: str,
+        device_class: str,
+        state_class: str | None,
+    ) -> None:
+        """Init the class."""
+        super().__init__(device)
+        self._attribute = attribute
+        self._name = name
+        self._device_class = device_class
+        self._default_unit = default_unit
+        self._attr_state_class = state_class
+
+    @property
+    def name(self) -> str:
+        """Return the name of the binary sensor."""
+        return f"{self._device.label} {self._name}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._device.device_id}.{self._attribute}"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        value = self._device.status.attributes[self._attribute].value
+        if value is not None:
+            return value["energy"] / 1000
+        return value
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        unit = self._device.status.attributes[self._attribute].unit
+        return UNITS.get(unit, unit) if unit else self._default_unit
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        return utc_from_timestamp(0)
