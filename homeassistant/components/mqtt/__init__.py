@@ -38,7 +38,7 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
@@ -108,6 +108,7 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = "auto"
 
+ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
 MAX_RECONNECT_WAIT = 300  # seconds
@@ -232,15 +233,19 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 # Service call validation schema
-MQTT_PUBLISH_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-        vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    },
-    required=True,
+MQTT_PUBLISH_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
+            vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
+            vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+            vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
+            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+            vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        },
+        required=True,
+    ),
+    cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
 )
 
 
@@ -485,17 +490,42 @@ async def async_setup_entry(hass, entry):
 
     async def async_publish_service(call: ServiceCall):
         """Handle MQTT publish service calls."""
-        msg_topic: str = call.data[ATTR_TOPIC]
+        msg_topic = call.data.get(ATTR_TOPIC)
+        msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload = call.data.get(ATTR_PAYLOAD)
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
+        if msg_topic_template is not None:
+            try:
+                rendered_topic = template.Template(
+                    msg_topic_template, hass
+                ).async_render(parse_result=False)
+                msg_topic = valid_publish_topic(rendered_topic)
+            except (template.jinja2.TemplateError, TemplateError) as exc:
+                _LOGGER.error(
+                    "Unable to publish: rendering topic template of %s "
+                    "failed because %s",
+                    msg_topic_template,
+                    exc,
+                )
+                return
+            except vol.Invalid as err:
+                _LOGGER.error(
+                    "Unable to publish: topic template '%s' produced an "
+                    "invalid topic '%s' after rendering (%s)",
+                    msg_topic_template,
+                    rendered_topic,
+                    err,
+                )
+                return
+
         if payload_template is not None:
             try:
                 payload = template.Template(payload_template, hass).async_render(
                     parse_result=False
                 )
-            except template.jinja2.TemplateError as exc:
+            except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",
