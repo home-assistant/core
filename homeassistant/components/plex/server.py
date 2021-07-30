@@ -201,22 +201,8 @@ class PlexServer:
         else:
             _connect_with_token()
 
-        try:
-            system_accounts = self._plex_server.systemAccounts()
-            shared_users = self.account.users() if self.account else []
-        except Unauthorized:
-            _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available"
-            )
-        else:
-            self._accounts = []
-            for user in shared_users:
-                for shared_server in user.servers:
-                    if shared_server.machineIdentifier == self.machine_identifier:
-                        self._accounts.append(user.title)
-
-            _LOGGER.debug("Linked accounts: %s", self.accounts)
-
+        def set_owner_account(system_accounts):
+            """Set known local owner account early in case cloud login fails."""
             owner_account = next(
                 (account.name for account in system_accounts if account.accountID == 1),
                 None,
@@ -225,6 +211,21 @@ class PlexServer:
                 self._owner_username = owner_account
                 self._accounts.append(owner_account)
                 _LOGGER.debug("Server owner found: '%s'", self._owner_username)
+
+        try:
+            system_accounts = self._plex_server.systemAccounts()
+            set_owner_account(system_accounts)
+            shared_users = self.account.users() if self.account else []
+        except Unauthorized:
+            _LOGGER.warning(
+                "Plex account has limited permissions, shared account filtering will not be available"
+            )
+        else:
+            for user in shared_users:
+                for shared_server in user.servers:
+                    if shared_server.machineIdentifier == self.machine_identifier:
+                        self._accounts.append(user.title)
+            _LOGGER.debug("Linked accounts: %s", self.accounts)
 
         self._version = self._plex_server.version
 
