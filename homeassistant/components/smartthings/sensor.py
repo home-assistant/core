@@ -407,7 +407,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             elif capability == Capability.power_consumption_report:
                 sensors.extend(
                     [
-                        SmartThingsPowerConsumtionSensor(
+                        SmartThingsPowerConsumptionSensor(
                             device,
                             Attribute.power_consumption,
                             "Energy Consumption",
@@ -542,7 +542,7 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
             return None
 
 
-class SmartThingsPowerConsumtionSensor(SmartThingsEntity, SensorEntity):
+class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Sensor."""
 
     def __init__(
