@@ -23,14 +23,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config, discovery_info=None):
-    """Get the Notify.Events notification service."""
-    return NotifyEventsNotificationService(
+    """Get the Gotify notification service."""
+    return GotifyNotificationService(
         hass.data[DOMAIN][CONF_TOKEN], hass.data[DOMAIN][CONF_URL]
     )
 
 
-class NotifyEventsNotificationService(BaseNotificationService):
-    """Implement the notification service for Notify.Events."""
+class GotifyNotificationService(BaseNotificationService):
+    """Implement the notification service for Gotify."""
 
     def __init__(self, token, url):
         """Initialize the service."""
