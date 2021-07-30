@@ -1,14 +1,22 @@
 """Support for LG soundbars."""
 import temescal
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    STATE_ON,
+)
+import homeassistant.helpers.config_validation as cv
+
+DEFAULT_PORT = 9741
 
 SUPPORT_LG = (
     SUPPORT_VOLUME_SET
@@ -17,11 +25,20 @@ SUPPORT_LG = (
     | SUPPORT_SELECT_SOUND_MODE
 )
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG platform."""
     if discovery_info is not None:
-        add_entities([LGDevice(discovery_info)])
+        config = discovery_info
+
+    add_entities([LGDevice(config)])
 
 
 class LGDevice(MediaPlayerEntity):
@@ -31,9 +48,11 @@ class LGDevice(MediaPlayerEntity):
         """Initialize the LG speakers."""
         self._host = discovery_info["host"]
         self._port = discovery_info["port"]
-        self._hostname = discovery_info["hostname"]
+        self._name = ""
+        if "hostname" in discovery_info.keys():
+            self._hostname = discovery_info["hostname"]
+            self._name = self._hostname.split(".")[0]
 
-        self._name = self._hostname.split(".")[0]
         self._volume = 0
         self._volume_min = 0
         self._volume_max = 0
