@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import IntEnum
 import logging
 from typing import cast
 
@@ -36,6 +35,7 @@ from zwave_js_server.const import (
     ConfigurationValueType,
     MeterType,
     MultilevelSensorType,
+    ScaleEnum,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
@@ -110,7 +110,7 @@ class ZwaveMeterSensorEntityDescription(ZwaveSensorBaseEntityDescription):
     """Description of a Z-Wave Meter CC entity."""
 
     meter_type: MeterType = field(init=False)
-    scale_type: IntEnum = field(init=False)
+    scale_type: ScaleEnum = field(init=False)
 
     def __post_init__(self) -> None:
         """Post initialize."""
