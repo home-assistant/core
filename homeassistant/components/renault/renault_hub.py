@@ -66,16 +66,17 @@ class RenaultHub:
         scan_interval: timedelta,
     ) -> None:
         """Set up proxy."""
-        if vehicle_link.vin and vehicle_link.vehicleDetails:
-            # Generate vehicle proxy
-            vehicle = RenaultVehicleProxy(
-                hass=self._hass,
-                vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
-                details=vehicle_link.vehicleDetails,
-                scan_interval=scan_interval,
-            )
-            await vehicle.async_initialise()
-            self._vehicles[vehicle_link.vin] = vehicle
+        if not vehicle_link.vin or not vehicle_link.vehicleDetails:
+            return
+        # Generate vehicle proxy
+        vehicle = RenaultVehicleProxy(
+            hass=self._hass,
+            vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
+            details=vehicle_link.vehicleDetails,
+            scan_interval=scan_interval,
+        )
+        await vehicle.async_initialise()
+        self._vehicles[vehicle_link.vin] = vehicle
 
     async def get_account_ids(self) -> list[str]:
         """Get Kamereon account ids."""
