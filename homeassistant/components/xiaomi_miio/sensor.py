@@ -45,7 +45,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_MIGRATE_ENTITY_NAME,
     MODELS_HUMIDIFIER_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
@@ -190,11 +189,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         device = None
         sensors = []
-        if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
-            name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
-        else:
-            name = config_entry.title
-
         if model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -205,6 +199,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensors = HUMIDIFIER_SENSORS
         else:
             unique_id = config_entry.unique_id
+            name = config_entry.title
             _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
             device = AirQualityMonitor(host, token)
@@ -214,7 +209,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in sensors:
             entities.append(
                 XiaomiGenericSensor(
-                    f"{name} {sensor.replace('_', ' ').title()}",
+                    f"{config_entry.title} {sensor.replace('_', ' ').title()}",
                     device,
                     config_entry,
                     f"{sensor}_{config_entry.unique_id}",
