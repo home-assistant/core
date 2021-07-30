@@ -7,6 +7,7 @@ from unittest.mock import patch
 import plexapi.exceptions
 import pytest
 import requests.exceptions
+import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex import config_flow
@@ -840,3 +841,77 @@ async def test_client_header_issues(hass, current_request_with_host):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={}
             )
+
+
+async def test_changing_hostname_with_option_flow(
+    hass, entry, mock_plex_server, requests_mock, empty_library, empty_payload, caplog
+):
+    """Test config options flow selection."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state is ConfigEntryState.LOADED
+
+    original_url = mock_plex_server.url_in_use
+    assert entry.title == original_url
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CONFIGURED_HOST: PLEX_DIRECT_URL,
+            CONF_USE_EPISODE_ART: True,
+            CONF_IGNORE_NEW_SHARED_USERS: True,
+            CONF_MONITORED_USERS: list(mock_plex_server.accounts),
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        MP_DOMAIN: {
+            CONF_CONFIGURED_HOST: PLEX_DIRECT_URL,
+            CONF_USE_EPISODE_ART: True,
+            CONF_IGNORE_NEW_SHARED_USERS: True,
+            CONF_MONITORED_USERS: {
+                user: {"enabled": True} for user in mock_plex_server.accounts
+            },
+            CONF_IGNORE_PLEX_WEB_CLIENTS: False,
+        }
+    }
+    assert f"Configured hostname changed to {PLEX_DIRECT_URL}" in caplog.text
+
+    requests_mock.get(f"{PLEX_DIRECT_URL}/library", text=empty_library)
+    requests_mock.get(f"{PLEX_DIRECT_URL}/library/sections", text=empty_payload)
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert f"Changing hostname from {original_url} to {PLEX_DIRECT_URL}" in caplog.text
+
+    new_mock_plex_server = hass.data[DOMAIN][SERVERS][entry.unique_id]
+
+    assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == PLEX_DIRECT_URL
+    assert entry.title == PLEX_DIRECT_URL
+    assert new_mock_plex_server is not mock_plex_server
+    assert new_mock_plex_server.url_in_use == PLEX_DIRECT_URL
+
+
+async def test_changing_hostname_with_option_flow_no_account(
+    hass, entry, setup_plex_server, requests_mock, empty_library, empty_payload, caplog
+):
+    """Test config options flow selection."""
+    requests_mock.get("https://plex.tv/users/account", status_code=401)
+    mock_plex_server = await setup_plex_server(config_entry=entry)
+
+    original_url = mock_plex_server.url_in_use
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+    assert repr(result["data_schema"].schema[CONF_CONFIGURED_HOST]) == repr(
+        vol.In({original_url: original_url})
+    )

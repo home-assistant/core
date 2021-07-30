@@ -374,6 +374,7 @@ def mock_config_entry():
     return MockConfigEntry(
         domain=DOMAIN,
         data=DEFAULT_DATA,
+        title=DEFAULT_DATA[PLEX_SERVER_CONFIG][CONF_URL],
         options=DEFAULT_OPTIONS,
         unique_id=DEFAULT_DATA["server_id"],
     )
