@@ -7,11 +7,7 @@ real HTTP calls are not initiated during testing.
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W,
-    ATTR_TODAY_ENERGY_KWH,
-    DOMAIN as SWITCH_DOMAIN,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -72,8 +68,6 @@ async def test_turn_on(hass, device_factory):
     state = hass.states.get("switch.switch_1")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes[ATTR_CURRENT_POWER_W] == 355
-    assert state.attributes[ATTR_TODAY_ENERGY_KWH] == 11.422
 
 
 async def test_update_from_signal(hass, device_factory):
