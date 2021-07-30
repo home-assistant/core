@@ -585,13 +585,11 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         """Return the device class of the sensor."""
         if self._index == "power":
             return DEVICE_CLASS_POWER
-        else:
-            return DEVICE_CLASS_ENERGY
+        return DEVICE_CLASS_ENERGY
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         if self._index == "power":
             return POWER_WATT
-        else:
-            return ENERGY_KILO_WATT_HOUR
+        return ENERGY_KILO_WATT_HOUR
