@@ -13,7 +13,7 @@ DOMAIN: Final = "speedtestdotnet"
 
 SPEED_TEST_SERVICE: Final = "speedtest"
 
-SENSOR_TYPES: Final[list[SensorEntityDescription]] = [
+SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="ping",
         name="Ping",
@@ -32,7 +32,7 @@ SENSOR_TYPES: Final[list[SensorEntityDescription]] = [
         unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-]
+)
 
 CONF_SERVER_NAME: Final = "server_name"
 CONF_SERVER_ID: Final = "server_id"
