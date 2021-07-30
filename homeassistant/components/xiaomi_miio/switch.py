@@ -219,13 +219,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switch from a config entry."""
-    if (
-        config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
-        or config_entry.data[CONF_MODEL] == "lumi.acpartner.v3"
-    ):
-        await async_setup_other_entry(hass, config_entry, async_add_entities)
-    else:
+    if config_entry.data[CONF_MODEL] in MODELS_HUMIDIFIER:
         await async_setup_coordinated_entry(hass, config_entry, async_add_entities)
+    else:
+        await async_setup_other_entry(hass, config_entry, async_add_entities)
 
 
 async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
