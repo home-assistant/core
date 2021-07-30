@@ -11,7 +11,13 @@ from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseExce
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -288,10 +294,10 @@ def get_entities(
                 )
                 continue
             device_info: DeviceInfo = {
-                "identifiers": {(DOMAIN, device_id)},
-                "manufacturer": "Maxim Integrated",
-                "model": device_type,
-                "name": device_id,
+                ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
+                ATTR_MANUFACTURER: "Maxim Integrated",
+                ATTR_MODEL: device_type,
+                ATTR_NAME: device_id,
             }
             for entity_specs in get_sensor_types(device_sub_type)[family]:
                 if entity_specs["type"] == SENSOR_TYPE_MOISTURE:
@@ -334,10 +340,10 @@ def get_entities(
                 continue
 
             device_info = {
-                "identifiers": {(DOMAIN, sensor_id)},
-                "manufacturer": "Maxim Integrated",
-                "model": family,
-                "name": sensor_id,
+                ATTR_IDENTIFIERS: {(DOMAIN, sensor_id)},
+                ATTR_MANUFACTURER: "Maxim Integrated",
+                ATTR_MODEL: family,
+                ATTR_NAME: sensor_id,
             }
             device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
             entities.append(
