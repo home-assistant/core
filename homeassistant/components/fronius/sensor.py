@@ -134,8 +134,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
-    entity_description: SensorEntityDescription | None = None
-
     def __init__(self, bridge, name, device, add_entities):
         """Initialize the sensor."""
         self.bridge = bridge
@@ -162,6 +160,11 @@ class FroniusAdapter:
     def available(self):
         """Whether the fronius device is active."""
         return self._available
+
+    @property
+    def entity_description(self) -> SensorEntityDescription | None:
+        """Entity description."""
+        return None
 
     async def async_update(self):
         """Retrieve and update latest state."""
@@ -219,12 +222,15 @@ class FroniusAdapter:
 class FroniusInverterSystem(FroniusAdapter):
     """Adapter for the fronius inverter with system scope."""
 
-    entity_description = SensorEntityDescription(
-        key="",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
-    )
+    @property
+    def entity_description(self):
+        """Return the entity descriptor."""
+        return SensorEntityDescription(
+            key=self._name,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            last_reset=dt.utc_from_timestamp(0),
+        )
 
     async def _update(self):
         """Get the values for the current state."""
@@ -234,12 +240,15 @@ class FroniusInverterSystem(FroniusAdapter):
 class FroniusInverterDevice(FroniusAdapter):
     """Adapter for the fronius inverter with device scope."""
 
-    entity_description = SensorEntityDescription(
-        key="",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
-    )
+    @property
+    def entity_description(self):
+        """Return the entity descriptor."""
+        return SensorEntityDescription(
+            key=self._name,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            last_reset=dt.utc_from_timestamp(0),
+        )
 
     async def _update(self):
         """Get the values for the current state."""
@@ -257,12 +266,20 @@ class FroniusStorage(FroniusAdapter):
 class FroniusMeterSystem(FroniusAdapter):
     """Adapter for the fronius meter with system scope."""
 
-    entity_description = SensorEntityDescription(
-        key="",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
-    )
+    @property
+    def entity_description(self):
+        """Return the entity descriptor."""
+        if self._name.startswith(("energy_day", "energy_year")):
+            last_reset = None
+        else:
+            last_reset = dt.utc_from_timestamp(0)
+
+        return SensorEntityDescription(
+            key=self._name,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            last_reset=last_reset,
+        )
 
     async def _update(self):
         """Get the values for the current state."""
@@ -272,12 +289,20 @@ class FroniusMeterSystem(FroniusAdapter):
 class FroniusMeterDevice(FroniusAdapter):
     """Adapter for the fronius meter with device scope."""
 
-    entity_description = SensorEntityDescription(
-        key="",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
-    )
+    @property
+    def entity_description(self):
+        """Return the entity descriptor."""
+        if self._name.startswith(("energy_day", "energy_year")):
+            last_reset = None
+        else:
+            last_reset = dt.utc_from_timestamp(0)
+
+        return SensorEntityDescription(
+            key=self._name,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_MEASUREMENT,
+            last_reset=last_reset,
+        )
 
     async def _update(self):
         """Get the values for the current state."""
@@ -287,11 +312,14 @@ class FroniusMeterDevice(FroniusAdapter):
 class FroniusPowerFlow(FroniusAdapter):
     """Adapter for the fronius power flow."""
 
-    entity_description = SensorEntityDescription(
-        key="",
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
-    )
+    @property
+    def entity_description(self):
+        """Return the entity descriptor."""
+        return SensorEntityDescription(
+            key=self._name,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        )
 
     async def _update(self):
         """Get the values for the current state."""
