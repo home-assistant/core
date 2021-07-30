@@ -142,6 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             vehicles = await with_timeout(mazda_client.get_vehicles())
 
+            # The Mazda API can throw an error when multiple simultaneous requests are
+            # made for the same account, so we can only make one request at a time here
             for vehicle in vehicles:
                 vehicle["status"] = await with_timeout(
                     mazda_client.get_vehicle_status(vehicle["id"])
