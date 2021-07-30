@@ -90,7 +90,7 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
         self.coordinator = coordinator
         super().__init__(self.coordinator)
         self._attr_name: str = self.coordinator.entry.data[CONF_NAME]
-        self._attr_unique_id: str = self.coordinator.entry.entry_id
+        self._attr_unique_id = self.coordinator.entry.entry_id
         self._identifier: str = self.coordinator.entry.data[CONF_USERNAME]
 
     @property
