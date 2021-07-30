@@ -88,10 +88,10 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.hass.async_add_job(self.smartplug.turn_on)
+        await self.hass.async_add_executor_job(self.smartplug.turn_on)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.hass.async_add_job(self.smartplug.turn_off)
+        await self.hass.async_add_executor_job(self.smartplug.turn_off)
         await self.coordinator.async_refresh()
