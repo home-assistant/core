@@ -1,7 +1,6 @@
 """Tests for the TP-Link component."""
 from __future__ import annotations
 
-from datetime import datetime
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -12,31 +11,21 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
-from homeassistant.components.sensor import ATTR_LAST_RESET
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH
 from homeassistant.components.tplink.common import SmartDevices
 from homeassistant.components.tplink.const import (
-    ATTR_CURRENT_A,
-    ATTR_TOTAL_ENERGY_KWH,
     CONF_DIMMER,
     CONF_DISCOVERY,
-    CONF_EMETER_PARAMS,
     CONF_LIGHT,
-    CONF_MODEL,
     CONF_SW_VERSION,
     CONF_SWITCH,
     COORDINATORS,
 )
-from homeassistant.const import (
-    ATTR_VOLTAGE,
-    CONF_ALIAS,
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_MAC,
-)
+from homeassistant.components.tplink.sensor import ENERGY_SENSORS
+from homeassistant.const import CONF_ALIAS, CONF_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry, mock_coro
 from tests.components.tplink.consts import SMARTPLUGSWITCH_DATA, SMARTSTRIPWITCH_DATA
@@ -217,20 +206,16 @@ async def test_platforms_are_initialized(hass: HomeAssistant):
         }
     }
 
-    with patch(
-        "homeassistant.components.tplink.common.Discover.discover"
-    ) as discover, patch(
+    with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
         "homeassistant.components.tplink.get_static_devices"
     ) as get_static_devices, patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
     ), patch(
         "homeassistant.components.tplink.light.async_setup_entry",
         return_value=mock_coro(True),
-    ) as light_setup, patch(
-        "homeassistant.components.tplink.switch.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as switch_setup, patch(
-        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+    ), patch(
+        "homeassistant.components.tplink.common.SmartPlug.is_dimmable",
+        False,
     ):
 
         light = SmartBulb("123.123.123.123")
@@ -248,47 +233,25 @@ async def test_platforms_are_initialized(hass: HomeAssistant):
         await async_setup_component(hass, tplink.DOMAIN, config)
         await hass.async_block_till_done()
 
-        assert hass.data.get(tplink.DOMAIN)
-        assert hass.data[tplink.DOMAIN].get(COORDINATORS)
-        assert hass.data[tplink.DOMAIN][COORDINATORS].get(switch.mac)
-        assert isinstance(
-            hass.data[tplink.DOMAIN][COORDINATORS][switch.mac],
-            tplink.SmartPlugDataUpdateCoordinator,
-        )
-        data = hass.data[tplink.DOMAIN][COORDINATORS][switch.mac].data
-        assert data[CONF_HOST] == switch.host
-        assert data[CONF_MAC] == switch.sys_info["mac"]
-        assert data[CONF_MODEL] == switch.sys_info["model"]
-        assert data[CONF_SW_VERSION] == switch.sys_info["sw_ver"]
-        assert data[CONF_ALIAS] == switch.sys_info["alias"]
-        assert data[CONF_DEVICE_ID] == switch.sys_info["mac"]
+        state = hass.states.get(f"switch.{switch.alias}")
+        assert state
+        assert state.name == switch.alias
 
-        emeter_readings = switch.get_emeter_realtime()
-        assert data[CONF_EMETER_PARAMS][ATTR_VOLTAGE] == round(
-            float(emeter_readings["voltage"]), 1
-        )
-        assert data[CONF_EMETER_PARAMS][ATTR_CURRENT_A] == round(
-            float(emeter_readings["current"]), 2
-        )
-        assert data[CONF_EMETER_PARAMS][ATTR_CURRENT_POWER_W] == round(
-            float(emeter_readings["power"]), 2
-        )
-        assert data[CONF_EMETER_PARAMS][ATTR_TOTAL_ENERGY_KWH] == round(
-            float(emeter_readings["total"]), 3
-        )
-        assert data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
-            ATTR_TOTAL_ENERGY_KWH
-        ] == utc_from_timestamp(0)
+        for description in ENERGY_SENSORS:
+            state = hass.states.get(
+                f"sensor.{switch.alias}_{slugify(description.name)}"
+            )
+            assert state
+            assert state.state is not None
+            assert state.name == f"{switch.alias} {description.name}"
 
-        assert data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] == 1.123
-        assert data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
-            ATTR_TODAY_ENERGY_KWH
-        ] == datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-
-        assert discover.call_count == 0
-        assert get_static_devices.call_count == 1
-        assert light_setup.call_count == 1
-        assert switch_setup.call_count == 1
+        device_registry = dr.async_get(hass)
+        assert len(device_registry.devices) == 1
+        device = next(iter(device_registry.devices.values()))
+        assert device.name == switch.alias
+        assert device.model == switch.model
+        assert device.connections == {(dr.CONNECTION_NETWORK_MAC, switch.mac.lower())}
+        assert device.sw_version == switch.sys_info[CONF_SW_VERSION]
 
 
 async def test_smartplug_without_consumption_sensors(hass: HomeAssistant):
@@ -311,8 +274,6 @@ async def test_smartplug_without_consumption_sensors(hass: HomeAssistant):
         "homeassistant.components.tplink.switch.async_setup_entry",
         return_value=mock_coro(True),
     ), patch(
-        "homeassistant.components.tplink.sensor.SmartPlugSensor.__init__"
-    ) as SmartPlugSensor, patch(
         "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
     ):
 
@@ -323,7 +284,11 @@ async def test_smartplug_without_consumption_sensors(hass: HomeAssistant):
         await async_setup_component(hass, tplink.DOMAIN, config)
         await hass.async_block_till_done()
 
-        assert SmartPlugSensor.call_count == 0
+        for description in ENERGY_SENSORS:
+            state = hass.states.get(
+                f"sensor.{switch.alias}_{slugify(description.name)}"
+            )
+            assert state is None
 
 
 async def test_smartstrip_device(hass: HomeAssistant):
