@@ -296,11 +296,7 @@ turn_on:
       name: Effect
       description: Light effect.
       selector:
-        select:
-          options:
-            - colorloop
-            - random
-            - white
+        text:
 
 turn_off:
   name: Turn off
