@@ -13,10 +13,16 @@ from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
@@ -72,7 +78,7 @@ CAPABILITY_TO_SENSORS = {
             Attribute.carbon_dioxide,
             "Carbon Dioxide Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
-            None,
+            DEVICE_CLASS_CO2,
             STATE_CLASS_MEASUREMENT,
         )
     ],
@@ -84,7 +90,7 @@ CAPABILITY_TO_SENSORS = {
             Attribute.carbon_monoxide_level,
             "Carbon Monoxide Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
-            None,
+            DEVICE_CLASS_CO,
             STATE_CLASS_MEASUREMENT,
         )
     ],
@@ -126,7 +132,7 @@ CAPABILITY_TO_SENSORS = {
             Attribute.energy,
             "Energy Meter",
             ENERGY_KILO_WATT_HOUR,
-            None,
+            DEVICE_CLASS_ENERGY,
             STATE_CLASS_MEASUREMENT,
         )
     ],
@@ -215,7 +221,13 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.oven_setpoint, "Oven Set Point", None, None, None)
     ],
     Capability.power_meter: [
-        Map(Attribute.power, "Power Meter", POWER_WATT, None, STATE_CLASS_MEASUREMENT)
+        Map(
+            Attribute.power,
+            "Power Meter",
+            POWER_WATT,
+            DEVICE_CLASS_POWER,
+            STATE_CLASS_MEASUREMENT,
+        )
     ],
     Capability.power_source: [
         Map(Attribute.power_source, "Power Source", None, None, None)
@@ -264,7 +276,11 @@ CAPABILITY_TO_SENSORS = {
     Capability.signal_strength: [
         Map(Attribute.lqi, "LQI Signal Strength", None, None, STATE_CLASS_MEASUREMENT),
         Map(
-            Attribute.rssi, "RSSI Signal Strength", None, None, STATE_CLASS_MEASUREMENT
+            Attribute.rssi,
+            "RSSI Signal Strength",
+            None,
+            DEVICE_CLASS_SIGNAL_STRENGTH,
+            STATE_CLASS_MEASUREMENT,
         ),
     ],
     Capability.smoke_detector: [
@@ -349,7 +365,7 @@ CAPABILITY_TO_SENSORS = {
             Attribute.voltage,
             "Voltage Measurement",
             ELECTRIC_POTENTIAL_VOLT,
-            None,
+            DEVICE_CLASS_VOLTAGE,
             STATE_CLASS_MEASUREMENT,
         )
     ],
