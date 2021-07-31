@@ -559,7 +559,16 @@ class CameraImageView(CameraView):
         """Serve camera image."""
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
-                image = await camera.async_camera_image()
+                sig = inspect.signature(camera.async_camera_image)
+                width = request.query.get("width")
+                height = request.query.get("height")
+                if "height" in sig.parameters and "width" in sig.parameters:
+                    image = await camera.async_camera_image(
+                        width=int(width) if width else None,
+                        height=int(height) if height else None,
+                    )
+                else:
+                    image = await camera.async_camera_image()
 
             if image:
                 return web.Response(body=image, content_type=camera.content_type)
