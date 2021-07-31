@@ -96,7 +96,11 @@ async def test_user_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/information", json=FIXTURE_INFORMATION)
+    aioclient_mock.get(
+        f"{FIXTURE_BASE_URL}/information",
+        headers={"Content-Type": "application/json"},
+        json=FIXTURE_INFORMATION,
+    )
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
@@ -250,7 +254,11 @@ async def test_reauth_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/information", json=FIXTURE_INFORMATION)
+    aioclient_mock.get(
+        f"{FIXTURE_BASE_URL}/information",
+        headers={"Content-Type": "application/json"},
+        json=FIXTURE_INFORMATION,
+    )
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
@@ -281,7 +289,11 @@ async def test_zeroconf_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert not result["errors"]
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/information", json=FIXTURE_INFORMATION)
+    aioclient_mock.get(
+        f"{FIXTURE_BASE_URL}/information",
+        headers={"Content-Type": "application/json"},
+        json=FIXTURE_INFORMATION,
+    )
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
