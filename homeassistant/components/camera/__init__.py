@@ -419,9 +419,12 @@ class Camera(Entity):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        return await self.hass.async_add_executor_job(
-            partial(self.camera_image, width=width, height=height)
-        )
+        sig = inspect.signature(self.camera_image)
+        if "height" in sig.parameters and "width" in sig.parameters:
+            return await self.hass.async_add_executor_job(
+                partial(self.camera_image, width=width, height=height)
+            )
+        return await self.hass.async_add_executor_job(self.camera_image)
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float
