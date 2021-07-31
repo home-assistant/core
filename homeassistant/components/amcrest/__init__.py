@@ -5,7 +5,7 @@ import logging
 import threading
 
 import aiohttp
-from amcrest import ApiWrapper, AmcrestError, LoginError
+from amcrest import AmcrestError, ApiWrapper, LoginError
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL
