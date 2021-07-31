@@ -99,7 +99,6 @@ async def async_create_miio_device_and_coordinator(
     token = entry.data[CONF_TOKEN]
     name = entry.title
     device = None
-    migrate_entity_name = None
 
     if model not in MODELS_HUMIDIFIER:
         return
@@ -116,8 +115,8 @@ async def async_create_miio_device_and_coordinator(
     entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
     if entity_id:
         # This check is entities that have a platform migration only and should be removed in the future
-        migrate_entity_name = entity_registry.async_get(entity_id).name
-        hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
+        if migrate_entity_name := entity_registry.async_get(entity_id).name:
+            hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
         entity_registry.async_remove(entity_id)
 
     async def async_update_data():
