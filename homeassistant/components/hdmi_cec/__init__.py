@@ -1,7 +1,6 @@
 """Support for HDMI CEC."""
 from __future__ import annotations
 
-from collections import defaultdict
 from functools import partial, reduce
 import logging
 import multiprocessing
@@ -67,8 +66,6 @@ ICONS_BY_TYPE = {
     4: ICON_PLAYER,
     5: ICON_AUDIO,
 }
-
-CEC_DEVICES = defaultdict(list)  # type: ignore
 
 CMD_UP = "up"
 CMD_DOWN = "down"
