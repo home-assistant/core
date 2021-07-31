@@ -188,10 +188,14 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
             return
 
         self._attr_native_value = last_state.attributes.get(ATTR_NATIVE_VALUE)
-        self._entity_picture = last_state.attributes.get(ATTR_ENTITY_PICTURE)
-        self._operated_remote = last_state.attributes.get(ATTR_OPERATION_REMOTE)
-        self._operated_keypad = last_state.attributes.get(ATTR_OPERATION_KEYPAD)
-        self._operated_autorelock = last_state.attributes.get(ATTR_OPERATION_AUTORELOCK)
+        if ATTR_ENTITY_PICTURE in last_state.attributes:
+            self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
+        if ATTR_OPERATION_REMOTE in last_state.attributes:
+            self._operated_remote = last_state.attributes[ATTR_OPERATION_REMOTE]
+        if ATTR_OPERATION_KEYPAD in last_state.attributes:
+            self._operated_keypad = last_state.attributes[ATTR_OPERATION_KEYPAD]
+        if ATTR_OPERATION_AUTORELOCK in last_state.attributes:
+            self._operated_autorelock = last_state.attributes[ATTR_OPERATION_AUTORELOCK]
 
     @property
     def entity_picture(self):
