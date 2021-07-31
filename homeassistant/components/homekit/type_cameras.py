@@ -468,7 +468,11 @@ class Camera(HomeAccessory, PyhapCamera):
     async def async_get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
         return scale_jpeg_camera_image(
-            await self.hass.components.camera.async_get_image(self.entity_id),
+            await self.hass.components.camera.async_get_image(
+                self.entity_id,
+                width=image_size["image-width"],
+                height=image_size["image-height"],
+            ),
             image_size["image-width"],
             image_size["image-height"],
         )
