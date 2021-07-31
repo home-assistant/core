@@ -414,7 +414,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
         return None
 
     async def async_set_humidity(self, humidity: int) -> None:
-        """Set the target humidity of the humidifier and set the mode to auto."""
+        """Set the target humidity of the humidifier and set the mode to Humidity."""
         target_humidity = self.translate_humidity(humidity)
         if not target_humidity:
             return
