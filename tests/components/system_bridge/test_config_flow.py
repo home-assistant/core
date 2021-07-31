@@ -149,9 +149,7 @@ async def test_form_cannot_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(
-        f"{FIXTURE_BASE_URL}/information", exc=BridgeAuthenticationException
-    )
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/information", exc=ClientConnectionError)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT
