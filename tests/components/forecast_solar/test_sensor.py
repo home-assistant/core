@@ -96,7 +96,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_production_now"
-    assert state.state == "300.0"
+    assert state.state == "300000"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Estimated Power Production - Now"
     )
