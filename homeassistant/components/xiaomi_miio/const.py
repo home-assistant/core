@@ -52,9 +52,9 @@ MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
 MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
 MODEL_AIRHUMIDIFIER_CA4 = "zhimi.humidifier.ca4"
 MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
-MODEL_AIRHUMIDIFIER_JSQ = "zhimi.humidifier.jsq"
-MODEL_AIRHUMIDIFIER_JSQ1 = "zhimi.humidifier.jsq1"
-MODEL_AIRHUMIDIFIER_MJJSQ = "zhimi.humidifier.mjjsq"
+MODEL_AIRHUMIDIFIER_JSQ = "deerma.humidifier.jsq"
+MODEL_AIRHUMIDIFIER_JSQ1 = "deerma.humidifier.jsq1"
+MODEL_AIRHUMIDIFIER_MJJSQ = "deerma.humidifier.mjjsq"
 
 MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
 
