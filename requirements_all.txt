@@ -883,6 +883,9 @@ krakenex==2.1.0
 # homeassistant.components.eufy
 lakeside==0.12
 
+# homeassistant.components.dyson_local
+libdyson==0.8.8
+
 # homeassistant.components.dyson
 libpurecool==0.6.4
 

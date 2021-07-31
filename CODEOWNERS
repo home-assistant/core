@@ -126,6 +126,7 @@ homeassistant/components/dunehd/* @bieniu
 homeassistant/components/dwd_weather_warnings/* @runningman84 @stephan192 @Hummel95
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/dynalite/* @ziv1234
+homeassistant/components/dyson_local/* @shenxn
 homeassistant/components/eafm/* @Jc2k
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/econet/* @vangorra @w1ll1am23

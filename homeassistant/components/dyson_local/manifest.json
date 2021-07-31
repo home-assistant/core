@@ -1,0 +1,9 @@
+{
+    "domain": "dyson_local",
+    "name": "Dyson Local",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/dyson_local",
+    "codeowners": ["@shenxn"],
+    "requirements": ["libdyson==0.8.8"],
+    "iot_class": "local_push"
+}

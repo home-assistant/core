@@ -62,6 +62,7 @@ FLOWS = [
     "dsmr",
     "dunehd",
     "dynalite",
+    "dyson_local",
     "eafm",
     "ecobee",
     "econet",
