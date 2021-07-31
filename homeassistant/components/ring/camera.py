@@ -51,6 +51,7 @@ class RingCam(RingEntityMixin, Camera):
         self._last_event = None
         self._last_video_id = None
         self._video_url = None
+        self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
 
     async def async_added_to_hass(self):
@@ -79,6 +80,7 @@ class RingCam(RingEntityMixin, Camera):
             self._last_event = None
             self._last_video_id = None
             self._video_url = None
+            self._image = None
             self._expires_at = dt_util.utcnow()
             self.async_write_ha_state()
 
@@ -103,18 +105,7 @@ class RingCam(RingEntityMixin, Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        ffmpeg = ImageFrame(self._ffmpeg.binary)
-
-        if self._video_url is None:
-            return
-
-        image = await asyncio.shield(
-            ffmpeg.get_image(
-                self._video_url,
-                output_format=IMAGE_JPEG,
-            )
-        )
-        return image
+        return self._image
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
@@ -158,6 +149,18 @@ class RingCam(RingEntityMixin, Camera):
             video_url = None
 
         if video_url:
+            if (self._last_video_id != self._last_event["id"]) or (self._image == None):
+                ffmpeg = ImageFrame(self._ffmpeg.binary)
+
+                self._image = await asyncio.shield(
+                    ffmpeg.get_image(
+                        video_url,
+                        output_format=IMAGE_JPEG,
+                    )
+                )
+
             self._last_video_id = self._last_event["id"]
             self._video_url = video_url
             self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
+        else:
+            self._image = None
