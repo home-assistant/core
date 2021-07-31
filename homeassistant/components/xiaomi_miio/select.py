@@ -13,6 +13,9 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_MODEL,
     DOMAIN,
+    FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
+    FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
+    FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ,
     FEATURE_SET_LED_BRIGHTNESS,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -20,6 +23,7 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODELS_HUMIDIFIER,
+    MODELS_HUMIDIFIER_MJJSQ,
     SERVICE_SET_LED_BRIGHTNESS,
 )
 from .device import XiaomiCoordinatedMiioEntity
@@ -69,24 +73,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
         entity_class = XiaomiAirHumidifierSelector
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
     elif model in [MODEL_AIRHUMIDIFIER_CA4]:
         entity_class = XiaomiAirHumidifierMiotSelector
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
+    elif model in MODELS_HUMIDIFIER_MJJSQ:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ
     elif model in MODELS_HUMIDIFIER:
         entity_class = XiaomiAirHumidifierSelector
     else:
         return
 
-    for selector in SELECTOR_TYPES.values():
-        entities.append(
-            entity_class(
-                f"{config_entry.title} {selector.name}",
-                device,
-                config_entry,
-                f"{selector.short_name}_{config_entry.unique_id}",
-                selector,
-                coordinator,
+    for feature, selector in SELECTOR_TYPES.items():
+        if feature & device_features:
+            entities.append(
+                entity_class(
+                    f"{config_entry.title} {selector.name}",
+                    device,
+                    config_entry,
+                    f"{selector.short_name}_{config_entry.unique_id}",
+                    selector,
+                    coordinator,
+                )
             )
-        )
 
     async_add_entities(entities)
 
