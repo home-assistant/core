@@ -211,49 +211,6 @@ fan_set_extra_features:
           min: 0
           max: 1
 
-fan_set_target_humidity:
-  name: Fan set target humidity
-  description: Set the target humidity.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
-    humidity:
-      name: Humidity
-      description: Target humidity.
-      required: true
-      selector:
-        number:
-          min: 30
-          max: 80
-          step: 10
-          unit_of_measurement: '%'
-
-fan_set_dry_on:
-  name: Fan set dry on
-  description: Turn the dry mode on.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
-
-fan_set_dry_off:
-  name: Fan set dry off
-  description: Turn the dry mode off.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
-
 fan_set_motor_speed:
   name: Fan set motor speed
   description: Set the target motor speed.
