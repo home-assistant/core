@@ -317,7 +317,12 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_climate_temp(self, state, attr, metric_name, metric_description):
+    def _handle_climate_temp(
+        self, state, attr, metric_name, metric_description, metric_labels=None
+    ):
+        if metric_labels is None:
+            metric_labels = {}
+
         temp = state.attributes.get(attr)
         if temp:
             if self._climate_units == TEMP_FAHRENHEIT:
@@ -327,7 +332,7 @@ class PrometheusMetrics:
                 self.prometheus_cli.Gauge,
                 metric_description,
             )
-            metric.labels(**self._labels(state)).set(temp)
+            metric.labels({**metric_labels, **self._labels(state)}).set(temp)
 
     def _handle_climate(self, state):
         self._handle_climate_temp(
@@ -338,21 +343,23 @@ class PrometheusMetrics:
         )
         self._handle_climate_temp(
             state,
-            ATTR_CURRENT_TEMPERATURE,
-            "climate_current_temperature_celsius",
-            "Current temperature in degrees Celsius",
-        )
-        self._handle_climate_temp(
-            state,
             ATTR_TARGET_TEMP_HIGH,
-            "climate_target_temperature_high_c",
-            "Target high temperature in degrees Celsius",
+            "climate_target_temperature_celsius",
+            "Target temperature in degrees Celsius",
+            {"point": "high"},
         )
         self._handle_climate_temp(
             state,
             ATTR_TARGET_TEMP_LOW,
-            "climate_target_temperature_low_c",
-            "Target low temperature in degrees Celsius",
+            "climate_target_temperature_celsius",
+            "Target temperature in degrees Celsius",
+            {"point": "low"},
+        )
+        self._handle_climate_temp(
+            state,
+            ATTR_CURRENT_TEMPERATURE,
+            "climate_current_temperature_celsius",
+            "Current temperature in degrees Celsius",
         )
 
         current_action = state.attributes.get(ATTR_HVAC_ACTION)
