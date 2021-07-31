@@ -318,10 +318,10 @@ class PrometheusMetrics:
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_climate_temp(
-        self, state, attr, metric_name, metric_description, metric_labels=None
+        self, state, attr, metric_name, metric_description, extra_labels=None
     ):
-        if metric_labels is None:
-            metric_labels = {}
+        if extra_labels is None:
+            extra_labels = {}
 
         temp = state.attributes.get(attr)
         if temp:
@@ -331,9 +331,9 @@ class PrometheusMetrics:
                 metric_name,
                 self.prometheus_cli.Gauge,
                 metric_description,
-                metric_labels.keys(),
+                extra_labels.keys(),
             )
-            all_labels = {**metric_labels, **self._labels(state)}
+            all_labels = {**extra_labels, **self._labels(state)}
             metric.labels(**all_labels).set(temp)
 
     def _handle_climate(self, state):
