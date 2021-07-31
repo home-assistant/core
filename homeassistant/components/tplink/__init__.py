@@ -99,7 +99,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
-    if config_data is None and entry.data is not None:
+    if config_data is None and entry.data:
         config_data = entry.data
     elif config_data is not None:
         hass.config_entries.async_update_entry(entry, data=config_data)
