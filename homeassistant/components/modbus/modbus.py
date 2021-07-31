@@ -1,6 +1,6 @@
 """Support for Modbus."""
 import asyncio
-from copy import deepcopy
+from collections import namedtuple
 import logging
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
@@ -54,54 +54,52 @@ from .const import (
     SERVICE_WRITE_REGISTER,
 )
 
-ENTRY_FUNC = "func"
-ENTRY_ATTR = "attr"
-ENTRY_NAME = "name"
-
 _LOGGER = logging.getLogger(__name__)
 
-PYMODBUS_CALL = {
-    CALL_TYPE_COIL: {
-        ENTRY_ATTR: "bits",
-        ENTRY_NAME: "read_coils",
-        ENTRY_FUNC: None,
-    },
-    CALL_TYPE_DISCRETE: {
-        ENTRY_ATTR: "bits",
-        ENTRY_NAME: "read_discrete_inputs",
-        ENTRY_FUNC: None,
-    },
-    CALL_TYPE_REGISTER_HOLDING: {
-        ENTRY_ATTR: "registers",
-        ENTRY_NAME: "read_holding_registers",
-        ENTRY_FUNC: None,
-    },
-    CALL_TYPE_REGISTER_INPUT: {
-        ENTRY_ATTR: "registers",
-        ENTRY_NAME: "read_input_registers",
-        ENTRY_FUNC: None,
-    },
-    CALL_TYPE_WRITE_COIL: {
-        ENTRY_ATTR: "value",
-        ENTRY_NAME: "write_coil",
-        ENTRY_FUNC: None,
-    },
-    CALL_TYPE_WRITE_COILS: {
-        ENTRY_ATTR: "count",
-        ENTRY_NAME: "write_coils",
-        ENTRY_FUNC: None,
-    },
-    CALL_TYPE_WRITE_REGISTER: {
-        ENTRY_ATTR: "value",
-        ENTRY_NAME: "write_register",
-        ENTRY_FUNC: None,
-    },
-    CALL_TYPE_WRITE_REGISTERS: {
-        ENTRY_ATTR: "count",
-        ENTRY_NAME: "write_registers",
-        ENTRY_FUNC: None,
-    },
-}
+ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")
+RunEntry = namedtuple("RunEntry", "attr func")
+PYMODBUS_CALL = [
+    ConfEntry(
+        CALL_TYPE_COIL,
+        "bits",
+        "read_coils",
+    ),
+    ConfEntry(
+        CALL_TYPE_DISCRETE,
+        "bits",
+        "read_discrete_inputs",
+    ),
+    ConfEntry(
+        CALL_TYPE_REGISTER_HOLDING,
+        "registers",
+        "read_holding_registers",
+    ),
+    ConfEntry(
+        CALL_TYPE_REGISTER_INPUT,
+        "registers",
+        "read_input_registers",
+    ),
+    ConfEntry(
+        CALL_TYPE_WRITE_COIL,
+        "value",
+        "write_coil",
+    ),
+    ConfEntry(
+        CALL_TYPE_WRITE_COILS,
+        "count",
+        "write_coils",
+    ),
+    ConfEntry(
+        CALL_TYPE_WRITE_REGISTER,
+        "value",
+        "write_register",
+    ),
+    ConfEntry(
+        CALL_TYPE_WRITE_REGISTERS,
+        "count",
+        "write_registers",
+    ),
+]
 
 
 async def async_modbus_setup(
@@ -197,7 +195,7 @@ class ModbusHub:
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
-        self._pb_call = deepcopy(PYMODBUS_CALL)
+        self._pb_call = {}
         self._pb_class = {
             CONF_SERIAL: ModbusSerialClient,
             CONF_TCP: ModbusTcpClient,
@@ -246,8 +244,9 @@ class ModbusHub:
             self._log_error(str(exception_error), error_state=False)
             return False
 
-        for entry in self._pb_call.values():
-            entry[ENTRY_FUNC] = getattr(self._client, entry[ENTRY_NAME])
+        for entry in PYMODBUS_CALL:
+            func = getattr(self._client, entry.func_name)
+            self._pb_call[entry.call_type] = RunEntry(entry.attr, func)
 
         await self.async_connect_task()
         return True
@@ -301,12 +300,13 @@ class ModbusHub:
     def _pymodbus_call(self, unit, address, value, use_call):
         """Call sync. pymodbus."""
         kwargs = {"unit": unit} if unit else {}
+        entry = self._pb_call[use_call]
         try:
-            result = self._pb_call[use_call][ENTRY_FUNC](address, value, **kwargs)
+            result = entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return None
-        if not hasattr(result, self._pb_call[use_call][ENTRY_ATTR]):
+        if not hasattr(result, entry.attr):
             self._log_error(str(result))
             return None
         self._in_error = False
