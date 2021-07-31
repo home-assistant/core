@@ -381,7 +381,6 @@ class CecEntity(Entity):
         self._state: str | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
-        self._attr_should_poll = False
 
     def _hdmi_cec_unavailable(self, callback_event):
         # Change state to unavailable. Without this, entity would remain in
@@ -415,6 +414,15 @@ class CecEntity(Entity):
     def _update(self, device=None):
         """Device status changed, schedule an update."""
         self.schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """
+        Return false.
+
+        CecEntity.update() is called by the HDMI network when there is new data.
+        """
+        return False
 
     @property
     def name(self):
