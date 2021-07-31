@@ -290,7 +290,7 @@ async def test_zeroconf_flow(
     assert not result["errors"]
 
     aioclient_mock.get(
-        f"{FIXTURE_BASE_URL}/information",
+        f"{FIXTURE_ZEROCONF_BASE_URL}/information",
         headers={"Content-Type": "application/json"},
         json=FIXTURE_INFORMATION,
     )
@@ -324,7 +324,9 @@ async def test_zeroconf_cannot_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert not result["errors"]
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/information", exc=ClientConnectionError)
+    aioclient_mock.get(
+        f"{FIXTURE_ZEROCONF_BASE_URL}/information", exc=ClientConnectionError
+    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
