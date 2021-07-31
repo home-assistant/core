@@ -560,8 +560,8 @@ class CameraImageView(CameraView):
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
                 sig = inspect.signature(camera.async_camera_image)
-                width = request.query.get("width")
-                height = request.query.get("height")
+                width = request.query.get("width") or 640
+                height = request.query.get("height") or 480
                 if "height" in sig.parameters and "width" in sig.parameters:
                     image = await camera.async_camera_image(
                         width=int(width) if width else None,
