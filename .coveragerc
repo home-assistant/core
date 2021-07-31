@@ -1007,8 +1007,9 @@ omit =
     homeassistant/components/synology_srm/device_tracker.py
     homeassistant/components/syslog/notify.py
     homeassistant/components/system_bridge/__init__.py
-    homeassistant/components/system_bridge/const.py
     homeassistant/components/system_bridge/binary_sensor.py
+    homeassistant/components/system_bridge/const.py
+    homeassistant/components/system_bridge/coordinator.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/*
