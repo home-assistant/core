@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
-HAP-python==3.5.2
+HAP-python==3.6.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -122,7 +122,7 @@ aiohomekit==0.6.0
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.5.1
+aiohue==2.6.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -449,7 +449,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210729.0
+home-assistant-frontend==20210730.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -758,7 +758,7 @@ pyatag==0.3.5.3
 pyatmo==5.2.3
 
 # homeassistant.components.apple_tv
-pyatv==0.8.1
+pyatv==0.8.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.5

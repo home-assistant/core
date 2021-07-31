@@ -60,7 +60,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "pyprosegur.auth.Auth",
+        "pyprosegur.installation.Installation",
         side_effect=ConnectionRefusedError,
     ):
         result2 = await hass.config_entries.flow.async_configure(

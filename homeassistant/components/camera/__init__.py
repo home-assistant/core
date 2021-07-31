@@ -8,7 +8,9 @@ from collections.abc import Awaitable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import hashlib
+import inspect
 import logging
 import os
 from random import SystemRandom
@@ -140,14 +142,34 @@ async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) ->
 
 @bind_hass
 async def async_get_image(
-    hass: HomeAssistant, entity_id: str, timeout: int = 10
+    hass: HomeAssistant,
+    entity_id: str,
+    timeout: int = 10,
+    width: int | None = None,
+    height: int | None = None,
 ) -> Image:
-    """Fetch an image from a camera entity."""
+    """Fetch an image from a camera entity.
+
+    width and height will be passed to the underlying
+    entity if it is supported.
+
+    There is no guarantee that the image will be the passed
+    width and height as many cameras cannot scale on demand
+
+    Passing the width and height are only helpful in avoiding
+    post processing of the image in the event the camera
+    can scale the image for us and shift the computational
+    load to the device itself.
+    """
     camera = _get_camera_from_entity_id(hass, entity_id)
 
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         async with async_timeout.timeout(timeout):
-            image = await camera.async_camera_image()
+            sig = inspect.signature(camera.async_camera_image)
+            if "height" in sig.parameters and "width" in sig.parameters:
+                image = await camera.async_camera_image(width=width, height=height)
+            else:
+                image = await camera.async_camera_image()
 
             if image:
                 return Image(camera.content_type, image)
@@ -387,13 +409,19 @@ class Camera(Entity):
         """Return the source of the stream."""
         return None
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
-        return await self.hass.async_add_executor_job(self.camera_image)
+        return await self.hass.async_add_executor_job(
+            partial(self.camera_image, width=width, height=height)
+        )
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float

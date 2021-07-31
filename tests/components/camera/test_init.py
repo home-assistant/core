@@ -75,6 +75,22 @@ async def test_get_image_from_camera(hass, image_mock_url):
     assert image.content == b"Test"
 
 
+async def test_get_image_from_camera_with_width_height(hass, image_mock_url):
+    """Grab an image from camera entity with width and height."""
+
+    with patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        autospec=True,
+        return_value=b"Test",
+    ) as mock_camera:
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera", width=640, height=480
+        )
+
+    assert mock_camera.called
+    assert image.content == b"Test"
+
+
 async def test_get_stream_source_from_camera(hass, mock_camera):
     """Fetch stream source from camera entity."""
 

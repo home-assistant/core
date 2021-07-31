@@ -30,6 +30,9 @@ async def setup_onewire_sysbus_integration(hass):
         data={
             CONF_TYPE: CONF_TYPE_SYSBUS,
             CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
+            "names": {
+                "10-111111111111": "My DS18B20",
+            },
         },
         unique_id=f"{CONF_TYPE_SYSBUS}:{DEFAULT_SYSBUS_MOUNT_DIR}",
         options={},
