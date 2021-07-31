@@ -331,6 +331,7 @@ class PrometheusMetrics:
                 metric_name,
                 self.prometheus_cli.Gauge,
                 metric_description,
+                metric_labels.keys(),
             )
             all_labels = {**metric_labels, **self._labels(state)}
             metric.labels(**all_labels).set(temp)
@@ -341,6 +342,7 @@ class PrometheusMetrics:
             ATTR_TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
+            {"point": "set"},
         )
         self._handle_climate_temp(
             state,
