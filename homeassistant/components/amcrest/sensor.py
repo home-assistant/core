@@ -1,7 +1,8 @@
 """Support for Amcrest IP camera sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 
 from amcrest import AmcrestError
 
@@ -20,19 +21,14 @@ SENSOR_PTZ_PRESET = "ptz_preset"
 SENSOR_SDCARD = "sdcard"
 
 
-class SensorMeta(NamedTuple):
-    """Meta data for sensor types."""
-
-    SENSOR_PTZ_PRESET: SensorEntityDescription
-    SENSOR_SDCARD: SensorEntityDescription
-
-
-SENSORS = SensorMeta(
-    SENSOR_PTZ_PRESET=SensorEntityDescription(key="PTZ Preset", icon="mdi:camera-iris"),
-    SENSOR_SDCARD=SensorEntityDescription(
+SENSORS: dict[str, SensorEntityDescription] = {
+    SENSOR_PTZ_PRESET: SensorEntityDescription(
+        key="PTZ Preset", icon="mdi:camera-iris"
+    ),
+    SENSOR_SDCARD: SensorEntityDescription(
         key="SD Used", unit_of_measurement=PERCENTAGE, icon="mdi:sd"
     ),
-)
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
