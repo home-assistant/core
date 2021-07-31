@@ -40,6 +40,7 @@ from .const import (
     FEATURE_SET_CHILD_LOCK,
     FEATURE_SET_CLEAN,
     FEATURE_SET_DRY,
+    FEATURE_SET_LED,
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_AIRHUMIDIFIER_CA1,
@@ -51,6 +52,7 @@ from .const import (
     SERVICE_SET_CHILD_LOCK,
     SERVICE_SET_CLEAN,
     SERVICE_SET_DRY,
+    SERVICE_SET_LED,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
     SERVICE_SET_WIFI_LED_OFF,
@@ -98,17 +100,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ATTR_POWER = "power"
-ATTR_LOAD_POWER = "load_power"
-ATTR_MODEL = "model"
-ATTR_POWER_MODE = "power_mode"
-ATTR_WIFI_LED = "wifi_led"
-ATTR_POWER_PRICE = "power_price"
-ATTR_PRICE = "price"
 ATTR_BUZZER = "buzzer"
 ATTR_CHILD_LOCK = "child_lock"
-ATTR_DRY = "dry"
 ATTR_CLEAN = "clean_mode"
+ATTR_DRY = "dry"
+ATTR_LED = "led"
+ATTR_LOAD_POWER = "load_power"
+ATTR_MODEL = "model"
+ATTR_POWER = "power"
+ATTR_POWER_MODE = "power_mode"
+ATTR_POWER_PRICE = "power_price"
+ATTR_PRICE = "price"
+ATTR_WIFI_LED = "wifi_led"
 
 FEATURE_SET_POWER_MODE = 1
 FEATURE_SET_WIFI_LED = 2
@@ -161,6 +164,10 @@ SERVICE_TO_METHOD = {
         "method_on": "async_set_clean_on",
         "method_off": "async_set_clean_off",
     },
+    SERVICE_SET_LED: {
+        "method_on": "async_set_led_on",
+        "method_off": "async_set_led_off",
+    },
 }
 
 
@@ -200,6 +207,12 @@ SWITCH_TYPES = {
         short_name=ATTR_CLEAN,
         service=SERVICE_SET_CLEAN,
         available_with_device_off=False,
+    ),
+    FEATURE_SET_LED: SwitchType(
+        name="Led",
+        icon="mdi:led-outline",
+        short_name=ATTR_LED,
+        service=SERVICE_SET_LED,
     ),
 }
 
@@ -503,6 +516,22 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         return await self._try_command(
             "Turning the clean mode of the miio device off failed.",
             self._device.set_clean_mode,
+            False,
+        )
+
+    async def async_set_led_on(self) -> bool:
+        """Turn the led on."""
+        return await self._try_command(
+            "Turning the led of the miio device on failed.",
+            self._device.set_led,
+            True,
+        )
+
+    async def async_set_led_off(self) -> bool:
+        """Turn the led off."""
+        return await self._try_command(
+            "Turning the led of the miio device off failed.",
+            self._device.set_led,
             False,
         )
 
