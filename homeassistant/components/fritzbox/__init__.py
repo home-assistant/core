@@ -144,6 +144,11 @@ class FritzBoxEntity(CoordinatorEntity):
         self._attr_state_class = entity_info[ATTR_STATE_CLASS]
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.device.present
+
+    @property
     def device(self) -> FritzhomeDevice:
         """Return device object from coordinator."""
         return self.coordinator.data[self.ain]
