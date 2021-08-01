@@ -10,6 +10,5 @@
     "@Danielhiversen",
     "@zhulik"
   ],
-  "iot_class": "cloud_push",
-  "quality_scale": "silver"
+  "iot_class": "cloud_push"
 }
