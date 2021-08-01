@@ -221,7 +221,10 @@ class ZHADevice(LogMixin):
     @property
     def device_type(self) -> str:
         """Return the logical device type for the device."""
-        if self._zigpy_device.node_desc is None:
+        if (
+            self._zigpy_device.node_desc is None
+            or self._zigpy_device.node_desc.logical_type is None
+        ):
             return UNKNOWN
 
         return self._zigpy_device.node_desc.logical_type.name
