@@ -1,19 +1,32 @@
-"""Image processing for HomeKit component."""
+"""Image processing for cameras."""
 
 import logging
+from typing import TYPE_CHECKING, cast
 
 SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
 
 _LOGGER = logging.getLogger(__name__)
 
+JPEG_QUALITY = 75
 
-def scale_jpeg_camera_image(cam_image, width, height):
+if TYPE_CHECKING:
+    from turbojpeg import TurboJPEG
+
+    from . import Image
+
+
+def scale_jpeg_camera_image(cam_image: "Image", width: int, height: int) -> bytes:
     """Scale a camera image as close as possible to one of the supported scaling factors."""
     turbo_jpeg = TurboJPEGSingleton.instance()
     if not turbo_jpeg:
         return cam_image.content
 
-    (current_width, current_height, _, _) = turbo_jpeg.decode_header(cam_image.content)
+    try:
+        (current_width, current_height, _, _) = turbo_jpeg.decode_header(
+            cam_image.content
+        )
+    except OSError:
+        return cam_image.content
 
     if current_width <= width or current_height <= height:
         return cam_image.content
@@ -26,10 +39,13 @@ def scale_jpeg_camera_image(cam_image, width, height):
             scaling_factor = supported_sf
             break
 
-    return turbo_jpeg.scale_with_quality(
-        cam_image.content,
-        scaling_factor=scaling_factor,
-        quality=75,
+    return cast(
+        bytes,
+        turbo_jpeg.scale_with_quality(
+            cam_image.content,
+            scaling_factor=scaling_factor,
+            quality=JPEG_QUALITY,
+        ),
     )
 
 
@@ -45,13 +61,13 @@ class TurboJPEGSingleton:
     __instance = None
 
     @staticmethod
-    def instance():
+    def instance() -> "TurboJPEG":
         """Singleton for TurboJPEG."""
         if TurboJPEGSingleton.__instance is None:
             TurboJPEGSingleton()
         return TurboJPEGSingleton.__instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Try to create TurboJPEG only once."""
         # pylint: disable=unused-private-member
         # https://github.com/PyCQA/pylint/issues/4681

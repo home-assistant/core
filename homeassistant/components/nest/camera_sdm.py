@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
@@ -125,7 +125,7 @@ class NestCamera(Camera):
         assert self._stream
         if self._stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
-        return self._stream.rtsp_stream_url
+        return cast(str, self._stream.rtsp_stream_url)
 
     def _schedule_stream_refresh(self) -> None:
         """Schedules an alarm to refresh the stream url before expiration."""
@@ -180,7 +180,9 @@ class NestCamera(Camera):
             self._device.add_update_listener(self.async_write_ha_state)
         )
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         # Returns the snapshot of the last event for ~30 seconds after the event
         active_event_image = await self._async_active_event_image()
@@ -228,7 +230,7 @@ class NestCamera(Camera):
         if not event_image:
             return None
         try:
-            return await event_image.contents()
+            return cast(bytes, await event_image.contents())
         except GoogleNestException as err:
             _LOGGER.debug("Unable to fetch event image: %s", err)
             return None
