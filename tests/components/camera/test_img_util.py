@@ -41,7 +41,7 @@ def test_scale_jpeg_camera_image():
 
     turbo_jpeg = mock_turbo_jpeg(first_width=16, first_height=12)
     turbo_jpeg.decode_header.side_effect = OSError
-    with patch("turbojpeg.TurboJPEG", return_value=False):
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
         TurboJPEGSingleton()
         assert scale_jpeg_camera_image(camera_image, 16, 12) == camera_image.content
 
