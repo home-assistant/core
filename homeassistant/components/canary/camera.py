@@ -123,7 +123,9 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
         live_stream_url = await self.hass.async_add_executor_job(

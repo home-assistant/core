@@ -165,10 +165,16 @@ async def async_get_image(
 
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         async with async_timeout.timeout(timeout):
+            # Calling inspect will be removed in 2022.1 after all
+            # custom components have had a chance to change their signature
             sig = inspect.signature(camera.async_camera_image)
             if "height" in sig.parameters and "width" in sig.parameters:
                 image = await camera.async_camera_image(width=width, height=height)
             else:
+                _LOGGER.warning(
+                    "The camera entity %s does not support requesting width and height, please open an issue with the integration author.",
+                    entity_id,
+                )
                 image = await camera.async_camera_image()
 
             if image:
@@ -420,10 +426,16 @@ class Camera(Entity):
     ) -> bytes | None:
         """Return bytes of camera image."""
         sig = inspect.signature(self.camera_image)
+        # Calling inspect will be removed in 2022.1 after all
+        # custom components have had a chance to change their signature
         if "height" in sig.parameters and "width" in sig.parameters:
             return await self.hass.async_add_executor_job(
                 partial(self.camera_image, width=width, height=height)
             )
+        _LOGGER.warning(
+            "The camera entity %s does not support requesting width and height, please open an issue with the integration author.",
+            self.entity_id,
+        )
         return await self.hass.async_add_executor_job(self.camera_image)
 
     async def handle_async_still_stream(

@@ -1,4 +1,6 @@
 """Camera support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -75,7 +77,9 @@ class SkybellCamera(SkybellDevice, Camera):
             return self._device.activity_image
         return self._device.image
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Get the latest camera image."""
         super().update()
 

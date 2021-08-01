@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 from aioesphomeapi import CameraInfo, CameraState
 from aiohttp import web
@@ -50,7 +50,9 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         async with self._image_cond:
             self._image_cond.notify_all()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return single camera image bytes."""
         if not self.available:
             return None
@@ -59,7 +61,7 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
             await self._image_cond.wait()
             if not self.available:
                 return None
-            return self._state.data[:]
+            return cast(bytes, self._state.data[:])
 
     async def _async_camera_stream_image(self) -> bytes | None:
         """Return a single camera image in a stream."""
@@ -70,7 +72,7 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
             await self._image_cond.wait()
             if not self.available:
                 return None
-            return self._state.data[:]
+            return cast(bytes, self._state.data[:])
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request

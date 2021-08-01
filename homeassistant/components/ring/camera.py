@@ -1,4 +1,6 @@
 """This component provides support to the Ring Door Bell camera."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from itertools import chain
@@ -101,7 +103,9 @@ class RingCam(RingEntityMixin, Camera):
             "last_video_id": self._last_video_id,
         }
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         ffmpeg = ImageFrame(self._ffmpeg.binary)
 
