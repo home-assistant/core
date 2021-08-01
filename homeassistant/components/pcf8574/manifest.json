@@ -6,10 +6,6 @@
   "requirements": [
     "pcf8574==0.1.3"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@asauerwein"
   ],
