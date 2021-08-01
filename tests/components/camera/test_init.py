@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .common import JPEG_8_6
+from .common import JPEG_8_6, mock_turbo_jpeg
 
 from tests.components.camera import common
 
@@ -80,7 +80,10 @@ async def test_get_image_from_camera(hass, image_mock_url):
 async def test_get_image_from_camera_with_width_height(hass, image_mock_url):
     """Grab an image from camera entity with width and height."""
 
-    with patch(
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg), patch(
         "homeassistant.components.demo.camera.Path.read_bytes",
         autospec=True,
         return_value=b"Test",
@@ -96,7 +99,10 @@ async def test_get_image_from_camera_with_width_height(hass, image_mock_url):
 async def test_get_image_from_camera_with_width_height_scaled(hass, image_mock_url):
     """Grab an image from camera entity with width and height and scale it."""
 
-    with patch(
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg), patch(
         "homeassistant.components.demo.camera.Path.read_bytes",
         autospec=True,
         return_value=JPEG_8_6,

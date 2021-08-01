@@ -142,7 +142,9 @@ class MjpegCamera(Camera):
         """Return a still image response from the camera."""
         if self._username and self._password:
             if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                auth = HTTPDigestAuth(self._username, self._password)
+                auth: HTTPDigestAuth | HTTPBasicAuth = HTTPDigestAuth(
+                    self._username, self._password
+                )
             else:
                 auth = HTTPBasicAuth(self._username, self._password)
             req = requests.get(

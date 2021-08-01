@@ -166,7 +166,7 @@ async def _async_get_image(
                 )
             else:
                 _LOGGER.warning(
-                    "The camera entity %s does not support requesting width and height, please open an issue with the integration author.",
+                    "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
                     camera.entity_id,
                 )
                 image_bytes = await camera.async_camera_image()
@@ -457,7 +457,7 @@ class Camera(Entity):
                 partial(self.camera_image, width=width, height=height)
             )
         _LOGGER.warning(
-            "The camera entity %s does not support requesting width and height, please open an issue with the integration author.",
+            "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
             self.entity_id,
         )
         return await self.hass.async_add_executor_job(self.camera_image)
