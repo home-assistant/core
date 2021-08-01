@@ -38,13 +38,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default="PCF8574 Switch"): cv.string,
     }
 )
-# STEP_PIN_DATA_SCHEMA = vol.Schema(
-#     {
-#         vol.Required("pin_num", default=0): vol.Coerce(int),
-#         vol.Required("pin_name", default=""): cv.string,
-#         vol.Optional("add_another"): cv.boolean,
-#     }
-# )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
@@ -89,17 +82,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    # async def async_step_pin(
-    #     self, user_input: dict[int, str] | None = None
-    # ) -> FlowResult:
-    #     if user_input is None:
-    #         return self.async_show_form(step_id="pin", data_schema=STEP_PIN_DATA_SCHEMA)
-
-    #     self.data["pins"].append({user_input["pin_num"]: user_input["pin_name"]})
-
-    #     if user_input.get("add_another", False):
-    #         return await self.async_step_pin()
-    #     else:
-    #         # User is done adding pins, create the config entries.
-    #         return self.async_create_entry(title=self.data[CONF_NAME], data=self.data)
