@@ -1,5 +1,4 @@
 """Tests for the Yeelight integration."""
-from asyncio import Future, coroutine
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from yeelight import BulbException, BulbType
