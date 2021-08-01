@@ -1,35 +1,9 @@
 """Support for switch sensor using I2C PCF8574 chip."""
 from pcf8574 import PCF8574
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import DOMAIN
-
-CONF_I2C_PORT_NUM = "i2c_port_num"
-CONF_I2C_ADDRESS = "i2c_address"
-CONF_PINS = "pins"
-CONF_INVERT_LOGIC = "invert_logic"
-
-DEFAULT_NAME = "PCF8574 Switch"
-DEFAULT_I2C_ADDRESS = 0x20
-DEFAULT_I2C_PORT_NUM = 0
-DEFAULT_INVERT_LOGIC = False
-
-_SWITCHES_SCHEMA = vol.Schema({cv.positive_int: cv.string})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PINS): _SWITCHES_SCHEMA,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
-        vol.Optional(CONF_I2C_PORT_NUM, default=DEFAULT_I2C_PORT_NUM): vol.Coerce(int),
-        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    }
-)
+from .const import CONF_I2C_ADDRESS, CONF_I2C_PORT_NUM, CONF_INVERT_LOGIC, DOMAIN
 
 
 async def async_setup_entry(
@@ -43,7 +17,7 @@ async def async_setup_entry(
     if config_entry.options:
         config.update(config_entry.options)
 
-    invert_logic = config.get(CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC)
+    invert_logic = config[CONF_INVERT_LOGIC]
     switches = []
     for i in range(8):
         # try to get all switch names. if key exist also the switch exists
@@ -51,8 +25,8 @@ async def async_setup_entry(
         if switch_name is not None:
             switches.append(
                 PCF8574Switch(
-                    config["i2c_port_num"],
-                    config["i2c_address"],
+                    config[CONF_I2C_PORT_NUM],
+                    config[CONF_I2C_ADDRESS],
                     switch_name,
                     i,
                     invert_logic,
@@ -62,27 +36,6 @@ async def async_setup_entry(
     async_add_entities(switches, update_before_add=True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the PCF8574 devices."""
-    i2c_address = config.get(CONF_I2C_ADDRESS)
-    i2c_port_num = config.get(CONF_I2C_PORT_NUM)
-    invert_logic = config.get(CONF_INVERT_LOGIC)
-
-    switches = []
-    pins = config.get(CONF_PINS)
-    for pin_num, pin_name in pins.items():
-        switches.append(
-            PCF8574Switch(
-                i2c_port_num,
-                i2c_address,
-                pin_name,
-                pin_num,
-                invert_logic,
-            )
-        )
-    add_entities(switches)
-
-
 class PCF8574Switch(ToggleEntity):
     """Representation of a PCF8574 output pin."""
 
@@ -90,7 +43,7 @@ class PCF8574Switch(ToggleEntity):
         self, i2c_port_num, i2c_address, name, pin_num, invert_logic, unique_id=None
     ):
         """Initialize the pin."""
-        self._attr_name = name or DEVICE_DEFAULT_NAME
+        self._attr_name = name
         self._attr_unique_id = str(unique_id) + str(pin_num)
         self._pcf = PCF8574(i2c_port_num, i2c_address)
         self._pin_num = pin_num

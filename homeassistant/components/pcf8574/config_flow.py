@@ -13,19 +13,30 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import (
+    CONF_I2C_ADDRESS,
+    CONF_I2C_PORT_NUM,
+    CONF_INVERT_LOGIC,
+    DEFAULT_I2C_ADDRESS,
+    DEFAULT_I2C_PORT_NUM,
+    DEFAULT_INVERT_LOGIC,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("i2c_port_num", default=0): vol.Coerce(int),
+        vol.Required(CONF_I2C_PORT_NUM, default=DEFAULT_I2C_PORT_NUM): vol.Coerce(int),
         vol.Required(
-            "i2c_address", default=0x20, description="0x20 hex is 32 dec"
+            CONF_I2C_ADDRESS,
+            default=DEFAULT_I2C_ADDRESS,
+            description="0x20 hex is 32 dec",
         ): vol.Coerce(
             int
         ),  # 0x20 = dec 32
-        vol.Optional("invert_logic", default=False): cv.boolean,
+        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
         vol.Optional("switch_1_name"): cv.string,
         vol.Optional("switch_2_name"): cv.string,
         vol.Optional("switch_3_name"): cv.string,
@@ -34,7 +45,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional("switch_6_name"): cv.string,
         vol.Optional("switch_7_name"): cv.string,
         vol.Optional("switch_8_name"): cv.string,
-        vol.Optional(CONF_NAME, default="PCF8574 Switch"): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
