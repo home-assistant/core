@@ -3,14 +3,15 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Awaitable, Iterable, Mapping
+from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, TypedDict
+from typing import Any, TypedDict, final
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -93,6 +94,40 @@ def async_generate_entity_id(
     return test_string
 
 
+def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> Any | None:
+    """Get a capability attribute of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(capability)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.capabilities.get(capability) if entry.capabilities else None
+
+
+def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get device class of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_DEVICE_CLASS)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.device_class
+
+
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     """Get supported features for an entity.
 
@@ -108,6 +143,23 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.supported_features or 0
+
+
+def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get unit of measurement class of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.unit_of_measurement
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -127,6 +179,21 @@ class DeviceInfo(TypedDict, total=False):
     default_model: str
 
 
+@dataclass
+class EntityDescription:
+    """A class that describes Home Assistant entities."""
+
+    # This is the key identifier for this entity
+    key: str
+
+    device_class: str | None = None
+    entity_registry_enabled_default: bool = True
+    force_update: bool = False
+    icon: str | None = None
+    name: str | None = None
+    unit_of_measurement: str | None = None
+
+
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
@@ -142,6 +209,9 @@ class Entity(ABC):
 
     # Owning platform instance. Will be set by EntityPlatform
     platform: EntityPlatform | None = None
+
+    # Entity description instance for this Entity
+    entity_description: EntityDescription
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -172,19 +242,19 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
-    _attr_device_class: str | None = None
+    _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_picture: str | None = None
-    _attr_entity_registry_enabled_default: bool = True
-    _attr_extra_state_attributes: Mapping[str, Any] | None = None
-    _attr_force_update: bool = False
-    _attr_icon: str | None = None
-    _attr_name: str | None = None
+    _attr_entity_registry_enabled_default: bool
+    _attr_extra_state_attributes: MutableMapping[str, Any]
+    _attr_force_update: bool
+    _attr_icon: str | None
+    _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
     _attr_unique_id: str | None = None
-    _attr_unit_of_measurement: str | None = None
+    _attr_unit_of_measurement: str | None
 
     @property
     def should_poll(self) -> bool:
@@ -202,7 +272,11 @@ class Entity(ABC):
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return self._attr_name
+        if hasattr(self, "_attr_name"):
+            return self._attr_name
+        if hasattr(self, "entity_description"):
+            return self.entity_description.name
+        return None
 
     @property
     def state(self) -> StateType:
@@ -245,7 +319,9 @@ class Entity(ABC):
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
-        return self._attr_extra_state_attributes
+        if hasattr(self, "_attr_extra_state_attributes"):
+            return self._attr_extra_state_attributes
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -258,17 +334,29 @@ class Entity(ABC):
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._attr_device_class
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self._attr_unit_of_measurement
+        if hasattr(self, "_attr_unit_of_measurement"):
+            return self._attr_unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.unit_of_measurement
+        return None
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        return self._attr_icon
+        if hasattr(self, "_attr_icon"):
+            return self._attr_icon
+        if hasattr(self, "entity_description"):
+            return self.entity_description.icon
+        return None
 
     @property
     def entity_picture(self) -> str | None:
@@ -292,7 +380,11 @@ class Entity(ABC):
         If True, a state change will be triggered anytime the state property is
         updated, not just when the value changes.
         """
-        return self._attr_force_update
+        if hasattr(self, "_attr_force_update"):
+            return self._attr_force_update
+        if hasattr(self, "entity_description"):
+            return self.entity_description.force_update
+        return False
 
     @property
     def supported_features(self) -> int | None:
@@ -307,7 +399,11 @@ class Entity(ABC):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._attr_entity_registry_enabled_default
+        if hasattr(self, "_attr_entity_registry_enabled_default"):
+            return self._attr_entity_registry_enabled_default
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_registry_enabled_default
+        return True
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
@@ -763,10 +859,20 @@ class Entity(ABC):
                 self.parallel_updates.release()
 
 
+@dataclass
+class ToggleEntityDescription(EntityDescription):
+    """A class that describes toggle entities."""
+
+
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
+    entity_description: ToggleEntityDescription
+    _attr_is_on: bool
+    _attr_state: None = None
+
     @property
+    @final
     def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
@@ -774,7 +880,7 @@ class ToggleEntity(Entity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        raise NotImplementedError()
+        return self._attr_is_on
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

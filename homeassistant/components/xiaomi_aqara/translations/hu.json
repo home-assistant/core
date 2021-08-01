@@ -12,7 +12,7 @@
             "invalid_key": "\u00c9rv\u00e9nytelen kulcs",
             "invalid_mac": "\u00c9rv\u00e9nytelen Mac-c\u00edm"
         },
-        "flow_title": "Xiaomi Aqara K\u00f6zponti egys\u00e9g: {name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {

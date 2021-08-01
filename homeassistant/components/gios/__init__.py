@@ -9,8 +9,10 @@ from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from gios import ApiError, Gios, InvalidSensorsData, NoStationError
 
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,7 +21,7 @@ from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["air_quality"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -48,6 +50,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    # Remove air_quality entities from registry if they exist
+    ent_reg = entity_registry.async_get(hass)
+    unique_id = str(coordinator.gios.station_id)
+    if entity_id := ent_reg.async_get_entity_id(
+        AIR_QUALITY_PLATFORM, DOMAIN, unique_id
+    ):
+        _LOGGER.debug("Removing deprecated air_quality entity %s", entity_id)
+        ent_reg.async_remove(entity_id)
 
     return True
 

@@ -282,7 +282,6 @@ def config_entry_fixture():
         title="",
         data=data,
         options={CONF_TTS_PAUSE_TIME: 0},
-        system_options={},
         source=SOURCE_USER,
         entry_id=1,
     )

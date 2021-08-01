@@ -57,6 +57,17 @@ async def test_polling_only_updates_entities_it_should_poll(hass):
     assert poll_ent.async_update.called
 
 
+async def test_polling_disabled_by_config_entry(hass):
+    """Test the polling of only updated entities."""
+    entity_platform = MockEntityPlatform(hass)
+    entity_platform.config_entry = MockConfigEntry(pref_disable_polling=True)
+
+    poll_ent = MockEntity(should_poll=True)
+
+    await entity_platform.async_add_entities([poll_ent])
+    assert entity_platform._async_unsub_polling is None
+
+
 async def test_polling_updates_entities_with_exception(hass):
     """Test the updated entities that not break with an exception."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
@@ -946,7 +957,6 @@ async def test_entity_info_added_to_entity_registry(hass):
     registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
-    print(entry_default)
     assert entry_default.capabilities == {"max": 100}
     assert entry_default.supported_features == 5
     assert entry_default.device_class == "mock-device-class"

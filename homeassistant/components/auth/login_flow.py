@@ -52,7 +52,7 @@ flow for details.
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
-have type "create_entry" and "result" key will contain an authorization code.
+have type RESULT_TYPE_CREATE_ENTRY and "result" key will contain an authorization code.
 The authorization code associated with an authorized user by default, it will
 associate with an credential if "type" set to "link_user" in
 "/auth/login_flow"
@@ -248,10 +248,10 @@ class LoginFlowResourceView(HomeAssistantView):
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200
             # need manually log failed login attempts
-            if result.get("errors") is not None and result["errors"].get("base") in [
+            if result.get("errors") is not None and result["errors"].get("base") in (
                 "invalid_auth",
                 "invalid_code",
-            ]:
+            ):
                 await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 

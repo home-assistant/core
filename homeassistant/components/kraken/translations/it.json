@@ -3,8 +3,16 @@
         "abort": {
             "already_configured": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
+        "error": {
+            "one": "Pi\u00f9",
+            "other": "Altri"
+        },
         "step": {
             "user": {
+                "data": {
+                    "one": "Pi\u00f9",
+                    "other": "Altri"
+                },
                 "description": "Vuoi iniziare la configurazione?"
             }
         }

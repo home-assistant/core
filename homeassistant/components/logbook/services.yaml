@@ -19,7 +19,6 @@ log:
     entity_id:
       name: Entity ID
       description: Entity to reference in custom logbook entry.
-      example: "light.kitchen"
       selector:
         entity:
     domain:

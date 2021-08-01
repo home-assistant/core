@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -179,6 +180,7 @@ class Battery(Sensor):
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
     @staticmethod
@@ -241,6 +243,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
 
@@ -282,6 +285,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PRESSURE_HPA
 
 
@@ -313,6 +317,27 @@ class CarbonMonoxideConcentration(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_CO
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_PARTS_PER_MILLION
+
+
+@STRICT_MATCH(generic_ids="channel_0x042e")
+@STRICT_MATCH(channel_names="voc_level")
+class VOCLevel(Sensor):
+    """VOC Level sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
+@STRICT_MATCH(channel_names="formaldehyde_concentration")
+class FormaldehydeConcentration(Sensor):
+    """Formaldehyde Concentration sensor."""
+
+    SENSOR_ATTR = "measured_value"
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION

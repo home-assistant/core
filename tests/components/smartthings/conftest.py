@@ -61,7 +61,6 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
         "Test",
         {CONF_INSTALLED_APP_ID: str(uuid4())},
         SOURCE_USER,
-        system_options={},
     )
     broker = DeviceBroker(
         hass, config_entry, Mock(), Mock(), devices or [], scenes or []

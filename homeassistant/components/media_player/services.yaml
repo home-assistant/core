@@ -46,7 +46,6 @@ volume_mute:
       name: Muted
       description: True/false for mute/unmute.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -61,13 +60,11 @@ volume_set:
       name: Level
       description: Volume level to set as float.
       required: true
-      example: 0.6
       selector:
         number:
           min: 0
           max: 1
           step: 0.01
-          mode: slider
 
 media_play_pause:
   name: Play/Pause
@@ -122,7 +119,6 @@ media_seek:
       name: Position
       description: Position to seek to. The format is platform dependent.
       required: true
-      example: 100
       selector:
         number:
           min: 0
@@ -202,7 +198,6 @@ shuffle_set:
       name: Shuffle
       description: True/false for enabling/disabling shuffle.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -217,7 +212,6 @@ repeat_set:
       name: Repeat mode
       description: Repeat mode to set.
       required: true
-      example: "off"
       selector:
         select:
           options:

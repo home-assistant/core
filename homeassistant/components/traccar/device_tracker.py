@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_GPS,
 )
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
     CONF_HOST,
@@ -116,7 +117,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Configure a dispatcher connection based on a config entry."""
 
     @callback
@@ -321,7 +324,7 @@ class TraccarScanner:
                         "device_traccar_id": event["deviceId"],
                         "device_name": device_name,
                         "type": event["type"],
-                        "serverTime": event["serverTime"],
+                        "serverTime": event.get("eventTime") or event.get("serverTime"),
                         "attributes": event["attributes"],
                     },
                 )

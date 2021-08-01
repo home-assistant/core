@@ -5,7 +5,6 @@ assume_state:
     entity_id:
       name: Entity
       description: Name(s) of entities to change.
-      example: "climate.kitchen"
       selector:
         entity:
           integration: sensibo

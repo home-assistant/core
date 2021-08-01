@@ -15,7 +15,6 @@ set_speed:
     speed:
       name: Speed
       description: Speed limit. 0 is unlimited.
-      example: 1000
       default: 1000
       selector:
         number:

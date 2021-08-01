@@ -1,5 +1,8 @@
 """Config flow to configure the Pi-hole integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from hole import Hole
 from hole.exceptions import HoleError
@@ -24,6 +27,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,19 +38,25 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self._config = None
+        self._config: dict = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_init(user_input)
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by import."""
         return await self.async_step_init(user_input, is_import=True)
 
-    async def async_step_init(self, user_input, is_import=False):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None, is_import: bool = False
+    ) -> FlowResult:
         """Handle init step of a flow."""
         errors = {}
 
@@ -131,7 +141,9 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_api_key(self, user_input=None):
+    async def async_step_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle step to setup API key."""
         if user_input is not None:
             return self.async_create_entry(
@@ -147,14 +159,16 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Optional(CONF_API_KEY): str}),
         )
 
-    async def _async_endpoint_existed(self, endpoint):
+    async def _async_endpoint_existed(self, endpoint: str) -> bool:
         existing_endpoints = [
             f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_LOCATION)}"
             for entry in self._async_current_entries()
         ]
         return endpoint in existing_endpoints
 
-    async def _async_try_connect(self, host, location, tls, verify_tls):
+    async def _async_try_connect(
+        self, host: str, location: str, tls: bool, verify_tls: bool
+    ) -> None:
         session = async_get_clientsession(self.hass, verify_tls)
         pi_hole = Hole(host, self.hass.loop, session, location=location, tls=tls)
         await pi_hole.get_data()

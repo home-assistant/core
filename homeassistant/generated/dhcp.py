@@ -176,6 +176,22 @@ DHCP = [
         "hostname": "tizen*"
     },
     {
+        "domain": "samsungtv",
+        "macaddress": "8CC8CD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "606BBD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "F47B5E*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "4844F7*"
+    },
+    {
         "domain": "screenlogic",
         "hostname": "pentair: *",
         "macaddress": "00C033*"
@@ -209,6 +225,11 @@ DHCP = [
         "domain": "smartthings",
         "hostname": "hub*",
         "macaddress": "D052A8*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "hub*",
+        "macaddress": "286D97*"
     },
     {
         "domain": "solaredge",

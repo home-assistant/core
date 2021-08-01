@@ -13,7 +13,7 @@ from homeassistant.components.homekit.accessories import (
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
@@ -106,7 +106,7 @@ async def test_home_accessory(hass, hk_driver):
             ATTR_MODEL: "Awesome",
             ATTR_MANUFACTURER: "Lux Brands",
             ATTR_SOFTWARE_VERSION: "0.4.3",
-            ATTR_INTERGRATION: "luxe",
+            ATTR_INTEGRATION: "luxe",
         },
     )
     assert acc3.available is False

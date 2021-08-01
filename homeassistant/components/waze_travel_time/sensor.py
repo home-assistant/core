@@ -127,7 +127,7 @@ async def async_setup_entry(
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = {}
-        for key in [
+        for key in (
             CONF_INCL_FILTER,
             CONF_EXCL_FILTER,
             CONF_REALTIME,
@@ -136,7 +136,7 @@ async def async_setup_entry(
             CONF_AVOID_SUBSCRIPTION_ROADS,
             CONF_AVOID_FERRIES,
             CONF_UNITS,
-        ]:
+        ):
             if key in new_data:
                 options[key] = new_data.pop(key)
             elif key in defaults:
@@ -158,7 +158,7 @@ async def async_setup_entry(
         config_entry,
     )
 
-    sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
+    sensor = WazeTravelTime(config_entry.entry_id, name, origin, destination, data)
 
     async_add_entities([sensor], False)
 

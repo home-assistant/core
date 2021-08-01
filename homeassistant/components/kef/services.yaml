@@ -18,31 +18,26 @@ set_mode:
     desk_mode:
       name: Desk mode
       description: Desk mode.
-      example: true
       selector:
         boolean:
     wall_mode:
       name: Wall mode
       description: Wall mode.
-      example: true
       selector:
         boolean:
     phase_correction:
       name: Phase correction
       description: Phase correction.
-      example: true
       selector:
         boolean:
     high_pass:
       name: High pass
       description: High-pass mode".
-      example: true
       selector:
         boolean:
     sub_polarity:
       name: Subwoofer polarity
       description: Sub polarity.
-      example: "+"
       selector:
         select:
           options:
@@ -51,7 +46,6 @@ set_mode:
     bass_extension:
       name: Base extension
       description: Bass extension.
-      example: "Extra"
       selector:
         select:
           options:
@@ -62,11 +56,11 @@ set_mode:
 set_desk_db:
   name: Set desk dB
   description: Set the "Desk mode" slider of the speaker in dB.
+  target:
+    entity:
+      integration: kef
+      domain: media_player
   fields:
-    entity_id:
-      name: Entity
-      description: The entity_id of the KEF speaker.
-      example: media_player.kef_lsx
     db_value:
       name: dB value
       description: Value of the slider
@@ -89,7 +83,6 @@ set_wall_db:
     db_value:
       name: dB value
       description: Value of the slider.
-      example: 0.0
       selector:
         number:
           min: -6
@@ -108,7 +101,6 @@ set_treble_db:
     db_value:
       name: dB value
       description: Value of the slider.
-      example: 0.0
       selector:
         number:
           min: -2
@@ -127,7 +119,6 @@ set_high_hz:
     hz_value:
       name: Hertz value
       description: Value of the slider.
-      example: 95
       selector:
         number:
           min: 50
@@ -146,7 +137,6 @@ set_low_hz:
     hz_value:
       name: Hertz value
       description: Value of the slider.
-      example: 80
       selector:
         number:
           min: 40
@@ -165,10 +155,8 @@ set_sub_db:
     db_value:
       name: dB value
       description: Value of the slider.
-      example: 0
       selector:
         number:
           min: -10
           max: 10
-          step: 1
           unit_of_measurement: dB

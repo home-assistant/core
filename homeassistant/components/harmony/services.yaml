@@ -18,7 +18,6 @@ change_channel:
       name: Channel
       description: Channel number to change to
       required: true
-      example: "200"
       selector:
         number:
           min: 1

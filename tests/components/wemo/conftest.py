@@ -19,7 +19,7 @@ MOCK_SERIAL_NUMBER = "WemoSerialNumber"
 @pytest.fixture(name="pywemo_model")
 def pywemo_model_fixture():
     """Fixture containing a pywemo class name used by pywemo_device_fixture."""
-    return "Insight"
+    return "LightSwitch"
 
 
 @pytest.fixture(name="pywemo_registry")
@@ -43,13 +43,15 @@ def pywemo_registry_fixture():
 @pytest.fixture(name="pywemo_device")
 def pywemo_device_fixture(pywemo_registry, pywemo_model):
     """Fixture for WeMoDevice instances."""
-    device = create_autospec(getattr(pywemo, pywemo_model), instance=True)
+    cls = getattr(pywemo, pywemo_model)
+    device = create_autospec(cls, instance=True)
     device.host = MOCK_HOST
     device.port = MOCK_PORT
     device.name = MOCK_NAME
     device.serialnumber = MOCK_SERIAL_NUMBER
     device.model_name = pywemo_model
     device.get_state.return_value = 0  # Default to Off
+    device.supports_long_press.return_value = cls.supports_long_press()
 
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
     with patch("pywemo.setup_url_for_address", return_value=url), patch(

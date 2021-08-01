@@ -15,7 +15,6 @@ virtualkey:
       name: Channel
       description: Channel for calling a keypress.
       required: true
-      example: 1
       selector:
         number:
           min: 1
@@ -41,7 +40,6 @@ set_variable_value:
     entity_id:
       name: Entity
       description: Name(s) of homematic central to set value.
-      example: "homematic.ccu2"
       selector:
         entity:
           domain: homematic
@@ -75,7 +73,6 @@ set_device_value:
       name: Channel
       description: Channel for calling a keypress
       required: true
-      example: 1
       selector:
         number:
           min: 1
@@ -130,7 +127,6 @@ set_install_mode:
     mode:
       name: Mode
       description: 1= Normal mode / 2= Remove exists old links
-      example: 1
       default: 1
       selector:
         number:
@@ -139,7 +135,6 @@ set_install_mode:
     time:
       name: Time
       description: Time to run in install mode
-      example: 1
       default: 60
       selector:
         number:

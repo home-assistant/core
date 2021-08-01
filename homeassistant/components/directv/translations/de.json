@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Das Ger\u00e4t ist bereits konfiguriert.",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "DirecTV: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "data": {
                     "one": "eins",
                     "other": "andere"
                 },
-                "description": "M\u00f6chten Sie {name} einrichten?"
+                "description": "M\u00f6chtest du {name} einrichten?"
             },
             "user": {
                 "data": {

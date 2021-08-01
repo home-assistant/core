@@ -1,7 +1,6 @@
 """Denon HEOS Media Player."""
 from __future__ import annotations
 
-from collections.abc import Sequence
 from functools import reduce, wraps
 import logging
 from operator import ior
@@ -362,7 +361,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._source_manager.get_current_source(self._player.now_playing_media)
 
     @property
-    def source_list(self) -> Sequence[str]:
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return self._source_manager.source_list
 

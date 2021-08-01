@@ -1,9 +1,10 @@
 """Tests for homekit_controller config flow."""
 from unittest import mock
 import unittest.mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohomekit
+from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
@@ -11,6 +12,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.homekit_controller import config_flow
+from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.helpers import device_registry
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -42,6 +44,16 @@ PAIRING_FINISH_ABORT_ERRORS = [
     (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error")
 ]
 
+
+INSECURE_PAIRING_CODES = [
+    "111-11-111",
+    "123-45-678",
+    "22222222",
+    "111-11-111 ",
+    " 111-11-111",
+]
+
+
 INVALID_PAIRING_CODES = [
     "aaa-aa-aaa",
     "aaa-11-aaa",
@@ -49,11 +61,8 @@ INVALID_PAIRING_CODES = [
     "aaa-aa-111",
     "1111-1-111",
     "a111-11-111",
-    " 111-11-111",
-    "111-11-111 ",
     "111-11-111a",
     "1111111",
-    "22222222",
 ]
 
 
@@ -92,6 +101,15 @@ def test_invalid_pairing_codes(pairing_code):
     """Test ensure_pin_format raises for an invalid pin code."""
     with pytest.raises(aiohomekit.exceptions.MalformedPinError):
         config_flow.ensure_pin_format(pairing_code)
+
+
+@pytest.mark.parametrize("pairing_code", INSECURE_PAIRING_CODES)
+def test_insecure_pairing_codes(pairing_code):
+    """Test ensure_pin_format raises for an invalid setup code."""
+    with pytest.raises(config_flow.InsecureSetupCode):
+        config_flow.ensure_pin_format(pairing_code)
+
+    config_flow.ensure_pin_format(pairing_code, allow_insecure_setup_codes=True)
 
 
 @pytest.mark.parametrize("pairing_code", VALID_PAIRING_CODES)
@@ -334,8 +352,48 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
     assert result["type"] == "form"
 
 
+async def test_discovery_broken_pairing_flag(hass, controller):
+    """
+    There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
+
+    We have seen this particular implementation error in 2 different devices.
+    """
+    await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
+
+    MockConfigEntry(
+        domain="homekit_controller",
+        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        unique_id="00:00:00:00:00:00",
+    ).add_to_hass(hass)
+
+    # We just added a mock config entry so it must be visible in hass
+    assert len(hass.config_entries.async_entries()) == 1
+
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Make sure that we are pairable
+    assert discovery_info["properties"]["sf"] != 0x0
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    # Should still be paired.
+    config_entry_count = len(hass.config_entries.async_entries())
+    assert config_entry_count == 1
+
+    # Even though discovered as pairable, we bail out as already paired.
+    assert result["reason"] == "already_paired"
+
+
 async def test_discovery_invalid_config_entry(hass, controller):
     """There is already a config entry for the pairing id but it's invalid."""
+    pairing = await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
+
     MockConfigEntry(
         domain="homekit_controller",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
@@ -349,11 +407,16 @@ async def test_discovery_invalid_config_entry(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Device is discovered
-    result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
+    with patch.object(
+        pairing,
+        "list_accessories_and_characteristics",
+        side_effect=AuthenticationError("Invalid pairing keys"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
 
     # Discovery of a HKID that is in a pairable state but for which there is
     # already a config entry - in that case the stale config entry is
@@ -367,11 +430,16 @@ async def test_discovery_invalid_config_entry(hass, controller):
 
 async def test_discovery_already_configured(hass, controller):
     """Already configured."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain="homekit_controller",
-        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        data={
+            "AccessoryIP": "4.4.4.4",
+            "AccessoryPort": 66,
+            "AccessoryPairingID": "00:00:00:00:00:00",
+        },
         unique_id="00:00:00:00:00:00",
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -387,6 +455,49 @@ async def test_discovery_already_configured(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert entry.data["AccessoryIP"] == discovery_info["host"]
+    assert entry.data["AccessoryPort"] == discovery_info["port"]
+
+
+async def test_discovery_already_configured_update_csharp(hass, controller):
+    """Already configured and csharp changes."""
+    entry = MockConfigEntry(
+        domain="homekit_controller",
+        data={
+            "AccessoryIP": "4.4.4.4",
+            "AccessoryPort": 66,
+            "AccessoryPairingID": "AA:BB:CC:DD:EE:FF",
+        },
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    connection_mock = AsyncMock()
+    connection_mock.pairing.connect.reconnect_soon = AsyncMock()
+    connection_mock.async_refresh_entity_map = AsyncMock()
+    hass.data[KNOWN_DEVICES] = {"AA:BB:CC:DD:EE:FF": connection_mock}
+
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Set device as already paired
+    discovery_info["properties"]["sf"] = 0x00
+    discovery_info["properties"]["c#"] = 99999
+    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    await hass.async_block_till_done()
+
+    assert entry.data["AccessoryIP"] == discovery_info["host"]
+    assert entry.data["AccessoryPort"] == discovery_info["port"]
+    assert connection_mock.async_refresh_entity_map.await_count == 1
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
@@ -619,6 +730,49 @@ async def test_user_works(hass, controller):
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Koogeek-LS1-20833F"
+
+
+async def test_user_pairing_with_insecure_setup_code(hass, controller):
+    """Test user initiated disovers devices."""
+    device = setup_mock_accessory(controller)
+    device.pairing_code = "123-45-678"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert get_flow_context(hass, result) == {
+        "source": config_entries.SOURCE_USER,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"device": "TestDevice"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "pair"
+
+    assert get_flow_context(hass, result) == {
+        "source": config_entries.SOURCE_USER,
+        "unique_id": "00:00:00:00:00:00",
+        "title_placeholders": {"name": "TestDevice"},
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "123-45-678"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "pair"
+    assert result["errors"] == {"pairing_code": "insecure_setup_code"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"pairing_code": "123-45-678", "allow_insecure_setup_codes": True},
     )
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"

@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data[ATTR_DEVICE_INFO] = await self.hass.async_add_executor_job(
                     self._remote.get_device_info
                 )
-            except (TimeoutError, URLError, SOAPError, OSError) as err:
+            except (URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 errors["base"] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
@@ -114,7 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SOAPError as err:
                 _LOGGER.error("Invalid PIN code: %s", err)
                 errors["base"] = ERROR_INVALID_PIN_CODE
-            except (TimeoutError, URLError, OSError) as err:
+            except (URLError, OSError) as err:
                 _LOGGER.error("The remote connection was lost: %s", err)
                 return self.async_abort(reason="cannot_connect")
             except Exception as err:  # pylint: disable=broad-except
@@ -138,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(
                 partial(self._remote.request_pin_code, name="Home Assistant")
             )
-        except (TimeoutError, URLError, SOAPError, OSError) as err:
+        except (URLError, SOAPError, OSError) as err:
             _LOGGER.error("The remote connection was lost: %s", err)
             return self.async_abort(reason="cannot_connect")
         except Exception as err:  # pylint: disable=broad-except

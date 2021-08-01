@@ -54,7 +54,7 @@ COUNTRYCODE_NAMES = {
     "LU": "Luxembourg",
     "MT": "Malta",
     "MX": "Mexico",
-    "MY": "Maylasia",
+    "MY": "Maylasia",  # spelling error compatibility with pyps4_2ndscreen.media_art.COUNTRIES
     "NI": "Nicaragua",
     "NL": "Nederland",
     "NO": "Norway",

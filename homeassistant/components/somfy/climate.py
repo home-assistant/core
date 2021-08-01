@@ -23,8 +23,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import SomfyEntity
-from .const import API, COORDINATOR, DOMAIN
+from .const import COORDINATOR, DOMAIN
+from .entity import SomfyEntity
 
 SUPPORTED_CATEGORIES = {Category.HVAC.value}
 
@@ -49,10 +49,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy climate platform."""
     domain_data = hass.data[DOMAIN]
     coordinator = domain_data[COORDINATOR]
-    api = domain_data[API]
 
     climates = [
-        SomfyClimate(coordinator, device_id, api)
+        SomfyClimate(coordinator, device_id)
         for device_id, device in coordinator.data.items()
         if SUPPORTED_CATEGORIES & set(device.categories)
     ]
@@ -63,15 +62,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomfyClimate(SomfyEntity, ClimateEntity):
     """Representation of a Somfy thermostat device."""
 
-    def __init__(self, coordinator, device_id, api):
+    def __init__(self, coordinator, device_id):
         """Initialize the Somfy device."""
-        super().__init__(coordinator, device_id, api)
+        super().__init__(coordinator, device_id)
         self._climate = None
         self._create_device()
 
     def _create_device(self):
         """Update the device with the latest data."""
-        self._climate = Thermostat(self.device, self.api)
+        self._climate = Thermostat(self.device, self.coordinator.client)
 
     @property
     def supported_features(self) -> int:
@@ -166,7 +165,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
             temperature = self._climate.get_night_temperature()
         elif preset_mode == PRESET_FROST_GUARD:
             temperature = self._climate.get_frost_protection_temperature()
-        elif preset_mode in [PRESET_MANUAL, PRESET_GEOFENCING]:
+        elif preset_mode in (PRESET_MANUAL, PRESET_GEOFENCING):
             temperature = self.target_temperature
         else:
             raise ValueError(f"Preset mode not supported: {preset_mode}")

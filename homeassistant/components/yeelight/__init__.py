@@ -164,16 +164,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
         _LOGGER.debug("Importing configured %s", host)
-        entry_config = {
-            CONF_HOST: host,
-            **device_config,
-        }
+        entry_config = {CONF_HOST: host, **device_config}
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=entry_config,
-            ),
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
+            )
         )
 
     return True
@@ -203,9 +198,7 @@ async def _async_initialize(
 
     entry.async_on_unload(
         async_dispatcher_connect(
-            hass,
-            DEVICE_INITIALIZED.format(host),
-            _async_load_platforms,
+            hass, DEVICE_INITIALIZED.format(host), _async_load_platforms
         )
     )
 
@@ -224,10 +217,7 @@ def _async_populate_entry_options(hass: HomeAssistant, entry: ConfigEntry) -> No
 
     hass.config_entries.async_update_entry(
         entry,
-        data={
-            CONF_HOST: entry.data.get(CONF_HOST),
-            CONF_ID: entry.data.get(CONF_ID),
-        },
+        data={CONF_HOST: entry.data.get(CONF_HOST), CONF_ID: entry.data.get(CONF_ID)},
         options={
             CONF_NAME: entry.data.get(CONF_NAME, ""),
             CONF_MODEL: entry.data.get(CONF_MODEL, ""),
@@ -271,7 +261,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
     entry_data = data_config_entries[entry.entry_id]
@@ -613,9 +603,7 @@ class YeelightEntity(Entity):
 
 
 async def _async_get_device(
-    hass: HomeAssistant,
-    host: str,
-    entry: ConfigEntry,
+    hass: HomeAssistant, host: str, entry: ConfigEntry
 ) -> YeelightDevice:
     # Get model from config and capabilities
     model = entry.options.get(CONF_MODEL)

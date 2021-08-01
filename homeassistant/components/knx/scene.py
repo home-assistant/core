@@ -26,23 +26,21 @@ async def async_setup_platform(
     """Set up the scenes for KNX platform."""
     if not discovery_info or not discovery_info["platform_config"]:
         return
-
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXScene(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXScene(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 class KNXScene(KnxEntity, Scene):
     """Representation of a KNX scene."""
 
+    _device: XknxScene
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Init KNX scene."""
-        self._device: XknxScene
         super().__init__(
             device=XknxScene(
                 xknx,
@@ -51,7 +49,7 @@ class KNXScene(KnxEntity, Scene):
                 scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
             )
         )
-        self._unique_id = (
+        self._attr_unique_id = (
             f"{self._device.scene_value.group_address}_{self._device.scene_number}"
         )
 

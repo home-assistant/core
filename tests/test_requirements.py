@@ -38,6 +38,7 @@ async def test_requirement_installed_in_venv(hass):
         assert mock_install.call_args == call(
             "package==0.0.1",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=False,
         )
 
@@ -59,6 +60,7 @@ async def test_requirement_installed_in_deps(hass):
             "package==0.0.1",
             target=hass.config.path("deps"),
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=False,
         )
 
@@ -304,6 +306,7 @@ async def test_install_with_wheels_index(hass):
             "hello==1.0.0",
             find_links="https://wheels.hass.io/test",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=True,
         )
 
@@ -327,6 +330,7 @@ async def test_install_on_docker(hass):
         assert mock_inst.call_args == call(
             "hello==1.0.0",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=True,
         )
 
@@ -361,10 +365,14 @@ async def test_discovery_requirements_ssdp(hass):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "ssdp_comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 4
     assert mock_process.mock_calls[0][1][2] == ssdp.requirements
     # Ensure zeroconf is a dep for ssdp
-    assert mock_process.mock_calls[1][1][1] == "zeroconf"
+    assert {
+        mock_process.mock_calls[1][1][1],
+        mock_process.mock_calls[2][1][1],
+        mock_process.mock_calls[3][1][1],
+    } == {"network", "zeroconf", "http"}
 
 
 @pytest.mark.parametrize(
@@ -386,7 +394,7 @@ async def test_discovery_requirements_zeroconf(hass, partial_manifest):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 2  # zeroconf also depends on http
+    assert len(mock_process.mock_calls) == 3  # zeroconf also depends on http
     assert mock_process.mock_calls[0][1][2] == zeroconf.requirements
 
 

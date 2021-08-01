@@ -15,7 +15,6 @@ output_abs:
       name: Output
       description: Output port
       required: true
-      example: "output1"
       selector:
         select:
           options:
@@ -25,17 +24,16 @@ output_abs:
             - "output4"
     brightness:
       name: Brightness
-      description: Absolute brightness in percent.
+      description: Absolute brightness.
       required: true
-      example: 50
       selector:
         number:
           min: 0
           max: 100
+          unit_of_measurement: "%"
     transition:
       name: Transition
       description: Transition time.
-      example: 5
       default: 0
       selector:
         number:
@@ -59,7 +57,6 @@ output_rel:
       name: Output
       description: Output port
       required: true
-      example: "output1"
       selector:
         select:
           options:
@@ -69,9 +66,8 @@ output_rel:
             - "output4"
     brightness:
       name: Brightness
-      description: Relative brightness in percent.
+      description: Relative brightness.
       required: true
-      example: 50
       selector:
         number:
           min: -100
@@ -93,7 +89,6 @@ output_toggle:
       name: Output
       description: Output port
       required: true
-      example: "output1"
       selector:
         select:
           options:
@@ -104,7 +99,6 @@ output_toggle:
     transition:
       name: Transition
       description: Transition time.
-      example: 5
       default: 0
       selector:
         number:
@@ -126,7 +120,7 @@ relays:
         text:
     state:
       name: State
-      description: Relays states as string (1=on, 2=off, t=toggle, -=nochange)
+      description: Relays states as string (1=on, 2=off, t=toggle, -=no change)
       required: true
       example: "t---001-"
       selector:
@@ -147,7 +141,6 @@ led:
       name: LED
       description: Led
       required: true
-      example: "led6"
       selector:
         select:
           options:
@@ -167,7 +160,6 @@ led:
       name: State
       description: Led state
       required: true
-      example: "blink"
       selector:
         select:
           options:
@@ -191,7 +183,6 @@ var_abs:
       name: Variable
       description: Variable or setpoint name
       required: true
-      example: "var1"
       default: native
       selector:
         select:
@@ -218,8 +209,7 @@ var_abs:
             - "var12"
     value:
       name: Value
-      description: Value to set
-      example: "50"
+      description: Value to set.
       default: 0
       selector:
         number:
@@ -227,8 +217,7 @@ var_abs:
           max: 100000
     unit_of_measurement:
       name: Unit of measurement
-      description: Unit of value
-      example: "celsius"
+      description: Unit of value.
       selector:
         select:
           options:
@@ -265,11 +254,12 @@ var_reset:
       description: Module address
       required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     variable:
       name: Variable
-      description: Variable or setpoint name
+      description: Variable or setpoint name.
       required: true
-      example: "var1"
       selector:
         select:
           options:
@@ -309,7 +299,6 @@ var_rel:
       name: Variable
       description: Variable or setpoint name
       required: true
-      example: "var1"
       selector:
         select:
           options:
@@ -353,7 +342,6 @@ var_rel:
     value:
       name: Value
       description: Shift value
-      example: "50"
       default: 0
       selector:
         number:
@@ -362,7 +350,6 @@ var_rel:
     unit_of_measurement:
       name: Unit of measurement
       description: Unit of value
-      example: "celsius"
       default: native
       selector:
         select:
@@ -393,7 +380,6 @@ var_rel:
     value_reference:
       name: Reference value
       description: Reference value for setpoint and threshold
-      example: "current"
       default: current
       selector:
         select:
@@ -416,7 +402,6 @@ lock_regulator:
       name: Setpoint
       description: Setpoint name
       required: true
-      example: "r1varsetpoint"
       selector:
         select:
           options:
@@ -440,7 +425,6 @@ lock_regulator:
     state:
       name: State
       description: New setpoint state
-      example: true
       default: false
       selector:
         boolean:
@@ -465,8 +449,7 @@ send_keys:
         text:
     state:
       name: State
-      description: "Key state upon sending (optional, must be hit for deferred)"
-      example: "hit"
+      description: "Key state upon sending (must be hit for deferred)"
       default: hit
       selector:
         select:
@@ -478,7 +461,6 @@ send_keys:
     time:
       name: Time
       description: Send delay.
-      example: 10
       default: 0
       selector:
         number:
@@ -487,7 +469,6 @@ send_keys:
     time_unit:
       name: Time unit
       description: Time unit of send delay.
-      example: "s"
       default: s
       selector:
         select:
@@ -521,7 +502,7 @@ lock_keys:
     table:
       name: Table
       description: "Table with keys to lock (must be A for interval)."
-      example: "a5"
+      example: "a"
       default: a
       selector:
         text:
@@ -535,7 +516,6 @@ lock_keys:
     time:
       name: Time
       description: Lock interval.
-      example: 10
       default: 0
       selector:
         number:
@@ -544,7 +524,6 @@ lock_keys:
     time_unit:
       name: Time unit
       description: Time unit of lock interval.
-      example: "s"
       default: s
       selector:
         select:
@@ -579,7 +558,6 @@ dyn_text:
       name: Row
       description: Text row.
       required: true
-      example: 1
       selector:
         number:
           min: 1

@@ -16,7 +16,8 @@ WRONG_PASSWORD = "wrong-passw0rd"
 def _mock_account(*_):
     account = MagicMock()
     account.authenticate = AsyncMock()
-    account.data = {CONF_EMAIL: TEST_EMAIL, ACCOUNT_HASH: "any"}
+    account.account_hash = "any"
+    account.email = TEST_EMAIL
     return account
 
 

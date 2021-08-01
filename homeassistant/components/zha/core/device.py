@@ -55,6 +55,10 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CONF_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     CONF_ENABLE_IDENTIFY_ON_JOIN,
     EFFECT_DEFAULT_VARIANT,
     EFFECT_OKAY,
@@ -70,8 +74,6 @@ from .const import (
 from .helpers import LogMixin, async_get_zha_config_value
 
 _LOGGER = logging.getLogger(__name__)
-CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
-CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
@@ -107,9 +109,20 @@ class ZHADevice(LogMixin):
         )
 
         if self.is_mains_powered:
-            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_MAINS
+            self.consider_unavailable_time = async_get_zha_config_value(
+                self._zha_gateway.config_entry,
+                ZHA_OPTIONS,
+                CONF_CONSIDER_UNAVAILABLE_MAINS,
+                CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+            )
         else:
-            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_BATTERY
+            self.consider_unavailable_time = async_get_zha_config_value(
+                self._zha_gateway.config_entry,
+                ZHA_OPTIONS,
+                CONF_CONSIDER_UNAVAILABLE_BATTERY,
+                CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+            )
+
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self.unsubs.append(
             async_track_time_interval(
@@ -170,11 +183,12 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.model
 
     @property
-    def manufacturer_code(self):
+    def manufacturer_code(self) -> int | None:
         """Return the manufacturer code for the device."""
-        if self._zigpy_device.node_desc.is_valid:
-            return self._zigpy_device.node_desc.manufacturer_code
-        return None
+        if self._zigpy_device.node_desc is None:
+            return None
+
+        return self._zigpy_device.node_desc.manufacturer_code
 
     @property
     def nwk(self):
@@ -197,17 +211,20 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.last_seen
 
     @property
-    def is_mains_powered(self):
+    def is_mains_powered(self) -> bool | None:
         """Return true if device is mains powered."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_mains_powered
 
     @property
-    def device_type(self):
+    def device_type(self) -> str:
         """Return the logical device type for the device."""
-        node_descriptor = self._zigpy_device.node_desc
-        return (
-            node_descriptor.logical_type.name if node_descriptor.is_valid else UNKNOWN
-        )
+        if self._zigpy_device.node_desc is None:
+            return UNKNOWN
+
+        return self._zigpy_device.node_desc.logical_type.name
 
     @property
     def power_source(self):
@@ -217,18 +234,27 @@ class ZHADevice(LogMixin):
         )
 
     @property
-    def is_router(self):
+    def is_router(self) -> bool | None:
         """Return true if this is a routing capable device."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_router
 
     @property
-    def is_coordinator(self):
+    def is_coordinator(self) -> bool | None:
         """Return true if this device represents the coordinator."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_coordinator
 
     @property
-    def is_end_device(self):
+    def is_end_device(self) -> bool | None:
         """Return true if this device is an end device."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_end_device
 
     @property
@@ -320,7 +346,7 @@ class ZHADevice(LogMixin):
             return
 
         difference = time.time() - self.last_seen
-        if difference < self._consider_unavailable_time:
+        if difference < self.consider_unavailable_time:
             self.update_available(True)
             self._checkins_missed_count = 0
             return
@@ -477,7 +503,7 @@ class ZHADevice(LogMixin):
                 names.append(
                     {
                         ATTR_NAME: f"unknown {endpoint.device_type} device_type "
-                        "of 0x{endpoint.profile_id:04x} profile id"
+                        f"of 0x{endpoint.profile_id:04x} profile id"
                     }
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names

@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kasutaja on juba seadistatud"
+            "already_configured": "Kasutaja on juba seadistatud",
+            "no_udn": "SSDP tuvastusteabel pole UDN-i",
+            "not_keenetic_ndms2": "Avastatud \u00fcksus pole Keeneticu ruuter"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

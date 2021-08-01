@@ -100,7 +100,7 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
         lookup_table: dict[str | int, ZwaveValue | None] = resolved_data["lookup_table"]
         dependent_value: ZwaveValue | None = resolved_data["dependent_value"]
 
-        if dependent_value:
+        if dependent_value and dependent_value.value is not None:
             lookup_key = dependent_value.metadata.states[
                 str(dependent_value.value)
             ].split("-")[0]

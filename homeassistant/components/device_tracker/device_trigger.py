@@ -6,7 +6,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE, trigger as zone
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -25,7 +25,7 @@ from . import DOMAIN
 
 TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 
-TRIGGER_SCHEMA: Final = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),

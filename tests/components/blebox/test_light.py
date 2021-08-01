@@ -7,21 +7,13 @@ import pytest
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_WHITE_VALUE,
+    ATTR_RGBW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_RGBW,
 )
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry as dr
-from homeassistant.util import color
 
 from .conftest import async_setup_entity, mock_feature
 
@@ -59,8 +51,8 @@ async def test_dimmer_init(dimmer, hass, config):
     state = hass.states.get(entity_id)
     assert state.name == "dimmerBox-brightness"
 
-    supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_BRIGHTNESS
+    color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+    assert color_modes == [COLOR_MODE_BRIGHTNESS]
 
     assert state.attributes[ATTR_BRIGHTNESS] == 65
     assert state.state == STATE_ON
@@ -230,8 +222,8 @@ async def test_wlightbox_s_init(wlightbox_s, hass, config):
     state = hass.states.get(entity_id)
     assert state.name == "wLightBoxS-color"
 
-    supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_BRIGHTNESS
+    color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+    assert color_modes == [COLOR_MODE_BRIGHTNESS]
 
     assert ATTR_BRIGHTNESS not in state.attributes
     assert state.state == STATE_OFF
@@ -330,13 +322,11 @@ async def test_wlightbox_init(wlightbox, hass, config):
     state = hass.states.get(entity_id)
     assert state.name == "wLightBox-color"
 
-    supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_WHITE_VALUE
-    assert supported_features & SUPPORT_COLOR
+    color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+    assert color_modes == [COLOR_MODE_RGBW]
 
-    assert ATTR_WHITE_VALUE not in state.attributes
-    assert ATTR_HS_COLOR not in state.attributes
     assert ATTR_BRIGHTNESS not in state.attributes
+    assert ATTR_RGBW_COLOR not in state.attributes
     assert state.state == STATE_OFF
 
     device_registry = dr.async_get(hass)
@@ -363,12 +353,11 @@ async def test_wlightbox_update(wlightbox, hass, config):
     await async_setup_entity(hass, config, entity_id)
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_HS_COLOR] == (352.32, 100.0)
-    assert state.attributes[ATTR_WHITE_VALUE] == 0x3A
+    assert state.attributes[ATTR_RGBW_COLOR] == (0xFA, 0x00, 0x20, 0x3A)
     assert state.state == STATE_ON
 
 
-async def test_wlightbox_on_via_just_whiteness(wlightbox, hass, config):
+async def test_wlightbox_on_rgbw(wlightbox, hass, config):
     """Test light on."""
 
     feature_mock, entity_id = wlightbox
@@ -385,125 +374,37 @@ async def test_wlightbox_on_via_just_whiteness(wlightbox, hass, config):
 
     def turn_on(value):
         feature_mock.is_on = True
-        assert value == "f1e2d3c7"
+        assert value == "c1d2f3c7"
         feature_mock.white_value = 0xC7  # on
-        feature_mock.rgbw_hex = "f1e2d3c7"
+        feature_mock.rgbw_hex = "c1d2f3c7"
 
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
 
     def apply_white(value, white):
-        assert value == "f1e2d305"
+        assert value == "00010203"
         assert white == 0xC7
-        return "f1e2d3c7"
+        return "000102c7"
 
     feature_mock.apply_white = apply_white
-
-    feature_mock.sensible_on_value = "f1e2d305"
-
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_WHITE_VALUE: 0xC7},
-        blocking=True,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_WHITE_VALUE] == 0xC7
-
-    assert state.attributes[ATTR_HS_COLOR] == color.color_RGB_to_hs(0xF1, 0xE2, 0xD3)
-
-
-async def test_wlightbox_on_via_reset_whiteness(wlightbox, hass, config):
-    """Test light on."""
-
-    feature_mock, entity_id = wlightbox
-
-    def initial_update():
-        feature_mock.is_on = False
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
-    feature_mock.async_update = AsyncMock()
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    def turn_on(value):
-        feature_mock.is_on = True
-        feature_mock.white_value = 0x0
-        assert value == "f1e2d300"
-        feature_mock.rgbw_hex = "f1e2d300"
-
-    feature_mock.async_on = AsyncMock(side_effect=turn_on)
-
-    def apply_white(value, white):
-        assert value == "f1e2d305"
-        assert white == 0x0
-        return "f1e2d300"
-
-    feature_mock.apply_white = apply_white
-
-    feature_mock.sensible_on_value = "f1e2d305"
-
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_WHITE_VALUE: 0x0},
-        blocking=True,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_WHITE_VALUE] == 0x0
-    assert state.attributes[ATTR_HS_COLOR] == color.color_RGB_to_hs(0xF1, 0xE2, 0xD3)
-
-
-async def test_wlightbox_on_via_just_hsl_color(wlightbox, hass, config):
-    """Test light on."""
-
-    feature_mock, entity_id = wlightbox
-
-    def initial_update():
-        feature_mock.is_on = False
-        feature_mock.rgbw_hex = "00000000"
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    await async_setup_entity(hass, config, entity_id)
-    feature_mock.async_update = AsyncMock()
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    hs_color = color.color_RGB_to_hs(0xFF, 0xA1, 0xB2)
-
-    def turn_on(value):
-        feature_mock.is_on = True
-        assert value == "ffa1b2e4"
-        feature_mock.white_value = 0xE4
-        feature_mock.rgbw_hex = value
-
-    feature_mock.async_on = AsyncMock(side_effect=turn_on)
 
     def apply_color(value, color_value):
-        assert value == "c1a2e3e4"
-        assert color_value == "ffa0b1"
-        return "ffa1b2e4"
+        assert value == "000102c7"
+        assert color_value == "c1d2f3"
+        return "c1d2f3c7"
 
     feature_mock.apply_color = apply_color
-    feature_mock.sensible_on_value = "c1a2e3e4"
+    feature_mock.sensible_on_value = "00010203"
 
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_HS_COLOR: hs_color},
+        {"entity_id": entity_id, ATTR_RGBW_COLOR: (0xC1, 0xD2, 0xF3, 0xC7)},
         blocking=True,
     )
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_HS_COLOR] == hs_color
-    assert state.attributes[ATTR_WHITE_VALUE] == 0xE4
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_RGBW_COLOR] == (0xC1, 0xD2, 0xF3, 0xC7)
 
 
 async def test_wlightbox_on_to_last_color(wlightbox, hass, config):
@@ -538,8 +439,7 @@ async def test_wlightbox_on_to_last_color(wlightbox, hass, config):
     )
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_WHITE_VALUE] == 0xE4
-    assert state.attributes[ATTR_HS_COLOR] == color.color_RGB_to_hs(0xF1, 0xE2, 0xD3)
+    assert state.attributes[ATTR_RGBW_COLOR] == (0xF1, 0xE2, 0xD3, 0xE4)
     assert state.state == STATE_ON
 
 
@@ -573,8 +473,7 @@ async def test_wlightbox_off(wlightbox, hass, config):
     )
 
     state = hass.states.get(entity_id)
-    assert ATTR_WHITE_VALUE not in state.attributes
-    assert ATTR_HS_COLOR not in state.attributes
+    assert ATTR_RGBW_COLOR not in state.attributes
     assert state.state == STATE_OFF
 
 

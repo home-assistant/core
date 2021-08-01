@@ -21,6 +21,7 @@ from .const import (
     ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
+    ATTR_ARCH,
     ATTR_AUTO_UPDATE,
     ATTR_AUTOMATION_COUNT,
     ATTR_BASE,
@@ -157,6 +158,7 @@ class Analytics:
             payload[ATTR_SUPERVISOR] = {
                 ATTR_HEALTHY: supervisor_info[ATTR_HEALTHY],
                 ATTR_SUPPORTED: supervisor_info[ATTR_SUPPORTED],
+                ATTR_ARCH: supervisor_info[ATTR_ARCH],
             }
 
         if operating_system_info.get(ATTR_BOARD) is not None:
@@ -169,10 +171,10 @@ class Analytics:
             ATTR_STATISTICS, False
         ):
             configured_integrations = await asyncio.gather(
-                *[
+                *(
                     async_get_integration(self.hass, domain)
                     for domain in async_get_loaded_integrations(self.hass)
-                ],
+                ),
                 return_exceptions=True,
             )
 
@@ -199,10 +201,10 @@ class Analytics:
 
             if supervisor_info is not None:
                 installed_addons = await asyncio.gather(
-                    *[
+                    *(
                         hassio.async_get_addon_info(self.hass, addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
-                    ]
+                    )
                 )
                 for addon in installed_addons:
                     addons.append(

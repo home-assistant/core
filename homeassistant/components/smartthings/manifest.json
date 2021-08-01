@@ -24,6 +24,10 @@
     {
       "hostname": "hub*",
       "macaddress": "D052A8*"
+    },
+    {
+      "hostname": "hub*",
+      "macaddress": "286D97*"
     }    
   ]
 }

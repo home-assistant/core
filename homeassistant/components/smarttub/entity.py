@@ -1,4 +1,4 @@
-"""SmartTub integration."""
+"""Base classes for SmartTub entities."""
 import logging
 
 import smarttub

@@ -32,15 +32,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MyQBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     """Representation of a MyQ gateway."""
 
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
         super().__init__(coordinator)
         self._device = device
-
-    @property
-    def device_class(self):
-        """We track connectivity for gateways."""
-        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def name(self):

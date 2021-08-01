@@ -1,5 +1,4 @@
 """Constants used in modbus integration."""
-
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -35,9 +34,13 @@ CONF_PARITY = "parity"
 CONF_REGISTER = "register"
 CONF_REGISTER_TYPE = "register_type"
 CONF_REGISTERS = "registers"
+CONF_RETRIES = "retries"
+CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
+CONF_RTUOVERTCP = "rtuovertcp"
 CONF_SCALE = "scale"
+CONF_SERIAL = "serial"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OFF = "state_off"
@@ -54,6 +57,8 @@ CONF_SWAP_NONE = "none"
 CONF_SWAP_WORD = "word"
 CONF_SWAP_WORD_BYTE = "word_byte"
 CONF_TARGET_TEMP = "target_temp_register"
+CONF_TCP = "tcp"
+CONF_UDP = "udp"
 CONF_VERIFY = "verify"
 CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
@@ -73,6 +78,15 @@ DATA_TYPE_FLOAT = "float"
 DATA_TYPE_INT = "int"
 DATA_TYPE_UINT = "uint"
 DATA_TYPE_STRING = "string"
+DATA_TYPE_INT16 = "int16"
+DATA_TYPE_INT32 = "int32"
+DATA_TYPE_INT64 = "int64"
+DATA_TYPE_UINT16 = "uint16"
+DATA_TYPE_UINT32 = "uint32"
+DATA_TYPE_UINT64 = "uint64"
+DATA_TYPE_FLOAT16 = "float16"
+DATA_TYPE_FLOAT32 = "float32"
+DATA_TYPE_FLOAT64 = "float64"
 
 # call types
 CALL_TYPE_COIL = "coil"
@@ -83,6 +97,8 @@ CALL_TYPE_WRITE_COIL = "write_coil"
 CALL_TYPE_WRITE_COILS = "write_coils"
 CALL_TYPE_WRITE_REGISTER = "write_register"
 CALL_TYPE_WRITE_REGISTERS = "write_registers"
+CALL_TYPE_X_COILS = "coils"
+CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
@@ -90,15 +106,11 @@ SERVICE_WRITE_REGISTER = "write_register"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
-MINIMUM_SCAN_INTERVAL = 5  # seconds
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
-DEFAULT_STRUCT_FORMAT = {
-    DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-    DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-    DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-}
+
+
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"
 

@@ -75,7 +75,6 @@ set_color_temp_scene:
     kelvin:
       name: Kelvin
       description: Color temperature for the light in Kelvin.
-      example: 4000
       selector:
         number:
           min: 1700
@@ -89,6 +88,7 @@ set_color_temp_scene:
         number:
           min: 0
           max: 100
+          unit_of_measurement: "%"
 set_color_flow_scene:
   name: Set color flow scene
   description: starts a color flow. If the light is off, it will be turned on.
@@ -108,7 +108,6 @@ set_color_flow_scene:
     action:
       name: Action
       description: The action to take after the flow stops.
-      example: "stay"
       default: 'recover'
       selector:
         select:
@@ -133,7 +132,6 @@ set_auto_delay_off_scene:
     minutes:
       name: Minutes
       description: The time to wait before automatically turning the light off.
-      example: 5
       selector:
         number:
           min: 1
@@ -146,6 +144,7 @@ set_auto_delay_off_scene:
         number:
           min: 0
           max: 100
+          unit_of_measurement: "%"
 start_flow:
   name: Start flow
   description: Start a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects

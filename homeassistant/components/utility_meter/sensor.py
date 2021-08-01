@@ -131,7 +131,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._collecting = None
         if name:
             self._name = name
@@ -237,7 +237,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         if self._tariff_entity != entity_id:
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._last_period = str(self._state)
         self._state = 0
         self.async_write_ha_state()
@@ -284,8 +284,8 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
-            self._last_reset = dt_util.parse_datetime(
-                state.attributes.get(ATTR_LAST_RESET)
+            self._last_reset = dt_util.as_utc(
+                dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
             )
             if state.attributes.get(ATTR_STATUS) == COLLECTING:
                 # Fake cancellation function to init the meter in similar state

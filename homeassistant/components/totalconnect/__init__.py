@@ -14,7 +14,7 @@ PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up upon config entry in user interface."""
     conf = entry.data
     username = conf[CONF_USERNAME]

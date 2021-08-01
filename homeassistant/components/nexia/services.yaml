@@ -10,7 +10,6 @@ set_aircleaner_mode:
       name: Air cleaner mode
       description: 'The air cleaner mode to set.'
       required: true
-      example: allergy
       selector:
         select:
           options:
@@ -30,7 +29,6 @@ set_humidify_setpoint:
       name: Humidify
       description: "The humidification setpoint."
       required: true
-      example: 45
       selector:
         number:
           min: 35

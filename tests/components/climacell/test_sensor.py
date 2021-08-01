@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 CC_SENSOR_ENTITY_ID = "sensor.climacell_{}"
 
+O3 = "ozone"
 CO = "carbon_monoxide"
 NO2 = "nitrogen_dioxide"
 SO2 = "sulfur_dioxide"
@@ -41,6 +42,49 @@ FIRE_INDEX = "fire_index"
 GRASS_POLLEN = "grass_pollen_index"
 WEED_POLLEN = "weed_pollen_index"
 TREE_POLLEN = "tree_pollen_index"
+FEELS_LIKE = "feels_like"
+DEW_POINT = "dew_point"
+PRESSURE_SURFACE_LEVEL = "pressure_surface_level"
+SNOW_ACCUMULATION = "snow_accumulation"
+ICE_ACCUMULATION = "ice_accumulation"
+GHI = "global_horizontal_irradiance"
+CLOUD_BASE = "cloud_base"
+CLOUD_COVER = "cloud_cover"
+CLOUD_CEILING = "cloud_ceiling"
+WIND_GUST = "wind_gust"
+PRECIPITATION_TYPE = "precipitation_type"
+
+V3_FIELDS = [
+    O3,
+    CO,
+    NO2,
+    SO2,
+    PM25,
+    PM10,
+    MEP_AQI,
+    MEP_HEALTH_CONCERN,
+    MEP_PRIMARY_POLLUTANT,
+    EPA_AQI,
+    EPA_HEALTH_CONCERN,
+    EPA_PRIMARY_POLLUTANT,
+    FIRE_INDEX,
+    GRASS_POLLEN,
+    WEED_POLLEN,
+    TREE_POLLEN,
+]
+
+V4_FIELDS = [
+    *V3_FIELDS,
+    FEELS_LIKE,
+    DEW_POINT,
+    PRESSURE_SURFACE_LEVEL,
+    GHI,
+    CLOUD_BASE,
+    CLOUD_COVER,
+    CLOUD_CEILING,
+    WIND_GUST,
+    PRECIPITATION_TYPE,
+]
 
 
 @callback
@@ -55,7 +99,9 @@ def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     assert updated_entry.disabled is False
 
 
-async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
+async def _setup(
+    hass: HomeAssistant, sensors: list[str], config: dict[str, Any]
+) -> State:
     """Set up entry and return entity state."""
     with patch(
         "homeassistant.util.dt.utcnow",
@@ -71,26 +117,10 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        for entity_name in (
-            CO,
-            NO2,
-            SO2,
-            PM25,
-            PM10,
-            MEP_AQI,
-            MEP_HEALTH_CONCERN,
-            MEP_PRIMARY_POLLUTANT,
-            EPA_AQI,
-            EPA_HEALTH_CONCERN,
-            EPA_PRIMARY_POLLUTANT,
-            FIRE_INDEX,
-            GRASS_POLLEN,
-            WEED_POLLEN,
-            TREE_POLLEN,
-        ):
+        for entity_name in sensors:
             _enable_entity(hass, CC_SENSOR_ENTITY_ID.format(entity_name))
         await hass.async_block_till_done()
-        assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 15
+        assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == len(sensors)
 
 
 def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
@@ -106,7 +136,8 @@ async def test_v3_sensor(
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test v3 sensor data."""
-    await _setup(hass, API_V3_ENTRY_DATA)
+    await _setup(hass, V3_FIELDS, API_V3_ENTRY_DATA)
+    check_sensor_state(hass, O3, "52.625")
     check_sensor_state(hass, CO, "0.875")
     check_sensor_state(hass, NO2, "14.1875")
     check_sensor_state(hass, SO2, "2")
@@ -129,7 +160,8 @@ async def test_v4_sensor(
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test v4 sensor data."""
-    await _setup(hass, API_V4_ENTRY_DATA)
+    await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
+    check_sensor_state(hass, O3, "46.53")
     check_sensor_state(hass, CO, "0.63")
     check_sensor_state(hass, NO2, "10.67")
     check_sensor_state(hass, SO2, "1.65")
@@ -145,3 +177,12 @@ async def test_v4_sensor(
     check_sensor_state(hass, GRASS_POLLEN, "none")
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
+    check_sensor_state(hass, FEELS_LIKE, "38.5")
+    check_sensor_state(hass, DEW_POINT, "22.6778")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "997.9688")
+    check_sensor_state(hass, GHI, "0.0")
+    check_sensor_state(hass, CLOUD_BASE, "1.1909")
+    check_sensor_state(hass, CLOUD_COVER, "100")
+    check_sensor_state(hass, CLOUD_CEILING, "1.1909")
+    check_sensor_state(hass, WIND_GUST, "5.6506")
+    check_sensor_state(hass, PRECIPITATION_TYPE, "rain")

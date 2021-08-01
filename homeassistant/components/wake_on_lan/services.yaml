@@ -18,7 +18,7 @@ send_magic_packet:
     broadcast_port:
       name: Broadcast port
       description: Port where to send the magic packet.
-      example: 9
+      default: 9
       selector:
         number:
           min: 1

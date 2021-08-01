@@ -12,7 +12,6 @@ set_absolute_position:
       name: Absolute position
       description: Absolute position to move to.
       required: true
-      example: 70
       selector:
         number:
           min: 1
@@ -20,7 +19,6 @@ set_absolute_position:
     width:
       name: Width
       description: Specify the width that is covered, only for TDBU Combined entities.
-      example: 30
       selector:
         number:
           min: 1

@@ -15,7 +15,6 @@ change_association:
       name: Node ID
       description: Node id of the node to set association for.
       required: true
-      example: 10
       selector:
         number:
           min: 1
@@ -24,7 +23,6 @@ change_association:
       name: Target node ID
       description: Node id of the node to associate to.
       required: true
-      example: 42
       selector:
         number:
           min: 1
@@ -197,7 +195,10 @@ set_poll_intensity:
       name: Node ID
       description: ID of the node to set polling to.
       required: true
-      example: 10
+      selector:
+        number:
+          min: 1
+          max: 255
     value_id:
       name: Value ID
       description: ID of the value to set polling to.

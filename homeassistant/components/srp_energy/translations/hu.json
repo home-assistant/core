@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_account": "A sz\u00e1mlaazonos\u00edt\u00f3nak 9 sz\u00e1mjegy\u0171nek kell lennie",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },

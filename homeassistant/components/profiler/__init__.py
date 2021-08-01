@@ -51,7 +51,7 @@ LOG_INTERVAL_SUB = "log_interval_subscription"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Profiler from a config entry."""
     lock = asyncio.Lock()
     domain_data = hass.data[DOMAIN] = {}
@@ -194,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     for service in SERVICES:
         hass.services.async_remove(domain=DOMAIN, service=service)

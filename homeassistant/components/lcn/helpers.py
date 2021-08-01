@@ -1,9 +1,13 @@
 """Helpers for LCN component."""
+from __future__ import annotations
+
 import re
+from typing import Tuple, Type, Union, cast
 
 import pypck
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
@@ -21,6 +25,8 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CLIMATES,
@@ -37,6 +43,13 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+
+# typing
+AddressType = Tuple[int, int, bool]
+DeviceConnectionType = Union[
+    pypck.module.ModuleConnection, pypck.module.GroupConnection
+]
+InputType = Type[pypck.inputs.Input]
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -55,21 +68,23 @@ DOMAIN_LOOKUP = {
 }
 
 
-def get_device_connection(hass, address, config_entry):
+def get_device_connection(
+    hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
+) -> DeviceConnectionType | None:
     """Return a lcn device_connection."""
     host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
     addr = pypck.lcn_addr.LcnAddr(*address)
     return host_connection.get_address_conn(addr)
 
 
-def get_resource(domain_name, domain_data):
+def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     """Return the resource for the specified domain_data."""
-    if domain_name in ["switch", "light"]:
-        return domain_data["output"]
-    if domain_name in ["binary_sensor", "sensor"]:
-        return domain_data["source"]
+    if domain_name in ("switch", "light"):
+        return cast(str, domain_data["output"])
+    if domain_name in ("binary_sensor", "sensor"):
+        return cast(str, domain_data["source"])
     if domain_name == "cover":
-        return domain_data["motor"]
+        return cast(str, domain_data["motor"])
     if domain_name == "climate":
         return f'{domain_data["source"]}.{domain_data["setpoint"]}'
     if domain_name == "scene":
@@ -77,13 +92,13 @@ def get_resource(domain_name, domain_data):
     raise ValueError("Unknown domain")
 
 
-def generate_unique_id(address):
+def generate_unique_id(address: AddressType) -> str:
     """Generate a unique_id from the given parameters."""
     is_group = "g" if address[2] else "m"
     return f"{is_group}{address[0]:03d}{address[1]:03d}"
 
 
-def import_lcn_config(lcn_config):
+def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
     """Convert lcn settings from configuration.yaml to config_entries data.
 
     Create a list of config_entry data structures like:
@@ -185,7 +200,7 @@ def import_lcn_config(lcn_config):
     return list(data.values())
 
 
-def has_unique_host_names(hosts):
+def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
     """Validate that all connection names are unique.
 
     Use 'pchk' as default connection_name (or add a numeric suffix if
@@ -206,7 +221,7 @@ def has_unique_host_names(hosts):
     return hosts
 
 
-def is_address(value):
+def is_address(value: str) -> tuple[AddressType, str]:
     """Validate the given address string.
 
     Examples for S000M005 at myhome:
@@ -224,44 +239,12 @@ def is_address(value):
         addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
         conn_id = matcher.group("conn_id")
         return addr, conn_id
-    raise vol.error.Invalid("Not a valid address string.")
+    raise ValueError(f"{value} is not a valid address string")
 
 
-def is_relays_states_string(states_string):
+def is_states_string(states_string: str) -> list[str]:
     """Validate the given states string and return states list."""
-    if len(states_string) == 8:
-        states = []
-        for state_string in states_string:
-            if state_string == "1":
-                state = "ON"
-            elif state_string == "0":
-                state = "OFF"
-            elif state_string == "T":
-                state = "TOGGLE"
-            elif state_string == "-":
-                state = "NOCHANGE"
-            else:
-                raise vol.error.Invalid("Not a valid relay state string.")
-            states.append(state)
-        return states
-    raise vol.error.Invalid("Wrong length of relay state string.")
-
-
-def is_key_lock_states_string(states_string):
-    """Validate the given states string and returns states list."""
-    if len(states_string) == 8:
-        states = []
-        for state_string in states_string:
-            if state_string == "1":
-                state = "ON"
-            elif state_string == "0":
-                state = "OFF"
-            elif state_string == "T":
-                state = "TOGGLE"
-            elif state_string == "-":
-                state = "NOCHANGE"
-            else:
-                raise vol.error.Invalid("Not a valid key lock state string.")
-            states.append(state)
-        return states
-    raise vol.error.Invalid("Wrong length of key lock state string.")
+    if len(states_string) != 8:
+        raise ValueError("Invalid length of states string")
+    states = {"1": "ON", "0": "OFF", "T": "TOGGLE", "-": "NOCHANGE"}
+    return [states[state_string] for state_string in states_string]

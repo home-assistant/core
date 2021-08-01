@@ -24,7 +24,7 @@ DOMAIN = "atag"
 PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Atag integration from a config entry."""
 
     async def _async_update_data():
@@ -75,27 +75,16 @@ class AtagEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._id = atag_id
-        self._name = DOMAIN.title()
+        self._attr_name = DOMAIN.title()
+        self._attr_unique_id = f"{coordinator.data.id}-{atag_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
-        device = self.coordinator.data.id
-        version = self.coordinator.data.apiversion
         return {
-            "identifiers": {(DOMAIN, device)},
+            "identifiers": {(DOMAIN, self.coordinator.data.id)},
             "name": "Atag Thermostat",
             "model": "Atag One",
-            "sw_version": version,
+            "sw_version": self.coordinator.data.apiversion,
             "manufacturer": "Atag",
         }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this entity."""
-        return f"{self.coordinator.data.id}-{self._id}"

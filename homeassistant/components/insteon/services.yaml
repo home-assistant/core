@@ -6,7 +6,6 @@ add_all_link:
       name: Group
       description: All-Link group number.
       required: true
-      example: 1
       selector:
         number:
           min: 0
@@ -15,7 +14,6 @@ add_all_link:
       name: Mode
       description: Linking mode   controller - IM is controller   responder - IM is responder
       required: true
-      example: "controller"
       selector:
         select:
           options:
@@ -29,7 +27,6 @@ delete_all_link:
       name: Group
       description: All-Link group number.
       required: true
-      example: 1
       selector:
         number:
           min: 0
@@ -48,7 +45,6 @@ load_all_link_database:
     reload:
       name: Reload
       description: Reload all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false.
-      example: "true"
       default: false
       selector:
         boolean:
@@ -60,7 +56,6 @@ print_all_link_database:
       name: Entity
       description: Name of the device to print
       required: true
-      example: "light.1a2b3c"
       selector:
         entity:
           integration: insteon
@@ -75,7 +70,6 @@ x10_all_units_off:
       name: Housecode
       description: X10 house code
       required: true
-      example: c
       selector:
         select:
           options:
@@ -103,7 +97,6 @@ x10_all_lights_on:
       name: Housecode
       description: X10 house code
       required: true
-      example: c
       selector:
         select:
           options:
@@ -131,7 +124,6 @@ x10_all_lights_off:
       name: Housecode
       description: X10 house code
       required: true
-      example: c
       selector:
         select:
           options:
@@ -159,7 +151,6 @@ scene_on:
       name: Group
       description: INSTEON group or scene number
       required: true
-      example: 26
       selector:
         number:
           min: 0
@@ -172,7 +163,6 @@ scene_off:
       name: Group
       description: INSTEON group or scene number
       required: true
-      example: 26
       selector:
         number:
           min: 0

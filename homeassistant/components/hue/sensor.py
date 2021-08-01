@@ -93,6 +93,7 @@ class HueBattery(GenericHueSensor, SensorEntity):
     """Battery class for when a batt-powered device is only represented as an event."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_unit_of_measurement = PERCENTAGE
 
     @property

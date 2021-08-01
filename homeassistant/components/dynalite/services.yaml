@@ -10,14 +10,12 @@ request_area_preset:
     area:
       description: "Area to request the preset reported"
       required: true
-      example: 2
       selector:
         number:
           min: 1
           max: 9999
     channel:
       description: "Channel to request the preset to be reported from."
-      example: 1
       default: 1
       selector:
         number:
@@ -38,7 +36,6 @@ request_channel_level:
       name: Area
       description: "Area for the requested channel"
       required: true
-      example: 2
       selector:
         number:
           min: 1
@@ -47,7 +44,6 @@ request_channel_level:
       name: Channel
       description: "Channel to request the level for."
       required: true
-      example: 1
       selector:
         number:
           min: 1

@@ -29,9 +29,9 @@ send_message:
       selector:
         select:
           options:
-            - 'html'
-            - 'markdown'
-            - 'markdown2'
+            - "html"
+            - "markdown"
+            - "markdown2"
     disable_notification:
       name: Disable notification
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -44,8 +44,13 @@ send_message:
         boolean:
     timeout:
       name: Timeout
-      description: Timeout for send message. Will help with timeout errors (poor internet connection, etc)
-      example: "1000"
+      description: Timeout for send message. Will help with timeout errors (poor internet connection, etc)s
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+
     keyboard:
       name: Keyboard
       description: List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard.
@@ -60,7 +65,7 @@ send_message:
         object:
     message_tag:
       name: Message tag
-      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
       example: "msg_to_edit"
       selector:
         text:
@@ -89,16 +94,25 @@ send_photo:
         text:
     username:
       name: Username
-      description: Username for a URL which require HTTP basic authentication.
+      description: Username for a URL which require HTTP authentication.
       example: myuser
       selector:
         text:
     password:
       name: Password
-      description: Password for a URL which require HTTP basic authentication.
+      description: Password (or bearer token) for a URL which require HTTP authentication.
       example: myuser_pwd
       selector:
         text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
     target:
       name: Target
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
@@ -108,13 +122,12 @@ send_photo:
     parse_mode:
       name: Parse mode
       description: "Parser for the message text."
-      example: "html"
       selector:
         select:
           options:
-            - 'html'
-            - 'markdown'
-            - 'markdown2'
+            - "html"
+            - "markdown"
+            - "markdown2"
     disable_notification:
       name: Disable notification
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -128,7 +141,6 @@ send_photo:
     timeout:
       name: Timeout
       description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
-      example: "1000"
       selector:
         number:
           min: 1
@@ -148,7 +160,7 @@ send_photo:
         object:
     message_tag:
       name: Message tag
-      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
       example: "msg_to_edit"
       selector:
         text:
@@ -171,16 +183,25 @@ send_sticker:
         text:
     username:
       name: Username
-      description: Username for a URL which require HTTP basic authentication.
+      description: Username for a URL which require HTTP authentication.
       example: myuser
       selector:
         text:
     password:
       name: Password
-      description: Password for a URL which require HTTP basic authentication.
+      description: Password (or bearer token) for a URL which require HTTP authentication.
       example: myuser_pwd
       selector:
         text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
     target:
       name: Target
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
@@ -219,7 +240,7 @@ send_sticker:
         object:
     message_tag:
       name: Message tag
-      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
       example: "msg_to_edit"
       selector:
         text:
@@ -248,16 +269,25 @@ send_animation:
         text:
     username:
       name: Username
-      description: Username for a URL which require HTTP basic authentication.
+      description: Username for a URL which require HTTP authentication.
       example: myuser
       selector:
         text:
     password:
       name: Password
-      description: Password for a URL which require HTTP basic authentication.
+      description: Password (or bearer token) for a URL which require HTTP authentication.
       example: myuser_pwd
       selector:
         text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
     target:
       name: Target
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
@@ -270,19 +300,17 @@ send_animation:
       selector:
         select:
           options:
-            - 'html'
-            - 'markdown'
-            - 'markdown2'
+            - "html"
+            - "markdown"
+            - "markdown2"
     disable_notification:
       name: Disable notification
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
-      example: true
       selector:
         boolean:
     verify_ssl:
       name: Verify SSL
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
-      example: false
       selector:
         boolean:
     timeout:
@@ -330,16 +358,25 @@ send_video:
         text:
     username:
       name: Username
-      description: Username for a URL which require HTTP basic authentication.
+      description: Username for a URL which require HTTP authentication.
       example: myuser
       selector:
         text:
     password:
       name: Password
-      description: Password for a URL which require HTTP basic authentication.
+      description: Password (or bearer token) for a URL which require HTTP authentication.
       example: myuser_pwd
       selector:
         text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
     target:
       name: Target
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
@@ -352,9 +389,9 @@ send_video:
       selector:
         select:
           options:
-            - 'html'
-            - 'markdown'
-            - 'markdown2'
+            - "html"
+            - "markdown"
+            - "markdown2"
     disable_notification:
       name: Disable notification
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -387,7 +424,7 @@ send_video:
         object:
     message_tag:
       name: Message tag
-      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
       example: "msg_to_edit"
       selector:
         text:
@@ -416,16 +453,25 @@ send_voice:
         text:
     username:
       name: Username
-      description: Username for a URL which require HTTP basic authentication.
+      description: Username for a URL which require HTTP authentication.
       example: myuser
       selector:
         text:
     password:
       name: Password
-      description: Password for a URL which require HTTP basic authentication.
+      description: Password (or bearer token) for a URL which require HTTP authentication.
       example: myuser_pwd
       selector:
         text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
     target:
       name: Target
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
@@ -464,7 +510,7 @@ send_voice:
         object:
     message_tag:
       name: Message tag
-      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
       example: "msg_to_edit"
       selector:
         text:
@@ -493,16 +539,25 @@ send_document:
         text:
     username:
       name: Username
-      description: Username for a URL which require HTTP basic authentication.
+      description: Username for a URL which require HTTP authentication.
       example: myuser
       selector:
         text:
     password:
       name: Password
-      description: Password for a URL which require HTTP basic authentication.
+      description: Password (or bearer token) for a URL which require HTTP authentication.
       example: myuser_pwd
       selector:
         text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
     target:
       name: Target
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
@@ -512,13 +567,12 @@ send_document:
     parse_mode:
       name: Parse mode
       description: "Parser for the message text."
-      example: "html"
       selector:
         select:
           options:
-            - 'html'
-            - 'markdown'
-            - 'markdown2'
+            - "html"
+            - "markdown"
+            - "markdown2"
     disable_notification:
       name: Disable notification
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -551,7 +605,7 @@ send_document:
         object:
     message_tag:
       name: Message tag
-      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
       example: "msg_to_edit"
       selector:
         text:
@@ -569,7 +623,7 @@ send_location:
           min: -90
           max: 90
           step: 0.001
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     longitude:
       name: Longitude
       description: The longitude to send.
@@ -579,7 +633,7 @@ send_location:
           min: -180
           max: 180
           step: 0.001
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     target:
       name: Target
       description: An array of pre-authorized chat_ids to send the location to. If not present, first allowed chat_id is the default.
@@ -613,7 +667,7 @@ send_location:
         object:
     message_tag:
       name: Message tag
-      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
       example: "msg_to_edit"
       selector:
         text:
@@ -651,13 +705,12 @@ edit_message:
     parse_mode:
       name: Parse mode
       description: "Parser for the message text."
-      example: "html"
       selector:
         select:
           options:
-            - 'html'
-            - 'markdown'
-            - 'markdown2'
+            - "html"
+            - "markdown"
+            - "markdown2"
     disable_web_page_preview:
       name: Disable web page preview
       description: Disables link previews for links in the message.

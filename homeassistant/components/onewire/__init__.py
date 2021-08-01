@@ -13,17 +13,17 @@ from .onewirehub import CannotConnect, OneWireHub
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a 1-Wire proxy for a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     onewirehub = OneWireHub(hass)
     try:
-        await onewirehub.initialize(config_entry)
+        await onewirehub.initialize(entry)
     except CannotConnect as exc:
         raise ConfigEntryNotReady() from exc
 
-    hass.data[DOMAIN][config_entry.entry_id] = onewirehub
+    hass.data[DOMAIN][entry.entry_id] = onewirehub
 
     async def cleanup_registry() -> None:
         # Get registries
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         registry_devices = [
             entry.id
             for entry in dr.async_entries_for_config_entry(
-                device_registry, config_entry.entry_id
+                device_registry, entry.entry_id
             )
         ]
         # Remove devices that don't belong to any entity
@@ -53,10 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Start platforms and cleanup devices."""
         # wait until all required platforms are ready
         await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+            *(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         await cleanup_registry()
 

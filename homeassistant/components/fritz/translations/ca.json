@@ -51,5 +51,14 @@
                 "title": "Configuraci\u00f3 de FRITZ!Box Tools"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segons d'espera abans de considerar un dispositiu a 'casa'"
+                }
+            }
+        }
     }
 }

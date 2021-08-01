@@ -6,7 +6,6 @@ capture_image:
       name: Entity
       description: Entity id of the camera to request an image.
       required: true
-      example: camera.downstairs_motion_camera
       selector:
         entity:
           integration: abode
@@ -39,7 +38,6 @@ trigger_automation:
       name: Entity
       description: Entity id of the automation to trigger.
       required: true
-      example: switch.my_automation
       selector:
         entity:
           integration: abode

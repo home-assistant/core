@@ -94,6 +94,18 @@ DEFAULT_SPEED_RANGE_MAX = 100
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
+MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        fan.ATTR_DIRECTION,
+        fan.ATTR_OSCILLATING,
+        fan.ATTR_PERCENTAGE_STEP,
+        fan.ATTR_PERCENTAGE,
+        fan.ATTR_PRESET_MODE,
+        fan.ATTR_PRESET_MODES,
+        fan.ATTR_SPEED_LIST,
+        fan.ATTR_SPEED,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,14 +136,14 @@ def valid_preset_mode_configuration(config):
 
 
 PLATFORM_SCHEMA = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_STATE_TOPIC, CONF_STATE_VALUE_TEMPLATE, CONF_SPEED_LIST and
+    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
     # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
     # are deprecated, support will be removed after a quarter (2021.7)
     cv.deprecated(CONF_PAYLOAD_HIGH_SPEED),
     cv.deprecated(CONF_PAYLOAD_LOW_SPEED),
     cv.deprecated(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.deprecated(CONF_SPEED_LIST),
     cv.deprecated(CONF_SPEED_COMMAND_TOPIC),
+    cv.deprecated(CONF_SPEED_LIST),
     cv.deprecated(CONF_SPEED_STATE_TOPIC),
     cv.deprecated(CONF_SPEED_VALUE_TEMPLATE),
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
@@ -222,6 +234,8 @@ async def _async_setup_entity(
 
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
+
+    _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
@@ -346,7 +360,7 @@ class MqttFan(MqttEntity, FanEntity):
         if self._feature_preset_mode:
             self._supported_features |= SUPPORT_PRESET_MODE
 
-        for tpl_dict in [self._command_templates, self._value_templates]:
+        for tpl_dict in (self._command_templates, self._value_templates):
             for key, tpl in tpl_dict.items():
                 if tpl is None:
                     tpl_dict[key] = lambda value: value

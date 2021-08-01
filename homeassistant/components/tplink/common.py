@@ -14,18 +14,18 @@ from pyHS100 import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as TPLINK_DOMAIN
+from .const import (
+    CONF_DIMMER,
+    CONF_LIGHT,
+    CONF_STRIP,
+    CONF_SWITCH,
+    DOMAIN as TPLINK_DOMAIN,
+    MAX_DISCOVERY_RETRIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-ATTR_CONFIG = "config"
-CONF_DIMMER = "dimmer"
-CONF_DISCOVERY = "discovery"
-CONF_LIGHT = "light"
-CONF_STRIP = "strip"
-CONF_SWITCH = "switch"
 
 
 class SmartDevices:
@@ -67,12 +67,9 @@ async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, Smart
 
 
 async def async_discover_devices(
-    hass: HomeAssistant, existing_devices: SmartDevices
+    hass: HomeAssistant, existing_devices: SmartDevices, target_device_count: int
 ) -> SmartDevices:
     """Get devices through discovery."""
-    _LOGGER.debug("Discovering devices")
-    devices = await async_get_discoverable_devices(hass)
-    _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devices))
 
     lights = []
     switches = []
@@ -100,6 +97,33 @@ async def async_discover_devices(
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
 
+    devices: dict[str, SmartDevice] = {}
+    for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
+        _LOGGER.debug(
+            "Discovering tplink devices, attempt %s of %s",
+            attempt,
+            MAX_DISCOVERY_RETRIES,
+        )
+        discovered_devices = await async_get_discoverable_devices(hass)
+        _LOGGER.info(
+            "Discovered %s TP-Link of expected %s smart home device(s)",
+            len(discovered_devices),
+            target_device_count,
+        )
+        for device_ip in discovered_devices:
+            devices[device_ip] = discovered_devices[device_ip]
+
+        if len(discovered_devices) >= target_device_count:
+            _LOGGER.info(
+                "Discovered at least as many devices on the network as exist in our device registry, no need to retry"
+            )
+            break
+
+    _LOGGER.info(
+        "Found %s unique TP-Link smart home device(s) after %s discovery attempts",
+        len(devices),
+        attempt,
+    )
     await hass.async_add_executor_job(process_devices)
 
     return SmartDevices(lights, switches)
@@ -111,7 +135,7 @@ def get_static_devices(config_data) -> SmartDevices:
     lights = []
     switches = []
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
+    for type_ in (CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER):
         for entry in config_data[type_]:
             host = entry["host"]
             try:
@@ -134,16 +158,18 @@ def get_static_devices(config_data) -> SmartDevices:
 
 def add_available_devices(
     hass: HomeAssistant, device_type: str, device_class: Callable
-) -> list:
+) -> list[Entity]:
     """Get sysinfo for all devices."""
 
-    devices = hass.data[TPLINK_DOMAIN][device_type]
+    devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][device_type]
 
     if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
-        devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
+        devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][
+            f"{device_type}_remaining"
+        ]
 
-    entities_ready = []
-    devices_unavailable = []
+    entities_ready: list[Entity] = []
+    devices_unavailable: list[SmartDevice] = []
     for device in devices:
         try:
             device.get_sysinfo()

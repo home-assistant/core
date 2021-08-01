@@ -32,14 +32,11 @@ set_cover_position:
       name: Position
       description: Position of the cover
       required: true
-      example: 30
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
 
 stop_cover:
   name: Stop
@@ -80,14 +77,11 @@ set_cover_tilt_position:
       name: Tilt position
       description: Tilt position of the cover.
       required: true
-      example: 30
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
 
 stop_cover_tilt:
   name: Stop tilt

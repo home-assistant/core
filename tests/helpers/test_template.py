@@ -526,6 +526,33 @@ def test_timestamp_local(hass):
         )
 
 
+@pytest.mark.parametrize(
+    "input",
+    (
+        "2021-06-03 13:00:00.000000+00:00",
+        "1986-07-09T12:00:00Z",
+        "2016-10-19 15:22:05.588122+0100",
+        "2016-10-19",
+        "2021-01-01 00:00:01",
+        "invalid",
+    ),
+)
+def test_as_datetime(hass, input):
+    """Test converting a timestamp string to a date object."""
+    expected = dt_util.parse_datetime(input)
+    if expected is not None:
+        expected = str(expected)
+
+    assert (
+        template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+        == expected
+    )
+    assert (
+        template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+        == expected
+    )
+
+
 def test_as_local(hass):
     """Test converting time to local."""
 
@@ -1558,6 +1585,151 @@ async def test_device_entities(hass):
     assert info.rate_limit is None
 
 
+async def test_device_id(hass):
+    """Test device_id function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="test",
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", device_id=device_entry.id
+    )
+    entity_entry_no_device = entity_registry.async_get_or_create(
+        "sensor", "test", "test_no_device", suggested_object_id="test"
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | device_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    with pytest.raises(TemplateError):
+        info = render_to_info(hass, "{{ 56 | device_id }}")
+        assert_result_info(info, None)
+
+    with pytest.raises(TemplateError):
+        info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
+        assert_result_info(info, None)
+
+    info = render_to_info(
+        hass, f"{{{{ device_id('{entity_entry_no_device.entity_id}') }}}}"
+    )
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ device_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.id)
+    assert info.rate_limit is None
+
+
+async def test_device_attr(hass):
+    """Test device_attr and is_device_attr functions."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+
+    # Test non existing device ids (device_attr)
+    info = render_to_info(hass, "{{ device_attr('abc123', 'id') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    with pytest.raises(TemplateError):
+        info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
+        assert_result_info(info, None)
+
+    # Test non existing device ids (is_device_attr)
+    info = render_to_info(hass, "{{ is_device_attr('abc123', 'id', 'test') }}")
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    with pytest.raises(TemplateError):
+        info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
+        assert_result_info(info, False)
+
+    # Test non existing entity id (device_attr)
+    info = render_to_info(hass, "{{ device_attr('entity.test', 'id') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing entity id (is_device_attr)
+    info = render_to_info(hass, "{{ is_device_attr('entity.test', 'id', 'test') }}")
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="test",
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", device_id=device_entry.id
+    )
+
+    # Test non existent device attribute (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{device_entry.id}', 'invalid_attr') }}}}"
+    )
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existent device attribute (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'invalid_attr', 'test') }}}}"
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test None device attribute (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{device_entry.id}', 'manufacturer') }}}}"
+    )
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test None device attribute mismatch (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'manufacturer', 'test') }}}}"
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test None device attribute match (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'manufacturer', None) }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+    # Test valid device attribute match (device_attr)
+    info = render_to_info(hass, f"{{{{ device_attr('{device_entry.id}', 'model') }}}}")
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # Test valid device attribute match (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{entity_entry.entity_id}', 'model') }}}}"
+    )
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # Test valid device attribute mismatch (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'model', 'fail') }}}}"
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test valid device attribute match (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'model', 'test') }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+
 def test_closest_function_to_coord(hass):
     """Test closest function to coord."""
     hass.states.async_set(
@@ -2472,7 +2644,7 @@ async def test_no_result_parsing(hass):
 
 
 async def test_is_static_still_ast_evals(hass):
-    """Test is_static still convers to native type."""
+    """Test is_static still converts to native type."""
     tpl = template.Template("[1, 2]", hass)
     assert tpl.is_static
     assert tpl.async_render() == [1, 2]

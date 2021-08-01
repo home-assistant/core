@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_URL = "watson_url"
 CONF_APIKEY = "watson_apikey"
 
-DEFAULT_URL = "https://stream.watsonplatform.net/text-to-speech/api"
+DEFAULT_URL = "https://api.us-south.text-to-speech.watson.cloud.ibm.com"
 
 CONF_VOICE = "voice"
 CONF_OUTPUT_FORMAT = "output_format"

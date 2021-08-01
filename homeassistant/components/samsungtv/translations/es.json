@@ -5,6 +5,7 @@
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "auth_missing": "Home Assistant no est\u00e1 autorizado para conectarse a este televisor Samsung. Revisa la configuraci\u00f3n de tu televisor para autorizar a Home Assistant.",
             "cannot_connect": "No se pudo conectar",
+            "id_missing": "Este dispositivo Samsung no tiene un n\u00famero de serie.",
             "not_supported": "Esta televisi\u00f3n Samsung actualmente no es compatible."
         },
         "flow_title": "Televisor Samsung: {model}",
@@ -12,6 +13,9 @@
             "confirm": {
                 "description": "\u00bfQuieres configurar la televisi\u00f3n Samsung {model}? Si nunca la has conectado a Home Assistant antes deber\u00edas ver una ventana en tu TV pidiendo autorizaci\u00f3n. Cualquier configuraci\u00f3n manual de esta TV se sobreescribir\u00e1.",
                 "title": "Samsung TV"
+            },
+            "reauth_confirm": {
+                "description": "Despu\u00e9s de enviarlo, acepte la ventana emergente en {device} solicitando autorizaci\u00f3n dentro de los 30 segundos."
             },
             "user": {
                 "data": {

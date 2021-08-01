@@ -5,7 +5,6 @@ restart:
     entity_id:
       name: Entity
       description: Name of entity that will restart. Platform dependent.
-      example: binary_sensor.ffmpeg_noise
       selector:
         entity:
           integration: ffmpeg
@@ -17,7 +16,6 @@ start:
     entity_id:
       name: Entity
       description: Name of entity that will start. Platform dependent.
-      example: binary_sensor.ffmpeg_noise
       selector:
         entity:
           integration: ffmpeg
@@ -29,7 +27,6 @@ stop:
     entity_id:
       name: Entity
       description: Name of entity that will stop. Platform dependent.
-      example: binary_sensor.ffmpeg_noise
       selector:
         entity:
           integration: ffmpeg

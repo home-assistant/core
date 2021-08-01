@@ -47,7 +47,8 @@ from homeassistant.const import (
     EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
-    MAX_LENGTH_EVENT_TYPE,
+    MAX_LENGTH_EVENT_EVENT_TYPE,
+    MAX_LENGTH_STATE_STATE,
     __version__,
 )
 from homeassistant.exceptions import (
@@ -130,7 +131,7 @@ def valid_entity_id(entity_id: str) -> bool:
 
 def valid_state(state: str) -> bool:
     """Test if a state is valid."""
-    return len(state) < 256
+    return len(state) <= MAX_LENGTH_STATE_STATE
 
 
 def callback(func: CALLABLE_T) -> CALLABLE_T:
@@ -200,7 +201,7 @@ class CoreState(enum.Enum):
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
-    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
+    def __str__(self) -> str:
         """Return the event."""
         return self.value
 
@@ -373,7 +374,7 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Coroutine) -> None:
+    def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool.
 
         target: target to call.
@@ -381,14 +382,14 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
+    def async_create_task(self, target: Awaitable) -> asyncio.Task:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
 
         target: target to call.
         """
-        task: asyncio.tasks.Task = self.loop.create_task(target)
+        task: asyncio.Task = self.loop.create_task(target)
 
         if self._track_task:
             self._pending_tasks.append(task)
@@ -592,7 +593,7 @@ class EventOrigin(enum.Enum):
     local = "LOCAL"
     remote = "REMOTE"
 
-    def __str__(self) -> str:  # pylint: disable=invalid-str-returned
+    def __str__(self) -> str:
         """Return the event."""
         return self.value
 
@@ -668,7 +669,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        return {key: len(self._listeners[key]) for key in self._listeners}
+        return {key: len(listeners) for key, listeners in self._listeners.items()}
 
     @property
     def listeners(self) -> dict[str, int]:
@@ -700,8 +701,10 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if len(event_type) > MAX_LENGTH_EVENT_TYPE:
-            raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_TYPE)
+        if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
+            raise MaxLengthExceeded(
+                event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
+            )
 
         listeners = self._listeners.get(event_type, [])
 
@@ -1295,7 +1298,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        return {domain: self._services[domain].copy() for domain in self._services}
+        return {domain: service.copy() for domain, service in self._services.items()}
 
     def has_service(self, domain: str, service: str) -> bool:
         """Test if specified service exists.
@@ -1542,6 +1545,7 @@ class Config:
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None
+        self.currency: str = "EUR"
 
         self.config_source: str = "default"
 
@@ -1647,6 +1651,7 @@ class Config:
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
+            "currency": self.currency,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1673,6 +1678,7 @@ class Config:
         # pylint: disable=dangerous-default-value # _UNDEFs not modified
         external_url: str | dict | None = _UNDEF,
         internal_url: str | dict | None = _UNDEF,
+        currency: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1695,6 +1701,8 @@ class Config:
             self.external_url = cast(Optional[str], external_url)
         if internal_url is not _UNDEF:
             self.internal_url = cast(Optional[str], internal_url)
+        if currency is not None:
+            self.currency = currency
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -1720,6 +1728,7 @@ class Config:
                 time_zone=data.get("time_zone"),
                 external_url=data.get("external_url", _UNDEF),
                 internal_url=data.get("internal_url", _UNDEF),
+                currency=data.get("currency"),
             )
 
     async def async_store(self) -> None:
@@ -1733,6 +1742,7 @@ class Config:
             "time_zone": self.time_zone,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
+            "currency": self.currency,
         }
 
         store = self.hass.helpers.storage.Store(

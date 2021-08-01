@@ -18,7 +18,9 @@ from homeassistant.core import HomeAssistant
         ("/dev/ttyACM0", False),
     ],
 )
-def test_is_serial_port_windows(hass: HomeAssistant, port: str, expect_valid: bool):
+def test_is_serial_port_windows(
+    hass: HomeAssistant, port: str, expect_valid: bool
+) -> None:
     """Test windows serial port."""
 
     with patch("sys.platform", "win32"):

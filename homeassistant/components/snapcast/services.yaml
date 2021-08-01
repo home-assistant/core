@@ -6,7 +6,6 @@ join:
       name: Master
       description: Entity ID of the player to synchronize to.
       required: true
-      example: "media_player.living_room"
       selector:
         entity:
           integration: snapcast
@@ -56,8 +55,8 @@ set_latency:
       name: Latency
       description: Latency in master
       required: true
-      example: 14
       selector:
         number:
           min: 1
           max: 1000
+          unit_of_measurement: "ms"

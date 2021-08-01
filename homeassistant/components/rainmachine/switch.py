@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Coroutine
 from datetime import datetime
+from typing import Any
 
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RequestError
@@ -53,6 +54,8 @@ CONF_PROGRAM_ID = "program_id"
 CONF_SECONDS = "seconds"
 CONF_ZONE_ID = "zone_id"
 
+DEFAULT_ICON = "mdi:water"
+
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 RUN_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
@@ -84,9 +87,10 @@ SLOPE_TYPE_MAP = {
 SPRINKLER_TYPE_MAP = {
     0: "Not Set",
     1: "Popup Spray",
-    2: "Rotors",
+    2: "Rotors Low Rate",
     3: "Surface Drip",
     4: "Bubblers Drip",
+    5: "Rotors High Rate",
     99: "Other",
 }
 
@@ -94,14 +98,16 @@ SUN_EXPOSURE_MAP = {0: "Not Set", 1: "Full Sun", 2: "Partial Shade", 3: "Full Sh
 
 VEGETATION_MAP = {
     0: "Not Set",
+    1: "Not Set",
     2: "Cool Season Grass",
     3: "Fruit Trees",
     4: "Flowers",
     5: "Vegetables",
     6: "Citrus",
-    7: "Trees and Bushes",
+    7: "Bushes",
     9: "Drought Tolerant Plants",
     10: "Warm Season Grass",
+    11: "Trees",
     99: "Other",
 }
 
@@ -118,7 +124,7 @@ async def async_setup_entry(
     alter_program_schema = {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
     alter_zone_schema = {vol.Required(CONF_ZONE_ID): cv.positive_int}
 
-    for service_name, schema, method in [
+    for service_name, schema, method in (
         ("disable_program", alter_program_schema, "async_disable_program"),
         ("disable_zone", alter_zone_schema, "async_disable_zone"),
         ("enable_program", alter_program_schema, "async_enable_program"),
@@ -151,7 +157,7 @@ async def async_setup_entry(
         ),
         ("stop_zone", {vol.Required(CONF_ZONE_ID): cv.positive_int}, "async_stop_zone"),
         ("unpause_watering", {}, "async_unpause_watering"),
-    ]:
+    ):
         platform.async_register_entity_service(service_name, schema, method)
 
     controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]
@@ -160,7 +166,8 @@ async def async_setup_entry(
     ]
     zones_coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][DATA_ZONES]
 
-    entities = []
+    entities: list[RainMachineProgram | RainMachineZone] = []
+
     for uid, program in programs_coordinator.data.items():
         entities.append(
             RainMachineProgram(
@@ -178,6 +185,8 @@ async def async_setup_entry(
 class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     """A class to represent a generic RainMachine switch."""
 
+    _attr_icon = DEFAULT_ICON
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -187,34 +196,24 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         entry: ConfigEntry,
     ) -> None:
         """Initialize a generic RainMachine switch."""
-        super().__init__(coordinator, controller)
+        super().__init__(coordinator, controller, type(self).__name__)
+
+        self._attr_is_on = False
+        self._attr_name = name
         self._data = coordinator.data[uid]
         self._entry = entry
         self._is_active = True
-        self._is_on = False
-        self._name = name
-        self._switch_type = type(self).__name__
         self._uid = uid
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._is_active and self.coordinator.last_update_success
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:water"
-
-    @property
-    def is_on(self) -> bool:
-        """Return whether the program is running."""
-        return self._is_on
+        return super().available and self._is_active
 
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._unique_id}_{self._switch_type}_{self._uid}"
+        return f"{super().unique_id}_{self._uid}"
 
     async def _async_run_switch_coroutine(self, api_coro: Coroutine) -> None:
         """Run a coroutine to toggle the switch."""
@@ -223,7 +222,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         except RequestError as err:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._switch_type,
+                self._entity_type,
                 self.unique_id,
                 err,
             )
@@ -232,7 +231,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         if resp["statusCode"] != 0:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._switch_type,
+                self._entity_type,
                 self.unique_id,
                 resp["message"],
             )
@@ -244,57 +243,57 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
             async_update_programs_and_zones(self.hass, self._entry)
         )
 
-    async def async_disable_program(self, *, program_id):
+    async def async_disable_program(self, *, program_id: int) -> None:
         """Disable a program."""
         await self._controller.programs.disable(program_id)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_disable_zone(self, *, zone_id):
+    async def async_disable_zone(self, *, zone_id: int) -> None:
         """Disable a zone."""
         await self._controller.zones.disable(zone_id)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_enable_program(self, *, program_id):
+    async def async_enable_program(self, *, program_id: int) -> None:
         """Enable a program."""
         await self._controller.programs.enable(program_id)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_enable_zone(self, *, zone_id):
+    async def async_enable_zone(self, *, zone_id: int) -> None:
         """Enable a zone."""
         await self._controller.zones.enable(zone_id)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_pause_watering(self, *, seconds):
+    async def async_pause_watering(self, *, seconds: int) -> None:
         """Pause watering for a set number of seconds."""
         await self._controller.watering.pause_all(seconds)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_start_program(self, *, program_id):
+    async def async_start_program(self, *, program_id: int) -> None:
         """Start a particular program."""
         await self._controller.programs.start(program_id)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_start_zone(self, *, zone_id, zone_run_time):
+    async def async_start_zone(self, *, zone_id: int, zone_run_time: int) -> None:
         """Start a particular zone for a certain amount of time."""
         await self._controller.zones.start(zone_id, zone_run_time)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_stop_all(self):
+    async def async_stop_all(self) -> None:
         """Stop all watering."""
         await self._controller.watering.stop_all()
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_stop_program(self, *, program_id):
+    async def async_stop_program(self, *, program_id: int) -> None:
         """Stop a program."""
         await self._controller.programs.stop(program_id)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_stop_zone(self, *, zone_id):
+    async def async_stop_zone(self, *, zone_id: int) -> None:
         """Stop a zone."""
         await self._controller.zones.stop(zone_id)
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    async def async_unpause_watering(self):
+    async def async_unpause_watering(self) -> None:
         """Unpause watering."""
         await self._controller.watering.unpause_all()
         await async_update_programs_and_zones(self.hass, self._entry)
@@ -314,13 +313,13 @@ class RainMachineProgram(RainMachineSwitch):
         """Return a list of active zones associated with this program."""
         return [z for z in self._data["wateringTimes"] if z["active"]]
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: dict[str, Any]) -> None:
         """Turn the program off."""
         await self._async_run_switch_coroutine(
             self._controller.programs.stop(self._uid)
         )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: dict[str, Any]) -> None:
         """Turn the program on."""
         await self._async_run_switch_coroutine(
             self._controller.programs.start(self._uid)
@@ -331,17 +330,16 @@ class RainMachineProgram(RainMachineSwitch):
         """Update the state."""
         super().update_from_latest_data()
 
-        self._is_on = bool(self._data["status"])
+        self._attr_is_on = bool(self._data["status"])
 
+        next_run: str | None = None
         if self._data.get("nextRun") is not None:
             next_run = datetime.strptime(
                 f"{self._data['nextRun']} {self._data['startTime']}",
                 "%Y-%m-%d %H:%M",
             ).isoformat()
-        else:
-            next_run = None
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_ID: self._uid,
                 ATTR_NEXT_RUN: next_run,
@@ -355,11 +353,11 @@ class RainMachineProgram(RainMachineSwitch):
 class RainMachineZone(RainMachineSwitch):
     """A RainMachine zone."""
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: dict[str, Any]) -> None:
         """Turn the zone off."""
         await self._async_run_switch_coroutine(self._controller.zones.stop(self._uid))
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: dict[str, Any]) -> None:
         """Turn the zone on."""
         await self._async_run_switch_coroutine(
             self._controller.zones.start(
@@ -373,9 +371,9 @@ class RainMachineZone(RainMachineSwitch):
         """Update the state."""
         super().update_from_latest_data()
 
-        self._is_on = bool(self._data["state"])
+        self._attr_is_on = bool(self._data["state"])
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_STATUS: RUN_STATUS_MAP[self._data["state"]],
                 ATTR_AREA: self._data.get("waterSense").get("area"),
@@ -386,7 +384,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_PRECIP_RATE: self._data.get("waterSense").get("precipitationRate"),
                 ATTR_RESTRICTIONS: self._data.get("restriction"),
                 ATTR_SLOPE: SLOPE_TYPE_MAP.get(self._data.get("slope")),
-                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("sun")),
+                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("soil")),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(self._data.get("group_id")),
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(self._data.get("sun")),
                 ATTR_TIME_REMAINING: self._data.get("remaining"),

@@ -243,8 +243,7 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlow):
 
         # Stream profiles
 
-        if vapix.params.stream_profiles_max_groups > 0:
-
+        if vapix.stream_profiles or vapix.params.stream_profiles_max_groups > 0:
             stream_profiles = [DEFAULT_STREAM_PROFILE]
             for profile in vapix.streaming_profiles:
                 stream_profiles.append(profile.name)

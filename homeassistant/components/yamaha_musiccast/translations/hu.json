@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "yxc_control_url_missing": "A vez\u00e9rl\u0151 URL nincs megadva az ssdp le\u00edr\u00e1sban."
+        },
+        "error": {
+            "no_musiccast_device": "\u00dagy t\u0171nik, hogy ez az eszk\u00f6z nem MusicCast eszk\u00f6z."
+        },
+        "flow_title": "MusicCast: {name}",
+        "step": {
+            "confirm": {
+                "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                },
+                "description": "\u00c1ll\u00edtsa be a MusicCast-ot a  Homeassistanttal val\u00f3 integr\u00e1ci\u00f3hoz."
+            }
+        }
+    }
+}

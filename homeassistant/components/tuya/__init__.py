@@ -93,7 +93,7 @@ def _update_query_interval(hass, interval):
         _LOGGER.warning(ex)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tuya platform."""
 
     tuya = TuyaApi()
@@ -197,7 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     @callback
     def _async_cancel_tuya_tracker(event):
-        domain_data[TUYA_TRACKER]()
+        domain_data[TUYA_TRACKER]()  # pylint: disable=not-callable
 
     domain_data[STOP_CANCEL] = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, _async_cancel_tuya_tracker

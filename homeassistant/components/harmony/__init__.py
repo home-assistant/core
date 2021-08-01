@@ -23,7 +23,7 @@ from .data import HarmonyData
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Logitech Harmony Hub from a config entry."""
     # As there currently is no way to import options from yaml
     # when setting up a config entry, we fallback to adding
@@ -94,7 +94,7 @@ async def _migrate_old_unique_ids(
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     modified = 0
-    for importable_option in [ATTR_ACTIVITY, ATTR_DELAY_SECS]:
+    for importable_option in (ATTR_ACTIVITY, ATTR_DELAY_SECS):
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
             modified = 1
