@@ -136,7 +136,7 @@ def is_momentary_input(settings: dict[str, Any], block: aioshelly.Block) -> bool
     return button_type in ["momentary", "momentary_on_release"]
 
 
-def get_device_uptime(status: dict[str, Any], last_uptime: str) -> str:
+def get_device_uptime(status: dict[str, Any], last_uptime: str | None) -> str:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=status["uptime"])
 

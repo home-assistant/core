@@ -4,6 +4,8 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
 
+from tests.common import async_capture_events
+
 
 async def test_send(hass: HomeAssistant, knx: KNXTestKit):
     """Test `knx.send` service."""
@@ -74,17 +76,14 @@ async def test_read(hass: HomeAssistant, knx: KNXTestKit):
 
 async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
     """Test `knx.event_register` service."""
-    events = []
+    events = async_capture_events(hass, "knx_event")
     test_address = "1/2/3"
 
-    def listener(event):
-        events.append(event)
-
     await knx.setup_integration({})
-    hass.bus.async_listen("knx_event", listener)
 
     # no event registered
     await knx.receive_write(test_address, True)
+    await hass.async_block_till_done()
     assert len(events) == 0
 
     # register event
@@ -93,10 +92,10 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
     )
     await knx.receive_write(test_address, True)
     await knx.receive_write(test_address, False)
+    await hass.async_block_till_done()
     assert len(events) == 2
 
-    # remove event registration
-    events = []
+    # remove event registration - no event added
     await hass.services.async_call(
         "knx",
         "event_register",
@@ -104,7 +103,8 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
         blocking=True,
     )
     await knx.receive_write(test_address, True)
-    assert len(events) == 0
+    await hass.async_block_till_done()
+    assert len(events) == 2
 
 
 async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit):

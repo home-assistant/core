@@ -131,7 +131,7 @@ class UnifiVideoCamera(Camera):
 
         return self._caminfo["recordingSettings"][
             "fullTimeRecordEnabled"
-        ] or recording_state in ["MOTION_INPROGRESS", "MOTION_FINISHED"]
+        ] or recording_state in ("MOTION_INPROGRESS", "MOTION_FINISHED")
 
     @property
     def motion_detection_enabled(self):

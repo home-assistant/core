@@ -115,7 +115,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.06.2
+        uses: home-assistant/builder@2021.07.0
         with:
           args: |
             $BUILD_ARGS \
@@ -134,6 +134,7 @@ jobs:
         machine:
           - generic-x86-64
           - intel-nuc
+          - khadas-vim3
           - odroid-c2
           - odroid-c4
           - odroid-n2
@@ -167,7 +168,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.06.2
+        uses: home-assistant/builder@2021.07.0
         with:
           args: |
             $BUILD_ARGS \

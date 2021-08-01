@@ -122,7 +122,7 @@ def _get_config_params(node, *args):
     for param in raw_values:
         schema = {}
 
-        if param["type"] in ["Byte", "Int", "Short"]:
+        if param["type"] in ("Byte", "Int", "Short"):
             schema = vol.Schema(
                 {
                     vol.Required(param["label"], default=param["value"]): vol.All(

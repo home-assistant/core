@@ -1,8 +1,12 @@
 """Support for SimpliSafe alarm control panels."""
+from __future__ import annotations
+
 import re
 
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
+from simplipy.system.v2 import SystemV2
+from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -13,6 +17,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CODE,
     STATE_ALARM_ARMED_AWAY,
@@ -21,9 +26,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafeEntity
+from . import SimpliSafe, SimpliSafeEntity
 from .const import (
     ATTR_ALARM_DURATION,
     ATTR_ALARM_VOLUME,
@@ -48,7 +54,9 @@ ATTR_WALL_POWER_LEVEL = "wall_power_level"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a SimpliSafe alarm control panel based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities(
@@ -60,7 +68,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, simplisafe, system):
+    def __init__(self, simplisafe: SimpliSafe, system: SystemV2 | SystemV3) -> None:
         """Initialize the SimpliSafe alarm."""
         super().__init__(simplisafe, system, "Alarm Control Panel")
 
@@ -91,7 +99,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             self._attr_state = None
 
     @callback
-    def _is_code_valid(self, code, state):
+    def _is_code_valid(self, code: str | None, state: str) -> bool:
         """Validate that a code matches the required one."""
         if not self._simplisafe.config_entry.options.get(CONF_CODE):
             return True
@@ -104,7 +112,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
         return True
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._is_code_valid(code, STATE_ALARM_DISARMED):
             return
@@ -118,7 +126,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._attr_state = STATE_ALARM_DISARMED
         self.async_write_ha_state()
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if not self._is_code_valid(code, STATE_ALARM_ARMED_HOME):
             return
@@ -134,7 +142,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._attr_state = STATE_ALARM_ARMED_HOME
         self.async_write_ha_state()
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if not self._is_code_valid(code, STATE_ALARM_ARMED_AWAY):
             return
@@ -151,9 +159,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_update_from_rest_api(self):
+    def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        if self._system.version == 3:
+        if isinstance(self._system, SystemV3):
             self._attr_extra_state_attributes.update(
                 {
                     ATTR_ALARM_DURATION: self._system.alarm_duration,
@@ -175,9 +183,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
                 }
             )
 
-        # Although system state updates are designed the come via the websocket, the
-        # SimpliSafe cloud can sporadically fail to send those updates as expected; so,
-        # just in case, we synchronize the state via the REST API, too:
         if self._system.state == SystemStates.alarm:
             self._attr_state = STATE_ALARM_TRIGGERED
         elif self._system.state == SystemStates.away:

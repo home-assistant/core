@@ -1,24 +1,34 @@
 """Tests for the TP-Link component."""
 from __future__ import annotations
 
+import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from pyHS100 import SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
+from pyHS100 import SmartBulb, SmartDevice, SmartDeviceException, SmartPlug, smartstrip
+from pyHS100.smartdevice import EmeterStatus
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
-from homeassistant.components.tplink.common import (
+from homeassistant.components.tplink.common import SmartDevices
+from homeassistant.components.tplink.const import (
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
+    CONF_SW_VERSION,
     CONF_SWITCH,
+    COORDINATORS,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.components.tplink.sensor import ENERGY_SENSORS
+from homeassistant.const import CONF_ALIAS, CONF_DEVICE_ID, CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry, mock_coro
+from tests.components.tplink.consts import SMARTPLUGSWITCH_DATA, SMARTSTRIPWITCH_DATA
 
 
 async def test_creating_entry_tries_discover(hass):
@@ -186,7 +196,7 @@ async def test_configuring_discovery_disabled(hass):
     assert mock_setup.call_count == 1
 
 
-async def test_platforms_are_initialized(hass):
+async def test_platforms_are_initialized(hass: HomeAssistant):
     """Test that platforms are initialized per configuration array."""
     config = {
         tplink.DOMAIN: {
@@ -196,26 +206,132 @@ async def test_platforms_are_initialized(hass):
         }
     }
 
+    with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
+        "homeassistant.components.tplink.get_static_devices"
+    ) as get_static_devices, patch(
+        "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.common.SmartPlug.is_dimmable",
+        False,
+    ):
+
+        light = SmartBulb("123.123.123.123")
+        switch = SmartPlug("321.321.321.321")
+        switch.get_sysinfo = MagicMock(return_value=SMARTPLUGSWITCH_DATA["sysinfo"])
+        switch.get_emeter_realtime = MagicMock(
+            return_value=EmeterStatus(SMARTPLUGSWITCH_DATA["realtime"])
+        )
+        switch.get_emeter_daily = MagicMock(
+            return_value={int(time.strftime("%e")): 1.123}
+        )
+        get_static_devices.return_value = SmartDevices([light], [switch])
+
+        # patching is_dimmable is necessray to avoid misdetection as light.
+        await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(f"switch.{switch.alias}")
+        assert state
+        assert state.name == switch.alias
+
+        for description in ENERGY_SENSORS:
+            state = hass.states.get(
+                f"sensor.{switch.alias}_{slugify(description.name)}"
+            )
+            assert state
+            assert state.state is not None
+            assert state.name == f"{switch.alias} {description.name}"
+
+        device_registry = dr.async_get(hass)
+        assert len(device_registry.devices) == 1
+        device = next(iter(device_registry.devices.values()))
+        assert device.name == switch.alias
+        assert device.model == switch.model
+        assert device.connections == {(dr.CONNECTION_NETWORK_MAC, switch.mac.lower())}
+        assert device.sw_version == switch.sys_info[CONF_SW_VERSION]
+
+
+async def test_smartplug_without_consumption_sensors(hass: HomeAssistant):
+    """Test that platforms are initialized per configuration array."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_SWITCH: [{CONF_HOST: "321.321.321.321"}],
+        }
+    }
+
+    with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
+        "homeassistant.components.tplink.get_static_devices"
+    ) as get_static_devices, patch(
+        "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.switch.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+    ):
+
+        switch = SmartPlug("321.321.321.321")
+        switch.get_sysinfo = MagicMock(return_value=SMARTPLUGSWITCH_DATA["sysinfo"])
+        get_static_devices.return_value = SmartDevices([], [switch])
+
+        await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        for description in ENERGY_SENSORS:
+            state = hass.states.get(
+                f"sensor.{switch.alias}_{slugify(description.name)}"
+            )
+            assert state is None
+
+
+async def test_smartstrip_device(hass: HomeAssistant):
+    """Test discover a SmartStrip devices."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: True,
+        }
+    }
+
+    class SmartStrip(smartstrip.SmartStrip):
+        """Moked SmartStrip class."""
+
+        def get_sysinfo(self):
+            return SMARTSTRIPWITCH_DATA["sysinfo"]
+
     with patch(
         "homeassistant.components.tplink.common.Discover.discover"
     ) as discover, patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
     ), patch(
-        "homeassistant.components.tplink.light.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as light_setup, patch(
-        "homeassistant.components.tplink.switch.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as switch_setup, patch(
-        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+        "homeassistant.components.tplink.common.SmartPlug.get_sysinfo",
+        return_value=SMARTSTRIPWITCH_DATA["sysinfo"],
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ):
-        # patching is_dimmable is necessray to avoid misdetection as light.
-        await async_setup_component(hass, tplink.DOMAIN, config)
+
+        strip = SmartStrip("123.123.123.123")
+        discover.return_value = {"123.123.123.123": strip}
+
+        assert await async_setup_component(hass, tplink.DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert discover.call_count == 0
-    assert light_setup.call_count == 1
-    assert switch_setup.call_count == 1
+        assert hass.data.get(tplink.DOMAIN)
+        assert hass.data[tplink.DOMAIN].get(COORDINATORS)
+        assert hass.data[tplink.DOMAIN][COORDINATORS].get(strip.mac)
+        assert isinstance(
+            hass.data[tplink.DOMAIN][COORDINATORS][strip.mac],
+            tplink.SmartPlugDataUpdateCoordinator,
+        )
+        data = hass.data[tplink.DOMAIN][COORDINATORS][strip.mac].data
+        assert data[CONF_ALIAS] == strip.sys_info["children"][0]["alias"]
+        assert data[CONF_DEVICE_ID] == "1"
 
 
 async def test_no_config_creates_no_entry(hass):
@@ -230,6 +346,42 @@ async def test_no_config_creates_no_entry(hass):
     assert mock_setup.call_count == 0
 
 
+async def test_not_ready(hass: HomeAssistant):
+    """Test for not ready when configured devices are not available."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_SWITCH: [{CONF_HOST: "321.321.321.321"}],
+        }
+    }
+
+    with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
+        "homeassistant.components.tplink.get_static_devices"
+    ) as get_static_devices, patch(
+        "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.switch.async_setup_entry",
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+    ):
+
+        switch = SmartPlug("321.321.321.321")
+        switch.get_sysinfo = MagicMock(side_effect=SmartDeviceException())
+        get_static_devices.return_value = SmartDevices([], [switch])
+
+        await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        entries = hass.config_entries.async_entries(tplink.DOMAIN)
+
+        assert len(entries) == 1
+        assert entries[0].state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.parametrize("platform", ["switch", "light"])
 async def test_unload(hass, platform):
     """Test that the async_unload_entry works."""
@@ -238,21 +390,35 @@ async def test_unload(hass, platform):
     entry.add_to_hass(hass)
 
     with patch(
+        "homeassistant.components.tplink.get_static_devices"
+    ) as get_static_devices, patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
     ), patch(
         f"homeassistant.components.tplink.{platform}.async_setup_entry",
         return_value=mock_coro(True),
-    ) as light_setup:
+    ) as async_setup_entry:
         config = {
             tplink.DOMAIN: {
                 platform: [{CONF_HOST: "123.123.123.123"}],
                 CONF_DISCOVERY: False,
             }
         }
+
+        light = SmartBulb("123.123.123.123")
+        switch = SmartPlug("321.321.321.321")
+        switch.get_sysinfo = MagicMock(return_value=SMARTPLUGSWITCH_DATA["sysinfo"])
+        switch.get_emeter_realtime = MagicMock(
+            return_value=EmeterStatus(SMARTPLUGSWITCH_DATA["realtime"])
+        )
+        if platform == "light":
+            get_static_devices.return_value = SmartDevices([light], [])
+        elif platform == "switch":
+            get_static_devices.return_value = SmartDevices([], [switch])
+
         assert await async_setup_component(hass, tplink.DOMAIN, config)
         await hass.async_block_till_done()
 
-        assert len(light_setup.mock_calls) == 1
+        assert len(async_setup_entry.mock_calls) == 1
         assert tplink.DOMAIN in hass.data
 
     assert await tplink.async_unload_entry(hass, entry)
