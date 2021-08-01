@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS = ["switch"]
 
 
