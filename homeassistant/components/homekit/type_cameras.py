@@ -11,6 +11,7 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
+from homeassistant.components.camera.img_util import scale_jpeg_camera_image
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
@@ -55,7 +56,6 @@ from .const import (
     SERV_SPEAKER,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
-from .img_util import scale_jpeg_camera_image
 from .util import pid_is_alive
 
 _LOGGER = logging.getLogger(__name__)

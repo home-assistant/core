@@ -109,7 +109,9 @@ class XeomaCamera(Camera):
         self._password = password
         self._last_image = None
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
 
         try:

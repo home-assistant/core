@@ -1,5 +1,6 @@
 """Support for HDMI CEC."""
-from collections import defaultdict
+from __future__ import annotations
+
 from functools import partial, reduce
 import logging
 import multiprocessing
@@ -65,8 +66,6 @@ ICONS_BY_TYPE = {
     4: ICON_PLAYER,
     5: ICON_AUDIO,
 }
-
-CEC_DEVICES = defaultdict(list)
 
 CMD_UP = "up"
 CMD_DOWN = "down"
@@ -134,7 +133,7 @@ SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
 
 # pylint: disable=unnecessary-lambda
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.All(cv.positive_int): vol.Any(
             lambda devices: DEVICE_SCHEMA(devices), cv.string
@@ -376,7 +375,7 @@ class CecEntity(Entity):
         """Initialize the device."""
         self._device = device
         self._icon = None
-        self._state = None
+        self._state: str | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
