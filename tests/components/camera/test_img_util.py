@@ -26,7 +26,6 @@ def test_turbojpeg_singleton():
     """Verify the instance always gives back the same."""
     _clear_turbojpeg_singleton()
     assert TurboJPEGSingleton.instance() == TurboJPEGSingleton.instance()
-    _reset_turbojpeg_singleton()
 
 
 def test_scale_jpeg_camera_image():
@@ -53,7 +52,6 @@ def test_scale_jpeg_camera_image():
         jpeg_bytes = scale_jpeg_camera_image(camera_image, 8, 6)
 
     assert jpeg_bytes == EMPTY_8_6_JPEG
-    _reset_turbojpeg_singleton()
 
 
 def test_turbojpeg_load_failure():
@@ -66,5 +64,3 @@ def test_turbojpeg_load_failure():
     _clear_turbojpeg_singleton()
     TurboJPEGSingleton()
     assert TurboJPEGSingleton.instance() is not None
-
-    _reset_turbojpeg_singleton()
