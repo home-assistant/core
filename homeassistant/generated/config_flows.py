@@ -45,6 +45,7 @@ FLOWS = [
     "cert_expiry",
     "climacell",
     "cloudflare",
+    "contec_controllers",
     "control4",
     "coolmaster",
     "coronavirus",
