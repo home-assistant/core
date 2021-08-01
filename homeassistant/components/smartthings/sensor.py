@@ -414,8 +414,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             elif capability == Capability.power_consumption_report:
                 sensors.extend(
                     [
-                        SmartThingsPowerConsumptionSensor(device, index)
-                        for index in range(len(POWER_CONSUMPTION_REPORT_NAMES))
+                        SmartThingsPowerConsumptionSensor(device, report_name)
+                        for report_name in POWER_CONSUMPTION_REPORT_NAMES
                     ]
                 )
             else:
@@ -549,47 +549,43 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     def __init__(
         self,
         device: DeviceEntity,
-        index: str,
+        report_name: str,
     ) -> None:
         """Init the class."""
         super().__init__(device)
-        self._index = index
+        self.report_name = report_name
 
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return f"{self._device.label} {POWER_CONSUMPTION_REPORT_NAMES[self._index]}"
+        return f"{self._device.label} {self.report_name}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{POWER_CONSUMPTION_REPORT_NAMES[self._index]}"
+        return f"{self._device.device_id}.{self.report_name}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
         value = self._device.status.attributes[Attribute.power_consumption].value
-        if POWER_CONSUMPTION_REPORT_NAMES[self._index] == "power":
-            try:
-                return value[POWER_CONSUMPTION_REPORT_NAMES[self._index]]
-            except (TypeError, IndexError):
-                return None
+        if value.get(self.report_name) is None:
+            return None
+        elif self.report_name == "power":
+            return value[self.report_name]
         else:
-            try:
-                return value[POWER_CONSUMPTION_REPORT_NAMES[self._index]] / 1000
-            except (TypeError, IndexError):
-                return None
+            return value[self.report_name] / 1000
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if POWER_CONSUMPTION_REPORT_NAMES[self._index] == "power":
+        if self.report_name == "power":
             return DEVICE_CLASS_POWER
         return DEVICE_CLASS_ENERGY
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        if POWER_CONSUMPTION_REPORT_NAMES[self._index] == "power":
+        if self.report_name == "power":
             return POWER_WATT
         return ENERGY_KILO_WATT_HOUR
