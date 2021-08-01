@@ -13,7 +13,6 @@ async def async_setup_entry(
 ):
     """Set up switch from a config entry created in the integrations UI."""
     config = hass.data[DOMAIN][config_entry.entry_id]
-    # Update our config to include new repos and remove those that have been removed.
     if config_entry.options:
         config.update(config_entry.options)
 
