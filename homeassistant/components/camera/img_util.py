@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from . import Image
 
 
-def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
+def scale_jpeg_camera_image(cam_image: "Image", width: int, height: int) -> bytes:
     """Scale a camera image as close as possible to one of the supported scaling factors."""
     turbo_jpeg = TurboJPEGSingleton.instance()
     if not turbo_jpeg:
