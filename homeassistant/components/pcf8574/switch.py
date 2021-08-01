@@ -40,11 +40,11 @@ class PCF8574Switch(ToggleEntity):
     """Representation of a PCF8574 output pin."""
 
     def __init__(
-        self, i2c_port_num, i2c_address, name, pin_num, invert_logic, unique_id=None
+        self, i2c_port_num, i2c_address, name, pin_num, invert_logic, entry_id
     ):
         """Initialize the pin."""
         self._attr_name = name
-        self._attr_unique_id = str(unique_id) + str(pin_num)
+        self._attr_unique_id = f"{entry_id}_{pin_num}"
         self._pcf = PCF8574(i2c_port_num, i2c_address)
         self._pin_num = pin_num
         self._invert_logic = invert_logic
