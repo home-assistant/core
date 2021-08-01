@@ -83,7 +83,10 @@ async def test_get_image_from_camera_with_width_height(hass, image_mock_url):
     turbo_jpeg = mock_turbo_jpeg(
         first_width=16, first_height=12, second_width=300, second_height=200
     )
-    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg), patch(
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
         "homeassistant.components.demo.camera.Path.read_bytes",
         autospec=True,
         return_value=b"Test",
@@ -102,7 +105,10 @@ async def test_get_image_from_camera_with_width_height_scaled(hass, image_mock_u
     turbo_jpeg = mock_turbo_jpeg(
         first_width=16, first_height=12, second_width=300, second_height=200
     )
-    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg), patch(
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
         "homeassistant.components.demo.camera.Path.read_bytes",
         autospec=True,
         return_value=b"Valid jpeg",
