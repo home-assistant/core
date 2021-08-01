@@ -1,6 +1,6 @@
 """Constants for the TP-Link component tests."""
 
-SMARTPLUGSWITCH_DATA = {
+SMARTPLUG_HS110_DATA = {
     "sysinfo": {
         "sw_ver": "1.0.4 Build 191111 Rel.143500",
         "hw_ver": "4.0",
@@ -33,6 +33,33 @@ SMARTPLUGSWITCH_DATA = {
         "total_wh": 1793,
         "err_code": 0,
     },
+}
+SMARTPLUG_HS100_DATA = {
+    "sysinfo": {
+        "sw_ver": "1.0.4 Build 191111 Rel.143500",
+        "hw_ver": "4.0",
+        "model": "HS100(EU)",
+        "deviceId": "4C56447B395BB7A2FAC68C9DFEE2E84163222581",
+        "oemId": "40F54B43071E9436B6395611E9D91CEA",
+        "hwId": "A6C77E4FDD238B53D824AC8DA361F043",
+        "rssi": -24,
+        "longitude_i": 130793,
+        "latitude_i": 480582,
+        "alias": "SmartPlug",
+        "status": "new",
+        "mic_type": "IOT.SMARTPLUGSWITCH",
+        "feature": "TIM:",
+        "mac": "A9:F4:3D:A4:E3:47",
+        "updating": 0,
+        "led_off": 0,
+        "relay_state": 0,
+        "on_time": 0,
+        "active_mode": "none",
+        "icon_hash": "",
+        "dev_name": "Smart Wi-Fi Plug",
+        "next_action": {"type": -1},
+        "err_code": 0,
+    }
 }
 SMARTSTRIPWITCH_DATA = {
     "sysinfo": {
