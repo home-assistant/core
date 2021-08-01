@@ -573,8 +573,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
             return None
         elif self.report_name == "power":
             return value[self.report_name]
-        else:
-            return value[self.report_name] / 1000
+        return value[self.report_name] / 1000
 
     @property
     def device_class(self):
