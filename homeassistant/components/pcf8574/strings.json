@@ -3,15 +3,22 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "i2c_port_num": "I2C Port Number",
+          "i2c_address": "I2C Address",
+          "switch_1_name": "Switch 1",
+          "switch_2_name": "Switch 2",
+          "switch_3_name": "Switch 3",
+          "switch_4_name": "Switch 4",
+          "switch_5_name": "Switch 5",
+          "switch_6_name": "Switch 6",
+          "switch_7_name": "Switch 7",
+          "switch_8_name": "Switch 8",
+          "invert_logic": "Invert Logic"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "ioerror": "cannot access i2c device",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

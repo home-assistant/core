@@ -1,9 +1,11 @@
 {
   "domain": "pcf8574",
   "name": "pcf8574",
-  "config_flow": false,
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pcf8574",
-  "requirements": [],
+  "requirements": [
+    "pcf8574==0.1.3"
+  ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

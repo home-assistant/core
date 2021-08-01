@@ -198,6 +198,7 @@ FLOWS = [
     "owntracks",
     "ozw",
     "panasonic_viera",
+    "pcf8574",
     "philips_js",
     "pi_hole",
     "picnic",

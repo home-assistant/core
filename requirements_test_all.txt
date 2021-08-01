@@ -631,6 +631,9 @@ paho-mqtt==1.5.1
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
 
+# homeassistant.components.pcf8574
+pcf8574==0.1.3
+
 # homeassistant.components.dunehd
 pdunehd==1.3.2
 
