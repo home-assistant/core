@@ -1,4 +1,6 @@
 """Support for loading picture from Neato."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -52,7 +54,9 @@ class NeatoCleaningMap(Camera):
         self._image_url = None
         self._image = None
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.update()
         return self._image
