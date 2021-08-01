@@ -90,21 +90,11 @@ class PCF8574Switch(ToggleEntity):
         self, i2c_port_num, i2c_address, name, pin_num, invert_logic, unique_id=None
     ):
         """Initialize the pin."""
+        self._attr_name = name or DEVICE_DEFAULT_NAME
+        self._attr_unique_id = str(unique_id) + str(pin_num)
         self._pcf = PCF8574(i2c_port_num, i2c_address)
-        self._name = name or DEVICE_DEFAULT_NAME
         self._pin_num = pin_num
         self._invert_logic = invert_logic
-        self._unique_id = str(unique_id) + str(pin_num)
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
 
     @property
     def should_poll(self):
