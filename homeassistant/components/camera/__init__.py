@@ -203,7 +203,6 @@ async def async_get_image(
 
     width and height will be passed to the underlying camera.
     """
-    _LOGGER.warning("async_get_image: %s %s %s", entity_id, width, height)
     camera = _get_camera_from_entity_id(hass, entity_id)
     return await _async_get_image(camera, timeout, width, height)
 
