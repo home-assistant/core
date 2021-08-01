@@ -25,7 +25,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     trackables = await client.trackable_objects()
 
     entities = await asyncio.gather(
-        *[create_trackable_entity(client, trackable) for trackable in trackables]
+        *(create_trackable_entity(client, trackable) for trackable in trackables)
     )
 
     async_add_entities(entities)
