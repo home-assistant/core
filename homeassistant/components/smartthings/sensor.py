@@ -571,7 +571,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         value = self._device.status.attributes[Attribute.power_consumption].value
         if value.get(self.report_name) is None:
             return None
-        elif self.report_name == "power":
+        if self.report_name == "power":
             return value[self.report_name]
         return value[self.report_name] / 1000
 
