@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .common import JPEG_8_6, mock_turbo_jpeg
+from .common import EMPTY_8_6_JPEG, mock_turbo_jpeg
 
 from tests.components.camera import common
 
@@ -105,7 +105,7 @@ async def test_get_image_from_camera_with_width_height_scaled(hass, image_mock_u
     with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg), patch(
         "homeassistant.components.demo.camera.Path.read_bytes",
         autospec=True,
-        return_value=JPEG_8_6,
+        return_value=b"Valid jpeg",
     ) as mock_camera:
         image = await camera.async_get_image(
             hass, "camera.demo_camera", width=4, height=3
@@ -113,7 +113,7 @@ async def test_get_image_from_camera_with_width_height_scaled(hass, image_mock_u
 
     assert mock_camera.called
     assert image.content_type == "image/jpeg"
-    assert image.content is not JPEG_8_6
+    assert image.content == EMPTY_8_6_JPEG
 
 
 async def test_get_stream_source_from_camera(hass, mock_camera):
