@@ -16,6 +16,11 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_OFF,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     HVAC_MODE_COOL,
@@ -64,6 +69,15 @@ ATW_ZONE_HVAC_MODE_LOOKUP = {
     atw.ZONE_OPERATION_MODE_COOL: HVAC_MODE_COOL,
 }
 ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
+
+
+HA_STATE_TO_CURRENT_HVAC = {
+    HVAC_MODE_COOL: CURRENT_HVAC_COOL,
+    HVAC_MODE_DRY: CURRENT_HVAC_DRY,
+    HVAC_MODE_FAN_ONLY: CURRENT_HVAC_FAN,
+    HVAC_MODE_HEAT: CURRENT_HVAC_HEAT,
+    HVAC_MODE_OFF: CURRENT_HVAC_OFF,
+}
 
 
 async def async_setup_entry(
@@ -136,6 +150,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
         self._attr_name = device.name
         self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
+        self._attr_hvac_action = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -164,10 +179,13 @@ class AtaDeviceClimate(MelCloudClimate):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        mode = self._device.operation_mode
-        if not self._device.power or mode is None:
-            return HVAC_MODE_OFF
-        return ATA_HVAC_MODE_LOOKUP.get(mode)
+        op_mode = self._device.operation_mode
+        if not self._device.power or op_mode is None:
+            mode = HVAC_MODE_OFF
+        else:
+            mode = ATA_HVAC_MODE_LOOKUP.get(op_mode)
+        self._attr_hvac_action = HA_STATE_TO_CURRENT_HVAC.get(mode)
+        return mode
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
