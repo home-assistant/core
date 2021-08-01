@@ -82,7 +82,7 @@ class StreamMuxer:
         self,
         video_stream: av.video.VideoStream,
         audio_stream: av.audio.stream.AudioStream | None,
-    ):
+    ) -> None:
         """Initialize StreamMuxer."""
         self._input_video_stream = video_stream
         self._input_audio_stream = audio_stream
