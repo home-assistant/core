@@ -66,6 +66,7 @@ from .const import (
     CONF_FANS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
+    CONF_MAX_SECONDS_TO_COMPLETE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_MSG_WAIT,
@@ -237,6 +238,7 @@ COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
         vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
         vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
+        vol.Optional(CONF_MAX_SECONDS_TO_COMPLETE): cv.positive_int,
         vol.Optional(
             CONF_STATUS_REGISTER_TYPE,
             default=CALL_TYPE_REGISTER_HOLDING,

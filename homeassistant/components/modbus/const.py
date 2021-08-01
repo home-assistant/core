@@ -67,6 +67,7 @@ CONF_SCAN_GROUPS = "scan_groups"
 CONF_SCAN_GROUP = "scan_group"
 CONF_SCAN_INTERVAL_MILLIS = "scan_interval_millis"
 CONF_ADDRESS_CLOSE = "address_close"
+CONF_MAX_SECONDS_TO_COMPLETE = "max_seconds_to_complete"
 
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"

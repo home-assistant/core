@@ -1,8 +1,8 @@
 """Support for Modbus covers."""
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
+from datetime import timedelta
+from typing import Any, Callable
 
 from homeassistant.components.cover import (
     ENTITY_ID_FORMAT,
@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,6 +34,7 @@ from .const import (
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
     CONF_ADDRESS_CLOSE,
+    CONF_MAX_SECONDS_TO_COMPLETE,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
@@ -81,6 +83,8 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._state_opening = config[CONF_STATE_OPENING]
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
+        self._max_seconds_to_complete = config.get(CONF_MAX_SECONDS_TO_COMPLETE)
+        self._complete_watcher: Callable[[], None] | None = None
 
         self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         self._attr_is_closed = False
@@ -183,6 +187,15 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 self._state_open,
                 self._write_type,
             )
+        if self._status_register is None and self._max_seconds_to_complete is not None:
+            if self._complete_watcher is not None:
+                self._complete_watcher()
+            self._complete_watcher = async_call_later(
+                self.hass,
+                timedelta(seconds=self._max_seconds_to_complete),
+                self.async_mark_as_opened,
+            )
+
         self._attr_available = result is not None
         await self.async_update()
 
@@ -208,6 +221,15 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 self._state_closed,
                 self._write_type,
             )
+        if self._status_register is None and self._max_seconds_to_complete is not None:
+            if self._complete_watcher is not None:
+                self._complete_watcher()
+            self._complete_watcher = async_call_later(
+                self.hass,
+                timedelta(seconds=self._max_seconds_to_complete),
+                self.async_mark_as_closed,
+            )
+
         self._attr_available = result is not None
         await self.async_update()
 
@@ -224,7 +246,62 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             result = await self._hub.async_pymodbus_call(
                 self._slave, self._write_address_close, False, self._write_type
             )
-            self._attr_available = result is not None
+            self._available = result is not None
+        if self._complete_watcher is not None:
+            self._complete_watcher()
+
+        self._attr_available = result is not None
+        await self.async_update()
+
+    async def async_mark_as_opened(self, now=None):
+        """Mark opening as completed."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_call_later
+        return await self.async_mark_as_opened_or_closed(True)
+
+    async def async_mark_as_closed(self, now=None):
+        """Mark closing as completed."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_call_later
+        return await self.async_mark_as_opened_or_closed(False)
+
+    async def async_mark_as_opened_or_closed(self, opened):
+        """Mark opening or closing of cover as completed."""
+        _LOGGER.debug(
+            "mark cover as opened or closed: slave=%s, input_type=%s, address=%s, state=%s",
+            self._slave,
+            self._input_type,
+            self._address,
+            opened,
+        )
+        if (
+            self._write_type == CALL_TYPE_WRITE_COIL
+            and self._write_address_close != self._write_address_open
+        ):
+            if opened:
+                result = await self._hub.async_pymodbus_call(
+                    self._slave, self._write_address_open, False, self._write_type
+                )
+            else:
+                result = await self._hub.async_pymodbus_call(
+                    self._slave, self._write_address_close, False, self._write_type
+                )
+        else:
+            if opened:
+                result = await self._hub.async_pymodbus_call(
+                    self._slave,
+                    self._write_address_open,
+                    self._state_open,
+                    self._write_type,
+                )
+            else:
+                result = await self._hub.async_pymodbus_call(
+                    self._slave,
+                    self._write_address_close,
+                    self._state_closed,
+                    self._write_type,
+                )
+        self._available = result is not None
         await self.async_update()
 
     async def async_update(self, now=None):
