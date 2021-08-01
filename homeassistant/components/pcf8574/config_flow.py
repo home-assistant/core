@@ -17,7 +17,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("i2c_port_num", default=0): vol.Coerce(int),
@@ -49,7 +48,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
     pcf.port[0]
 
     return True
-    # Return info that you want to store in the config entry.
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -76,7 +74,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            # return await self.async_step_pin()
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(

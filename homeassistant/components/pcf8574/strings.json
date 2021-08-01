@@ -18,7 +18,7 @@
       }
     },
     "error": {
-      "ioerror": "cannot access i2c device",
+      "ioerror": "Cannot access i2c device.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
