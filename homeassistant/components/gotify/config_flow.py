@@ -7,7 +7,7 @@ from typing import Any
 import gotify
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -18,83 +18,32 @@ from .const import CONF_HOST, CONF_TOKEN, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
-    """
-    Return schema defaults for init step based on user input/config dict.
-
-    Retain info already provided for future form views by setting them
-    as defaults in schema.
-    """
-    if input_dict is None:
-        input_dict = {}
-
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
-            vol.Required(CONF_TOKEN, default=input_dict.get(CONF_TOKEN, "")): str,
-        },
-        extra=vol.REMOVE_EXTRA,
-    )
-
-
-class GotifyHub:
-    """Gotify Server Connection test."""
-
-    def __init__(self, hass, host: str, token: str) -> None:
-        """Initialize."""
-        self.host = host
-        self.token = token
-        gotify.config(base_url=host, app_token=token, client_token=token)
-
-    async def connect(self, hass: HomeAssistant) -> bool:
-        """Test if we can connect with the host."""
-        try:
-            await hass.async_add_executor_job(gotify.get_health)
-        except gotify.GotifyError:
-            return False
-        return True
-
-    async def authenticate(self, hass: HomeAssistant) -> bool:
-        """Test if we can authenticate with the host."""
-        try:
-            await hass.async_add_executor_job(
-                gotify.create_message, "Home Assistant has been authenticated."
-            )
-        except gotify.GotifyError:
-            return False
-        return True
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, host: str, token: str) -> None:
     """Validate the user input allows us to connect."""
-    schema = cv.url
     try:
-        schema(data[CONF_HOST])
+        cv.url(host)
     except vol.Invalid as error:
         raise InvalidURL from error
 
-    hub = GotifyHub(hass, data[CONF_HOST], data[CONF_TOKEN])
+    gotify.config(base_url=host, app_token=token, client_token=token)
 
-    result = await hub.connect(hass)
-    if not result:
-        raise CannotConnect
+    try:
+        await hass.async_add_executor_job(gotify.get_health)
+    except gotify.GotifyError as exc:
+        raise CannotConnect from exc
 
-    result = await hub.authenticate(hass)
-    if not result:
+    try:
+        await hass.async_add_executor_job(
+            gotify.create_message, "Home Assistant has been authenticated."
+        )
+    except gotify.GotifyError:
         raise InvalidAuth
 
-    # Return info that you want to store in the config entry.
-    return {"title": data[CONF_HOST]}
 
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GotifyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for gotify."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize."""
-        self._user_schema = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -103,10 +52,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Store current values in case setup fails and user needs to edit
-            self._user_schema = _get_config_schema(user_input)
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(
+                    self.hass, user_input[CONF_HOST], user_input[CONF_TOKEN]
+                )
             except InvalidURL:
                 errors["base"] = "invalid_host"
             except CannotConnect:
@@ -117,11 +66,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
+        else:
+            user_input = {}
 
-        schema = self._user_schema or _get_config_schema()
+        STEP_USER_DATA_SCHEMA = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
+                vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN)): str,
+            },
+        )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
 
 
 class CannotConnect(HomeAssistantError):
