@@ -1,7 +1,9 @@
 """Open ports in your router for Home Assistant and provide statistics."""
+from __future__ import annotations
+
 import asyncio
 from ipaddress import ip_address
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 import voluptuous as vol
 
@@ -78,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register device discovered-callback.
     device_found_event = asyncio.Event()
-    discovery_info: Optional[Mapping[str, Any]] = None
+    discovery_info: Mapping[str, Any] | None = None
 
     @callback
     def device_found(info: Mapping[str, Any]) -> None:
