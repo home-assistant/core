@@ -79,33 +79,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     usn = f"{udn}::{st}"
 
     # Register device discovered-callback.
-    device_found_event = asyncio.Event()
+    device_discovered_event = asyncio.Event()
     discovery_info: Mapping[str, Any] | None = None
 
     @callback
-    def device_found(info: Mapping[str, Any]) -> None:
+    def device_discovered(info: Mapping[str, Any]) -> None:
         nonlocal discovery_info
         _LOGGER.info(
             "Device discovered: %s, at: %s", usn, info[ssdp.ATTR_SSDP_LOCATION]
         )
         discovery_info = info
-        device_found_event.set()
+        device_discovered_event.set()
 
-    entry.async_on_unload(
-        ssdp.async_register_callback(
-            hass,
-            device_found,
-            {
-                "usn": usn,
-            },
-        )
+    cancel_discovered_callback = ssdp.async_register_callback(
+        hass,
+        device_discovered,
+        {
+            "usn": usn,
+        },
     )
 
     try:
-        await asyncio.wait_for(device_found_event.wait(), timeout=10)
+        await asyncio.wait_for(device_discovered_event.wait(), timeout=10)
     except asyncio.TimeoutError as err:
         _LOGGER.debug("Device not discovered: %s", usn)
         raise ConfigEntryNotReady from err
+    finally:
+        cancel_discovered_callback()
 
     # Create device.
     device = await Device.async_create_device(
