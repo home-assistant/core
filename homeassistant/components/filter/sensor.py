@@ -209,7 +209,7 @@ class SensorFilter(SensorEntity):
             self.async_write_ha_state()
             return
 
-        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._state = new_state.state
             self.async_write_ha_state()
             return

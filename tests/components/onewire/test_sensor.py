@@ -10,10 +10,12 @@ from homeassistant.components.onewire.const import (
     PLATFORMS,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.setup import async_setup_component
 
 from . import (
     setup_onewire_patched_owserver_integration,
+    setup_onewire_sysbus_integration,
     setup_owproxy_mock_devices,
     setup_sysbus_mock_devices,
 )
@@ -23,16 +25,6 @@ from tests.common import assert_setup_component, mock_device_registry, mock_regi
 
 MOCK_COUPLERS = {
     key: value for (key, value) in MOCK_OWPROXY_DEVICES.items() if "branches" in value
-}
-
-MOCK_SYSBUS_CONFIG = {
-    SENSOR_DOMAIN: {
-        "platform": DOMAIN,
-        "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
-        "names": {
-            "10-111111111111": "My DS18B20",
-        },
-    }
 }
 
 
@@ -164,9 +156,9 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
         registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
         assert registry_entry.identifiers == {(DOMAIN, device_id)}
-        assert registry_entry.manufacturer == device_info["manufacturer"]
-        assert registry_entry.name == device_info["name"]
-        assert registry_entry.model == device_info["model"]
+        assert registry_entry.manufacturer == device_info[ATTR_MANUFACTURER]
+        assert registry_entry.name == device_info[ATTR_NAME]
+        assert registry_entry.model == device_info[ATTR_MODEL]
 
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
@@ -200,13 +192,11 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     mock_device = MOCK_SYSBUS_DEVICES[device_id]
     expected_entities = mock_device.get(SENSOR_DOMAIN, [])
 
-    with patch(
-        "homeassistant.components.onewire.onewirehub.os.path.isdir", return_value=True
-    ), patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
+    with patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
         "pi1wire.OneWire.get_temperature",
         side_effect=read_side_effect,
     ):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, MOCK_SYSBUS_CONFIG)
+        assert await setup_onewire_sysbus_integration(hass)
         await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_entities)
@@ -217,9 +207,9 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
         registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
         assert registry_entry.identifiers == {(DOMAIN, device_id)}
-        assert registry_entry.manufacturer == device_info["manufacturer"]
-        assert registry_entry.name == device_info["name"]
-        assert registry_entry.model == device_info["model"]
+        assert registry_entry.manufacturer == device_info[ATTR_MANUFACTURER]
+        assert registry_entry.name == device_info[ATTR_NAME]
+        assert registry_entry.model == device_info[ATTR_MODEL]
 
     for expected_sensor in expected_entities:
         entity_id = expected_sensor["entity_id"]

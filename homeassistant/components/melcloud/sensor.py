@@ -22,20 +22,18 @@ from .const import DOMAIN
 
 
 @dataclass
-class MelcloudSensorEntityDescription(SensorEntityDescription):
+class MelcloudRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Any], float]
+    enabled: Callable[[Any], bool]
+
+
+@dataclass
+class MelcloudSensorEntityDescription(
+    SensorEntityDescription, MelcloudRequiredKeysMixin
+):
     """Describes Melcloud sensor entity."""
-
-    _value_fn: Callable[[Any], float] | None = None
-    _enabled: Callable[[Any], bool] | None = None
-
-    def __post_init__(self) -> None:
-        """Ensure all required fields are set."""
-        if self._value_fn is None:  # pragma: no cover
-            raise TypeError
-        if self._enabled is None:  # pragma: no cover
-            raise TypeError
-        self.value_fn = self._value_fn
-        self.enabled = self._enabled
 
 
 ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
@@ -45,8 +43,8 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        _value_fn=lambda x: x.device.room_temperature,
-        _enabled=lambda x: True,
+        value_fn=lambda x: x.device.room_temperature,
+        enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="energy",
@@ -54,8 +52,8 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         icon="mdi:factory",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        _value_fn=lambda x: x.device.total_energy_consumed,
-        _enabled=lambda x: x.device.has_energy_consumed_meter,
+        value_fn=lambda x: x.device.total_energy_consumed,
+        enabled=lambda x: x.device.has_energy_consumed_meter,
     ),
 )
 ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
@@ -65,8 +63,8 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        _value_fn=lambda x: x.device.outside_temperature,
-        _enabled=lambda x: True,
+        value_fn=lambda x: x.device.outside_temperature,
+        enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="tank_temperature",
@@ -74,8 +72,8 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        _value_fn=lambda x: x.device.tank_temperature,
-        _enabled=lambda x: True,
+        value_fn=lambda x: x.device.tank_temperature,
+        enabled=lambda x: True,
     ),
 )
 ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
@@ -85,8 +83,8 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        _value_fn=lambda zone: zone.room_temperature,
-        _enabled=lambda x: True,
+        value_fn=lambda zone: zone.room_temperature,
+        enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="flow_temperature",
@@ -94,8 +92,8 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        _value_fn=lambda zone: zone.flow_temperature,
-        _enabled=lambda x: True,
+        value_fn=lambda zone: zone.flow_temperature,
+        enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
         key="return_temperature",
@@ -103,8 +101,8 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        _value_fn=lambda zone: zone.return_temperature,
-        _enabled=lambda x: True,
+        value_fn=lambda zone: zone.return_temperature,
+        enabled=lambda x: True,
     ),
 )
 

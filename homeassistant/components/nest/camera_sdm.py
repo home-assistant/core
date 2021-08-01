@@ -9,10 +9,11 @@ from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
     CameraImageTrait,
     CameraLiveStreamTrait,
-    CameraMotionTrait,
+    EventImageGenerator,
     RtspStream,
 )
 from google_nest_sdm.device import Device
+from google_nest_sdm.event import ImageEventBase
 from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
 
@@ -121,6 +122,7 @@ class NestCamera(Camera):
             _LOGGER.debug("Fetching stream url")
             self._stream = await trait.generate_rtsp_stream()
             self._schedule_stream_refresh()
+        assert self._stream
         if self._stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
         return self._stream.rtsp_stream_url
@@ -198,7 +200,11 @@ class NestCamera(Camera):
         if not trait:
             return None
         # Reuse image bytes if they have already been fetched
-        event = trait.last_event
+        if not isinstance(trait, EventImageGenerator):
+            return None
+        event: ImageEventBase | None = trait.last_event
+        if not event:
+            return None
         if self._event_id is not None and self._event_id == event.event_id:
             return self._event_image_bytes
         _LOGGER.debug("Generating event image URL for event_id %s", event.event_id)
@@ -211,7 +217,7 @@ class NestCamera(Camera):
         return image_bytes
 
     async def _async_fetch_active_event_image(
-        self, trait: CameraMotionTrait
+        self, trait: EventImageGenerator
     ) -> bytes | None:
         """Return image bytes for an active event."""
         try:
