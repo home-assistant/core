@@ -1,12 +1,10 @@
 """The tests for the hassio component."""
-from aiohttp.client import ClientError
-from aiohttp.streams import StreamReader
-from aiohttp.test_utils import TestClient
+import asyncio
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_forward_request(hassio_client, aioclient_mock):
@@ -108,6 +106,16 @@ async def test_forward_log_request(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
+async def test_bad_gateway_when_cannot_find_supervisor(hassio_client):
+    """Test we get a bad gateway error if we can't find supervisor."""
+    with patch(
+        "homeassistant.components.hassio.http.async_timeout.timeout",
+        side_effect=asyncio.TimeoutError,
+    ):
+        resp = await hassio_client.get("/api/hassio/addons/test/info")
+    assert resp.status == 502
+
+
 async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mock):
     """Test that we forward user info correctly."""
     aioclient_mock.get("http://127.0.0.1/hello")
@@ -124,13 +132,13 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mo
     assert req_headers["X-Hass-Is-Admin"] == "1"
 
 
-async def test_backup_upload_headers(hassio_client, aioclient_mock, caplog):
-    """Test that we forward the full header for backup upload."""
+async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
+    """Test that we forward the full header for snapshot upload."""
     content_type = "multipart/form-data; boundary='--webkit'"
-    aioclient_mock.get("http://127.0.0.1/backups/new/upload")
+    aioclient_mock.get("http://127.0.0.1/snapshots/new/upload")
 
     resp = await hassio_client.get(
-        "/api/hassio/backups/new/upload", headers={"Content-Type": content_type}
+        "/api/hassio/snapshots/new/upload", headers={"Content-Type": content_type}
     )
 
     # Check we got right response
@@ -142,18 +150,18 @@ async def test_backup_upload_headers(hassio_client, aioclient_mock, caplog):
     assert req_headers["Content-Type"] == content_type
 
 
-async def test_backup_download_headers(hassio_client, aioclient_mock):
-    """Test that we forward the full header for backup download."""
+async def test_snapshot_download_headers(hassio_client, aioclient_mock):
+    """Test that we forward the full header for snapshot download."""
     content_disposition = "attachment; filename=test.tar"
     aioclient_mock.get(
-        "http://127.0.0.1/backups/slug/download",
+        "http://127.0.0.1/snapshots/slug/download",
         headers={
             "Content-Length": "50000000",
             "Content-Disposition": content_disposition,
         },
     )
 
-    resp = await hassio_client.get("/api/hassio/backups/slug/download")
+    resp = await hassio_client.get("/api/hassio/snapshots/slug/download")
 
     # Check we got right response
     assert resp.status == 200
@@ -163,43 +171,12 @@ async def test_backup_download_headers(hassio_client, aioclient_mock):
     assert resp.headers["Content-Disposition"] == content_disposition
 
 
-async def test_supervisor_client_error(
-    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
-):
-    """Test any client error from the supervisor returns a 502."""
-    # Create a request that throws a ClientError
-    async def raise_client_error(*args):
-        raise ClientError()
-
-    aioclient_mock.get(
-        "http://127.0.0.1/test/raise/error",
-        side_effect=raise_client_error,
-    )
-
-    # Verify it returns bad gateway
-    resp = await hassio_client.get("/api/hassio/test/raise/error")
-    assert resp.status == 502
-    assert len(aioclient_mock.mock_calls) == 1
-
-
-async def test_streamed_requests(
-    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
-):
-    """Test requests get proxied to the supervisor as a stream."""
-    aioclient_mock.get("http://127.0.0.1/test/stream")
-    await hassio_client.get("/api/hassio/test/stream", data="Test data")
-    assert len(aioclient_mock.mock_calls) == 1
-
-    # Verify the request body is passed as a StreamReader
-    assert isinstance(aioclient_mock.mock_calls[0][2], StreamReader)
-
-
 def test_need_auth(hass):
     """Test if the requested path needs authentication."""
     assert not _need_auth(hass, "addons/test/logo")
-    assert _need_auth(hass, "backups/new/upload")
+    assert _need_auth(hass, "snapshots/new/upload")
     assert _need_auth(hass, "supervisor/logs")
 
     hass.data["onboarding"] = False
-    assert not _need_auth(hass, "backups/new/upload")
+    assert not _need_auth(hass, "snapshots/new/upload")
     assert not _need_auth(hass, "supervisor/logs")

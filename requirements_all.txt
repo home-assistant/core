@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.5.2
+HAP-python==3.6.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -185,7 +185,7 @@ aiohomekit==0.6.0
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.5.1
+aiohue==2.6.0
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -219,9 +219,6 @@ aionotify==0.2.0
 
 # homeassistant.components.notion
 aionotion==3.0.2
-
-# homeassistant.components.automate
-aiopulse2==0.6.0
 
 # homeassistant.components.acmeda
 aiopulse==0.4.2
@@ -269,7 +266,7 @@ ambee==0.3.0
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.7.2
+amcrest==1.8.0
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.60
@@ -367,7 +364,7 @@ beautifulsoup4==4.9.3
 bellows==0.26.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.15
+bimmer_connected==0.7.16
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -785,7 +782,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210728.0
+home-assistant-frontend==20210730.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1332,7 +1329,7 @@ pyatmo==5.2.3
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.8.1
+pyatv==0.8.2
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -2339,7 +2336,7 @@ uscisstatus==0.1.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.4.0
+vallox-websocket-api==2.8.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
@@ -2471,7 +2468,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.2
 
 # homeassistant.components.zha
-zigpy==0.36.0
+zigpy==0.36.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
