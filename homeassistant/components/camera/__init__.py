@@ -64,6 +64,7 @@ from .const import (
     DOMAIN,
     SERVICE_RECORD,
 )
+from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
 
 # mypy: allow-untyped-calls
@@ -140,6 +141,56 @@ async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) ->
     return await _async_stream_endpoint_url(hass, camera, fmt)
 
 
+async def _async_get_image(
+    camera: Camera,
+    timeout: int = 10,
+    width: int | None = None,
+    height: int | None = None,
+) -> Image:
+    """Fetch a snapshot image from a camera.
+
+    If width and height are passed, an attempt to scale
+    the image will be made on a best effort basis.
+    Not all cameras can scale images or return jpegs
+    that we can scale, however the majority of cases
+    are handled.
+    """
+    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+        async with async_timeout.timeout(timeout):
+            # Calling inspect will be removed in 2022.1 after all
+            # custom components have had a chance to change their signature
+            sig = inspect.signature(camera.async_camera_image)
+            if "height" in sig.parameters and "width" in sig.parameters:
+                image_bytes = await camera.async_camera_image(
+                    width=width, height=height
+                )
+            else:
+                _LOGGER.warning(
+                    "The camera entity %s does not support requesting width and height, please open an issue with the integration author.",
+                    camera.entity_id,
+                )
+                image_bytes = await camera.async_camera_image()
+
+            if image_bytes:
+                content_type = camera.content_type
+                image = Image(content_type, image_bytes)
+                if (
+                    width is not None
+                    and height is not None
+                    and "jpeg" in content_type
+                    or "jpg" in content_type
+                ):
+                    assert width is not None
+                    assert height is not None
+                    return Image(
+                        content_type, scale_jpeg_camera_image(image, width, height)
+                    )
+
+                return image
+
+    raise HomeAssistantError("Unable to get image")
+
+
 @bind_hass
 async def async_get_image(
     hass: HomeAssistant,
@@ -150,37 +201,11 @@ async def async_get_image(
 ) -> Image:
     """Fetch an image from a camera entity.
 
-    width and height will be passed to the underlying
-    entity if it is supported.
-
-    There is no guarantee that the image will be the passed
-    width and height as many cameras cannot scale on demand
-
-    Passing the width and height are only helpful in avoiding
-    post processing of the image in the event the camera
-    can scale the image for us and shift the computational
-    load to the device itself.
+    width and height will be passed to the underlying camera.
     """
+    _LOGGER.warning("async_get_image: %s %s %s", entity_id, width, height)
     camera = _get_camera_from_entity_id(hass, entity_id)
-
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        async with async_timeout.timeout(timeout):
-            # Calling inspect will be removed in 2022.1 after all
-            # custom components have had a chance to change their signature
-            sig = inspect.signature(camera.async_camera_image)
-            if "height" in sig.parameters and "width" in sig.parameters:
-                image = await camera.async_camera_image(width=width, height=height)
-            else:
-                _LOGGER.warning(
-                    "The camera entity %s does not support requesting width and height, please open an issue with the integration author.",
-                    entity_id,
-                )
-                image = await camera.async_camera_image()
-
-            if image:
-                return Image(camera.content_type, image)
-
-    raise HomeAssistantError("Unable to get image")
+    return await _async_get_image(camera, timeout, width, height)
 
 
 @bind_hass
@@ -572,23 +597,19 @@ class CameraImageView(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
-        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
-                sig = inspect.signature(camera.async_camera_image)
-                width = request.query.get("width") or 640
-                height = request.query.get("height") or 480
-                if "height" in sig.parameters and "width" in sig.parameters:
-                    image = await camera.async_camera_image(
-                        width=int(width) if width else None,
-                        height=int(height) if height else None,
-                    )
-                else:
-                    image = await camera.async_camera_image()
-
-            if image:
-                return web.Response(body=image, content_type=camera.content_type)
-
-        raise web.HTTPInternalServerError()
+        width = request.query.get("width")
+        height = request.query.get("height")
+        try:
+            image = await _async_get_image(
+                camera,
+                CAMERA_IMAGE_TIMEOUT,
+                int(width) if width else None,
+                int(height) if height else None,
+            )
+        except HomeAssistantError as ex:
+            raise web.HTTPInternalServerError() from ex
+        else:
+            return web.Response(body=image.content, content_type=image.content_type)
 
 
 class CameraMjpegStream(CameraView):

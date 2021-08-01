@@ -11,7 +11,6 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
-from homeassistant.components.camera.img_util import scale_jpeg_camera_image
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
@@ -467,12 +466,8 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def async_get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        return scale_jpeg_camera_image(
-            await self.hass.components.camera.async_get_image(
-                self.entity_id,
-                width=image_size["image-width"],
-                height=image_size["image-height"],
-            ),
-            image_size["image-width"],
-            image_size["image-height"],
+        return await self.hass.components.camera.async_get_image(
+            self.entity_id,
+            width=image_size["image-width"],
+            height=image_size["image-height"],
         )

@@ -21,7 +21,12 @@ def scale_jpeg_camera_image(cam_image: "Image", width: int, height: int) -> byte
     if not turbo_jpeg:
         return cam_image.content
 
-    (current_width, current_height, _, _) = turbo_jpeg.decode_header(cam_image.content)
+    try:
+        (current_width, current_height, _, _) = turbo_jpeg.decode_header(
+            cam_image.content
+        )
+    except OSError:
+        return cam_image.content
 
     if current_width <= width or current_height <= height:
         return cam_image.content
