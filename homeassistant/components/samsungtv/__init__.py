@@ -145,7 +145,7 @@ async def _async_create_bridge_with_updated_data(
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
-    bridge: SamsungTVBridge = _async_get_device_bridge({**entry.data, **updated_data})
+    bridge = _async_get_device_bridge({**entry.data, **updated_data})
 
     mac = entry.data.get(CONF_MAC)
     if not mac and bridge.method == METHOD_WEBSOCKET:
