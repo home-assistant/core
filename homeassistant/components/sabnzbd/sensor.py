@@ -14,23 +14,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = sab_api_data.sensors
     client_name = sab_api_data.name
     async_add_entities(
-        [SabnzbdSensor(sensor, sab_api_data, client_name) for sensor in sensors]
+        [
+            SabnzbdSensor(SENSOR_TYPES[sensor], sab_api_data, client_name)
+            for sensor in sensors
+        ]
     )
 
 
 class SabnzbdSensor(SensorEntity):
     """Representation of an SABnzbd sensor."""
 
-    def __init__(self, sensor_type, sabnzbd_api_data, client_name):
+    _attr_should_poll = False
+
+    def __init__(self, myDescription, sabnzbd_api_data, client_name):
         """Initialize the sensor."""
-        meta_data = SENSOR_TYPES[sensor_type]
-        self._field_name = meta_data.key
+        self.entity_description = myDescription
+        self._field_name = self.entity_description.key
         self._sabnzbd_api = sabnzbd_api_data
         self._attr_state = None
-        self._type = sensor_type
-        self._attr_unit_of_measurement = meta_data.unit_of_measurement
-        self._attr_name = f"{client_name} {meta_data.name}"
-        self._attr_should_poll = False
+        self.entity_description.name = f"{client_name} {self.entity_description.name}"
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -44,9 +46,9 @@ class SabnzbdSensor(SensorEntity):
         """Get the latest data and updates the states."""
         new_state = self._sabnzbd_api.get_queue_field(self._field_name)
 
-        if self._type == "speed":
+        if self.entity_description.key == "speed":
             self._attr_state = round(float(new_state) / 1024, 1)
-        elif "size" in self._type:
+        elif "size" in self.entity_description.key:
             self._attr_state = round(float(new_state), 2)
         else:
             self._attr_state = new_state
