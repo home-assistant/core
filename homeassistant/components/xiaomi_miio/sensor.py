@@ -48,6 +48,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
 )
@@ -224,7 +225,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_SENSORS_MJJSQ
-        elif model.startswith("zhimi.humidifier."):
+        elif model in MODELS_HUMIDIFIER_MIIO:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_SENSORS
         else:
