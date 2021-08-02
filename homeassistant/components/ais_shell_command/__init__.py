@@ -514,7 +514,7 @@ async def _restart_pm2_service(hass, call):
         )
     elif service == "zigbee":
         cmd_to_run = (
-            "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+            "pm2 restart zigbee || cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt; pm2 start index.js "
             "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
         )
     await _run(cmd_to_run)

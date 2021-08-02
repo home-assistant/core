@@ -179,7 +179,7 @@ async def prepare_usb_device(hass, device_info):
                 if device_info["id"] == G_CONBEE_ID:
                     G_CONBEE_STARTED = True
                 cmd_to_run = (
-                    "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+                    "pm2 restart zigbee || cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt; pm2 start index.js "
                     "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
                 )
                 await _run(hass, cmd_to_run)
