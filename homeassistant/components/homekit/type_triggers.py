@@ -60,8 +60,8 @@ class DeviceTriggerAccessory(HomeAccessory):
         if "trigger" in run_variables and "description" in run_variables["trigger"]:
             reason = f' by {run_variables["trigger"]["description"]}'
         _LOGGER.debug("Button triggered%s - %s", reason, run_variables)
-        id = run_variables["trigger"]["id"]
-        self._triggers[id].set_value(0)
+        idx = int(run_variables["trigger"]["idx"])
+        self._triggers[idx].set_value(0)
 
     # Attach the trigger using the helper in async run
     # and detach it in async stop
