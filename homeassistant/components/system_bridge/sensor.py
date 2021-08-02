@@ -292,7 +292,7 @@ class BridgeGpuMemoryFreeSensor(BridgeSensor):
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
-            round(bridge.graphics.controllers[self._index].memoryFree / 1000 ** 3, 2)
+            round(bridge.graphics.controllers[self._index].memoryFree / 10 ** 3, 2)
             if bridge.graphics.controllers[self._index].memoryFree is not None
             else None
         )
@@ -326,7 +326,7 @@ class BridgeGpuMemoryUsedSensor(BridgeSensor):
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
-            round(bridge.graphics.controllers[self._index].memoryUsed / 1000 ** 3, 2)
+            round(bridge.graphics.controllers[self._index].memoryUsed / 10 ** 3, 2)
             if bridge.graphics.controllers[self._index].memoryUsed is not None
             else None
         )
