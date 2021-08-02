@@ -109,7 +109,7 @@ async def async_get_device_automation_platform(
 
 
 async def _async_get_device_automations_from_domain(
-    hass, domain, automation_type, device_ids
+    hass, domain, automation_type, device_ids, return_exceptions
 ):
     """List device automations."""
     try:
@@ -126,7 +126,7 @@ async def _async_get_device_automations_from_domain(
             getattr(platform, function_name)(hass, device_id)
             for device_id in device_ids
         ),
-        return_exceptions=True,
+        return_exceptions=return_exceptions,
     )
 
 
@@ -156,12 +156,17 @@ async def _async_get_device_automations(
         for domain in device_entities_domains.get(device_id, []):
             domain_devices.setdefault(domain, set()).add(device_id)
 
+    # If specific device ids were requested, we allow
+    # InvalidDeviceAutomationConfig to be thrown, otherwise we skip
+    # devices that do not have valid triggers
+    return_exceptions = not bool(device_ids)
+
     for domain_results in await asyncio.gather(
         *(
             _async_get_device_automations_from_domain(
-                hass, domain, automation_type, device_ids
+                hass, domain, automation_type, domain_device_ids, return_exceptions
             )
-            for domain, device_ids in domain_devices.items()
+            for domain, domain_device_ids in domain_devices.items()
         )
     ):
         for device_results in domain_results:
