@@ -153,7 +153,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.somfy.*",
     "homeassistant.components.somfy_mylink.*",
     "homeassistant.components.sonarr.*",
-    "homeassistant.components.songpal.*",
     "homeassistant.components.sonos.*",
     "homeassistant.components.spotify.*",
     "homeassistant.components.stt.*",
