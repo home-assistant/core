@@ -1,10 +1,11 @@
-"""Config flow for Legrand RFLC."""
+"""Config flow for Legrand RFLC integration."""
+
+from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 import logging
 import socket
-from typing import Final, Optional
+from typing import Any, Final
 
 import lc7001.aio
 import voluptuous
@@ -26,7 +27,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """ConfigFlow for this integration."""
+    """ConfigFlow for Legrand RFLC integration."""
 
     VERSION = 1
 
@@ -59,13 +60,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             resolutions = await asyncio.get_event_loop().getaddrinfo(self.HOST, None)
         except OSError as error:
-            _LOGGER.warning("getaddrinfo %s error %s", self.HOST, error)
+            _LOGGER.warning("OS getaddrinfo %s error %s", self.HOST, error)
             return self.async_abort(reason=self.ABORT_NO_DEVICES_FOUND)
         address = discovery_info[IP_ADDRESS]
         if any(
             resolution[4][0] == address
             for resolution in resolutions
-            if resolution[0] == socket.AddressFamily.AF_INET
+            if resolution[0] == socket.AF_INET
         ):
             await self._async_handle_discovery_without_unique_id()
             # wait for user interaction in the next step
@@ -74,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=self.ABORT_NO_DEVICES_FOUND)
 
     async def async_step_user(
-        self, user_input: Optional[Mapping] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
@@ -119,13 +120,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Optional[Mapping] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle configuration by reauth."""
         host = self.context["unique_id"]
         errors = {CONF_PASSWORD: self.ERROR_INVALID_AUTH}
         if user_input is not None:
-            key: Optional[bytes] = None
+            key: bytes | None = None
             kwargs = {"key": key, "loop_timeout": -1}
             if CONF_AUTHENTICATION in user_input:
                 key = kwargs["key"] = bytes.fromhex(user_input[CONF_AUTHENTICATION])

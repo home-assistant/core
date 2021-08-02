@@ -1,7 +1,7 @@
 """The Legrand RFLC integration light platform."""
 
 from collections.abc import Mapping
-from typing import Any, Dict, Final
+from typing import Final
 
 from homeassistant import config_entries
 from homeassistant.components.light import (
@@ -118,7 +118,7 @@ class _Dimmer(_Switch):
         async def handle(message: Mapping) -> None:
             hub.StatusError(message).raise_if()
 
-        properties: Dict[str, Any] = {"power": power}
+        properties: dict = {"power": power}
         if ATTR_BRIGHTNESS in kwargs:
             brightness = self._from_ha(kwargs[ATTR_BRIGHTNESS])
             properties["power_level"] = brightness
