@@ -8,6 +8,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DOMAIN
+from .data import async_get_manager
+
+
+async def is_configured(hass: HomeAssistant) -> bool:
+    """Return a boolean to indicate if energy is configured."""
+    manager = await async_get_manager(hass)
+    return bool(manager.data != manager.default_preferences())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
