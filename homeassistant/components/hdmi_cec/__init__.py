@@ -380,26 +380,23 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
-        self._attr_icon = (
-            ICONS_BY_TYPE.get(self._device.type)
-            if self._device.type in ICONS_BY_TYPE
-            else ICON_UNKNOWN
-        )
+        if self._device.type in ICONS_BY_TYPE:
+            self._attr_icon = ICONS_BY_TYPE.get(self._device.type)
+        else:
+            self._attr_icon = ICON_UNKNOWN
 
     def _set_attr_name(self):
         """Set name."""
-        self._attr_name = (
-            f"{self.vendor_name} {self._device.osd_name}"
-            if (
-                self._device.osd_name is not None
-                and self.vendor_name is not None
-                and self.vendor_name != "Unknown"
-            )
-            else "%s %d" % (self._device.type_name, self._logical_address)
-            if self._device.osd_name is None
-            else "%s %d (%s)"
-            % (self._device.type_name, self._logical_address, self._device.osd_name)
-        )
+        if (
+            self._device.osd_name is not None
+            and self.vendor_name is not None
+            and self.vendor_name != "Unknown"
+        ):
+            self._attr_name = f"{self.vendor_name} {self._device.osd_name}"
+        elif self._device.osd_name is None:
+            self._attr_name = f"{self._device.type_name} {self._logical_address}"
+        else:
+            self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
 
     def _hdmi_cec_unavailable(self, callback_event):
         # Change state to unavailable. Without this, entity would remain in
