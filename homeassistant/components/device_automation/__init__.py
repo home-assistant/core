@@ -122,7 +122,11 @@ async def _async_get_device_automations_from_domain(
     function_name = TYPES[automation_type][1]
 
     return await asyncio.gather(
-        *(getattr(platform, function_name)(hass, device_id) for device_id in device_ids)
+        *(
+            getattr(platform, function_name)(hass, device_id)
+            for device_id in device_ids
+        ),
+        return_exceptions=True,
     )
 
 
@@ -164,7 +168,8 @@ async def _async_get_device_automations(
             if device_results is None:
                 continue
             for automation in device_results:
-                combined_results[automation["device_id"]].append(automation)
+                if not isinstance(automation, InvalidDeviceAutomationConfig):
+                    combined_results[automation["device_id"]].append(automation)
 
     return combined_results
 
