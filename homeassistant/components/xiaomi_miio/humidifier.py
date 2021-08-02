@@ -405,12 +405,11 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
     def target_humidity(self):
         """Return the target humidity."""
         if self._state:
-            return (
-                self._target_humidity
-                if AirhumidifierMjjsqOperationMode(self._mode)
+            if (
+                AirhumidifierMjjsqOperationMode(self._mode)
                 == AirhumidifierMjjsqOperationMode.Humidity
-                else None
-            )
+            ):
+                return self._target_humidity
         return None
 
     async def async_set_humidity(self, humidity: int) -> None:
