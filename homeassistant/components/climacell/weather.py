@@ -248,7 +248,10 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         """Return the wind speed."""
         if self.hass.config.units.is_metric and self._wind_speed:
             return round(
-                speed_convert(self._wind_speed, LENGTH_MILES, LENGTH_KILOMETERS), 4
+                speed_convert(
+                    self._wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
+                ),
+                4,
             )
         return self._wind_speed
 
