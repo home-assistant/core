@@ -8,7 +8,7 @@ from aiohttp import web
 from pyhap.const import STANDALONE_AID
 import voluptuous as vol
 
-from homeassistant.components import network, zeroconf
+from homeassistant.components import device_automation, network, zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_MOTION,
@@ -99,6 +99,7 @@ from .const import (
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
 )
+from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
     dismiss_setup_message,
@@ -278,6 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
+    devices = options.get(CONF_DEVICES, [])
 
     homekit = HomeKit(
         hass,
@@ -291,6 +293,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         advertise_ip,
         entry.entry_id,
         entry.title,
+        devices=devices,
     )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -493,6 +496,7 @@ class HomeKit:
         advertise_ip=None,
         entry_id=None,
         entry_title=None,
+        devices=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -506,6 +510,7 @@ class HomeKit:
         self._entry_id = entry_id
         self._entry_title = entry_title
         self._homekit_mode = homekit_mode
+        self._devices = devices or []
         self.aid_storage = None
         self.status = STATUS_READY
 
@@ -636,6 +641,31 @@ class HomeKit:
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
         return None
+
+    def add_bridge_triggers_accessory(self, device_id, name, device_triggers):
+        """Try trigger accessory to th ebridge."""
+        # The bridge itself counts as an accessory
+        if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
+            _LOGGER.warning(
+                "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
+                name,
+                MAX_DEVICES,
+            )
+            return
+
+        aid = self.aid_storage.get_or_allocate_aid(device_id, device_id)
+        # If an accessory cannot be created or added due to an exception
+        # of any kind (usually in pyhap) it should not prevent
+        # the rest of the accessories from being created
+        try:
+            acc = DeviceTriggerAccessory(
+                self.hass, self.driver, name, None, aid, {}, device_triggers
+            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failed to create a HomeKit accessory for %s", device_id)
+            return
+
+        self.bridge.add_accessory(acc)
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
@@ -783,12 +813,25 @@ class HomeKit:
             )
         return acc
 
-    @callback
-    def _async_create_bridge_accessory(self, entity_states):
+    async def _async_create_bridge_accessory(self, entity_states):
         """Create a HomeKit bridge with accessories. (bridge mode)."""
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         for state in entity_states:
             self.add_bridge_accessory(state)
+        dev_reg = device_registry.async_get(self.hass)
+        triggers = await device_automation.async_get_device_automations(
+            self.hass, "trigger", self._devices
+        )
+        for device_id, device_triggers in triggers:
+            device = dev_reg.async_get(device_id)
+            if not device:
+                _LOGGER.warning(
+                    "HomeKit %s cannot add device %s because it is missing from the device registry.",
+                    self._name,
+                    device_id,
+                )
+                continue
+            self.add_bridge_triggers_accessory(device_id, device.name, device_triggers)
         return self.bridge
 
     async def _async_create_accessories(self):
@@ -797,7 +840,7 @@ class HomeKit:
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
             acc = self._async_create_single_accessory(entity_states)
         else:
-            acc = self._async_create_bridge_accessory(entity_states)
+            acc = await self._async_create_bridge_accessory(entity_states)
 
         if acc is None:
             return False

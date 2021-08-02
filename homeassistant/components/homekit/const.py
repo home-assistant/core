@@ -1,5 +1,7 @@
 """Constants used be the HomeKit component."""
 
+from homeassistant.const import CONF_DEVICES
+
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
@@ -295,4 +297,5 @@ CONFIG_OPTIONS = [
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
+    CONF_DEVICES,
 ]
