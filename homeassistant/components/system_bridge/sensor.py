@@ -47,48 +47,48 @@ async def async_setup_entry(
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        BridgeBiosVersionSensor(coordinator),
-        BridgeCpuSpeedSensor(coordinator),
-        BridgeCpuTemperatureSensor(coordinator),
-        BridgeCpuVoltageSensor(coordinator),
+        SystemBridgeBiosVersionSensor(coordinator),
+        SystemBridgeCpuSpeedSensor(coordinator),
+        SystemBridgeCpuTemperatureSensor(coordinator),
+        SystemBridgeCpuVoltageSensor(coordinator),
         *(
             SystemBridgeFilesystemSensor(coordinator, key)
             for key, _ in coordinator.data.filesystem.fsSize.items()
         ),
-        BridgeKernelSensor(coordinator),
-        BridgeMemoryFreeSensor(coordinator),
-        BridgeMemoryUsedPercentageSensor(coordinator),
-        BridgeMemoryUsedSensor(coordinator),
-        BridgeOsSensor(coordinator),
-        BridgeProcessesLoadSensor(coordinator),
-        BridgeVersionSensor(coordinator),
+        SystemBridgeKernelSensor(coordinator),
+        SystemBridgeMemoryFreeSensor(coordinator),
+        SystemBridgeMemoryUsedPercentageSensor(coordinator),
+        SystemBridgeMemoryUsedSensor(coordinator),
+        SystemBridgeOsSensor(coordinator),
+        SystemBridgeProcessesLoadSensor(coordinator),
+        SystemBridgeVersionSensor(coordinator),
     ]
 
-    if bridge.battery.hasBattery:
+    if coordinator.data.battery.hasBattery:
         entities = [
             *entities,
-            BridgeBatterySensor(coordinator),
-            BridgeBatteryTimeRemainingSensor(coordinator),
+            SystemBridgeBatterySensor(coordinator),
+            SystemBridgeBatteryTimeRemainingSensor(coordinator),
         ]
 
-    for index, _ in enumerate(bridge.graphics.controllers):
+    for index, _ in enumerate(coordinator.data.graphics.controllers):
         # Remove vendor from name
         name = (
-            bridge.graphics.controllers[index]
-            .name.replace(bridge.graphics.controllers[index].vendor, "")
+            coordinator.data.graphics.controllers[index]
+            .name.replace(coordinator.data.graphics.controllers[index].vendor, "")
             .strip()
         )
         entities = [
             *entities,
-            BridgeGpuCoreClockSpeedSensor(coordinator, bridge, index, name),
-            BridgeGpuFanSpeedSensor(coordinator, bridge, index, name),
-            BridgeGpuMemoryClockSpeedSensor(coordinator, bridge, index, name),
-            BridgeGpuMemoryFreeSensor(coordinator, bridge, index, name),
-            BridgeGpuMemoryUsedPercentageSensor(coordinator, bridge, index, name),
-            BridgeGpuMemoryUsedSensor(coordinator, bridge, index, name),
-            BridgeGpuPowerUsageSensor(coordinator, bridge, index, name),
-            BridgeGpuTemperatureSensor(coordinator, bridge, index, name),
-            BridgeGpuUsagePercentageSensor(coordinator, bridge, index, name),
+            SystemBridgeGpuCoreClockSpeedSensor(coordinator, index, name),
+            SystemBridgeGpuFanSpeedSensor(coordinator, index, name),
+            SystemBridgeGpuMemoryClockSpeedSensor(coordinator, index, name),
+            SystemBridgeGpuMemoryFreeSensor(coordinator, index, name),
+            SystemBridgeGpuMemoryUsedPercentageSensor(coordinator, index, name),
+            SystemBridgeGpuMemoryUsedSensor(coordinator, index, name),
+            SystemBridgeGpuPowerUsageSensor(coordinator, index, name),
+            SystemBridgeGpuTemperatureSensor(coordinator, index, name),
+            SystemBridgeGpuUsagePercentageSensor(coordinator, index, name),
         ]
 
     async_add_entities(entities)
@@ -279,16 +279,15 @@ class SystemBridgeFilesystemSensor(SystemBridgeSensor):
         }
 
 
-class BridgeGpuMemoryFreeSensor(BridgeSensor):
+class SystemBridgeGpuMemoryFreeSensor(SystemBridgeSensor):
     """Defines a GPU memory free sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_memory_free",
             f"{name} Memory Free",
             "mdi:memory",
@@ -309,16 +308,15 @@ class BridgeGpuMemoryFreeSensor(BridgeSensor):
         )
 
 
-class BridgeGpuMemoryUsedSensor(BridgeSensor):
+class SystemBridgeGpuMemoryUsedSensor(SystemBridgeSensor):
     """Defines a GPU memory used sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_memory_used",
             f"{name} Memory Used",
             "mdi:memory",
@@ -339,16 +337,15 @@ class BridgeGpuMemoryUsedSensor(BridgeSensor):
         )
 
 
-class BridgeGpuMemoryUsedPercentageSensor(BridgeSensor):
+class SystemBridgeGpuMemoryUsedPercentageSensor(SystemBridgeSensor):
     """Defines a GPU memory used percentage sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_memory_used_percentage",
             f"{name} Memory Used %",
             "mdi:memory",
@@ -377,16 +374,15 @@ class BridgeGpuMemoryUsedPercentageSensor(BridgeSensor):
         )
 
 
-class BridgeGpuUsagePercentageSensor(BridgeSensor):
+class SystemBridgeGpuUsagePercentageSensor(SystemBridgeSensor):
     """Defines a GPU usage percentage sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_usage_percentage",
             f"{name} Usage %",
             "mdi:percent",
@@ -407,16 +403,15 @@ class BridgeGpuUsagePercentageSensor(BridgeSensor):
         )
 
 
-class BridgeGpuCoreClockSpeedSensor(BridgeSensor):
+class SystemBridgeGpuCoreClockSpeedSensor(SystemBridgeSensor):
     """Defines a GPU core clock speed sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_core_clock_speed",
             f"{name} Clock Speed",
             "mdi:speedometer",
@@ -437,16 +432,15 @@ class BridgeGpuCoreClockSpeedSensor(BridgeSensor):
         )
 
 
-class BridgeGpuMemoryClockSpeedSensor(BridgeSensor):
+class SystemBridgeGpuMemoryClockSpeedSensor(SystemBridgeSensor):
     """Defines a GPU memory clock speed sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_memory_clock_speed",
             f"{name} Memory Clock Speed",
             "mdi:speedometer",
@@ -467,16 +461,15 @@ class BridgeGpuMemoryClockSpeedSensor(BridgeSensor):
         )
 
 
-class BridgeGpuTemperatureSensor(BridgeSensor):
+class SystemBridgeGpuTemperatureSensor(SystemBridgeSensor):
     """Defines a GPU temperature sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_temperature",
             f"{name} Temperature",
             None,
@@ -497,16 +490,15 @@ class BridgeGpuTemperatureSensor(BridgeSensor):
         )
 
 
-class BridgeGpuFanSpeedSensor(BridgeSensor):
+class SystemBridgeGpuFanSpeedSensor(SystemBridgeSensor):
     """Defines a GPU fan speed sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_fan_speed",
             f"{name} Fan Speed",
             "mdi:fan",
@@ -527,16 +519,15 @@ class BridgeGpuFanSpeedSensor(BridgeSensor):
         )
 
 
-class BridgeGpuPowerUsageSensor(BridgeSensor):
+class SystemBridgeGpuPowerUsageSensor(SystemBridgeSensor):
     """Defines a GPU power usage sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             f"gpu_{index}_power_usage",
             f"{name} Power Usage",
             None,
@@ -557,7 +548,7 @@ class BridgeGpuPowerUsageSensor(BridgeSensor):
         )
 
 
-class BridgeMemoryFreeSensor(BridgeSensor):
+class SystemBridgeMemoryFreeSensor(SystemBridgeSensor):
     """Defines a memory free sensor."""
 
     def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
@@ -742,14 +733,13 @@ class SystemBridgeBiosVersionSensor(SystemBridgeSensor):
         return bridge.system.bios.version
 
 
-class BridgeVersionSensor(BridgeSensor):
+class SystemBridgeVersionSensor(SystemBridgeSensor):
     """Defines a version sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator: Bridge) -> None:
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
-            bridge,
             "version",
             "Version",
             "mdi:counter",
