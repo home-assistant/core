@@ -69,11 +69,18 @@ async def async_setup_entry(
         ]
 
     for index in range(len(bridge.graphics.controllers)):
+        # Remove vendor from name
+        name = (
+            bridge.graphics.controllers[index]
+            .name.replace(bridge.graphics.controllers[index].vendor, "")
+            .strip()
+        )
         entities = [
             *entities,
-            BridgeGpuMemoryFreeSensor(coordinator, index),
-            BridgeGpuMemoryUsedPercentageSensor(coordinator, index),
-            BridgeGpuMemoryUsedSensor(coordinator, index),
+            BridgeGpuMemoryFreeSensor(coordinator, index, name),
+            BridgeGpuMemoryUsedPercentageSensor(coordinator, index, name),
+            BridgeGpuMemoryUsedSensor(coordinator, index, name),
+            BridgeGpuUsagePercentageSensor(coordinator, index, name),
         ]
 
     async_add_entities(entities)
@@ -268,13 +275,9 @@ class BridgeGpuMemoryFreeSensor(BridgeSensor):
     """Defines a GPU memory free sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator: Bridge, index: int
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
-        # Remove vendor from name
-        name = bridge.graphics.controllers[index].name.replace(
-            bridge.graphics.controllers[index].vendor, ""
-        )
         super().__init__(
             coordinator,
             bridge,
@@ -302,13 +305,9 @@ class BridgeGpuMemoryUsedSensor(BridgeSensor):
     """Defines a GPU memory used sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator: Bridge, index: int
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
-        # Remove vendor from name
-        name = bridge.graphics.controllers[index].name.replace(
-            bridge.graphics.controllers[index].vendor, ""
-        )
         super().__init__(
             coordinator,
             bridge,
@@ -336,13 +335,9 @@ class BridgeGpuMemoryUsedPercentageSensor(BridgeSensor):
     """Defines a GPU memory used percentage sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator: Bridge, index: int
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
     ) -> None:
         """Initialize System Bridge sensor."""
-        # Remove vendor from name
-        name = bridge.graphics.controllers[index].name.replace(
-            bridge.graphics.controllers[index].vendor, ""
-        )
         super().__init__(
             coordinator,
             bridge,
@@ -370,6 +365,36 @@ class BridgeGpuMemoryUsedPercentageSensor(BridgeSensor):
             )
             if bridge.graphics.controllers[self._index].memoryUsed is not None
             and bridge.graphics.controllers[self._index].memoryTotal is not None
+            else None
+        )
+
+
+class BridgeGpuUsagePercentageSensor(BridgeSensor):
+    """Defines a GPU usage percentage sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+    ) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            f"gpu_{index}_usage_percentage",
+            f"{name} Usage %",
+            "mdi:percent",
+            None,
+            PERCENTAGE,
+            True,
+        )
+        self._index = index
+
+    @property
+    def state(self) -> str | None:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            bridge.graphics.controllers[self._index].utilizationGpu
+            if bridge.graphics.controllers[self._index].utilizationGpu is not None
             else None
         )
 
