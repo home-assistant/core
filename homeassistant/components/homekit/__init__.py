@@ -643,33 +643,47 @@ class HomeKit:
             )
         return None
 
-    def add_bridge_triggers_accessory(self, device_id, name, device_triggers):
+    def add_bridge_triggers_accessory(self, device, device_triggers):
         """Try trigger accessory to th ebridge."""
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
                 "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
-                name,
+                device.name,
                 MAX_DEVICES,
             )
             return
 
-        aid = self.aid_storage.get_or_allocate_aid(device_id, device_id)
+        aid = self.aid_storage.get_or_allocate_aid(device.id, device.id)
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
+        config = {}
+        if device.manufacturer:
+            config[ATTR_MANUFACTURER] = device.manufacturer
+        if device.model:
+            config[ATTR_MODEL] = device.model
+        if device.config_entries:
+            first_entry = list(device.config_entries)[0]
+            if entry := self.hass.config_entries.async_get_entry(first_entry):
+                config[ATTR_INTEGRATION] = entry.domain
+
         try:
             acc = DeviceTriggerAccessory(
                 self.hass,
                 self.driver,
-                name,
-                None,
+                device.name,
+                device.id,
                 aid,
-                {},
+                config,
                 device_triggers=device_triggers,
             )
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to create a HomeKit accessory for %s", device_id)
+            _LOGGER.exception(
+                "Failed to create a HomeKit accessory for %s (%s)",
+                device.name,
+                device.id,
+            )
             return
 
         self.bridge.add_accessory(acc)
@@ -838,7 +852,7 @@ class HomeKit:
                     device_id,
                 )
                 continue
-            self.add_bridge_triggers_accessory(device_id, device.name, device_triggers)
+            self.add_bridge_triggers_accessory(device, device_triggers)
         return self.bridge
 
     async def _async_create_accessories(self):
