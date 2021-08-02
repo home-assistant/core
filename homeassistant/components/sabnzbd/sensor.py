@@ -31,7 +31,6 @@ class SabnzbdSensor(SensorEntity):
         self.entity_description = myDescription
         self._field_name = self.entity_description.key
         self._sabnzbd_api = sabnzbd_api_data
-        self._attr_state = None
         self.entity_description.name = f"{client_name} {self.entity_description.name}"
 
     async def async_added_to_hass(self):
@@ -48,7 +47,14 @@ class SabnzbdSensor(SensorEntity):
 
         if self.entity_description.key == "kbpersec":
             self._attr_state = round(float(new_state) / 1024, 1)
-        elif self.entity_description.key in ("mb", "diskspacetotal1", "day_size", "week_size", "month_size", "total_size"):
+        elif self.entity_description.key in (
+            "mb",
+            "diskspacetotal1",
+            "day_size",
+            "week_size",
+            "month_size",
+            "total_size",
+        ):
             self._attr_state = round(float(new_state), 2)
         else:
             self._attr_state = new_state
