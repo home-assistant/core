@@ -15,6 +15,9 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
 )
 from homeassistant.components.api import ATTR_UUID
+from homeassistant.components.energy.data import (
+    async_get_manager as async_get_energy_manager,
+)
 from homeassistant.const import ATTR_DOMAIN
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -424,3 +427,72 @@ async def test_nightly_endpoint(hass, aioclient_mock):
 
     payload = aioclient_mock.mock_calls[0]
     assert str(payload[1]) == ANALYTICS_ENDPOINT_URL
+
+
+async def test_send_with_no_energy(hass, aioclient_mock):
+    """Test send base prefrences are defined."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ):
+        hex.return_value = MOCK_UUID
+        await analytics.send_analytics()
+
+    postdata = aioclient_mock.mock_calls[-1][2]
+
+    assert "energy" not in postdata
+
+
+async def test_send_with_no_energy_config(hass, aioclient_mock):
+    """Test send base prefrences are defined."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+    assert await async_setup_component(
+        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
+    )
+    manager = await async_get_energy_manager(hass)
+    manager.data = manager.default_preferences()
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ):
+        hex.return_value = MOCK_UUID
+        await analytics.send_analytics()
+
+    postdata = aioclient_mock.mock_calls[-1][2]
+
+    assert not postdata["energy"]["configured"]
+
+
+async def test_send_with_energy_config(hass, aioclient_mock):
+    """Test send base prefrences are defined."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+    assert await async_setup_component(
+        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
+    )
+    manager = await async_get_energy_manager(hass)
+    manager.data = manager.default_preferences()
+    await manager.async_update(
+        {
+            "energy_sources": [{}],
+        }
+    )
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ):
+        hex.return_value = MOCK_UUID
+        await analytics.send_analytics()
+
+    postdata = aioclient_mock.mock_calls[-1][2]
+
+    assert postdata["energy"]["configured"]
