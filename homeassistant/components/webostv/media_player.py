@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 
-from aiopylgtv import PyLGTVPairException, WebOsClient
+from aiopylgtv import PyLGTVPairException
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -20,6 +20,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -33,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from . import WebOsClientWrapper
 from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
@@ -76,16 +78,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     unique_id = config_entry.unique_id
     name = config_entry.title
     sources = config_entry.options.get(CONF_SOURCES)
-    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
 
-    async_add_entities([LgWebOSMediaPlayerEntity(client, name, sources, unique_id)])
+    async_add_entities([LgWebOSMediaPlayerEntity(wrapper, name, sources, unique_id)])
 
 
 def cmd(func):
     """Catch command exceptions."""
 
     @wraps(func)
-    async def wrapper(obj, *args, **kwargs):
+    async def cmd_wrapper(obj, *args, **kwargs):
         """Wrap all command methods."""
         try:
             await func(obj, *args, **kwargs)
@@ -103,15 +105,18 @@ def cmd(func):
                 exc,
             )
 
-    return wrapper
+    return cmd_wrapper
 
 
 class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
-    def __init__(self, client: WebOsClient, name: str, sources, unique_id):
+    def __init__(
+        self, wrapper: WebOsClientWrapper, name: str, sources, unique_id
+    ) -> None:
         """Initialize the webos device."""
-        self._client = client
+        self._wrapper = wrapper
+        self._client = wrapper.client
         self._name = name
         self._unique_id = unique_id
         self._sources = sources
@@ -297,6 +302,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
 
+        if self._wrapper.turn_on:
+            supported |= SUPPORT_TURN_ON
+
         return supported
 
     @property
@@ -333,6 +341,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     async def async_turn_off(self):
         """Turn off media player."""
         await self._client.power_off()
+
+    async def async_turn_on(self):
+        """Turn on media player."""
+        self._wrapper.turn_on.async_run(self.hass, self._context)
 
     @cmd
     async def async_volume_up(self):

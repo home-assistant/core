@@ -3,6 +3,14 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.common import async_mock_service
+
+
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
+
 
 @pytest.fixture(name="client")
 def client_fixture():
