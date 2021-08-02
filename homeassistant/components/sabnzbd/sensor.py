@@ -48,7 +48,7 @@ class SabnzbdSensor(SensorEntity):
 
         if self.entity_description.key == "kbpersec":
             self._attr_state = round(float(new_state) / 1024, 1)
-        elif "size" in self.entity_description.key:
+        elif self.entity_description.key in ("mb", "diskspacetotal1", "day_size", "week_size", "month_size", "total_size"):
             self._attr_state = round(float(new_state), 2)
         else:
             self._attr_state = new_state
