@@ -30,6 +30,8 @@ class DeviceTriggerAccessory(HomeAccessory):
         self._triggers = []
         for idx, trigger in enumerate(device_triggers):
             _LOGGER.warning("Set up up trigger: %s", trigger)
+            type_ = trigger.get("type")
+            subtype = trigger.get("subtype")
             serv_service_label = self.add_preload_service(
                 SERV_SERVICE_LABEL, [CHAR_NAME]
             )
@@ -46,8 +48,6 @@ class DeviceTriggerAccessory(HomeAccessory):
                     valid_values={"Press": 0},
                 )
             )
-            type_ = trigger.get("type")
-            subtype = trigger.get("subtype")
             serv_stateless_switch.configure_char(CHAR_NAME, value=f"{type_} {subtype}")
             serv_stateless_switch.configure_char(CHAR_SERVICE_LABEL_INDEX, value=idx)
 
