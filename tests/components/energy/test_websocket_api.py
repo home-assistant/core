@@ -34,6 +34,8 @@ async def test_get_preferences_default(hass, hass_ws_client, hass_storage) -> No
     manager.data = data.EnergyManager.default_preferences()
     client = await hass_ws_client(hass)
 
+    assert not await data.is_configured(hass)
+
     await client.send_json({"id": 5, "type": "energy/get_prefs"})
 
     msg = await client.receive_json()
@@ -118,6 +120,8 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
     await flush_store((await data.async_get_manager(hass))._store)
 
     assert hass_storage[data.STORAGE_KEY]["data"] == new_prefs
+
+    assert await data.is_configured(hass)
 
     # Verify info reflects data.
     await client.send_json({"id": 7, "type": "energy/info"})

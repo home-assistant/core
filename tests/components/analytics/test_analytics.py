@@ -15,9 +15,6 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
 )
 from homeassistant.components.api import ATTR_UUID
-from homeassistant.components.energy.data import (
-    async_get_manager as async_get_energy_manager,
-)
 from homeassistant.const import ATTR_DOMAIN
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -438,7 +435,10 @@ async def test_send_with_no_energy(hass, aioclient_mock):
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
-    ):
+    ), patch(
+        "homeassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
+    ) as energy_is_configured:
+        energy_is_configured.return_value = False
         hex.return_value = MOCK_UUID
         await analytics.send_analytics()
 
@@ -456,12 +456,13 @@ async def test_send_with_no_energy_config(hass, aioclient_mock):
     assert await async_setup_component(
         hass, "energy", {"recorder": {"db_url": "sqlite://"}}
     )
-    manager = await async_get_energy_manager(hass)
-    manager.data = manager.default_preferences()
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
-    ):
+    ), patch(
+        "homeassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
+    ) as energy_is_configured:
+        energy_is_configured.return_value = False
         hex.return_value = MOCK_UUID
         await analytics.send_analytics()
 
@@ -479,17 +480,13 @@ async def test_send_with_energy_config(hass, aioclient_mock):
     assert await async_setup_component(
         hass, "energy", {"recorder": {"db_url": "sqlite://"}}
     )
-    manager = await async_get_energy_manager(hass)
-    manager.data = manager.default_preferences()
-    await manager.async_update(
-        {
-            "energy_sources": [{}],
-        }
-    )
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
-    ):
+    ), patch(
+        "homeassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
+    ) as energy_is_configured:
+        energy_is_configured.return_value = True
         hex.return_value = MOCK_UUID
         await analytics.send_analytics()
 

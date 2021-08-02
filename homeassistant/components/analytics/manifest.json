@@ -8,7 +8,9 @@
   ],
   "dependencies": [
     "api",
-    "websocket_api",
+    "websocket_api"
+  ],
+  "after_dependencies": [
     "energy"
   ],
   "quality_scale": "internal",
