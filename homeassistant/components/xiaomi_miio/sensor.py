@@ -149,19 +149,19 @@ SENSOR_TYPES = (
     ),
 )
 
-HUMIDIFIER_SENSORS = {
+HUMIDIFIER_MIIO_SENSORS = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
 }
 
-HUMIDIFIER_SENSORS_MIOT = {
+HUMIDIFIER_MIOT_SENSORS = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
     ATTR_WATER_LEVEL: "water_level",
     ATTR_ACTUAL_MOTOR_SPEED: "actual_speed",
 }
 
-HUMIDIFIER_SENSORS_MJJSQ = {
+HUMIDIFIER_MJJSQ_SENSORS = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
 }
@@ -221,13 +221,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors = []
         if model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            sensors = HUMIDIFIER_SENSORS_MIOT
+            sensors = HUMIDIFIER_MIOT_SENSORS
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            sensors = HUMIDIFIER_SENSORS_MJJSQ
+            sensors = HUMIDIFIER_MJJSQ_SENSORS
         elif model in MODELS_HUMIDIFIER_MIIO:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            sensors = HUMIDIFIER_SENSORS
+            sensors = HUMIDIFIER_MIIO_SENSORS
         else:
             unique_id = config_entry.unique_id
             name = config_entry.title
