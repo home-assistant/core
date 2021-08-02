@@ -35,7 +35,7 @@ class _Switch(LightEntity):
 
     @property
     def unique_id(self) -> str:
-        return f"{self._hub._host}:{self._zid}"
+        return f"{self._hub.host()}:{self._zid}"
 
     @property
     def available(self) -> bool:

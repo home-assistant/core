@@ -3,7 +3,7 @@
   "name": "Legrand RF Lighting Control",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/legrand_rflc",
-  "requirements": ["lc7001==1.0.2"],
+  "requirements": ["lc7001==1.0.3"],
   "dependencies": [],
   "codeowners": ["@rtyle"],
   "iot_class": "local_push",
