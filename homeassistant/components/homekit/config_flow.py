@@ -9,6 +9,7 @@ import string
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import device_automation
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -34,6 +36,7 @@ from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_AUTO_START,
+    CONF_DEVICES,
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
@@ -412,6 +415,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     self.included_cameras = set()
 
             self.hk_options[CONF_FILTER] = entity_filter
+            self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
             if self.included_cameras:
                 return await self.async_step_cameras()
@@ -441,6 +445,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema[vol.Optional(CONF_ENTITIES, default=entities)] = entity_schema(
             all_supported_entities
+        )
+
+        all_supported_devices = await _async_get_supported_devices(self.hass)
+        devices = self.hk_options.get(CONF_DEVICES, [])
+        data_schema[vol.Options(CONF_DEVICES, default=devices)] = cv.multi_select(
+            all_supported_devices
         )
 
         return self.async_show_form(
@@ -479,6 +489,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
+
+
+async def _async_get_supported_devices(hass):
+    """Return all supported devices."""
+    results = await device_automation.async_get_device_automations(hass, "trigger")
+    dev_reg = device_registry.async_get(hass)
+    return {device_id: dev_reg.async_get(device_id).name for device_id in results}
 
 
 def _async_get_matching_entities(hass, domains=None):
