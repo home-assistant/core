@@ -381,7 +381,7 @@ class CecEntity(Entity):
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
         if self._device.type in ICONS_BY_TYPE:
-            self._attr_icon = ICONS_BY_TYPE.get(self._device.type)
+            self._attr_icon = ICONS_BY_TYPE[self._device.type]
         else:
             self._attr_icon = ICON_UNKNOWN
 
