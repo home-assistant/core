@@ -221,8 +221,10 @@ class HomeAccessory(Accessory):
         super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
         self.config = config or {}
         if device_id:
+            self.device_id = device_id
             domain = None
         else:
+            self.device_id = None
             domain = split_entity_id(entity_id)[0].replace("_", " ")
 
         if ATTR_MANUFACTURER in self.config:
@@ -316,6 +318,9 @@ class HomeAccessory(Accessory):
 
     async def run(self):
         """Handle accessory driver started event."""
+        if self.device_id:
+            return
+
         state = self.hass.states.get(self.entity_id)
         self.async_update_state_callback(state)
         self._subscriptions.append(

@@ -42,3 +42,8 @@ class DeviceTriggerAccessory(HomeAccessory):
 
     # Attach the trigger using the helper in async run
     # and detach it in async stop
+    async def run(self):
+        """Handle accessory driver started event."""
+
+    async def stop(self):
+        """Handle accessory driver stop event."""
