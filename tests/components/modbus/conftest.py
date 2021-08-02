@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from unittest import mock
@@ -22,6 +23,16 @@ from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class ReadResult:
+    """Storage class for register read results."""
+
+    def __init__(self, register_words):
+        """Init."""
+        self.registers = register_words
+        self.bits = register_words
 
 
 @pytest.fixture
@@ -59,9 +70,15 @@ async def mock_modbus(hass, caplog, request, do_config):
             }
         ]
     }
+    mock_pb = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
-    ) as mock_pb:
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
+    ):
+        mock_pb.read_coils.return_value = ReadResult([0x00])
+        read_result = ReadResult([0x00, 0x00])
+        mock_pb.read_discrete_inputs.return_value = read_result
+        mock_pb.read_input_registers.return_value = read_result
+        mock_pb.read_holding_registers.return_value = read_result
         if request.param["testLoad"]:
             assert await async_setup_component(hass, DOMAIN, config) is True
         else:
@@ -77,14 +94,12 @@ async def mock_test_state(hass, request):
     return request.param
 
 
-# dataclass
-class ReadResult:
-    """Storage class for register read results."""
-
-    def __init__(self, register_words):
-        """Init."""
-        self.registers = register_words
-        self.bits = register_words
+@pytest.fixture
+async def mock_ha(hass):
+    """Load homeassistant to allow service calls."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+    yield mock_modbus
 
 
 async def base_test(
@@ -191,21 +206,3 @@ async def base_test(
         # Check state
         entity_id = f"{entity_domain}.{device_name}"
         return hass.states.get(entity_id).state
-
-
-async def prepare_service_update(hass, config):
-    """Run test for service write_coil."""
-
-    config_modbus = {
-        DOMAIN: {
-            CONF_NAME: DEFAULT_HUB,
-            CONF_TYPE: "tcp",
-            CONF_HOST: "modbusTest",
-            CONF_PORT: 5001,
-            **config,
-        },
-    }
-    assert await async_setup_component(hass, DOMAIN, config_modbus)
-    await hass.async_block_till_done()
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
