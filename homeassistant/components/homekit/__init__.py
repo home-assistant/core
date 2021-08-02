@@ -822,7 +822,7 @@ class HomeKit:
         triggers = await device_automation.async_get_device_automations(
             self.hass, "trigger", self._devices
         )
-        for device_id, device_triggers in triggers:
+        for device_id, device_triggers in triggers.items():
             device = dev_reg.async_get(device_id)
             if not device:
                 _LOGGER.warning(

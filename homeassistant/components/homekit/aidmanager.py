@@ -94,12 +94,12 @@ class AccessoryAidStorage:
         """Generate a stable aid for an entity id."""
         entity = self._entity_registry.async_get(entity_id)
         if not entity:
-            return self._get_or_allocate_aid(None, entity_id)
+            return self.get_or_allocate_aid(None, entity_id)
 
         sys_unique_id = get_system_unique_id(entity)
-        return self._get_or_allocate_aid(sys_unique_id, entity_id)
+        return self.get_or_allocate_aid(sys_unique_id, entity_id)
 
-    def _get_or_allocate_aid(self, unique_id: str, entity_id: str):
+    def get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""
         if unique_id and unique_id in self.allocations:
             return self.allocations[unique_id]
