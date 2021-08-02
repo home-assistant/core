@@ -181,7 +181,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         )
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         if (
             self.name is not None
