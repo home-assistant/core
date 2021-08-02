@@ -46,6 +46,7 @@ from .const import (
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODELS_HUMIDIFIER_MIOT,
+    MODELS_HUMIDIFIER_MJJSQ,
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
@@ -135,6 +136,11 @@ HUMIDIFIER_SENSORS_MIOT = {
     ATTR_ACTUAL_MOTOR_SPEED: "actual_speed",
 }
 
+HUMIDIFIER_SENSORS_MJJSQ = {
+    ATTR_HUMIDITY: "humidity",
+    ATTR_TEMPERATURE: "temperature",
+}
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Miio configuration from YAML."""
@@ -191,11 +197,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors = []
         if model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_SENSORS_MIOT
+        elif model in MODELS_HUMIDIFIER_MJJSQ:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = HUMIDIFIER_SENSORS_MJJSQ
         elif model.startswith("zhimi.humidifier."):
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_SENSORS
         else:
             unique_id = config_entry.unique_id
