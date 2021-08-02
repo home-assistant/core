@@ -598,7 +598,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     config = config_entry.data
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    url = config[CONF_URL]
+    url = config.get(CONF_URL, DEFAULT_URL)
     name = config[CONF_NAME]
 
     api = growattServer.GrowattApi()
