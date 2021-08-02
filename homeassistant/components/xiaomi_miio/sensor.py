@@ -205,7 +205,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
             for description in SENSOR_TYPES:
-                if description.key not in set(sub_device.status):
+                if description.key not in sub_device.status:
                     continue
                 entities.append(
                     XiaomiGatewaySensor(
