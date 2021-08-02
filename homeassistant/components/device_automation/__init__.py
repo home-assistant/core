@@ -165,11 +165,12 @@ async def _async_get_device_automations(
         )
     ):
         for device_results in domain_results:
-            if device_results is None:
+            if device_results is None or isinstance(
+                device_results, InvalidDeviceAutomationConfig
+            ):
                 continue
             for automation in device_results:
-                if not isinstance(automation, InvalidDeviceAutomationConfig):
-                    combined_results[automation["device_id"]].append(automation)
+                combined_results[automation["device_id"]].append(automation)
 
     return combined_results
 
