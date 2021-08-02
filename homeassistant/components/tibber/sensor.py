@@ -77,12 +77,14 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         key="power",
         name="power",
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement=POWER_WATT,
     ),
     "powerProduction": TibberSensorEntityDescription(
         key="powerProduction",
         name="power production",
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement=POWER_WATT,
     ),
     "minPower": TibberSensorEntityDescription(
