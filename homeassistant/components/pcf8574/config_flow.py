@@ -16,7 +16,10 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_I2C_ADDRESS,
     CONF_I2C_PORT_NUM,
+    CONF_INPUT,
     CONF_INVERT_LOGIC,
+    CONF_PIN_NAME,
+    CONF_PINS,
     DEFAULT_I2C_ADDRESS,
     DEFAULT_I2C_PORT_NUM,
     DEFAULT_INVERT_LOGIC,
@@ -36,15 +39,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ): vol.Coerce(
             int
         ),  # 0x20 = dec 32
-        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-        vol.Optional("switch_1_name"): cv.string,
-        vol.Optional("switch_2_name"): cv.string,
-        vol.Optional("switch_3_name"): cv.string,
-        vol.Optional("switch_4_name"): cv.string,
-        vol.Optional("switch_5_name"): cv.string,
-        vol.Optional("switch_6_name"): cv.string,
-        vol.Optional("switch_7_name"): cv.string,
-        vol.Optional("switch_8_name"): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -76,7 +70,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
+        device_unique_id = (
+            f"{user_input[CONF_I2C_PORT_NUM]}_{user_input[CONF_I2C_ADDRESS]}"
+        )
+        await self.async_set_unique_id(device_unique_id)
+        self._abort_if_unique_id_configured()
+
         try:
+
             await validate_input(self.hass, user_input)
         except OSError:
             errors["base"] = "ioerror"
@@ -84,8 +85,51 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            self.data = user_input
+            self.data[CONF_PINS] = []
+            return await self.async_step_pin()
+            # return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_pin(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle pin tep."""
+        errors: dict[str, Any] = {}
+        pin_num = len(self.data[CONF_PINS])
+        # first run len=0 -> pin_num = 0
+        # second run len=1 -> pin_num = 1
+        if user_input is None:
+            pin_name = f"pin_{pin_num}_name"
+            step_pin_data_schema = vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC
+                    ): cv.boolean,
+                    vol.Optional(CONF_PIN_NAME, default=pin_name): cv.string,
+                    vol.Optional(CONF_INPUT, default=False): cv.boolean,
+                    vol.Optional("add_another", default=False): cv.boolean,
+                }
+            )
+            return self.async_show_form(
+                step_id="pin", data_schema=step_pin_data_schema, errors=errors
+            )
+        else:
+            self.data[CONF_PINS].append(
+                {
+                    "pin_num": pin_num,
+                    CONF_PIN_NAME: user_input[CONF_PIN_NAME],
+                    CONF_INPUT: user_input[CONF_INPUT],
+                    CONF_INVERT_LOGIC: user_input[CONF_INVERT_LOGIC],
+                }
+            )
+
+            if user_input["add_another"] and pin_num < 7:
+                return await self.async_step_pin()
+            else:
+                return self.async_create_entry(
+                    title=self.data[CONF_NAME], data=self.data
+                )

@@ -4,23 +4,22 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "ioerror": "cannot access i2c device",
+            "ioerror": "Cannot access the device. Ensure you have I2C enabled on your system.",
             "unknown": "Unexpected error"
         },
         "step": {
+            "pin": {
+                "data": {
+                    "add_another": "Add another Pin",
+                    "input": "Binary Sensor (Y/N)",
+                    "invert_logic": "Invert Logic",
+                    "pin_name": "Pin Name"
+                }
+            },
             "user": {
                 "data": {
                     "i2c_address": "I2C Address",
-                    "i2c_port_num": "I2C Port Number",
-                    "invert_logic": "Invert Logic",
-                    "switch_1_name": "Switch 1",
-                    "switch_2_name": "Switch 2",
-                    "switch_3_name": "Switch 3",
-                    "switch_4_name": "Switch 4",
-                    "switch_5_name": "Switch 5",
-                    "switch_6_name": "Switch 6",
-                    "switch_7_name": "Switch 7",
-                    "switch_8_name": "Switch 8"
+                    "i2c_port_num": "I2C Port Number"
                 }
             }
         }

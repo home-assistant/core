@@ -5,6 +5,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.pcf8574.const import (
     CONF_I2C_ADDRESS,
     CONF_I2C_PORT_NUM,
+    CONF_INPUT,
     CONF_INVERT_LOGIC,
     DOMAIN,
 )
@@ -14,16 +15,7 @@ from homeassistant.core import HomeAssistant
 VALID_CONFIG = {
     CONF_I2C_PORT_NUM: 1,
     CONF_I2C_ADDRESS: 32,
-    CONF_INVERT_LOGIC: True,
     CONF_NAME: "PCF8574 Test Module",
-    "switch_1_name": "switch 1",
-    "switch_2_name": "switch 2",
-    "switch_3_name": "switch 3",
-    "switch_4_name": "switch 4",
-    "switch_5_name": "switch 5",
-    "switch_6_name": "switch 6",
-    "switch_7_name": "switch 7",
-    "switch_8_name": "switch 8",
 }
 
 
@@ -54,6 +46,25 @@ async def test_create_integration(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=VALID_CONFIG
         )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    # add first pin, switch, default
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"add_another": True}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    # add second pin, switch, invert logic
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"add_another": True, CONF_INVERT_LOGIC: True}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    # add third pin, binay_sensor
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"add_another": False, CONF_INPUT: True}
+    )
     assert result["type"] == "create_entry"
 
 
