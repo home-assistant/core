@@ -378,6 +378,15 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._attr_should_poll = False
+        self._set_attr_name()
+        self._attr_icon = (
+            ICONS_BY_TYPE.get(self._device.type)
+            if self._device.type in ICONS_BY_TYPE
+            else ICON_UNKNOWN
+        )
+
+    def _set_attr_name(self):
+        """Set name."""
         self._attr_name = (
             f"{self.vendor_name} {self._device.osd_name}"
             if (
@@ -389,11 +398,6 @@ class CecEntity(Entity):
             if self._device.osd_name is None
             else "%s %d (%s)"
             % (self._device.type_name, self._logical_address, self._device.osd_name)
-        )
-        self._attr_icon = (
-            ICONS_BY_TYPE.get(self._device.type)
-            if self._device.type in ICONS_BY_TYPE
-            else ICON_UNKNOWN
         )
 
     def _hdmi_cec_unavailable(self, callback_event):
