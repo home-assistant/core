@@ -554,6 +554,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self.report_name = report_name
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self) -> str:
@@ -588,3 +589,8 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         if self.report_name == "power":
             return POWER_WATT
         return ENERGY_KILO_WATT_HOUR
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        return utc_from_timestamp(0)
