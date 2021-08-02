@@ -71,7 +71,7 @@ async def async_setup_entry(
             BridgeBatteryTimeRemainingSensor(coordinator),
         ]
 
-    for index in range(len(bridge.graphics.controllers)):
+    for index, _ in enumerate(bridge.graphics.controllers):
         # Remove vendor from name
         name = (
             bridge.graphics.controllers[index]
