@@ -8,23 +8,17 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL
 
-from .const import DOMAIN
-
-ATTR_LEVEL = "level"
-ATTR_PRIORITY = "priority"
-ATTR_TOKEN = "token"
-ATTR_URL = "url"
-ATTR_LINK = "link"
+from .const import ATTR_LINK, ATTR_PRIORITY, CONF_HOST, CONF_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Gotify notification service."""
+    config_entry = hass.data[DOMAIN]
     return GotifyNotificationService(
-        hass.data[DOMAIN][CONF_TOKEN], hass.data[DOMAIN][CONF_URL]
+        config_entry["data"][CONF_TOKEN], config_entry["data"][CONF_HOST]
     )
 
 

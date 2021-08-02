@@ -1,24 +1,23 @@
-"""The gotify component."""
-import voluptuous as vol
+"""The gotify integration."""
+from __future__ import annotations
 
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_URL): cv.string}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up gotify_temp from a config entry."""
+    hass.data[DOMAIN] = entry.as_dict()
+
+    await hass.async_create_task(
+        discovery.async_load_platform(hass, "notify", DOMAIN, {}, entry.as_dict())
+    )
+    return True
 
 
-def setup(hass, config):
-    """Set up the gotify component."""
-    hass.data[DOMAIN] = config[DOMAIN]
-    discovery.load_platform(hass, "notify", DOMAIN, {}, config)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
     return True

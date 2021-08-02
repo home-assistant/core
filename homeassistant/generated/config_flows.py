@@ -97,6 +97,7 @@ FLOWS = [
     "goalzero",
     "gogogate2",
     "google_travel_time",
+    "gotify",
     "gpslogger",
     "gree",
     "growatt_server",
