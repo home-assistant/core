@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
@@ -18,6 +19,7 @@ from homeassistant.const import (
     FREQUENCY_GIGAHERTZ,
     FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -84,6 +86,7 @@ async def async_setup_entry(
             BridgeGpuMemoryFreeSensor(coordinator, bridge, index, name),
             BridgeGpuMemoryUsedPercentageSensor(coordinator, bridge, index, name),
             BridgeGpuMemoryUsedSensor(coordinator, bridge, index, name),
+            BridgeGpuPowerUsageSensor(coordinator, bridge, index, name),
             BridgeGpuTemperatureSensor(coordinator, bridge, index, name),
             BridgeGpuUsagePercentageSensor(coordinator, bridge, index, name),
         ]
@@ -520,6 +523,36 @@ class BridgeGpuFanSpeedSensor(BridgeSensor):
         return (
             bridge.graphics.controllers[self._index].fanSpeed
             if bridge.graphics.controllers[self._index].fanSpeed is not None
+            else None
+        )
+
+
+class BridgeGpuPowerUsageSensor(BridgeSensor):
+    """Defines a GPU power usage sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+    ) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            f"gpu_{index}_power_usage",
+            f"{name} Power Usage",
+            None,
+            DEVICE_CLASS_POWER,
+            POWER_WATT,
+            False,
+        )
+        self._index = index
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            bridge.graphics.controllers[self._index].powerDraw
+            if bridge.graphics.controllers[self._index].powerDraw is not None
             else None
         )
 
