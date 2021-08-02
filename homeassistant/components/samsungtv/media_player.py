@@ -198,7 +198,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             if self._mac:
                 info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
             return info
-        return {}
+        return None
 
     @property
     def is_volume_muted(self) -> bool:
