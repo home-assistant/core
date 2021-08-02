@@ -554,6 +554,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self.report_name = report_name
+        # This is an exception for STATE_CLASS_MEASUREMENT per @balloob
         self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
@@ -593,4 +594,6 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        return utc_from_timestamp(0)
+        if self.report_name != "power":
+            return utc_from_timestamp(0)
+        return None
