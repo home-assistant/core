@@ -371,13 +371,14 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
 class CecEntity(Entity):
     """Representation of a HDMI CEC device entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
         self._state: str | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
-        self._attr_should_poll = False
         self._set_attr_name()
         self._attr_icon = (
             ICONS_BY_TYPE.get(self._device.type)
