@@ -21,6 +21,9 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NAME,
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
@@ -29,14 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_TARGET_TEMPERATURE,
-    DATA_BSBLAN_CLIENT,
-    DOMAIN,
-)
+from .const import ATTR_TARGET_TEMPERATURE, DATA_BSBLAN_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
