@@ -275,6 +275,7 @@ homeassistant/components/life360/* @pnbruckner
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/litejet/* @joncar
 homeassistant/components/litterrobot/* @natekspencer
+homeassistant/components/livemasjid/* @lockhaty
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd

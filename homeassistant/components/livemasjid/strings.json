@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Livemasjid",
+        "description": "Do you want to set up Livemasjid?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Livemasjid Configuration",
+        "description": "Please select your Primary Subscription, Optional subscriptions as well as other streams of interest.\n\nThe Primary subscription will always be streamed when that stream starts.\n\nAlternate streams will be available as entities and will keep their states updated.\n\nYou can also select your preferred media player device and optionally alternate media players.",
+        "data": {
+          "primary_subscription": "Primary Subscription",
+          "alternate_subscriptions": "Alternate Subscriptions (Comma seperated list)",
+          "alternate_streams": "Alternate Streams (Comma seperated list)",
+          "primary_device": "Primary Device",
+          "alternate_devices": "Alternate Devices (Comma seperated list)"
+        }
+      }
+    }
+  }
+}

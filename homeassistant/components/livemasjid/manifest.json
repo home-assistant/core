@@ -1,0 +1,15 @@
+{
+  "domain": "livemasjid",
+  "name": "Livemasjid",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/livemasjid",
+  "requirements": ["livemasjid==0.1.2"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["media_player"],
+  "codeowners": [
+    "@lockhaty"
+  ],
+  "iot_class": "cloud_polling"
+}

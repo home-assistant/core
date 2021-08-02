@@ -146,6 +146,7 @@ FLOWS = [
     "lifx",
     "litejet",
     "litterrobot",
+    "livemasjid",
     "local_ip",
     "locative",
     "logi_circle",
