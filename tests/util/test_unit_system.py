@@ -172,13 +172,13 @@ def test_speed_unknown_unit():
 def test_speed_to_metric():
     """Test length conversion to metric system."""
     assert METRIC_SYSTEM.speed(100, METRIC_SYSTEM.speed_unit) == 100
-    assert METRIC_SYSTEM.speed(5, IMPERIAL_SYSTEM.speed_unit) == 3.10685596
+    assert METRIC_SYSTEM.speed(5, IMPERIAL_SYSTEM.speed_unit) == 8.046719971418051
 
 
 def test_speed_to_imperial():
     """Test speed conversion to imperial system."""
     assert IMPERIAL_SYSTEM.speed(100, IMPERIAL_SYSTEM.speed_unit) == 100
-    assert IMPERIAL_SYSTEM.speed(5, METRIC_SYSTEM.speed_unit) == 8.04672
+    assert IMPERIAL_SYSTEM.speed(5, METRIC_SYSTEM.speed_unit) == 3.106855972222222
 
 
 def test_pressure_same_unit():

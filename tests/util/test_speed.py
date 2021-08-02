@@ -46,17 +46,17 @@ def test_convert_nonnumeric_value():
 
 def test_convert_from_kph():
     """Test conversion from liters to other units."""
-    liters = 5
+    kph = 5
     assert (
-        speed_util.convert(liters, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
-        == 0.62137119
+        speed_util.convert(kph, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
+        == 3.106855972222222
     )
 
 
 def test_convert_from_mph():
-    """Test conversion from gallons to other units."""
-    gallons = 5
+    """Test conversion from mph to other units."""
+    mph = 5
     assert (
-        speed_util.convert(gallons, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR)
-        == 1.609344
+        speed_util.convert(mph, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR)
+        == 8.046719971418051
     )
