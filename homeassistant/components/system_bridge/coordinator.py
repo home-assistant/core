@@ -108,9 +108,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
             if self.unsub:
                 self.unsub()
                 self.unsub = None
-            raise ConfigEntryAuthFailed(
-                f"Authentication failed for {self.title} ({self.host})"
-            ) from exception
+            raise ConfigEntryAuthFailed() from exception
         except (*BRIDGE_CONNECTION_ERRORS, ConnectionRefusedError) as exception:
             if self.unsub:
                 self.unsub()
