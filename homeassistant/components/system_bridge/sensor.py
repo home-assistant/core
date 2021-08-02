@@ -734,13 +734,11 @@ class SystemBridgeProcessesCpuLoadSensor(SystemBridgeSensor):
             False,
         )
         self._index = index
-        print(coordinator.data.processes.load.cpus[self._index].load)
 
     @property
     def state(self) -> float | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
-        print(bridge.processes.load.cpus[self._index].load)
         return (
             round(bridge.processes.load.cpus[self._index].load, 2)
             if bridge.processes.load.cpus[self._index].load is not None
