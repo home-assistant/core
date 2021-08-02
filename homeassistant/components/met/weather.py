@@ -22,17 +22,18 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.speed import convert as convert_speed
 
 from .const import (
     ATTR_FORECAST_PRECIPITATION,
@@ -198,7 +199,9 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
         if self._is_metric or speed_km_h is None:
             return speed_km_h
 
-        speed_mi_h = convert_distance(speed_km_h, LENGTH_KILOMETERS, LENGTH_MILES)
+        speed_mi_h = convert_speed(
+            speed_km_h, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
+        )
         return int(round(speed_mi_h))
 
     @property

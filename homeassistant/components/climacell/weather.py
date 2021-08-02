@@ -38,6 +38,8 @@ from homeassistant.const import (
     LENGTH_MILES,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
@@ -46,6 +48,7 @@ from homeassistant.helpers.sun import is_up
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
+from homeassistant.util.speed import convert as speed_convert
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
 from .const import (
@@ -182,7 +185,10 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                 )
             if wind_speed:
                 wind_speed = round(
-                    distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS), 4
+                    speed_convert(
+                        wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
+                    ),
+                    4,
                 )
 
         data = {
@@ -204,7 +210,10 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         wind_gust = self.wind_gust
         if wind_gust and self.hass.config.units.is_metric:
             wind_gust = round(
-                distance_convert(self.wind_gust, LENGTH_MILES, LENGTH_KILOMETERS), 4
+                speed_convert(
+                    self.wind_gust, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
+                ),
+                4,
             )
         cloud_cover = self.cloud_cover
         return {
@@ -252,7 +261,7 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         """Return the wind speed."""
         if self.hass.config.units.is_metric and self._wind_speed:
             return round(
-                distance_convert(self._wind_speed, LENGTH_MILES, LENGTH_KILOMETERS), 4
+                speed_convert(self._wind_speed, LENGTH_MILES, LENGTH_KILOMETERS), 4
             )
         return self._wind_speed
 

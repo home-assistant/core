@@ -19,6 +19,8 @@ from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -27,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.speed import convert as convert_speed
 from homeassistant.util.temperature import convert as convert_temperature
 
 from . import base_unique_id
@@ -195,7 +198,9 @@ class NWSWeather(WeatherEntity):
         if self.is_metric:
             wind = wind_km_hr
         else:
-            wind = convert_distance(wind_km_hr, LENGTH_KILOMETERS, LENGTH_MILES)
+            wind = convert_speed(
+                wind_km_hr, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
+            )
         return round(wind)
 
     @property
@@ -270,7 +275,9 @@ class NWSWeather(WeatherEntity):
             if wind_speed is not None:
                 if self.is_metric:
                     data[ATTR_FORECAST_WIND_SPEED] = round(
-                        convert_distance(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
+                        convert_speed(
+                            wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
+                        )
                     )
                 else:
                     data[ATTR_FORECAST_WIND_SPEED] = round(wind_speed)

@@ -712,7 +712,7 @@ MASS: Final[UnitTypeT] = UnitTypeT("mass")
 PRESSURE: Final[UnitTypeT] = UnitTypeT("pressure")
 VOLUME: Final[UnitTypeT] = UnitTypeT("volume")
 TEMPERATURE: Final[UnitTypeT] = UnitTypeT("temperature")
-SPEED_MS: Final[UnitTypeT] = UnitTypeT("speed_ms")
+SPEED: Final[UnitTypeT] = UnitTypeT("speed")
 ILLUMINANCE: Final[UnitTypeT] = UnitTypeT("illuminance")
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]

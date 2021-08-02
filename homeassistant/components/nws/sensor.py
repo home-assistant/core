@@ -5,12 +5,12 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_INHG,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
 from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.speed import convert as convert_speed
 
 from . import base_unique_id
 from .const import (
@@ -97,7 +98,9 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         if value is None:
             return None
         if self._unit == SPEED_MILES_PER_HOUR:
-            return round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
+            return round(
+                convert_speed(value, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
+            )
         if self._unit == LENGTH_MILES:
             return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
         if self._unit == PRESSURE_INHG:
