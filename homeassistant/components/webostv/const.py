@@ -24,8 +24,6 @@ SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 
 LIVE_TV_APP_ID = "com.webos.app.livetv"
 
-TRIGGER_TYPE_TURN_ON = "turn_on"
-
 WEBOSTV_EXCEPTIONS = (
     OSError,
     ConnectionClosed,

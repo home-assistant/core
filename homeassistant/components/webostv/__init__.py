@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from aiopylgtv import PyLGTVPairException, WebOsClient
 import voluptuous as vol
@@ -223,18 +223,20 @@ class PluggableAction:
 
     def __init__(self) -> None:
         """Initialize."""
-        self._actions: dict[Any, AutomationActionType] = {}
+        self._actions: dict[Callable[[], None], AutomationActionType] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
         return bool(self._actions)
 
     @callback
-    def async_attach(self, action: AutomationActionType, variables: dict[str, Any]):
+    def async_attach(
+        self, action: AutomationActionType, variables: dict[str, Any]
+    ) -> Callable[[], None]:
         """Attach a device trigger for turn on."""
 
         @callback
-        def _remove():
+        def _remove() -> None:
             del self._actions[_remove]
 
         job = HassJob(action)
@@ -243,7 +245,8 @@ class PluggableAction:
 
         return _remove
 
-    async def async_run(self, hass: HomeAssistant, context: Context | None = None):
+    @callback
+    def async_run(self, hass: HomeAssistant, context: Context | None = None) -> None:
         """Run all turn on triggers."""
         for job, variables in self._actions.values():
             hass.async_run_hass_job(job, variables, context)
@@ -252,12 +255,12 @@ class PluggableAction:
 class WebOsClientWrapper:
     """Wrapper for a WebOS TV client with Home Assistant specific functions."""
 
-    def __init__(self, host: str, client_key: str | None) -> None:
+    def __init__(self, host: str, client_key: str) -> None:
         """Set up the client."""
         self.host = host
         self.client_key = client_key
         self.turn_on = PluggableAction()
-        self.client = None
+        self.client: WebOsClient | None = None
 
     async def connect(self) -> None:
         """Attempt a connection, but fail gracefully if tv is off for example."""
@@ -267,5 +270,6 @@ class WebOsClientWrapper:
 
     async def shutdown(self) -> None:
         """Unregister callbacks and disconnect."""
+        assert self.client
         self.client.clear_state_update_callbacks()
         await self.client.disconnect()

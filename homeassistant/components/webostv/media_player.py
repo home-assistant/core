@@ -99,7 +99,9 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
-    def __init__(self, wrapper: WebOsClientWrapper, name: str, sources, unique_id):
+    def __init__(
+        self, wrapper: WebOsClientWrapper, name: str, sources, unique_id
+    ) -> None:
         """Initialize the webos device."""
         self._wrapper = wrapper
         self._client = wrapper.client
@@ -333,7 +335,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn on media player."""
-        await self._wrapper.turn_on.async_run(self.hass, self._context)
+        self._wrapper.turn_on.async_run(self.hass, self._context)
 
     @cmd
     async def async_volume_up(self):
