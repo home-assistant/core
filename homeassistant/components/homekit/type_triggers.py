@@ -34,6 +34,7 @@ class DeviceTriggerAccessory(HomeAccessory):
                 SERV_SERVICE_LABEL, [CHAR_NAME]
             )
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
+            serv_service_label.configure_char(CHAR_NAME, value=f"{type_} {subtype}")
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
@@ -49,7 +50,6 @@ class DeviceTriggerAccessory(HomeAccessory):
             subtype = trigger.get("subtype")
             serv_stateless_switch.configure_char(CHAR_NAME, value=f"{type_} {subtype}")
             serv_stateless_switch.configure_char(CHAR_SERVICE_LABEL_INDEX, value=idx)
-            serv_service_label.configure_char(CHAR_NAME, value=f"{type_} {subtype}")
 
     async def async_trigger(self, run_variables, context=None, skip_condition=False):
         """Trigger button press.
@@ -59,7 +59,9 @@ class DeviceTriggerAccessory(HomeAccessory):
         reason = ""
         if "trigger" in run_variables and "description" in run_variables["trigger"]:
             reason = f' by {run_variables["trigger"]["description"]}'
-        _LOGGER.warning("Button triggered%s - %s", reason, run_variables)
+        _LOGGER.debug("Button triggered%s - %s", reason, run_variables)
+        id = run_variables["trigger"]["id"]
+        self._triggers[id].set_value(0)
 
     # Attach the trigger using the helper in async run
     # and detach it in async stop
