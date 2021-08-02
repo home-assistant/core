@@ -197,15 +197,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors = []
         if model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_SENSORS_MIOT
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_SENSORS_MJJSQ
         elif model.startswith("zhimi.humidifier."):
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_SENSORS
         else:
             unique_id = config_entry.unique_id
@@ -224,7 +221,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     config_entry,
                     f"{sensor}_{config_entry.unique_id}",
                     sensor,
-                    coordinator,
+                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
                 )
             )
 
