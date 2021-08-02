@@ -1,0 +1,8 @@
+{
+    "state": {
+        "airvisual__pollutant_level": {
+            "good": "\u05d8\u05d5\u05d1",
+            "unhealthy": "\u05dc\u05d0 \u05d1\u05e8\u05d9\u05d0"
+        }
+    }
+}

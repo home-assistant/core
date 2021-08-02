@@ -14,9 +14,6 @@ from homeassistant.components.homekit.accessories import (
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_NAME,
@@ -36,7 +33,10 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
+    ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -105,7 +105,7 @@ async def test_home_accessory(hass, hk_driver):
         {
             ATTR_MODEL: "Awesome",
             ATTR_MANUFACTURER: "Lux Brands",
-            ATTR_SOFTWARE_VERSION: "0.4.3",
+            ATTR_SW_VERSION: "0.4.3",
             ATTR_INTEGRATION: "luxe",
         },
     )
@@ -576,7 +576,7 @@ def test_home_bridge(hk_driver):
     assert bridge.hass == "hass"
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
@@ -587,7 +587,7 @@ def test_home_bridge(hk_driver):
 
     bridge = HomeBridge("hass", hk_driver, "test_name")
     assert bridge.display_name == "test_name"
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
 
     # setup_message

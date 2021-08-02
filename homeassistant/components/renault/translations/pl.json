@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "kamereon_no_account": "Nie mo\u017cna znale\u017a\u0107 konta Kamereon."
+        },
+        "error": {
+            "invalid_credentials": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Identyfikator konta Kamereon"
+                },
+                "title": "Wyb\u00f3r identyfikatora konta Kamereon"
+            },
+            "user": {
+                "data": {
+                    "locale": "Ustawienia regionalne",
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "title": "Dane logowania Renault"
+            }
+        }
+    }
+}

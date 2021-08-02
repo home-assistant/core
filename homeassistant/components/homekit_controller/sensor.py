@@ -254,9 +254,8 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         self._unit = unit
         self._icon = icon
         self._name = name
-        self._char = char
 
-        super().__init__(conn, info)
+        super().__init__(conn, info, char)
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
