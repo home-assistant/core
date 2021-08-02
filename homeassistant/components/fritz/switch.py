@@ -13,15 +13,17 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
+import slugify as unicode_slug
 import xmltodict
 
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import get_local_ip, slugify
+from homeassistant.util import slugify
 
 from .common import (
     FritzBoxBaseEntity,
@@ -160,7 +162,7 @@ def deflection_entities_list(
 
 
 def port_entities_list(
-    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str, local_ip: str
 ) -> list[FritzBoxPortSwitch]:
     """Get list of port forwarding entities."""
 
@@ -193,7 +195,6 @@ def port_entities_list(
         port_forwards_count,
     )
 
-    local_ip = get_local_ip()
     _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
 
     for i in range(port_forwards_count):
@@ -247,7 +248,7 @@ def wifi_entities_list(
         )
         if network_info:
             ssid = network_info["NewSSID"]
-            if ssid in networks.values():
+            if unicode_slug.slugify(ssid, lowercase=False) in networks.values():
                 networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
             else:
                 networks[i] = ssid
@@ -289,12 +290,15 @@ def profile_entities_list(
 
 
 def all_entities_list(
-    fritzbox_tools: FritzBoxTools, device_friendly_name: str, data_fritz: FritzData
+    fritzbox_tools: FritzBoxTools,
+    device_friendly_name: str,
+    data_fritz: FritzData,
+    local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
-        *port_entities_list(fritzbox_tools, device_friendly_name),
+        *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
         *wifi_entities_list(fritzbox_tools, device_friendly_name),
         *profile_entities_list(fritzbox_tools, data_fritz),
     ]
@@ -310,8 +314,12 @@ async def async_setup_entry(
 
     _LOGGER.debug("Fritzbox services: %s", fritzbox_tools.connection.services)
 
+    local_ip = await async_get_source_ip(
+        fritzbox_tools.hass, target_ip=fritzbox_tools.host
+    )
+
     entities_list = await hass.async_add_executor_job(
-        all_entities_list, fritzbox_tools, entry.title, data_fritz
+        all_entities_list, fritzbox_tools, entry.title, data_fritz, local_ip
     )
 
     async_add_entities(entities_list)
@@ -557,20 +565,14 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     """Defines a FRITZ!Box Tools DeviceProfile switch."""
 
+    _attr_icon = "mdi:router-wireless-settings"
+
     def __init__(self, fritzbox_tools: FritzBoxTools, device: FritzDevice) -> None:
         """Init Fritz profile."""
         super().__init__(fritzbox_tools, device)
         self._attr_is_on: bool = False
-
-    @property
-    def unique_id(self) -> str:
-        """Return device unique id."""
-        return f"{self._mac}_switch"
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:router-wireless-settings"
+        self._name = f"{device.hostname} Internet Access"
+        self._attr_unique_id = f"{self._mac}_internet_access"
 
     async def async_process_update(self) -> None:
         """Update device."""

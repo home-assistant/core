@@ -11,16 +11,12 @@ import socket
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
-from zeroconf import (
-    InterfaceChoice,
-    IPVersion,
-    NonUniqueNameException,
-    ServiceStateChange,
-)
+from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
-from homeassistant import config_entries, util
+from homeassistant import config_entries
 from homeassistant.components import network
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -222,7 +218,7 @@ async def _async_register_hass_zc_service(
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
 
-    host_ip = util.get_local_ip()
+    host_ip = await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
 
     try:
         host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
@@ -241,12 +237,7 @@ async def _async_register_hass_zc_service(
     )
 
     _LOGGER.info("Starting Zeroconf broadcast")
-    try:
-        await aio_zc.async_register_service(info)
-    except NonUniqueNameException:
-        _LOGGER.error(
-            "Home Assistant instance with identical name present in the local network"
-        )
+    await aio_zc.async_register_service(info, allow_name_change=True)
 
 
 class FlowDispatcher:

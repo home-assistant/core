@@ -58,12 +58,14 @@ from .const import (
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     DEVICE_CLASS_PM25,
+    DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
     SERV_BATTERY_SERVICE,
+    SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -451,6 +453,17 @@ class HomeAccessory(Accessory):
         self.hass.async_create_task(
             self.hass.services.async_call(
                 domain, service, service_data, context=context
+            )
+        )
+
+    @ha_callback
+    def async_reset(self):
+        """Reset and recreate an accessory."""
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                DOMAIN,
+                SERVICE_HOMEKIT_RESET_ACCESSORY,
+                {ATTR_ENTITY_ID: self.entity_id},
             )
         )
 

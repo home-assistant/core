@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -37,6 +38,7 @@ async def async_setup_entry(
                     ATTR_ENTITY_ID: f"{device.ain}",
                     ATTR_UNIT_OF_MEASUREMENT: None,
                     ATTR_DEVICE_CLASS: DEVICE_CLASS_WINDOW,
+                    ATTR_STATE_CLASS: None,
                 },
                 coordinator,
                 ain,

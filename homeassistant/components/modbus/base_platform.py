@@ -68,6 +68,7 @@ class BasePlatform(Entity):
         self._value = None
         self._available = True
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
+        self._available = self._scan_interval == 0
         self._call_active = False
 
     @abstractmethod

@@ -27,14 +27,6 @@ from homeassistant.const import (
     VOLUME,
     VOLUME_GALLONS,
     VOLUME_LITERS,
-    UnitLengthT,
-    UnitMassT,
-    UnitPressureT,
-    UnitSpeedT,
-    UnitT,
-    UnitTemperatureT,
-    UnitTypeT,
-    UnitVolumeT,
 )
 from homeassistant.util import (
     distance as distance_util,
@@ -48,12 +40,7 @@ from homeassistant.util import (
 
 LENGTH_UNITS = distance_util.VALID_UNITS
 
-MASS_UNITS: tuple[UnitMassT, ...] = (
-    MASS_POUNDS,
-    MASS_OUNCES,
-    MASS_KILOGRAMS,
-    MASS_GRAMS,
-)
+MASS_UNITS: tuple[str, ...] = (MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS)
 
 PRESSURE_UNITS = pressure_util.VALID_UNITS
 
@@ -61,12 +48,11 @@ VOLUME_UNITS = volume_util.VALID_UNITS
 
 SPEED_UNITS = speed_util.VALID_UNITS
 
-TEMPERATURE_UNITS: tuple[UnitTemperatureT, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
+TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
 
 
-def is_valid_unit(unit: UnitT, unit_type: UnitTypeT) -> bool:
+def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
-    units: tuple[UnitT, ...]
     if unit_type == LENGTH:
         units = LENGTH_UNITS
     elif unit_type == SPEED:
@@ -91,12 +77,12 @@ class UnitSystem:
     def __init__(
         self,
         name: str,
-        temperature: UnitTemperatureT,
-        length: UnitLengthT,
-        speed: UnitSpeedT,
-        volume: UnitVolumeT,
-        mass: UnitMassT,
-        pressure: UnitPressureT,
+        temperature: str,
+        length: str,
+        speed: str,
+        volume: str,
+        mass: str,
+        pressure: str,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -128,14 +114,14 @@ class UnitSystem:
         """Determine if this is the metric unit system."""
         return self.name == CONF_UNIT_SYSTEM_METRIC
 
-    def temperature(self, temperature: float, from_unit: UnitTemperatureT) -> float:
+    def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
             raise TypeError(f"{temperature!s} is not a numeric value.")
 
         return temperature_util.convert(temperature, from_unit, self.temperature_unit)
 
-    def length(self, length: float | None, from_unit: UnitLengthT) -> float:
+    def length(self, length: float | None, from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError(f"{length!s} is not a numeric value.")
@@ -145,7 +131,7 @@ class UnitSystem:
             length, from_unit, self.length_unit
         )
 
-    def pressure(self, pressure: float | None, from_unit: UnitPressureT) -> float:
+    def pressure(self, pressure: float | None, from_unit: str) -> float:
         """Convert the given pressure to this unit system."""
         if not isinstance(pressure, Number):
             raise TypeError(f"{pressure!s} is not a numeric value.")
@@ -155,7 +141,7 @@ class UnitSystem:
             pressure, from_unit, self.pressure_unit
         )
 
-    def speed(self, speed: float | None, from_unit: UnitSpeedT) -> float:
+    def speed(self, speed: float | None, from_unit: str) -> float:
         """Convert the given speed to this unit system."""
         if not isinstance(speed, Number):
             raise TypeError(f"{speed!s} is not a numeric value.")
@@ -163,7 +149,7 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return speed_util.convert(speed, from_unit, self.speed_unit)  # type: ignore
 
-    def volume(self, volume: float | None, from_unit: UnitVolumeT) -> float:
+    def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
         if not isinstance(volume, Number):
             raise TypeError(f"{volume!s} is not a numeric value.")
@@ -171,7 +157,7 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore
 
-    def as_dict(self) -> dict[str, UnitT]:
+    def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""
         return {
             LENGTH: self.length_unit,

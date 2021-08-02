@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Kaasatavad domeenid"
                 },
-                "description": "Vali kaasatavad domeenid. Kaasatakse k\u00f5ik domeenis toetatud olemid. Iga telemeedia pleieri ja kaamera jaoks luuakse eraldi HomeKiti eksemplar tarvikure\u017eiimis.",
+                "description": "Vali kaasatavad domeenid. Lisatakse k\u00f5ik domeenis toetatud \u00fcksused. Iga tv-meediam\u00e4ngija, tegevusp\u00f5hise kaugjuhtimispuldi, luku ja kaamera jaoks luuakse eraldi HomeKit-instants lisaseadme re\u017eiimis.",
                 "title": "Vali kaasatavad domeenid"
             }
         }

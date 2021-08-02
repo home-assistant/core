@@ -48,11 +48,10 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
-ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
-DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
-ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
-
+ENTITY_ID_JSON_TEMPLATE = '"entity_id": ?"{}"'
+ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
+DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
+ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
 CONTINUOUS_DOMAINS = ["proximity", "sensor"]

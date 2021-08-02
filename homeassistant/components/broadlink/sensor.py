@@ -6,12 +6,13 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.const import CONF_HOST, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import CONF_HOST, PERCENTAGE, POWER_WATT, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
@@ -37,6 +38,12 @@ SENSOR_TYPES = {
     ),
     "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE, None),
     "noise": ("Noise", None, None, None),
+    "power": (
+        "Current power",
+        POWER_WATT,
+        DEVICE_CLASS_POWER,
+        STATE_CLASS_MEASUREMENT,
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -77,14 +84,12 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
         self._coordinator = device.update_manager.coordinator
         self._monitored_condition = monitored_condition
 
-        self._attr_device_class = SENSOR_TYPES[self._monitored_condition][2]
-        self._attr_name = (
-            f"{self._device.name} {SENSOR_TYPES[self._monitored_condition][0]}"
-        )
-        self._attr_state_class = SENSOR_TYPES[self._monitored_condition][3]
+        self._attr_device_class = SENSOR_TYPES[monitored_condition][2]
+        self._attr_name = f"{device.name} {SENSOR_TYPES[monitored_condition][0]}"
+        self._attr_state_class = SENSOR_TYPES[monitored_condition][3]
         self._attr_state = self._coordinator.data[monitored_condition]
-        self._attr_unique_id = f"{self._device.unique_id}-{self._monitored_condition}"
-        self._attr_unit_of_measurement = SENSOR_TYPES[self._monitored_condition][1]
+        self._attr_unique_id = f"{device.unique_id}-{monitored_condition}"
+        self._attr_unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
 
     @callback
     def update_data(self):

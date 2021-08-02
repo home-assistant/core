@@ -2,6 +2,7 @@
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     MASS_GRAMS,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -342,7 +343,7 @@ SENSOR_TYPES = {
             "kind": "csad_orp",
             "device_class": None,
             "icon": "mdi:gauge",
-            "unit": "mV",
+            "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
             "guard_condition": [
                 {"orp": ""},
             ],

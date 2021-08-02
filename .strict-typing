@@ -9,10 +9,12 @@ homeassistant.components.actiontec.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
+homeassistant.components.airvisual.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.ambee.*
+homeassistant.components.ambient_station.*
 homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
@@ -32,6 +34,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
+homeassistant.components.energy.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.forecast_solar.*
@@ -41,6 +44,7 @@ homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
 homeassistant.components.group.*
+homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.http.*
@@ -58,11 +62,14 @@ homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
+homeassistant.components.netatmo.*
 homeassistant.components.network.*
 homeassistant.components.no_ip.*
 homeassistant.components.notify.*
+homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
+homeassistant.components.openuv.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
@@ -73,6 +80,7 @@ homeassistant.components.remote.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
 homeassistant.components.sensor.*
+homeassistant.components.shelly.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*

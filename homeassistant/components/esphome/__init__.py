@@ -653,6 +653,9 @@ async def _register_service(
 async def _setup_services(
     hass: HomeAssistant, entry_data: RuntimeEntryData, services: list[UserService]
 ) -> None:
+    if entry_data.device_info is None:
+        # Can happen if device has never connected or .storage cleared
+        return
     old_services = entry_data.services.copy()
     to_unregister = []
     to_register = []
@@ -673,7 +676,6 @@ async def _setup_services(
 
     entry_data.services = {serv.key: serv for serv in services}
 
-    assert entry_data.device_info is not None
     for service in to_unregister:
         service_name = f"{entry_data.device_info.name}_{service.name}"
         hass.services.async_remove(DOMAIN, service_name)

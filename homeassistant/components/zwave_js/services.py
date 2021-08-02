@@ -254,6 +254,7 @@ class ZWaveServices:
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                         vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
                         vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
+                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                     get_nodes_from_service_data,
@@ -282,6 +283,7 @@ class ZWaveServices:
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                         vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                        vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
                     vol.Any(
                         cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
@@ -381,6 +383,7 @@ class ZWaveServices:
         endpoint = service.data.get(const.ATTR_ENDPOINT)
         new_value = service.data[const.ATTR_VALUE]
         wait_for_result = service.data.get(const.ATTR_WAIT_FOR_RESULT)
+        options = service.data.get(const.ATTR_OPTIONS)
 
         for node in nodes:
             success = await node.async_set_value(
@@ -392,6 +395,7 @@ class ZWaveServices:
                     property_key=property_key,
                 ),
                 new_value,
+                options=options,
                 wait_for_result=wait_for_result,
             )
 
@@ -406,6 +410,7 @@ class ZWaveServices:
         """Set a value via multicast to multiple nodes."""
         nodes = service.data[const.ATTR_NODES]
         broadcast: bool = service.data[const.ATTR_BROADCAST]
+        options = service.data.get(const.ATTR_OPTIONS)
 
         if not broadcast and len(nodes) == 1:
             const.LOGGER.warning(
@@ -435,10 +440,11 @@ class ZWaveServices:
             client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
 
         success = await async_multicast_set_value(
-            client,
-            new_value,
-            {k: v for k, v in value.items() if v is not None},
-            None if broadcast else list(nodes),
+            client=client,
+            new_value=new_value,
+            value_data={k: v for k, v in value.items() if v is not None},
+            nodes=None if broadcast else list(nodes),
+            options=options,
         )
 
         if success is False:

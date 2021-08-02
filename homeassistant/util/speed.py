@@ -12,10 +12,9 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    UnitSpeedT,
 )
 
-VALID_UNITS: tuple[UnitSpeedT, ...] = (
+VALID_UNITS: tuple[str, ...] = (
     SPEED_METERS_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
@@ -25,7 +24,7 @@ VALID_UNITS: tuple[UnitSpeedT, ...] = (
 )
 
 # Units in terms of m/s
-UNIT_CONVERSION: dict[UnitSpeedT, float] = {
+UNIT_CONVERSION: dict[str, float] = {
     SPEED_METERS_PER_SECOND: 1,
     SPEED_KILOMETERS_PER_HOUR: 3.6,
     SPEED_MILES_PER_HOUR: 2.2369363,
@@ -35,7 +34,7 @@ UNIT_CONVERSION: dict[UnitSpeedT, float] = {
 }
 
 
-def convert(value: float, unit_1: UnitSpeedT, unit_2: UnitSpeedT) -> float:
+def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
     if unit_1 not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, SPEED))

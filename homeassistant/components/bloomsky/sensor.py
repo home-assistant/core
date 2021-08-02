@@ -6,6 +6,7 @@ from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     PRESSURE_INHG,
     PRESSURE_MBAR,
@@ -32,7 +33,7 @@ SENSOR_UNITS_IMPERIAL = {
     "Humidity": PERCENTAGE,
     "Pressure": PRESSURE_INHG,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
-    "Voltage": "mV",
+    "Voltage": ELECTRIC_POTENTIAL_MILLIVOLT,
 }
 
 # Metric units
@@ -41,7 +42,7 @@ SENSOR_UNITS_METRIC = {
     "Humidity": PERCENTAGE,
     "Pressure": PRESSURE_MBAR,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
-    "Voltage": "mV",
+    "Voltage": ELECTRIC_POTENTIAL_MILLIVOLT,
 }
 
 # Device class

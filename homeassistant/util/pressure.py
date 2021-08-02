@@ -11,10 +11,9 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    UnitPressureT,
 )
 
-VALID_UNITS: tuple[UnitPressureT, ...] = (
+VALID_UNITS: tuple[str, ...] = (
     PRESSURE_PA,
     PRESSURE_HPA,
     PRESSURE_MBAR,
@@ -22,7 +21,7 @@ VALID_UNITS: tuple[UnitPressureT, ...] = (
     PRESSURE_PSI,
 )
 
-UNIT_CONVERSION: dict[UnitPressureT, float] = {
+UNIT_CONVERSION: dict[str, float] = {
     PRESSURE_PA: 1,
     PRESSURE_HPA: 1 / 100,
     PRESSURE_MBAR: 1 / 100,
@@ -31,7 +30,7 @@ UNIT_CONVERSION: dict[UnitPressureT, float] = {
 }
 
 
-def convert(value: float, unit_1: UnitPressureT, unit_2: UnitPressureT) -> float:
+def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
     if unit_1 not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, PRESSURE))

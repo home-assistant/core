@@ -40,7 +40,7 @@ def async_get_pin_from_uid(uid: str) -> str:
     return uid[-4:]
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.discovery_info = {}
+        self.discovery_info: dict[str, Any] = {}
 
     async def _async_set_unique_id(self, pin: str) -> None:
         """Set the config entry's unique ID (based on the device's 4-digit PIN)."""
