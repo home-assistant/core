@@ -68,7 +68,7 @@ class DeviceTriggerAccessory(HomeAccessory):
         self._remove_triggers = await async_initialize_triggers(
             self.hass,
             self._device_triggers,
-            self.triggered,
+            self.async_trigger,
             "homekit",
             self.name,
             _LOGGER,
