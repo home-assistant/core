@@ -37,6 +37,7 @@ class DecoraWifiPlatform:
         self._iot_switches: Dict[str, IotSwitch] = {
             platform: [] for platform in PLATFORMS
         }
+        self._loggedin = False
 
         self._apilogin()
         self._apigetdevices()
@@ -62,11 +63,12 @@ class DecoraWifiPlatform:
 
             # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
             if success is None:
-                self._loggedin = False
                 raise DecoraWifiLoginFailed
             self._loggedin = True
         except ValueError as exc:
             raise DecoraWifiCommFailed from exc
+
+        self._loggedin = True
 
     def apilogout(self):
         """Log out of decora_wifi session."""

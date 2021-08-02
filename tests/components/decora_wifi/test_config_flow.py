@@ -235,3 +235,35 @@ async def test_user_flow_no_internet_connection(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_flow_no_internet_connection(hass):
+    """Test reauth flow with no internet connection."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USERNAME,
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: INCORRECT_PASSWORD,
+        },
+    )
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.decora_wifi.config_flow.DecoraWifiPlatform.async_setup_decora_wifi",
+        side_effect=DecoraWifiCommFailed(),
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "unique_id": mock_config.unique_id,
+            },
+            data=mock_config.data,
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "reauth"
+    assert result2["errors"] == {"base": "cannot_connect"}

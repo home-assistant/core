@@ -194,7 +194,7 @@ omit =
     homeassistant/components/ddwrt/device_tracker.py
     homeassistant/components/decora/light.py
     homeassistant/components/decora_wifi/__init__.py
-    homeassistant/components/decora_wifi/common.py
+    homeassistant/components/decora_wifi/const.py
     homeassistant/components/decora_wifi/light.py
     homeassistant/components/delijn/*
     homeassistant/components/deluge/sensor.py
