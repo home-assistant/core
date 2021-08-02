@@ -30,6 +30,7 @@ async def test_get_preferences_no_data(hass, hass_ws_client) -> None:
 
 async def test_get_preferences_default(hass, hass_ws_client, hass_storage) -> None:
     """Test we get preferences."""
+    assert not await is_configured(hass)
     manager = await data.async_get_manager(hass)
     manager.data = data.EnergyManager.default_preferences()
     client = await hass_ws_client(hass)
