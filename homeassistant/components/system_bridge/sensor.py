@@ -78,12 +78,14 @@ async def async_setup_entry(
         )
         entities = [
             *entities,
-            BridgeGpuCoreClockSpeedSensor(coordinator, index, name),
-            BridgeGpuMemoryClockSpeedSensor(coordinator, index, name),
-            BridgeGpuMemoryFreeSensor(coordinator, index, name),
-            BridgeGpuMemoryUsedPercentageSensor(coordinator, index, name),
-            BridgeGpuMemoryUsedSensor(coordinator, index, name),
-            BridgeGpuUsagePercentageSensor(coordinator, index, name),
+            BridgeGpuCoreClockSpeedSensor(coordinator, bridge, index, name),
+            BridgeGpuFanSpeedSensor(coordinator, bridge, index, name),
+            BridgeGpuMemoryClockSpeedSensor(coordinator, bridge, index, name),
+            BridgeGpuMemoryFreeSensor(coordinator, bridge, index, name),
+            BridgeGpuMemoryUsedPercentageSensor(coordinator, bridge, index, name),
+            BridgeGpuMemoryUsedSensor(coordinator, bridge, index, name),
+            BridgeGpuTemperatureSensor(coordinator, bridge, index, name),
+            BridgeGpuUsagePercentageSensor(coordinator, bridge, index, name),
         ]
 
     async_add_entities(entities)
@@ -413,11 +415,11 @@ class BridgeGpuCoreClockSpeedSensor(BridgeSensor):
             coordinator,
             bridge,
             f"gpu_{index}_core_clock_speed",
-            f"{name} GPU Clock Speed",
+            f"{name} Clock Speed",
             "mdi:speedometer",
             None,
             FREQUENCY_MEGAHERTZ,
-            True,
+            False,
         )
         self._index = index
 
@@ -443,11 +445,11 @@ class BridgeGpuMemoryClockSpeedSensor(BridgeSensor):
             coordinator,
             bridge,
             f"gpu_{index}_memory_clock_speed",
-            f"{name} GPU Memory Clock Speed",
+            f"{name} Memory Clock Speed",
             "mdi:speedometer",
             None,
             FREQUENCY_MEGAHERTZ,
-            True,
+            False,
         )
         self._index = index
 
@@ -458,6 +460,66 @@ class BridgeGpuMemoryClockSpeedSensor(BridgeSensor):
         return (
             bridge.graphics.controllers[self._index].clockMemory
             if bridge.graphics.controllers[self._index].clockMemory is not None
+            else None
+        )
+
+
+class BridgeGpuTemperatureSensor(BridgeSensor):
+    """Defines a GPU temperature sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+    ) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            f"gpu_{index}_temperature",
+            f"{name} Temperature",
+            None,
+            DEVICE_CLASS_TEMPERATURE,
+            TEMP_CELSIUS,
+            False,
+        )
+        self._index = index
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            bridge.graphics.controllers[self._index].temperatureGpu
+            if bridge.graphics.controllers[self._index].temperatureGpu is not None
+            else None
+        )
+
+
+class BridgeGpuFanSpeedSensor(BridgeSensor):
+    """Defines a GPU fan speed sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+    ) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            f"gpu_{index}_fan_speed",
+            f"{name} Fan Speed",
+            "mdi:fan",
+            None,
+            PERCENTAGE,
+            False,
+        )
+        self._index = index
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            bridge.graphics.controllers[self._index].fanSpeed
+            if bridge.graphics.controllers[self._index].fanSpeed is not None
             else None
         )
 
