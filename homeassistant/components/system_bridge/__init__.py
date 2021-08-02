@@ -10,6 +10,7 @@ from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
 from systembridge.objects.command.response import CommandResponse
+from systembridge.objects.keyboard.payload import KeyboardPayload
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +40,9 @@ PLATFORMS = ["binary_sensor", "sensor"]
 
 CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"
+CONF_KEY = "key"
+CONF_MODIFIERS = "modifiers"
+CONF_TEXT = "text"
 CONF_WAIT = "wait"
 
 SERVICE_SEND_COMMAND = "send_command"
@@ -52,6 +56,18 @@ SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
 SERVICE_OPEN = "open"
 SERVICE_OPEN_SCHEMA = vol.Schema(
     {vol.Required(CONF_BRIDGE): cv.string, vol.Required(CONF_PATH): cv.string}
+)
+SERVICE_SEND_KEYPRESS = "send_keypress"
+SERVICE_SEND_KEYPRESS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BRIDGE): cv.string,
+        vol.Required(CONF_KEY): cv.string,
+        vol.Optional(CONF_MODIFIERS): cv.string,
+    }
+)
+SERVICE_SEND_TEXT = "send_text"
+SERVICE_SEND_TEXT_SCHEMA = vol.Schema(
+    {vol.Required(CONF_BRIDGE): cv.string, vol.Required(CONF_TEXT): cv.string}
 )
 
 
@@ -178,6 +194,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
             _LOGGER.warning("Error sending. Error was: %s", exception)
 
+    async def handle_send_keypress(call):
+        """Handle the send_keypress service call."""
+        device_registry = dr.async_get(hass)
+        device_id = call.data[CONF_BRIDGE]
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            _LOGGER.warning("Missing device: %s", device_id)
+            return
+
+        entry_id = next(
+            entry.entry_id
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in device_entry.config_entries
+        )
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        bridge: Bridge = coordinator.data
+
+        keyboard_payload: KeyboardPayload = {
+            CONF_KEY: call.data[CONF_KEY],
+            CONF_MODIFIERS: shlex.split(call.data.get(CONF_MODIFIERS, "")),
+        }
+
+        _LOGGER.debug("Keypress payload: %s", keyboard_payload)
+        try:
+            await bridge.async_send_keypress(keyboard_payload)
+            _LOGGER.debug("Sent keypress request")
+        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
+            _LOGGER.warning("Error sending. Error was: %s", exception)
+
+    async def handle_send_text(call):
+        """Handle the send_keypress service call."""
+        device_registry = dr.async_get(hass)
+        device_id = call.data[CONF_BRIDGE]
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            _LOGGER.warning("Missing device: %s", device_id)
+            return
+
+        entry_id = next(
+            entry.entry_id
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in device_entry.config_entries
+        )
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        bridge: Bridge = coordinator.data
+
+        keyboard_payload: KeyboardPayload = {CONF_TEXT: call.data[CONF_TEXT]}
+
+        _LOGGER.debug("Text payload: %s", keyboard_payload)
+        try:
+            await bridge.async_send_keypress(keyboard_payload)
+            _LOGGER.debug("Sent text request")
+        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
+            _LOGGER.warning("Error sending. Error was: %s", exception)
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_COMMAND,
@@ -190,6 +261,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_OPEN,
         handle_open,
         schema=SERVICE_OPEN_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_KEYPRESS,
+        handle_send_keypress,
+        schema=SERVICE_SEND_KEYPRESS_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_TEXT,
+        handle_send_text,
+        schema=SERVICE_SEND_TEXT_SCHEMA,
     )
 
     # Reload entry when its updated.
