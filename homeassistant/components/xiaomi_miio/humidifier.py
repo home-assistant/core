@@ -43,6 +43,23 @@ AVAILABLE_ATTRIBUTES = {
     ATTR_TARGET_HUMIDITY: "target_humidity",
 }
 
+AVAILABLE_MODES_CA1_CB1 = [
+    mode.name
+    for mode in AirhumidifierOperationMode
+    if mode is not AirhumidifierOperationMode.Strong
+]
+AVAILABLE_MODES_CA4 = [mode.name for mode in AirhumidifierMiotOperationMode]
+AVAILABLE_MODES_MJJSQ = [
+    mode.name
+    for mode in AirhumidifierMjjsqOperationMode
+    if mode is not AirhumidifierMjjsqOperationMode.WetAndProtect
+]
+AVAILABLE_MODES_OTHER = [
+    mode.name
+    for mode in AirhumidifierOperationMode
+    if mode is not AirhumidifierOperationMode.Auto
+]
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Humidifier from a config entry."""
@@ -180,37 +197,22 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, coordinator)
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            self._available_modes = []
-            self._available_modes = [
-                mode.name
-                for mode in AirhumidifierOperationMode
-                if mode is not AirhumidifierOperationMode.Strong
-            ]
+            self._available_modes = AVAILABLE_MODES_CA1_CB1
             self._min_humidity = 30
             self._max_humidity = 80
             self._humidity_steps = 10
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
-            self._available_modes = [
-                mode.name for mode in AirhumidifierMiotOperationMode
-            ]
+            self._available_modes = AVAILABLE_MODES_CA4
             self._min_humidity = 30
             self._max_humidity = 80
             self._humidity_steps = 100
         elif self._model in MODELS_HUMIDIFIER_MJJSQ:
-            self._available_modes = [
-                mode.name
-                for mode in AirhumidifierMjjsqOperationMode
-                if mode is not AirhumidifierMjjsqOperationMode.WetAndProtect
-            ]
+            self._available_modes = AVAILABLE_MODES_MJJSQ
             self._min_humidity = 30
             self._max_humidity = 80
             self._humidity_steps = 10
         else:
-            self._available_modes = [
-                mode.name
-                for mode in AirhumidifierOperationMode
-                if mode is not AirhumidifierOperationMode.Auto
-            ]
+            self._available_modes = AVAILABLE_MODES_OTHER
             self._min_humidity = 30
             self._max_humidity = 80
             self._humidity_steps = 10
