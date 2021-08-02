@@ -17,6 +17,7 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
+    CONF_DEVICES,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_ENTITY_ID,
@@ -36,7 +37,6 @@ from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_AUTO_START,
-    CONF_DEVICES,
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
