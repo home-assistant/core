@@ -71,7 +71,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             self.async_trigger,
             "homekit",
             self.display_name,
-            _LOGGER,
+            _LOGGER.log,
         )
 
     async def stop(self):
