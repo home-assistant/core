@@ -239,8 +239,9 @@ def _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
         data = conf.copy()
         options = {}
         for key in CONFIG_OPTIONS:
-            options[key] = data[key]
-            del data[key]
+            if key in data:
+                options[key] = data[key]
+                del data[key]
 
         hass.config_entries.async_update_entry(entry, data=data, options=options)
         return True
