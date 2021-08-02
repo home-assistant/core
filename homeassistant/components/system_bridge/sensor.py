@@ -51,13 +51,13 @@ async def async_setup_entry(
             SystemBridgeFilesystemSensor(coordinator, key)
             for key, _ in coordinator.data.filesystem.fsSize.items()
         ),
-        SystemBridgeMemoryFreeSensor(coordinator),
-        SystemBridgeMemoryUsedSensor(coordinator),
-        SystemBridgeMemoryUsedPercentageSensor(coordinator),
-        SystemBridgeKernelSensor(coordinator),
-        SystemBridgeOsSensor(coordinator),
-        SystemBridgeProcessesLoadSensor(coordinator),
-        SystemBridgeBiosVersionSensor(coordinator),
+        BridgeMemoryFreeSensor(coordinator),
+        BridgeMemoryUsedSensor(coordinator),
+        BridgeMemoryUsedPercentageSensor(coordinator),
+        BridgeKernelSensor(coordinator),
+        BridgeOsSensor(coordinator),
+        BridgeProcessesLoadSensor(coordinator),
+        BridgeVersionSensor(coordinator),
     ]
 
     if coordinator.data.battery.hasBattery:
@@ -435,3 +435,26 @@ class SystemBridgeBiosVersionSensor(SystemBridgeSensor):
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.system.bios.version
+
+
+class BridgeVersionSensor(BridgeSensor):
+    """Defines a version sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator: Bridge) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "version",
+            "Version",
+            "mdi:counter",
+            None,
+            None,
+            True,
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return bridge.information.version
