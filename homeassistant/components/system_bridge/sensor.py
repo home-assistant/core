@@ -91,6 +91,12 @@ async def async_setup_entry(
             SystemBridgeGpuUsagePercentageSensor(coordinator, index, name),
         ]
 
+    for index, _ in enumerate(coordinator.data.processes.load.cpus):
+        entities = [
+            *entities,
+            SystemBridgeProcessesCpuLoadSensor(coordinator, index),
+        ]
+
     async_add_entities(entities)
 
 
@@ -708,6 +714,56 @@ class SystemBridgeProcessesLoadSensor(SystemBridgeSensor):
             attrs[ATTR_LOAD_SYSTEM] = round(bridge.processes.load.currentLoadSystem, 2)
         if bridge.processes.load.currentLoadIdle is not None:
             attrs[ATTR_LOAD_IDLE] = round(bridge.processes.load.currentLoadIdle, 2)
+        return attrs
+
+
+class SystemBridgeProcessesCpuLoadSensor(SystemBridgeSensor):
+    """Defines a Processes CPU Load sensor."""
+
+    def __init__(
+        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int
+    ) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            f"processes_load_cpu_{index}",
+            f"Load CPU {index}",
+            "mdi:percent",
+            None,
+            PERCENTAGE,
+            False,
+        )
+        self._index = index
+        print(coordinator.data.processes.load.cpus[self._index].load)
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        print(bridge.processes.load.cpus[self._index].load)
+        return (
+            round(bridge.processes.load.cpus[self._index].load, 2)
+            if bridge.processes.load.cpus[self._index].load is not None
+            else None
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the entity."""
+        bridge: Bridge = self.coordinator.data
+        attrs = {}
+        if bridge.processes.load.cpus[self._index].loadUser is not None:
+            attrs[ATTR_LOAD_USER] = round(
+                bridge.processes.load.cpus[self._index].loadUser, 2
+            )
+        if bridge.processes.load.cpus[self._index].loadSystem is not None:
+            attrs[ATTR_LOAD_SYSTEM] = round(
+                bridge.processes.load.cpus[self._index].loadSystem, 2
+            )
+        if bridge.processes.load.cpus[self._index].loadIdle is not None:
+            attrs[ATTR_LOAD_IDLE] = round(
+                bridge.processes.load.cpus[self._index].loadIdle, 2
+            )
         return attrs
 
 
