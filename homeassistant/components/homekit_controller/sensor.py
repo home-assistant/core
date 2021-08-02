@@ -12,6 +12,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -29,19 +30,19 @@ SIMPLE_SENSOR = {
         "name": "Real Time Energy",
         "device_class": DEVICE_CLASS_POWER,
         "state_class": STATE_CLASS_MEASUREMENT,
-        "unit": "watts",
+        "unit": POWER_WATT,
     },
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: {
         "name": "Real Time Energy",
         "device_class": DEVICE_CLASS_POWER,
         "state_class": STATE_CLASS_MEASUREMENT,
-        "unit": "watts",
+        "unit": POWER_WATT,
     },
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: {
         "name": "Real Time Energy",
         "device_class": DEVICE_CLASS_POWER,
         "state_class": STATE_CLASS_MEASUREMENT,
-        "unit": "watts",
+        "unit": POWER_WATT,
     },
     CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): {
         "name": "Current Temperature",
