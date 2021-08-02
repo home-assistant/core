@@ -673,9 +673,10 @@ class HomeKit:
                 self.hass,
                 self.driver,
                 device.name,
-                device.id,
+                None,
                 aid,
                 config,
+                device_id=device.id,
                 device_triggers=device_triggers,
             )
         except Exception:  # pylint: disable=broad-except

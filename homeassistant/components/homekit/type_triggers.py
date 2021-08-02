@@ -20,9 +20,9 @@ class DeviceTriggerAccessory(HomeAccessory):
     Sensor entity must return temperature in °C, °F.
     """
 
-    def __init__(self, *args, device_triggers=None):
+    def __init__(self, *args, device_triggers=None, device_id=None):
         """Initialize a TemperatureSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args, category=CATEGORY_SENSOR, device_id=device_id)
         self._triggers = []
         for trigger in device_triggers:
             _LOGGER.warning("Set up up trigger: %s", trigger)
