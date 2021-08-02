@@ -45,7 +45,7 @@ async def test_koogeek_ls1_setup(hass):
 
     # Assert that the power sensor entity is correctly added to the entity registry
     entry = entity_registry.async_get("sensor.koogeek_sw2_187a91_real_time_energy")
-    assert entry.unique_id == "homekit-CNNT061751001372-aid:1-sid:14-cid:14"
+    assert entry.unique_id == "homekit-CNNT061751001372-aid:1-sid:14-cid:18"
 
     helper = Helper(
         hass,
