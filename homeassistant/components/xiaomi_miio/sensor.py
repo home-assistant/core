@@ -67,16 +67,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ATTR_POWER = "power"
+ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 ATTR_CHARGING = "charging"
 ATTR_DISPLAY_CLOCK = "display_clock"
+ATTR_HUMIDITY = "humidity"
 ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
+ATTR_POWER = "power"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
-ATTR_HUMIDITY = "humidity"
-ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 
 
 @dataclass
