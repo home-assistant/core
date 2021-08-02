@@ -16,6 +16,7 @@ from homeassistant.const import (
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_GIGAHERTZ,
+    FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -77,6 +78,8 @@ async def async_setup_entry(
         )
         entities = [
             *entities,
+            BridgeGpuCoreClockSpeedSensor(coordinator, index, name),
+            BridgeGpuMemoryClockSpeedSensor(coordinator, index, name),
             BridgeGpuMemoryFreeSensor(coordinator, index, name),
             BridgeGpuMemoryUsedPercentageSensor(coordinator, index, name),
             BridgeGpuMemoryUsedSensor(coordinator, index, name),
@@ -395,6 +398,66 @@ class BridgeGpuUsagePercentageSensor(BridgeSensor):
         return (
             bridge.graphics.controllers[self._index].utilizationGpu
             if bridge.graphics.controllers[self._index].utilizationGpu is not None
+            else None
+        )
+
+
+class BridgeGpuCoreClockSpeedSensor(BridgeSensor):
+    """Defines a GPU core clock speed sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+    ) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            f"gpu_{index}_core_clock_speed",
+            f"{name} GPU Clock Speed",
+            "mdi:speedometer",
+            None,
+            FREQUENCY_MEGAHERTZ,
+            True,
+        )
+        self._index = index
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            bridge.graphics.controllers[self._index].clockCore
+            if bridge.graphics.controllers[self._index].clockCore is not None
+            else None
+        )
+
+
+class BridgeGpuMemoryClockSpeedSensor(BridgeSensor):
+    """Defines a GPU memory clock speed sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, index: int, name: str
+    ) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            f"gpu_{index}_memory_clock_speed",
+            f"{name} GPU Memory Clock Speed",
+            "mdi:speedometer",
+            None,
+            FREQUENCY_MEGAHERTZ,
+            True,
+        )
+        self._index = index
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            bridge.graphics.controllers[self._index].clockMemory
+            if bridge.graphics.controllers[self._index].clockMemory is not None
             else None
         )
 
