@@ -443,9 +443,6 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
-        if self.supported_features & SUPPORT_MODES == 0 or not mode:
-            return
-
         if mode not in self.MODE_MAPPING:
             _LOGGER.warning("Mode %s is not a valid operation mode", mode)
             return
