@@ -1,21 +1,22 @@
 """Support for Broadlink lights."""
-from abc import ABC, abstractmethod
 import logging
 
 from broadlink.exceptions import BroadlinkException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_UNKNOWN,
     LightEntity,
 )
-from homeassistant.core import callback
 
 from .const import DOMAIN
+from .entity import BroadlinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,179 +30,108 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
     if device.api.type == "LB1":
-        lights = [BroadlinkLB1Light(device)]
+        lights = [BroadlinkLight(device)]
 
     async_add_entities(lights)
 
 
-class BroadlinkLight(LightEntity, ABC):
+class BroadlinkLight(BroadlinkEntity, LightEntity):
     """Representation of a Broadlink light."""
 
     def __init__(self, device):
         """Initialize the light."""
-        self._device = device
-        self._coordinator = device.update_manager.coordinator
+        super().__init__(device)
+        self._attr_assumed_state = False
+        self._attr_name = f"{device.name} Light"
+        self._attr_unique_id = device.unique_id
+        self._attr_supported_color_modes = set()
 
         data = self._coordinator.data
-        self._hs_color = [data["hue"], data["saturation"]]
-        self._color_temp = round((data["colortemp"] - 2700) / 100 + 153)
-        self._state = data["pwr"]
-        self._brightness = round(data["brightness"] * 2.55)
 
-        if data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
-            self._color_mode = COLOR_MODE_HS
-        elif data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
-        else:
-            # Scenes are for now not supported
-            self._color_mode = COLOR_MODE_UNKNOWN
+        if {"hue", "saturation"}.issubset(data):
+            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+        if "colortemp" in data:
+            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+        if not self.supported_color_modes:
+            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
-    @property
-    def name(self):
-        """Return the name of the light."""
-        return f"{self._device.name} Light"
+        self._update_state(data)
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the light."""
-        return self._device.unique_id
+    def _update_state(self, data):
+        """Update the state of the entity."""
+        if "pwr" in data:
+            self._attr_is_on = data["pwr"]
 
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the light."""
-        return False
+        if "brightness" in data:
+            self._attr_brightness = round(data["brightness"] * 2.55)
 
-    @property
-    def available(self):
-        """Return True if the light is available."""
-        return self._device.update_manager.available
+        if self.supported_color_modes == {COLOR_MODE_BRIGHTNESS}:
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            return
 
-    @property
-    def is_on(self):
-        """Return True if the light is on."""
-        return self._state
+        if {"hue", "saturation"}.issubset(data):
+            self._attr_hs_color = [data["hue"], data["saturation"]]
 
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
+        if "colortemp" in data:
+            self._attr_color_temp = round((data["colortemp"] - 2700) / 100 + 153)
 
-    @property
-    def hs_color(self):
-        """Return the color property."""
-        return self._hs_color
-
-    @property
-    def color_temp(self):
-        """Return the color temperature property."""
-        return self._color_temp
-
-    @property
-    def should_poll(self):
-        """Return True if the light has to be polled for state."""
-        return False
-
-    @property
-    def color_mode(self):
-        """Return the current color mode property"""
-        return self._color_mode
-
-    @property
-    def supported_color_modes(self):
-        """Return the supported color modes"""
-        return {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "manufacturer": self._device.api.manufacturer,
-            "model": self._device.api.model,
-            "name": self._device.name,
-            "sw_version": self._device.fw_version,
-        }
-
-    @callback
-    def update_data(self):
-        """Update data."""
-        data = self._coordinator.data
-        self._brightness = round(data["brightness"] * 2.55)
-        self._hs_color = [data["hue"], data["saturation"]]
-        self._color_temp = round((data["colortemp"] - 2700) / 100 + 153)
-        self._state = data["pwr"]
-
-        if data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
-            self._color_mode = COLOR_MODE_HS
-        elif data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
-        else:
-            # Scenes are for now not supported
-            self._color_mode = COLOR_MODE_UNKNOWN
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Call when the light is added to hass."""
-        self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
-
-    async def async_update(self):
-        """Update the light."""
-        await self._coordinator.async_request_refresh()
+        if "bulb_colormode" in data:
+            if data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
+                self._attr_color_mode = COLOR_MODE_HS
+            elif data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE:
+                self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+            else:
+                # Scenes are not yet supported.
+                self._attr_color_mode = COLOR_MODE_UNKNOWN
 
     async def async_turn_on(self, **kwargs):
         """Turn on the light."""
-        hs_color = [int(i) for i in kwargs.get(ATTR_HS_COLOR, self._hs_color)]
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP, self._color_temp)
-        if ATTR_COLOR_TEMP in kwargs:
-            color_mode = COLOR_MODE_COLOR_TEMP
+        state = {"pwr": 1}
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            state["brightness"] = round(brightness / 2.55)
+
+        if self.supported_color_modes == {COLOR_MODE_BRIGHTNESS}:
+            state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
+
         elif ATTR_HS_COLOR in kwargs:
-            color_mode = COLOR_MODE_HS
-        else:
-            color_mode = self._color_mode
+            hs_color = kwargs[ATTR_HS_COLOR]
+            state["hue"] = int(hs_color[0])
+            state["saturation"] = int(hs_color[1])
+            state["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
 
-        data = {
-            "hue": hs_color[0],
-            "saturation": hs_color[1],
-            "colortemp": (color_temp - 153) * 100 + 2700,
-            "brightness": round(brightness / 2.55),
-            "pwr": 1,
-        }
+        elif ATTR_COLOR_TEMP in kwargs:
+            color_temp = kwargs[ATTR_COLOR_TEMP]
+            state["colortemp"] = (color_temp - 153) * 100 + 2700
+            state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
 
-        if color_mode == COLOR_MODE_HS:
-            data["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
-        elif color_mode == COLOR_MODE_COLOR_TEMP:
-            data["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
-        else:
-            data["bulb_colormode"] = BROADLINK_COLOR_MODE_SCENES
+        elif ATTR_COLOR_MODE in kwargs:
+            color_mode = kwargs[ATTR_COLOR_MODE]
+            if color_mode == COLOR_MODE_HS:
+                state["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
+            elif color_mode == COLOR_MODE_COLOR_TEMP:
+                state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
+            else:
+                # Scenes are not yet supported.
+                state["bulb_colormode"] = BROADLINK_COLOR_MODE_SCENES
 
-        if await self._async_send_packet(data):
-            self._hs_color = hs_color
-            self._brightness = brightness
-            self._color_mode = color_mode
-            self._color_temp = color_temp
-            self._state = True
-            self.async_write_ha_state()
+        await self._async_set_state(state)
 
     async def async_turn_off(self, **kwargs):
         """Turn off the light."""
-        if await self._async_send_packet({"pwr": 0}):
-            self._state = False
-            self.async_write_ha_state()
+        await self._async_set_state({"pwr": 0})
 
-    @abstractmethod
-    async def _async_send_packet(self, request):
-        """Send a packet to the device."""
-
-
-class BroadlinkLB1Light(BroadlinkLight):
-    """Representation of a Broadlink LB1 light."""
-
-    async def _async_send_packet(self, request):
-        """Send a packet to the device."""
+    async def _async_set_state(self, state):
+        """Set the state of the light."""
         try:
-            await self._device.async_request(self._device.api.set_state, **request)
+            state = await self._device.async_request(
+                self._device.api.set_state, **state
+            )
         except (BroadlinkException, OSError) as err:
-            _LOGGER.error("Failed to send packet: %s", err)
+            _LOGGER.error("Failed to set state: %s", err)
             return False
+
+        self._update_state(state)
+        self.async_write_ha_state()
         return True
