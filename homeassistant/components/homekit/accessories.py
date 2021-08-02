@@ -245,7 +245,7 @@ class HomeAccessory(Accessory):
         self.set_info_service(
             manufacturer=manufacturer,
             model=model,
-            serial_number=entity_id,
+            serial_number=device_id or entity_id,
             firmware_revision=sw_version,
         )
 
@@ -318,9 +318,6 @@ class HomeAccessory(Accessory):
 
     async def run(self):
         """Handle accessory driver started event."""
-        if self.device_id:
-            return
-
         state = self.hass.states.get(self.entity_id)
         self.async_update_state_callback(state)
         self._subscriptions.append(

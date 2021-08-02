@@ -7,6 +7,9 @@ from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_NAME,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
+    CHAR_SERVICE_LABEL_INDEX,
+    CHAR_SERVICE_LABEL_NAMESPACE,
+    SERV_SERVICE_LABEL,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
 
@@ -24,8 +27,12 @@ class DeviceTriggerAccessory(HomeAccessory):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH, device_id=device_id)
         self._triggers = []
-        for trigger in device_triggers:
+        for idx, trigger in enumerate(device_triggers):
             _LOGGER.warning("Set up up trigger: %s", trigger)
+            serv_service_label = self.add_preload_service(
+                SERV_SERVICE_LABEL, [CHAR_NAME]
+            )
+            serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=0)
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH, [CHAR_NAME]
             )
@@ -39,6 +46,8 @@ class DeviceTriggerAccessory(HomeAccessory):
             type_ = trigger.get("type")
             sub_type = trigger.get("sub_type")
             serv_stateless_switch.configure_char(CHAR_NAME, value=f"{type_} {sub_type}")
+            serv_stateless_switch.configure_char(CHAR_SERVICE_LABEL_INDEX, value=idx)
+            serv_service_label.configure_char(CHAR_NAME, value=f"{type_} {sub_type}")
 
     # Attach the trigger using the helper in async run
     # and detach it in async stop
