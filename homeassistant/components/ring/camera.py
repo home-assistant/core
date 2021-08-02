@@ -149,7 +149,7 @@ class RingCam(RingEntityMixin, Camera):
             video_url = None
 
         if video_url:
-            if (self._last_video_id != self._last_event["id"]) or (self._image == None):
+            if (self._last_video_id != self._last_event["id"]) or (self._image is None):
                 ffmpeg = ImageFrame(self._ffmpeg.binary)
 
                 self._image = await asyncio.shield(
