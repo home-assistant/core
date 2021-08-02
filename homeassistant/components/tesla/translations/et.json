@@ -12,6 +12,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mfa": "MFA kood (valikuline)",
                     "password": "Salas\u00f5na",
                     "username": "E-post"
                 },
