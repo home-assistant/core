@@ -340,13 +340,13 @@ class PrometheusMetrics:
             state,
             ATTR_TARGET_TEMP_HIGH,
             "climate_target_temperature_high_celsius",
-            "Target temperature in degrees Celsius",
+            "Target high temperature in degrees Celsius",
         )
         self._handle_climate_temp(
             state,
             ATTR_TARGET_TEMP_LOW,
             "climate_target_temperature_low_celsius",
-            "Target temperature in degrees Celsius",
+            "Target low temperature in degrees Celsius",
         )
         self._handle_climate_temp(
             state,
