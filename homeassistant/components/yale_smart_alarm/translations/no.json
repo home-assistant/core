@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "name": "Navn",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Navn",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}
