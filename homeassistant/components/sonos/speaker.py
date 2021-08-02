@@ -460,7 +460,6 @@ class SonosSpeaker:
             self.soco = soco
 
         was_available = self.available
-        _LOGGER.debug("Async seen: %s, was_available: %s", self.soco, was_available)
 
         if self._seen_timer:
             self._seen_timer()
@@ -472,6 +471,12 @@ class SonosSpeaker:
         if was_available:
             self.async_write_entity_states()
             return
+
+        _LOGGER.debug(
+            "%s [%s] was not available, setting up",
+            self.zone_name,
+            self.soco.ip_address,
+        )
 
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
             partial(

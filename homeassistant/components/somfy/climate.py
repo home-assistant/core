@@ -165,7 +165,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
             temperature = self._climate.get_night_temperature()
         elif preset_mode == PRESET_FROST_GUARD:
             temperature = self._climate.get_frost_protection_temperature()
-        elif preset_mode in [PRESET_MANUAL, PRESET_GEOFENCING]:
+        elif preset_mode in (PRESET_MANUAL, PRESET_GEOFENCING):
             temperature = self.target_temperature
         else:
             raise ValueError(f"Preset mode not supported: {preset_mode}")

@@ -1,6 +1,7 @@
 """Const file for Tesla cars."""
 CONF_EXPIRATION = "expiration"
 CONF_WAKE_ON_START = "enable_wake_on_start"
+CONF_MFA = "mfa"
 DOMAIN = "tesla"
 DATA_LISTENER = "listener"
 DEFAULT_SCAN_INTERVAL = 660

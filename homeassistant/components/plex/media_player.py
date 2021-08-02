@@ -256,7 +256,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def _is_player_active(self):
         """Report if the client is playing media."""
-        return self.state in [STATE_PLAYING, STATE_PAUSED]
+        return self.state in (STATE_PLAYING, STATE_PAUSED)
 
     @property
     def _active_media_plexapi_type(self):

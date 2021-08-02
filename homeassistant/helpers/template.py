@@ -43,7 +43,11 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity_registry, location as loc_helper
+from homeassistant.helpers import (
+    device_registry,
+    entity_registry,
+    location as loc_helper,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -902,11 +906,47 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
-def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
+def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     """Get entity ids for entities tied to a device."""
     entity_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_device(entity_reg, device_id)
+    entries = entity_registry.async_entries_for_device(entity_reg, _device_id)
     return [entry.entity_id for entry in entries]
+
+
+def device_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get a device ID from an entity ID."""
+    if not isinstance(entity_id, str) or "." not in entity_id:
+        raise TemplateError(f"Must provide an entity ID, got {entity_id}")  # type: ignore
+    entity_reg = entity_registry.async_get(hass)
+    entity = entity_reg.async_get(entity_id)
+    if entity is None:
+        return None
+    return entity.device_id
+
+
+def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
+    """Get the device specific attribute."""
+    device_reg = device_registry.async_get(hass)
+    if not isinstance(device_or_entity_id, str):
+        raise TemplateError("Must provide a device or entity ID")
+    device = None
+    if (
+        "." in device_or_entity_id
+        and (_device_id := device_id(hass, device_or_entity_id)) is not None
+    ):
+        device = device_reg.async_get(_device_id)
+    elif "." not in device_or_entity_id:
+        device = device_reg.async_get(device_or_entity_id)
+    if device is None or not hasattr(device, attr_name):
+        return None
+    return getattr(device, attr_name)
+
+
+def is_device_attr(
+    hass: HomeAssistant, device_or_entity_id: str, attr_name: str, attr_value: Any
+) -> bool:
+    """Test if a device's attribute is a specific value."""
+    return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
 
 
 def closest(hass, *args):
@@ -1486,6 +1526,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_entities"] = hassfunction(device_entities)
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
+        self.globals["device_attr"] = hassfunction(device_attr)
+        self.globals["is_device_attr"] = hassfunction(is_device_attr)
+
+        self.globals["device_id"] = hassfunction(device_id)
+        self.filters["device_id"] = pass_context(self.globals["device_id"])
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -1507,8 +1553,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "states",
                 "utcnow",
                 "now",
+                "device_attr",
+                "is_device_attr",
+                "device_id",
             ]
-            hass_filters = ["closest", "expand"]
+            hass_filters = ["closest", "expand", "device_id"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:

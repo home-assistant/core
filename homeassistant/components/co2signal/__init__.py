@@ -134,7 +134,7 @@ def get_data(hass: HomeAssistant, config: dict) -> CO2SignalResponse:
 
         _LOGGER.exception("Unexpected exception")
         raise UnknownError from err
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         _LOGGER.exception("Unexpected exception")
         raise UnknownError from err
 

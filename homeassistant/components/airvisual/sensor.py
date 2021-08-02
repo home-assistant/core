@@ -156,10 +156,10 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
     sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
-    if config_entry.data[CONF_INTEGRATION_TYPE] in [
+    if config_entry.data[CONF_INTEGRATION_TYPE] in (
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
-    ]:
+    ):
         sensors = [
             AirVisualGeographySensor(
                 coordinator,

@@ -679,6 +679,7 @@ async def test_script_variables(hass, caplog):
             "script": {
                 "script1": {
                     "variables": {
+                        "this_variable": "{{this.entity_id}}",
                         "test_var": "from_config",
                         "templated_config_var": "{{ var_from_service | default('config-default') }}",
                     },
@@ -688,6 +689,8 @@ async def test_script_variables(hass, caplog):
                             "data": {
                                 "value": "{{ test_var }}",
                                 "templated_config_var": "{{ templated_config_var }}",
+                                "this_template": "{{this.entity_id}}",
+                                "this_variable": "{{this_variable}}",
                             },
                         },
                     ],
@@ -731,6 +734,10 @@ async def test_script_variables(hass, caplog):
     assert len(mock_calls) == 1
     assert mock_calls[0].data["value"] == "from_config"
     assert mock_calls[0].data["templated_config_var"] == "hello"
+    # Verify this available to all templates
+    assert mock_calls[0].data.get("this_template") == "script.script1"
+    # Verify this available during trigger variables rendering
+    assert mock_calls[0].data.get("this_variable") == "script.script1"
 
     await hass.services.async_call(
         "script", "script1", {"test_var": "from_service"}, blocking=True
@@ -758,3 +765,34 @@ async def test_script_variables(hass, caplog):
 
     assert len(mock_calls) == 4
     assert mock_calls[3].data["value"] == 1
+
+
+async def test_script_this_var_always(hass, caplog):
+    """Test script always has reference to this, even with no variabls are configured."""
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {
+                                "this_template": "{{this.entity_id}}",
+                            },
+                        },
+                    ],
+                },
+            },
+        },
+    )
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await hass.services.async_call("script", "script1", blocking=True)
+
+    assert len(mock_calls) == 1
+    # Verify this available to all templates
+    assert mock_calls[0].data.get("this_template") == "script.script1"
+    assert "Error rendering variables" not in caplog.text

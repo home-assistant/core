@@ -1,6 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Final, TypedDict, final
@@ -12,7 +13,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 
@@ -97,9 +98,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class WeatherEntityDescription(EntityDescription):
+    """A class that describes weather entities."""
+
+
 class WeatherEntity(Entity):
     """ABC for weather data."""
 
+    entity_description: WeatherEntityDescription
     _attr_attribution: str | None = None
     _attr_condition: str | None
     _attr_forecast: list[Forecast] | None = None

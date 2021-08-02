@@ -47,7 +47,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
-        self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -61,11 +61,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         """Return the state of the sensor."""
         return self._value
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
     async def async_update(self, now=None):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
@@ -74,10 +69,10 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
             self._slave, self._address, self._count, self._input_type
         )
         if result is None:
-            self._available = False
+            self._attr_available = False
             self.async_write_ha_state()
             return
 
         self.unpack_structure_result(result.registers)
-        self._available = True
+        self._attr_available = True
         self.async_write_ha_state()
