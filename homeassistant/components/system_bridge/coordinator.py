@@ -77,7 +77,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
         except BridgeConnectionClosedException as exception:
             self.last_update_success = False
             self.logger.info(
-                "Websocket Connection Closed for %s (%s). Will retry. %s",
+                "Websocket Connection Closed for %s (%s). Will retry: %s",
                 self.title,
                 self.host,
                 exception,
@@ -86,7 +86,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[Bridge]):
             self.last_update_success = False
             self.update_listeners()
             self.logger.warning(
-                "Exception occurred for %s (%s). Will retry. %s",
+                "Exception occurred for %s (%s). Will retry: %s",
                 self.title,
                 self.host,
                 exception,
