@@ -9,7 +9,8 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "L'int\u00e9gration SmartTub doit r\u00e9-authentifier votre compte"
+                "description": "L'int\u00e9gration SmartTub doit r\u00e9-authentifier votre compte",
+                "title": "R\u00e9authentification de l'int\u00e9gration"
             },
             "user": {
                 "data": {

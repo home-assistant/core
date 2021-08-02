@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "snmp_error": "SNMP-Server deaktiviert oder Drucker nicht unterst\u00fctzt.",
-            "wrong_host": " Ung\u00fcltiger Hostname oder IP-Adresse"
+            "wrong_host": "Ung\u00fcltiger Hostname oder IP-Adresse"
         },
         "flow_title": "{model} {serial_number}",
         "step": {

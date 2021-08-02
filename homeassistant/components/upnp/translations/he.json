@@ -12,6 +12,12 @@
         },
         "flow_title": "{name}",
         "step": {
+            "init": {
+                "many": "\u05e8\u05d9\u05e7\u05d9\u05dd",
+                "one": "\u05e8\u05d9\u05e7",
+                "other": "\u05e8\u05d9\u05e7\u05d9\u05dd",
+                "two": "\u05e8\u05d9\u05e7\u05d9\u05dd"
+            },
             "user": {
                 "data": {
                     "unique_id": "\u05d4\u05ea\u05e7\u05df",

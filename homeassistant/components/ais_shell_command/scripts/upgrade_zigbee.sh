@@ -21,6 +21,9 @@ git pull
 echo "Installing dependencies..."
 npm ci --unsafe-perm
 
+echo "Build and Test"
+node index.js
+
 echo "Restore configuration..."
 cp ~/configuration.yaml ~/zigbee2mqtt/data/configuration.yaml
 rm ~/configuration.yaml
