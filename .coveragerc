@@ -75,12 +75,6 @@ omit =
     homeassistant/components/asuswrt/router.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
-    homeassistant/components/automate/__init__.py
-    homeassistant/components/automate/base.py
-    homeassistant/components/automate/const.py
-    homeassistant/components/automate/cover.py
-    homeassistant/components/automate/helpers.py
-    homeassistant/components/automate/hub.py
     homeassistant/components/aurora/__init__.py
     homeassistant/components/aurora/binary_sensor.py
     homeassistant/components/aurora/const.py
@@ -112,6 +106,8 @@ omit =
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_tracker/*
+    homeassistant/components/bme280/__init__.py
+    homeassistant/components/bme280/const.py
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
     homeassistant/components/bmp280/sensor.py
@@ -279,6 +275,7 @@ omit =
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/number.py
+    homeassistant/components/esphome/select.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
     homeassistant/components/essent/sensor.py
@@ -360,10 +357,6 @@ omit =
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
     homeassistant/components/garages_amsterdam/sensor.py
-    homeassistant/components/garmin_connect/__init__.py
-    homeassistant/components/garmin_connect/const.py
-    homeassistant/components/garmin_connect/sensor.py
-    homeassistant/components/garmin_connect/alarm_util.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/generic_hygrostat/*
@@ -1206,8 +1199,11 @@ omit =
     homeassistant/components/xiaomi_miio/device_tracker.py
     homeassistant/components/xiaomi_miio/fan.py
     homeassistant/components/xiaomi_miio/gateway.py
+    homeassistant/components/xiaomi_miio/humidifier.py
     homeassistant/components/xiaomi_miio/light.py
+    homeassistant/components/xiaomi_miio/number.py
     homeassistant/components/xiaomi_miio/remote.py
+    homeassistant/components/xiaomi_miio/select.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
     homeassistant/components/xiaomi_miio/vacuum.py
@@ -1223,6 +1219,9 @@ omit =
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
+    homeassistant/components/youless/__init__.py
+    homeassistant/components/youless/const.py
+    homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*
     homeassistant/components/zamg/sensor.py
     homeassistant/components/zamg/weather.py

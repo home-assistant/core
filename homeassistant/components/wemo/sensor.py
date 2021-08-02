@@ -3,13 +3,16 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Callable
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import StateType
@@ -52,31 +55,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class InsightSensor(WemoSubscriptionEntity, SensorEntity):
     """Common base for WeMo Insight power sensors."""
 
-    def __init__(
-        self,
-        device: DeviceWrapper,
-        update_insight_params: Callable,
-        name_suffix: str,
-        device_class: str,
-        unit_of_measurement: str,
-    ) -> None:
+    _name_suffix: str
+
+    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
         """Initialize the WeMo Insight power sensor."""
         super().__init__(device)
         self._update_insight_params = update_insight_params
-        self._name_suffix = name_suffix
-        self._attr_device_class = device_class
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_unit_of_measurement = unit_of_measurement
 
     @property
     def name(self) -> str:
         """Return the name of the entity if any."""
-        return f"{self.wemo.name} {self._name_suffix}"
+        return f"{super().name} {self.entity_description.name}"
 
     @property
     def unique_id(self) -> str:
         """Return the id of this entity."""
-        return f"{self.wemo.serialnumber}_{self._name_suffix}"
+        return f"{super().unique_id}_{self.entity_description.key}"
+
+    @property
+    def available(self) -> str:
+        """Return true if sensor is available."""
+        return (
+            self.entity_description.key in self.wemo.insight_params
+            and super().available
+        )
 
     def _update(self, force_update=True) -> None:
         with self._wemo_exception_handler("update status"):
@@ -87,36 +89,33 @@ class InsightSensor(WemoSubscriptionEntity, SensorEntity):
 class InsightCurrentPower(InsightSensor):
     """Current instantaineous power consumption."""
 
-    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
-        """Initialize the WeMo Insight power sensor."""
-        super().__init__(
-            device,
-            update_insight_params,
-            "Current Power",
-            DEVICE_CLASS_POWER,
-            POWER_WATT,
-        )
+    entity_description = SensorEntityDescription(
+        key="currentpower",
+        name="Current Power",
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_of_measurement=POWER_WATT,
+    )
 
     @property
     def state(self) -> StateType:
         """Return the current power consumption."""
-        if "currentpower" not in self.wemo.insight_params:
-            return STATE_UNAVAILABLE
-        return convert(self.wemo.insight_params["currentpower"], float, 0.0) / 1000.0
+        return (
+            convert(self.wemo.insight_params[self.entity_description.key], float, 0.0)
+            / 1000.0
+        )
 
 
 class InsightTodayEnergy(InsightSensor):
     """Energy used today."""
 
-    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
-        """Initialize the WeMo Insight power sensor."""
-        super().__init__(
-            device,
-            update_insight_params,
-            "Today Energy",
-            DEVICE_CLASS_ENERGY,
-            ENERGY_KILO_WATT_HOUR,
-        )
+    entity_description = SensorEntityDescription(
+        key="todaymw",
+        name="Today Energy",
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    )
 
     @property
     def last_reset(self) -> datetime:
@@ -126,7 +125,7 @@ class InsightTodayEnergy(InsightSensor):
     @property
     def state(self) -> StateType:
         """Return the current energy use today."""
-        if "todaymw" not in self.wemo.insight_params:
-            return STATE_UNAVAILABLE
-        miliwatts = convert(self.wemo.insight_params["todaymw"], float, 0.0)
+        miliwatts = convert(
+            self.wemo.insight_params[self.entity_description.key], float, 0.0
+        )
         return round(miliwatts / (1000.0 * 1000.0 * 60), 2)

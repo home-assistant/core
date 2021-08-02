@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
+import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
 from homeassistant.components.sensor import (
@@ -10,6 +11,11 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_MONETARY,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+)
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,6 +25,8 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -124,7 +132,6 @@ async def _process_manager_data(
 
                 current_entities[key] = EnergyCostSensor(
                     adapter,
-                    manager.data["currency"],
                     untyped_flow,
                 )
                 to_add.append(current_entities[key])
@@ -142,7 +149,6 @@ class EnergyCostSensor(SensorEntity):
     def __init__(
         self,
         adapter: FlowAdapter,
-        currency: str,
         flow: dict,
     ) -> None:
         """Initialize the sensor."""
@@ -152,13 +158,14 @@ class EnergyCostSensor(SensorEntity):
         self.entity_id = f"{flow[adapter.entity_energy_key]}_{adapter.entity_id_suffix}"
         self._attr_device_class = DEVICE_CLASS_MONETARY
         self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_unit_of_measurement = currency
         self._flow = flow
         self._last_energy_sensor_state: State | None = None
+        self._cur_value = 0.0
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
         self._attr_state = 0.0
+        self._cur_value = 0.0
         self._attr_last_reset = dt_util.utcnow()
         self._last_energy_sensor_state = energy_state
         self.async_write_ha_state()
@@ -189,6 +196,12 @@ class EnergyCostSensor(SensorEntity):
                 energy_price = float(energy_price_state.state)
             except ValueError:
                 return
+
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_WATT_HOUR}"
+            ):
+                energy_price *= 1000.0
+
         else:
             energy_price_state = None
             energy_price = cast(float, self._flow["number_energy_price"])
@@ -198,7 +211,16 @@ class EnergyCostSensor(SensorEntity):
             self._reset(energy_state)
             return
 
-        cur_value = cast(float, self._attr_state)
+        energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if energy_unit == ENERGY_WATT_HOUR:
+            energy_price /= 1000
+        elif energy_unit != ENERGY_KILO_WATT_HOUR:
+            _LOGGER.warning(
+                "Found unexpected unit %s for %s", energy_unit, energy_state.entity_id
+            )
+            return
+
         if (
             energy_state.attributes[ATTR_LAST_RESET]
             != self._last_energy_sensor_state.attributes[ATTR_LAST_RESET]
@@ -208,7 +230,8 @@ class EnergyCostSensor(SensorEntity):
         else:
             # Update with newly incurred cost
             old_energy_value = float(self._last_energy_sensor_state.state)
-            self._attr_state = cur_value + (energy - old_energy_value) * energy_price
+            self._cur_value += (energy - old_energy_value) * energy_price
+            self._attr_state = round(self._cur_value, 2)
 
         self._last_energy_sensor_state = energy_state
 
@@ -256,3 +279,8 @@ class EnergyCostSensor(SensorEntity):
     def update_config(self, flow: dict) -> None:
         """Update the config."""
         self._flow = flow
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the units of measurement."""
+        return self.hass.config.currency

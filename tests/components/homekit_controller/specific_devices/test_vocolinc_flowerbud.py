@@ -68,3 +68,25 @@ async def test_vocolinc_flowerbud_setup(hass):
 
     # The sensor and switch should be part of the same device
     assert entry.device_id == device.id
+
+    # Assert the humidity sensory is detected
+    entry = entity_registry.async_get(
+        "sensor.vocolinc_flowerbud_0d324b_current_humidity"
+    )
+    assert entry.unique_id == "homekit-AM01121849000327-aid:1-sid:30-cid:30"
+
+    helper = Helper(
+        hass,
+        "sensor.vocolinc_flowerbud_0d324b_current_humidity",
+        pairing,
+        accessories[0],
+        config_entry,
+    )
+    state = await helper.poll_and_get_state()
+    assert (
+        state.attributes["friendly_name"]
+        == "VOCOlinc-Flowerbud-0d324b - Current Humidity"
+    )
+
+    # The sensor and humidifier should be part of the same device
+    assert entry.device_id == device.id

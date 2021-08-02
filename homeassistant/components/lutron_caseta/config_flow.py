@@ -137,7 +137,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _write_tls_assets(self, assets):
         """Write the tls assets to disk."""
         for asset_key, conf_key in FILE_MAPPING.items():
-            with open(self.hass.config.path(self.data[conf_key]), "w") as file_handle:
+            with open(
+                self.hass.config.path(self.data[conf_key]), "w", encoding="utf8"
+            ) as file_handle:
                 file_handle.write(assets[asset_key])
 
     def _tls_assets_exist(self):

@@ -218,12 +218,14 @@ async def test_import(hass: HomeAssistant) -> None:
     assert state.state == "45.99"
     assert state.name == "CO2 intensity"
     assert state.attributes["unit_of_measurement"] == "gCO2eq/kWh"
+    assert state.attributes["country_code"] == "FR"
 
     state = hass.states.get("sensor.grid_fossil_fuel_percentage")
     assert state is not None
     assert state.state == "5.46"
     assert state.name == "Grid fossil fuel percentage"
     assert state.attributes["unit_of_measurement"] == "%"
+    assert state.attributes["country_code"] == "FR"
 
 
 async def test_import_abort_existing_home(hass: HomeAssistant) -> None:
