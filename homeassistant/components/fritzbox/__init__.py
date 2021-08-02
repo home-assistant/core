@@ -146,7 +146,7 @@ class FritzBoxEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.device.present
+        return super().available and self.device.present
 
     @property
     def device(self) -> FritzhomeDevice:
