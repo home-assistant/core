@@ -80,7 +80,7 @@ ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 
 
 @dataclass
-class XiaomiMiioSensorEntityDescription(SensorEntityDescription):
+class XiaomiMiioSensorDescription(SensorEntityDescription):
     """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
     valid_min_value: float | None = None
@@ -88,34 +88,34 @@ class XiaomiMiioSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES = (
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="temperature",
         name="Temperature",
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="humidity",
         name="Humidity",
         unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="pressure",
         name="Pressure",
         unit_of_measurement=PRESSURE_HPA,
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="load_power",
         name="Load Power",
         unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="water_level",
         name="Water Level",
         unit_of_measurement=PERCENTAGE,
@@ -124,7 +124,7 @@ SENSOR_TYPES = (
         valid_min_value=0.0,
         valid_max_value=100.0,
     ),
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="actual_speed",
         name="Actual Speed",
         unit_of_measurement="rpm",
@@ -133,14 +133,14 @@ SENSOR_TYPES = (
         valid_min_value=200.0,
         valid_max_value=2000.0,
     ),
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="illuminance",
         name="Illuminance",
         unit_of_measurement=UNIT_LUMEN,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    XiaomiMiioSensorEntityDescription(
+    XiaomiMiioSensorDescription(
         key="air_quality",
         unit_of_measurement="AQI",
         icon="mdi:cloud",
@@ -411,7 +411,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
                 )
 
 
-def _get_sensor_description(sensor: str) -> XiaomiMiioSensorEntityDescription:
+def _get_sensor_description(sensor: str) -> XiaomiMiioSensorDescription:
     """Return sensor entity description."""
     for description in SENSOR_TYPES:
         if description.key == sensor:
