@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry):
         params["app_id"] = config[CONF_APP_ID]
         params["encryption_key"] = config[CONF_ENCRYPTION_KEY]
 
-    remote = Device(hass, host, port, on_action, **params)
+    remote = Remote(hass, host, port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
     panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
@@ -119,8 +119,8 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-class Device:
-    """The Device class. It stores the TV properties and the remote control connection itself."""
+class Remote:
+    """The Remote class. It stores the TV properties and the remote control connection itself."""
 
     def __init__(
         self,
@@ -131,7 +131,7 @@ class Device:
         app_id=None,
         encryption_key=None,
     ):
-        """Initialize the Device class."""
+        """Initialize the Remote class."""
         self._hass = hass
 
         self._host = host

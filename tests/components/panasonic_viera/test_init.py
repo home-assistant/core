@@ -1,6 +1,8 @@
 """Test the Panasonic Viera setup process."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+from urllib.error import HTTPError, URLError
 
+from homeassistant.components.panasonic_viera import Remote
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
     ATTR_UDN,
@@ -8,7 +10,7 @@ from homeassistant.components.panasonic_viera.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -225,3 +227,33 @@ async def test_setup_unload_entry(hass, mock_remote):
 
     assert state_tv is None
     assert state_remote is None
+
+
+async def test_remote_handle_httperror(hass, mock_remote):
+    """Test device handle httperror as Off."""
+
+    device = Remote(hass, "1.0.0.0", 1)
+
+    # simulate http badrequest
+    mock_remote.get_mute = Mock(side_effect=HTTPError("", 400, "", None, None))
+
+    await device.async_create_remote_control(True)
+    await hass.async_block_till_done()
+
+    assert device.state == STATE_OFF
+    assert device.available is True
+
+
+async def test_device_handle_urlerror(hass, mock_remote):
+    """Test device handle urlerror as Unavailable."""
+
+    device = Remote(hass, "1.0.0.0", 1)
+
+    # simulate timeout error
+    mock_remote.get_mute = Mock(side_effect=URLError("", ""))
+
+    await device.async_create_remote_control(True)
+    await hass.async_block_till_done()
+
+    assert device.state == STATE_OFF
+    assert device.available is False
