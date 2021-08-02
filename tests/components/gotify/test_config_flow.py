@@ -17,10 +17,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.gotify.config_flow.GotifyHub.authenticate",
-        return_value=True,
-    ), patch(
+    with patch("homeassistant.components.gotify.config_flow.validate_input"), patch(
         "homeassistant.components.gotify.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,7 +46,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.gotify.config_flow.GotifyHub.authenticate",
+        "homeassistant.components.gotify.config_flow.validate_input",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -71,7 +68,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.gotify.config_flow.GotifyHub.connect",
+        "homeassistant.components.gotify.config_flow.validate_input",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
