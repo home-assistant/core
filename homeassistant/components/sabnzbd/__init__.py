@@ -1,6 +1,7 @@
 """Support for monitoring an SABnzbd NZB client."""
 from __future__ import annotations
 
+from collections import namedtuple
 from datetime import timedelta
 import logging
 
@@ -53,40 +54,56 @@ SERVICE_SET_SPEED = "set_speed"
 
 SIGNAL_SABNZBD_UPDATED = "sabnzbd_updated"
 
+SensorTuple = namedtuple(
+    "SensorTuple",
+    [
+        "current_state",
+        "speed",
+        "queue_size",
+        "queue_remaining",
+        "disk_size",
+        "disk_free",
+        "queue_count",
+        "day_size",
+        "week_size",
+        "month_size",
+        "total_size",
+    ],
+)
 
-SENSOR_TYPES = {
-    "current_state": SensorEntityDescription(name="Status", key="status"),
-    "speed": SensorEntityDescription(
+SENSOR_TYPES = SensorTuple(
+    current_state=SensorEntityDescription(name="Status", key="status"),
+    speed=SensorEntityDescription(
         name="Speed", unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND, key="kbpersec"
     ),
-    "queue_size": SensorEntityDescription(
+    queue_size=SensorEntityDescription(
         name="Queue", unit_of_measurement=DATA_MEGABYTES, key="mb"
     ),
-    "queue_remaining": SensorEntityDescription(
+    queue_remaining=SensorEntityDescription(
         name="Left", unit_of_measurement=DATA_MEGABYTES, key="mbleft"
     ),
-    "disk_size": SensorEntityDescription(
+    disk_size=SensorEntityDescription(
         name="Disk", unit_of_measurement=DATA_GIGABYTES, key="diskspacetotal1"
     ),
-    "disk_free": SensorEntityDescription(
+    disk_free=SensorEntityDescription(
         name="Disk Free", unit_of_measurement=DATA_GIGABYTES, key="diskspace1"
     ),
-    "queue_count": SensorEntityDescription(
+    queue_count=SensorEntityDescription(
         name="Queue Count", unit_of_measurement=None, key="noofslots_total"
     ),
-    "day_size": SensorEntityDescription(
+    day_size=SensorEntityDescription(
         name="Daily Total", unit_of_measurement=DATA_GIGABYTES, key="day_size"
     ),
-    "week_size": SensorEntityDescription(
+    week_size=SensorEntityDescription(
         name="Weekly Total", unit_of_measurement=DATA_GIGABYTES, key="week_size"
     ),
-    "month_size": SensorEntityDescription(
+    month_size=SensorEntityDescription(
         name="Monthly Total", unit_of_measurement=DATA_GIGABYTES, key="month_size"
     ),
-    "total_size": SensorEntityDescription(
+    total_size=SensorEntityDescription(
         name="Total", unit_of_measurement=DATA_GIGABYTES, key="total_size"
     ),
-}
+)
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string}
