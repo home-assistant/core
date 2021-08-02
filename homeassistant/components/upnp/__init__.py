@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from ipaddress import ip_address
-from typing import Any, Mapping
+from typing import Any
 
 import voluptuous as vol
 
@@ -109,7 +110,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create device.
     device = await Device.async_create_device(
-        hass, discovery_info[ssdp.ATTR_SSDP_LOCATION]
+        hass,
+        discovery_info[  # pylint: disable=unsubscriptable-object
+            ssdp.ATTR_SSDP_LOCATION
+        ],
     )
 
     # Save device.
