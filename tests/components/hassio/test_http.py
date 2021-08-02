@@ -132,13 +132,13 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mo
     assert req_headers["X-Hass-Is-Admin"] == "1"
 
 
-async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
-    """Test that we forward the full header for snapshot upload."""
+async def test_backup_upload_headers(hassio_client, aioclient_mock, caplog):
+    """Test that we forward the full header for backup upload."""
     content_type = "multipart/form-data; boundary='--webkit'"
-    aioclient_mock.get("http://127.0.0.1/snapshots/new/upload")
+    aioclient_mock.get("http://127.0.0.1/backups/new/upload")
 
     resp = await hassio_client.get(
-        "/api/hassio/snapshots/new/upload", headers={"Content-Type": content_type}
+        "/api/hassio/backups/new/upload", headers={"Content-Type": content_type}
     )
 
     # Check we got right response
@@ -150,18 +150,18 @@ async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
     assert req_headers["Content-Type"] == content_type
 
 
-async def test_snapshot_download_headers(hassio_client, aioclient_mock):
-    """Test that we forward the full header for snapshot download."""
+async def test_backup_download_headers(hassio_client, aioclient_mock):
+    """Test that we forward the full header for backup download."""
     content_disposition = "attachment; filename=test.tar"
     aioclient_mock.get(
-        "http://127.0.0.1/snapshots/slug/download",
+        "http://127.0.0.1/backups/slug/download",
         headers={
             "Content-Length": "50000000",
             "Content-Disposition": content_disposition,
         },
     )
 
-    resp = await hassio_client.get("/api/hassio/snapshots/slug/download")
+    resp = await hassio_client.get("/api/hassio/backups/slug/download")
 
     # Check we got right response
     assert resp.status == 200
@@ -174,9 +174,9 @@ async def test_snapshot_download_headers(hassio_client, aioclient_mock):
 def test_need_auth(hass):
     """Test if the requested path needs authentication."""
     assert not _need_auth(hass, "addons/test/logo")
-    assert _need_auth(hass, "snapshots/new/upload")
+    assert _need_auth(hass, "backups/new/upload")
     assert _need_auth(hass, "supervisor/logs")
 
     hass.data["onboarding"] = False
-    assert not _need_auth(hass, "snapshots/new/upload")
+    assert not _need_auth(hass, "backups/new/upload")
     assert not _need_auth(hass, "supervisor/logs")
