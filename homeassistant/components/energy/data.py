@@ -25,12 +25,6 @@ async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
     return manager
 
 
-async def is_configured(hass: HomeAssistant) -> bool:
-    """Return a boolean to indicate if energy is configured."""
-    manager = await async_get_manager(hass)
-    return bool(manager.data != manager.default_preferences())
-
-
 class FlowFromGridSourceType(TypedDict):
     """Dictionary describing the 'from' stat for the grid source."""
 

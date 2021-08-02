@@ -8,8 +8,10 @@ import async_timeout
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.energy.const import DOMAIN as ENERGY_DOMAIN
-from homeassistant.components.energy.data import is_configured as energy_is_configured
+from homeassistant.components.energy import (
+    DOMAIN as ENERGY_DOMAIN,
+    is_configured as energy_is_configured,
+)
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

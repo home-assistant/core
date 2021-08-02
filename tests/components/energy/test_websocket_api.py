@@ -1,7 +1,7 @@
 """Test the Energy websocket API."""
 import pytest
 
-from homeassistant.components.energy import data
+from homeassistant.components.energy import data, is_configured
 from homeassistant.setup import async_setup_component
 
 from tests.common import flush_store
@@ -34,7 +34,7 @@ async def test_get_preferences_default(hass, hass_ws_client, hass_storage) -> No
     manager.data = data.EnergyManager.default_preferences()
     client = await hass_ws_client(hass)
 
-    assert not await data.is_configured(hass)
+    assert not await is_configured(hass)
 
     await client.send_json({"id": 5, "type": "energy/get_prefs"})
 
@@ -121,7 +121,7 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
 
     assert hass_storage[data.STORAGE_KEY]["data"] == new_prefs
 
-    assert await data.is_configured(hass)
+    assert await is_configured(hass)
 
     # Verify info reflects data.
     await client.send_json({"id": 7, "type": "energy/info"})
