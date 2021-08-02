@@ -180,9 +180,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
 
         hass_data[COORDINATORS][
-            switch.mac
+            switch.context or switch.mac
         ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch)
-
         await coordinator.async_config_entry_first_refresh()
 
     if unavailable_devices:
@@ -275,4 +274,5 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
 
+        self.name = data[CONF_ALIAS]
         return data

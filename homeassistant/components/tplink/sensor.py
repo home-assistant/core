@@ -101,7 +101,9 @@ async def async_setup_entry(
     ]
     switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
     for switch in switches:
-        coordinator: SmartPlugDataUpdateCoordinator = coordinators[switch.mac]
+        coordinator: SmartPlugDataUpdateCoordinator = coordinators[
+            switch.context or switch.mac
+        ]
         if not switch.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
             continue
         for description in ENERGY_SENSORS:
