@@ -82,7 +82,6 @@ def ws_get_prefs(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "energy/save_prefs",
-        vol.Optional("currency"): str,
         vol.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
         vol.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
     }

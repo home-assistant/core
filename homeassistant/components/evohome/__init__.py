@@ -531,7 +531,7 @@ class EvoDevice(Entity):
             return
         if payload["unique_id"] != self._unique_id:
             return
-        if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
+        if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])

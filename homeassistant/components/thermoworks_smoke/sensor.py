@@ -160,7 +160,7 @@ class ThermoworksSmokeSensor(SensorEntity):
             }
 
             # set extended attributes for main probe sensors
-            if self.type in [PROBE_1, PROBE_2]:
+            if self.type in (PROBE_1, PROBE_2):
                 for key, val in values.items():
                     # add all attributes that don't contain any probe name
                     # or contain a matching probe name

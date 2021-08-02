@@ -11,15 +11,15 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
-          "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
+          "name": "[%key:common::config_flow::data::name%]",
+          "area_id": "Area ID"
         }
       },
       "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
         }
       }
