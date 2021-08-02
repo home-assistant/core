@@ -415,7 +415,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     self.included_cameras = set()
 
             self.hk_options[CONF_FILTER] = entity_filter
-            self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
+            if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE:
+                self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
             if self.included_cameras:
                 return await self.async_step_cameras()
@@ -447,11 +448,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             all_supported_entities
         )
 
-        all_supported_devices = await _async_get_supported_devices(self.hass)
-        devices = self.hk_options.get(CONF_DEVICES, [])
-        data_schema[vol.Options(CONF_DEVICES, default=devices)] = cv.multi_select(
-            all_supported_devices
-        )
+        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE:
+            all_supported_devices = await _async_get_supported_devices(self.hass)
+            devices = self.hk_options.get(CONF_DEVICES, [])
+            data_schema[vol.Options(CONF_DEVICES, default=devices)] = cv.multi_select(
+                all_supported_devices
+            )
 
         return self.async_show_form(
             step_id="include_exclude", data_schema=vol.Schema(data_schema)
