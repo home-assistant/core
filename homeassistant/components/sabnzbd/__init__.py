@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import NamedTuple
 
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 import voluptuous as vol
@@ -55,45 +54,39 @@ SERVICE_SET_SPEED = "set_speed"
 SIGNAL_SABNZBD_UPDATED = "sabnzbd_updated"
 
 
-class sensorTuple(NamedTuple):
-    """Define types of sensor."""
-
-    current_state: SensorEntityDescription = SensorEntityDescription(
-        name="Status", key="status"
-    )
-    speed: SensorEntityDescription = SensorEntityDescription(
+SENSOR_TYPES = {
+    "current_state": SensorEntityDescription(name="Status", key="status"),
+    "speed": SensorEntityDescription(
         name="Speed", unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND, key="kbpersec"
-    )
-    queue_size: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "queue_size": SensorEntityDescription(
         name="Queue", unit_of_measurement=DATA_MEGABYTES, key="mb"
-    )
-    queue_remaining: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "queue_remaining": SensorEntityDescription(
         name="Left", unit_of_measurement=DATA_MEGABYTES, key="mbleft"
-    )
-    disk_size: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "disk_size": SensorEntityDescription(
         name="Disk", unit_of_measurement=DATA_GIGABYTES, key="diskspacetotal1"
-    )
-    disk_free: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "disk_free": SensorEntityDescription(
         name="Disk Free", unit_of_measurement=DATA_GIGABYTES, key="diskspace1"
-    )
-    queue_count: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "queue_count": SensorEntityDescription(
         name="Queue Count", unit_of_measurement=None, key="noofslots_total"
-    )
-    day_size: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "day_size": SensorEntityDescription(
         name="Daily Total", unit_of_measurement=DATA_GIGABYTES, key="day_size"
-    )
-    week_size: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "week_size": SensorEntityDescription(
         name="Weekly Total", unit_of_measurement=DATA_GIGABYTES, key="week_size"
-    )
-    month_size: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "month_size": SensorEntityDescription(
         name="Monthly Total", unit_of_measurement=DATA_GIGABYTES, key="month_size"
-    )
-    total_size: SensorEntityDescription = SensorEntityDescription(
+    ),
+    "total_size": SensorEntityDescription(
         name="Total", unit_of_measurement=DATA_GIGABYTES, key="total_size"
-    )
-
-
-SENSOR_TYPES = sensorTuple
+    ),
+}
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string}
