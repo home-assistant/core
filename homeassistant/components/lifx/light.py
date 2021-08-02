@@ -448,32 +448,31 @@ class LIFXLight(LightEntity):
         """Initialize the light."""
         self.bulb = bulb
         self.effects_conductor = effects_conductor
+        self.registered = True
         self._attr_available = True
         self.postponed_update = None
         self.lock = asyncio.Lock()
         self._attr_unique_id = self.bulb.mac_addr
         self._attr_name = self.bulb.label
         """set the coldest/warmest color_temp that this light supports."""
-        kelvin = lifx_features(self.bulb)["max_kelvin"]
+        bulb_features = lifx_features(self.bulb)
+        kelvin = bulb_features["max_kelvin"]
         self._attr_min_mireds = math.floor(
             color_util.color_temperature_kelvin_to_mired(kelvin)
         )
-        kelvin = lifx_features(self.bulb)["min_kelvin"]
+        kelvin = bulb_features["min_kelvin"]
         self._attr_max_mireds = math.ceil(
             color_util.color_temperature_kelvin_to_mired(kelvin)
         )
         self._attr_supported_features = (
             SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_EFFECT
         )
-        bulb_features = lifx_features(self.bulb)
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
             self._attr_supported_features |= SUPPORT_COLOR_TEMP
         fade = self.bulb.power_level / 65535
         self._attr_brightness = convert_16_to_8(int(fade * self.bulb.color[2]))
         _, sat, _, kelvin = self.bulb.color
-        if sat:
-            self._attr_color_temp = None
-        else:
+        if not sat:
             self._attr_color_temp = color_util.color_temperature_kelvin_to_mired(kelvin)
 
     @property
