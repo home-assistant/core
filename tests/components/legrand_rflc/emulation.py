@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 class Server:
     """Emulated LC7001 Server for serving a matching config entry."""
 
-    HOST: Final = "localhost"
+    HOST: Final = "127.0.0.1"  # do not depend on "localhost" name resolution
     ADDRESS: Final = "127.0.0.1"
 
     # https://static.developer.legrand.com/files/2021/03/LC7001-AU7000-Security-Addendum-RevB.pdf
