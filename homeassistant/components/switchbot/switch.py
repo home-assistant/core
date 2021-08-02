@@ -73,9 +73,9 @@ class SwitchBot(SwitchEntity, RestoreEntity):
         return True
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._state
+        return bool(self._state)
 
     @property
     def unique_id(self) -> str:
