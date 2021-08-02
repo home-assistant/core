@@ -147,8 +147,6 @@ MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"
 SERVICE_SET_BUZZER = "set_buzzer"
-SERVICE_SET_CLEAN_ON = "set_clean_on"
-SERVICE_SET_CLEAN_OFF = "set_clean_off"
 SERVICE_SET_CLEAN = "set_clean"
 SERVICE_SET_FAN_LED_ON = "fan_set_led_on"
 SERVICE_SET_FAN_LED_OFF = "fan_set_led_off"
@@ -167,9 +165,6 @@ SERVICE_SET_LEARN_MODE_OFF = "fan_set_learn_mode_off"
 SERVICE_SET_VOLUME = "fan_set_volume"
 SERVICE_RESET_FILTER = "fan_reset_filter"
 SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"
-SERVICE_SET_TARGET_HUMIDITY = "fan_set_target_humidity"
-SERVICE_SET_DRY_ON = "fan_set_dry_on"
-SERVICE_SET_DRY_OFF = "fan_set_dry_off"
 SERVICE_SET_DRY = "set_dry"
 SERVICE_SET_MOTOR_SPEED = "fan_set_motor_speed"
 
@@ -269,7 +264,6 @@ FEATURE_FLAGS_AIRPURIFIER_V3 = (
 FEATURE_FLAGS_AIRHUMIDIFIER = (
     FEATURE_SET_BUZZER
     | FEATURE_SET_CHILD_LOCK
-    | FEATURE_SET_LED
     | FEATURE_SET_LED_BRIGHTNESS
     | FEATURE_SET_TARGET_HUMIDITY
 )

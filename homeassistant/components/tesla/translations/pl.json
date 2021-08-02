@@ -12,6 +12,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mfa": "Kod uwierzytelniania wielosk\u0142adnikowego (opcjonalnie)",
                     "password": "Has\u0142o",
                     "username": "Adres e-mail"
                 },
