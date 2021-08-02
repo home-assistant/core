@@ -451,7 +451,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE:
             all_supported_devices = await _async_get_supported_devices(self.hass)
             devices = self.hk_options.get(CONF_DEVICES, [])
-            data_schema[vol.Options(CONF_DEVICES, default=devices)] = cv.multi_select(
+            data_schema[vol.Optional(CONF_DEVICES, default=devices)] = cv.multi_select(
                 all_supported_devices
             )
 
