@@ -374,7 +374,6 @@ class CecEntity(Entity):
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self._icon = None
         self._state: str | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
@@ -392,9 +391,7 @@ class CecEntity(Entity):
             % (self._device.type_name, self._logical_address, self._device.osd_name)
         )
         self._attr_icon = (
-            self._icon
-            if self._icon is not None
-            else ICONS_BY_TYPE.get(self._device.type)
+            ICONS_BY_TYPE.get(self._device.type)
             if self._device.type in ICONS_BY_TYPE
             else ICON_UNKNOWN
         )
