@@ -47,7 +47,9 @@ class DeviceTriggerAccessory(HomeAccessory):
             type_ = trigger.get("type")
             sub_type = trigger.get("sub_type")
             serv_stateless_switch.configure_char(CHAR_NAME, value=f"{type_} {sub_type}")
-            serv_stateless_switch.configure_char(CHAR_SERVICE_LABEL_INDEX, value=idx)
+            serv_stateless_switch.configure_char(
+                CHAR_SERVICE_LABEL_INDEX, value=idx + 1
+            )
             serv_service_label.configure_char(CHAR_NAME, value=f"{type_} {sub_type}")
 
     # Attach the trigger using the helper in async run
@@ -60,4 +62,5 @@ class DeviceTriggerAccessory(HomeAccessory):
 
     @property
     def available(self):
+        """Return available."""
         return True
