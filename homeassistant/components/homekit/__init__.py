@@ -660,7 +660,13 @@ class HomeKit:
         # the rest of the accessories from being created
         try:
             acc = DeviceTriggerAccessory(
-                self.hass, self.driver, name, None, aid, {}, device_triggers
+                self.hass,
+                self.driver,
+                name,
+                None,
+                aid,
+                {},
+                device_triggers=device_triggers,
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to create a HomeKit accessory for %s", device_id)
