@@ -361,11 +361,11 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     )
     await hass.async_block_till_done()
     assert (
-        "The service 'snapshot_full' is deprecated and will be removed in Home Assistant 2021.10, use 'backup_full' instead"
+        "The service 'snapshot_full' is deprecated and will be removed in Home Assistant 2021.11, use 'backup_full' instead"
         in caplog.text
     )
     assert (
-        "The service 'snapshot_partial' is deprecated and will be removed in Home Assistant 2021.10, use 'backup_partial' instead"
+        "The service 'snapshot_partial' is deprecated and will be removed in Home Assistant 2021.11, use 'backup_partial' instead"
         in caplog.text
     )
 
@@ -380,7 +380,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     await hass.services.async_call("hassio", "restore_full", {"snapshot": "test"})
     await hass.async_block_till_done()
     assert (
-        "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.10, use 'slug' instead"
+        "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.11, use 'slug' instead"
         in caplog.text
     )
 

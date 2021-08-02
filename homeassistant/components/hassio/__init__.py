@@ -469,7 +469,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         api_command = MAP_SERVICE_API[service.service][0]
         if "snapshot" in service.service:
             _LOGGER.warning(
-                "The service '%s' is deprecated and will be removed in Home Assistant 2021.10, use '%s' instead",
+                "The service '%s' is deprecated and will be removed in Home Assistant 2021.11, use '%s' instead",
                 service.service,
                 service.service.replace("snapshot", "backup"),
             )
@@ -479,7 +479,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         snapshot = data.pop(ATTR_SNAPSHOT, None)
         if snapshot is not None:
             _LOGGER.warning(
-                "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.10, use 'slug' instead"
+                "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.11, use 'slug' instead"
             )
             slug = snapshot
 
