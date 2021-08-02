@@ -224,7 +224,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     config_entry,
                     f"{sensor}_{config_entry.unique_id}",
                     sensor,
-                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                    coordinator,
                 )
             )
 
