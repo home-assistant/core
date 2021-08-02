@@ -841,19 +841,20 @@ class HomeKit:
         for state in entity_states:
             self.add_bridge_accessory(state)
         dev_reg = device_registry.async_get(self.hass)
-        triggers = await device_automation.async_get_device_automations(
-            self.hass, "trigger", self._devices
-        )
-        for device_id, device_triggers in triggers.items():
-            device = dev_reg.async_get(device_id)
-            if not device:
-                _LOGGER.warning(
-                    "HomeKit %s cannot add device %s because it is missing from the device registry.",
-                    self._name,
-                    device_id,
-                )
-                continue
-            self.add_bridge_triggers_accessory(device, device_triggers)
+        if self._devices:
+            triggers = await device_automation.async_get_device_automations(
+                self.hass, "trigger", self._devices
+            )
+            for device_id, device_triggers in triggers.items():
+                device = dev_reg.async_get(device_id)
+                if not device:
+                    _LOGGER.warning(
+                        "HomeKit %s cannot add device %s because it is missing from the device registry.",
+                        self._name,
+                        device_id,
+                    )
+                    continue
+                self.add_bridge_triggers_accessory(device, device_triggers)
         return self.bridge
 
     async def _async_create_accessories(self):

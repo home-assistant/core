@@ -1,7 +1,7 @@
 """Class to hold all sensor accessories."""
 import logging
 
-from pyhap.const import CATEGORY_SENSOR
+from pyhap.const import CATEGORY_SWITCH
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -22,7 +22,7 @@ class DeviceTriggerAccessory(HomeAccessory):
 
     def __init__(self, *args, device_triggers=None, device_id=None):
         """Initialize a TemperatureSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR, device_id=device_id)
+        super().__init__(*args, category=CATEGORY_SWITCH, device_id=device_id)
         self._triggers = []
         for trigger in device_triggers:
             _LOGGER.warning("Set up up trigger: %s", trigger)
