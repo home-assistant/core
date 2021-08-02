@@ -70,7 +70,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             self._device_triggers,
             self.async_trigger,
             "homekit",
-            self.name,
+            self.display_name,
             _LOGGER,
         )
 
