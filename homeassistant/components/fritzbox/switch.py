@@ -57,11 +57,6 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
     """The switch class for FRITZ!SmartHome switches."""
 
     @property
-    def available(self) -> bool:
-        """Return if switch is available."""
-        return self.device.present  # type: ignore [no-any-return]
-
-    @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.device.switch_state  # type: ignore [no-any-return]
