@@ -46,7 +46,7 @@ class SabnzbdSensor(SensorEntity):
         """Get the latest data and updates the states."""
         new_state = self._sabnzbd_api.get_queue_field(self._field_name)
 
-        if self.entity_description.key == "speed":
+        if self.entity_description.key == "kbpersec":
             self._attr_state = round(float(new_state) / 1024, 1)
         elif "size" in self.entity_description.key:
             self._attr_state = round(float(new_state), 2)
