@@ -322,7 +322,7 @@ async def test_options_flow(hass: HomeAssistant):
         Mock(return_value=ssdp_discoveries[0]),
     ):
         # Initialisation of component.
-        await async_setup_component(hass, "upnp", config)
+        await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         mock_device.times_polled = 0  # Reset.
 
