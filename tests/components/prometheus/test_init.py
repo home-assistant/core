@@ -140,22 +140,19 @@ async def test_view_empty_namespace(hass, hass_client):
     assert (
         'climate_target_temperature_celsius{domain="climate",'
         'entity="climate.heatpump",'
-        'friendly_name="HeatPump",'
-        'point="set"} 20.0' in body
+        'friendly_name="HeatPump"} 20.0' in body
     )
 
     assert (
-        'climate_target_temperature_celsius{domain="climate",'
+        'climate_target_temperature_low_celsius{domain="climate",'
         'entity="climate.ecobee",'
-        'friendly_name="Ecobee",'
-        'point="low"} 21.0' in body
+        'friendly_name="Ecobee"} 21.0' in body
     )
 
     assert (
-        'climate_target_temperature_celsius{domain="climate",'
+        'climate_target_temperature_high_celsius{domain="climate",'
         'entity="climate.ecobee",'
-        'friendly_name="Ecobee",'
-        'point="high"} 24.0' in body
+        'friendly_name="Ecobee"} 24.0' in body
     )
 
     assert (

@@ -317,12 +317,7 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_climate_temp(
-        self, state, attr, metric_name, metric_description, extra_labels=None
-    ):
-        if extra_labels is None:
-            extra_labels = {}
-
+    def _handle_climate_temp(self, state, attr, metric_name, metric_description):
         temp = state.attributes.get(attr)
         if temp:
             if self._climate_units == TEMP_FAHRENHEIT:
@@ -331,10 +326,8 @@ class PrometheusMetrics:
                 metric_name,
                 self.prometheus_cli.Gauge,
                 metric_description,
-                extra_labels.keys(),
             )
-            all_labels = {**extra_labels, **self._labels(state)}
-            metric.labels(**all_labels).set(temp)
+            metric.labels(**self._labels(state)).set(temp)
 
     def _handle_climate(self, state):
         self._handle_climate_temp(
@@ -342,21 +335,18 @@ class PrometheusMetrics:
             ATTR_TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
-            {"point": "set"},
         )
         self._handle_climate_temp(
             state,
             ATTR_TARGET_TEMP_HIGH,
-            "climate_target_temperature_celsius",
+            "climate_target_temperature_high_celsius",
             "Target temperature in degrees Celsius",
-            {"point": "high"},
         )
         self._handle_climate_temp(
             state,
             ATTR_TARGET_TEMP_LOW,
-            "climate_target_temperature_celsius",
+            "climate_target_temperature_low_celsius",
             "Target temperature in degrees Celsius",
-            {"point": "low"},
         )
         self._handle_climate_temp(
             state,
