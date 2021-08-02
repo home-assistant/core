@@ -20,6 +20,7 @@ class DeviceTriggerAccessory(HomeAccessory):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         for trigger in device_triggers:
+            _LOGGER.warning("Set up up trigger: %s", trigger)
             type = trigger.get("type")
             sub_type = trigger.get("sub_type")
             serv_stateless_switch = self.add_preload_service(
@@ -28,7 +29,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             self._triggers[(type, sub_type)] = serv_stateless_switch.configure_char(
                 CHAR_PROGRAMMABLE_SWITCH_EVENT,
                 value=0,
-                valid_values={"SinglePress": 0},
+                valid_values={"Press": 0},
             )
 
     # Attach the trigger using the helper in async run
