@@ -15,7 +15,11 @@ NUMBER_ENTITIES = {
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: {
         "name": "Spray Quantity",
         "icon": "mdi:water",
-    }
+    },
+    CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: {
+        "name": "Elevation",
+        "icon": "mdi:elevation-rise",
+    },
 }
 
 
