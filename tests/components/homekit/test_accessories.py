@@ -66,7 +66,7 @@ async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
 async def test_home_accessory(hass, hk_driver):
     """Test HomeAccessory class."""
     entity_id = "sensor.accessory"
-    entity_id2 = "light.accessory"
+    entity_id2 = "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum_maximum_maximum_maximum_allowed_length"
 
     hass.states.async_set(entity_id, None)
     hass.states.async_set(entity_id2, STATE_UNAVAILABLE)
@@ -94,27 +94,42 @@ async def test_home_accessory(hass, hk_driver):
     assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == f"{MANUFACTURER} Light"
     assert serv.get_characteristic(CHAR_MODEL).value == "Light"
-    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
 
     acc3 = HomeAccessory(
         hass,
         hk_driver,
-        "Home Accessory",
+        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
         entity_id2,
         3,
         {
-            ATTR_MODEL: "Awesome",
-            ATTR_MANUFACTURER: "Lux Brands",
-            ATTR_SW_VERSION: "0.4.3",
-            ATTR_INTEGRATION: "luxe",
+            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_SW_VERSION: "0.4.3 that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
         },
     )
     assert acc3.available is False
     serv = acc3.services[0]  # SERV_ACCESSORY_INFO
-    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
-    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Lux Brands"
-    assert serv.get_characteristic(CHAR_MODEL).value == "Awesome"
-    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
+    assert (
+        serv.get_characteristic(CHAR_NAME).value
+        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+    )
+    assert (
+        serv.get_characteristic(CHAR_MANUFACTURER).value
+        == "Lux Brands that exceeds the maximum maximum maximum maximum maxi"
+    )
+    assert (
+        serv.get_characteristic(CHAR_MODEL).value
+        == "Awesome Model that exceeds the maximum maximum maximum maximum m"
+    )
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
 
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
