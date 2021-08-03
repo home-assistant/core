@@ -199,7 +199,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             GATEWAY_MODEL_AC_V3,
             GATEWAY_MODEL_EU,
         ]:
-            description = description = SENSOR_TYPES[ATTR_ILLUMINANCE]
+            description = SENSOR_TYPES[ATTR_ILLUMINANCE]
             entities.append(
                 XiaomiGatewayIlluminanceSensor(
                     gateway, config_entry.title, config_entry.unique_id, description
