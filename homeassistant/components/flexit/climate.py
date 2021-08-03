@@ -14,6 +14,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_REGISTER,
     CONF_HUB,
     DEFAULT_HUB,
     MODBUS_DOMAIN,
@@ -198,12 +199,24 @@ class Flexit(ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.unit.set_temp(self._target_temperature)
+            target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        else:
+            _LOGGER.error("Received invalid temperature")
+            return
+
+        if await self._async_write_int16_to_register(8, target_temperature * 10):
+            self._target_temperature = target_temperature
+        else:
+            _LOGGER.error("Modbus error setting target temperature to Flexit")
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        self.unit.set_fan_speed(self._fan_modes.index(fan_mode))
+        if await self._async_write_int16_to_register(
+            17, self.fan_modes.index(fan_mode)
+        ):
+            self._current_fan_mode = self.fan_modes.index(fan_mode)
+        else:
+            _LOGGER.error("Modbus error setting fan mode to Flexit")
 
     # Based on _async_read_register in ModbusThermostat class
     async def _async_read_int16_from_register(self, register_type, register) -> int:
@@ -224,3 +237,12 @@ class Flexit(ClimateEntity):
         if result == -1:
             return -1
         return result / 10.0
+
+    async def _async_write_int16_to_register(self, register, value) -> bool:
+        value = int(value)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, register, value, CALL_TYPE_WRITE_REGISTER
+        )
+        if result == -1:
+            return False
+        return True
