@@ -26,6 +26,7 @@ from .const import (
     MODEL_GENERATION_1,
     SERVICE_PAUSE_WATERING,
     SERVICE_RESUME_WATERING,
+    SERVICE_STOP_WATERING,
 )
 from .webhooks import LISTEN_EVENT_TYPES, WEBHOOK_CONST_ID
 
@@ -43,6 +44,8 @@ PAUSE_SERVICE_SCHEMA = vol.Schema(
 )
 
 RESUME_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
+
+STOP_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
 
 
 class RachioPerson:
@@ -87,6 +90,13 @@ class RachioPerson:
                 if iro.name in devices:
                     iro.resume_watering()
 
+        def stop_water(service):
+            """Service to stop watering on all or specific controllers."""
+            devices = service.data.get(ATTR_DEVICES, all_devices)
+            for iro in self._controllers:
+                if iro.name in devices:
+                    iro.stop_watering()
+
         hass.services.async_register(
             DOMAIN,
             SERVICE_PAUSE_WATERING,
@@ -99,6 +109,13 @@ class RachioPerson:
             SERVICE_RESUME_WATERING,
             resume_water,
             schema=RESUME_SERVICE_SCHEMA,
+        )
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_STOP_WATERING,
+            stop_water,
+            schema=STOP_SERVICE_SCHEMA,
         )
 
     def _setup(self, hass):
