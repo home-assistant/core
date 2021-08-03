@@ -48,8 +48,6 @@ def init(empty=False):
             MockNumberEntity(
                 name="number 1",
                 unique_id=UNIQUE_NUMBER,
-                min=0.0,
-                max=100.0,
                 value=50.0,
             ),
         ]
