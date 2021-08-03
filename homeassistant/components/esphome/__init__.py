@@ -982,4 +982,4 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return not self._static_info.disabled_default
+        return not self._static_info.disabled_by_default
