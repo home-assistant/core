@@ -47,7 +47,7 @@ SELECTOR_TYPES = {
         name="Led Brightness",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
-        options=("Bright", "Dim", "Off"),
+        options=("bright", "dim", "off"),
     ),
 }
 
@@ -122,7 +122,7 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     @property
     def current_option(self):
         """Return the current option."""
-        return self.led_brightness
+        return self.led_brightness.lower()
 
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
@@ -130,7 +130,7 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
             raise ValueError(
                 f"Selection '{option}' is not a valid {self.entity_description.name}"
             )
-        await self.async_set_led_brightness(option)
+        await self.async_set_led_brightness(option.title())
 
     @property
     def led_brightness(self):
