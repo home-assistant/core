@@ -278,7 +278,7 @@ androidtv[async]==0.0.60
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anthemav
-anthemav==1.1.10
+anthemav==1.2.0
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
