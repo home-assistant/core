@@ -9,6 +9,13 @@ from homeassistant.components.select import DOMAIN
 from homeassistant.components.select.device_condition import (
     async_get_condition_capabilities,
 )
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
+    CONF_PLATFORM,
+    SERVICE_SELECT_OPTION,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
@@ -24,6 +31,10 @@ from tests.common import (
     async_mock_service,
     mock_device_registry,
     mock_registry,
+)
+from tests.testing_config.custom_components.test.select import (
+    UNIQUE_SELECT_1,
+    UNIQUE_SELECT_2,
 )
 
 
@@ -199,3 +210,79 @@ async def test_get_condition_capabilities(hass: HomeAssistant) -> None:
             "type": "positive_time_period_dict",
         },
     ]
+
+
+async def test_custom_integration_and_validation(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
+    """Test we can only select valid options."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    reg_entry_1 = entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        UNIQUE_SELECT_1,
+        device_id=device_entry.id,
+    )
+    reg_entry_2 = entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        UNIQUE_SELECT_2,
+        device_id=device_entry.id,
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(reg_entry_1.entity_id).state == "option 1"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_OPTION: "option 2", ATTR_ENTITY_ID: reg_entry_1.entity_id},
+        blocking=True,
+    )
+
+    hass.states.async_set(reg_entry_1.entity_id, "option 2")
+    await hass.async_block_till_done()
+    assert hass.states.get(reg_entry_1.entity_id).state == "option 2"
+
+    # test ValueError trigger
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_OPTION: "option invalid", ATTR_ENTITY_ID: reg_entry_1.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    assert hass.states.get(reg_entry_1.entity_id).state == "option 2"
+
+    assert hass.states.get(reg_entry_2.entity_id).state == STATE_UNKNOWN
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_OPTION: "option invalid", ATTR_ENTITY_ID: reg_entry_2.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    assert hass.states.get(reg_entry_2.entity_id).state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_OPTION: "option 3", ATTR_ENTITY_ID: reg_entry_2.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(reg_entry_2.entity_id).state == "option 3"

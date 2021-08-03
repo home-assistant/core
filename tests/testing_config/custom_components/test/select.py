@@ -16,6 +16,8 @@ ENTITIES = []
 class MockSelectEntity(MockEntity, SelectEntity):
     """Mock Select class."""
 
+    _attr_current_option = None
+
     @property
     def current_option(self):
         """Return the current option of this select."""
@@ -25,6 +27,10 @@ class MockSelectEntity(MockEntity, SelectEntity):
     def options(self) -> list:
         """Return the list of available options of this select."""
         return self._handle("options")
+
+    def select_option(self, option: str) -> None:
+        """Change the selected option."""
+        self._attr_current_option = option
 
 
 def init(empty=False):
