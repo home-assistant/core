@@ -6,6 +6,9 @@ from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
     CONF_CODE,
     CONF_HOST,
     CONF_TIMEOUT,
@@ -24,16 +27,12 @@ DOMAIN = "envisalink"
 DATA_EVL = "envisalink"
 
 CONF_EVL_KEEPALIVE = "keepalive_interval"
-CONF_EVL_PORT = "port"
 CONF_EVL_VERSION = "evl_version"
 CONF_PANEL_TYPE = "panel_type"
 CONF_PANIC = "panic_type"
-CONF_PARTITIONNAME = "name"
 CONF_PARTITIONS = "partitions"
-CONF_PASS = "password"
 CONF_USERNAME = "user_name"
 CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
-CONF_ZONENAME = "name"
 CONF_ZONES = "zones"
 CONF_ZONETYPE = "type"
 
@@ -51,12 +50,16 @@ SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
 
 ZONE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ZONENAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
     }
 )
 
-PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_PARTITIONNAME): cv.string})
+PARTITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -67,12 +70,12 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.string, vol.In(["HONEYWELL", "DSC"])
                 ),
                 vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASS): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_CODE): cv.string,
                 vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
                 vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
-                vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION): vol.All(
                     vol.Coerce(int), vol.Range(min=3, max=4)
                 ),
@@ -106,13 +109,13 @@ async def async_setup(hass, config):
     conf = config.get(DOMAIN)
 
     host = conf.get(CONF_HOST)
-    port = conf.get(CONF_EVL_PORT)
+    port = conf.get(CONF_PORT)
     code = conf.get(CONF_CODE)
     panel_type = conf.get(CONF_PANEL_TYPE)
     panic_type = conf.get(CONF_PANIC)
     version = conf.get(CONF_EVL_VERSION)
     user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASS)
+    password = conf.get(CONF_PASSWORD)
     keep_alive = conf.get(CONF_EVL_KEEPALIVE)
     zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
     zones = conf.get(CONF_ZONES)
