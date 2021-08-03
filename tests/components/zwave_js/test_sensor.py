@@ -203,7 +203,7 @@ async def test_reset_meter(
     client.async_send_command.return_value = {}
     client.async_send_command_no_wait.return_value = {}
 
-    # Validate that non accumulating meters does not have a last reset attribute
+    # Validate that non accumulating meter does not have a last reset attribute
 
     assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
 
@@ -237,7 +237,7 @@ async def test_reset_meter(
     assert args["endpoint"] == 0
     assert args["args"] == []
 
-    # Validate that non accumulating meters does not have a last reset attribute
+    # Validate that non accumulating meter does not have a last reset attribute
 
     assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
 
@@ -262,7 +262,7 @@ async def test_reset_meter(
     assert args["endpoint"] == 0
     assert args["args"] == [{"type": 1, "targetValue": 2}]
 
-    # Validate that non accumulating meters does not have a last reset attribute
+    # Validate that non accumulating meter does not have a last reset attribute
 
     assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
 
@@ -282,6 +282,6 @@ async def test_restore_last_reset(
         == DATETIME_LAST_RESET.isoformat()
     )
 
-    # Validate that non accumulating meters does not have a last reset attribute
+    # Validate that non accumulating meter does not have a last reset attribute
 
     assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
