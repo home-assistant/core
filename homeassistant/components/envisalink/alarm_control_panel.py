@@ -16,6 +16,7 @@ from homeassistant.components.alarm_control_panel.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CODE,
+    CONF_NAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -30,7 +31,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     CONF_PANIC,
-    CONF_PARTITIONNAME,
     DATA_EVL,
     DOMAIN,
     PARTITION_SCHEMA,
@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device = EnvisalinkAlarm(
             hass,
             part_num,
-            device_config_data[CONF_PARTITIONNAME],
+            device_config_data[CONF_NAME],
             code,
             panic_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
