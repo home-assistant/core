@@ -36,6 +36,6 @@ def fixture_scanner(hass):
     with patch(
         "homeassistant.components.fjaraskupan.config_flow.BleakScanner", new=MockScanner
     ), patch(
-        "homeassistant.components.fjaraskupan.config_flow.CONST_WAITTIME", new=0.01
+        "homeassistant.components.fjaraskupan.config_flow.CONST_WAIT_TIME", new=0.01
     ):
         yield devices
