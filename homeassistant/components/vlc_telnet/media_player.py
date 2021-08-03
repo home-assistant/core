@@ -8,6 +8,7 @@ from python_telnet_vlc import (
     LuaError,
     ParseError,
 )
+from python_telnet_vlc.vlctelnet import VLCTelnet
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -94,14 +95,17 @@ async def async_setup_entry(
     vlc = hass.data[DOMAIN][entry.entry_id][DATA_VLC]
     available = hass.data[DOMAIN][entry.entry_id][DATA_AVAILABLE]
 
-    async_add_entities([VlcDevice(vlc, name, available)], True)
+    async_add_entities([VlcDevice(entry, vlc, name, available)], True)
 
 
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
-    def __init__(self, vlc, name, available):
+    def __init__(
+        self, config_entry: ConfigEntry, vlc: VLCTelnet, name: str, available: bool
+    ) -> None:
         """Initialize the vlc device."""
+        self._config_entry = config_entry
         self._name = name
         self._volume = None
         self._muted = None
@@ -128,6 +132,7 @@ class VlcDevice(MediaPlayerEntity):
                 self._vlc.login()
             except AuthError:
                 LOGGER.error("Failed to login to VLC")
+                self.hass.add_job(self._config_entry.async_start_reauth)
                 return
 
             self._state = STATE_IDLE
