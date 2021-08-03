@@ -11,7 +11,7 @@ UNIQUE_SELECT_2 = "unique_select_2"
 ENTITIES = []
 
 
-class MockSelectEntity(MockEntity):
+class MockSelectEntity(MockEntity, SelectEntity):
     """Mock Select class."""
 
     @property
