@@ -1294,7 +1294,7 @@ pyW215==0.7.0
 pyW800rf32==0.1
 
 # homeassistant.components.nextbus
-py_nextbusnext==0.1.4
+py_nextbus-umoiq==0.1.5
 
 # homeassistant.components.ads
 pyads==3.2.2
