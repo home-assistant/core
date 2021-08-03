@@ -96,8 +96,9 @@ class UptimeRobotBinarySensor(BinarySensorEntity, CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         description: UptimeRobotBinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize Uptime Robot the binary sensor."""
+        super().__init__(coordinator)
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_extra_state_attributes = {
