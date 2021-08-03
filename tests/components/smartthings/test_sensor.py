@@ -187,6 +187,28 @@ async def test_power_consumption_sensor(hass, device_factory):
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
 
+    device = device_factory(
+        "vacuum",
+        [Capability.power_consumption_report],
+        {Attribute.power_consumption: {}},
+    )
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    # Act
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    # Assert
+    state = hass.states.get("sensor.vacuum_energy")
+    assert state
+    assert state.state == "unknown"
+    entry = entity_registry.async_get("sensor.vacuum_energy")
+    assert entry
+    assert entry.unique_id == f"{device.device_id}.energy"
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    assert entry
+    assert entry.name == device.label
+    assert entry.model == device.device_type_name
+    assert entry.manufacturer == "Unavailable"
+
 
 async def test_update_from_signal(hass, device_factory):
     """Test the binary_sensor updates when receiving a signal."""
