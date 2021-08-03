@@ -69,7 +69,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def _try_login(user_input):
-        _LOGGER.debug(f"TuyaConfigFlow._try_login start, user_input: {user_input}")
+        _LOGGER.debug("TuyaConfigFlow._try_login start, user_input: %s", user_input)
         project_type = ProjectType(user_input[CONF_PROJECT_TYPE])
         api = TuyaOpenAPI(
             user_input[CONF_ENDPOINT]
@@ -95,7 +95,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api.endpoint = api.token_info.platform_url
                 user_input[CONF_ENDPOINT] = api.token_info.platform_url
 
-        _LOGGER.debug(f"TuyaConfigFlow._try_login finish, response:, {response}")
+        _LOGGER.debug("TuyaConfigFlow._try_login finish, response:, %s", response)
         return response
 
     async def async_step_import(self, user_input=None):
@@ -118,9 +118,11 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Step user."""
         _LOGGER.debug(
-            f"TuyaConfigFlow.async_step_user start, is_import= {self.is_import}"
+            "TuyaConfigFlow.async_step_user start, is_import= %s}", self.is_import
         )
-        _LOGGER.debug(f"TuyaConfigFlow.async_step_user start, user_input= {user_input}")
+        _LOGGER.debug(
+            "TuyaConfigFlow.async_step_user start, user_input= %s", user_input
+        )
 
         if self._async_current_entries():
             return self.async_abort(reason=RESULT_SINGLE_INSTANCE)

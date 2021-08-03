@@ -81,7 +81,6 @@ def entry_decrypt(hass: HomeAssistant, entry: ConfigEntry, init_entry_data):
         cbc_key = key_iv[0:16]
         cbc_iv = key_iv[16:32]
         decrpyt_str = aes.cbc_decrypt(cbc_key, cbc_iv, init_entry_data[AES_ACCOUNT_KEY])
-        # _LOGGER.debug(f"tuya.__init__.exist_xor_cache:::decrpyt_str-->{decrpyt_str}")
         entry_data = aes.json_to_dict(decrpyt_str)
     else:
         # if not exist xor cache, use old account info
@@ -91,8 +90,8 @@ def entry_decrypt(hass: HomeAssistant, entry: ConfigEntry, init_entry_data):
         cbc_iv = aes.random_16()
         access_id = init_entry_data[CONF_ACCESS_ID]
         access_id_entry = aes.cbc_encrypt(cbc_key, cbc_iv, access_id)
-        c = cbc_key + cbc_iv
-        c_xor_entry = aes.xor_encrypt(c, access_id_entry)
+        merged_data = cbc_key + cbc_iv
+        c_xor_entry = aes.xor_encrypt(merged_data, access_id_entry)
         # account info encrypted with AES-CBC
         user_input_encrpt = aes.cbc_encrypt(
             cbc_key, cbc_iv, json.dumps(dict(init_entry_data))
@@ -137,7 +136,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     if response.get("success", False) is False:
-        _LOGGER.error(f"Tuya login error response: {response}")
+        _LOGGER.error("Tuya login error response: %s", response)
         return False
 
     tuya_mq = TuyaOpenMQ(api)
@@ -156,7 +155,9 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def update_device(self, device: TuyaDevice):
             for ha_device in hass.data[DOMAIN][TUYA_HA_DEVICES]:
                 if ha_device.tuya_device.id == device.id:
-                    _LOGGER.debug(f"_update-->{self};->>{ha_device.tuya_device.status}")
+                    _LOGGER.debug(
+                        "_update-->%s;->>%s", self, ha_device.tuya_device.status
+                    )
                     ha_device.schedule_update_ha_state()
 
         def add_device(self, device: TuyaDevice):
@@ -164,8 +165,9 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_add = False
 
             _LOGGER.debug(
-                f"""add device category->{device.category}; keys->,
-                {hass.data[DOMAIN][TUYA_HA_TUYA_MAP].keys()}"""
+                """add device category->%s; keys->,
+                {hass.data[DOMAIN][TUYA_HA_TUYA_MAP].keys()}""",
+                device.category,
             )
             if device.category in itertools.chain(
                 *hass.data[DOMAIN][TUYA_HA_TUYA_MAP].values()
@@ -191,7 +193,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 tuya_mq.add_message_listener(device_manager._on_message)
 
         def remove_device(self, device_id: str):
-            _LOGGER.debug(f"tuya remove device:{device_id}")
+            _LOGGER.debug("tuya remove device:%s", device_id)
             remove_hass_device(hass, device_id)
 
     __listener = DeviceListener()
@@ -202,10 +204,10 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Clean up device entities
     await cleanup_device_registry(hass)
 
-    _LOGGER.debug(f"init support type->{TUYA_SUPPORT_HA_TYPE}")
+    _LOGGER.debug("init support type->%s", TUYA_SUPPORT_HA_TYPE)
 
     for platform in TUYA_SUPPORT_HA_TYPE:
-        _LOGGER.debug(f"tuya async platform-->{platform}")
+        _LOGGER.debug("tuya async platform-->%s", platform)
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -241,7 +243,7 @@ async def async_setup(hass, config):
     tuya_logger.setLevel(_LOGGER.level)
     conf = config.get(DOMAIN)
 
-    _LOGGER.debug(f"Tuya async setup conf {conf}")
+    _LOGGER.debug("Tuya async setup conf %s", conf)
     if conf is not None:
 
         async def flow_init() -> Any:
@@ -277,7 +279,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Async setup hass config entry."""
-    _LOGGER.debug(f"tuya.__init__.async_setup_entry-->{entry.data}")
+    _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
 
     hass.data[DOMAIN] = {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: []}
     hass.data[DOMAIN][TUYA_SETUP_PLATFORM] = set()

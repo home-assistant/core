@@ -16,15 +16,16 @@ KEY_KEY = "oo00oo"
 class AesCBC:
     """AES helper."""
 
-    def random_16(self):
+    @classmethod
+    def random_16(cls):
         """Return random 16."""
-        str = ""
-        return str.join(
+        return "".join(
             secrets.choice("abcdefghijklmnopqrstuvwxyz!@#$%^&*1234567890")
             for i in range(16)
         )
 
-    def add_to_16(self, text):
+    @classmethod
+    def add_to_16(cls, text):
         """Add to 16."""
         if len(text.encode("utf-8")) % 16:
             add = 16 - (len(text.encode("utf-8")) % 16)
@@ -33,26 +34,29 @@ class AesCBC:
         text = text + ("\0" * add)
         return text.encode("utf-8")
 
-    def cbc_encrypt(self, key, iv, text):
+    @classmethod
+    def cbc_encrypt(cls, key, iv, text):
         """Cbc encrypt."""
         key = key.encode("utf-8")
         mode = AES.MODE_CBC
         iv = bytes(iv, encoding="utf8")
-        text = self.add_to_16(text)
+        text = cls.add_to_16(text)
         cryptos = AES.new(key, mode, iv)
         cipher_text = cryptos.encrypt(text)
         return str(b2a_hex(cipher_text), encoding="utf-8")
 
-    def cbc_decrypt(self, key, iv, text):
+    @classmethod
+    def cbc_decrypt(cls, key, offset, text):
         """Cbc decrypt."""
         key = key.encode("utf-8")
-        iv = bytes(iv, encoding="utf8")
+        offset = bytes(offset, encoding="utf8")
         mode = AES.MODE_CBC
-        cryptos = AES.new(key, mode, iv)
+        cryptos = AES.new(key, mode, offset)
         plain_text = cryptos.decrypt(a2b_hex(text))
         return bytes.decode(plain_text).rstrip("\0")
 
-    def xor_encrypt(self, data, key):
+    @classmethod
+    def xor_encrypt(cls, data, key):
         """Xor encrypt."""
         lkey = len(key)
         secret = []
@@ -64,7 +68,8 @@ class AesCBC:
             num += 1
         return b64.b64encode("".join(secret).encode()).decode()
 
-    def xor_decrypt(self, secret, key):
+    @classmethod
+    def xor_decrypt(cls, secret, key):
         """Xor decrypt."""
         tips = b64.b64decode(secret.encode()).decode()
         lkey = len(key)
@@ -77,14 +82,17 @@ class AesCBC:
             num += 1
         return "".join(secret)
 
-    def json_to_dict(self, json_str):
+    @classmethod
+    def json_to_dict(cls, json_str):
         """Json to dict."""
         return json.loads(json_str)
 
-    def b64_encrypt(self, text):
+    @classmethod
+    def b64_encrypt(cls, text):
         """Base64 encrypt."""
         return b64.b64encode(text.encode()).decode()
 
-    def b64_decrypt(self, text):
+    @classmethod
+    def b64_decrypt(cls, text):
         """Base64 decrypt."""
         return b64.b64decode(text).decode()

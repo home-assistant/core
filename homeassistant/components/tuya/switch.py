@@ -67,7 +67,7 @@ async def async_setup_entry(
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya sensor."""
-        _LOGGER.debug(f"switch add-> {dev_ids}")
+        _LOGGER.debug("switch add-> %s", dev_ids)
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)

@@ -12,7 +12,7 @@ from .const import DOMAIN
 class TuyaHaDevice(Entity):
     """Tuya base device."""
 
-    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager):
+    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init TuyaHaDevice."""
         super().__init__()
 
