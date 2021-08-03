@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_PARTITIONNAME,
     DATA_EVL,
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
@@ -26,7 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
         device = EnvisalinkSensor(
             hass,
-            device_config_data[CONF_PARTITIONNAME],
+            device_config_data[CONF_NAME],
             part_num,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
