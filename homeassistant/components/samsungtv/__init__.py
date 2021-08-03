@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
