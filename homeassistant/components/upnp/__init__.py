@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         device_discovered,
         {
-            "ssdp_usn": usn,
+            "usn": usn,
         },
     )
 

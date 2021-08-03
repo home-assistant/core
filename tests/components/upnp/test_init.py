@@ -59,6 +59,7 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
         ssdp.ATTR_SSDP_ST: mock_device.device_type,
         ssdp.ATTR_SSDP_USN: mock_device.usn,
         ssdp.ATTR_UPNP_UDN: mock_device.udn,
+        "usn": mock_device.usn,
         "location": location,
     }
     entry = MockConfigEntry(
@@ -76,19 +77,19 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
     with patch.object(Device, "async_create_device", async_create_device), patch(
         "homeassistant.components.ssdp.Scanner", MockSsdpScanner
     ):
-        # initialisation of component, no device discovered
+        # Initialisation of component, no device discovered.
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-        # cheat by filling SSDP cache
+        # Device is discovered.
         scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
         scanner.cache[
             (udn, "urn:schemas-upnp-org:device:InternetGatewayDevice:1")
         ] = discovery
 
-        # loading of config_entry, device discovered
+        # Load config_entry.
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id) is True
 
-        # ensure device is stored/used
+        # Assert device is created.
         async_create_device.assert_called_with(hass, discovery[ssdp.ATTR_SSDP_LOCATION])
