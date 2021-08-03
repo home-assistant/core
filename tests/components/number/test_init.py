@@ -3,7 +3,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.number import ATTR_STEP, DOMAIN, NumberEntity
+from homeassistant.components.number import (
+    ATTR_STEP,
+    ATTR_VALUE,
+    DOMAIN,
+    SERVICE_SET_VALUE,
+    NumberEntity,
+)
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
@@ -11,9 +17,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
 from tests.testing_config.custom_components.test.number import UNIQUE_NUMBER
-
-ATTR_VALUE = "value"
-SERVICE_SET_VALUE = "set_value"
 
 
 class MockDefaultNumberEntity(NumberEntity):
