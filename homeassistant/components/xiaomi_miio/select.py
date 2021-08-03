@@ -20,7 +20,6 @@ from .const import (
     KEY_DEVICE,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
-    SERVICE_SET_LED_BRIGHTNESS,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -50,7 +49,6 @@ SELECTOR_TYPES = {
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
         options=("Bright", "Dim", "Off"),
-        service=SERVICE_SET_LED_BRIGHTNESS,
     ),
 }
 
