@@ -3,13 +3,15 @@ import datetime
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import ATTR_LAST_TRIP_TIME
+from homeassistant.const import (
+    ATTR_LAST_TRIP_TIME,
+    CONF_NAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
 from . import (
-    CONF_ZONENAME,
     CONF_ZONETYPE,
     DATA_EVL,
     SIGNAL_ZONE_UPDATE,
@@ -30,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device = EnvisalinkBinarySensor(
             hass,
             zone_num,
-            device_config_data[CONF_ZONENAME],
+            device_config_data[CONF_NAME],
             device_config_data[CONF_ZONETYPE],
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
             hass.data[DATA_EVL],
