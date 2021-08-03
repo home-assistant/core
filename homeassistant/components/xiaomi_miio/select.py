@@ -39,7 +39,6 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
 
     options: tuple = ()
-    service: str | None = None
 
 
 SELECTOR_TYPES = {
