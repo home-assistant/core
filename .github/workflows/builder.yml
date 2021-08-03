@@ -114,7 +114,7 @@ jobs:
           python3 script/version_bump.py nightly
           version="$(python setup.py -V)"
 
-      - name: Write meta info
+      - name: Write meta info file
         shell: bash
         run: |
           echo "${{ env.GITHUB_SHA }};${{ env.GITHUB_REF }};${{ env.GITHUB_EVENT_NAME }};${{ env.GITHUB_ACTOR }}" > rootfs/OFFICIAL_IMAGE
