@@ -90,7 +90,7 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 9
         )
         self._current_fan_mode = self._fan_modes[
-            await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 16)
+            await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
         ]
         self._filter_hours = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 8
