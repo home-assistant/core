@@ -43,14 +43,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._value = state.state == STATE_ON
-        else:
-            self._value = None
-
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._value
+            self._attr_is_on = state.state == STATE_ON
 
     async def async_update(self, now=None):
         """Update the state of the sensor."""
@@ -68,6 +61,6 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        self._value = result.bits[0] & 1
+        self._attr_is_on = result.bits[0] & 1
         self._attr_available = True
         self.async_write_ha_state()
