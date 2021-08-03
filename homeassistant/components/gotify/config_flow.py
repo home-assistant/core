@@ -8,12 +8,13 @@ import gotify
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_HOST, CONF_TOKEN, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +37,8 @@ async def validate_input(hass: HomeAssistant, host: str, token: str) -> None:
         await hass.async_add_executor_job(
             gotify.create_message, "Home Assistant has been authenticated."
         )
-    except gotify.GotifyError:
-        raise InvalidAuth
+    except gotify.GotifyError as error:
+        raise InvalidAuth from error
 
 
 class GotifyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -67,7 +68,7 @@ class GotifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_NAME], data=user_input
                 )
         else:
             user_input = {}
@@ -76,6 +77,7 @@ class GotifyConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
                 vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN)): str,
+                vol.Required(CONF_NAME, default=user_input.get(CONF_NAME)): str,
             },
         )
 

@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "token": "[%key:common::config_flow::data::api_token%]"
+          "token": "[%key:common::config_flow::data::api_token%]",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     },
