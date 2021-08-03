@@ -164,7 +164,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==5.1.1
+aioesphomeapi==6.0.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -186,7 +186,7 @@ aiohomekit==0.6.0
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.6.0
+aiohue==2.6.1
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -783,7 +783,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210801.0
+home-assistant-frontend==20210803.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2048,7 +2048,7 @@ rokuecp==0.8.1
 roombapy==1.6.3
 
 # homeassistant.components.roon
-roonapi==0.0.37
+roonapi==0.0.38
 
 # homeassistant.components.rova
 rova==0.2.1
@@ -2238,7 +2238,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridge==1.1.5
+systembridge==2.0.6
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
