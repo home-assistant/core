@@ -5,6 +5,7 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{host}",
         "step": {
             "user": {
                 "data": {
@@ -15,6 +16,5 @@
                 }
             }
         }
-    },
-    "title": "VLC media player Telnet"
+    }
 }

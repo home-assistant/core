@@ -1,6 +1,6 @@
 {
-  "title": "VLC media player Telnet",
   "config": {
+    "flow_title": "{host}",
     "step": {
       "user": {
         "data": {

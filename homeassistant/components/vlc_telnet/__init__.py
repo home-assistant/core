@@ -4,6 +4,7 @@ from python_telnet_vlc import AuthError, ConnectionError as ConnErr, VLCTelnet
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DATA_AVAILABLE, DATA_VLC, DOMAIN, LOGGER
 
@@ -31,9 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if available:
         try:
             await hass.async_add_executor_job(vlc.login)
-        except AuthError:
-            LOGGER.error("Failed to login to VLC")
-            return False
+        except AuthError as err:
+            raise ConfigEntryAuthFailed() from err
 
     domain_data = hass.data.setdefault(DOMAIN, {})
     domain_data[entry.entry_id] = {DATA_VLC: vlc, DATA_AVAILABLE: available}

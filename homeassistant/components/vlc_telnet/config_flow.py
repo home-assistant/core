@@ -8,7 +8,8 @@ from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
 from python_telnet_vlc.vlctelnet import AuthError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import core, exceptions
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
@@ -24,6 +25,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+
+
+def vlc_connect(vlc: VLCTelnet) -> None:
+    """Connect to VLC."""
+    vlc.connect()
+    vlc.login()
 
 
 async def validate_input(
@@ -42,22 +51,20 @@ async def validate_input(
     )
 
     try:
-        await hass.async_add_executor_job(vlc.connect)
+        await hass.async_add_executor_job(vlc_connect, vlc)
     except (ConnErr, EOFError):
         raise CannotConnect
-
-    try:
-        await hass.async_add_executor_job(vlc.login)
     except AuthError:
         raise InvalidAuth
 
     return {"title": data[CONF_NAME]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VLC media player Telnet."""
 
     VERSION = 1
+    entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -93,6 +100,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the import step."""
         return await self.async_step_user(user_input)
+
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+        """Handle reauth flow."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert self.entry
+        self.context["title_placeholders"] = {"host": self.entry.data[CONF_HOST]}
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle reauth confirm."""
+        errors = {}
+
+        if user_input is not None and self.entry:
+            try:
+                await validate_input(self.hass, {**self.entry.data, **user_input})
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
