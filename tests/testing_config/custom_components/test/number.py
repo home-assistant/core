@@ -7,13 +7,12 @@ from homeassistant.components.number import NumberEntity
 
 from tests.common import MockEntity
 
-UNIQUE_SELECT_1 = "unique_number_1"
-UNIQUE_SELECT_2 = "unique_number_2"
+UNIQUE_NUMBER = "unique_number"
 
 ENTITIES = []
 
 
-class MockSelectEntity(MockEntity, NumberEntity):
+class MockNumberEntity(MockEntity, NumberEntity):
     """Mock Select class."""
 
     _attr_value = None
@@ -33,10 +32,9 @@ class MockSelectEntity(MockEntity, NumberEntity):
         """Return the current value."""
         return self._handle("value")
 
-
-def set_value(self, value: float) -> None:
-    """Change the selected option."""
-    self._attr_value = value
+    def set_value(self, value: float) -> None:
+        """Change the selected option."""
+        self._attr_value = value
 
 
 def init(empty=False):
@@ -47,20 +45,12 @@ def init(empty=False):
         []
         if empty
         else [
-            MockSelectEntity(
+            MockNumberEntity(
                 name="number 1",
-                unique_id="unique_number_1",
+                unique_id=UNIQUE_NUMBER,
                 min=0.0,
                 max=100.0,
                 value=50.0,
-            ),
-            MockSelectEntity(
-                name="number 2",
-                unique_id="unique_number_2",
-                min=0.0,
-                max=1.0,
-                value=0.5,
-                step=0.1,
             ),
         ]
     )

@@ -1,7 +1,19 @@
 """The tests for the Number component."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.number import NumberEntity
+import pytest
+
+from homeassistant.components.number import DOMAIN, NumberEntity
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
+from homeassistant.setup import async_setup_component
+
+from tests.common import mock_registry
+from tests.testing_config.custom_components.test.number import UNIQUE_NUMBER
+
+ATTR_VALUE = "value"
+SERVICE_SET_VALUE = "set_value"
 
 
 class MockDefaultNumberEntity(NumberEntity):
@@ -27,6 +39,12 @@ class MockNumberEntity(NumberEntity):
         return 0.5
 
 
+@pytest.fixture
+def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)
+
+
 async def test_step(hass):
     """Test the step calculation."""
     number = MockDefaultNumberEntity()
@@ -46,3 +64,44 @@ async def test_sync_set_value(hass):
 
     assert number.set_value.called
     assert number.set_value.call_args[0][0] == 42
+
+
+async def test_custom_integration_and_validation(
+    hass, entity_reg, enable_custom_integrations
+):
+    """Test we can only set valid values."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    reg_entry_1 = entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        UNIQUE_NUMBER,
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(reg_entry_1.entity_id).state == "50.0"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_VALUE: 60.0, ATTR_ENTITY_ID: reg_entry_1.entity_id},
+        blocking=True,
+    )
+
+    hass.states.async_set(reg_entry_1.entity_id, 60.0)
+    await hass.async_block_till_done()
+    assert hass.states.get(reg_entry_1.entity_id).state == "60.0"
+
+    # test ValueError trigger
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: reg_entry_1.entity_id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    assert hass.states.get(reg_entry_1.entity_id).state == "60.0"
