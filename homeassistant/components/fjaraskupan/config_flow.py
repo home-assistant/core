@@ -40,7 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         async with BleakScanner(detection_callback=detection):
             try:
-                await asyncio.wait_for(event.wait(), CONST_WAITTIME)
+                await asyncio.wait_for(event.wait(), CONST_WAIT_TIME)
             except asyncio.TimeoutError:
                 return self.async_abort(reason="no_devices_found")
 
