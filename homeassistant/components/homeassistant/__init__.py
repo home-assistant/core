@@ -119,14 +119,12 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C9
         if tasks:
             await asyncio.gather(*tasks)
 
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_SAVE_PERSISTENT_STATES, async_save_persistent_states
+    )
+
     service_schema = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids}, extra=vol.ALLOW_EXTRA)
 
-    hass.services.async_register(
-        ha.DOMAIN,
-        SERVICE_SAVE_PERSISTENT_STATES,
-        async_save_persistent_states,
-        schema=service_schema,
-    )
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service, schema=service_schema
     )
