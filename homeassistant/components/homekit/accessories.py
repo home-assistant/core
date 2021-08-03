@@ -64,6 +64,8 @@ from .const import (
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
+    MAX_SERIAL_LENGTH,
+    MAX_VERSION_LENGTH,
     SERV_BATTERY_SERVICE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
@@ -245,8 +247,9 @@ class HomeAccessory(Accessory):
         self.set_info_service(
             manufacturer=manufacturer,
             model=model,
-            serial_number=device_id or entity_id,
-            firmware_revision=sw_version,
+            serial_number=device_id[:MAX_SERIAL_LENGTH]
+            or entity_id[:MAX_SERIAL_LENGTH],
+            firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
         self.category = category
