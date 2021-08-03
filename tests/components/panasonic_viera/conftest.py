@@ -100,7 +100,7 @@ def mock_remote_fixture():
 
 
 @pytest.fixture
-async def init_integration(hass: HomeAssistant, mock_remote) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant, mock_remote: Mock) -> MockConfigEntry:
     """Set up the Panasonic Viera integration for testing."""
 
     mock_entry = MockConfigEntry(
