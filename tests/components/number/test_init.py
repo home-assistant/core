@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.number import DOMAIN, NumberEntity
+from homeassistant.components.number import ATTR_STEP, DOMAIN, NumberEntity
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
@@ -82,7 +82,9 @@ async def test_custom_integration_and_validation(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    assert hass.states.get(reg_entry_1.entity_id).state == "50.0"
+    state = hass.states.get(reg_entry_1.entity_id)
+    assert state.attributes.get(ATTR_VALUE) is None
+    assert state.attributes.get(ATTR_STEP) == 1.0
 
     await hass.services.async_call(
         DOMAIN,
@@ -93,7 +95,8 @@ async def test_custom_integration_and_validation(
 
     hass.states.async_set(reg_entry_1.entity_id, 60.0)
     await hass.async_block_till_done()
-    assert hass.states.get(reg_entry_1.entity_id).state == "60.0"
+    state = hass.states.get(reg_entry_1.entity_id)
+    assert state.state == "60.0"
 
     # test ValueError trigger
     with pytest.raises(ValueError):
@@ -103,5 +106,7 @@ async def test_custom_integration_and_validation(
             {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: reg_entry_1.entity_id},
             blocking=True,
         )
+
     await hass.async_block_till_done()
-    assert hass.states.get(reg_entry_1.entity_id).state == "60.0"
+    state = hass.states.get(reg_entry_1.entity_id)
+    assert state.state == "60.0"

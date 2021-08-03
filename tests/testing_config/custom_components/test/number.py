@@ -15,17 +15,8 @@ ENTITIES = []
 class MockNumberEntity(MockEntity, NumberEntity):
     """Mock Select class."""
 
-    _attr_value = None
-
-    @property
-    def max(self) -> list:
-        """Return the maximum accepted value (inclusive)."""
-        return self._handle("max")
-
-    @property
-    def min(self) -> list:
-        """Return the minimum accepted value (inclusive)."""
-        return self._handle("min")
+    _attr_value = 50.0
+    _attr_step = 1.0
 
     @property
     def value(self):
@@ -46,9 +37,8 @@ def init(empty=False):
         if empty
         else [
             MockNumberEntity(
-                name="number 1",
+                name="test",
                 unique_id=UNIQUE_NUMBER,
-                value=50.0,
             ),
         ]
     )
