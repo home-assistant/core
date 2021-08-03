@@ -1,6 +1,9 @@
 """A platform that to monitor Uptime Robot monitors."""
+from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
+import async_timeout
 from pyuptimerobot import UptimeRobot
 import voluptuous as vol
 
@@ -8,9 +11,17 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,69 +32,90 @@ ATTRIBUTION = "Data provided by Uptime Robot"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+@dataclass
+class UptimeRobotBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Entity description for UptimeRobotBinarySensor."""
+
+    target: str = ""
+
+
+async def async_setup_platform(
+    hass: HomeAssistant, config, async_add_entities, discovery_info=None
+):
     """Set up the Uptime Robot binary_sensors."""
+    uptime_robot_api = UptimeRobot()
+    api_key = config[CONF_API_KEY]
 
-    up_robot = UptimeRobot()
-    api_key = config.get(CONF_API_KEY)
-    monitors = up_robot.getMonitors(api_key)
+    async def async_update_data():
+        """Fetch data from API UptimeRobot API."""
 
-    devices = []
-    if not monitors or monitors.get("stat") != "ok":
+        def api_wrapper():
+            return uptime_robot_api.getMonitors(api_key)
+
+        async with async_timeout.timeout(10):
+            monitors = await hass.async_add_executor_job(api_wrapper)
+            if not monitors or monitors.get("stat") != "ok":
+                raise UpdateFailed("Error communicating with Uptime Robot API")
+            return monitors
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="uptimerobot",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=60),
+    )
+
+    await coordinator.async_refresh()
+
+    if not coordinator.data or coordinator.data.get("stat") != "ok":
         _LOGGER.error("Error connecting to Uptime Robot")
-        return
+        raise PlatformNotReady()
 
-    for monitor in monitors["monitors"]:
-        devices.append(
+    async_add_entities(
+        [
             UptimeRobotBinarySensor(
-                api_key,
-                up_robot,
-                monitor["id"],
-                monitor["friendly_name"],
-                monitor["url"],
+                coordinator,
+                UptimeRobotBinarySensorEntityDescription(
+                    key=monitor["id"],
+                    name=monitor["friendly_name"],
+                    target=monitor["url"],
+                    device_class=DEVICE_CLASS_CONNECTIVITY,
+                ),
             )
-        )
+            for monitor in coordinator.data["monitors"]
+        ],
+        True,
+    )
 
-    add_entities(devices, True)
 
-
-class UptimeRobotBinarySensor(BinarySensorEntity):
+class UptimeRobotBinarySensor(BinarySensorEntity, CoordinatorEntity):
     """Representation of a Uptime Robot binary sensor."""
 
-    def __init__(self, api_key, up_robot, monitor_id, name, target):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        description: UptimeRobotBinarySensorEntityDescription,
+    ):
         """Initialize Uptime Robot the binary sensor."""
-        self._api_key = api_key
-        self._monitor_id = str(monitor_id)
-        self._name = name
-        self._target = target
-        self._up_robot = up_robot
-        self._state = None
+        self.coordinator = coordinator
+        self.entity_description = description
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_TARGET: self.entity_description.target,
+        }
 
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the state of the binary sensor."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the binary sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION, ATTR_TARGET: self._target}
-
-    def update(self):
+    async def async_update(self):
         """Get the latest state of the binary sensor."""
-        monitor = self._up_robot.getMonitors(self._api_key, self._monitor_id)
-        if not monitor or monitor.get("stat") != "ok":
-            _LOGGER.warning("Failed to get new state")
-            return
-        status = monitor["monitors"][0]["status"]
-        self._state = 1 if status == 2 else 0
+        if monitor := get_monitor_by_id(
+            self.coordinator.data.get("monitors", []), self.entity_description.key
+        ):
+            self._attr_is_on = monitor["status"] == 2
+
+
+def get_monitor_by_id(monitors, monitor_id):
+    """Return the monitor object matching the id."""
+    filtered = [monitor for monitor in monitors if monitor["id"] == monitor_id]
+    if len(filtered) == 0:
+        return
+    return filtered[0]
