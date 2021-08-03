@@ -1,6 +1,7 @@
 """Platform for climate integration."""
 import logging
 
+import aiohttp
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
 from whirlpool.auth import Auth
 
@@ -34,6 +35,8 @@ AIRCON_MODE_MAP = {
     AirconMode.Fan: HVAC_MODE_FAN_ONLY,
 }
 
+HVAC_MODE_TO_AIRCON_MODE = {v: k for k, v in AIRCON_MODE_MAP.items()}
+
 AIRCON_FANSPEED_MAP = {
     AirconFanSpeed.Off: FAN_OFF,
     AirconFanSpeed.Auto: FAN_AUTO,
@@ -41,6 +44,8 @@ AIRCON_FANSPEED_MAP = {
     AirconFanSpeed.Medium: FAN_MEDIUM,
     AirconFanSpeed.High: FAN_HIGH,
 }
+
+FAN_MODE_TO_AIRCON_FANSPEED = {v: k for k, v in AIRCON_FANSPEED_MAP.items()}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -75,7 +80,7 @@ class AirConEntity(ClimateEntity):
             name = await self._aircon.fetch_name()
             if name is not None:
                 self._name = name
-        except Exception:  # pylint: disable=broad-except
+        except aiohttp.ClientError:
             _LOGGER.exception("Failed to get name")
 
     @property
@@ -171,11 +176,7 @@ class AirConEntity(ClimateEntity):
             await self._aircon.set_power_on(False)
             return
 
-        mode = None
-        for k, val in AIRCON_MODE_MAP.items():
-            if val == hvac_mode:
-                mode = k
-
+        mode = HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)
         if not mode:
             _LOGGER.warning("Unexpected hvac mode")
             return
@@ -197,11 +198,7 @@ class AirConEntity(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        fanspeed = None
-        for k, val in AIRCON_FANSPEED_MAP.items():
-            if val == fan_mode:
-                fanspeed = k
-
+        fanspeed = FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)
         if not fanspeed:
             return
         await self._aircon.set_fanspeed(fanspeed)
