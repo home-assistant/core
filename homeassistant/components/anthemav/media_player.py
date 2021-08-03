@@ -37,8 +37,6 @@ from .const import (
     MANUFACTURER,
 )
 
-DEVICE_CLASS_RECEIVER = "receiver"
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -136,11 +134,6 @@ class AnthemAVR(MediaPlayerEntity):
         return None
 
     @property
-    def extra_state_attributes(self):
-        """Return entity specific state attributes."""
-        return {"attenuation": self._lookup("attenuation", -90)}
-
-    @property
     def is_volume_muted(self):
         """Return boolean reflecting mute state on device."""
         return self._lookup("mute", False)
@@ -173,18 +166,6 @@ class AnthemAVR(MediaPlayerEntity):
         """Return all active, configured inputs."""
         return self._lookup("input_list", ["Unknown"])
 
-    @property
-    def sound_mode_list(self):
-        """Return all available sound mode."""
-        if self.state is STATE_OFF:
-            return None
-        return self._lookup("audio_listening_mode_list", None)
-
-    @property
-    def sound_mode(self):
-        """Return currently selected sound mode."""
-        return self._lookup("audio_listening_mode_text", "Unknown")
-
     async def async_select_source(self, source):
         """Change AVR to the designated source (by name)."""
         self._update_avr("input_name", source)
@@ -201,25 +182,9 @@ class AnthemAVR(MediaPlayerEntity):
         """Set AVR volume (0 to 1)."""
         self._update_avr("volume_as_percentage", volume)
 
-    async def async_volume_up(self):
-        """Turn volume up for media player."""
-        volume = self.volume_level
-        if volume < 1:
-            await self.async_set_volume_level(min(1, volume + 0.04))
-
-    async def async_volume_down(self):
-        """Turn volume down for media player."""
-        volume = self.volume_level
-        if volume > 0:
-            await self.async_set_volume_level(max(0, volume - 0.04))
-
     async def async_mute_volume(self, mute):
         """Engage AVR mute."""
         self._update_avr("mute", mute)
-
-    async def async_select_sound_mode(self, sound_mode):
-        """Switch the sound mode of the entity."""
-        self._update_avr("audio_listening_mode_text", sound_mode)
 
     def _update_avr(self, propname, value):
         """Update a property in the AVR."""
