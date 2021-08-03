@@ -185,7 +185,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xbox.*",
     "homeassistant.components.xiaomi_aqara.*",
     "homeassistant.components.xiaomi_miio.*",
-    "homeassistant.components.yamaha.*",
     "homeassistant.components.yeelight.*",
     "homeassistant.components.zha.*",
     "homeassistant.components.zwave.*",
