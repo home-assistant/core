@@ -65,7 +65,7 @@ stop_watering:
   fields:
     devices:
       name: Devices
-      description: Name of controllers to pause. Defaults to all controllers on the account if not provided.
+      description: Name of controllers to stop. Defaults to all controllers on the account if not provided.
       example: "Main House"
       selector:
         text:
