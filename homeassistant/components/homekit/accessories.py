@@ -64,6 +64,9 @@ from .const import (
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
+    MAX_MANUFACTURER_LENGTH,
+    MAX_MODEL_LENGTH,
+    MAX_NAME_LENGTH,
     MAX_SERIAL_LENGTH,
     MAX_VERSION_LENGTH,
     SERV_BATTERY_SERVICE,
@@ -220,7 +223,9 @@ class HomeAccessory(Accessory):
         **kwargs,
     ):
         """Initialize a Accessory object."""
-        super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
+        super().__init__(
+            driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
+        )
         self.config = config or {}
         if device_id:
             self.device_id = device_id
@@ -245,8 +250,8 @@ class HomeAccessory(Accessory):
             sw_version = __version__
 
         self.set_info_service(
-            manufacturer=manufacturer,
-            model=model,
+            manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
+            model=model[:MAX_MODEL_LENGTH],
             serial_number=device_id[:MAX_SERIAL_LENGTH]
             if device_id
             else entity_id[:MAX_SERIAL_LENGTH],
