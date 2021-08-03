@@ -9,10 +9,12 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -43,6 +45,12 @@ SIMPLE_SENSOR = {
         "device_class": DEVICE_CLASS_POWER,
         "state_class": STATE_CLASS_MEASUREMENT,
         "unit": POWER_WATT,
+    },
+    CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: {
+        "name": "Air Pressure",
+        "device_class": DEVICE_CLASS_PRESSURE,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": PRESSURE_HPA,
     },
     CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): {
         "name": "Current Temperature",

@@ -103,7 +103,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==6.0.0
+aioesphomeapi==6.1.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -115,7 +115,7 @@ aioguardian==1.0.8
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.0
+aiohomekit==0.6.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1125,7 +1125,7 @@ rokuecp==0.8.1
 roombapy==1.6.3
 
 # homeassistant.components.roon
-roonapi==0.0.37
+roonapi==0.0.38
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
