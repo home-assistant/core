@@ -38,8 +38,9 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         info_object["docker"] = os.path.isfile("/.dockerenv")
 
     # Determine installation type on current data
-    if info_object["docker"] and info_object["user"] == "root":
-        info_object["installation_type"] = "Home Assistant Container"
+    if info_object["docker"]:
+        if info_object["user"] == "root":
+            info_object["installation_type"] = "Home Assistant Container"
     elif is_virtual_env():
         info_object["installation_type"] = "Home Assistant Core"
 
