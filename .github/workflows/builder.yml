@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "${{ env.GITHUB_SHA }};${{ env.GITHUB_REF }};${{ env.GITHUB_EVENT_NAME }};${{ env.GITHUB_ACTOR }}" > OFFICIAL_IMAGE
 
-      - name: Signing image
+      - name: Signing meta info file
         uses: home-assistant/actions/helpers/codenotary@master
         with:
           source: file://${{ github.workspace }}/OFFICIAL_IMAGE
