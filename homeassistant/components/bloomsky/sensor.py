@@ -101,20 +101,16 @@ FORMAT_NUMBERS = [
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available BloomSky weather sensors."""
-    # Default needed in case of discovery
-    if discovery_info is not None:
+    if discovery_info is None:  # Only accept discovery
         return
 
     bloomsky = hass.data[DOMAIN]
-    bloomsky.refresh_devices()
 
     for device in bloomsky.devices.values():
-        add_entities(
-            (BloomSkySensor(bloomsky, device, what) for what in SKY_SENSORS), True
-        )
+        add_entities(BloomSkySensor(bloomsky, device, what) for what in SKY_SENSORS)
         if "Storm" in device:
             add_entities(
-                (BloomSkySensor(bloomsky, device, what) for what in STORM_SENSORS), True
+                BloomSkySensor(bloomsky, device, what) for what in STORM_SENSORS
             )
 
 
@@ -135,6 +131,7 @@ class BloomSkySensor(SensorEntity):
             self._attr_native_unit_of_measurement = SENSOR_UNITS_METRIC.get(
                 sensor_name, None
             )
+        self.update()
 
     @property
     def device_class(self):

@@ -16,14 +16,14 @@ SENSOR_TYPES = {
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available BloomSky weather binary sensors."""
     # Default needed in case of discovery
-    if discovery_info is not None:
+    if discovery_info is None:
         return
 
     bloomsky = hass.data[DOMAIN]
 
     for device in bloomsky.devices.values():
         add_entities(
-            (BloomSkySensor(bloomsky, device, sensor) for sensor in SENSOR_TYPES), True
+            BloomSkySensor(bloomsky, device, sensor) for sensor in SENSOR_TYPES
         )
 
 
@@ -38,6 +38,7 @@ class BloomSkySensor(BinarySensorEntity):
         self._attr_name = f"{device['DeviceName']} {sensor_name}"
         self._attr_unique_id = f"{self._device_id}-{sensor_name}"
         self._attr_device_class = SENSOR_TYPES.get(sensor_name)
+        self.update()
 
     def update(self):
         """Request an update from the BloomSky API."""
