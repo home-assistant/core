@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
-CONST_WAITTIME = 5.0
+CONST_WAIT_TIME = 5.0
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
