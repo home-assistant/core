@@ -248,7 +248,8 @@ class HomeAccessory(Accessory):
             manufacturer=manufacturer,
             model=model,
             serial_number=device_id[:MAX_SERIAL_LENGTH]
-            or entity_id[:MAX_SERIAL_LENGTH],
+            if device_id
+            else entity_id[:MAX_SERIAL_LENGTH],
             firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
