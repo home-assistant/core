@@ -70,8 +70,8 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         """Initialize the SimpliSafe alarm."""
         super().__init__(simplisafe, system, "Alarm Control Panel")
 
-        if CONF_CODE in self._simplisafe.config_entry.options:
-            if self._simplisafe.config_entry.options[CONF_CODE].isdigit():
+        if code := self._simplisafe.config_entry.options.get(CONF_CODE):
+            if code.isdigit():
                 self._attr_code_format = FORMAT_NUMBER
             else:
                 self._attr_code_format = FORMAT_TEXT
