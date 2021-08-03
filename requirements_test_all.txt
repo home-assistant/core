@@ -103,7 +103,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==5.1.1
+aioesphomeapi==6.0.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -122,7 +122,7 @@ aiohomekit==0.6.0
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.6.0
+aiohue==2.6.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -449,7 +449,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-ais-dom-frontend==20210801.0
+ais-dom-frontend==20210803.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1005,7 +1005,7 @@ pysiaalarm==3.0.0
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.4
+pysma==0.6.5
 
 # homeassistant.components.smappee
 pysmappee==0.2.25

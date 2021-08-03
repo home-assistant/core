@@ -121,7 +121,9 @@ class FritzBoxPowerSensor(FritzBoxEntity, SensorEntity):
     @property
     def state(self) -> float | None:
         """Return the state of the sensor."""
-        return self.device.power / 1000  # type: ignore [no-any-return]
+        if power := self.device.power:
+            return power / 1000  # type: ignore [no-any-return]
+        return 0.0
 
 
 class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
@@ -130,7 +132,9 @@ class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
     @property
     def state(self) -> float | None:
         """Return the state of the sensor."""
-        return (self.device.energy or 0.0) / 1000
+        if energy := self.device.energy:
+            return energy / 1000  # type: ignore [no-any-return]
+        return 0.0
 
     @property
     def last_reset(self) -> datetime:
