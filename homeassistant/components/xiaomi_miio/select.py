@@ -44,7 +44,7 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
 SELECTOR_TYPES = {
     FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioSelectDescription(
         key=ATTR_LED_BRIGHTNESS,
-        name="Led brightness",
+        name="Led Brightness",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
         options=("Bright", "Dim", "Off"),
