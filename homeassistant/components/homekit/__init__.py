@@ -114,6 +114,7 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 MAX_DEVICES = 150
+MAX_PORT = 32768
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -258,7 +259,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     name = conf[CONF_NAME]
     port = conf[CONF_PORT]
+
     _LOGGER.debug("Begin setup HomeKit for %s", name)
+    if port >= MAX_PORT:
+        _LOGGER.warning(
+            "The HomeKit server %s is using port %s which is in the ephemeral port range, and may not be reliable; Choose a port lower than %s",
+            name,
+            port,
+            MAX_PORT,
+        )
 
     # ip_address and advertise_ip are yaml only
     ip_address = conf.get(
