@@ -26,17 +26,15 @@ ATTR_MOTOR_SPEED = "motor_speed"
 class XiaomiMiioNumberDescription(NumberEntityDescription):
     """A class that describes number entities."""
 
-    feature: str | None = None
     min_value: float | None = None
     max_value: float | None = None
     step: float | None = None
     available_with_device_off: bool = True
 
 
-NUMBER_TYPES = (
-    XiaomiMiioNumberDescription(
+NUMBER_TYPES = {
+    FEATURE_SET_MOTOR_SPEED: XiaomiMiioNumberDescription(
         key=ATTR_MOTOR_SPEED,
-        feature=FEATURE_SET_MOTOR_SPEED,
         name="Motor Speed",
         icon="mdi:fast-forward-outline",
         unit_of_measurement="rpm",
@@ -45,7 +43,7 @@ NUMBER_TYPES = (
         step=10,
         available_with_device_off=False,
     ),
-)
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -59,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if model != MODEL_AIRHUMIDIFIER_CA4:
         return
 
-    description = _get_number_description(ATTR_MOTOR_SPEED)
+    description = NUMBER_TYPES[FEATURE_SET_MOTOR_SPEED]
     entities.append(
         XiaomiAirHumidifierNumber(
             f"{config_entry.title} {description.name}",
@@ -139,10 +137,3 @@ class XiaomiAirHumidifierNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
             self._device.set_speed,
             motor_speed,
         )
-
-
-def _get_number_description(sensor: str) -> XiaomiMiioNumberDescription:
-    """Return number entity description."""
-    for description in NUMBER_TYPES:
-        if description.key == sensor:
-            return description
