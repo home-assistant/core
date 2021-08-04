@@ -450,7 +450,9 @@ class SonosSpeaker:
         """Add the soco instance associated with the event to the callback."""
         if not (event_id := event.variables.get("favorites_update_id")):
             return
-        self.favorites.async_handle_event(event_id, self.soco)
+        if not (container_ids := event.variables.get("container_update_i_ds")):
+            return
+        self.favorites.async_handle_event(event_id, container_ids, self.soco)
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
