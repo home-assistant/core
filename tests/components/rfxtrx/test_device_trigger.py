@@ -1,12 +1,13 @@
 """The tests for RFXCOM RFXtrx device triggers."""
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -105,12 +106,13 @@ async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
         EVENT_FIREALARM_1,
     ],
 )
-async def test_firing_event(hass, device_reg, rfxtrx, event):
+async def test_firing_event(hass, device_reg: DeviceRegistry, rfxtrx, event):
     """Test for turn_on and turn_off triggers firing."""
 
     await setup_entry(hass, {event.code: {"fire_event": True, "signal_repetitions": 1}})
 
     device_entry = device_reg.async_get_device(event.device_identifiers, set())
+    assert device_entry
 
     calls = async_mock_service(hass, "test", "automation")
 
@@ -141,3 +143,44 @@ async def test_firing_event(hass, device_reg, rfxtrx, event):
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "device"
+
+
+async def test_invalid_trigger(hass, device_reg: DeviceRegistry):
+    """Test for invalid actions."""
+    event = EVENT_LIGHTING_1
+    notification_calls = async_mock_service(hass, "persistent_notification", "create")
+
+    await setup_entry(hass, {event.code: {"fire_event": True, "signal_repetitions": 1}})
+
+    device_identifers = cast(set[tuple[str, str]], event.device_identifiers)
+    device_entry = device_reg.async_get_device(device_identifers, set())
+    assert device_entry
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": event.type,
+                        "subtype": "invalid",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("{{trigger.platform}}")},
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(notification_calls) == 1
+    assert (
+        "The following integrations and platforms could not be set up"
+        in notification_calls[0].data["message"]
+    )

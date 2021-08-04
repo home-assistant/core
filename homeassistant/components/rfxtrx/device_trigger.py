@@ -5,6 +5,9 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.const import (
@@ -43,23 +46,39 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for RFXCOM RFXtrx devices."""
-    triggers = []
-
     device = async_get_device_object(hass, device_id)
-    if device:
-        for conf_type in TRIGGER_TYPES:
-            data = getattr(device, TRIGGER_SELECTION[conf_type], {})
-            for command in data.values():
-                triggers.append(
-                    {
-                        CONF_PLATFORM: "device",
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_TYPE: conf_type,
-                        CONF_SUBTYPE: command,
-                    }
-                )
+
+    triggers = []
+    for conf_type in TRIGGER_TYPES:
+        data = getattr(device, TRIGGER_SELECTION[conf_type], {})
+        for command in data.values():
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_TYPE: conf_type,
+                    CONF_SUBTYPE: command,
+                }
+            )
     return triggers
+
+
+async def async_validate_trigger_config(hass, config):
+    """Validate config."""
+    config = TRIGGER_SCHEMA(config)
+
+    device = async_get_device_object(hass, config[CONF_DEVICE_ID])
+
+    action_type = config[CONF_TYPE]
+    sub_type = config[CONF_SUBTYPE]
+    commands = getattr(device, TRIGGER_SELECTION[action_type], {})
+    if config[CONF_SUBTYPE] not in commands.values():
+        raise InvalidDeviceAutomationConfig(
+            f"Subtype {sub_type} not found in device triggers {commands}"
+        )
+
+    return config
 
 
 async def async_attach_trigger(

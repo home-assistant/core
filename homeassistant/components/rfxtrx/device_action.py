@@ -3,11 +3,14 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from . import _LOGGER, DATA_RFXOBJECT, DOMAIN
+from . import DATA_RFXOBJECT, DOMAIN
 from .helpers import async_get_device_object
 
 CONF_DATA = "data"
@@ -36,24 +39,48 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions for RFXCOM RFXtrx devices."""
-    actions = []
 
-    device = async_get_device_object(hass, device_id)
-    if device:
-        for action_type in ACTION_TYPES:
-            if hasattr(device, action_type):
-                values = getattr(device, ACTION_SELECTION[action_type], {})
-                for value in values.values():
-                    actions.append(
-                        {
-                            CONF_DEVICE_ID: device_id,
-                            CONF_DOMAIN: DOMAIN,
-                            CONF_TYPE: action_type,
-                            CONF_SUBTYPE: value,
-                        }
-                    )
+    try:
+        device = async_get_device_object(hass, device_id)
+    except ValueError:
+        return []
+
+    actions = []
+    for action_type in ACTION_TYPES:
+        if hasattr(device, action_type):
+            values = getattr(device, ACTION_SELECTION[action_type], {})
+            for value in values.values():
+                actions.append(
+                    {
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_TYPE: action_type,
+                        CONF_SUBTYPE: value,
+                    }
+                )
 
     return actions
+
+
+def _get_commands(hass, device_id, action_type):
+    device = async_get_device_object(hass, device_id)
+    send_fun = getattr(device, action_type)
+    commands = getattr(device, ACTION_SELECTION[action_type], {})
+    return commands, send_fun
+
+
+async def async_validate_action_config(hass, config):
+    """Validate config."""
+    config = ACTION_SCHEMA(config)
+    commands, _ = _get_commands(hass, config[CONF_DEVICE_ID], config[CONF_TYPE])
+    sub_type = config[CONF_SUBTYPE]
+
+    if sub_type not in commands.values():
+        raise InvalidDeviceAutomationConfig(
+            f"Subtype {sub_type} not found in device commands {commands}"
+        )
+
+    return config
 
 
 async def async_call_action_from_config(
@@ -63,16 +90,10 @@ async def async_call_action_from_config(
     config = ACTION_SCHEMA(config)
 
     rfx = hass.data[DOMAIN][DATA_RFXOBJECT]
-    device = async_get_device_object(hass, config[CONF_DEVICE_ID])
-
-    action_type = config[CONF_TYPE]
+    commands, send_fun = _get_commands(hass, config[CONF_DEVICE_ID], config[CONF_TYPE])
     sub_type = config[CONF_SUBTYPE]
-    send_fun = getattr(device, action_type)
-    commands = getattr(device, ACTION_SELECTION[action_type], {})
 
     for key, value in commands.items():
         if value == sub_type:
             await hass.async_add_executor_job(send_fun, rfx.transport, key)
-            break
-    else:
-        _LOGGER.error("Subtype %s not found in device commands %s", sub_type, commands)
+            return

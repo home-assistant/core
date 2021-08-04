@@ -1,7 +1,7 @@
 """The tests for RFXCOM RFXtrx device actions."""
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 import RFXtrx
 import pytest
@@ -15,6 +15,7 @@ from tests.common import (
     MockConfigEntry,
     assert_lists_same,
     async_get_device_automations,
+    async_mock_service,
     mock_device_registry,
     mock_registry,
 )
@@ -163,3 +164,43 @@ async def test_action(
     await hass.async_block_till_done()
 
     rfxtrx.transport.send.assert_called_once_with(bytearray.fromhex(expected))
+
+
+async def test_invalid_action(hass, device_reg: DeviceRegistry):
+    """Test for invalid actions."""
+    device = DEVICE_LIGHTING_1
+    notification_calls = async_mock_service(hass, "persistent_notification", "create")
+
+    await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
+
+    device_identifers = cast(set[tuple[str, str]], device.device_identifiers)
+    device_entry = device_reg.async_get_device(device_identifers, set())
+    assert device_entry
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": "send_command",
+                        "subtype": "invalid",
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(notification_calls) == 1
+    assert (
+        "The following integrations and platforms could not be set up"
+        in notification_calls[0].data["message"]
+    )
