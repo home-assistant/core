@@ -1,7 +1,7 @@
 """The tests for the hassio component."""
 import asyncio
-from unittest.mock import patch
 
+from aiohttp import StreamReader
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
@@ -106,13 +106,11 @@ async def test_forward_log_request(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_bad_gateway_when_cannot_find_supervisor(hassio_client):
+async def test_bad_gateway_when_cannot_find_supervisor(hassio_client, aioclient_mock):
     """Test we get a bad gateway error if we can't find supervisor."""
-    with patch(
-        "homeassistant.components.hassio.http.async_timeout.timeout",
-        side_effect=asyncio.TimeoutError,
-    ):
-        resp = await hassio_client.get("/api/hassio/addons/test/info")
+    aioclient_mock.get("http://127.0.0.1/addons/test/info", exc=asyncio.TimeoutError)
+
+    resp = await hassio_client.get("/api/hassio/addons/test/info")
     assert resp.status == 502
 
 
@@ -180,3 +178,10 @@ def test_need_auth(hass):
     hass.data["onboarding"] = False
     assert not _need_auth(hass, "backups/new/upload")
     assert not _need_auth(hass, "supervisor/logs")
+
+
+async def test_stream(hassio_client, aioclient_mock):
+    """Verify that the request is a stream."""
+    aioclient_mock.get("http://127.0.0.1/test")
+    await hassio_client.get("/api/hassio/test", data="test")
+    assert isinstance(aioclient_mock.mock_calls[-1][2], StreamReader)
