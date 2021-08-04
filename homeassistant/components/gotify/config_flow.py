@@ -75,9 +75,9 @@ class GotifyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         STEP_USER_DATA_SCHEMA = vol.Schema(
             {
-                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-                vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN)): str,
-                vol.Required(CONF_NAME, default=user_input.get(CONF_NAME)): str,
+                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN, "")): str,
+                vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
             },
         )
 
