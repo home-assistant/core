@@ -10,9 +10,9 @@ from . import (
     ATTR_PARTITION,
     DATA_EVL,
     PARTITION_SCHEMA,
-    USERS_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
+    USERS_SCHEMA,
     EnvisalinkDevice,
 )
 
@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Perform the setup for Envisalink sensor devices."""
     configured_partitions = discovery_info["partitions"]
     configured_users = discovery_info["users"]
-    
+
     user_list = {}
     if configured_users:
         for user_num in configured_users:
