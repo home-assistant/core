@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/gotify",
   "codeowners": ["@benjmarshall"],
   "iot_class": "cloud_push",
-  "requirements": ["gotify==0.1.1"],
+  "requirements": ["gotify==0.2.0"],
   "config_flow": true
 }

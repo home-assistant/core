@@ -30,7 +30,7 @@ class GotifyNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.token = token
         self.url = url
-        gotify.config(
+        self.gotify = gotify.gotify(
             base_url=url,
             app_token=token,
         )
@@ -50,7 +50,7 @@ class GotifyNotificationService(BaseNotificationService):
         }
 
         try:
-            gotify.create_message(
+            self.gotify.create_message(
                 message, title=title, priority=priority, extras=extras
             )
         except gotify.GotifyError as exception:

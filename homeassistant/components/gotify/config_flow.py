@@ -26,16 +26,16 @@ async def validate_input(hass: HomeAssistant, host: str, token: str) -> None:
     except vol.Invalid as error:
         raise InvalidURL from error
 
-    gotify.config(base_url=host, app_token=token, client_token=token)
+    gotify_hub = gotify.gotify(base_url=host, app_token=token, client_token=token)
 
     try:
-        await hass.async_add_executor_job(gotify.get_health)
+        await hass.async_add_executor_job(gotify_hub.get_health)
     except gotify.GotifyError as exc:
         raise CannotConnect from exc
 
     try:
         await hass.async_add_executor_job(
-            gotify.create_message, "Home Assistant has been authenticated."
+            gotify_hub.create_message, "Home Assistant has been authenticated."
         )
     except gotify.GotifyError as error:
         raise InvalidAuth from error
