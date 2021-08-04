@@ -70,6 +70,8 @@ class SolarlogSensor(SensorEntity):
         self._label = SENSOR_TYPES[self.sensor_key][1]
         self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
         self._icon = SENSOR_TYPES[self.sensor_key][3]
+        self._state_class = SENSOR_TYPES[self.sensor_key][4]
+        self._device_class = SENSOR_TYPES[self.sensor_key][5]
 
     @property
     def unique_id(self):
@@ -95,6 +97,16 @@ class SolarlogSensor(SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return self._state_class
+
+    @property
+    def device_class(self):
+        """Return the state class of the sensor."""
+        return self._device_class
 
     @property
     def device_info(self):
