@@ -59,7 +59,7 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
     value = service_call.data["value"]
     if value < entity.min_value or value > entity.max_value:
         raise ValueError(
-            f"Value {value} not a valid for {entity.name} within the range {entity.min_value} - {entity.max_value}"
+            f"Value {value} for {entity.name} is outside valid range {entity.min_value} - {entity.max_value}"
         )
     await entity.async_set_value(value)
 
