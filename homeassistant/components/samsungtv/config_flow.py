@@ -27,7 +27,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .bridge import (
@@ -85,7 +84,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title: str = ""
         self._id: int | None = None
         self._bridge: SamsungTVLegacyBridge | SamsungTVWSBridge | None = None
-        self._device_info: DeviceInfo | None = None
+        self._device_info: dict[Any, Any] | None = None
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
         """Get device entry."""
