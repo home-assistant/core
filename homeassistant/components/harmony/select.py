@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up harmony activities select."""
     data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
-    _LOGGER.debug("creating select for %s hub activities.", entry.data[CONF_NAME])
+    _LOGGER.debug("creating select for %s hub activities", entry.data[CONF_NAME])
     async_add_entities(
         [HarmonyActivitySelect(f"{entry.data[CONF_NAME]} Activities", data)]
     )
@@ -92,5 +92,5 @@ class HarmonyActivitySelect(ConnectionStateMixin, SelectEntity):
         self.async_on_remove(self._data.async_subscribe(HarmonyCallback(**callbacks)))
 
     @callback
-    def _async_activity_update(self):
+    def _async_activity_update(self, activity_info: tuple):
         self.async_write_ha_state()
