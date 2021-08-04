@@ -51,7 +51,7 @@ def mac_from_device_info(info: Any) -> str | None:
 
 async def async_get_device_info(
     hass: HomeAssistant, bridge: SamsungTVBridge | None, host: str
-) -> tuple:
+) -> tuple[int | None, str | None, dict[Any, Any] | None]:
     """Fetch the port, method, and device info."""
     return await hass.async_add_executor_job(_get_device_info, bridge, host)
 
