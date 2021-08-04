@@ -88,11 +88,10 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
-        self.coordinator = coordinator
-        super().__init__(self.coordinator)
-        self._attr_name: str = self.coordinator.entry.data[CONF_NAME]
-        self._attr_unique_id = self.coordinator.entry.entry_id
-        self._identifier: str = self.coordinator.entry.data[CONF_USERNAME]
+        super().__init__(coordinator)
+        self._attr_name: str = coordinator.entry.data[CONF_NAME]
+        self._attr_unique_id = coordinator.entry.entry_id
+        self._identifier: str = coordinator.entry.data[CONF_USERNAME]
 
     @property
     def device_info(self) -> DeviceInfo:
