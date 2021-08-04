@@ -86,11 +86,13 @@ async def async_setup_entry(
 class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
-    coordinator: YaleDataUpdateCoordinator
-
-    _attr_name: str = coordinator.entry.data[CONF_NAME]
-    _attr_unique_id: str = coordinator.entry.entry_id
-    _identifier: str = coordinator.entry.data[CONF_USERNAME]
+    def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
+        """Initialize the Yale Alarm Device."""
+        self.coordinator = coordinator
+        super().__init__(self.coordinator)
+        self._attr_name: str = self.coordinator.entry.data[CONF_NAME]
+        self._attr_unique_id = self.coordinator.entry.entry_id
+        self._identifier: str = self.coordinator.entry.data[CONF_USERNAME]
 
     @property
     def device_info(self) -> DeviceInfo:
