@@ -12,6 +12,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for channel in cntrl.get_all("sensor"):
         entities.append(VelbusSensor(channel))
+        if channel.get_class() == "counter":
+            entities.append(VelbusSensor(channel, True))
     async_add_entities(entities)
 
 
@@ -35,7 +37,7 @@ class VelbusSensor(VelbusEntity, SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         if self._channel.get_class() == "counter" and not self._is_counter:
-            if self._channel.get_counter_unit() == ENERGY_KILO_WATT_HOUR:
+            if self._channel.get_unit() == ENERGY_KILO_WATT_HOUR:
                 return DEVICE_CLASS_POWER
             return None
         return self._channel.get_class()
@@ -50,8 +52,6 @@ class VelbusSensor(VelbusEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        if self._is_counter:
-            return self._channel.get_counter_unit()
         return self._channel.get_unit()
 
     @property
