@@ -1,4 +1,6 @@
 """Support for Yamaha Receivers."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -101,7 +103,7 @@ class YamahaConfigInfo:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
-        self.ctrl_url = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
+        self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
         self.source_ignore = config.get(CONF_SOURCE_IGNORE)
         self.source_names = config.get(CONF_SOURCE_NAMES)
         self.zone_ignore = config.get(CONF_ZONE_IGNORE)
@@ -110,7 +112,7 @@ class YamahaConfigInfo:
         if discovery_info is not None:
             self.name = discovery_info.get("name")
             self.model = discovery_info.get("model_name")
-            self.ctrl_url = str(discovery_info.get("control_url"))
+            self.ctrl_url = discovery_info.get("control_url")
             self.desc_url = discovery_info.get("description_url")
             self.zone_ignore = []
             self.from_discovery = True
