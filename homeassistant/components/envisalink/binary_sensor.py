@@ -10,8 +10,8 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_PARTITION,
-    CONF_ZONETYPE,
     CONF_ZONEPART,
+    CONF_ZONETYPE,
     DATA_EVL,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_ZONE_UPDATE,
@@ -38,7 +38,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_config_data[CONF_ZONETYPE],
             device_config_data[CONF_ZONEPART],
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL].alarm_state["partition"][device_config_data[CONF_ZONEPART]],
+            hass.data[DATA_EVL].alarm_state["partition"][
+                device_config_data[CONF_ZONEPART]
+            ],
             hass.data[DATA_EVL],
         )
         devices.append(device)
@@ -50,7 +52,15 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
     def __init__(
-        self, hass, zone_number, zone_name, zone_type, zone_part, info, keypad, controller
+        self,
+        hass,
+        zone_number,
+        zone_name,
+        zone_type,
+        zone_part,
+        info,
+        keypad,
+        controller,
     ):
         """Initialize the binary_sensor."""
         self._zone_type = zone_type
@@ -95,8 +105,11 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
 
     @property
     def is_on(self):
-        """Return true if sensor is on and parition is not ready."""
-        return self._info["status"]["open"] and not self._partition_keypad["status"]["ready"]
+        """Return true if sensor is on and partition is not ready."""
+        return (
+            self._info["status"]["open"]
+            and not self._partition_keypad["status"]["ready"]
+        )
 
     @property
     def device_class(self):
