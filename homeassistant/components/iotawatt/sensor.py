@@ -74,19 +74,9 @@ class IotaWattSensor(IotaWattEntity):
         if unit == "Watts":
             self._attr_unit_of_measurement = POWER_WATT
             self._attr_device_class = DEVICE_CLASS_POWER
-        if unit == "WattHours":
+        elif unit == "WattHours":
             self._attr_unit_of_measurement = ENERGY_WATT_HOUR
             self._attr_device_class = DEVICE_CLASS_ENERGY
-        elif unit == "Volts":
-            self._attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-            self._attr_device_class = DEVICE_CLASS_VOLTAGE
-        else:
-            self._attr_unit_of_measurement = unit
-
-        unit = self.coordinator.data["sensors"][self._ent].getUnit()
-        if unit == "Watts":
-            self._attr_unit_of_measurement = POWER_WATT
-            self._attr_device_class = DEVICE_CLASS_POWER
         elif unit == "Volts":
             self._attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
             self._attr_device_class = DEVICE_CLASS_VOLTAGE
