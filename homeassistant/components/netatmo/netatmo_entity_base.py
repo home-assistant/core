@@ -30,9 +30,7 @@ class NetatmoBase(Entity):
         self._model: str = ""
         self._attr_name = None
         self._attr_unique_id = None
-        self._attr_extra_state_attributes: dict = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""

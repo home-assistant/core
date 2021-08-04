@@ -797,6 +797,55 @@ async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews:
     assert entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
+async def test_websocket_no_mac(hass: HomeAssistant, remote: Mock, remotews: Mock):
+    """Test for send key with autodetection of protocol."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews, patch(
+        "getmac.get_mac_address", return_value="gg:hh:ii:ll:mm:nn"
+    ):
+        enter = Mock()
+        type(enter).token = PropertyMock(return_value="123456789")
+        remote = Mock()
+        remote.__enter__ = Mock(return_value=enter)
+        remote.__exit__ = Mock(return_value=False)
+        remote.rest_device_info.return_value = {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "networkType": "lan",
+                "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+                "name": "[TV] Living Room",
+                "type": "Samsung SmartTV",
+            },
+        }
+        remotews.return_value = remote
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "create_entry"
+        assert result["data"][CONF_METHOD] == "websocket"
+        assert result["data"][CONF_TOKEN] == "123456789"
+        assert result["data"][CONF_MAC] == "gg:hh:ii:ll:mm:nn"
+        assert remotews.call_count == 2
+        assert remotews.call_args_list == [
+            call(**AUTODETECT_WEBSOCKET_SSL),
+            call(**DEVICEINFO_WEBSOCKET_SSL),
+        ]
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_MAC] == "gg:hh:ii:ll:mm:nn"
+
+
 async def test_autodetect_auth_missing(hass: HomeAssistant, remote: Mock):
     """Test for send key with autodetection of protocol."""
     with patch(

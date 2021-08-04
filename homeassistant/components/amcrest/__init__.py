@@ -5,7 +5,7 @@ import logging
 import threading
 
 import aiohttp
-from amcrest import AmcrestError, Http, LoginError
+from amcrest import AmcrestError, ApiWrapper, LoginError
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL
@@ -114,8 +114,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class AmcrestChecker(Http):
-    """amcrest.Http wrapper for catching errors."""
+class AmcrestChecker(ApiWrapper):
+    """amcrest.ApiWrapper wrapper for catching errors."""
 
     def __init__(self, hass, name, host, port, user, password):
         """Initialize."""
@@ -154,7 +154,7 @@ class AmcrestChecker(Http):
         )
 
     def command(self, *args, **kwargs):
-        """amcrest.Http.command wrapper to catch errors."""
+        """amcrest.ApiWrapper.command wrapper to catch errors."""
         try:
             ret = super().command(*args, **kwargs)
         except LoginError as ex:

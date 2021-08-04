@@ -397,7 +397,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
 
         The ISY uses both DON and DOF commands (alternating) for a heartbeat.
         """
-        if event.control in [CMD_ON, CMD_OFF]:
+        if event.control in (CMD_ON, CMD_OFF):
             self.async_heartbeat()
 
     @callback

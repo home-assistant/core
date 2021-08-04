@@ -653,6 +653,9 @@ async def _register_service(
 async def _setup_services(
     hass: HomeAssistant, entry_data: RuntimeEntryData, services: list[UserService]
 ) -> None:
+    if entry_data.device_info is None:
+        # Can happen if device has never connected or .storage cleared
+        return
     old_services = entry_data.services.copy()
     to_unregister = []
     to_register = []
@@ -673,7 +676,6 @@ async def _setup_services(
 
     entry_data.services = {serv.key: serv for serv in services}
 
-    assert entry_data.device_info is not None
     for service in to_unregister:
         service_name = f"{entry_data.device_info.name}_{service.name}"
         hass.services.async_remove(DOMAIN, service_name)
@@ -710,7 +712,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
-_EntityT = TypeVar("_EntityT", bound="EsphomeBaseEntity[Any,Any]")
+_EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
 
 
@@ -848,7 +850,7 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
         return self._inverse[value]
 
 
-class EsphomeBaseEntity(Entity, Generic[_InfoT, _StateT]):
+class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     def __init__(
@@ -880,6 +882,22 @@ class EsphomeBaseEntity(Entity, Generic[_InfoT, _StateT]):
             )
         )
 
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"esphome_{self._entry_id}"
+                    f"_update_{self._component_key}_{self._key}"
+                ),
+                self._on_state_update,
+            )
+        )
+
+    @callback
+    def _on_state_update(self) -> None:
+        # Behavior can be changed in child classes
+        self.async_write_ha_state()
+
     @callback
     def _on_device_update(self) -> None:
         """Update the entity state when device info has changed."""
@@ -888,7 +906,7 @@ class EsphomeBaseEntity(Entity, Generic[_InfoT, _StateT]):
             # Only update the HA state when the full state arrives
             # through the next entity state packet.
             return
-        self.async_write_ha_state()
+        self._on_state_update()
 
     @property
     def _entry_id(self) -> str:
@@ -961,22 +979,7 @@ class EsphomeBaseEntity(Entity, Generic[_InfoT, _StateT]):
         """Disable polling."""
         return False
 
-
-class EsphomeEntity(EsphomeBaseEntity[_InfoT, _StateT]):
-    """Define a generic esphome entity."""
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                (
-                    f"esphome_{self._entry_id}"
-                    f"_update_{self._component_key}_{self._key}"
-                ),
-                self.async_write_ha_state,
-            )
-        )
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._static_info.disabled_by_default

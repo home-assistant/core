@@ -64,10 +64,10 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         )
         self._call_active = False
         if result is None:
-            self._available = False
+            self._attr_available = False
             self.async_write_ha_state()
             return
 
         self._value = result.bits[0] & 1
-        self._available = True
+        self._attr_available = True
         self.async_write_ha_state()

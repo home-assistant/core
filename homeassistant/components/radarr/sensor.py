@@ -194,7 +194,7 @@ class RadarrSensor(SensorEntity):
             return
 
         if res.status_code == HTTP_OK:
-            if self.type in ["upcoming", "movies", "commands"]:
+            if self.type in ("upcoming", "movies", "commands"):
                 self.data = res.json()
                 self._state = len(self.data)
             elif self.type == "diskspace":
