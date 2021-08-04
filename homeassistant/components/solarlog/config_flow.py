@@ -31,7 +31,7 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._errors = {}
+        self._errors: dict = {}
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""

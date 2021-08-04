@@ -148,7 +148,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.smarttub.*",
     "homeassistant.components.smarty.*",
     "homeassistant.components.solaredge.*",
-    "homeassistant.components.solarlog.*",
     "homeassistant.components.somfy.*",
     "homeassistant.components.somfy_mylink.*",
     "homeassistant.components.sonarr.*",
