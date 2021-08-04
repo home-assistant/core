@@ -3,7 +3,12 @@ import pytest
 
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_locks import Lock
-from homeassistant.components.lock import DOMAIN
+from homeassistant.components.lock import (
+    DOMAIN,
+    STATE_JAMMED,
+    STATE_LOCKING,
+    STATE_UNLOCKING,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -37,9 +42,24 @@ async def test_lock_unlock(hass, hk_driver, events):
     assert acc.char_current_state.value == 1
     assert acc.char_target_state.value == 1
 
+    hass.states.async_set(entity_id, STATE_LOCKING)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 0
+    assert acc.char_target_state.value == 1
+
     hass.states.async_set(entity_id, STATE_UNLOCKED)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
+    assert acc.char_target_state.value == 0
+
+    hass.states.async_set(entity_id, STATE_UNLOCKING)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 1
+    assert acc.char_target_state.value == 0
+
+    hass.states.async_set(entity_id, STATE_JAMMED)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 2
     assert acc.char_target_state.value == 0
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)

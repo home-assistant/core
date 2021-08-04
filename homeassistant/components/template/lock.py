@@ -1,7 +1,13 @@
 """Support for locks which integrates with other components."""
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
+from homeassistant.components.lock import (
+    PLATFORM_SCHEMA,
+    STATE_JAMMED,
+    STATE_LOCKING,
+    STATE_UNLOCKING,
+    LockEntity,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -9,6 +15,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_LOCKED,
     STATE_ON,
+    STATE_UNLOCKED,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
@@ -105,7 +112,22 @@ class TemplateLock(TemplateEntity, LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._state
+        return self._state in ("true", STATE_ON, STATE_LOCKED)
+
+    @property
+    def is_jammed(self):
+        """Return true if lock is jammed."""
+        return self._state == STATE_JAMMED
+
+    @property
+    def is_unlocking(self):
+        """Return true if lock is unlocking."""
+        return self._state == STATE_UNLOCKING
+
+    @property
+    def is_locking(self):
+        """Return true if lock is locking."""
+        return self._state == STATE_LOCKING
 
     @callback
     def _update_state(self, result):
@@ -115,14 +137,14 @@ class TemplateLock(TemplateEntity, LockEntity):
             return
 
         if isinstance(result, bool):
-            self._state = result
+            self._state = STATE_LOCKED if result else STATE_UNLOCKED
             return
 
         if isinstance(result, str):
-            self._state = result.lower() in ("true", STATE_ON, STATE_LOCKED)
+            self._state = result.lower()
             return
 
-        self._state = False
+        self._state = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""

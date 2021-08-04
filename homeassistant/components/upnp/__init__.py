@@ -6,12 +6,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import get_local_ip
 
 from .const import (
     CONF_LOCAL_IP,
@@ -63,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     _LOGGER.debug("async_setup, config: %s", config)
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
     conf = config.get(DOMAIN, conf_default)
-    local_ip = await hass.async_add_executor_job(get_local_ip)
+    local_ip = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
     hass.data[DOMAIN] = {
         DOMAIN_CONFIG: conf,
         DOMAIN_DEVICES: {},

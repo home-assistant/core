@@ -15,8 +15,14 @@
             "user": {
                 "data": {
                     "host": "Hoszt"
-                }
+                },
+                "description": "\u00c1ll\u00edtsa be a Modern Forms-t, hogy integr\u00e1l\u00f3djon a Home Assistant programba."
+            },
+            "zeroconf_confirm": {
+                "description": "Hozz\u00e1 szeretn\u00e9 adni a(z) {name} `nev\u0171 Modern Forms rajong\u00f3t a Home Assistanthoz?",
+                "title": "Felfedezte a Modern Forms rajong\u00f3i eszk\u00f6zt"
             }
         }
-    }
+    },
+    "title": "Modern Forms"
 }

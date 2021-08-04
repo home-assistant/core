@@ -11,6 +11,7 @@ class EntityInfo(TypedDict):
     entity_id: str
     unit_of_measurement: str | None
     device_class: str | None
+    state_class: str | None
 
 
 class ClimateExtraAttributes(TypedDict, total=False):

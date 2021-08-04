@@ -6,6 +6,9 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Be akarja \u00e1ll\u00edtani ezt a Guardian eszk\u00f6zt?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP c\u00edm",

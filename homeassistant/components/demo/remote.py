@@ -53,6 +53,7 @@ class DemoRemote(RemoteEntity):
         """Return device state attributes."""
         if self._last_command_sent is not None:
             return {"last_command_sent": self._last_command_sent}
+        return None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the remote on."""

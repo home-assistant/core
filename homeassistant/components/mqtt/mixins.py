@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import json
 import logging
+from typing import Callable
 
 import voluptuous as vol
 
@@ -37,7 +38,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import Message
+from .models import ReceiveMessage
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 from .util import valid_subscribe_topic
 
@@ -194,11 +195,11 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
-    _attributes_extra_blocked = frozenset()
+    _attributes_extra_blocked: frozenset[str] = frozenset()
 
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes = None
+        self._attributes: dict | None = None
         self._attributes_sub_state = None
         self._attributes_config = config
 
@@ -220,12 +221,12 @@ class MqttAttributes(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def attributes_message_received(msg: Message) -> None:
+        def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if attr_tpl is not None:
                     payload = attr_tpl.async_render_with_possible_json_value(payload)
-                json_dict = json.loads(payload)
+                json_dict = json.loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
                     filtered_dict = {
                         k: v
@@ -272,7 +273,7 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available = {}
+        self._available: dict = {}
         self._available_latest = False
         self._availability_setup_from_config(config)
 
@@ -317,7 +318,7 @@ class MqttAvailability(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def availability_message_received(msg: Message) -> None:
+        def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
             if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
@@ -397,7 +398,7 @@ class MqttDiscoveryUpdate(Entity):
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
-        self._remove_signal = None
+        self._remove_signal: Callable | None = None
         self._removed_from_hass = False
 
     async def async_added_to_hass(self) -> None:

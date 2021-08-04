@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -74,6 +75,7 @@ async def async_setup_entry(
                     ATTR_ENTITY_ID: f"{device.ain}",
                     ATTR_UNIT_OF_MEASUREMENT: None,
                     ATTR_DEVICE_CLASS: None,
+                    ATTR_STATE_CLASS: None,
                 },
                 coordinator,
                 ain,
@@ -90,11 +92,6 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def available(self) -> bool:
-        """Return if thermostat is available."""
-        return self.device.present  # type: ignore [no-any-return]
 
     @property
     def temperature_unit(self) -> str:

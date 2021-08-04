@@ -1430,6 +1430,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -1642,7 +1645,8 @@
           "type": "any",
           "readable": true,
           "writeable": true,
-          "label": "Target Color"
+          "label": "Target Color",
+          "valueChangeOptions": ["transitionDuration"]
         },
         "value": {
           "warmWhite": 141,
@@ -1667,7 +1671,8 @@
           "description": "The target value of the Warm White color.",
           "label": "Target value (Warm White)",
           "min": 0,
-          "max": 255
+          "max": 255,
+          "valueChangeOptions": ["transitionDuration"]
         }
       },
       {
@@ -1686,7 +1691,8 @@
           "description": "The target value of the Red color.",
           "label": "Target value (Red)",
           "min": 0,
-          "max": 255
+          "max": 255,
+          "valueChangeOptions": ["transitionDuration"]
         }
       },
       {
@@ -1705,7 +1711,8 @@
           "description": "The target value of the Green color.",
           "label": "Target value (Green)",
           "min": 0,
-          "max": 255
+          "max": 255,
+          "valueChangeOptions": ["transitionDuration"]
         }
       },
       {
@@ -1724,7 +1731,8 @@
           "description": "The target value of the Blue color.",
           "label": "Target value (Blue)",
           "min": 0,
-          "max": 255
+          "max": 255,
+          "valueChangeOptions": ["transitionDuration"]
         }
       },
       {
@@ -1982,6 +1990,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -2100,6 +2111,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -2218,6 +2232,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -2336,6 +2353,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },

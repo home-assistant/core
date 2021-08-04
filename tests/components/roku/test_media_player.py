@@ -136,7 +136,7 @@ async def test_availability(
         await setup_integration(hass, aioclient_mock)
 
     with patch(
-        "homeassistant.components.roku.Roku.update", side_effect=RokuError
+        "homeassistant.components.roku.coordinator.Roku.update", side_effect=RokuError
     ), patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -336,21 +336,21 @@ async def test_services(
     """Test the different media player services."""
     await setup_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("poweroff")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("poweron")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_PAUSE,
@@ -360,7 +360,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("play")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_PLAY,
@@ -370,7 +370,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("play")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_PLAY_PAUSE,
@@ -380,7 +380,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("play")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_NEXT_TRACK,
@@ -390,7 +390,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("forward")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_PREVIOUS_TRACK,
@@ -400,7 +400,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("reverse")
 
-    with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.launch") as launch_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -414,7 +414,7 @@ async def test_services(
 
         launch_mock.assert_called_once_with("11")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -424,7 +424,7 @@ async def test_services(
 
         remote_mock.assert_called_once_with("home")
 
-    with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.launch") as launch_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -434,7 +434,7 @@ async def test_services(
 
         launch_mock.assert_called_once_with("12")
 
-    with patch("homeassistant.components.roku.Roku.launch") as launch_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.launch") as launch_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -458,14 +458,14 @@ async def test_tv_services(
         unique_id=TV_SERIAL,
     )
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: TV_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("volume_up")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_DOWN,
@@ -475,7 +475,7 @@ async def test_tv_services(
 
         remote_mock.assert_called_once_with("volume_down")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_MUTE,
@@ -485,7 +485,7 @@ async def test_tv_services(
 
         remote_mock.assert_called_once_with("volume_mute")
 
-    with patch("homeassistant.components.roku.Roku.tune") as tune_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.tune") as tune_mock:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -694,7 +694,7 @@ async def test_integration_services(
     """Test integration services."""
     await setup_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.roku.Roku.search") as search_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.search") as search_mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEARCH,
