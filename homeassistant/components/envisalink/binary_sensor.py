@@ -12,7 +12,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
 from . import (
+    ATTR_PARTITION,
     CONF_ZONETYPE,
+    CONF_ZONEPART,
     DATA_EVL,
     SIGNAL_ZONE_UPDATE,
     ZONE_SCHEMA,
@@ -20,6 +22,8 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_ZONE = "zone"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -34,6 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             zone_num,
             device_config_data[CONF_NAME],
             device_config_data[CONF_ZONETYPE],
+            device_config_data[CONF_ZONEPART],
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
             hass.data[DATA_EVL],
         )
@@ -45,10 +50,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
-    def __init__(self, hass, zone_number, zone_name, zone_type, info, controller):
+    def __init__(self, hass, zone_number, zone_name, zone_type, zone_part, info, controller):
         """Initialize the binary_sensor."""
         self._zone_type = zone_type
         self._zone_number = zone_number
+        self._zone_partition = zone_part
 
         _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
@@ -80,6 +86,8 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
             last_trip_time = None
 
         attr[ATTR_LAST_TRIP_TIME] = last_trip_time
+        attr[ATTR_PARTITION] = self._zone_partition
+        attr[ATTR_ZONE] = self._zone_number
         return attr
 
     @property
