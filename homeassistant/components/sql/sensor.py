@@ -9,7 +9,11 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASSES_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 import homeassistant.helpers.config_validation as cv
 
@@ -18,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_COLUMN_NAME = "column"
 CONF_QUERIES = "queries"
 CONF_QUERY = "query"
+CONF_STATE_CLASS = "state_class"
 
 DB_URL_RE = re.compile("//.*:.*@")
 
@@ -41,6 +46,7 @@ _QUERY_SCHEME = vol.Schema(
         vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     }
 )
 
@@ -82,6 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         query_str = query.get(CONF_QUERY)
         unit = query.get(CONF_UNIT_OF_MEASUREMENT)
         value_template = query.get(CONF_VALUE_TEMPLATE)
+        state_class = query.get(CONF_STATE_CLASS)
         column_name = query.get(CONF_COLUMN_NAME)
 
         if value_template is not None:
@@ -96,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
         sensor = SQLSensor(
-            name, sessmaker, query_str, column_name, unit, value_template
+            name, sessmaker, query_str, column_name, unit, value_template, state_class
         )
         queries.append(sensor)
 
@@ -106,12 +113,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
-    def __init__(self, name, sessmaker, query, column, unit, value_template):
+    def __init__(
+        self, name, sessmaker, query, column, unit, value_template, state_class
+    ):
         """Initialize the SQL sensor."""
         self._name = name
         self._query = query
         self._unit_of_measurement = unit
         self._template = value_template
+        self._attr_state_class = state_class
         self._column_name = column
         self.sessionmaker = sessmaker
         self._state = None
