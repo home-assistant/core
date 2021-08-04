@@ -35,13 +35,13 @@ class AesCBC:
         return text.encode("utf-8")
 
     @classmethod
-    def cbc_encrypt(cls, key, iv, text):
+    def cbc_encrypt(cls, key, offset, text):
         """Cbc encrypt."""
         key = key.encode("utf-8")
         mode = AES.MODE_CBC
-        iv = bytes(iv, encoding="utf8")
+        offset = bytes(offset, encoding="utf8")
         text = cls.add_to_16(text)
-        cryptos = AES.new(key, mode, iv)
+        cryptos = AES.new(key, mode, offset)
         cipher_text = cryptos.encrypt(text)
         return str(b2a_hex(cipher_text), encoding="utf-8")
 

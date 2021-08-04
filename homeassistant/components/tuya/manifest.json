@@ -3,7 +3,7 @@
   "name": "Tuya",
   "documentation": "https://github.com/tuya/tuya-home-assistant",
   "requirements": [
-    "tuya-iot-py-sdk==0.4.0"
+    "tuya-iot-py-sdk==0.4.1"
   ],
   "codeowners": [
     "@Tuya"

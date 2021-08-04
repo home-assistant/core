@@ -4,6 +4,7 @@
 import itertools
 import json
 import logging
+import sys
 from typing import Any
 
 from tuya_iot import (
@@ -190,7 +191,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 tuya_mq.start()
 
                 device_manager.mq = tuya_mq
-                tuya_mq.add_message_listener(device_manager._on_message)
+                tuya_mq.add_message_listener(device_manager.on_message)
 
         def remove_device(self, device_id: str):
             _LOGGER.debug("tuya remove device:%s", device_id)
@@ -251,8 +252,8 @@ async def async_setup(hass, config):
                 result = await hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
                 )
-            except Exception as inst:
-                _LOGGER.error(inst.args)
+            except:
+                _LOGGER.error(sys.exc_info()[0])
             _LOGGER.debug("Tuya async setup flow_init")
             return result
 
