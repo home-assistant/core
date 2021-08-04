@@ -3,7 +3,7 @@
   "name": "Gotify",
   "documentation": "https://www.home-assistant.io/integrations/gotify",
   "codeowners": ["@benjmarshall"],
-  "iot_class": "cloud_push",
+  "iot_class": "cloud_polling",
   "requirements": ["gotify==0.2.0"],
   "config_flow": true
 }
