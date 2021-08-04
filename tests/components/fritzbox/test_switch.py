@@ -7,24 +7,22 @@ from requests.exceptions import HTTPError
 from homeassistant.components.fritzbox.const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
-    ATTR_TEMPERATURE_UNIT,
-    ATTR_TOTAL_CONSUMPTION,
-    ATTR_TOTAL_CONSUMPTION_UNIT,
     DOMAIN as FB_DOMAIN,
 )
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
 )
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, DOMAIN
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -51,14 +49,9 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_POWER_W] == 5.678
     assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
     assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
     assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
-    assert state.attributes[ATTR_TEMPERATURE] == "1.23"
-    assert state.attributes[ATTR_TEMPERATURE_UNIT] == TEMP_CELSIUS
-    assert state.attributes[ATTR_TOTAL_CONSUMPTION] == "1.234"
-    assert state.attributes[ATTR_TOTAL_CONSUMPTION_UNIT] == ENERGY_KILO_WATT_HOUR
     assert ATTR_STATE_CLASS not in state.attributes
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_temperature")
@@ -68,6 +61,21 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
     assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power_consumption")
+    assert state
+    assert state.state == "5.678"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Power Consumption"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_total_energy")
+    assert state
+    assert state.state == "1.234"
+    assert state.attributes[ATTR_LAST_RESET] == "1970-01-01T00:00:00+00:00"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Total Energy"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
     assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
 
 

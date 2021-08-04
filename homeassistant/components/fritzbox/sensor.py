@@ -1,6 +1,8 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
@@ -13,12 +15,17 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxEntity
 from .const import (
@@ -68,16 +75,72 @@ async def async_setup_entry(
                 )
             )
 
+        if device.has_powermeter:
+            entities.append(
+                FritzBoxPowerSensor(
+                    {
+                        ATTR_NAME: f"{device.name} Power Consumption",
+                        ATTR_ENTITY_ID: f"{device.ain}_power_consumption",
+                        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    },
+                    coordinator,
+                    ain,
+                )
+            )
+            entities.append(
+                FritzBoxEnergySensor(
+                    {
+                        ATTR_NAME: f"{device.name} Total Energy",
+                        ATTR_ENTITY_ID: f"{device.ain}_total_energy",
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    },
+                    coordinator,
+                    ain,
+                )
+            )
+
     async_add_entities(entities)
 
 
 class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
-    """The entity class for FRITZ!SmartHome sensors."""
+    """The entity class for FRITZ!SmartHome battery sensors."""
 
     @property
     def state(self) -> int | None:
         """Return the state of the sensor."""
         return self.device.battery_level  # type: ignore [no-any-return]
+
+
+class FritzBoxPowerSensor(FritzBoxEntity, SensorEntity):
+    """The entity class for FRITZ!SmartHome power consumption sensors."""
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of the sensor."""
+        if power := self.device.power:
+            return power / 1000  # type: ignore [no-any-return]
+        return 0.0
+
+
+class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
+    """The entity class for FRITZ!SmartHome total energy sensors."""
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of the sensor."""
+        if energy := self.device.energy:
+            return energy / 1000  # type: ignore [no-any-return]
+        return 0.0
+
+    @property
+    def last_reset(self) -> datetime:
+        """Return the time when the sensor was last reset, if any."""
+        # device does not provide timestamp of initialization
+        return utc_from_timestamp(0)
 
 
 class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):

@@ -1,9 +1,11 @@
 """Support for OpenUV binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
-from . import OpenUvEntity
+from . import OpenUV, OpenUvEntity
 from .const import (
     DATA_CLIENT,
     DATA_PROTECTION_WINDOW,
@@ -20,7 +22,9 @@ ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 BINARY_SENSORS = {TYPE_PROTECTION_WINDOW: ("Protection Window", "mdi:sunglasses")}
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up an OpenUV sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
@@ -35,7 +39,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
-    def __init__(self, openuv, sensor_type, name, icon):
+    def __init__(self, openuv: OpenUV, sensor_type: str, name: str, icon: str) -> None:
         """Initialize the sensor."""
         super().__init__(openuv, sensor_type)
 
@@ -43,7 +47,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
         self._attr_name = name
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the state."""
         data = self.openuv.data[DATA_PROTECTION_WINDOW]
 
@@ -59,20 +63,24 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
                 return
 
         if self._sensor_type == TYPE_PROTECTION_WINDOW:
-            self._attr_is_on = (
-                parse_datetime(data["from_time"])
-                <= utcnow()
-                <= parse_datetime(data["to_time"])
-            )
+            from_dt = parse_datetime(data["from_time"])
+            to_dt = parse_datetime(data["to_time"])
+
+            if not from_dt or not to_dt:
+                LOGGER.warning(
+                    "Unable to parse protection window datetimes: %s, %s",
+                    data["from_time"],
+                    data["to_time"],
+                )
+                self._attr_is_on = False
+                return
+
+            self._attr_is_on = from_dt <= utcnow() <= to_dt
             self._attr_extra_state_attributes.update(
                 {
-                    ATTR_PROTECTION_WINDOW_ENDING_TIME: as_local(
-                        parse_datetime(data["to_time"])
-                    ),
+                    ATTR_PROTECTION_WINDOW_ENDING_TIME: as_local(to_dt),
                     ATTR_PROTECTION_WINDOW_ENDING_UV: data["to_uv"],
                     ATTR_PROTECTION_WINDOW_STARTING_UV: data["from_uv"],
-                    ATTR_PROTECTION_WINDOW_STARTING_TIME: as_local(
-                        parse_datetime(data["from_time"])
-                    ),
+                    ATTR_PROTECTION_WINDOW_STARTING_TIME: as_local(from_dt),
                 }
             )

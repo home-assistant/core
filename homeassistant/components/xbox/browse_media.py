@@ -45,7 +45,7 @@ async def build_item_response(
     """Create response payload for the provided media query."""
     apps: InstalledPackagesList = await client.smartglass.get_installed_apps(device_id)
 
-    if media_content_type in [None, "library"]:
+    if media_content_type in (None, "library"):
         library_info = BrowseMedia(
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="library",

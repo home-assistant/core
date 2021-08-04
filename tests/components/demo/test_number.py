@@ -67,7 +67,7 @@ async def test_set_value_bad_range(hass):
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "42.0"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,

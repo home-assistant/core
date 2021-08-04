@@ -3,6 +3,7 @@
   "name": "Samsung Smart TV",
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
+    "getmac==0.8.2",
     "samsungctl[websocket]==0.7.1",
     "samsungtvws==1.6.0",
     "wakeonlan==2.0.1"

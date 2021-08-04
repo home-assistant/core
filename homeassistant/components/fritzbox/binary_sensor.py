@@ -54,6 +54,4 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        if not self.device.present:
-            return False
         return self.device.alert_state  # type: ignore [no-any-return]

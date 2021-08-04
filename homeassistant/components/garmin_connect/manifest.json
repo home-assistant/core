@@ -1,9 +1,0 @@
-{
-  "domain": "garmin_connect",
-  "name": "Garmin Connect",
-  "documentation": "https://www.home-assistant.io/integrations/garmin_connect",
-  "requirements": ["garminconnect_ha==0.1.6"],
-  "codeowners": ["@cyberjunky"],
-  "config_flow": true,
-  "iot_class": "cloud_polling"
-}

@@ -22,9 +22,6 @@ AUDIO_CODEC_COPY = "copy"
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
 ATTR_INTEGRATION = "platform"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_MODEL = "model"
-ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
 # Current attribute used by homekit_controller
 ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
@@ -296,3 +293,10 @@ CONFIG_OPTIONS = [
     CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
 ]
+
+# ### Maximum Lengths ###
+MAX_NAME_LENGTH = 64
+MAX_SERIAL_LENGTH = 64
+MAX_MODEL_LENGTH = 64
+MAX_VERSION_LENGTH = 64
+MAX_MANUFACTURER_LENGTH = 64

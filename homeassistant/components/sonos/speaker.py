@@ -11,13 +11,13 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
-from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
-from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
-from pysonos.events_base import Event as SonosEvent, SubscriptionBase
-from pysonos.exceptions import SoCoException, SoCoUPnPException
-from pysonos.music_library import MusicLibrary
-from pysonos.plugins.sharelink import ShareLinkPlugin
-from pysonos.snapshot import Snapshot
+from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
+from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
+from soco.events_base import Event as SonosEvent, SubscriptionBase
+from soco.exceptions import SoCoException, SoCoUPnPException
+from soco.music_library import MusicLibrary
+from soco.plugins.sharelink import ShareLinkPlugin
+from soco.snapshot import Snapshot
 
 from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -460,7 +460,6 @@ class SonosSpeaker:
             self.soco = soco
 
         was_available = self.available
-        _LOGGER.debug("Async seen: %s, was_available: %s", self.soco, was_available)
 
         if self._seen_timer:
             self._seen_timer()
@@ -472,6 +471,12 @@ class SonosSpeaker:
         if was_available:
             self.async_write_entity_states()
             return
+
+        _LOGGER.debug(
+            "%s [%s] was not available, setting up",
+            self.zone_name,
+            self.soco.ip_address,
+        )
 
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
             partial(
