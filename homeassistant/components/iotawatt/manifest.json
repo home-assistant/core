@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iotawatt",
   "requirements": [
-    "iotawattpy==0.0.5"
+    "iotawattpy==0.0.6"
   ],
   "ssdp": [],
   "zeroconf": [],
