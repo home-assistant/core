@@ -55,6 +55,26 @@ async def test_connection_state_changes(
     assert hass.states.is_state(ENTITY_SELECT, "Watch TV")
 
 
+async def test_options(mock_hc, hass, mock_write_config):
+    """Ensure calls to the switch modify the harmony state."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # assert we have all options
+    state = hass.states.get(ENTITY_SELECT)
+    assert state.attributes.get("options") == [
+        "PowerOff",
+        "Nile-TV",
+        "Play Music",
+        "Watch TV",
+    ]
+
+
 async def test_select_option(mock_hc, hass, mock_write_config):
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
