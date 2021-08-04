@@ -126,7 +126,7 @@ async def test_color_palette_segment_change_state(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
-            ATTR_OPTION: "Some Other Palette",
+            ATTR_OPTION: "Icefire",
         },
         blocking=True,
     )
@@ -134,7 +134,7 @@ async def test_color_palette_segment_change_state(
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
         segment_id=1,
-        palette="Some Other Palette",
+        palette="Icefire",
     )
 
 
@@ -195,7 +195,7 @@ async def test_color_palette_select_error(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
-            ATTR_OPTION: "Whatever",
+            ATTR_OPTION: "Icefire",
         },
         blocking=True,
     )
@@ -206,7 +206,7 @@ async def test_color_palette_select_error(
     assert state.state == "Random Cycle"
     assert "Invalid response from API" in caplog.text
     assert mock_wled.segment.call_count == 1
-    mock_wled.segment.assert_called_with(segment_id=1, palette="Whatever")
+    mock_wled.segment.assert_called_with(segment_id=1, palette="Icefire")
 
 
 async def test_color_palette_select_connection_error(
@@ -224,7 +224,7 @@ async def test_color_palette_select_connection_error(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
-            ATTR_OPTION: "Whatever",
+            ATTR_OPTION: "Icefire",
         },
         blocking=True,
     )
@@ -235,7 +235,7 @@ async def test_color_palette_select_connection_error(
     assert state.state == STATE_UNAVAILABLE
     assert "Error communicating with API" in caplog.text
     assert mock_wled.segment.call_count == 1
-    mock_wled.segment.assert_called_with(segment_id=1, palette="Whatever")
+    mock_wled.segment.assert_called_with(segment_id=1, palette="Icefire")
 
 
 async def test_preset_unavailable_without_presets(
