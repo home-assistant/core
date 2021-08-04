@@ -1,7 +1,7 @@
 """Support for Notion sensors."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -9,12 +9,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import NotionEntity
 from .const import DATA_COORDINATOR, DOMAIN, LOGGER, SENSOR_TEMPERATURE
 
-SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", TEMP_CELSIUS)}
+SENSOR_TYPES = {
+    SENSOR_TEMPERATURE: ("Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up Notion sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
@@ -61,25 +63,15 @@ class NotionSensor(NotionEntity, SensorEntity):
             coordinator, task_id, sensor_id, bridge_id, system_id, name, device_class
         )
 
-        self._unit = unit
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return self._unit
+        self._attr_unit_of_measurement = unit
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        task = self.coordinator.data["tasks"][self.task_id]
+        task = self.coordinator.data["tasks"][self._task_id]
 
         if task["task_type"] == SENSOR_TEMPERATURE:
-            self._state = round(float(task["status"]["value"]), 1)
+            self._attr_state = round(float(task["status"]["value"]), 1)
         else:
             LOGGER.error(
                 "Unknown task type: %s: %s",

@@ -22,6 +22,23 @@
     "options": {
         "error": {
             "invalid_known_hosts": "Az ismert hosztoknak vessz\u0151vel elv\u00e1lasztott hosztok list\u00e1j\u00e1nak kell lennie."
+        },
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "A CEC figyelmen k\u00edv\u00fcl hagy\u00e1sa",
+                    "uuid": "Enged\u00e9lyezett UUID-k"
+                },
+                "description": "Enged\u00e9lyezett UUID - vessz\u0151vel elv\u00e1lasztott lista a Cast-eszk\u00f6z\u00f6k UUID-j\u00e9b\u0151l, amelyeket hozz\u00e1 lehet adni a Home Assistanthoz. Csak akkor haszn\u00e1lja, ha nem akarja hozz\u00e1adni az \u00f6sszes rendelkez\u00e9sre \u00e1ll\u00f3 cast eszk\u00f6zt.\n CEC figyelmen k\u00edv\u00fcl hagy\u00e1sa - vessz\u0151vel elv\u00e1lasztott Chromecast-lista, amelynek figyelmen k\u00edv\u00fcl kell hagynia a CEC-adatokat az akt\u00edv bemenet meghat\u00e1roz\u00e1s\u00e1hoz. Ezt tov\u00e1bb\u00edtjuk a pychromecast.IGNORE_CEC c\u00edmre.",
+                "title": "Speci\u00e1lis Google Cast-konfigur\u00e1ci\u00f3"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Ismert gazd\u00e1k"
+                },
+                "description": "Ismert gazd\u00e1k - vessz\u0151vel elv\u00e1lasztott lista az eszk\u00f6z\u00f6k hosztneveir\u0151l vagy IP-c\u00edmeir\u0151l, akkor haszn\u00e1lja, ha az mDNS felder\u00edt\u00e9s nem m\u0171k\u00f6dik.",
+                "title": "Google Cast konfigur\u00e1ci\u00f3"
+            }
         }
     }
 }

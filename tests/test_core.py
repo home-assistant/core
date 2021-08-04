@@ -315,9 +315,9 @@ def test_event_eq():
     now = dt_util.utcnow()
     data = {"some": "attr"}
     context = ha.Context()
-    event1, event2 = [
+    event1, event2 = (
         ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
-    ]
+    )
 
     assert event1 == event2
 
@@ -912,6 +912,7 @@ def test_config_defaults():
     assert config.media_dirs == {}
     assert config.safe_mode is False
     assert config.legacy_templates is False
+    assert config.currency == "EUR"
 
 
 def test_config_path_with_file():
@@ -952,6 +953,7 @@ def test_config_as_dict():
         "state": "RUNNING",
         "external_url": None,
         "internal_url": None,
+        "currency": "EUR",
     }
 
     assert expected == config.as_dict()

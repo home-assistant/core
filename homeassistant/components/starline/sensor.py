@@ -1,10 +1,10 @@
 """Reads vehicle status from StarLine API."""
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
 from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     TEMP_CELSIUS,
-    VOLT,
     VOLUME_LITERS,
 )
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
@@ -14,7 +14,7 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 SENSOR_TYPES = {
-    "battery": ["Battery", None, VOLT, None],
+    "battery": ["Battery", None, ELECTRIC_POTENTIAL_VOLT, None],
     "balance": ["Balance", None, None, "mdi:cash-multiple"],
     "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
     "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],

@@ -4,6 +4,15 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Gar\u00e1zs neve"
+                },
+                "title": "V\u00e1lasszon egy gar\u00e1zst a megfigyel\u00e9shez"
+            }
         }
-    }
+    },
+    "title": "Gar\u00e1zsok Amszterdam"
 }

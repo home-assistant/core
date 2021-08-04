@@ -17,7 +17,6 @@ from homeassistant.components.light import (
 from homeassistant.components.wled.const import (
     ATTR_INTENSITY,
     ATTR_PALETTE,
-    ATTR_PLAYLIST,
     ATTR_PRESET,
     ATTR_REVERSE,
     ATTR_SPEED,
@@ -58,7 +57,6 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
     assert state.attributes.get(ATTR_INTENSITY) == 128
     assert state.attributes.get(ATTR_PALETTE) == "Default"
-    assert state.attributes.get(ATTR_PLAYLIST) is None
     assert state.attributes.get(ATTR_PRESET) is None
     assert state.attributes.get(ATTR_REVERSE) is False
     assert state.attributes.get(ATTR_SPEED) == 32
@@ -77,7 +75,6 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
     assert state.attributes.get(ATTR_INTENSITY) == 64
     assert state.attributes.get(ATTR_PALETTE) == "Random Cycle"
-    assert state.attributes.get(ATTR_PLAYLIST) is None
     assert state.attributes.get(ATTR_PRESET) is None
     assert state.attributes.get(ATTR_REVERSE) is False
     assert state.attributes.get(ATTR_SPEED) == 16
@@ -566,7 +563,10 @@ async def test_effect_service_error(
 
 
 async def test_preset_service(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the preset service of a WLED light."""
     await hass.services.async_call(
@@ -594,6 +594,8 @@ async def test_preset_service(
     await hass.async_block_till_done()
     assert mock_wled.preset.call_count == 2
     mock_wled.preset.assert_called_with(preset=2)
+
+    assert "The 'wled.preset' service is deprecated" in caplog.text
 
 
 async def test_preset_service_error(

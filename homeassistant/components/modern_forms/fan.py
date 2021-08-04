@@ -8,9 +8,9 @@ import voluptuous as vol
 
 from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.config_entries import ConfigEntry
-import homeassistant.helpers.entity_platform as entity_platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -34,7 +34,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:

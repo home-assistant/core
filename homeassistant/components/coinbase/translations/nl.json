@@ -16,7 +16,7 @@
                     "currencies": "Valuta's van rekeningsaldo",
                     "exchange_rates": "Wisselkoersen"
                 },
-                "description": "Voer de gegevens van uw API-sleutel in zoals verstrekt door Coinbase. Scheidt meerdere valuta's met een komma (bijv. \"BTC, EUR\")",
+                "description": "Voer de gegevens van uw API-sleutel in zoals verstrekt door Coinbase.",
                 "title": "Coinbase API Sleutel Details"
             }
         }
@@ -31,6 +31,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Wallet-saldi om te rapporteren.",
+                    "exchange_base": "Basisvaluta voor wisselkoerssensoren.",
                     "exchange_rate_currencies": "Wisselkoersen om te rapporteren."
                 },
                 "description": "Coinbase-opties aanpassen"

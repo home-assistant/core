@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
@@ -30,6 +31,7 @@ from .const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
 
@@ -37,6 +39,7 @@ ACTION_TYPES: Final[set[str]] = {
     "arm_away",
     "arm_home",
     "arm_night",
+    "arm_vacation",
     "disarm",
     "trigger",
 }
@@ -77,6 +80,8 @@ async def async_get_actions(
             actions.append({**base_action, CONF_TYPE: "arm_home"})
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
             actions.append({**base_action, CONF_TYPE: "arm_night"})
+        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+            actions.append({**base_action, CONF_TYPE: "arm_vacation"})
         actions.append({**base_action, CONF_TYPE: "disarm"})
         if supported_features & SUPPORT_ALARM_TRIGGER:
             actions.append({**base_action, CONF_TYPE: "trigger"})
@@ -98,6 +103,8 @@ async def async_call_action_from_config(
         service = SERVICE_ALARM_ARM_HOME
     elif config[CONF_TYPE] == "arm_night":
         service = SERVICE_ALARM_ARM_NIGHT
+    elif config[CONF_TYPE] == "arm_vacation":
+        service = SERVICE_ALARM_ARM_VACATION
     elif config[CONF_TYPE] == "disarm":
         service = SERVICE_ALARM_DISARM
     elif config[CONF_TYPE] == "trigger":

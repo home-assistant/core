@@ -23,7 +23,7 @@
                     "password": "Passwort",
                     "path": "ZM-Pfad",
                     "path_zms": "ZMS-Pfad",
-                    "ssl": "Nutzt ein SSL-Zertifikat",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },

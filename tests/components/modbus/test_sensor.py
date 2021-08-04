@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -140,19 +141,10 @@ async def test_config_sensor(hass, mock_modbus):
                 CONF_ADDRESS: 1234,
                 CONF_COUNT: 8,
                 CONF_PRECISION: 2,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
-            },
-            "Unable to detect data type for test_sensor sensor, try a custom type",
-        ),
-        (
-            {
-                CONF_ADDRESS: 1234,
-                CONF_COUNT: 8,
-                CONF_PRECISION: 2,
                 CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
                 CONF_STRUCTURE: ">no struct",
             },
-            "Error in sensor test_sensor structure: bad char in struct format",
+            "bad char in struct format",
         ),
         (
             {
@@ -172,7 +164,7 @@ async def test_config_sensor(hass, mock_modbus):
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_STRUCTURE: "invalid",
             },
-            "Error in sensor test_sensor structure: bad char in struct format",
+            "bad char in struct format",
         ),
         (
             {
@@ -182,7 +174,7 @@ async def test_config_sensor(hass, mock_modbus):
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_STRUCTURE: "",
             },
-            "Error in sensor test_sensor. The `structure` field can not be empty if the parameter `data_type` is set to the `custom`",
+            "Error in sensor test_sensor. The `structure` field can not be empty",
         ),
         (
             {
@@ -229,7 +221,7 @@ async def test_config_wrong_struct_sensor(
         expect_setup_to_fail=True,
     )
 
-    assert error_message in caplog.text
+    assert caplog.text.count(error_message)
 
 
 @pytest.mark.parametrize(
@@ -587,6 +579,7 @@ async def test_struct_sensor(hass, cfg, regs, expected):
                 {
                     CONF_NAME: SENSOR_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },
@@ -595,46 +588,6 @@ async def test_struct_sensor(hass, cfg, regs, expected):
 async def test_restore_state_sensor(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
     assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
-
-
-@pytest.mark.parametrize(
-    "swap_type, error_message",
-    [
-        (
-            CONF_SWAP_WORD,
-            f"Error in sensor {SENSOR_NAME} swap(word) not possible due to the registers count: 1, needed: 2",
-        ),
-        (
-            CONF_SWAP_WORD_BYTE,
-            f"Error in sensor {SENSOR_NAME} swap(word_byte) not possible due to the registers count: 1, needed: 2",
-        ),
-    ],
-)
-async def test_swap_sensor_wrong_config(
-    hass, caplog, swap_type, error_message, mock_pymodbus
-):
-    """Run test for sensor swap."""
-    config = {
-        CONF_NAME: SENSOR_NAME,
-        CONF_ADDRESS: 1234,
-        CONF_COUNT: 1,
-        CONF_SWAP: swap_type,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-    }
-
-    caplog.set_level(logging.ERROR)
-    caplog.clear()
-    await base_config_test(
-        hass,
-        config,
-        SENSOR_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        method_discovery=True,
-        expect_setup_to_fail=True,
-    )
-    assert error_message in "".join(caplog.messages)
 
 
 async def test_service_sensor_update(hass, mock_pymodbus):

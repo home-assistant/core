@@ -42,14 +42,14 @@ async def async_setup_entry(
         sensors.extend(
             [
                 ToonBoilerBinarySensor(coordinator, key=key)
-                for key in [
+                for key in (
                     "thermostat_info_ot_communication_error_0",
                     "thermostat_info_error_found_255",
                     "thermostat_info_burner_info_None",
                     "thermostat_info_burner_info_1",
                     "thermostat_info_burner_info_2",
                     "thermostat_info_burner_info_3",
-                ]
+                )
             ]
         )
 
