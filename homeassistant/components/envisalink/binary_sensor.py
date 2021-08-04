@@ -3,23 +3,12 @@ import datetime
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import (
-    ATTR_LAST_TRIP_TIME,
-    CONF_NAME,
-)
+from homeassistant.const import ATTR_LAST_TRIP_TIME, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
-from . import (
-    ATTR_PARTITION,
-    CONF_ZONETYPE,
-    CONF_ZONEPART,
-    DATA_EVL,
-    SIGNAL_ZONE_UPDATE,
-    ZONE_SCHEMA,
-    EnvisalinkDevice,
-)
+from . import CONF_ZONETYPE, DATA_EVL, SIGNAL_ZONE_UPDATE, ZONE_SCHEMA, EnvisalinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
