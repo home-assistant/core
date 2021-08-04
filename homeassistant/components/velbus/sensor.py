@@ -7,24 +7,20 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Velbus sensor based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    modules_data = hass.data[DOMAIN][entry.entry_id]["sensor"]
+    """Set up Velbus switch based on config_entry."""
+    cntrl = hass.data[DOMAIN][entry.entry_id]
     entities = []
-    for address, channel in modules_data:
-        module = cntrl.get_module(address)
-        entities.append(VelbusSensor(module, channel))
-        if module.get_class(channel) == "counter":
-            entities.append(VelbusSensor(module, channel, True))
+    for channel in cntrl.get_all("sensor"):
+        entities.append(VelbusSensor(channel))
     async_add_entities(entities)
 
 
 class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
-    def __init__(self, module, channel, counter=False):
+    def __init__(self, channel, counter=False):
         """Initialize a sensor Velbus entity."""
-        super().__init__(module, channel)
+        super().__init__(channel)
         self._is_counter = counter
 
     @property
@@ -38,25 +34,25 @@ class VelbusSensor(VelbusEntity, SensorEntity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self._module.get_class(self._channel) == "counter" and not self._is_counter:
-            if self._module.get_counter_unit(self._channel) == ENERGY_KILO_WATT_HOUR:
+        if self._channel.get_class() == "counter" and not self._is_counter:
+            if self._channel.get_counter_unit() == ENERGY_KILO_WATT_HOUR:
                 return DEVICE_CLASS_POWER
             return None
-        return self._module.get_class(self._channel)
+        return self._channel.get_class()
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         if self._is_counter:
-            return self._module.get_counter_state(self._channel)
-        return self._module.get_state(self._channel)
+            return self._channel.get_counter_state()
+        return self._channel.get_state()
 
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         if self._is_counter:
-            return self._module.get_counter_unit(self._channel)
-        return self._module.get_unit(self._channel)
+            return self._channel.get_counter_unit()
+        return self._channel.get_unit()
 
     @property
     def icon(self):
