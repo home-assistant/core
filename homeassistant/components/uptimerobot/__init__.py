@@ -4,12 +4,9 @@ from __future__ import annotations
 import async_timeout
 from pyuptimerobot import UptimeRobot
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_PLATFORM
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -23,21 +20,6 @@ from .const import (
     PLATFORMS,
     MonitorData,
 )
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Uptime Robot integration."""
-    # Iterate all entries for binart_sensor to only get uptimerobot
-    hass.data.setdefault(DOMAIN, {})
-    for entry in config.get(BINARY_SENSOR, []):
-        if entry[CONF_PLATFORM] == DOMAIN:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,10 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=COORDINATOR_UPDATE_INTERVAL,
     )
 
-    await coordinator.async_refresh()
-
-    if not coordinator.data:
-        raise ConfigEntryNotReady(CONNECTION_ERROR)
+    await coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

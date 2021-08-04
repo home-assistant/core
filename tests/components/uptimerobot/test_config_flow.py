@@ -2,8 +2,12 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.uptimerobot.config_flow import CannotConnect
-from homeassistant.components.uptimerobot.const import DOMAIN
+from homeassistant.components.uptimerobot.const import (
+    API_ATTR_MONITORS,
+    API_ATTR_OK,
+    API_ATTR_STAT,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -22,8 +26,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.uptimerobot.config_flow.validate_input",
-        return_value=None,
+        "pyuptimerobot.UptimeRobot.getMonitors",
+        return_value={API_ATTR_STAT: API_ATTR_OK, API_ATTR_MONITORS: []},
     ), patch(
         "homeassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
@@ -46,10 +50,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.uptimerobot.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
+    with patch("pyuptimerobot.UptimeRobot.getMonitors", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"api_key": "1234"},
@@ -61,20 +62,37 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_flow_import(hass):
     """Test an import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={"platform": DOMAIN, "api_key": "1234"},
-    )
+    with patch(
+        "pyuptimerobot.UptimeRobot.getMonitors",
+        return_value={API_ATTR_STAT: API_ATTR_OK, API_ATTR_MONITORS: []},
+    ), patch(
+        "homeassistant.components.uptimerobot.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"platform": DOMAIN, "api_key": "1234"},
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {"api_key": "1234"}
+        assert len(mock_setup_entry.mock_calls) == 1
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {"api_key": "1234"}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={"platform": DOMAIN, "api_key": "1234"},
-    )
+    with patch(
+        "pyuptimerobot.UptimeRobot.getMonitors",
+        return_value={API_ATTR_STAT: API_ATTR_OK, API_ATTR_MONITORS: []},
+    ), patch(
+        "homeassistant.components.uptimerobot.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"platform": DOMAIN, "api_key": "1234"},
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"

@@ -55,20 +55,21 @@ class UptimeRobotEntity(CoordinatorEntity):
     @property
     def monitor(self) -> MonitorData | None:
         """Return the monitor for this entity."""
-        return (
-            next(
-                (
-                    monitor
-                    for monitor in self.monitors
-                    if str(monitor.id) == self.entity_description.key
-                ),
-                None,
-            )
-            if self.coordinator.data
-            else None
+        return next(
+            (
+                monitor
+                for monitor in self.monitors
+                if str(monitor.id) == self.entity_description.key
+            ),
+            None,
         )
 
     @property
     def monitor_available(self) -> bool:
         """Returtn if the monitor is available."""
         return self.monitor.status == 2 if self.monitor else False
+
+    @property
+    def available(self) -> bool:
+        """Returtn if entity is available."""
+        return self.monitor is not None

@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_PLATFORM
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,10 +32,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Uptime Robot binary_sensor platform."""
-    if config[CONF_PLATFORM] == DOMAIN:
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
 
 async def async_setup_entry(
@@ -59,7 +58,7 @@ async def async_setup_entry(
     )
 
 
-class UptimeRobotBinarySensor(BinarySensorEntity, UptimeRobotEntity):
+class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
     """Representation of a Uptime Robot binary sensor."""
 
     @property
