@@ -19,7 +19,7 @@
             "user": {
                 "data": {
                     "i2c_address": "I2C Address",
-                    "i2c_port_num": "I2C Port Number"
+                    "i2c_bus_num": "I2C Bus Number"
                 }
             }
         }

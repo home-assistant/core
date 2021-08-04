@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries, setup
 from homeassistant.components.pcf8574.const import (
     CONF_I2C_ADDRESS,
-    CONF_I2C_PORT_NUM,
+    CONF_I2C_BUS_NUM,
     CONF_INPUT,
     CONF_INVERT_LOGIC,
     DOMAIN,
@@ -13,7 +13,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 VALID_CONFIG = {
-    CONF_I2C_PORT_NUM: 1,
+    CONF_I2C_BUS_NUM: 1,
     CONF_I2C_ADDRESS: 32,
     CONF_NAME: "PCF8574 Test Module",
 }

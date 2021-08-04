@@ -15,13 +15,13 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_I2C_ADDRESS,
-    CONF_I2C_PORT_NUM,
+    CONF_I2C_BUS_NUM,
     CONF_INPUT,
     CONF_INVERT_LOGIC,
     CONF_PIN_NAME,
     CONF_PINS,
     DEFAULT_I2C_ADDRESS,
-    DEFAULT_I2C_PORT_NUM,
+    DEFAULT_I2C_BUS_NUM,
     DEFAULT_INVERT_LOGIC,
     DEFAULT_NAME,
     DOMAIN,
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_I2C_PORT_NUM, default=DEFAULT_I2C_PORT_NUM): vol.Coerce(int),
+        vol.Required(CONF_I2C_BUS_NUM, default=DEFAULT_I2C_BUS_NUM): vol.Coerce(int),
         vol.Required(
             CONF_I2C_ADDRESS,
             default=DEFAULT_I2C_ADDRESS,
@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    pcf = PCF8574(data["i2c_port_num"], data["i2c_address"])
+    pcf = PCF8574(data[CONF_I2C_BUS_NUM], data[CONF_I2C_ADDRESS])
     pcf.port[0]
 
     return True
@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         device_unique_id = (
-            f"{user_input[CONF_I2C_PORT_NUM]}_{user_input[CONF_I2C_ADDRESS]}"
+            f"{user_input[CONF_I2C_BUS_NUM]}_{user_input[CONF_I2C_ADDRESS]}"
         )
         await self.async_set_unique_id(device_unique_id)
         self._abort_if_unique_id_configured()
@@ -102,6 +102,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         pin_num = len(self.data[CONF_PINS])
         # first run len=0 -> pin_num = 0
         # second run len=1 -> pin_num = 1
+        last_pin = pin_num == 7
+
         if user_input is None:
             pin_name = f"pin_{pin_num}_name"
             step_pin_data_schema = vol.Schema(
@@ -111,9 +113,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): cv.boolean,
                     vol.Optional(CONF_PIN_NAME, default=pin_name): cv.string,
                     vol.Optional(CONF_INPUT, default=False): cv.boolean,
-                    vol.Optional("add_another", default=False): cv.boolean,
                 }
             )
+            if not last_pin:
+                step_pin_data_schema = step_pin_data_schema.extend(
+                    {vol.Optional("add_another", default=False): cv.boolean}
+                )
             return self.async_show_form(
                 step_id="pin", data_schema=step_pin_data_schema, errors=errors
             )
@@ -127,7 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if user_input["add_another"] and pin_num < 7:
+            if user_input.get("add_another") and not last_pin:
                 return await self.async_step_pin()
             else:
                 return self.async_create_entry(

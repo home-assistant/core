@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from .const import (
     CONF_I2C_ADDRESS,
-    CONF_I2C_PORT_NUM,
+    CONF_I2C_BUS_NUM,
     CONF_INPUT,
     CONF_INVERT_LOGIC,
     CONF_PIN_NAME,
@@ -32,7 +32,7 @@ async def async_setup_entry(
         else:
             switches.append(
                 PCF8574Switch(
-                    config[CONF_I2C_PORT_NUM],
+                    config[CONF_I2C_BUS_NUM],
                     config[CONF_I2C_ADDRESS],
                     pin[CONF_PIN_NAME],
                     pin["pin_num"],
@@ -46,11 +46,11 @@ async def async_setup_entry(
 class PCF8574Switch(ToggleEntity):
     """Representation of a PCF8574 output pin."""
 
-    def __init__(self, i2c_port_num, i2c_address, name, pin_num, invert_logic):
+    def __init__(self, i2c_bus_num, i2c_address, name, pin_num, invert_logic):
         """Initialize the pin."""
         self._attr_name = name
-        self._attr_unique_id = f"{i2c_port_num}_{i2c_address}_{pin_num}"
-        self._pcf = PCF8574(i2c_port_num, i2c_address)
+        self._attr_unique_id = f"{i2c_bus_num}_{i2c_address}_{pin_num}"
+        self._pcf = PCF8574(i2c_bus_num, i2c_address)
         self._pin_num = pin_num
         self._invert_logic = invert_logic
 
