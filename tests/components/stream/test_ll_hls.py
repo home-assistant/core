@@ -316,7 +316,7 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
 
     hls_sync.reset_request_pool(4)
     msn_requests = asyncio.gather(
-        *[hls_client.get(f"/playlist.m3u8?_HLS_msn={i}") for i in range(4)]
+        *(hls_client.get(f"/playlist.m3u8?_HLS_msn={i}") for i in range(4))
     )
 
     for sequence in range(3):
@@ -338,7 +338,7 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
 
     hls_sync.reset_request_pool(6)
     msn_requests = asyncio.gather(
-        *[hls_client.get(f"/playlist.m3u8?_HLS_msn={i}") for i in range(6)]
+        *(hls_client.get(f"/playlist.m3u8?_HLS_msn={i}") for i in range(6))
     )
     for sequence in range(3, 6):
         await hls_sync.wait_for_handler()
@@ -547,15 +547,11 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
     )
     msn_requests = asyncio.gather(
         *(
-            [
-                hls_client.get(f"/playlist.m3u8?_HLS_msn=1&_HLS_part={i}")
-                for i in range(
-                    num_completed_parts
-                    + int(
-                        -(-hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit // 1)
-                    )
-                )
-            ]
+            hls_client.get(f"/playlist.m3u8?_HLS_msn=1&_HLS_part={i}")
+            for i in range(
+                num_completed_parts
+                + int(-(-hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit // 1))
+            )
         )
     )
 
