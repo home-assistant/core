@@ -22,18 +22,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class IotawattHub:
-    """IotaWatt main object."""
-
-    def __init__(self, name):
-        """Initialize."""
-        self.name = name
-
-    async def authenticate(self, username, password) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
-
-
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
