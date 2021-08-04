@@ -108,15 +108,6 @@ class XiaomiAirHumidifierNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
 
     async def async_set_value(self, value):
         """Set an option of the miio device."""
-        if (
-            self.min_value
-            and value < self.min_value
-            or self.max_value
-            and value > self.max_value
-        ):
-            raise ValueError(
-                f"Value {value} not a valid {self.name} within the range {self.min_value} - {self.max_value}"
-            )
         if await self.async_set_motor_speed(value):
             self._attr_value = value
             self.async_write_ha_state()
