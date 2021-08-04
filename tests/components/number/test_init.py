@@ -70,7 +70,7 @@ async def test_custom_integration_and_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("number.test")
-    assert state.attributes.get(ATTR_VALUE) is None
+    assert state.state == "50.0"
     assert state.attributes.get(ATTR_STEP) == 1.0
 
     await hass.services.async_call(
