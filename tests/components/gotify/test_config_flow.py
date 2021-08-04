@@ -23,18 +23,16 @@ async def test_form(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "https://1.1.1.1",
-                "token": "test-token",
-            },
+            {"host": "https://1.1.1.1", "token": "test-token", "name": "test"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "https://1.1.1.1"
+    assert result2["title"] == "test"
     assert result2["data"] == {
         "host": "https://1.1.1.1",
         "token": "test-token",
+        "name": "test",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -51,10 +49,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "https://1.1.1.1",
-                "token": "test-token",
-            },
+            {"host": "https://1.1.1.1", "token": "test-token", "name": "test"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -73,10 +68,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "https://1.1.1.1",
-                "token": "test-token",
-            },
+            {"host": "https://1.1.1.1", "token": "test-token", "name": "test"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -91,10 +83,7 @@ async def test_invalid_host(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            "host": "1.1.1.1",
-            "token": "test-token",
-        },
+        {"host": "1.1.1.1", "token": "test-token", "name": "test"},
     )
 
     assert result2["type"] == RESULT_TYPE_FORM
