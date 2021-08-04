@@ -35,12 +35,14 @@ CONF_USERNAME = "user_name"
 CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
 CONF_ZONES = "zones"
 CONF_ZONETYPE = "type"
+CONF_ZONEPART = "part"
 
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
 DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = "opening"
+DEFAULT_ZONEPART = 1
 DEFAULT_PANIC = "Police"
 DEFAULT_TIMEOUT = 10
 
@@ -52,6 +54,7 @@ ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
+        vol.Optional(CONF_ZONEPART, default=DEFAULT_ZONEPART): vol.Coerce(int),
     }
 )
 
