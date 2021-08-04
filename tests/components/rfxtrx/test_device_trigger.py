@@ -1,7 +1,7 @@
 """The tests for RFXCOM RFXtrx device triggers."""
 from __future__ import annotations
 
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple
 
 import pytest
 
@@ -152,7 +152,7 @@ async def test_invalid_trigger(hass, device_reg: DeviceRegistry):
 
     await setup_entry(hass, {event.code: {"fire_event": True, "signal_repetitions": 1}})
 
-    device_identifers = cast(set[tuple[str, str]], event.device_identifiers)
+    device_identifers: Any = event.device_identifiers
     device_entry = device_reg.async_get_device(device_identifers, set())
     assert device_entry
 

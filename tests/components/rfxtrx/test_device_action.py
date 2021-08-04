@@ -1,7 +1,7 @@
 """The tests for RFXCOM RFXtrx device actions."""
 from __future__ import annotations
 
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple
 
 import RFXtrx
 import pytest
@@ -173,7 +173,7 @@ async def test_invalid_action(hass, device_reg: DeviceRegistry):
 
     await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
 
-    device_identifers = cast(set[tuple[str, str]], device.device_identifiers)
+    device_identifers: Any = device.device_identifiers
     device_entry = device_reg.async_get_device(device_identifers, set())
     assert device_entry
 
