@@ -1,0 +1,17 @@
+{
+  "domain": "iotawatt",
+  "name": "IoTawatt",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/iotawatt",
+  "requirements": [
+    "iotawattpy==0.0.5"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@gtdiehl"
+  ],
+  "iot_class": "local_polling"
+}
