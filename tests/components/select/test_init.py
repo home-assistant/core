@@ -12,10 +12,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_registry
 
 
 class MockSelectEntity(SelectEntity):
@@ -23,12 +20,6 @@ class MockSelectEntity(SelectEntity):
 
     _attr_current_option = "option_one"
     _attr_options = ["option_one", "option_two", "option_three"]
-
-
-@pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 async def test_select(hass: HomeAssistant) -> None:
@@ -66,9 +57,7 @@ async def test_select(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_custom_integration_and_validation(
-    hass, entity_reg, enable_custom_integrations
-):
+async def test_custom_integration_and_validation(hass, enable_custom_integrations):
     """Test we can only select valid options."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
