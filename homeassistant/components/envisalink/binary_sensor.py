@@ -8,7 +8,16 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
-from . import CONF_ZONETYPE, DATA_EVL, SIGNAL_ZONE_UPDATE, ZONE_SCHEMA, EnvisalinkDevice
+from . import (
+    ATTR_PARTITION,
+    CONF_ZONETYPE,
+    CONF_ZONEPART,
+    DATA_EVL,
+    SIGNAL_KEYPAD_UPDATE,
+    SIGNAL_ZONE_UPDATE,
+    ZONE_SCHEMA,
+    EnvisalinkDevice,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_config_data[CONF_ZONETYPE],
             device_config_data[CONF_ZONEPART],
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
+            hass.data[DATA_EVL].alarm_state["partition"][device_config_data[CONF_ZONEPART]],
             hass.data[DATA_EVL],
         )
         devices.append(device)
@@ -39,11 +49,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
-    def __init__(self, hass, zone_number, zone_name, zone_type, zone_part, info, controller):
+    def __init__(
+        self, hass, zone_number, zone_name, zone_type, zone_part, info, keypad, controller
+    ):
         """Initialize the binary_sensor."""
         self._zone_type = zone_type
         self._zone_number = zone_number
         self._zone_partition = zone_part
+        self._partition_keypad = keypad
 
         _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
@@ -51,6 +64,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
 
     @property
     def extra_state_attributes(self):
@@ -81,8 +95,8 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
 
     @property
     def is_on(self):
-        """Return true if sensor is on."""
-        return self._info["status"]["open"]
+        """Return true if sensor is on and parition is not ready."""
+        return self._info["status"]["open"] and not self._partition_keypad["status"]["ready"]
 
     @property
     def device_class(self):
