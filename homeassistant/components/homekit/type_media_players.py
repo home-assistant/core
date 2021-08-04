@@ -55,6 +55,7 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_PLAY_PAUSE,
+    MAX_NAME_LENGTH,
     SERV_SWITCH,
     SERV_TELEVISION_SPEAKER,
 )
@@ -134,7 +135,7 @@ class MediaPlayer(HomeAccessory):
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
-        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"
+        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"[:MAX_NAME_LENGTH]
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""

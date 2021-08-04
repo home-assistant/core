@@ -1,8 +1,6 @@
 """Support for SimpliSafe alarm control panels."""
 from __future__ import annotations
 
-import re
-
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
 from simplipy.system.v2 import SystemV2
@@ -72,12 +70,11 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         """Initialize the SimpliSafe alarm."""
         super().__init__(simplisafe, system, "Alarm Control Panel")
 
-        if isinstance(
-            self._simplisafe.config_entry.options.get(CONF_CODE), str
-        ) and re.search("^\\d+$", self._simplisafe.config_entry.options[CONF_CODE]):
-            self._attr_code_format = FORMAT_NUMBER
-        else:
-            self._attr_code_format = FORMAT_TEXT
+        if code := self._simplisafe.config_entry.options.get(CONF_CODE):
+            if code.isdigit():
+                self._attr_code_format = FORMAT_NUMBER
+            else:
+                self._attr_code_format = FORMAT_TEXT
         self._attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
         self._last_event = None
 
