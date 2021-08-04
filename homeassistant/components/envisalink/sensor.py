@@ -7,6 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
+    ATTR_PARTITION,
     DATA_EVL,
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
@@ -42,7 +43,7 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
 
     def __init__(self, hass, partition_name, partition_number, info, controller):
         """Initialize the sensor."""
-        self._icon = "mdi:alarm"
+        self._icon = "mdi:security"
         self._partition_number = partition_number
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
@@ -68,7 +69,10 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return self._info["status"]
+        attr = {}
+        attr[ATTR_PARTITION] = self._partition_number
+        attr.update(self._info["status"])
+        return attr
 
     @callback
     def _update_callback(self, partition):
