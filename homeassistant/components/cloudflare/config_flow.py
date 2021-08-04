@@ -173,7 +173,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_records(self, user_input: dict | None = None):
         """Handle the picking the zone records."""
-        errors = {}
+        errors: dict = {}
 
         if user_input is not None:
             self.cloudflare_config.update(user_input)
