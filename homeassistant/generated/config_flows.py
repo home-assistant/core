@@ -283,6 +283,7 @@ FLOWS = [
     "upb",
     "upcloud",
     "upnp",
+    "uptimerobot",
     "velbus",
     "vera",
     "verisure",

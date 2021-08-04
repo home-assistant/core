@@ -248,20 +248,20 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
 
         # Entity class attributes
         self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_last_reset = dt.utc_from_timestamp(0)
+        if self.device_class == DEVICE_CLASS_ENERGY:
+            self._attr_last_reset = dt.utc_from_timestamp(0)
 
     @callback
     def async_update_last_reset(
         self, node: ZwaveNode, endpoint: int, meter_type: int | None
     ) -> None:
         """Update last reset."""
-        # If the signal is not for this node or is for a different endpoint, ignore it
-        if self.info.node != node or self.info.primary_value.endpoint != endpoint:
-            return
-        # If a meter type was specified and doesn't match this entity's meter type,
-        # ignore it
+        # If the signal is not for this node or is for a different endpoint,
+        # or a meter type was specified and doesn't match this entity's meter type:
         if (
-            meter_type is not None
+            self.info.node != node
+            or self.info.primary_value.endpoint != endpoint
+            or meter_type is not None
             and self.info.primary_value.metadata.cc_specific.get("meterType")
             != meter_type
         ):
@@ -273,6 +273,10 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
+
+        # If the meter is not an accumulating meter type, do not reset.
+        if self.device_class != DEVICE_CLASS_ENERGY:
+            return
 
         # Restore the last reset time from stored state
         restored_state = await self.async_get_last_state()
@@ -310,7 +314,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
             primary_value.endpoint,
             options,
         )
-        self._attr_last_reset = dt.utcnow()
+
         # Notify meters that may have been reset
         async_dispatcher_send(
             self.hass,

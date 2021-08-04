@@ -103,6 +103,7 @@ homeassistant.components.tile.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
+homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*

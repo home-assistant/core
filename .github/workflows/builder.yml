@@ -50,7 +50,7 @@ jobs:
       - name: Generate meta info
         shell: bash
         run: |
-          echo "${{ env.GITHUB_SHA }};${{ env.GITHUB_REF }};${{ env.GITHUB_EVENT_NAME }};${{ env.GITHUB_ACTOR }}" > OFFICIAL_IMAGE
+          echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > OFFICIAL_IMAGE
 
       - name: Signing meta info file
         uses: home-assistant/actions/helpers/codenotary@master
@@ -117,7 +117,7 @@ jobs:
       - name: Write meta info file
         shell: bash
         run: |
-          echo "${{ env.GITHUB_SHA }};${{ env.GITHUB_REF }};${{ env.GITHUB_EVENT_NAME }};${{ env.GITHUB_ACTOR }}" > rootfs/OFFICIAL_IMAGE
+          echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to DockerHub
         uses: docker/login-action@v1.10.0

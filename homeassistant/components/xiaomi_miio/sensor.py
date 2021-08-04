@@ -10,6 +10,7 @@ from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
+    GATEWAY_MODEL_AQARA,
     GATEWAY_MODEL_EU,
     GatewayException,
 )
@@ -197,6 +198,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             GATEWAY_MODEL_AC_V1,
             GATEWAY_MODEL_AC_V2,
             GATEWAY_MODEL_AC_V3,
+            GATEWAY_MODEL_AQARA,
             GATEWAY_MODEL_EU,
         ]:
             description = SENSOR_TYPES[ATTR_ILLUMINANCE]
