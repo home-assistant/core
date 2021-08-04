@@ -32,6 +32,7 @@ CONF_PANEL_TYPE = "panel_type"
 CONF_PANIC = "panic_type"
 CONF_PARTITIONS = "partitions"
 CONF_USERNAME = "user_name"
+CONF_USERS = "users"
 CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
 CONF_ZONES = "zones"
 CONF_ZONETYPE = "type"
@@ -58,11 +59,9 @@ ZONE_SCHEMA = vol.Schema(
     }
 )
 
-PARTITION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string
-    }
-)
+PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+
+USERS_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -78,6 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
                 vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
+                vol.Optional(CONF_USERS): {vol.Coerce(int): USERS_SCHEMA},
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION): vol.All(
                     vol.Coerce(int), vol.Range(min=3, max=4)
@@ -123,6 +123,7 @@ async def async_setup(hass, config):
     zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
+    users = conf.get(CONF_USERS)
     connection_timeout = conf.get(CONF_TIMEOUT)
     sync_connect = asyncio.Future()
 
@@ -224,7 +225,7 @@ async def async_setup(hass, config):
                 hass,
                 "sensor",
                 "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code},
+                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_USERS: users},
                 config,
             )
         )
