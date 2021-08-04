@@ -10,6 +10,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt
 
 from .const import DOMAIN
 
@@ -126,3 +127,4 @@ class EnergySensor(TwcSensor):
         super().__init__(coordinator, uuid, twc, prop, name)
         self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
         self._attr_device_class = DEVICE_CLASS_ENERGY
+        self._attr_last_reset = dt.utc_from_timestamp(0)
