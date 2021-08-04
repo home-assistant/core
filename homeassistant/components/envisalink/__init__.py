@@ -6,11 +6,11 @@ from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_CODE,
-    CONF_HOST,
     CONF_TIMEOUT,
     EVENT_HOMEASSISTANT_STOP,
 )
