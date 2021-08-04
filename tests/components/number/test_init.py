@@ -12,11 +12,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_registry
-from tests.testing_config.custom_components.test.number import UNIQUE_NUMBER
 
 
 class MockDefaultNumberEntity(NumberEntity):
@@ -42,13 +38,7 @@ class MockNumberEntity(NumberEntity):
         return 0.5
 
 
-@pytest.fixture
-def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
-
-
-async def test_step(hass):
+async def test_step(hass: HomeAssistant):
     """Test the step calculation."""
     number = MockDefaultNumberEntity()
     assert number.step == 1.0
@@ -57,7 +47,7 @@ async def test_step(hass):
     assert number_2.step == 0.1
 
 
-async def test_sync_set_value(hass):
+async def test_sync_set_value(hass: HomeAssistant):
     """Test if async set_value calls sync set_value."""
     number = MockDefaultNumberEntity()
     number.hass = hass
@@ -70,35 +60,29 @@ async def test_sync_set_value(hass):
 
 
 async def test_custom_integration_and_validation(
-    hass, entity_reg, enable_custom_integrations
+    hass: HomeAssistant, enable_custom_integrations
 ):
     """Test we can only set valid values."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
 
-    reg_entry_1 = entity_reg.async_get_or_create(
-        DOMAIN,
-        "test",
-        UNIQUE_NUMBER,
-    )
-
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(reg_entry_1.entity_id)
+    state = hass.states.get("number.test")
     assert state.attributes.get(ATTR_VALUE) is None
     assert state.attributes.get(ATTR_STEP) == 1.0
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_VALUE: 60.0, ATTR_ENTITY_ID: reg_entry_1.entity_id},
+        {ATTR_VALUE: 60.0, ATTR_ENTITY_ID: "number.test"},
         blocking=True,
     )
 
-    hass.states.async_set(reg_entry_1.entity_id, 60.0)
+    hass.states.async_set("number.test", 60.0)
     await hass.async_block_till_done()
-    state = hass.states.get(reg_entry_1.entity_id)
+    state = hass.states.get("number.test")
     assert state.state == "60.0"
 
     # test ValueError trigger
@@ -106,10 +90,10 @@ async def test_custom_integration_and_validation(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: reg_entry_1.entity_id},
+            {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
             blocking=True,
         )
 
     await hass.async_block_till_done()
-    state = hass.states.get(reg_entry_1.entity_id)
+    state = hass.states.get("number.test")
     assert state.state == "60.0"
