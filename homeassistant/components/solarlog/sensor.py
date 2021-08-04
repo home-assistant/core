@@ -9,7 +9,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
-from .const import API_DICT, DOMAIN, SCAN_INTERVAL, SENSORS
+from .const import API_DICT, DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     # Create a new sensor for each sensor type.
     entities = []
-    for description in SENSORS:
+    for description in SENSOR_TYPES:
         sensor = SolarlogSensor(entry.entry_id, device_name, description, data)
         entities.append(sensor)
     async_add_entities(entities, True)

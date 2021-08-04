@@ -28,7 +28,7 @@ DEFAULT_NAME = "solarlog"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 """Supported sensor types."""
-SENSORS: Final[list[SensorEntityDescription]] = [
+SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="time",
         name="last update",
@@ -190,7 +190,7 @@ SENSORS: Final[list[SensorEntityDescription]] = [
         icon="mdi:solar-power",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-]
+)
 
 API_DICT = {
     "time": "TIME",
