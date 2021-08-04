@@ -151,9 +151,15 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             state = STATE_ALARM_ARMING
         elif self._info["status"]["entry_delay"]:
             state = STATE_ALARM_PENDING
-        elif self._info["status"]["armed_zero_entry_delay"] and self._info["status"]["armed_away"]:
+        elif (
+            self._info["status"]["armed_zero_entry_delay"]
+            and self._info["status"]["armed_away"]
+        ):
             state = STATE_ALARM_ARMED_VACATION
-        elif self._info["status"]["armed_zero_entry_delay"] and self._info["status"]["armed_stay"]:
+        elif (
+            self._info["status"]["armed_zero_entry_delay"]
+            and self._info["status"]["armed_stay"]
+        ):
             state = STATE_ALARM_ARMED_NIGHT
         elif self._info["status"]["armed_away"]:
             state = STATE_ALARM_ARMED_AWAY
