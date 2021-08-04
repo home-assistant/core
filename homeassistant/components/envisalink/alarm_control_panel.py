@@ -33,6 +33,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
+    ATTR_PARTITION,
     CONF_PANIC,
     DATA_EVL,
     DOMAIN,
@@ -161,6 +162,13 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         elif self._info["status"]["alpha"]:
             state = STATE_ALARM_DISARMED
         return state
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attr = {}
+        attr[ATTR_PARTITION] = self._partition_number
+        return attr
 
     @property
     def supported_features(self) -> int:
