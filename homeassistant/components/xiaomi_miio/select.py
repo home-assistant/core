@@ -126,10 +126,6 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
 
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
-        if option not in self.options:
-            raise ValueError(
-                f"Selection '{option}' is not a valid {self.entity_description.name}"
-            )
         await self.async_set_led_brightness(option.title())
 
     @property
