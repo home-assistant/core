@@ -10,6 +10,7 @@ from . import (
     ATTR_PARTITION,
     DATA_EVL,
     PARTITION_SCHEMA,
+    USERS_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
     EnvisalinkDevice,
@@ -21,6 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     configured_partitions = discovery_info["partitions"]
+    configured_users = discovery_info["users"]
+    
+    user_list = {}
+    if configured_users:
+        for user_num in configured_users:
+            user_list[user_num] = USERS_SCHEMA(configured_users[user_num])[CONF_NAME]
 
     devices = []
     for part_num in configured_partitions:
@@ -30,6 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_config_data[CONF_NAME],
             part_num,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
+            user_list,
             hass.data[DATA_EVL],
         )
 
@@ -41,10 +49,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
     """Representation of an Envisalink keypad."""
 
-    def __init__(self, hass, partition_name, partition_number, info, controller):
+    def __init__(self, hass, partition_name, partition_number, info, users, controller):
         """Initialize the sensor."""
         self._icon = "mdi:security"
         self._partition_number = partition_number
+        self._users = users
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)
@@ -72,6 +81,12 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
         attr = {}
         attr[ATTR_PARTITION] = self._partition_number
         attr.update(self._info["status"])
+        last_armed_by_user = attr["last_armed_by_user"]
+        last_disarmed_by_user = attr["last_disarmed_by_user"]
+        if last_armed_by_user in self._users:
+            attr["last_armed_by_user"] = self._users[last_armed_by_user]
+        if last_disarmed_by_user in self._users:
+            attr["last_disarmed_by_user"] = self._users[last_disarmed_by_user]
         return attr
 
     @callback
