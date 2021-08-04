@@ -38,7 +38,7 @@ class MockNumberEntity(NumberEntity):
         return 0.5
 
 
-async def test_step(hass: HomeAssistant):
+async def test_step(hass: HomeAssistant) -> None:
     """Test the step calculation."""
     number = MockDefaultNumberEntity()
     assert number.step == 1.0
@@ -47,7 +47,7 @@ async def test_step(hass: HomeAssistant):
     assert number_2.step == 0.1
 
 
-async def test_sync_set_value(hass: HomeAssistant):
+async def test_sync_set_value(hass: HomeAssistant) -> None:
     """Test if async set_value calls sync set_value."""
     number = MockDefaultNumberEntity()
     number.hass = hass
@@ -60,8 +60,8 @@ async def test_sync_set_value(hass: HomeAssistant):
 
 
 async def test_custom_integration_and_validation(
-    hass: HomeAssistant, enable_custom_integrations
-):
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we can only set valid values."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
