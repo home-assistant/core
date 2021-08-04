@@ -7,7 +7,7 @@ import logging
 
 import voluptuous as vol
 from yeelight import BulbException, discover_bulbs
-from yeelight.aio import AsyncBulb, KEY_CONNECTED
+from yeelight.aio import KEY_CONNECTED, AsyncBulb
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
