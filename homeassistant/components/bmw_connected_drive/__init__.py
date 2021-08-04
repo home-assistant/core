@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
@@ -317,6 +317,8 @@ class BMWConnectedDriveAccount:
 class BMWConnectedDriveBaseEntity(Entity):
     """Common base for BMW entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, account, vehicle):
         """Initialize sensor."""
         self._account = account
@@ -326,29 +328,17 @@ class BMWConnectedDriveBaseEntity(Entity):
             "vin": self._vehicle.vin,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return info for device registry."""
-        return {
-            "identifiers": {(DOMAIN, self._vehicle.vin)},
-            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
-            "model": self._vehicle.name,
-            "manufacturer": self._vehicle.attributes.get("brand"),
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, vehicle.vin)},
+            "name": f'{vehicle.attributes.get("brand")} {vehicle.name}',
+            "model": vehicle.name,
+            "manufacturer": vehicle.attributes.get("brand"),
         }
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return self._attrs
-
-    @property
-    def should_poll(self):
-        """Do not poll this class.
-
-        Updates are triggered from BMWConnectedDriveAccount.
-        """
-        return False
 
     def update_callback(self):
         """Schedule a state update."""

@@ -54,6 +54,8 @@ from .const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_X_COILS,
+    CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
@@ -94,20 +96,25 @@ from .const import (
     CONF_WRITE_TYPE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
+    DATA_TYPE_FLOAT16,
+    DATA_TYPE_FLOAT32,
+    DATA_TYPE_FLOAT64,
     DATA_TYPE_INT,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT64,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT64,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
 )
 from .modbus import async_modbus_setup
-from .validators import (
-    number_validator,
-    scan_interval_validator,
-    sensor_schema_validator,
-)
+from .validators import number_validator, scan_interval_validator, struct_validator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,9 +141,19 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_REGISTER_INPUT,
             ]
         ),
-        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_COUNT): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
             [
+                DATA_TYPE_INT16,
+                DATA_TYPE_INT32,
+                DATA_TYPE_INT64,
+                DATA_TYPE_UINT16,
+                DATA_TYPE_UINT32,
+                DATA_TYPE_UINT64,
+                DATA_TYPE_FLOAT16,
+                DATA_TYPE_FLOAT32,
+                DATA_TYPE_FLOAT64,
+                DATA_TYPE_STRING,
                 DATA_TYPE_INT,
                 DATA_TYPE_UINT,
                 DATA_TYPE_FLOAT,
@@ -166,6 +183,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,
+                CALL_TYPE_X_COILS,
+                CALL_TYPE_X_REGISTER_HOLDINGS,
             ]
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
@@ -179,6 +198,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_DISCRETE,
                         CALL_TYPE_REGISTER_INPUT,
                         CALL_TYPE_COIL,
+                        CALL_TYPE_X_COILS,
+                        CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
                 vol.Optional(CONF_STATE_OFF): cv.positive_int,
@@ -266,12 +287,12 @@ MODBUS_SCHEMA = vol.Schema(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
         vol.Optional(CONF_CLIMATES): vol.All(
-            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, sensor_schema_validator)]
+            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, struct_validator)]
         ),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, sensor_schema_validator)]
+            cv.ensure_list, [vol.All(SENSOR_SCHEMA, struct_validator)]
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),

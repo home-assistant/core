@@ -154,6 +154,12 @@ set_value:
       required: true
       selector:
         object:
+    options:
+      name: Options
+      description: Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set.
+      required: false
+      selector:
+        object:
     wait_for_result:
       name: Wait for result?
       description: Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the service call can take a while if setting a value on an asleep battery device.
@@ -203,6 +209,12 @@ multicast_set_value:
       required: false
       selector:
         text:
+    options:
+      name: Options
+      description: Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set.
+      required: false
+      selector:
+        object:
     value:
       name: Value
       description: The new value to set.
@@ -217,3 +229,26 @@ ping:
   target:
     entity:
       integration: zwave_js
+
+reset_meter:
+  name: Reset meter(s) on a node
+  description: Resets the meter(s) on a node.
+  target:
+    entity:
+      domain: sensor
+      integration: zwave_js
+  fields:
+    meter_type:
+      name: Meter Type
+      description: The type of meter to reset. Not all meters support the ability to pick a meter type to reset.
+      example: 1
+      required: false
+      selector:
+        text:
+    value:
+      name: Target Value
+      description: The value that meter(s) should be reset to. Not all meters support the ability to be reset to a specific value.
+      example: 5
+      required: false
+      selector:
+        text:

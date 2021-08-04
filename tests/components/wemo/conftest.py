@@ -19,7 +19,7 @@ MOCK_SERIAL_NUMBER = "WemoSerialNumber"
 @pytest.fixture(name="pywemo_model")
 def pywemo_model_fixture():
     """Fixture containing a pywemo class name used by pywemo_device_fixture."""
-    return "Insight"
+    return "LightSwitch"
 
 
 @pytest.fixture(name="pywemo_registry")

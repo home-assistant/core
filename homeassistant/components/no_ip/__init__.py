@@ -60,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     password = config[DOMAIN].get(CONF_PASSWORD)
     timeout = config[DOMAIN].get(CONF_TIMEOUT)
 
-    auth_str = base64.b64encode(f"{user}:{password}".encode("utf-8"))
+    auth_str = base64.b64encode(f"{user}:{password}".encode())
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 

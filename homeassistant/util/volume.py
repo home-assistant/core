@@ -1,4 +1,6 @@
 """Volume conversion util functions."""
+from __future__ import annotations
+
 from numbers import Number
 
 from homeassistant.const import (
@@ -10,7 +12,12 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 
-VALID_UNITS = [VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE]
+VALID_UNITS: tuple[str, ...] = (
+    VOLUME_LITERS,
+    VOLUME_MILLILITERS,
+    VOLUME_GALLONS,
+    VOLUME_FLUID_OUNCE,
+)
 
 
 def __liter_to_gallon(liter: float) -> float:

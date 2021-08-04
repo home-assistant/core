@@ -48,6 +48,8 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
 class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
+    _attr_icon = ICON
+
     async def async_added_to_hass(self):
         """Set up trigger automation service."""
         await super().async_added_to_hass()
@@ -73,8 +75,3 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     def is_on(self):
         """Return True if the automation is enabled."""
         return self._automation.is_enabled
-
-    @property
-    def icon(self):
-        """Return the robot icon to match Home Assistant automations."""
-        return ICON

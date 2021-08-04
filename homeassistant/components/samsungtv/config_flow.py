@@ -2,6 +2,7 @@
 import socket
 from urllib.parse import urlparse
 
+import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -134,6 +135,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass, self._bridge, self._host
         )
         if not info:
+            if not _method:
+                LOGGER.debug(
+                    "Samsung host %s is not supported by either %s or %s methods",
+                    self._host,
+                    METHOD_LEGACY,
+                    METHOD_WEBSOCKET,
+                )
+                raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
             return False
         dev_info = info.get("device", {})
         device_type = dev_info.get("type")
@@ -145,6 +154,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = f"{self._name} ({self._model})"
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
         if mac := mac_from_device_info(info):
+            self._mac = mac
+        elif mac := getmac.get_mac_address(ip=self._host):
             self._mac = mac
         self._device_info = info
         return True

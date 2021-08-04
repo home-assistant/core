@@ -120,15 +120,15 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._router = router
         self._sensor_type = sensor_type
-        self._sensor_def = sensor_def
-        self._name = f"{DEFAULT_PREFIX} {sensor_def[SENSOR_NAME]}"
-        self._unique_id = f"{DOMAIN} {self._name}"
+        self._attr_name = f"{DEFAULT_PREFIX} {sensor_def[SENSOR_NAME]}"
         self._factor = sensor_def.get(SENSOR_FACTOR)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._sensor_def.get(SENSOR_DEFAULT_ENABLED, False)
+        self._attr_unique_id = f"{DOMAIN} {self.name}"
+        self._attr_entity_registry_enabled_default = sensor_def.get(
+            SENSOR_DEFAULT_ENABLED, False
+        )
+        self._attr_unit_of_measurement = sensor_def.get(SENSOR_UNIT)
+        self._attr_icon = sensor_def.get(SENSOR_ICON)
+        self._attr_device_class = sensor_def.get(SENSOR_DEVICE_CLASS)
 
     @property
     def state(self) -> str:
@@ -139,31 +139,6 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         if self._factor and isinstance(state, Number):
             return round(state / self._factor, 2)
         return state
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit."""
-        return self._sensor_def.get(SENSOR_UNIT)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._sensor_def.get(SENSOR_ICON)
-
-    @property
-    def device_class(self) -> str:
-        """Return the device_class."""
-        return self._sensor_def.get(SENSOR_DEVICE_CLASS)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

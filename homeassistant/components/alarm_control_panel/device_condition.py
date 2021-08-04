@@ -10,6 +10,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
@@ -37,6 +39,7 @@ from .const import (
     CONDITION_ARMED_CUSTOM_BYPASS,
     CONDITION_ARMED_HOME,
     CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_VACATION,
     CONDITION_DISARMED,
     CONDITION_TRIGGERED,
 )
@@ -47,6 +50,7 @@ CONDITION_TYPES: Final[set[str]] = {
     CONDITION_ARMED_HOME,
     CONDITION_ARMED_AWAY,
     CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_VACATION,
     CONDITION_ARMED_CUSTOM_BYPASS,
 }
 
@@ -90,6 +94,8 @@ async def async_get_conditions(
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY})
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT})
+        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_VACATION})
         if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
             conditions.append(
                 {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS}
@@ -114,6 +120,8 @@ def async_condition_from_config(
         state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == CONDITION_ARMED_NIGHT:
         state = STATE_ALARM_ARMED_NIGHT
+    elif config[CONF_TYPE] == CONDITION_ARMED_VACATION:
+        state = STATE_ALARM_ARMED_VACATION
     elif config[CONF_TYPE] == CONDITION_ARMED_CUSTOM_BYPASS:
         state = STATE_ALARM_ARMED_CUSTOM_BYPASS
 

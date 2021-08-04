@@ -48,6 +48,13 @@ def mock_api_connection_error():
         yield mock_error
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry():
+    """Mock setting up a config entry."""
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+        yield
+
+
 async def test_user_connection_works(hass, mock_client):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(

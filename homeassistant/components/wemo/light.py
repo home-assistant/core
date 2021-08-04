@@ -50,10 +50,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
 
     await asyncio.gather(
-        *[
+        *(
             _discovered_wemo(device)
             for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
-        ]
+        )
     )
 
 

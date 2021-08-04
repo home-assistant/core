@@ -10,9 +10,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -66,6 +70,24 @@ async def async_setup_platform(
                 STATE_CLASS_MEASUREMENT,
                 CONCENTRATION_PARTS_PER_MILLION,
                 14,
+            ),
+            DemoSensor(
+                "sensor_5",
+                "Power consumption",
+                100,
+                DEVICE_CLASS_POWER,
+                STATE_CLASS_MEASUREMENT,
+                POWER_WATT,
+                None,
+            ),
+            DemoSensor(
+                "sensor_6",
+                "Today energy",
+                15,
+                DEVICE_CLASS_ENERGY,
+                STATE_CLASS_MEASUREMENT,
+                ENERGY_KILO_WATT_HOUR,
+                None,
             ),
         ]
     )

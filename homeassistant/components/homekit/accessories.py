@@ -58,12 +58,19 @@ from .const import (
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     DEVICE_CLASS_PM25,
+    DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
+    MAX_MANUFACTURER_LENGTH,
+    MAX_MODEL_LENGTH,
+    MAX_NAME_LENGTH,
+    MAX_SERIAL_LENGTH,
+    MAX_VERSION_LENGTH,
     SERV_BATTERY_SERVICE,
+    SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -127,7 +134,7 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             and features & cover.SUPPORT_SET_POSITION
         ):
             a_type = "Window"
-        elif features & cover.SUPPORT_SET_POSITION:
+        elif features & (cover.SUPPORT_SET_POSITION | cover.SUPPORT_SET_TILT_POSITION):
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "WindowCoveringBasic"
@@ -215,7 +222,9 @@ class HomeAccessory(Accessory):
         **kwargs,
     ):
         """Initialize a Accessory object."""
-        super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
+        super().__init__(
+            driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
+        )
         self.config = config or {}
         domain = split_entity_id(entity_id)[0].replace("_", " ")
 
@@ -235,10 +244,10 @@ class HomeAccessory(Accessory):
             sw_version = __version__
 
         self.set_info_service(
-            manufacturer=manufacturer,
-            model=model,
-            serial_number=entity_id,
-            firmware_revision=sw_version,
+            manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
+            model=model[:MAX_MODEL_LENGTH],
+            serial_number=entity_id[:MAX_SERIAL_LENGTH],
+            firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
         self.category = category
@@ -451,6 +460,17 @@ class HomeAccessory(Accessory):
         self.hass.async_create_task(
             self.hass.services.async_call(
                 domain, service, service_data, context=context
+            )
+        )
+
+    @ha_callback
+    def async_reset(self):
+        """Reset and recreate an accessory."""
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                DOMAIN,
+                SERVICE_HOMEKIT_RESET_ACCESSORY,
+                {ATTR_ENTITY_ID: self.entity_id},
             )
         )
 

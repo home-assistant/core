@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Tsooni ID",
+                    "name": "Nimi",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Tsooni ID",
+                    "name": "Nimi",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    }
+}
