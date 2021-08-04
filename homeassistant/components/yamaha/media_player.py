@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CURSOR_TYPE_DOWN,
@@ -96,7 +97,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    def __init__(self, config: None, discovery_info: None) -> None:
+    def __init__(self, config: ConfigType, discovery_info: DiscoveryInfoType) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
@@ -109,7 +110,7 @@ class YamahaConfigInfo:
         if discovery_info is not None:
             self.name = discovery_info.get("name")
             self.model = discovery_info.get("model_name")
-            self.ctrl_url = discovery_info.get("control_url")
+            self.ctrl_url = str(discovery_info.get("control_url"))
             self.desc_url = discovery_info.get("description_url")
             self.zone_ignore = []
             self.from_discovery = True
