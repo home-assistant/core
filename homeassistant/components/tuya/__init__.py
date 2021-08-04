@@ -252,8 +252,8 @@ async def async_setup(hass, config):
                 result = await hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
                 )
-            except:
-                _LOGGER.error(sys.exc_info()[0])
+            except Exception as e:
+                _LOGGER.error(e.args)
             _LOGGER.debug("Tuya async setup flow_init")
             return result
 
