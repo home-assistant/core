@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -45,7 +45,10 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: DiscoveryInfoType = None,
 ):
     """Set up the Flexit Platform."""
     modbus_slave = config.get(CONF_SLAVE)
@@ -57,7 +60,9 @@ async def async_setup_platform(
 class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
 
-    def __init__(self, hub: ModbusHub, modbus_slave, name):
+    def __init__(
+        self, hub: ModbusHub, modbus_slave: int | None, name: str | None
+    ) -> None:
         """Initialize the unit."""
         self._hub = hub
         self._name = name
@@ -82,7 +87,7 @@ class Flexit(ClimateEntity):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    async def async_update(self, now=None):
+    async def async_update(self):
         """Update unit attributes."""
         self._target_temperature = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_HOLDING, 8
@@ -90,9 +95,9 @@ class Flexit(ClimateEntity):
         self._current_temperature = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_INPUT, 9
         )
-        self._current_fan_mode = self._fan_modes[
-            await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
-        ]
+        res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
+        if res < len(self._fan_modes):
+            self._current_fan_mode = res
         self._filter_hours = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 8
         )
