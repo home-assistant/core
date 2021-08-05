@@ -5,5 +5,8 @@
   "requirements": ["notifications-android-tv==0.1.2"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "dhcp": [
+    {"hostname": "amazon-f*"}
+  ],
   "iot_class": "local_push"
 }

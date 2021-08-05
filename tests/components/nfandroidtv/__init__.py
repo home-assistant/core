@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 HOST = "1.2.3.4"
@@ -15,6 +16,18 @@ CONF_DATA = {
 CONF_CONFIG_FLOW = {
     CONF_HOST: HOST,
     CONF_NAME: NAME,
+}
+
+CONF_DHCP_FLOW_FIRE_TV = {
+    IP_ADDRESS: "1.1.1.1",
+    MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+    HOSTNAME: "amazon-fffffffff",
+}
+
+CONF_DHCP_FLOW_ANDROID_TV = {
+    IP_ADDRESS: "1.1.1.1",
+    MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+    HOSTNAME: "any",
 }
 
 

@@ -123,6 +123,10 @@ DHCP = [
         "macaddress": "000231*"
     },
     {
+        "domain": "nfandroidtv",
+        "hostname": "amazon-f*"
+    },
+    {
         "domain": "nuheat",
         "hostname": "nuheat",
         "macaddress": "002338*"

@@ -8,6 +8,8 @@ CONF_COLOR = "color"
 CONF_INTERRUPT = "interrupt"
 
 DEFAULT_NAME = "Android TV / Fire TV"
+FIRE_TV_NAME = "Fire TV"
+ANDROID_TV_NAME = "Android TV"
 DEFAULT_TIMEOUT = 5
 
 ATTR_DURATION = "duration"

@@ -6,10 +6,13 @@ from notifications_android_tv.notifications import ConnectError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nfandroidtv.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.setup import async_setup_component
 
 from . import (
     CONF_CONFIG_FLOW,
     CONF_DATA,
+    CONF_DHCP_FLOW_ANDROID_TV,
+    CONF_DHCP_FLOW_FIRE_TV,
     HOST,
     NAME,
     _create_mocked_tv,
@@ -133,3 +136,91 @@ async def test_flow_import_missing_optional(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {CONF_HOST: HOST, CONF_NAME: f"{DEFAULT_NAME} {HOST}"}
+
+
+async def test_dhcp_discovery_fire_tv(hass):
+    """Test we can process the Fire TV discovery from dhcp."""
+    await async_setup_component(hass, "persistent_notification", {})
+    mocked_tv = await _create_mocked_tv()
+    with _patch_config_flow_tv(mocked_tv), _patch_setup():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_FIRE_TV,
+        )
+        assert result["type"] == "form"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Fire TV",
+        }
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_FIRE_TV,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_android_tv(hass):
+    """Test we can process the Android TV discovery from dhcp."""
+    await async_setup_component(hass, "persistent_notification", {})
+    mocked_tv = await _create_mocked_tv()
+    with _patch_config_flow_tv(mocked_tv), _patch_setup():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_ANDROID_TV,
+        )
+        assert result["type"] == "form"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Android TV",
+        }
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_ANDROID_TV,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_failed(hass):
+    """Test failed setup from dhcp."""
+    mocked_tv = await _create_mocked_tv(True)
+    with _patch_config_flow_tv(mocked_tv) as tvmock:
+        tvmock.side_effect = ConnectError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_FIRE_TV,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
+
+    with _patch_config_flow_tv(mocked_tv) as tvmock:
+        tvmock.side_effect = Exception
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_FIRE_TV,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "unknown"
