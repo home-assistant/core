@@ -30,7 +30,7 @@ ENVOY = "Envoy"
 CONF_SERIAL = "serial"
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     envoy_reader = EnvoyReader(
         data[CONF_HOST],
