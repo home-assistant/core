@@ -22,7 +22,7 @@ from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 import jinja2
-from jinja2 import contextfunction, pass_context
+from jinja2 import pass_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -1521,7 +1521,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             def wrapper(*args, **kwargs):
                 return func(hass, *args[1:], **kwargs)
 
-            return contextfunction(wrapper)
+            return pass_context(wrapper)
 
         self.globals["device_entities"] = hassfunction(device_entities)
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
