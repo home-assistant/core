@@ -5,7 +5,7 @@ from urllib.parse import ParseResult, urlparse
 from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
@@ -57,7 +57,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SolarlogSensor(SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, entry_id, device_name, description, data):
+    def __init__(
+        self, entry_id, device_name, description: SensorEntityDescription, data
+    ):
         """Initialize the sensor."""
         self.entry_id = entry_id
         self.device_name = device_name
