@@ -667,7 +667,6 @@ async def test_merge(merge_log_err, hass):
     await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
-    print(config)
     assert len(config) == 8
     assert len(config["input_boolean"]) == 2
     assert len(config["input_select"]) == 1
