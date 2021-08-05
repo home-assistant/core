@@ -7,7 +7,12 @@ from typing import Any, Callable
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_STATE_CLASS,
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,11 +42,7 @@ async def async_setup_entry(
 
     available_process_data = await plenticore.client.get_process_data()
     process_data_update_coordinator = ProcessDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Process Data",
-        timedelta(seconds=10),
-        plenticore,
+        hass, _LOGGER, "Process Data", timedelta(seconds=10), plenticore
     )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_PROCESS_DATA:
         if (
@@ -69,11 +70,7 @@ async def async_setup_entry(
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=300),
-        plenticore,
+        hass, _LOGGER, "Settings Data", timedelta(seconds=300), plenticore
     )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_SETTINGS_DATA:
         if module_id not in available_settings_data or data_id not in (
@@ -179,12 +176,22 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._sensor_data.get(ATTR_DEVICE_CLASS)
 
-    @property                                                                                               def state_class(self) -> str | None:                                                                        """Return the class of the state of this device, from component STATE_CLASSES."""                       return self._sensor_data.get(ATTR_STATE_CLASS)
+    @property
+    def state_class(self) -> str | None:
+        """Return the class of the state of this device, from component STATE_CLASSES."""
+        return self._sensor_data.get(ATTR_STATE_CLASS)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._sensor_data.get(ATTR_ENABLED_DEFAULT, False)
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Display a generic last_reset time when ATTR_STATE_CLASS is set"""
+        if ATTR_STATE_CLASS in self._sensor_data:
+            return utc_from_timestamp(0)
+        return None
 
     @property
     def state(self) -> Any | None:
