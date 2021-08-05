@@ -42,7 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.error(exception)
             errors["base"] = "cannot_connect"
         except Exception as exception:  # pylint: disable=broad-except
-            LOGGER.error(exception)
+            LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
             if response.status != API_ATTR_OK:

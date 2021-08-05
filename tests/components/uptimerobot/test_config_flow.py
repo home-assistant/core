@@ -14,6 +14,8 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -29,7 +31,7 @@ async def test_form(hass: HomeAssistant) -> None:
         return_value=UptimeRobotApiResponse.from_dict(
             {
                 "stat": "ok",
-                "account": {"email": "test@test.test", "user_id": 123456890},
+                "account": {"email": "test@test.test", "user_id": 1234567890},
             }
         ),
     ), patch(
@@ -42,7 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["result"].unique_id == "123456890"
+    assert result2["result"].unique_id == "1234567890"
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test@test.test"
     assert result2["data"] == {"api_key": "1234"}
@@ -156,7 +158,7 @@ async def test_flow_import(hass):
         return_value=UptimeRobotApiResponse.from_dict(
             {
                 "stat": "ok",
-                "account": {"email": "test@test.test", "user_id": 123456890},
+                "account": {"email": "test@test.test", "user_id": 1234567890},
             }
         ),
     ), patch(
@@ -179,7 +181,7 @@ async def test_flow_import(hass):
         return_value=UptimeRobotApiResponse.from_dict(
             {
                 "stat": "ok",
-                "account": {"email": "test@test.test", "user_id": 123456890},
+                "account": {"email": "test@test.test", "user_id": 1234567890},
             }
         ),
     ), patch(
@@ -193,6 +195,7 @@ async def test_flow_import(hass):
         )
         await hass.async_block_till_done()
 
+        assert len(mock_setup_entry.mock_calls) == 0
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
@@ -212,3 +215,41 @@ async def test_flow_import(hass):
 
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "unknown"
+
+
+async def test_user_unique_id_already_exists(hass):
+    """Test creating an entry where the unique_id already exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"platform": DOMAIN, "api_key": "1234"},
+        unique_id="1234567890",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "ok",
+                "account": {"email": "test@test.test", "user_id": 1234567890},
+            }
+        ),
+    ), patch(
+        "homeassistant.components.uptimerobot.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": "12345"},
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
