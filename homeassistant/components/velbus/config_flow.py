@@ -1,7 +1,7 @@
 """Config flow for the Velbus platform."""
 from __future__ import annotations
 
-import velbus
+from velbusaio.controller import Velbus
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -35,12 +35,12 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _test_connection(self, prt):
         """Try to connect to the velbus with the port specified."""
-        # try:
-        #    controller = velbus.Controller(prt)
-        # except Exception:  # pylint: disable=broad-except
-        #    self._errors[CONF_PORT] = "cannot_connect"
-        #    return False
-        # controller.stop()
+        try:
+            controller = Velbus(prt, True)
+            controller.stop()
+        except Exception:  # pylint: disable=broad-except
+            self._errors[CONF_PORT] = "cannot_connect"
+            return False
         return True
 
     def _prt_in_configuration_exists(self, prt: str) -> bool:
