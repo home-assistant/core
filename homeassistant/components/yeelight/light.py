@@ -600,8 +600,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         else:
             self._bulb.stop_music()
 
-        self.device.update()
-
     @_cmd
     def set_brightness(self, brightness, duration) -> None:
         """Set bulb brightness."""
@@ -757,7 +755,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             except BulbException as ex:
                 _LOGGER.error("Unable to set the defaults: %s", ex)
                 return
-        self.device.update()
 
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
@@ -766,13 +763,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         self.device.turn_off(duration=duration, light_type=self.light_type)
-        self.device.update()
 
     def set_mode(self, mode: str):
         """Set a power mode."""
         try:
             self._bulb.set_power_mode(PowerMode[mode.upper()])
-            self.device.update()
         except BulbException as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
 
@@ -784,7 +779,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             )
 
             self._bulb.start_flow(flow, light_type=self.light_type)
-            self.device.update()
         except BulbException as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
 
@@ -796,7 +790,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """
         try:
             self._bulb.set_scene(scene_class, *args)
-            self.device.update()
         except BulbException as ex:
             _LOGGER.error("Unable to set scene: %s", ex)
 
