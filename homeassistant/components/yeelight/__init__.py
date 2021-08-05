@@ -213,7 +213,7 @@ async def _async_initialize(
     )
 
     # fetch initial state
-    await device.async_update()
+    asyncio.create_task(device.async_update())
 
 
 @callback
