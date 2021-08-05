@@ -59,7 +59,12 @@ ZONE_SCHEMA = vol.Schema(
     }
 )
 
-PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+PARTITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_CODE, default=""): cv.string,
+    }
+)
 
 USERS_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
