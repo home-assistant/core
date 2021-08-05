@@ -14,7 +14,11 @@ from typing import Any, cast
 import psutil
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
@@ -56,45 +60,107 @@ SENSOR_TYPE_NAME = 0
 SENSOR_TYPE_UOM = 1
 SENSOR_TYPE_ICON = 2
 SENSOR_TYPE_DEVICE_CLASS = 3
-SENSOR_TYPE_MANDATORY_ARG = 4
+SENSOR_TYPE_STATE_CLASS = 4
+SENSOR_TYPE_MANDATORY_ARG = 5
 
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
-# Schema: [name, unit of measurement, icon, device class, flag if mandatory arg]
-SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = {
-    "disk_free": ("Disk free", DATA_GIBIBYTES, "mdi:harddisk", None, False),
-    "disk_use": ("Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, False),
+# Schema: [name, unit of measurement, icon, device class, state class, flag if mandatory arg]
+SENSOR_TYPES: dict[
+    str, tuple[str, str | None, str | None, str | None, str | None, bool]
+] = {
+    "disk_free": (
+        "Disk free",
+        DATA_GIBIBYTES,
+        "mdi:harddisk",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
+    "disk_use": (
+        "Disk use",
+        DATA_GIBIBYTES,
+        "mdi:harddisk",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
     "disk_use_percent": (
         "Disk use (percent)",
         PERCENTAGE,
         "mdi:harddisk",
         None,
+        STATE_CLASS_MEASUREMENT,
         False,
     ),
-    "ipv4_address": ("IPv4 address", "", "mdi:server-network", None, True),
-    "ipv6_address": ("IPv6 address", "", "mdi:server-network", None, True),
-    "last_boot": ("Last boot", None, None, DEVICE_CLASS_TIMESTAMP, False),
-    "load_15m": ("Load (15m)", " ", CPU_ICON, None, False),
-    "load_1m": ("Load (1m)", " ", CPU_ICON, None, False),
-    "load_5m": ("Load (5m)", " ", CPU_ICON, None, False),
-    "memory_free": ("Memory free", DATA_MEBIBYTES, "mdi:memory", None, False),
-    "memory_use": ("Memory use", DATA_MEBIBYTES, "mdi:memory", None, False),
+    "ipv4_address": ("IPv4 address", "", "mdi:server-network", None, None, True),
+    "ipv6_address": ("IPv6 address", "", "mdi:server-network", None, None, True),
+    "last_boot": ("Last boot", None, None, DEVICE_CLASS_TIMESTAMP, None, False),
+    "load_15m": ("Load (15m)", " ", CPU_ICON, None, STATE_CLASS_MEASUREMENT, False),
+    "load_1m": ("Load (1m)", " ", CPU_ICON, None, STATE_CLASS_MEASUREMENT, False),
+    "load_5m": ("Load (5m)", " ", CPU_ICON, None, STATE_CLASS_MEASUREMENT, False),
+    "memory_free": (
+        "Memory free",
+        DATA_MEBIBYTES,
+        "mdi:memory",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
+    "memory_use": (
+        "Memory use",
+        DATA_MEBIBYTES,
+        "mdi:memory",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
     "memory_use_percent": (
         "Memory use (percent)",
         PERCENTAGE,
         "mdi:memory",
         None,
+        STATE_CLASS_MEASUREMENT,
         False,
     ),
-    "network_in": ("Network in", DATA_MEBIBYTES, "mdi:server-network", None, True),
-    "network_out": ("Network out", DATA_MEBIBYTES, "mdi:server-network", None, True),
-    "packets_in": ("Packets in", " ", "mdi:server-network", None, True),
-    "packets_out": ("Packets out", " ", "mdi:server-network", None, True),
+    "network_in": (
+        "Network in",
+        DATA_MEBIBYTES,
+        "mdi:server-network",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        True,
+    ),
+    "network_out": (
+        "Network out",
+        DATA_MEBIBYTES,
+        "mdi:server-network",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        True,
+    ),
+    "packets_in": (
+        "Packets in",
+        " ",
+        "mdi:server-network",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        True,
+    ),
+    "packets_out": (
+        "Packets out",
+        " ",
+        "mdi:server-network",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        True,
+    ),
     "throughput_network_in": (
         "Network throughput in",
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
+        STATE_CLASS_MEASUREMENT,
         True,
     ),
     "throughput_network_out": (
@@ -102,20 +168,50 @@ SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = 
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
+        STATE_CLASS_MEASUREMENT,
         True,
     ),
-    "process": ("Process", " ", CPU_ICON, None, True),
-    "processor_use": ("Processor use (percent)", PERCENTAGE, CPU_ICON, None, False),
+    "process": ("Process", " ", CPU_ICON, None, None, True),
+    "processor_use": (
+        "Processor use (percent)",
+        PERCENTAGE,
+        CPU_ICON,
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
     "processor_temperature": (
         "Processor temperature",
         TEMP_CELSIUS,
         None,
         DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS_MEASUREMENT,
         False,
     ),
-    "swap_free": ("Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, False),
-    "swap_use": ("Swap use", DATA_MEBIBYTES, "mdi:harddisk", None, False),
-    "swap_use_percent": ("Swap use (percent)", PERCENTAGE, "mdi:harddisk", None, False),
+    "swap_free": (
+        "Swap free",
+        DATA_MEBIBYTES,
+        "mdi:harddisk",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
+    "swap_use": (
+        "Swap use",
+        DATA_MEBIBYTES,
+        "mdi:harddisk",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
+    "swap_use_percent": (
+        "Swap use (percent)",
+        PERCENTAGE,
+        "mdi:harddisk",
+        None,
+        STATE_CLASS_MEASUREMENT,
+        False,
+    ),
 }
 
 
@@ -309,6 +405,10 @@ class SystemMonitorSensor(SensorEntity):
         self._unique_id: str = slugify(f"{sensor_type}_{argument}")
         self._sensor_registry = sensor_registry
         self._argument: str = argument
+        self._attr_device_class: str | None = self.sensor_type[SENSOR_TYPE_DEVICE_CLASS]
+        self._attr_icon: str | None = self.sensor_type[SENSOR_TYPE_ICON]
+        self._attr_state_class: str | None = self.sensor_type[SENSOR_TYPE_STATE_CLASS]
+        self._attr_unit_of_measurement: str | None = self.sensor_type[SENSOR_TYPE_UOM]
 
     @property
     def name(self) -> str:
@@ -321,24 +421,9 @@ class SystemMonitorSensor(SensorEntity):
         return self._unique_id
 
     @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        return self.sensor_type[SENSOR_TYPE_DEVICE_CLASS]  # type: ignore[no-any-return]
-
-    @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend, if any."""
-        return self.sensor_type[SENSOR_TYPE_ICON]  # type: ignore[no-any-return]
-
-    @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
         return self.data.state
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-        return self.sensor_type[SENSOR_TYPE_UOM]  # type: ignore[no-any-return]
 
     @property
     def available(self) -> bool:
