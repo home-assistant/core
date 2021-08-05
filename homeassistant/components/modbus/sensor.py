@@ -11,7 +11,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .base_platform import BaseStructPlatform
-from .const import MODBUS_DOMAIN
+from .const import CONF_STATE_CLASS, MODBUS_DOMAIN
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -47,6 +47,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
+        self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
 
     async def async_added_to_hass(self):
