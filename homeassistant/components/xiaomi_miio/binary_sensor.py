@@ -45,7 +45,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors = []
         if model in MODELS_HUMIDIFIER_MJJSQ:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         for description in BINARY_SENSOR_TYPES:
             if description.key not in sensors:
@@ -56,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     device,
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
-                    coordinator,
+                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
                     description,
                 )
             )
