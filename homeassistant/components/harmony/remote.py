@@ -83,6 +83,7 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         """Initialize HarmonyRemote class."""
         super().__init__()
         self._data = data
+        self._name = data.name
         self._state = None
         self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
@@ -91,10 +92,10 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         self.delay_secs = delay_secs
         self._last_activity = None
         self._config_path = out_path
-        self._attr_name = self._data.name
-        self._attr_unique_id = self._data.unique_id
-        self._attr_device_info = self._data.device_info(DOMAIN)
         self._attr_should_poll = False
+        self._attr_unique_id = data.unique_id
+        self._attr_device_info = self._data.device_info(DOMAIN)
+        self._attr_name = data.name
         self._attr_supported_features = SUPPORT_ACTIVITY
 
     async def _async_update_options(self, data):

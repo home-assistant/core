@@ -29,10 +29,11 @@ class HarmonyActivitySelect(ConnectionStateMixin, SelectEntity):
         """Initialize HarmonyActivitySelect class."""
         super().__init__()
         self._data = data
-        self._attr_name = name
+        self._name = name
+        self._attr_should_poll = False
         self._attr_unique_id = f"{self._data.unique_id}_activities"
         self._attr_device_info = self._data.device_info(DOMAIN)
-        self._attr_should_poll = False
+        self._attr_name = name
 
     @property
     def available(self):

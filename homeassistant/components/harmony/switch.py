@@ -33,14 +33,15 @@ class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
     def __init__(self, name: str, activity: dict, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySwitch class."""
         super().__init__()
+        self._name = name
         self._activity_name = activity["label"]
         self._activity_id = activity["id"]
         self._data = data
-        self._attr_name = name
-        self._attr_unique_id = f"activity_{self._activity_id}"
-        self._attr_device_info = self._data.device_info(DOMAIN)
-        self._attr_should_poll = False
         self._attr_entity_registry_enabled_default = False
+        self._attr_should_poll = False
+        self._attr_unique_id = f"activity_{self._activity_id}"
+        self._attr_name = name
+        self._attr_device_info = self._data.device_info(DOMAIN)
 
     @property
     def is_on(self):
