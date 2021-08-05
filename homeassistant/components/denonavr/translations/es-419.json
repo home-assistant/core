@@ -1,0 +1,15 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_audyssey": "Actualizar la configuraci\u00f3n de Audyssey",
+                    "zone2": "Configurar Zona 2",
+                    "zone3": "Configurar Zona 3"
+                },
+                "description": "Especificar configuraciones opcionales",
+                "title": "Receptores de red Denon AVR"
+            }
+        }
+    }
+}
