@@ -6,6 +6,7 @@ from pyuptimerobot import (
     UptimeRobotAccount,
     UptimeRobotApiError,
     UptimeRobotApiResponse,
+    UptimeRobotAuthenticationException,
     UptimeRobotException,
 )
 import voluptuous as vol
@@ -38,6 +39,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             response = await uptime_robot_api.async_get_account_details()
+        except UptimeRobotAuthenticationException as exception:
+            LOGGER.error(exception)
+            errors["base"] = "invalid_api_key"
         except UptimeRobotException as exception:
             LOGGER.error(exception)
             errors["base"] = "cannot_connect"
@@ -46,14 +50,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             if response.status != API_ATTR_OK:
-                if response.error.message in (
-                    "api_key not found.",
-                    "api_key is invalid.",
-                ):
-                    errors["base"] = "invalid_api_key"
-                else:
-                    errors["base"] = "unknown"
-                    LOGGER.error(response.error.message)
+                errors["base"] = "unknown"
+                LOGGER.error(response.error.message)
 
         account: UptimeRobotAccount | None = (
             response.data

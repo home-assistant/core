@@ -3,7 +3,10 @@ from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 from pyuptimerobot import UptimeRobotApiResponse
-from pyuptimerobot.exceptions import UptimeRobotException
+from pyuptimerobot.exceptions import (
+    UptimeRobotAuthenticationException,
+    UptimeRobotException,
+)
 
 from homeassistant import config_entries, setup
 from homeassistant.components.uptimerobot.const import DOMAIN
@@ -96,12 +99,7 @@ async def test_form_api_key_error(hass: HomeAssistant) -> None:
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=UptimeRobotApiResponse.from_dict(
-            {
-                "stat": "fail",
-                "error": {"message": "api_key not found."},
-            }
-        ),
+        side_effect=UptimeRobotAuthenticationException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -109,22 +107,6 @@ async def test_form_api_key_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["errors"] == {"base": "invalid_api_key"}
-
-    with patch(
-        "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=UptimeRobotApiResponse.from_dict(
-            {
-                "stat": "fail",
-                "error": {"message": "api_key is invalid."},
-            }
-        ),
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"api_key": "1234"},
-        )
-
-    assert result3["errors"] == {"base": "invalid_api_key"}
 
 
 async def test_form_api_error(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
