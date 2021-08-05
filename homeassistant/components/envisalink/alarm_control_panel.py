@@ -69,6 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             part_num,
             device_config_data[CONF_NAME],
             code,
+            device_config_data[CONF_CODE],
             panic_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
@@ -104,11 +105,16 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     """Representation of an Envisalink-based alarm panel."""
 
     def __init__(
-        self, hass, partition_number, alarm_name, code, panic_type, info, controller
+        self, hass, partition_number, alarm_name, code, partition_code, panic_type, info, controller
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
-        self._code = code
+
+        if partition_code == "":
+            self._code = code
+        else:
+            self._code = partition_code
+
         self._panic_type = panic_type
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
