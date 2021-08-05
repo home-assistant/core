@@ -654,7 +654,11 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
-            if group == [self.soco.uid] and self.sonos_group == [self]:
+            if (
+                group == [self.soco.uid]
+                and self.sonos_group == [self]
+                and self.sonos_group_entities
+            ):
                 # Skip updating existing single speakers in polling mode
                 return
 
