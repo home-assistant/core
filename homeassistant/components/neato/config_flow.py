@@ -52,11 +52,7 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create an entry for the flow. Update an entry if one already exist."""
         current_entries = self._async_current_entries()
-        if (
-            self.source != SOURCE_REAUTH
-            and current_entries
-            and CONF_TOKEN in current_entries[0].data
-        ):
+        if self.source == SOURCE_REAUTH and current_entries:
             # Update entry
             self.hass.config_entries.async_update_entry(
                 current_entries[0], title=self.flow_impl.name, data=data
