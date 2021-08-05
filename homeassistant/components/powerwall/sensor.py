@@ -14,8 +14,6 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    ATTR_ENERGY_EXPORTED,
-    ATTR_ENERGY_IMPORTED,
     ATTR_FREQUENCY,
     ATTR_INSTANT_AVERAGE_VOLTAGE,
     ATTR_INSTANT_TOTAL_CURRENT,
@@ -143,8 +141,6 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         return {
             ATTR_FREQUENCY: round(meter.frequency, 1),
-            ATTR_ENERGY_EXPORTED: meter.get_energy_exported(),
-            ATTR_ENERGY_IMPORTED: meter.get_energy_imported(),
             ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.average_voltage, 1),
             ATTR_INSTANT_TOTAL_CURRENT: meter.get_instant_total_current(),
             ATTR_IS_ACTIVE: meter.is_active(),
