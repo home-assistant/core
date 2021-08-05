@@ -228,17 +228,17 @@ class HomeAccessory(Accessory):
         self.config = config or {}
         domain = split_entity_id(entity_id)[0].replace("_", " ")
 
-        if ATTR_MANUFACTURER in self.config:
+        if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
-        elif ATTR_INTEGRATION in self.config:
+        elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
         else:
             manufacturer = f"{MANUFACTURER} {domain}".title()
-        if ATTR_MODEL in self.config:
+        if self.config.get(ATTR_MODEL) is not None:
             model = self.config[ATTR_MODEL]
         else:
             model = domain.title()
-        if ATTR_SOFTWARE_VERSION in self.config:
+        if self.config.get(ATTR_SOFTWARE_VERSION) is not None:
             sw_version = format_sw_version(self.config[ATTR_SOFTWARE_VERSION])
         else:
             sw_version = __version__
