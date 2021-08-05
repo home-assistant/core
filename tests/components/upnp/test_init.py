@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_ST,
@@ -49,6 +51,16 @@ class MockSsdpScanner(ssdp.Scanner):
         # Do nothing.
 
 
+@pytest.fixture
+def mock_ssdp_scanner():
+    """Mock ssdp Scanner."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner", MockSsdpScanner
+    ) as mock_ssdp_scanner:
+        yield mock_ssdp_scanner
+
+
+@pytest.mark.usefixtures("mock_ssdp_scanner")
 async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
     udn = "uuid:device_1"
@@ -74,9 +86,7 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
         # no upnp
     }
     async_create_device = AsyncMock(return_value=mock_device)
-    with patch.object(Device, "async_create_device", async_create_device), patch(
-        "homeassistant.components.ssdp.Scanner", MockSsdpScanner
-    ):
+    with patch.object(Device, "async_create_device", async_create_device):
         # Initialisation of component, no device discovered.
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
