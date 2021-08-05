@@ -80,7 +80,6 @@ class AgentCamera(MjpegCamera):
         self._removed = False
         self._attr_name = f"{device.client.name} {device.name}"
         self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
-        self._attr_should_poll = True
         super().__init__(device_info)
         self._attr_device_info = {
             "identifiers": {(AGENT_DOMAIN, self.unique_id)},
@@ -102,11 +101,14 @@ class AgentCamera(MjpegCamera):
             if self.device.client.is_available and not self._removed:
                 _LOGGER.error("%s lost", self.name)
                 self._removed = True
-        self._attr_available = self.device.client.is_available
         self._attr_icon = "mdi:camcorder-off"
         if self.is_on:
             self._attr_icon = "mdi:camcorder"
-        self._attr_extra_state_attributes = {
+
+    @property
+    def extra_state_attributes(self):
+        """Return the Agent DVR camera state attributes."""
+        return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             "editable": False,
             "enabled": self.is_on,
@@ -116,6 +118,11 @@ class AgentCamera(MjpegCamera):
             "has_ptz": self.device.has_ptz,
             "alerts_enabled": self.device.alerts_active,
         }
+
+    @property
+    def should_poll(self) -> bool:
+        """Update the state periodically."""
+        return True
 
     @property
     def is_recording(self) -> bool:
@@ -131,6 +138,11 @@ class AgentCamera(MjpegCamera):
     def is_detected(self) -> bool:
         """Return whether the monitor has alerted."""
         return self.device.detected
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.device.client.is_available
 
     @property
     def connected(self) -> bool:
