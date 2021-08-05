@@ -213,7 +213,7 @@ async def _async_initialize(
     )
 
     # fetch initial state
-    await hass.async_add_executor_job(device.update)
+    await device.async_update()
 
 
 @callback
