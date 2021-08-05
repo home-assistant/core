@@ -17,10 +17,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
 )
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASSES_SCHEMA,
-)
+from homeassistant.components.sensor import STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -152,20 +149,6 @@ def sensor_type_validator(value: Any) -> str | int:
     if isinstance(value, (str, int)) and DPTBase.parse_transcoder(value) is not None:
         return value
     raise vol.Invalid(f"value '{value}' is not a valid sensor type.")
-
-
-def sensor_type_sub_validator(entity_config: OrderedDict) -> OrderedDict:
-    """Validate a sensor entity options configuration."""
-    # validate that value is parsable as sensor type
-    sensor_type = entity_config[CONF_TYPE]
-    dpt_class = DPTBase.parse_transcoder(sensor_type)
-    if dpt_class is None:
-        raise vol.Invalid(f"value '{sensor_type}' is not a valid sensor type.")
-    # string sensors may not have a state_class
-    if dpt_class.value_type == "string":
-        entity_config[SensorSchema.CONF_STATE_CLASS] = None
-
-    return entity_config
 
 
 sync_state_validator = vol.Any(
@@ -746,20 +729,15 @@ class SensorSchema(KNXPlatformSchema):
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
-    ENTITY_SCHEMA = vol.All(
-        vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
-                vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_STATE_CLASS, default=STATE_CLASS_MEASUREMENT
-                ): vol.Maybe(STATE_CLASSES_SCHEMA),
-                vol.Required(CONF_TYPE): vol.Any(str, int),
-                vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
-            }
-        ),
-        sensor_type_sub_validator,
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
+            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+            vol.Required(CONF_TYPE): sensor_type_validator,
+            vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
+        }
     )
 
 
