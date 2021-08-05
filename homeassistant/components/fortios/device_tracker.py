@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): cv.string,
@@ -68,8 +68,8 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def __init__(self, fgt, fos_major_version, api_url) -> None:
         """Initialize the scanner."""
-        self._clients = {}
-        self._clients_json = {}
+        self._clients: dict = {}
+        self._clients_json: dict = {}
         self._fgt = fgt
         self._fos_major_version = fos_major_version
         self._api_url = api_url
