@@ -13,6 +13,8 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 from . import binary_sensor as binary_sensor_platform, sensor as sensor_platform
 from .const import CONF_TRIGGER, DOMAIN
 
+PACKAGE_MERGE_HINT = "list"
+
 CONFIG_SECTION_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_UNIQUE_ID): cv.string,
