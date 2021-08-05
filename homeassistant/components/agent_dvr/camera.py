@@ -80,6 +80,7 @@ class AgentCamera(MjpegCamera):
         self._removed = False
         self._attr_name = f"{device.client.name} {device.name}"
         self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
+        self._attr_should_poll = True
         super().__init__(device_info)
         self._attr_device_info = {
             "identifiers": {(AGENT_DOMAIN, self.unique_id)},
@@ -118,11 +119,6 @@ class AgentCamera(MjpegCamera):
             "has_ptz": self.device.has_ptz,
             "alerts_enabled": self.device.alerts_active,
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """Update the state periodically."""
-        return True
 
     @property
     def is_recording(self) -> bool:
