@@ -91,7 +91,7 @@ class RedditSensor(SensorEntity):
         self._limit = limit
         self._sort_by = sort_by
 
-        self._subreddit_data = []
+        self._subreddit_data: list = []
 
     @property
     def name(self):
