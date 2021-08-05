@@ -1,4 +1,5 @@
 """Support for Home Assistant Updater binary sensors."""
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -28,14 +29,14 @@ class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
         return "updater"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.coordinator.data:
             return None
         return self.coordinator.data.update_available
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict | None:
         """Return the optional state attributes."""
         if not self.coordinator.data:
             return None
