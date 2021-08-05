@@ -500,19 +500,21 @@ class YeelightDevice:
 
         return self._device_type
 
-    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
+    async def async_turn_on(
+        self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None
+    ):
         """Turn on device."""
         try:
-            self.bulb.turn_on(
+            await self.bulb.async_turn_on(
                 duration=duration, light_type=light_type, power_mode=power_mode
             )
         except BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
 
-    def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
+    async def async_turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         try:
-            self.bulb.turn_off(duration=duration, light_type=light_type)
+            await self.bulb.async_turn_off(duration=duration, light_type=light_type)
         except BulbException as ex:
             _LOGGER.error(
                 "Unable to turn the bulb off: %s, %s: %s", self._host, self.name, ex

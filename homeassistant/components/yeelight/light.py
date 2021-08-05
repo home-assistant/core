@@ -247,6 +247,19 @@ def _cmd(func):
     return _wrap
 
 
+def _async_cmd(func):
+    """Define a wrapper to catch exceptions from the bulb."""
+
+    async def _async_wrap(self, *args, **kwargs):
+        try:
+            _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
+            return await func(self, *args, **kwargs)
+        except BulbException as ex:
+            _LOGGER.error("Error when calling %s: %s", func, ex)
+
+    return _async_wrap
+
+
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
@@ -587,41 +600,41 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         else:
             self._bulb.stop_music()
 
-    @_cmd
-    def set_brightness(self, brightness, duration) -> None:
+    @_async_cmd
+    async def async_set_brightness(self, brightness, duration) -> None:
         """Set bulb brightness."""
         if brightness:
             _LOGGER.debug("Setting brightness: %s", brightness)
-            self._bulb.set_brightness(
+            await self._bulb.async_set_brightness(
                 brightness / 255 * 100, duration=duration, light_type=self.light_type
             )
 
-    @_cmd
-    def set_hs(self, hs_color, duration) -> None:
+    @_async_cmd
+    async def async_set_hs(self, hs_color, duration) -> None:
         """Set bulb's color."""
         if hs_color and COLOR_MODE_HS in self.supported_color_modes:
             _LOGGER.debug("Setting HS: %s", hs_color)
-            self._bulb.set_hsv(
+            self._bulb.async_set_hsv(
                 hs_color[0], hs_color[1], duration=duration, light_type=self.light_type
             )
 
-    @_cmd
-    def set_rgb(self, rgb, duration) -> None:
+    @_async_cmd
+    async def async_set_rgb(self, rgb, duration) -> None:
         """Set bulb's color."""
         if rgb and COLOR_MODE_RGB in self.supported_color_modes:
             _LOGGER.debug("Setting RGB: %s", rgb)
-            self._bulb.set_rgb(
+            self._bulb.async_set_rgb(
                 rgb[0], rgb[1], rgb[2], duration=duration, light_type=self.light_type
             )
 
-    @_cmd
-    def set_colortemp(self, colortemp, duration) -> None:
+    @_async_cmd
+    def async_set_colortemp(self, colortemp, duration) -> None:
         """Set bulb's color temperature."""
         if colortemp and COLOR_MODE_COLOR_TEMP in self.supported_color_modes:
             temp_in_k = mired_to_kelvin(colortemp)
             _LOGGER.debug("Setting color temp: %s K", temp_in_k)
 
-            self._bulb.set_color_temp(
+            self._bulb.async_set_color_temp(
                 temp_in_k, duration=duration, light_type=self.light_type
             )
 
@@ -630,8 +643,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set current options as default."""
         self._bulb.set_default()
 
-    @_cmd
-    def set_flash(self, flash) -> None:
+    @_async_cmd
+    async def async_set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
             if int(self._bulb.last_properties["color_mode"]) != 1:
@@ -661,12 +674,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
             flow = Flow(count=count, transitions=transitions)
             try:
-                self._bulb.start_flow(flow, light_type=self.light_type)
+                await self._bulb.async_start_flow(flow, light_type=self.light_type)
             except BulbException as ex:
                 _LOGGER.error("Unable to set flash: %s", ex)
 
-    @_cmd
-    def set_effect(self, effect) -> None:
+    @_async_cmd
+    async def async_set_effect(self, effect) -> None:
         """Activate effect."""
         if not effect:
             return
@@ -691,12 +704,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             return
 
         try:
-            self._bulb.start_flow(flow, light_type=self.light_type)
+            await self._bulb.async_start_flow(flow, light_type=self.light_type)
             self._effect = effect
         except BulbException as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
@@ -709,7 +722,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self.device.turn_on(
+        await self.device.async_turn_on(
             duration=duration,
             light_type=self.light_type,
             power_mode=self._turn_on_power_mode,
@@ -725,12 +738,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         try:
             # values checked for none in methods
-            self.set_hs(hs_color, duration)
-            self.set_rgb(rgb, duration)
-            self.set_colortemp(colortemp, duration)
-            self.set_brightness(brightness, duration)
-            self.set_flash(flash)
-            self.set_effect(effect)
+            await self.async_set_hs(hs_color, duration)
+            await self.async_set_rgb(rgb, duration)
+            await self.async_set_colortemp(colortemp, duration)
+            await self.async_set_brightness(brightness, duration)
+            await self.async_set_flash(flash)
+            await self.async_set_effect(effect)
         except BulbException as ex:
             _LOGGER.error("Unable to set bulb properties: %s", ex)
             return
@@ -743,13 +756,13 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
                 _LOGGER.error("Unable to set the defaults: %s", ex)
                 return
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn off."""
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self.device.turn_off(duration=duration, light_type=self.light_type)
+        await self.device.async_turn_off(duration=duration, light_type=self.light_type)
 
     def set_mode(self, mode: str):
         """Set a power mode."""
