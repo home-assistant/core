@@ -29,7 +29,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.cert_expiry.*",
     "homeassistant.components.climacell.*",
     "homeassistant.components.cloud.*",
-    "homeassistant.components.cloudflare.*",
     "homeassistant.components.config.*",
     "homeassistant.components.conversation.*",
     "homeassistant.components.deconz.*",
