@@ -1,14 +1,32 @@
 """Adds config flow for Yale Smart Alarm integration."""
 from __future__ import annotations
 
+from typing import Any
+
+import requests
 import voluptuous as vol
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import (
+    CONN_CLASS_CLOUD_POLL,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import (
+    CONF_AREA_ID,
+    CONF_LOCK_CODE_DIGITS,
+    DEFAULT_AREA_ID,
+    DEFAULT_LOCK_CODE_DIGITS,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -27,12 +45,19 @@ DATA_SCHEMA_AUTH = vol.Schema(
 )
 
 
-class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 1
+    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
-    entry: config_entries.ConfigEntry
+    entry: ConfigEntry
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> YaleOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return YaleOptionsFlowHandler(config_entry)
 
     async def async_step_import(self, config: dict):
         """Import a configuration from config.yaml."""
@@ -66,6 +91,14 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=DATA_SCHEMA,
                     errors={"base": "invalid_auth"},
                 )
+            except requests.HTTPError as error:
+                if "401 Client Error" in str(error):
+                    LOGGER.error("Authentication failed. Check credentials %s", error)
+                    return self.async_show_form(
+                        step_id="reauth_confirm",
+                        data_schema=DATA_SCHEMA,
+                        errors={"base": "invalid_auth"},
+                    )
 
             existing_entry = await self.async_set_unique_id(username)
             if existing_entry:
@@ -124,5 +157,43 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
+
+
+class YaleOptionsFlowHandler(OptionsFlow):
+    """Handle Yale options."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize Yale options flow."""
+        self.entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage Yale options."""
+        errors = {}
+
+        if user_input:
+            if len(user_input[CONF_CODE]) not in [0, user_input[CONF_LOCK_CODE_DIGITS]]:
+                errors["base"] = "code_format_mismatch"
+            else:
+                return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CODE, default=self.entry.options.get(CONF_CODE)
+                    ): str,
+                    vol.Optional(
+                        CONF_LOCK_CODE_DIGITS,
+                        default=self.entry.options.get(
+                            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
+                        ),
+                    ): int,
+                }
+            ),
             errors=errors,
         )
