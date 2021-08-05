@@ -24,7 +24,7 @@ async def validate_input(hass: HomeAssistant, data: ConfigType) -> UptimeRobotAc
     try:
         response = await uptime_robot_api.async_get_account_details()
     except UptimeRobotException as exception:
-        raise CannotConnect(exception)
+        raise CannotConnect(exception) from exception
     else:
         if response.status == API_ATTR_OK:
             return response.data

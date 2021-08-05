@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             response = await uptime_robot_api.async_get_monitors()
         except UptimeRobotException as exception:
-            raise UpdateFailed(exception)
+            raise UpdateFailed(exception) from exception
         else:
             if response.status == API_ATTR_OK:
                 monitors: list[UptimeRobotMonitor] = response.data
