@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
@@ -21,6 +22,13 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_NITROGEN_DIOXIDE,
+    DEVICE_CLASS_NITROGEN_MONOXIDE,
+    DEVICE_CLASS_NITROGEN_OXIDE,
+    DEVICE_CLASS_OZONE,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
@@ -51,6 +59,7 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 DEVICE_CLASSES: Final[list[str]] = [
+    DEVICE_CLASS_AQI,  # Air Quality Index
     DEVICE_CLASS_BATTERY,  # % of battery that is left
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
@@ -59,6 +68,13 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
+    DEVICE_CLASS_OZONE,  # Amount of O3 (ppm)
+    DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (ppm)
+    DEVICE_CLASS_NITROGEN_OXIDE,  # Amount of NO (ppm)
+    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (ppm)
+    DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm
+    DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm
+    DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
