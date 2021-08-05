@@ -6,8 +6,13 @@ DOMAIN: Final = "crownstone"
 PLATFORMS: Final = ["light"]
 
 # Listeners
-SSE: Final = "sse_listeners"
-UART: Final = "uart_listeners"
+SSE_LISTENERS: Final = "sse_listeners"
+UART_LISTENERS: Final = "uart_listeners"
+
+# Class attributes
+ATTR_SSE: Final = "sse"
+ATTR_UART: Final = "uart"
+ATTR_CLOUD: Final = "cloud"
 
 # Unique ID suffixes
 CROWNSTONE_SUFFIX: Final = "crownstone"

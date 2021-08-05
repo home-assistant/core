@@ -3,6 +3,13 @@ from __future__ import annotations
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone
 
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import CROWNSTONE_INCLUDE_TYPES, DOMAIN
@@ -28,9 +35,9 @@ class CrownstoneDevice:
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self.cloud_id)},
-            "name": self.device.name,
-            "manufacturer": "Crownstone",
-            "model": str(CROWNSTONE_INCLUDE_TYPES.get(self.device.type)),
-            "sw_version": self.device.sw_version,
+            ATTR_IDENTIFIERS: {(DOMAIN, self.cloud_id)},
+            ATTR_NAME: self.device.name,
+            ATTR_MANUFACTURER: "Crownstone",
+            ATTR_MODEL: str(CROWNSTONE_INCLUDE_TYPES.get(self.device.type)),
+            ATTR_SW_VERSION: self.device.sw_version,
         }

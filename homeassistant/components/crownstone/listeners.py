@@ -26,7 +26,13 @@ from crownstone_uart.topics.SystemTopics import SystemTopics
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, SIG_CROWNSTONE_STATE_UPDATE, SIG_UART_STATE_CHANGE, SSE, UART
+from .const import (
+    DOMAIN,
+    SIG_CROWNSTONE_STATE_UPDATE,
+    SIG_UART_STATE_CHANGE,
+    SSE_LISTENERS,
+    UART_LISTENERS,
+)
 
 if TYPE_CHECKING:
     from .entry_manager import CrownstoneEntryManager
@@ -123,7 +129,7 @@ def create_data_listeners(hass: HomeAssistant, manager: CrownstoneEntryManager) 
 
     # add SSE listeners to HA eventbus
     # save unsub function for when entry removed
-    manager.listeners[SSE] = [
+    manager.listeners[SSE_LISTENERS] = [
         hass.bus.async_listen(
             f"{DOMAIN}_{EVENT_SWITCH_STATE_UPDATE}", update_crwn_state_sse
         ),
@@ -132,7 +138,7 @@ def create_data_listeners(hass: HomeAssistant, manager: CrownstoneEntryManager) 
 
     # add UART listeners to UART eventbus
     # save subscription id to unsub, UartEventBus is a singleton
-    manager.listeners[UART] = [
+    manager.listeners[UART_LISTENERS] = [
         UartEventBus.subscribe(SystemTopics.connectionEstablished, update_uart_state),
         UartEventBus.subscribe(SystemTopics.connectionClosed, update_uart_state),
         UartEventBus.subscribe(UartTopics.newDataAvailable, update_crwn_state_uart),

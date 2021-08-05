@@ -25,7 +25,17 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_USB_PATH, CONF_USE_CROWNSTONE_USB, DOMAIN, PLATFORMS, SSE, UART
+from .const import (
+    ATTR_SSE,
+    ATTR_UART,
+    CONF_USB_PATH,
+    CONF_USE_CROWNSTONE_USB,
+    CROWNSTONE_USB,
+    DOMAIN,
+    PLATFORMS,
+    SSE_LISTENERS,
+    UART_LISTENERS,
+)
 from .helpers import get_port
 from .listeners import create_data_listeners
 
@@ -44,6 +54,7 @@ class CrownstoneEntryManager:
         self.hass = hass
         self.config_entry = config_entry
         self.listeners: dict[str, Any] = {}
+        self.usb_sphere_id: str | None = None
 
     async def async_setup(self) -> bool:
         """
@@ -122,6 +133,15 @@ class CrownstoneEntryManager:
                         "crownstone_usb_dongle_setup",
                     )
 
+        # Save in what sphere the Crownstone USB is if it was setup correctly
+        # Crownstones could only be switched using the USB if they are in the same sphere (using BLE)
+        # Assuming that the other spheres are different buildings
+        if hasattr(self, ATTR_UART):
+            for sphere in self.cloud.cloud_data:
+                for crownstone in sphere.crownstones:
+                    if crownstone.type == CROWNSTONE_USB:
+                        self.usb_sphere_id = sphere.cloud_id
+
         # Create listeners for SSE and UART
         create_data_listeners(self.hass, self)
 
@@ -148,15 +168,15 @@ class CrownstoneEntryManager:
             return True
 
         # stop services
-        if hasattr(self, "uart"):
+        if hasattr(self, ATTR_UART):
             self.uart.stop()
-        if hasattr(self, "sse"):
+        if hasattr(self, ATTR_SSE):
             self.sse.close_client()
 
         # Unsubscribe from listeners
-        for sse_unsub in self.listeners[SSE]:
+        for sse_unsub in self.listeners[SSE_LISTENERS]:
             sse_unsub()
-        for subscription_id in self.listeners[UART]:
+        for subscription_id in self.listeners[UART_LISTENERS]:
             UartEventBus.unsubscribe(subscription_id)
 
         # unload all platform entities
@@ -173,9 +193,9 @@ class CrownstoneEntryManager:
     def on_close(self, event: Event) -> None:
         """Close SSE client and uart bridge."""
         _LOGGER.debug(event.data)
-        if hasattr(self, "sse"):
+        if hasattr(self, ATTR_SSE):
             self.sse.close_client()
-        if hasattr(self, "uart"):
+        if hasattr(self, ATTR_UART):
             self.uart.stop()
 
 
