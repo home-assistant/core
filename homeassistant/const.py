@@ -248,6 +248,10 @@ DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
 
+# ### STATE CLASSES ####
+STATE_CLASS_MEASUREMENT: Final = "measurement"
+STATE_CLASS_NONE: Final = "none"
+
 # #### STATES ####
 STATE_ON: Final = "on"
 STATE_OFF: Final = "off"
@@ -392,6 +396,9 @@ ATTR_SUPPORTED_FEATURES: Final = "supported_features"
 
 # Class of device within its domain
 ATTR_DEVICE_CLASS: Final = "device_class"
+
+# Class of device state
+ATTR_STATE_CLASS: Final = "state_class"
 
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
