@@ -26,6 +26,7 @@ DOMAIN = "envisalink"
 
 DATA_EVL = "envisalink"
 
+CONF_DEVICE_CODE = "device_code"
 CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_VERSION = "evl_version"
 CONF_PANEL_TYPE = "panel_type"
@@ -79,6 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_CODE): cv.string,
+                vol.Optional(CONF_DEVICE_CODE): cv.string,
                 vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
                 vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
@@ -119,6 +121,7 @@ async def async_setup(hass, config):
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
     code = conf.get(CONF_CODE)
+    device_code = conf.get(CONF_DEVICE_CODE)
     panel_type = conf.get(CONF_PANEL_TYPE)
     panic_type = conf.get(CONF_PANIC)
     version = conf.get(CONF_EVL_VERSION)
@@ -221,7 +224,12 @@ async def async_setup(hass, config):
                 hass,
                 "alarm_control_panel",
                 "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
+                {
+                    CONF_PARTITIONS: partitions, 
+                    CONF_CODE: code, 
+                    CONF_PANIC: panic_type, 
+                    CONF_DEVICE_CODE: device_code,
+                },
                 config,
             )
         )
@@ -242,7 +250,10 @@ async def async_setup(hass, config):
         )
     if panel_type == "DSC":
         hass.services.async_register(
-            DOMAIN, SERVICE_DSC_CUSTOM_FUNCTION, handle_custom_function, schema=DSC_CUSTOM_FUNCTION_SCHEMA
+            DOMAIN,
+            SERVICE_DSC_CUSTOM_FUNCTION,
+            handle_custom_function,
+            schema=DSC_CUSTOM_FUNCTION_SCHEMA,
         )
 
     return True
