@@ -614,7 +614,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @_async_cmd
     async def async_set_default(self) -> None:
         """Set current options as default."""
-        self._bulb.async_set_default()
+        await self._bulb.async_set_default()
 
     @_async_cmd
     async def async_set_flash(self, flash) -> None:
