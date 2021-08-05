@@ -405,8 +405,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         self.config = device.config
 
         self._color_temp = None
-        self._hs = None
-        self._rgb = None
         self._effect = None
 
         model_specs = self._bulb.get_model_specs()
@@ -499,16 +497,18 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def hs_color(self) -> tuple:
         """Return the color property."""
-        return self._hs
+        return self._get_hs_from_properties()
 
     @property
     def rgb_color(self) -> tuple:
         """Return the color property."""
-        return self._rgb
+        return self._get_rgb_from_properties()
 
     @property
     def effect(self):
         """Return the current effect."""
+        if not self.device.is_color_flow_enabled:
+            return None
         return self._effect
 
     @property
@@ -558,12 +558,9 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Return yeelight device."""
         return self._device
 
-    def update(self):
+    async def async_update(self):
         """Update light properties."""
-        self._hs = self._get_hs_from_properties()
-        self._rgb = self._get_rgb_from_properties()
-        if not self.device.is_color_flow_enabled:
-            self._effect = None
+        await self.device.async_update()
 
     def _get_hs_from_properties(self):
         hue = self._get_property("hue")
@@ -655,7 +652,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
                 count = 1
                 duration = transition * 2
 
-            red, green, blue = color_util.color_hs_to_RGB(*self._hs)
+            red, green, blue = color_util.color_hs_to_RGB(*self.hs_color)
 
             transitions = []
             transitions.append(
