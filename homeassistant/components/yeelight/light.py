@@ -497,12 +497,27 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def hs_color(self) -> tuple:
         """Return the color property."""
-        return self._get_hs_from_properties()
+        hue = self._get_property("hue")
+        sat = self._get_property("sat")
+        if hue is None or sat is None:
+            return None
+
+        return (int(hue), int(sat))
 
     @property
     def rgb_color(self) -> tuple:
         """Return the color property."""
-        return self._get_rgb_from_properties()
+        rgb = self._get_property("rgb")
+
+        if rgb is None:
+            return None
+
+        rgb = int(rgb)
+        blue = rgb & 0xFF
+        green = (rgb >> 8) & 0xFF
+        red = (rgb >> 16) & 0xFF
+
+        return (red, green, blue)
 
     @property
     def effect(self):
@@ -561,27 +576,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_update(self):
         """Update light properties."""
         await self.device.async_update()
-
-    def _get_hs_from_properties(self):
-        hue = self._get_property("hue")
-        sat = self._get_property("sat")
-        if hue is None or sat is None:
-            return None
-
-        return (int(hue), int(sat))
-
-    def _get_rgb_from_properties(self):
-        rgb = self._get_property("rgb")
-
-        if rgb is None:
-            return None
-
-        rgb = int(rgb)
-        blue = rgb & 0xFF
-        green = (rgb >> 8) & 0xFF
-        red = (rgb >> 16) & 0xFF
-
-        return (red, green, blue)
 
     def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
