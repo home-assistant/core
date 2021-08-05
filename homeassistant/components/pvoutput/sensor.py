@@ -9,7 +9,6 @@ from homeassistant.components.rest.data import RestData
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -72,7 +71,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class PvoutputSensor(SensorEntity):
     """Representation of a PVOutput sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_unit_of_measurement = ENERGY_WATT_HOUR
 
