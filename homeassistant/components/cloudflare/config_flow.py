@@ -173,7 +173,6 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_records(self, user_input: dict | None = None):
         """Handle the picking the zone records."""
-        errors = {}
 
         if user_input is not None:
             self.cloudflare_config.update(user_input)
@@ -183,7 +182,6 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="records",
             data_schema=_records_schema(self.records),
-            errors=errors,
         )
 
     async def _async_validate_or_error(self, config):
