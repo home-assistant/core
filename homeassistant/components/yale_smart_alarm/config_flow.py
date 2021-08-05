@@ -140,6 +140,14 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_schema=DATA_SCHEMA,
                     errors={"base": "invalid_auth"},
                 )
+            except requests.HTTPError as error:
+                if "401 Client Error" in str(error):
+                    LOGGER.error("Authentication failed. Check credentials %s", error)
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=DATA_SCHEMA,
+                        errors={"base": "invalid_auth"},
+                    )
 
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()

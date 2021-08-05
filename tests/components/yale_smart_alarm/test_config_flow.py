@@ -1,9 +1,11 @@
 """Test the Yale Smart Living config flow."""
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+import requests
 from yalesmartalarmclient.client import AuthenticationError
 
 from homeassistant import config_entries
@@ -55,7 +57,14 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        (AuthenticationError,),
+        (requests.HTTPError("401 Client Error: Unauthorized for url"),),
+    ],
+)
+async def test_form_invalid_auth(hass: HomeAssistant, side_effect: Any) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,7 +72,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-        side_effect=AuthenticationError,
+        side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -188,7 +197,14 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_flow_invalid_login(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        (AuthenticationError,),
+        (requests.HTTPError("401 Client Error: Unauthorized for url"),),
+    ],
+)
+async def test_reauth_flow_invalid_login(hass: HomeAssistant, side_effect: Any) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -212,7 +228,7 @@ async def test_reauth_flow_invalid_login(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-        side_effect=AuthenticationError,
+        side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
