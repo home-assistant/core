@@ -152,6 +152,12 @@ class ZWaveBaseEntity(Entity):
             and self.info.node.status != NodeStatus.DEAD
         )
 
+    @property
+    def extra_state_attributes(self) -> Optional[Dict[str, str]]:
+	"""Return additional entity attributes"""
+    return {"node_id": self.info.node.node_id}
+
+
     @callback
     def _node_status_alive_or_dead(self, event_data: dict) -> None:
         """
