@@ -1077,7 +1077,7 @@ pytraccar==0.9.0
 pytradfri[async]==7.0.6
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==0.0.5
+pyuptimerobot==21.8.1
 
 # homeassistant.components.vera
 pyvera==0.3.13

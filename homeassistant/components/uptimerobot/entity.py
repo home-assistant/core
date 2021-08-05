@@ -1,6 +1,8 @@
 """Base UptimeRobot entity."""
 from __future__ import annotations
 
+from pyuptimerobot import UptimeRobotMonitor
+
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
@@ -8,7 +10,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTR_TARGET, ATTRIBUTION, DOMAIN, MonitorData
+from .const import ATTR_TARGET, ATTRIBUTION, DOMAIN
 
 
 class UptimeRobotEntity(CoordinatorEntity):
@@ -48,12 +50,12 @@ class UptimeRobotEntity(CoordinatorEntity):
         return {}
 
     @property
-    def monitors(self) -> list[MonitorData]:
+    def monitors(self) -> list[UptimeRobotMonitor]:
         """Return all monitors."""
         return self.coordinator.data or []
 
     @property
-    def monitor(self) -> MonitorData | None:
+    def monitor(self) -> UptimeRobotMonitor | None:
         """Return the monitor for this entity."""
         return next(
             (
@@ -67,7 +69,8 @@ class UptimeRobotEntity(CoordinatorEntity):
     @property
     def monitor_available(self) -> bool:
         """Returtn if the monitor is available."""
-        return self.monitor.status == 2 if self.monitor else False
+        status: bool = self.monitor.status == 2 if self.monitor else False
+        return status
 
     @property
     def available(self) -> bool:
