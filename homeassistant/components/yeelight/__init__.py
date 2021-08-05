@@ -572,6 +572,9 @@ class YeelightDevice:
     def _async_update_callback(self, data):
         """Update push from device."""
         self._available = data.get(KEY_CONNECTED, True)
+        _LOGGER.warning("_async_update_callback: %s", data)
+        if self.bulb:
+            _LOGGER.warning("Bulb props: %s", self.bulb.last_properties)
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 
