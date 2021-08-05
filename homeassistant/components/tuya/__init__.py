@@ -19,6 +19,7 @@ from tuya_iot import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.data_entry_flow import UnknownFlow, UnknownStep
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
@@ -251,8 +252,12 @@ async def async_setup(hass, config):
                 result = await hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
                 )
-            except Exception as e:
-                _LOGGER.error(e.args)
+            except UnknownFlow as flow:
+                _LOGGER.error(flow.args)
+            except UnknownStep as step:
+                _LOGGER.error(step.args)
+            except ValueError as err:
+                _LOGGER.error(err.args)
             _LOGGER.debug("Tuya async setup flow_init")
             return result
 
