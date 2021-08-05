@@ -19,7 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -193,7 +196,7 @@ async def _async_initialize(
     entry_data[DATA_DEVICE] = device
 
     # start listening for local pushes
-    await device.bulb.async_listen(device.update_callback)
+    await device.bulb.async_listen(device._async_update_callback)
 
     # register stop callback to shutdown listening for local pushes
     async def async_stop_listen_task(event):
@@ -210,7 +213,7 @@ async def _async_initialize(
     )
 
     # fetch initial state
-    await hass.async_add_executor_job(device.update)
+    asyncio.create_task(device.async_update())
 
 
 @callback
@@ -497,34 +500,36 @@ class YeelightDevice:
 
         return self._device_type
 
-    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
+    async def async_turn_on(
+        self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None
+    ):
         """Turn on device."""
         try:
-            self.bulb.turn_on(
+            await self.bulb.async_turn_on(
                 duration=duration, light_type=light_type, power_mode=power_mode
             )
         except BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
 
-    def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
+    async def async_turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         try:
-            self.bulb.turn_off(duration=duration, light_type=light_type)
+            await self.bulb.async_turn_off(duration=duration, light_type=light_type)
         except BulbException as ex:
             _LOGGER.error(
                 "Unable to turn the bulb off: %s, %s: %s", self._host, self.name, ex
             )
 
-    def _update_properties(self):
+    async def _async_update_properties(self):
         """Read new properties from the device."""
         if not self.bulb:
             return
 
         try:
-            self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
+            await self.bulb.async_get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
             if not self._initialized:
-                self._initialize_device()
+                await self._async_initialize_device()
         except BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
@@ -534,10 +539,10 @@ class YeelightDevice:
 
         return self._available
 
-    def _get_capabilities(self):
+    async def _async_get_capabilities(self):
         """Request device capabilities."""
         try:
-            self.bulb.get_capabilities()
+            await self._hass.async_add_executor_job(self.bulb.get_capabilities)
             _LOGGER.debug(
                 "Device %s, %s capabilities: %s",
                 self._host,
@@ -552,21 +557,24 @@ class YeelightDevice:
                 ex,
             )
 
-    def _initialize_device(self):
-        self._get_capabilities()
+    async def _async_initialize_device(self):
+        await self._async_get_capabilities()
         self._initialized = True
-        dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
+        async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
 
-    def update(self):
+    async def async_update(self):
         """Update device properties and send data updated signal."""
-        self._update_properties()
-        dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
+        if self._initialized and self._available:
+            # No need to poll, already connected
+            return
+        await self._async_update_properties()
+        async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
     @callback
-    def update_callback(self, data):
+    def _async_update_callback(self, data):
         """Update push from device."""
         self._available = data.get(KEY_CONNECTED, True)
-        dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
+        async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 
 class YeelightEntity(Entity):
@@ -604,11 +612,11 @@ class YeelightEntity(Entity):
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
-        return False
+        return True
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the entity."""
-        self._device.update()
+        await self._device.async_update()
 
 
 async def _async_get_device(
