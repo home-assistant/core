@@ -16,6 +16,7 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,8 +32,8 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
-    """Validate the configuration and return a FortiOSDeviceScanner."""
+def get_scanner(hass: HomeAssistant, config: dict) -> FortiOSDeviceScanner | None:
+    """Validate the configuration and return a FortiOSDeviceScanner or None if the validation failed."""
     host = config[DOMAIN][CONF_HOST]
     verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
     token = config[DOMAIN][CONF_TOKEN]
@@ -68,50 +69,45 @@ def get_scanner(hass, config):
 class FortiOSDeviceScanner(DeviceScanner):
     """This class queries a FortiOS unit for connected devices."""
 
-    def __init__(self, fgt, fos_major_version, api_url) -> None:
+    def __init__(self, fgt: FortiOSAPI, fos_major_version: int, api_url: str) -> None:
         """Initialize the scanner."""
-        self._clients: dict | list = {}
-        self._clients_json: dict | int = {}
+        self._clients: list[str]
+        self._clients_json = {}
         self._fgt = fgt
         self._fos_major_version = fos_major_version
         self._api_url = api_url
 
-    def update(self):
+    def update(self) -> None:
         """Update clients from the device."""
-        clients_json = self._fgt.monitor(self._api_url, "")
-        self._clients_json = clients_json
+        self._clients_json = self._fgt.monitor(self._api_url, "")
 
         self._clients = []
 
-        if clients_json:
+        if self._clients_json:
             if self._fos_major_version == 6:
-                for client in clients_json["results"]:
+                for client in self._clients_json["results"]:
                     if client["last_seen"] < 180:
                         self._clients.append(client["mac"].upper())
             elif self._fos_major_version == 7:
-                for client in clients_json["results"]:
+                for client in self._clients_json["results"]:
                     if client["is_online"]:
                         self._clients.append(client["mac"].upper())
 
-    def scan_devices(self):
+    def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         self.update()
         return self._clients
 
-    def get_device_name(self, device):
+    def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         _LOGGER.debug("Getting name of device %s", device)
 
-        device = device.lower()
-
-        data = self._clients_json
-
-        if data == 0:
+        if self._clients_json == 0:
             _LOGGER.error("No json results to get device names")
             return None
 
-        for client in data["results"]:
-            if client["mac"] == device:
+        for client in self._clients_json["results"]:
+            if client["mac"] == device.lower():
                 try:
                     name = ""
                     if self._fos_major_version == 6:
