@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_NAME,
+    CONF_STATE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
@@ -42,7 +43,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_STATE_CLASS = "state_class"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {

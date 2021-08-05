@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_STATE_CLASS,
     CONF_TYPE,
 )
 import homeassistant.helpers.config_validation as cv
@@ -725,7 +726,6 @@ class SensorSchema(KNXPlatformSchema):
 
     CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_STATE_CLASS = "state_class"
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
