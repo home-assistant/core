@@ -16,7 +16,7 @@ PORT_TCP = "127.0.1.0.1:3788"
 @pytest.fixture(name="controller_assert")
 def mock_controller_assert():
     """Mock the velbus controller with an assert."""
-    with patch("velbus.Controller", side_effect=Exception()):
+    with patch("velbusaio.Velbus", side_effect=Exception()):
         yield
 
 
@@ -24,7 +24,7 @@ def mock_controller_assert():
 def mock_controller():
     """Mock a successful velbus controller."""
     controller = Mock()
-    with patch("velbus.Controller", return_value=controller):
+    with patch("velbusaio.Velbus", return_value=controller):
         yield controller
 
 
