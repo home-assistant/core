@@ -34,8 +34,8 @@ class VelbusLight(VelbusEntity, LightEntity):
     @property
     def name(self):
         """Return the display name of this entity."""
-        # if self._module.light_is_buttonled(self._channel):
-        #    return f"LED {self._module.get_name(self._channel)}"
+        if self._channel.light_is_buttonled():
+            return f"LED {self._channel.get_name()}"
         return self._channel.get_name()
 
     @property
@@ -64,7 +64,7 @@ class VelbusLight(VelbusEntity, LightEntity):
 
     def turn_on(self, **kwargs):
         """Instruct the Velbus light to turn on."""
-        if self._module.light_is_buttonled(self._channel):
+        if self._channel.light_is_buttonled(self._channel):
             if ATTR_FLASH in kwargs:
                 if kwargs[ATTR_FLASH] == FLASH_LONG:
                     attr, *args = "set_led_state", self._channel, "slow"

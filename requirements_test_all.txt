@@ -1313,7 +1313,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.velbus
-velbus-aio==2021.8.1
+velbus-aio==2021.8.2
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
