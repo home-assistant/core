@@ -7,7 +7,11 @@ from typing import NamedTuple, cast
 
 import pyatmo
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -81,6 +85,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="temp_trend",
@@ -96,6 +101,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CO2,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="pressure",
@@ -104,6 +110,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         unit_of_measurement=PRESSURE_MBAR,
         device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="pressure_trend",
@@ -119,6 +126,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         unit_of_measurement=SOUND_PRESSURE_DB,
         icon="mdi:volume-high",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="humidity",
@@ -127,6 +135,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="rain",
@@ -159,6 +168,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="windangle",
@@ -174,6 +184,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="windstrength",
@@ -182,6 +193,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="gustangle",
@@ -197,6 +209,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="guststrength",
@@ -205,6 +218,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="reachable",
@@ -227,6 +241,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="wifi_status",
@@ -242,6 +257,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
         key="health_idx",
