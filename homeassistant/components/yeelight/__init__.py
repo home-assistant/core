@@ -562,7 +562,7 @@ class YeelightDevice:
 
     async def async_update(self):
         """Update device properties and send data updated signal."""
-        if self._available:
+        if self._initialized and self._available:
             # No need to poll, already connected
             return
         await self._async_update_properties()
