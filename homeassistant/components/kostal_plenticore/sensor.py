@@ -7,7 +7,7 @@ from typing import Any, Callable
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_STATE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -178,6 +178,8 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._sensor_data.get(ATTR_DEVICE_CLASS)
+
+    @property                                                                                               def state_class(self) -> str | None:                                                                        """Return the class of the state of this device, from component STATE_CLASSES."""                       return self._sensor_data.get(ATTR_STATE_CLASS)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
