@@ -7,7 +7,7 @@ import logging
 
 import voluptuous as vol
 from yeelight import BulbException, discover_bulbs
-from yeelight.aio import AsyncBulb
+from yeelight.aio import KEY_CONNECTED, AsyncBulb
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
@@ -565,7 +565,7 @@ class YeelightDevice:
     @callback
     def update_callback(self, data):
         """Update push from device."""
-        self._available = True
+        self._available = data.get(KEY_CONNECTED, True)
         dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 
