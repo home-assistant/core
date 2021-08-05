@@ -70,28 +70,44 @@ SENSOR_PROCESS_DATA = [
         "devices:local",
         "HomeGrid_P",
         "Home Power from Grid",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "HomeOwn_P",
         "Home Power from Own",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "HomePv_P",
         "Home Power from PV",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "Home_P",
         "Home Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -110,28 +126,44 @@ SENSOR_PROCESS_DATA = [
         "devices:local:pv1",
         "P",
         "DC1 Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local:pv2",
         "P",
         "DC2 Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local:pv3",
         "P",
         "DC3 Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "PV2Bat_P",
         "PV to Battery Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -152,7 +184,11 @@ SENSOR_PROCESS_DATA = [
         "devices:local:battery",
         "P",
         "Battery Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER, ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -180,7 +216,11 @@ SENSOR_PROCESS_DATA = [
         "scb:statistic:EnergyFlow",
         "Statistic:Autarky:Total",
         "Autarky Total",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut", ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_ICON: "mdi:chart-donut",
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -208,7 +248,11 @@ SENSOR_PROCESS_DATA = [
         "scb:statistic:EnergyFlow",
         "Statistic:OwnConsumptionRate:Total",
         "Own Consumption Rate Total",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut", ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_ICON: "mdi:chart-donut",
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -378,7 +422,6 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-
         },
         "format_energy",
     ),
@@ -569,11 +612,5 @@ SENSOR_SETTINGS_DATA = [
         {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
         "format_round",
     ),
-    (
-        "devices:local",
-        "Battery:Strategy",
-        "Battery Strategy",
-        {},
-        "format_round",
-    ),
+    ("devices:local", "Battery:Strategy", "Battery Strategy", {}, "format_round"),
 ]
