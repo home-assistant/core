@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Akun sudah dikonfigurasi",
+            "ezviz_cloud_account_missing": "Akun cloud Ezviz tidak tersedia. Konfigurasi ulang akun cloud Ezviz",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_host": "Nama host atau alamat IP tidak valid"
+        },
+        "flow_title": "{serial}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan kredensial RTSP untuk kamera Ezviz {serial} dengan IP {ip_address}",
+                "title": "Kamera Ezviz yang ditemukan"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "url": "URL",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Hubungkan ke Ezviz Cloud"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "url": "URL",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Tentukan URL wilayah Anda secara manual",
+                "title": "Hubungkan ke URL Ezviz khusus"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumen yang diteruskan ke ffmpeg untuk kamera",
+                    "timeout": "Tenggang Waktu Permintaan (detik)"
+                }
+            }
+        }
+    }
+}

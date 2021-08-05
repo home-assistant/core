@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "account_locked": "Konto zablokowane. Spr\u00f3buj ponownie p\u00f3\u017aniej.",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Adres e-mail",
+                    "password": "Has\u0142o",
+                    "region": "Region"
+                },
+                "description": "Wprowad\u017a adres e-mail i has\u0142o, kt\u00f3rych u\u017cywasz do logowania si\u0119 do aplikacji mobilnej MyMazda.",
+                "title": "Mazda Connected Services - Dodawanie konta"
+            }
+        }
+    },
+    "title": "Mazda Connected Services"
+}

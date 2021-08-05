@@ -1,14 +1,17 @@
 """Tests for the EE BrightBox device scanner."""
 from datetime import datetime
+from unittest.mock import patch
 
-from eebrightbox import EEBrightBoxException
+# Integration is disabled
+# from eebrightbox import EEBrightBoxException
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
 
 
 def _configure_mock_get_devices(eebrightbox_mock):
@@ -44,7 +47,8 @@ def _configure_mock_get_devices(eebrightbox_mock):
 
 def _configure_mock_failed_config_check(eebrightbox_mock):
     eebrightbox_instance = eebrightbox_mock.return_value
-    eebrightbox_instance.__enter__.side_effect = EEBrightBoxException(
+    # Integration is disabled
+    eebrightbox_instance.__enter__.side_effect = EEBrightBoxException(  # noqa: F821
         "Failed to connect to the router"
     )
 

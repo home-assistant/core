@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Port serveru je ji\u017e pou\u017e\u00edv\u00e1n.",
+            "start_server_failed": "Spu\u0161t\u011bn\u00ed serveru se nezda\u0159ilo."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "\u010casov\u00fd limit (v minut\u00e1ch)"
+                }
+            }
+        }
+    }
+}

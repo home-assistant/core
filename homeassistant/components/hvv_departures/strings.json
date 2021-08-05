@@ -1,13 +1,12 @@
 {
-  "title": "HVV Departures",
   "config": {
     "step": {
       "user": {
         "title": "Connect to the HVV API",
         "data": {
-          "host": "Host",
-          "username": "Username",
-          "password": "Password"
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "station": {
@@ -24,12 +23,12 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_results": "No results. Try with a different station/address"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {

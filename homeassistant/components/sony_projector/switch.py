@@ -65,7 +65,7 @@ class SonyProjector(SwitchEntity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return state attributes."""
         return self._attributes
 

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Ingen LIFX-enheter funnet p\u00e5 nettverket.",
-            "single_instance_allowed": "Kun en konfigurasjon av LIFX er mulig."
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "step": {
             "confirm": {

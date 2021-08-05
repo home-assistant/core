@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "OVO Energy: {username}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                },
+                "description": "OVO Energy\uc5d0 \ub300\ud55c \uc778\uc99d\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4. \ud604\uc7ac \uc790\uaca9 \uc99d\uba85\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "\uc7ac\uc778\uc99d"
+            },
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "\uc5d0\ub108\uc9c0 \uc0ac\uc6a9\ub7c9\uc5d0 \uc811\uadfc\ud558\ub824\uba74 OVO Energy \uc778\uc2a4\ud134\uc2a4\ub97c \uc124\uc815\ud574\uc8fc\uc138\uc694.",
+                "title": "OVO Energy \uacc4\uc815 \ucd94\uac00\ud558\uae30"
+            }
+        }
+    }
+}

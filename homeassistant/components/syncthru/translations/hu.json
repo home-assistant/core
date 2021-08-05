@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "invalid_url": "\u00c9rv\u00e9nytelen URL"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "N\u00e9v",
+                    "url": "Webes fel\u00fclet URL-je"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "N\u00e9v",
+                    "url": "Webes fel\u00fclet URL-je"
+                }
+            }
+        }
+    }
+}

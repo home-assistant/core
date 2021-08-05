@@ -1,8 +1,9 @@
 """Common methods used across the tests for ring devices."""
+from unittest.mock import patch
+
 from homeassistant.components.ring import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

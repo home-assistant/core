@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "If [%key:common::config_flow::data::latitude%] and [%key:common::config_flow::data::longitude%] are not provided, the default values in the Home Assistant configuration will be used. An entity will be created for each forecast type but only the ones you select will be enabled by default.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_version": "API Version",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "rate_limited": "Currently rate limited, please try again later."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update [%key:component::climacell::title%] Options",
+        "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+        "data": {
+          "timestep": "Min. Between NowCast Forecasts"
+        }
+      }
+    }
+  }
+}

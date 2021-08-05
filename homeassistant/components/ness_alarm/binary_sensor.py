@@ -1,6 +1,4 @@
 """Support for Ness D8X/D16X zone states - represented as binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,8 +11,6 @@ from . import (
     SIGNAL_ZONE_CHANGED,
     ZoneChangedData,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

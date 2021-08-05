@@ -1,25 +1,29 @@
 """Common vera code."""
-import logging
-from typing import DefaultDict, List, NamedTuple, Set
+from __future__ import annotations
+
+from collections import defaultdict
+from typing import NamedTuple
 
 import pyvera as pv
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import call_later
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
 class ControllerData(NamedTuple):
     """Controller data."""
 
     controller: pv.VeraController
-    devices: DefaultDict[str, List[pv.VeraDevice]]
-    scenes: List[pv.VeraScene]
+    devices: defaultdict[str, list[pv.VeraDevice]]
+    scenes: list[pv.VeraScene]
+    config_entry: ConfigEntry
 
 
-def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
+def get_configured_platforms(controller_data: ControllerData) -> set[str]:
     """Get configured platforms for a controller."""
     platforms = []
     for platform in controller_data.devices:
@@ -29,6 +33,20 @@ def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
         platforms.append(SCENE_DOMAIN)
 
     return set(platforms)
+
+
+def get_controller_data(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> ControllerData:
+    """Get controller data from hass data."""
+    return hass.data[DOMAIN][config_entry.entry_id]
+
+
+def set_controller_data(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: ControllerData
+) -> None:
+    """Set controller data in hass data."""
+    hass.data[DOMAIN][config_entry.entry_id] = data
 
 
 class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):

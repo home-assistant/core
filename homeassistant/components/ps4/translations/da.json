@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "credential_error": "Fejl ved hentning af legitimationsoplysninger.",
-            "devices_configured": "Alle de fundne enheder er allerede konfigureret.",
             "no_devices_found": "Der blev ikke fundet nogen PlayStation 4-enheder p\u00e5 netv\u00e6rket.",
             "port_987_bind_error": "Kunne ikke binde til port 987. Se [dokumentationen](https://www.home-assistant.io/components/ps4/) for yderligere oplysninger.",
             "port_997_bind_error": "Kunne ikke binde til port 997. Se [dokumentationen](https://www.home-assistant.io/components/ps4/) for yderligere oplysninger."
@@ -10,8 +9,7 @@
         "error": {
             "credential_timeout": "Tjenesten for legitimationsoplysninger fik timeout. Tryk p\u00e5 send for at genstarte.",
             "login_failed": "Kunne ikke parre med PlayStation 4. Kontroller PIN er korrekt.",
-            "no_ipaddress": "Indtast IP-adressen p\u00e5 den PlayStation 4, du gerne vil konfigurere.",
-            "not_ready": "PlayStation 4 er ikke t\u00e6ndt eller tilsluttet til netv\u00e6rket."
+            "no_ipaddress": "Indtast IP-adressen p\u00e5 den PlayStation 4, du gerne vil konfigurere."
         },
         "step": {
             "creds": {

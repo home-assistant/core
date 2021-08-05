@@ -1,11 +1,14 @@
 """Const file for Tesla cars."""
+CONF_EXPIRATION = "expiration"
 CONF_WAKE_ON_START = "enable_wake_on_start"
+CONF_MFA = "mfa"
 DOMAIN = "tesla"
 DATA_LISTENER = "listener"
 DEFAULT_SCAN_INTERVAL = 660
 DEFAULT_WAKE_ON_START = False
 MIN_SCAN_INTERVAL = 60
-TESLA_COMPONENTS = [
+
+PLATFORMS = [
     "sensor",
     "lock",
     "climate",
@@ -13,6 +16,7 @@ TESLA_COMPONENTS = [
     "device_tracker",
     "switch",
 ]
+
 ICONS = {
     "battery sensor": "mdi:battery",
     "range sensor": "mdi:gauge",

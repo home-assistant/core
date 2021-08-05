@@ -1,0 +1,105 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon om Z-Wave JS-tillegg",
+            "addon_info_failed": "Kunne ikke hente informasjon om Z-Wave JS-tillegg",
+            "addon_install_failed": "Kunne ikke installere Z-Wave JS-tillegg",
+            "addon_set_config_failed": "Kunne ikke angi Z-Wave JS-konfigurasjon",
+            "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegget.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "error": {
+            "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegg. Sjekk konfigurasjonen.",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_ws_url": "Ugyldig websocket URL",
+            "unknown": "Uventet feil"
+        },
+        "progress": {
+            "install_addon": "Vent mens installasjonen av Z-Wave JS-tillegg er ferdig. Dette kan ta flere minutter.",
+            "start_addon": "Vent mens Z-Wave JS-tillegget er ferdig startet. Dette kan ta noen sekunder."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Nettverksn\u00f8kkel",
+                    "usb_path": "USB enhetsbane"
+                },
+                "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
+            },
+            "hassio_confirm": {
+                "title": "Sett opp Z-Wave JS-integrasjon med Z-Wave JS-tillegg"
+            },
+            "install_addon": {
+                "title": "Installasjon av Z-Wave JS-tillegg har startet"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Bruk Z-Wave JS Supervisor-tillegg"
+                },
+                "description": "Vil du bruke Z-Wave JS Supervisor-tillegg?",
+                "title": "Velg tilkoblingsmetode"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS-tillegget starter"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon om Z-Wave JS-tillegg",
+            "addon_info_failed": "Kunne ikke hente informasjon om Z-Wave JS-tillegg",
+            "addon_install_failed": "Kunne ikke installere Z-Wave JS-tillegg",
+            "addon_set_config_failed": "Kunne ikke angi Z-Wave JS-konfigurasjon",
+            "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegget.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "different_device": "Den tilkoblede USB-enheten er ikke den samme som tidligere konfigurert for denne konfigurasjonsoppf\u00f8ringen. Opprett i stedet en ny konfigurasjonsoppf\u00f8ring for den nye enheten."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_ws_url": "Ugyldig URL-adresse for websocket",
+            "unknown": "Uventet feil"
+        },
+        "progress": {
+            "install_addon": "Vent mens installasjonen av Z-Wave JS-tillegg er ferdig. Dette kan ta flere minutter.",
+            "start_addon": "Vent mens Z-Wave JS-tillegget er ferdig startet. Dette kan ta noen sekunder."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emuler maskinvare",
+                    "log_level": "Loggniv\u00e5",
+                    "network_key": "Nettverksn\u00f8kkel",
+                    "usb_path": "USB enhetsbane"
+                },
+                "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
+            },
+            "install_addon": {
+                "title": "Installasjon av Z-Wave JS-tillegg har startet"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Bruk Z-Wave JS Supervisor-tillegg"
+                },
+                "description": "Vil du bruke Z-Wave JS Supervisor-tillegg?",
+                "title": "Velg tilkoblingsmetode"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS-tillegget starter"
+            }
+        }
+    },
+    "title": ""
+}

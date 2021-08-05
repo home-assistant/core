@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schon am gaang",
+            "auth_new_token_not_granted_error": "Nei erstallte Jeton ass net an der Hyperion UI accord\u00e9iert",
+            "auth_new_token_not_work_error": "Feeler bei der Authentifikatioun mam nei erstallte Jeton",
+            "auth_required_error": "Feeler beim best\u00ebmmen ob Autorisatioun erfuerderlech ass",
+            "cannot_connect": "Feeler beim verbannen",
+            "no_id": "D\u00ebs Hyperion Ambilight Instanz huet seng ID net gemellt."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_access_token": "Ong\u00ebltegen Acc\u00e8s Jeton"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Neie Jeton automatesch erstellen",
+                    "token": "oder scho bestehenden Jeton uginn"
+                },
+                "description": "Autorisatioun mat dengem Hyperion Ambilight Server konfigur\u00e9ieren"
+            },
+            "confirm": {
+                "description": "Soll d\u00ebsen Hyperion Ambilight am Home Assistant dob\u00e4i gesaat ginn?\n\n**Host:** {host}\n**Port:** {port}\n**ID**: {id}",
+                "title": "Dob\u00e4isetzen vum Hyperion Ambilight Service best\u00e4tegen"
+            },
+            "create_token": {
+                "description": "Klick **Ofsch\u00e9cken** fir een neien Authentifikatioun's Jeton unzefroen. Du g\u00ebss dann an Hyperion UI weidergeleet fir d'Ufro z'accord\u00e9ieren. Iwwerpr\u00e9if dass d\u00e9i ugewisen id \"{auth_id}\" ass.",
+                "title": "Neien Authentifikatioun's Jeton automatesch erstellen"
+            },
+            "create_token_external": {
+                "title": "Neie Jeton an der Hyperion UI accord\u00e9ieren"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "priority": "Hyperion Priorit\u00e9it fir Faarwen an Effekter"
+                }
+            }
+        }
+    }
+}

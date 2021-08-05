@@ -1,7 +1,7 @@
 """Constants used by the Withings component."""
 from enum import Enum
 
-import homeassistant.const as const
+from homeassistant import const
 
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
@@ -55,6 +55,7 @@ class Measurement(Enum):
     WEIGHT_KG = "weight_kg"
 
 
+SCORE_POINTS = "points"
 UOM_BEATS_PER_MINUTE = "bpm"
 UOM_BREATHS_PER_MINUTE = f"br/{const.TIME_MINUTES}"
 UOM_FREQUENCY = "times"

@@ -6,20 +6,20 @@ from btlewrap.base import BluetoothBackendException
 from mitemp_bt import mitemp_bt_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_MAC,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    CONF_TIMEOUT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 try:
     import bluepy.btle  # noqa: F401 pylint: disable=unused-import
@@ -34,7 +34,6 @@ CONF_ADAPTER = "adapter"
 CONF_CACHE = "cache_value"
 CONF_MEDIAN = "median"
 CONF_RETRIES = "retries"
-CONF_TIMEOUT = "timeout"
 
 DEFAULT_ADAPTER = "hci0"
 DEFAULT_UPDATE_INTERVAL = 300
@@ -48,8 +47,8 @@ DEFAULT_TIMEOUT = 10
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     "temperature": [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
-    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", UNIT_PERCENTAGE],
-    "battery": [DEVICE_CLASS_BATTERY, "Battery", UNIT_PERCENTAGE],
+    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", PERCENTAGE],
+    "battery": [DEVICE_CLASS_BATTERY, "Battery", PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -104,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class MiTempBtSensor(Entity):
+class MiTempBtSensor(SensorEntity):
     """Implementing the MiTempBt sensor."""
 
     def __init__(self, poller, parameter, device, name, unit, force_update, median):

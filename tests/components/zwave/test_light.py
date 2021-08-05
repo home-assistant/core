@@ -1,4 +1,6 @@
 """Test Z-Wave lights."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant.components import zwave
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,7 +16,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.zwave import const, light
 
-from tests.async_mock import MagicMock, patch
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "invalid_discovery_topic": "\u00c9rv\u00e9nytelen felfedez\u00e9si t\u00e9ma el\u0151tag."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Felder\u00edt\u00e9si t\u00e9ma el\u0151tagja"
+                },
+                "description": "Add meg a Tasmota konfigur\u00e1ci\u00f3t.",
+                "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Tasmota-t?"
+            }
+        }
+    }
+}

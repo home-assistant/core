@@ -16,7 +16,7 @@
 <!--
   Provide details about the versions you are using, which helps us to reproduce
   and find the issue quicker. Version information is found in the
-  Home Assistant frontend: Developer tools -> Info.
+  Home Assistant frontend: Configuration -> Info.
 -->
 
 - Home Assistant Core release with the issue: 

@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Gagal terhubung",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "select_single": "Pilih satu opsi."
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "Alamat IP",
+                    "port": "Port"
+                },
+                "description": "Konfigurasikan Insteon Hub Versio 1 (pra-2014).",
+                "title": "Insteon Hub Versi 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Alamat IP",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Konfigurasikan Insteon Hub Versi 2.",
+                "title": "Insteon Hub Versi 2"
+            },
+            "plm": {
+                "data": {
+                    "device": "Jalur Perangkat USB"
+                },
+                "description": "Konfigurasikan Insteon PowerLink Modem (PLM).",
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Jenis modem."
+                },
+                "description": "Pilih jenis modem Insteon.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "input_error": "Entri tidak valid, periksa nilai Anda.",
+            "select_single": "Pilih satu opsi."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Alamat perangkat (yaitu 1a2b3c)",
+                    "cat": "Kategori perangkat (mis. 0x10)",
+                    "subcat": "Subkategori perangkat (mis. 0x0a)"
+                },
+                "description": "Tambahkan penimpaan nilai perangkat.",
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "Kode rumah (a - p)",
+                    "platform": "Platform",
+                    "steps": "Langkah peredup (hanya untuk perangkat ringan, nilai bawaan adalah 22)",
+                    "unitcode": "Unitcode (1 - 16)"
+                },
+                "description": "Ubah kata sandi Insteon Hub.",
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "Alamat IP",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Ubah informasi koneksi Insteon Hub. Anda harus memulai ulang Home Assistant setelah melakukan perubahan ini. Ini tidak mengubah konfigurasi Hub itu sendiri. Untuk mengubah konfigurasi di Hub, gunakan aplikasi Hub.",
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "Tambahkan penimpaan nilai perangkat.",
+                    "add_x10": "Tambahkan perangkat X10.",
+                    "change_hub_config": "Ubah konfigurasi Hub.",
+                    "remove_override": "Hapus penimpaan nilai perangkat.",
+                    "remove_x10": "Hapus perangkat X10."
+                },
+                "description": "Pilih opsi untuk dikonfigurasi.",
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Pilih alamat perangkat untuk dihapus"
+                },
+                "description": "Hapus penimpaan nilai perangkat",
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Pilih alamat perangkat untuk dihapus"
+                },
+                "description": "Hapus perangkat X10",
+                "title": "Insteon"
+            }
+        }
+    }
+}

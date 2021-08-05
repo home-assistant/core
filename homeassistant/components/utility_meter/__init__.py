@@ -76,7 +76,7 @@ async def async_setup(hass, config):
                     hass,
                     SENSOR_DOMAIN,
                     DOMAIN,
-                    [{CONF_METER: meter, CONF_NAME: meter}],
+                    [{CONF_METER: meter, CONF_NAME: conf.get(CONF_NAME, meter)}],
                     config,
                 )
             )
@@ -165,7 +165,7 @@ class TariffSelect(RestoreEntity):
         return self._current_tariff
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_TARIFFS: self._tariffs}
 

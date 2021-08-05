@@ -6,10 +6,9 @@ from pysuez import SuezClient
 from pysuez.client import PySuezError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, VOLUME_LITERS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 CONF_COUNTER_ID = "counter_id"
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SuezSensor(client)], True)
 
 
-class SuezSensor(Entity):
+class SuezSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, client):
@@ -73,7 +72,7 @@ class SuezSensor(Entity):
         return VOLUME_LITERS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

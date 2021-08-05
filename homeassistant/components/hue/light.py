@@ -29,10 +29,21 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import color
 
-from .const import DOMAIN as HUE_DOMAIN, REQUEST_REFRESH_DELAY
+from .const import (
+    DOMAIN as HUE_DOMAIN,
+    GROUP_TYPE_LIGHT_GROUP,
+    GROUP_TYPE_LIGHT_SOURCE,
+    GROUP_TYPE_LUMINAIRE,
+    GROUP_TYPE_ROOM,
+    REQUEST_REFRESH_DELAY,
+)
 from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -70,24 +81,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
 
 
-def create_light(item_class, coordinator, bridge, is_group, api, item_id):
+def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id):
     """Create the light."""
+    api_item = api[item_id]
+
     if is_group:
         supported_features = 0
-        for light_id in api[item_id].lights:
+        for light_id in api_item.lights:
             if light_id not in bridge.api.lights:
                 continue
             light = bridge.api.lights[light_id]
             supported_features |= SUPPORT_HUE.get(light.type, SUPPORT_HUE_EXTENDED)
         supported_features = supported_features or SUPPORT_HUE_EXTENDED
     else:
-        supported_features = SUPPORT_HUE.get(api[item_id].type, SUPPORT_HUE_EXTENDED)
-    return item_class(coordinator, bridge, is_group, api[item_id], supported_features)
+        supported_features = SUPPORT_HUE.get(api_item.type, SUPPORT_HUE_EXTENDED)
+    return item_class(
+        coordinator, bridge, is_group, api_item, supported_features, rooms
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Hue lights from a config entry."""
     bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
+    rooms = {}
+
+    allow_groups = bridge.allow_groups
+    supports_groups = api_version >= GROUP_MIN_API_VERSION
+    if allow_groups and not supports_groups:
+        _LOGGER.warning("Please update your Hue bridge to support groups")
 
     light_coordinator = DataUpdateCoordinator(
         hass,
@@ -107,27 +129,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if not light_coordinator.last_update_success:
         raise PlatformNotReady
 
-    update_lights = partial(
-        async_update_items,
-        bridge,
-        bridge.api.lights,
-        {},
-        async_add_entities,
-        partial(create_light, HueLight, light_coordinator, bridge, False),
-    )
-
-    # We add a listener after fetching the data, so manually trigger listener
-    bridge.reset_jobs.append(light_coordinator.async_add_listener(update_lights))
-    update_lights()
-
-    api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
-
-    allow_groups = bridge.allow_groups
-    if allow_groups and api_version < GROUP_MIN_API_VERSION:
-        _LOGGER.warning("Please update your Hue bridge to support groups")
-        allow_groups = False
-
-    if not allow_groups:
+    if not supports_groups:
+        update_lights_without_group_support = partial(
+            async_update_items,
+            bridge,
+            bridge.api.lights,
+            {},
+            async_add_entities,
+            partial(create_light, HueLight, light_coordinator, bridge, False, rooms),
+            None,
+        )
+        # We add a listener after fetching the data, so manually trigger listener
+        bridge.reset_jobs.append(
+            light_coordinator.async_add_listener(update_lights_without_group_support)
+        )
         return
 
     group_coordinator = DataUpdateCoordinator(
@@ -141,17 +156,69 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ),
     )
 
-    update_groups = partial(
+    if allow_groups:
+        update_groups = partial(
+            async_update_items,
+            bridge,
+            bridge.api.groups,
+            {},
+            async_add_entities,
+            partial(create_light, HueLight, group_coordinator, bridge, True, None),
+            None,
+        )
+
+        bridge.reset_jobs.append(group_coordinator.async_add_listener(update_groups))
+
+    cancel_update_rooms_listener = None
+
+    @callback
+    def _async_update_rooms():
+        """Update rooms."""
+        nonlocal cancel_update_rooms_listener
+        rooms.clear()
+        for item_id in bridge.api.groups:
+            group = bridge.api.groups[item_id]
+            if group.type != GROUP_TYPE_ROOM:
+                continue
+            for light_id in group.lights:
+                rooms[light_id] = group.name
+
+        # Once we do a rooms update, we cancel the listener
+        # until the next time lights are added
+        bridge.reset_jobs.remove(cancel_update_rooms_listener)
+        cancel_update_rooms_listener()  # pylint: disable=not-callable
+        cancel_update_rooms_listener = None
+
+    @callback
+    def _setup_rooms_listener():
+        nonlocal cancel_update_rooms_listener
+        if cancel_update_rooms_listener is not None:
+            # If there are new lights added before _async_update_rooms
+            # is called we should not add another listener
+            return
+
+        cancel_update_rooms_listener = group_coordinator.async_add_listener(
+            _async_update_rooms
+        )
+        bridge.reset_jobs.append(cancel_update_rooms_listener)
+
+    _setup_rooms_listener()
+    await group_coordinator.async_refresh()
+
+    update_lights_with_group_support = partial(
         async_update_items,
         bridge,
-        bridge.api.groups,
+        bridge.api.lights,
         {},
         async_add_entities,
-        partial(create_light, HueLight, group_coordinator, bridge, True),
+        partial(create_light, HueLight, light_coordinator, bridge, False, rooms),
+        _setup_rooms_listener,
     )
-
-    bridge.reset_jobs.append(group_coordinator.async_add_listener(update_groups))
-    await group_coordinator.async_refresh()
+    # We add a listener after fetching the data, so manually trigger listener
+    bridge.reset_jobs.append(
+        light_coordinator.async_add_listener(update_lights_with_group_support)
+    )
+    update_lights_with_group_support()
 
 
 async def async_safe_fetch(bridge, fetch_method):
@@ -159,15 +226,17 @@ async def async_safe_fetch(bridge, fetch_method):
     try:
         with async_timeout.timeout(4):
             return await bridge.async_request_call(fetch_method)
-    except aiohue.Unauthorized:
+    except aiohue.Unauthorized as err:
         await bridge.handle_unauthorized_error()
-        raise UpdateFailed("Unauthorized")
-    except (aiohue.AiohueException,) as err:
-        raise UpdateFailed(f"Hue error: {err}")
+        raise UpdateFailed("Unauthorized") from err
+    except aiohue.AiohueException as err:
+        raise UpdateFailed(f"Hue error: {err}") from err
 
 
 @callback
-def async_update_items(bridge, api, current, async_add_entities, create_item):
+def async_update_items(
+    bridge, api, current, async_add_entities, create_item, new_items_callback
+):
     """Update items."""
     new_items = []
 
@@ -181,6 +250,9 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
     bridge.hass.async_create_task(remove_devices(bridge, api, current))
 
     if new_items:
+        # This is currently used to setup the listener to update rooms
+        if new_items_callback:
+            new_items_callback()
         async_add_entities(new_items)
 
 
@@ -194,16 +266,17 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
-class HueLight(LightEntity):
+class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 
-    def __init__(self, coordinator, bridge, is_group, light, supported_features):
+    def __init__(self, coordinator, bridge, is_group, light, supported_features, rooms):
         """Initialize the light."""
+        super().__init__(coordinator)
         self.light = light
-        self.coordinator = coordinator
         self.bridge = bridge
         self.is_group = is_group
         self._supported_features = supported_features
+        self._rooms = rooms
 
         if is_group:
             self.is_osram = False
@@ -224,22 +297,20 @@ class HueLight(LightEntity):
                     "bulb in the Philips Hue App."
                 )
                 _LOGGER.warning(err, self.name)
-            if self.gamut:
-                if not color.check_valid_gamut(self.gamut):
-                    err = "Color gamut of %s: %s, not valid, setting gamut to None."
-                    _LOGGER.warning(err, self.name, str(self.gamut))
-                    self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
-                    self.gamut = None
+            if self.gamut and not color.check_valid_gamut(self.gamut):
+                err = "Color gamut of %s: %s, not valid, setting gamut to None."
+                _LOGGER.debug(err, self.name, str(self.gamut))
+                self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+                self.gamut = None
 
     @property
     def unique_id(self):
         """Return the unique ID of this Hue light."""
-        return self.light.uniqueid
+        unique_id = self.light.uniqueid
+        if not unique_id and self.is_group and self.light.room:
+            unique_id = self.light.room["id"]
 
-    @property
-    def should_poll(self):
-        """No polling required."""
-        return False
+        return unique_id
 
     @property
     def device_id(self):
@@ -356,10 +427,15 @@ class HueLight(LightEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        if self.light.type in ("LightGroup", "Room", "Luminaire", "LightSource"):
+        if self.light.type in (
+            GROUP_TYPE_LIGHT_GROUP,
+            GROUP_TYPE_ROOM,
+            GROUP_TYPE_LUMINAIRE,
+            GROUP_TYPE_LIGHT_SOURCE,
+        ):
             return None
 
-        return {
+        info = {
             "identifiers": {(HUE_DOMAIN, self.device_id)},
             "name": self.name,
             "manufacturer": self.light.manufacturername,
@@ -371,11 +447,19 @@ class HueLight(LightEntity):
             "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
+        if self.light.id in self._rooms:
+            info["suggested_area"] = self._rooms[self.light.id]
+
+        return info
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+            self.bridge.listen_updates(
+                self.light.ITEM_TYPE, self.light.id, self.async_write_ha_state
+            )
         )
+        await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
@@ -462,17 +546,9 @@ class HueLight(LightEntity):
 
         await self.coordinator.async_request_refresh()
 
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()
-
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        if self.is_group:
-            attributes[ATTR_IS_HUE_GROUP] = self.is_group
-        return attributes
+        if not self.is_group:
+            return {}
+        return {ATTR_IS_HUE_GROUP: self.is_group}

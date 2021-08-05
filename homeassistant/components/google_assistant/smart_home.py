@@ -83,14 +83,23 @@ async def async_devices_sync(hass, data, payload):
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
-
-    devices = await asyncio.gather(
+    entities = async_get_entities(hass, data.config)
+    results = await asyncio.gather(
         *(
             entity.sync_serialize(agent_user_id)
-            for entity in async_get_entities(hass, data.config)
+            for entity in entities
             if entity.should_expose()
-        )
+        ),
+        return_exceptions=True,
     )
+
+    devices = []
+
+    for entity, result in zip(entities, results):
+        if isinstance(result, Exception):
+            _LOGGER.error("Error serializing %s", entity.entity_id, exc_info=result)
+        else:
+            devices.append(result)
 
     response = {"agentUserId": agent_user_id, "devices": devices}
 
@@ -107,20 +116,22 @@ async def async_devices_query(hass, data, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#QUERY
     """
+    payload_devices = payload.get("devices", [])
+
+    hass.bus.async_fire(
+        EVENT_QUERY_RECEIVED,
+        {
+            "request_id": data.request_id,
+            ATTR_ENTITY_ID: [device["id"] for device in payload_devices],
+            "source": data.source,
+        },
+        context=data.context,
+    )
+
     devices = {}
-    for device in payload.get("devices", []):
+    for device in payload_devices:
         devid = device["id"]
         state = hass.states.get(devid)
-
-        hass.bus.async_fire(
-            EVENT_QUERY_RECEIVED,
-            {
-                "request_id": data.request_id,
-                ATTR_ENTITY_ID: devid,
-                "source": data.source,
-            },
-            context=data.context,
-        )
 
         if not state:
             # If we can't find a state, the device is offline
@@ -128,7 +139,11 @@ async def async_devices_query(hass, data, payload):
             continue
 
         entity = GoogleEntity(hass, data.config, state)
-        devices[devid] = entity.query_serialize()
+        try:
+            devices[devid] = entity.query_serialize()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected error serializing query for %s", state)
+            devices[devid] = {"online": False}
 
     return {"devices": devices}
 
@@ -162,19 +177,19 @@ async def handle_devices_execute(hass, data, payload):
     results = {}
 
     for command in payload["commands"]:
+        hass.bus.async_fire(
+            EVENT_COMMAND_RECEIVED,
+            {
+                "request_id": data.request_id,
+                ATTR_ENTITY_ID: [device["id"] for device in command["devices"]],
+                "execution": command["execution"],
+                "source": data.source,
+            },
+            context=data.context,
+        )
+
         for device, execution in product(command["devices"], command["execution"]):
             entity_id = device["id"]
-
-            hass.bus.async_fire(
-                EVENT_COMMAND_RECEIVED,
-                {
-                    "request_id": data.request_id,
-                    ATTR_ENTITY_ID: entity_id,
-                    "execution": execution,
-                    "source": data.source,
-                },
-                context=data.context,
-            )
 
             # Happens if error occurred. Skip entity for further processing
             if entity_id in results:
@@ -198,10 +213,10 @@ async def handle_devices_execute(hass, data, payload):
             executions[entity_id] = [execution]
 
     execute_results = await asyncio.gather(
-        *[
-            _entity_execute(entities[entity_id], data, executions[entity_id])
-            for entity_id in executions
-        ]
+        *(
+            _entity_execute(entities[entity_id], data, execution)
+            for entity_id, execution in executions.items()
+        )
     )
 
     for entity_id, result in zip(executions, execute_results):

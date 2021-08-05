@@ -12,8 +12,13 @@
                     "name": "N\u00e9v"
                 },
                 "description": "Portug\u00e1l Atmoszf\u00e9ra Int\u00e9zet",
-                "title": "Hely"
+                "title": "Elhelyezked\u00e9s"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API v\u00e9gpont el\u00e9rhet\u0151"
         }
     }
 }

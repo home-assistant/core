@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
+    CONF_UNIQUE_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -63,10 +65,21 @@ CONFIG_POS = {
     ]
 }
 
+CONFIG_TILT_ONLY = {
+    DOMAIN: [
+        {"platform": "demo"},
+        {
+            "platform": "group",
+            CONF_ENTITIES: [DEMO_COVER_TILT, DEMO_TILT],
+        },
+    ]
+}
+
 CONFIG_ATTRIBUTES = {
     DOMAIN: {
         "platform": "group",
         CONF_ENTITIES: [DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT, DEMO_TILT],
+        CONF_UNIQUE_ID: "unique_identifier",
     }
 }
 
@@ -77,6 +90,8 @@ async def setup_comp(hass, config_count):
     config, count = config_count
     with assert_setup_component(count, DOMAIN):
         await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
     await hass.async_block_till_done()
 
 
@@ -207,6 +222,39 @@ async def test_attributes(hass, setup_comp):
 
     state = hass.states.get(COVER_GROUP)
     assert state.attributes[ATTR_ASSUMED_STATE] is True
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(COVER_GROUP)
+    assert entry
+    assert entry.unique_id == "unique_identifier"
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_TILT_ONLY, 2)])
+async def test_cover_that_only_supports_tilt_removed(hass, setup_comp):
+    """Test removing a cover that support tilt."""
+    hass.states.async_set(
+        DEMO_COVER_TILT,
+        STATE_OPEN,
+        {ATTR_SUPPORTED_FEATURES: 128, ATTR_CURRENT_TILT_POSITION: 60},
+    )
+    hass.states.async_set(
+        DEMO_TILT,
+        STATE_OPEN,
+        {ATTR_SUPPORTED_FEATURES: 128, ATTR_CURRENT_TILT_POSITION: 60},
+    )
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert state.attributes[ATTR_ENTITY_ID] == [
+        DEMO_COVER_TILT,
+        DEMO_TILT,
+    ]
+    assert ATTR_ASSUMED_STATE not in state.attributes
+    assert ATTR_CURRENT_TILT_POSITION in state.attributes
+
+    hass.states.async_remove(DEMO_COVER_TILT)
+    hass.states.async_set(DEMO_TILT, STATE_CLOSED)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
@@ -492,6 +540,7 @@ async def test_is_opening_closing(hass, setup_comp):
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get(DEMO_COVER_POS).state == STATE_OPENING
     assert hass.states.get(DEMO_COVER_TILT).state == STATE_OPENING

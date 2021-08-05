@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "invalid_auth": "\u65e0\u6548\u7684\u8eab\u4efd\u9a8c\u8bc1"
+        },
         "error": {
-            "invalid_credentials": "\u65e0\u6548\u7684\u8eab\u4efd\u8ba4\u8bc1",
+            "invalid_auth": "\u65e0\u6548\u7684\u8eab\u4efd\u9a8c\u8bc1",
             "invalid_username": "\u65e0\u6548\u7684\u7528\u6237\u540d"
         },
         "step": {

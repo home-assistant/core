@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Impossible de se connecter \u00e0 la carte Firmata pendant la configuration"
+        },
+        "step": {
+            "one": "Vide ",
+            "other": "Vide"
+        }
+    }
+}

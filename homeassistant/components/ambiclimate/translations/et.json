@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Tundmatu t\u00f5rge juurdep\u00e4\u00e4suloa loomisel.",
+            "already_configured": "Konto on juba seadistatud",
+            "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni."
+        },
+        "create_entry": {
+            "default": "Ambiclimate autentimine \u00f5nnestus"
+        },
+        "error": {
+            "follow_link": "Enne Esita nupu  vajutamist j\u00e4rgi linki ja autendi",
+            "no_token": "Ambiclimate ei ole autenditud"
+        },
+        "step": {
+            "auth": {
+                "description": "J\u00e4rgi seda linki [link] ( {authorization_url} ) ja ** Luba** juurdep\u00e4\u00e4s oma Ambiclimate'i kontole, siis tule tagasi ja vajuta allolevat nuppu ** Esita **.\n (Veendu, et m\u00e4\u00e4ratud tagasihelistamise URL on {cb_url} )",
+                "title": "Autendi Ambiclimate"
+            }
+        }
+    }
+}

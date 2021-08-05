@@ -59,8 +59,8 @@ async def test_registration(hass, hass_client, hass_admin_user):
 async def test_registration_encryption(hass, hass_client):
     """Test that registrations happen."""
     try:
-        from nacl.secret import SecretBox
         from nacl.encoding import Base64Encoder
+        from nacl.secret import SecretBox
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
@@ -86,7 +86,7 @@ async def test_registration_encryption(hass, hass_client):
     container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
 
     resp = await api_client.post(
-        "/api/webhook/{}".format(register_json[CONF_WEBHOOK_ID]), json=container
+        f"/api/webhook/{register_json[CONF_WEBHOOK_ID]}", json=container
     )
 
     assert resp.status == 200

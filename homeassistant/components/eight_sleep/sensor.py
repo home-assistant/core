@@ -1,7 +1,13 @@
 """Support for Eight Sleep sensors."""
 import logging
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 
 from . import (
     CONF_SENSORS,
@@ -20,9 +26,9 @@ ATTR_AVG_RESP_RATE = "Average Respiratory Rate"
 ATTR_HEART_RATE = "Heart Rate"
 ATTR_AVG_HEART_RATE = "Average Heart Rate"
 ATTR_SLEEP_DUR = "Time Slept"
-ATTR_LIGHT_PERC = f"Light Sleep {UNIT_PERCENTAGE}"
-ATTR_DEEP_PERC = f"Deep Sleep {UNIT_PERCENTAGE}"
-ATTR_REM_PERC = f"REM Sleep {UNIT_PERCENTAGE}"
+ATTR_LIGHT_PERC = f"Light Sleep {PERCENTAGE}"
+ATTR_DEEP_PERC = f"Deep Sleep {PERCENTAGE}"
+ATTR_REM_PERC = f"REM Sleep {PERCENTAGE}"
 ATTR_TNT = "Tosses & Turns"
 ATTR_SLEEP_STAGE = "Sleep Stage"
 ATTR_TARGET_HEAT = "Target Heating Level"
@@ -66,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_sensors, True)
 
 
-class EightHeatSensor(EightSleepHeatEntity):
+class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
     """Representation of an eight sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
@@ -102,7 +108,7 @@ class EightHeatSensor(EightSleepHeatEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -110,16 +116,16 @@ class EightHeatSensor(EightSleepHeatEntity):
         self._state = self._usrobj.heating_level
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
-        state_attr = {ATTR_TARGET_HEAT: self._usrobj.target_heating_level}
-        state_attr[ATTR_ACTIVE_HEAT] = self._usrobj.now_heating
-        state_attr[ATTR_DURATION_HEAT] = self._usrobj.heating_remaining
+        return {
+            ATTR_TARGET_HEAT: self._usrobj.target_heating_level,
+            ATTR_ACTIVE_HEAT: self._usrobj.now_heating,
+            ATTR_DURATION_HEAT: self._usrobj.heating_remaining,
+        }
 
-        return state_attr
 
-
-class EightUserSensor(EightSleepUserEntity):
+class EightUserSensor(EightSleepUserEntity, SensorEntity):
     """Representation of an eight sleep user-based sensor."""
 
     def __init__(self, name, eight, sensor, units):
@@ -171,10 +177,11 @@ class EightUserSensor(EightSleepUserEntity):
         return None
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
         if "bed_temp" in self._sensor:
-            return "mdi:thermometer"
+            return DEVICE_CLASS_TEMPERATURE
+        return None
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -202,7 +209,7 @@ class EightUserSensor(EightSleepUserEntity):
             self._state = self._usrobj.current_values["stage"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         if self._attr is None:
             # Skip attributes if sensor type doesn't support
@@ -289,7 +296,7 @@ class EightUserSensor(EightSleepUserEntity):
         return state_attr
 
 
-class EightRoomSensor(EightSleepUserEntity):
+class EightRoomSensor(EightSleepUserEntity, SensorEntity):
     """Representation of an eight sleep room sensor."""
 
     def __init__(self, name, eight, sensor, units):
@@ -333,6 +340,6 @@ class EightRoomSensor(EightSleepUserEntity):
         return TEMP_FAHRENHEIT
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:thermometer"
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TEMPERATURE

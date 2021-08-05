@@ -1,208 +1,321 @@
 """The tests for the Rfxtrx sensor platform."""
-from datetime import timedelta
+import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
+from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.components.rfxtrx.const import ATTR_EVENT
+from homeassistant.core import State
 
-from . import _signal_event
+from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
-from tests.common import async_fire_time_changed
+EVENT_SMOKE_DETECTOR_PANIC = "08200300a109000670"
+EVENT_SMOKE_DETECTOR_NO_PANIC = "08200300a109000770"
 
+EVENT_MOTION_DETECTOR_MOTION = "08200100a109000470"
+EVENT_MOTION_DETECTOR_NO_MOTION = "08200100a109000570"
 
-async def test_default_config(hass, rfxtrx):
-    """Test with 0 sensor."""
-    await async_setup_component(
-        hass, "binary_sensor", {"binary_sensor": {"platform": "rfxtrx", "devices": {}}}
-    )
-    await hass.async_block_till_done()
+EVENT_LIGHT_DETECTOR_LIGHT = "08200100a109001570"
+EVENT_LIGHT_DETECTOR_DARK = "08200100a109001470"
 
-    assert len(hass.states.async_all()) == 0
+EVENT_AC_118CDEA_2_ON = "0b1100100118cdea02010f70"
 
 
 async def test_one(hass, rfxtrx):
     """Test with 1 sensor."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "rfxtrx",
-                "devices": {"0a52080705020095220269": {"name": "Test"}},
-            }
-        },
-    )
+    entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f230010f71": {}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test")
+    state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Test"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
 async def test_one_pt2262(hass, rfxtrx):
     """Test with 1 sensor."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "rfxtrx",
-                "devices": {
-                    "0913000022670e013970": {
-                        "name": "Test",
-                        "data_bits": 4,
-                        "command_on": 0xE,
-                        "command_off": 0x7,
-                    }
-                },
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0913000022670e013970": {
+                "data_bits": 4,
+                "command_on": 0xE,
+                "command_off": 0x7,
             }
-        },
+        }
     )
-    await hass.async_block_till_done()
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    state = hass.states.get("binary_sensor.test")
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
     assert state.state == "off"  # probably aught to be unknown
-    assert state.attributes.get("friendly_name") == "Test"
+    assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
-    await _signal_event(hass, "0913000022670e013970")
-    state = hass.states.get("binary_sensor.test")
-    assert state
+    await rfxtrx.signal("0913000022670e013970")
+    state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "Test"
 
-    await _signal_event(hass, "09130000226707013d70")
-    state = hass.states.get("binary_sensor.test")
-    assert state
+    await rfxtrx.signal("09130000226707013d70")
+    state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Test"
+
+
+async def test_pt2262_unconfigured(hass, rfxtrx):
+    """Test with discovery for PT2262."""
+    entry_data = create_rfx_test_cfg(
+        devices={"0913000022670e013970": {}, "09130000226707013970": {}}
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.pt2262_22670e")
+    assert state
+    assert state.state == "off"  # probably aught to be unknown
+    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+
+    state = hass.states.get("binary_sensor.pt2262_226707")
+    assert state
+    assert state.state == "off"  # probably aught to be unknown
+    assert state.attributes.get("friendly_name") == "PT2262 226707"
+
+
+@pytest.mark.parametrize(
+    "state,event",
+    [["on", "0b1100cd0213c7f230010f71"], ["off", "0b1100cd0213c7f230000f71"]],
+)
+async def test_state_restore(hass, rfxtrx, state, event):
+    """State restoration."""
+
+    entity_id = "binary_sensor.ac_213c7f2_48"
+
+    mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
+
+    entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f230010f71": {}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
 
 
 async def test_several(hass, rfxtrx):
     """Test with 3."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "rfxtrx",
-                "devices": {
-                    "0b1100cd0213c7f230010f71": {"name": "Test"},
-                    "0b1100100118cdea02010f70": {"name": "Bath"},
-                    "0b1100101118cdea02010f70": {"name": "Living"},
-                },
-            }
-        },
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0b1100cd0213c7f230010f71": {},
+            "0b1100100118cdea02010f70": {},
+            "0b1100100118cdea03010f70": {},
+        }
     )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test")
+    state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Test"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
-    state = hass.states.get("binary_sensor.bath")
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Bath"
+    assert state.attributes.get("friendly_name") == "AC 118cdea:2"
 
-    state = hass.states.get("binary_sensor.living")
+    state = hass.states.get("binary_sensor.ac_118cdea_3")
     assert state
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Living"
+    assert state.attributes.get("friendly_name") == "AC 118cdea:3"
+
+    # "2: Group on"
+    await rfxtrx.signal("0b1100100118cdea03040f70")
+    assert hass.states.get("binary_sensor.ac_118cdea_2").state == "on"
+    assert hass.states.get("binary_sensor.ac_118cdea_3").state == "on"
+
+    # "2: Group off"
+    await rfxtrx.signal("0b1100100118cdea03030f70")
+    assert hass.states.get("binary_sensor.ac_118cdea_2").state == "off"
+    assert hass.states.get("binary_sensor.ac_118cdea_3").state == "off"
 
 
-async def test_discover(hass, rfxtrx):
+async def test_discover(hass, rfxtrx_automatic):
     """Test with discovery."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {"binary_sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
-    )
-    await hass.async_block_till_done()
+    rfxtrx = rfxtrx_automatic
 
-    await _signal_event(hass, "0b1100100118cdea02010f70")
-    state = hass.states.get("binary_sensor.0b1100100118cdea02010f70")
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
 
-    await _signal_event(hass, "0b1100100118cdeb02010f70")
-    state = hass.states.get("binary_sensor.0b1100100118cdeb02010f70")
+    await rfxtrx.signal("0b1100100118cdeb02010f70")
+    state = hass.states.get("binary_sensor.ac_118cdeb_2")
     assert state
     assert state.state == "on"
 
-    # Trying to add a sensor
-    await _signal_event(hass, "0a52085e070100b31b0279")
-    state = hass.states.get("sensor.0a52085e070100b31b0279")
-    assert state is None
 
-    # Trying to add a light
-    await _signal_event(hass, "0b1100100118cdea02010f70")
-    state = hass.states.get("light.0b1100100118cdea02010f70")
-    assert state is None
-
-    # Trying to add a rollershutter
-    await _signal_event(hass, "0a1400adf394ab020e0060")
-    state = hass.states.get("cover.0a1400adf394ab020e0060")
-    assert state is None
-
-
-async def test_discover_noautoadd(hass, rfxtrx):
-    """Test with discovery of switch when auto add is False."""
-    await async_setup_component(
+async def test_off_delay_restore(hass, rfxtrx):
+    """Make sure binary sensor restore as off, if off delay is active."""
+    mock_restore_cache(
         hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "rfxtrx",
-                "automatic_add": False,
-                "devices": {},
-            }
-        },
+        [
+            State(
+                "binary_sensor.ac_118cdea_2",
+                "on",
+                attributes={ATTR_EVENT: EVENT_AC_118CDEA_2_ON},
+            )
+        ],
     )
+
+    entry_data = create_rfx_test_cfg(devices={EVENT_AC_118CDEA_2_ON: {"off_delay": 5}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_start()
 
-    # Trying to add switch
-    await _signal_event(hass, "0b1100100118cdea02010f70")
-    assert hass.states.async_all() == []
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "off"
 
 
-async def test_off_delay(hass, rfxtrx):
+async def test_off_delay(hass, rfxtrx, timestep):
     """Test with discovery."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "rfxtrx",
-                "automatic_add": True,
-                "devices": {
-                    "0b1100100118cdea02010f70": {"name": "Test", "off_delay": 5}
-                },
-            }
-        },
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1100100118cdea02010f70": {"off_delay": 5}}
     )
-    await hass.async_block_till_done()
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    state = hass.states.get("binary_sensor.test")
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "off"
 
-    await _signal_event(hass, "0b1100100118cdea02010f70")
-    state = hass.states.get("binary_sensor.test")
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
 
-    base_time = utcnow()
-
-    async_fire_time_changed(hass, base_time + timedelta(seconds=4))
-    await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.test")
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "on"
 
-    async_fire_time_changed(hass, base_time + timedelta(seconds=6))
-    await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.test")
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
     assert state.state == "off"
+
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "on"
+
+    await timestep(3)
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "on"
+
+    await timestep(4)
+    state = hass.states.get("binary_sensor.ac_118cdea_2")
+    assert state
+    assert state.state == "off"
+
+
+async def test_panic(hass, rfxtrx_automatic):
+    """Test panic entities."""
+    rfxtrx = rfxtrx_automatic
+
+    entity_id = "binary_sensor.kd101_smoke_detector_a10900_32"
+
+    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_PANIC)
+    assert hass.states.get(entity_id).state == "on"
+    assert hass.states.get(entity_id).attributes.get("device_class") == "smoke"
+
+    await rfxtrx.signal(EVENT_SMOKE_DETECTOR_NO_PANIC)
+    assert hass.states.get(entity_id).state == "off"
+
+
+async def test_motion(hass, rfxtrx_automatic):
+    """Test motion entities."""
+    rfxtrx = rfxtrx_automatic
+
+    entity_id = "binary_sensor.x10_security_motion_detector_a10900_32"
+
+    await rfxtrx.signal(EVENT_MOTION_DETECTOR_MOTION)
+    assert hass.states.get(entity_id).state == "on"
+    assert hass.states.get(entity_id).attributes.get("device_class") == "motion"
+
+    await rfxtrx.signal(EVENT_MOTION_DETECTOR_NO_MOTION)
+    assert hass.states.get(entity_id).state == "off"
+
+
+async def test_light(hass, rfxtrx_automatic):
+    """Test light entities."""
+    rfxtrx = rfxtrx_automatic
+
+    entity_id = "binary_sensor.x10_security_motion_detector_a10900_32"
+
+    await rfxtrx.signal(EVENT_LIGHT_DETECTOR_LIGHT)
+    assert hass.states.get(entity_id).state == "on"
+
+    await rfxtrx.signal(EVENT_LIGHT_DETECTOR_DARK)
+    assert hass.states.get(entity_id).state == "off"
+
+
+async def test_pt2262_duplicate_id(hass, rfxtrx):
+    """Test with 1 sensor."""
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0913000022670e013970": {
+                "data_bits": 4,
+                "command_on": 0xE,
+                "command_off": 0x7,
+            },
+            "09130000226707013970": {
+                "data_bits": 4,
+                "command_on": 0xE,
+                "command_off": 0x7,
+            },
+        }
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.pt2262_22670e")
+    assert state
+    assert state.state == "off"  # probably aught to be unknown
+    assert state.attributes.get("friendly_name") == "PT2262 22670e"

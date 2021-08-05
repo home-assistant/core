@@ -1,1 +1,0 @@
-"""The yr component."""

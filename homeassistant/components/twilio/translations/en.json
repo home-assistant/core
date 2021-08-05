@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive Twilio messages.",
-            "one_instance_allowed": "Only a single instance is necessary."
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
         },
         "create_entry": {
             "default": "To send events to Home Assistant, you will need to setup [Webhooks with Twilio]({twilio_url}).\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/x-www-form-urlencoded\n\nSee [the documentation]({docs_url}) on how to configure automations to handle incoming data."
         },
         "step": {
             "user": {
-                "description": "Are you sure you want to set up Twilio?",
+                "description": "Do you want to start set up?",
                 "title": "Set up the Twilio Webhook"
             }
         }

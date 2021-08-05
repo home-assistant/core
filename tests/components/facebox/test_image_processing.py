@@ -1,4 +1,6 @@
 """The tests for the facebox component."""
+from unittest.mock import Mock, mock_open, patch
+
 import pytest
 import requests
 import requests_mock
@@ -20,8 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, mock_open, patch
 
 MOCK_IP = "192.168.0.1"
 MOCK_PORT = "8080"

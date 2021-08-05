@@ -1,4 +1,6 @@
 """Constants used by insteon component."""
+import re
+
 from pyinsteon.groups import (
     CO_SENSOR,
     COVER,
@@ -34,13 +36,19 @@ from pyinsteon.groups import (
 
 DOMAIN = "insteon"
 
-INSTEON_COMPONENTS = [
+INSTEON_PLATFORMS = [
     "binary_sensor",
     "climate",
     "cover",
     "fan",
     "light",
     "switch",
+]
+
+X10_PLATFORMS = [
+    "binary_sensor",
+    "switch",
+    "light",
 ]
 
 CONF_IP_PORT = "ip_port"
@@ -60,6 +68,9 @@ CONF_DIM_STEPS = "dim_steps"
 CONF_X10_ALL_UNITS_OFF = "x10_all_units_off"
 CONF_X10_ALL_LIGHTS_ON = "x10_all_lights_on"
 CONF_X10_ALL_LIGHTS_OFF = "x10_all_lights_off"
+
+PORT_HUB_V1 = 9761
+PORT_HUB_V2 = 25105
 
 SRV_ADD_ALL_LINK = "add_all_link"
 SRV_DEL_ALL_LINK = "delete_all_link"
@@ -82,6 +93,13 @@ SRV_ADD_DEFAULT_LINKS = "add_default_links"
 SIGNAL_LOAD_ALDB = "load_aldb"
 SIGNAL_PRINT_ALDB = "print_aldb"
 SIGNAL_SAVE_DEVICES = "save_devices"
+SIGNAL_ADD_ENTITIES = "insteon_add_entities"
+SIGNAL_ADD_DEFAULT_LINKS = "add_default_links"
+SIGNAL_ADD_DEVICE_OVERRIDE = "add_device_override"
+SIGNAL_REMOVE_DEVICE_OVERRIDE = "insteon_remove_device_override"
+SIGNAL_REMOVE_ENTITY = "insteon_remove_entity"
+SIGNAL_ADD_X10_DEVICE = "insteon_add_x10_device"
+SIGNAL_REMOVE_X10_DEVICE = "insteon_remove_x10_device"
 SIGNAL_ADD_DEFAULT_LINKS = "add_default_links"
 
 HOUSECODES = [
@@ -142,3 +160,15 @@ STATE_NAME_LABEL_MAP = {
     COVER: "Cover",
     RELAY: "Relay",
 }
+
+TYPE = "type"
+ID = "id"
+DEVICE_ID = "device_id"
+DEVICE_ADDRESS = "device_address"
+ALDB_RECORD = "record"
+PROPERTY_NAME = "name"
+PROPERTY_VALUE = "value"
+HA_DEVICE_NOT_FOUND = "ha_device_not_found"
+INSTEON_DEVICE_NOT_FOUND = "insteon_device_not_found"
+
+INSTEON_ADDR_REGEX = re.compile(r"([A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2})$")

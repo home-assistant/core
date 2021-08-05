@@ -1,6 +1,4 @@
 """Demo platform for the vacuum component."""
-import logging
-
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     STATE_CLEANING,
@@ -24,8 +22,6 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_MINIMAL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
@@ -144,7 +140,7 @@ class DemoVacuum(VacuumEntity):
         return max(0, min(100, self._battery_level))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 
@@ -292,7 +288,7 @@ class StateDemoVacuum(StateVacuumEntity):
         return FAN_SPEEDS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 

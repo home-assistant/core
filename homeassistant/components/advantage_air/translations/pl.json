@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adres IP",
+                    "port": "Port"
+                },
+                "description": "Po\u0142\u0105cz si\u0119 z API tabletu firmy Advantage Air.",
+                "title": "Po\u0142\u0105czenie"
+            }
+        }
+    }
+}

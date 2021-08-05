@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "power": "Szerz\u0151d\u00e9s szerinti teljes\u00edtm\u00e9ny (kW)",
+                    "power_p3": "Szerz\u0151d\u00f6tt teljes\u00edtm\u00e9ny P3 v\u00f6lgyid\u0151szakra (kW)"
+                },
+                "description": "Ez az \u00e9rz\u00e9kel\u0151 a hivatalos API-t haszn\u00e1lja a [villamos energia \u00f3r\u00e1nk\u00e9nti \u00e1raz\u00e1s\u00e1nak (PVPC)] (https://www.esios.ree.es/es/pvpc) megszerz\u00e9s\u00e9hez Spanyolorsz\u00e1gban.\n Pontosabb magyar\u00e1zat\u00e9rt keresse fel az [integr\u00e1ci\u00f3s dokumentumok] oldalt (https://www.home-assistant.io/integrations/pvpc_hourly_pricing/)."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "power": "Szerz\u0151d\u00e9s szerinti teljes\u00edtm\u00e9ny (kW)",
+                    "power_p3": "Szerz\u0151d\u00f6tt teljes\u00edtm\u00e9ny P3 v\u00f6lgyid\u0151szakra (kW)",
+                    "tariff": "Alkalmazand\u00f3 tarifa f\u00f6ldrajzi z\u00f3n\u00e1k szerint"
+                },
+                "description": "Ez az \u00e9rz\u00e9kel\u0151 a hivatalos API-t haszn\u00e1lja a [villamos energia \u00f3r\u00e1nk\u00e9nti \u00e1raz\u00e1s\u00e1nak (PVPC)] (https://www.esios.ree.es/es/pvpc) megszerz\u00e9s\u00e9hez Spanyolorsz\u00e1gban.\n Pontosabb magyar\u00e1zat\u00e9rt keresse fel az [integr\u00e1ci\u00f3s dokumentumok] oldalt (https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
+                "title": "\u00c9rz\u00e9kel\u0151 be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

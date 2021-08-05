@@ -3,5 +3,6 @@
   "name": "EverLights",
   "documentation": "https://www.home-assistant.io/integrations/everlights",
   "requirements": ["pyeverlights==0.1.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

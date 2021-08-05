@@ -194,10 +194,10 @@ class TahomaCover(TahomaDevice, CoverEntity):
         return TAHOMA_DEVICE_CLASSES.get(self.tahoma_device.type)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().device_state_attributes
+        super_attr = super().extra_state_attributes
         if super_attr is not None:
             attr.update(super_attr)
 

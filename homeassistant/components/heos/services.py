@@ -5,8 +5,8 @@ import logging
 from pyheos import CommandFailedError, Heos, HeosError, const
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_PASSWORD,
@@ -25,7 +25,7 @@ HEOS_SIGN_IN_SCHEMA = vol.Schema(
 HEOS_SIGN_OUT_SCHEMA = vol.Schema({})
 
 
-def register(hass: HomeAssistantType, controller: Heos):
+def register(hass: HomeAssistant, controller: Heos):
     """Register HEOS services."""
     hass.services.async_register(
         DOMAIN,
@@ -41,7 +41,7 @@ def register(hass: HomeAssistantType, controller: Heos):
     )
 
 
-def remove(hass: HomeAssistantType):
+def remove(hass: HomeAssistant):
     """Unregister HEOS services."""
     hass.services.async_remove(DOMAIN, SERVICE_SIGN_IN)
     hass.services.async_remove(DOMAIN, SERVICE_SIGN_OUT)

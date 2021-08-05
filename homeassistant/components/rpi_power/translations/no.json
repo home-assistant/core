@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Finner ikke systemklassen som trengs for denne komponenten, s\u00f8rg for at kjernen din er ny og at maskinvaren st\u00f8ttes",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vil du starte oppsettet?"
+            }
+        }
+    },
+    "title": "Raspberry Pi str\u00f8mforsyningskontroll"
+}

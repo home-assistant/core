@@ -84,6 +84,7 @@ def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):
     device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 191.0
     assert device.unit_of_measurement == homeassistant.const.TEMP_FAHRENHEIT
+    assert device.device_class == homeassistant.const.DEVICE_CLASS_TEMPERATURE
     value.data = 197.95555
     value_changed(value)
     assert device.state == 198.0
@@ -103,6 +104,7 @@ def test_multilevelsensor_value_changed_temp_celsius(mock_openzwave):
     device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 38.9
     assert device.unit_of_measurement == homeassistant.const.TEMP_CELSIUS
+    assert device.device_class == homeassistant.const.DEVICE_CLASS_TEMPERATURE
     value.data = 37.95555
     value_changed(value)
     assert device.state == 38.0
@@ -124,6 +126,7 @@ def test_multilevelsensor_value_changed_other_units(mock_openzwave):
     device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 190.96
     assert device.unit_of_measurement == homeassistant.const.ENERGY_KILO_WATT_HOUR
+    assert device.device_class is None
     value.data = 197.95555
     value_changed(value)
     assert device.state == 197.96
@@ -143,6 +146,7 @@ def test_multilevelsensor_value_changed_integer(mock_openzwave):
     device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 5
     assert device.unit_of_measurement == "counts"
+    assert device.device_class is None
     value.data = 6
     value_changed(value)
     assert device.state == 6
@@ -153,12 +157,13 @@ def test_alarm_sensor_value_changed(mock_openzwave):
     node = MockNode(
         command_classes=[const.COMMAND_CLASS_ALARM, const.COMMAND_CLASS_SENSOR_ALARM]
     )
-    value = MockValue(data=12.34, node=node, units=homeassistant.const.UNIT_PERCENTAGE)
+    value = MockValue(data=12.34, node=node, units=homeassistant.const.PERCENTAGE)
     values = MockEntityValues(primary=value)
 
     device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 12.34
-    assert device.unit_of_measurement == homeassistant.const.UNIT_PERCENTAGE
+    assert device.unit_of_measurement == homeassistant.const.PERCENTAGE
+    assert device.device_class is None
     value.data = 45.67
     value_changed(value)
     assert device.state == 45.67

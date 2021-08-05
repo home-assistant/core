@@ -1,61 +1,34 @@
 """Tests for the Sonarr sensor platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sonarr.const import (
-    CONF_BASE_PATH,
-    CONF_UPCOMING_DAYS,
-    DOMAIN,
-)
+from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_GIGABYTES,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
-from tests.components.sonarr import (
-    MOCK_SENSOR_CONFIG,
-    mock_connection,
-    setup_integration,
-)
+from tests.components.sonarr import mock_connection, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 
-async def test_import_from_sensor_component(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test import from sensor platform."""
-    mock_connection(aioclient_mock)
-    assert await async_setup_component(
-        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: MOCK_SENSOR_CONFIG}
-    )
-    await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    assert entries[0].data[CONF_BASE_PATH] == "/api"
-    assert entries[0].options[CONF_UPCOMING_DAYS] == 3
-
-    assert hass.states.get(UPCOMING_ENTITY_ID)
-
-
 async def test_sensors(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the sensors."""
     entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
     sensors = {
@@ -131,12 +104,11 @@ async def test_sensors(
     ),
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker, entity_id: str
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, entity_id: str
 ) -> None:
     """Test the disabled by default sensors."""
     await setup_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
-    print(registry.entities)
+    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state is None
@@ -144,11 +116,11 @@ async def test_disabled_by_default_sensors(
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_availability(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test entity availability."""
     now = dt_util.utcnow()

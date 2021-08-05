@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
         "step": {
             "user": {
                 "data": {
@@ -9,6 +16,12 @@
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 }
             }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         }
     }
 }

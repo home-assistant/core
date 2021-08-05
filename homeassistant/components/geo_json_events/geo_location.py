@@ -1,7 +1,8 @@
 """Support for generic GeoJSON events."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from geojson_client.generic_feed import GenericFeedManager
 import voluptuous as vol
@@ -144,7 +145,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
         """Remove this entity."""
         self._remove_signal_delete()
         self._remove_signal_update()
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self):
@@ -176,22 +177,22 @@ class GeoJsonLocationEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._name
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 
@@ -201,9 +202,8 @@ class GeoJsonLocationEvent(GeolocationEvent):
         return LENGTH_KILOMETERS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        if self._external_id:
-            attributes[ATTR_EXTERNAL_ID] = self._external_id
-        return attributes
+        if not self._external_id:
+            return {}
+        return {ATTR_EXTERNAL_ID: self._external_id}

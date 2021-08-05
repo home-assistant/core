@@ -4,9 +4,8 @@ import logging
 
 from pybotvac.exceptions import NeatoRobotException
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.const import UNIT_PERCENTAGE
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+from homeassistant.const import PERCENTAGE
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 
@@ -31,13 +30,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class NeatoSensor(Entity):
+class NeatoSensor(SensorEntity):
     """Neato sensor."""
 
     def __init__(self, neato, robot):
         """Initialize Neato sensor."""
         self.robot = robot
-        self._available = neato.logged_in if neato is not None else False
+        self._available = False
         self._robot_name = f"{self.robot.name} {BATTERY}"
         self._robot_serial = self.robot.serial
         self._state = None
@@ -48,7 +47,9 @@ class NeatoSensor(Entity):
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:
-                _LOGGER.error("Neato sensor connection error: %s", ex)
+                _LOGGER.error(
+                    "Neato sensor connection error for '%s': %s", self.entity_id, ex
+                )
             self._state = None
             self._available = False
             return
@@ -79,12 +80,12 @@ class NeatoSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        return self._state["details"]["charge"]
+        return self._state["details"]["charge"] if self._state else None
 
     @property
     def unit_of_measurement(self):
         """Return unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_info(self):

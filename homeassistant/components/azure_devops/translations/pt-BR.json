@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "project_error": "N\u00e3o foi poss\u00edvel obter informa\u00e7\u00f5es do projeto."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Token de acesso pessoal (PAT)"
+                },
+                "description": "A autentica\u00e7\u00e3o falhou para {project_url}. Por favor, insira suas credenciais atuais.",
+                "title": "Reautentica\u00e7\u00e3o"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organiza\u00e7\u00e3o",
+                    "personal_access_token": "Token de acesso pessoal (PAT)",
+                    "project": "Projeto"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 """Tests for the Atag sensor platform."""
-
 from homeassistant.components.atag.sensor import SENSORS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -12,7 +12,7 @@ async def test_sensors(
 ) -> None:
     """Test the creation of ATAG sensors."""
     entry = await init_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     for item in SENSORS:
         sensor_id = "_".join(f"sensor.{item}".lower().split())

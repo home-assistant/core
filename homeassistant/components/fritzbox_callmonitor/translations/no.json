@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "insufficient_permissions": "Brukeren har utilstrekkelig tillatelse til \u00e5 f\u00e5 tilgang til AVM FRITZ! Box-innstillingene og telefonb\u00f8kene.",
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Telefonbok"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Prefikser er misformet, vennligst sjekk deres format."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefikser (kommaseparert liste)"
+                },
+                "title": "Konfigurer prefiks"
+            }
+        }
+    }
+}

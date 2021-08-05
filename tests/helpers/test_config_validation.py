@@ -1,17 +1,17 @@
 """Test config validators."""
+from collections import OrderedDict
 from datetime import date, datetime, timedelta
 import enum
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+from unittest.mock import Mock, patch
 import uuid
 
 import pytest
 import voluptuous as vol
 
 import homeassistant
-import homeassistant.helpers.config_validation as cv
-
-from tests.async_mock import Mock, patch
+from homeassistant.helpers import config_validation as cv, template
 
 
 def test_boolean():
@@ -179,14 +179,25 @@ def test_entity_domain():
     """Test entity domain validation."""
     schema = vol.Schema(cv.entity_domain("sensor"))
 
-    options = ("invalid_entity", "cover.demo")
-
-    for value in options:
+    for value in (
+        "invalid_entity",
+        "cover.demo",
+        "cover.demo,sensor.another_entity",
+        "",
+    ):
         with pytest.raises(vol.MultipleInvalid):
-            print(value)
             schema(value)
 
     assert schema("sensor.LIGHT") == "sensor.light"
+
+    schema = vol.Schema(cv.entity_domain(("sensor", "binary_sensor")))
+
+    for value in ("invalid_entity", "cover.demo"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    assert schema("sensor.LIGHT") == "sensor.light"
+    assert schema("binary_sensor.LIGHT") == "binary_sensor.light"
 
 
 def test_entities_domain():
@@ -260,18 +271,49 @@ def test_time_period():
     """Test time_period validation."""
     schema = vol.Schema(cv.time_period)
 
-    options = (None, "", "hello:world", "12:", "12:34:56:78", {}, {"wrong_key": -10})
+    options = (
+        None,
+        "",
+        "hello:world",
+        "12:",
+        "12:34:56:78",
+        {},
+        {"wrong_key": -10},
+        "12.5:30",
+        "12:30.5",
+        "12.5:30:30",
+        "12:30.5:30",
+    )
     for value in options:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    options = ("8:20", "23:59", "-8:20", "-23:59:59", "-48:00", {"minutes": 5}, 1, "5")
-    for value in options:
-        schema(value)
-
-    assert timedelta(seconds=180) == schema("180")
-    assert timedelta(hours=23, minutes=59) == schema("23:59")
-    assert -1 * timedelta(hours=1, minutes=15) == schema("-1:15")
+    options = (
+        ("8:20", timedelta(hours=8, minutes=20)),
+        ("23:59", timedelta(hours=23, minutes=59)),
+        ("-8:20", -1 * timedelta(hours=8, minutes=20)),
+        ("-1:15", -1 * timedelta(hours=1, minutes=15)),
+        ("-23:59:59", -1 * timedelta(hours=23, minutes=59, seconds=59)),
+        ("-48:00", -1 * timedelta(days=2)),
+        ({"minutes": 5}, timedelta(minutes=5)),
+        (1, timedelta(seconds=1)),
+        ("5", timedelta(seconds=5)),
+        ("180", timedelta(seconds=180)),
+        ("00:08:20.5", timedelta(minutes=8, seconds=20, milliseconds=500)),
+        ("00:23:59.999", timedelta(minutes=23, seconds=59, milliseconds=999)),
+        ("-00:08:20.5", -1 * timedelta(minutes=8, seconds=20, milliseconds=500)),
+        (
+            "-12:59:59.999",
+            -1 * timedelta(hours=12, minutes=59, seconds=59, milliseconds=999),
+        ),
+        ({"milliseconds": 1.5}, timedelta(milliseconds=1, microseconds=500)),
+        ({"seconds": "1.5"}, timedelta(seconds=1, milliseconds=500)),
+        ({"minutes": "1.5"}, timedelta(minutes=1, seconds=30)),
+        ({"hours": -1.5}, -1 * timedelta(hours=1, minutes=30)),
+        ({"days": "-1.5"}, -1 * timedelta(days=1, hours=12)),
+    )
+    for value, result in options:
+        assert schema(value) == result
 
 
 def test_remove_falsy():
@@ -317,6 +359,11 @@ def test_service_schema():
             "service": "homeassistant.turn_on",
             "entity_id": ["light.kitchen", "light.ceiling"],
         },
+        {
+            "service": "light.turn_on",
+            "entity_id": "all",
+            "alias": "turn on kitchen lights",
+        },
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
@@ -334,7 +381,7 @@ def test_slug():
         schema(value)
 
 
-def test_string():
+def test_string(hass):
     """Test string validation."""
     schema = vol.Schema(cv.string)
 
@@ -349,6 +396,19 @@ def test_string():
 
     for value in (True, 1, "hello"):
         schema(value)
+
+    # Test template support
+    for text, native in (
+        ("[1, 2]", [1, 2]),
+        ("{1, 2}", {1, 2}),
+        ("(1, 2)", (1, 2)),
+        ('{"hello": True}', {"hello": True}),
+    ):
+        tpl = template.Template(text, hass)
+        result = tpl.async_render()
+        assert isinstance(result, template.ResultWrapper)
+        assert result == native
+        assert schema(result) == text
 
 
 def test_string_with_no_html():
@@ -405,6 +465,29 @@ def test_template():
     options = (
         1,
         "Hello",
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+    )
+    for value in options:
+        schema(value)
+
+
+def test_dynamic_template():
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+    ):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
     )
@@ -517,6 +600,27 @@ def test_multi_select_in_serializer():
     }
 
 
+def test_boolean_in_serializer():
+    """Test boolean with custom_serializer."""
+    assert cv.custom_serializer(cv.boolean) == {
+        "type": "boolean",
+    }
+
+
+def test_string_in_serializer():
+    """Test string with custom_serializer."""
+    assert cv.custom_serializer(cv.string) == {
+        "type": "string",
+    }
+
+
+def test_positive_time_period_dict_in_serializer():
+    """Test positive_time_period_dict with custom_serializer."""
+    assert cv.custom_serializer(cv.positive_time_period_dict) == {
+        "type": "positive_time_period_dict",
+    }
+
+
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""
@@ -597,114 +701,6 @@ def test_deprecated_with_replacement_key(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 0
     assert test_data == output
-
-
-def test_deprecated_with_invalidation_version(caplog, schema, version):
-    """
-    Test deprecation behaves correctly with only an invalidation_version.
-
-    Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
-        - Processes schema without changing any values
-        - No warning or difference in output if key is not provided
-        - Once the invalidation_version is crossed, raises vol.Invalid if key
-            is detected
-    """
-    deprecated_schema = vol.All(
-        cv.deprecated("mars", invalidation_version="1.0.0"), schema
-    )
-
-    message = (
-        "The 'mars' option is deprecated, "
-        "please remove it from your configuration. "
-        "This option will become invalid in version 1.0.0"
-    )
-
-    test_data = {"mars": True}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 1
-    assert message in caplog.text
-    assert test_data == output
-
-    caplog.clear()
-    assert len(caplog.records) == 0
-
-    test_data = {"venus": False}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 0
-    assert test_data == output
-
-    invalidated_schema = vol.All(
-        cv.deprecated("mars", invalidation_version="0.1.0"), schema
-    )
-    test_data = {"mars": True}
-    with pytest.raises(vol.MultipleInvalid) as exc_info:
-        invalidated_schema(test_data)
-    assert str(exc_info.value) == (
-        "The 'mars' option is deprecated, "
-        "please remove it from your configuration. This option became "
-        "invalid in version 0.1.0"
-    )
-
-
-def test_deprecated_with_replacement_key_and_invalidation_version(
-    caplog, schema, version
-):
-    """
-    Test deprecation behaves with a replacement key & invalidation_version.
-
-    Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
-        - Processes schema moving the value from key to replacement_key
-        - Processes schema changing nothing if only replacement_key provided
-        - No warning if only replacement_key provided
-        - No warning or difference in output if neither key nor
-            replacement_key are provided
-        - Once the invalidation_version is crossed, raises vol.Invalid if key
-        is detected
-    """
-    deprecated_schema = vol.All(
-        cv.deprecated("mars", replacement_key="jupiter", invalidation_version="1.0.0"),
-        schema,
-    )
-
-    warning = (
-        "The 'mars' option is deprecated, "
-        "please replace it with 'jupiter'. This option will become "
-        "invalid in version 1.0.0"
-    )
-
-    test_data = {"mars": True}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 1
-    assert warning in caplog.text
-    assert {"jupiter": True} == output
-
-    caplog.clear()
-    assert len(caplog.records) == 0
-
-    test_data = {"jupiter": True}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 0
-    assert test_data == output
-
-    test_data = {"venus": True}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 0
-    assert test_data == output
-
-    invalidated_schema = vol.All(
-        cv.deprecated("mars", replacement_key="jupiter", invalidation_version="0.1.0"),
-        schema,
-    )
-    test_data = {"mars": True}
-    with pytest.raises(vol.MultipleInvalid) as exc_info:
-        invalidated_schema(test_data)
-    assert str(exc_info.value) == (
-        "The 'mars' option is deprecated, "
-        "please replace it with 'jupiter'. This option became "
-        "invalid in version 0.1.0"
-    )
 
 
 def test_deprecated_with_default(caplog, schema):
@@ -793,69 +789,6 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     assert {"jupiter": True} == output
 
 
-def test_deprecated_with_replacement_key_invalidation_version_default(
-    caplog, schema, version
-):
-    """
-    Test deprecation with a replacement key, invalidation_version & default.
-
-    Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
-        - Processes schema moving the value from key to replacement_key
-        - Processes schema changing nothing if only replacement_key provided
-        - No warning if only replacement_key provided
-        - No warning if neither key nor replacement_key are provided
-            - Adds replacement_key with default value in this case
-        - Once the invalidation_version is crossed, raises vol.Invalid if key
-        is detected
-    """
-    deprecated_schema = vol.All(
-        cv.deprecated(
-            "mars",
-            replacement_key="jupiter",
-            invalidation_version="1.0.0",
-            default=False,
-        ),
-        schema,
-    )
-
-    test_data = {"mars": True}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 1
-    assert (
-        "The 'mars' option is deprecated, "
-        "please replace it with 'jupiter'. This option will become "
-        "invalid in version 1.0.0"
-    ) in caplog.text
-    assert {"jupiter": True} == output
-
-    caplog.clear()
-    assert len(caplog.records) == 0
-
-    test_data = {"jupiter": True}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 0
-    assert test_data == output
-
-    test_data = {"venus": True}
-    output = deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 0
-    assert {"venus": True, "jupiter": False} == output
-
-    invalidated_schema = vol.All(
-        cv.deprecated("mars", replacement_key="jupiter", invalidation_version="0.1.0"),
-        schema,
-    )
-    test_data = {"mars": True}
-    with pytest.raises(vol.MultipleInvalid) as exc_info:
-        invalidated_schema(test_data)
-    assert str(exc_info.value) == (
-        "The 'mars' option is deprecated, "
-        "please replace it with 'jupiter'. This option became "
-        "invalid in version 0.1.0"
-    )
-
-
 def test_deprecated_cant_find_module():
     """Test if the current module cannot be inspected."""
     with patch("inspect.getmodule", return_value=None):
@@ -863,9 +796,79 @@ def test_deprecated_cant_find_module():
         cv.deprecated(
             "mars",
             replacement_key="jupiter",
-            invalidation_version="1.0.0",
             default=False,
         )
+
+
+def test_deprecated_logger_with_config_attributes(caplog):
+    """Test if the logger outputs the correct message if the line and file attribute is available in config."""
+    file: str = "configuration.yaml"
+    line: int = 54
+    replacement = f"'mars' option near {file}:{line} is deprecated"
+    config = OrderedDict([("mars", "blah")])
+    setattr(config, "__config_file__", file)
+    setattr(config, "__line__", line)
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+
+def test_deprecated_logger_with_one_config_attribute(caplog):
+    """Test if the logger outputs the correct message if only one of line and file attribute is available in config."""
+    file: str = "configuration.yaml"
+    line: int = 54
+    replacement = f"'mars' option near {file}:{line} is deprecated"
+    config = OrderedDict([("mars", "blah")])
+    setattr(config, "__config_file__", file)
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement not in caplog.text
+    assert (
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
+    ) in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    config = OrderedDict([("mars", "blah")])
+    setattr(config, "__line__", line)
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement not in caplog.text
+    assert (
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
+    ) in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+
+def test_deprecated_logger_without_config_attributes(caplog):
+    """Test if the logger outputs the correct message if the line and file attribute is not available in config."""
+    file: str = "configuration.yaml"
+    line: int = 54
+    replacement = f"'mars' option near {file}:{line} is deprecated"
+    config = OrderedDict([("mars", "blah")])
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement not in caplog.text
+    assert (
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
+    ) in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
 
 
 def test_key_dependency():
@@ -931,7 +934,7 @@ def test_socket_timeout():  # pylint: disable=invalid-name
     with pytest.raises(vol.Invalid):
         schema(-1)
 
-    assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
+    assert schema(None) == _GLOBAL_DEFAULT_TIMEOUT
 
     assert schema(1) == 1.0
 
@@ -1021,7 +1024,7 @@ def test_key_value_schemas():
         schema(True)
         assert str(excinfo.value) == "Expected a dictionary"
 
-    for mode in None, "invalid":
+    for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
@@ -1061,3 +1064,39 @@ def test_script(caplog):
             cv.script_action(data)
 
         assert msg in str(excinfo.value)
+
+
+def test_whitespace():
+    """Test whitespace validation."""
+    schema = vol.Schema(cv.whitespace)
+
+    for value in (
+        None,
+        "" "T",
+        "negative",
+        "lock",
+        "tr  ue",
+        [],
+        [1, 2],
+        {"one": "two"},
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("  ", "   "):
+        assert schema(value)
+
+
+def test_currency():
+    """Test currency validator."""
+    schema = vol.Schema(cv.currency)
+
+    for value in (
+        None,
+        "BTC",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("EUR", "USD"):
+        assert schema(value)

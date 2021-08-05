@@ -1,10 +1,6 @@
 {
     "config": {
-        "abort": {
-            "address_exists": "Adressen har redan st\u00e4llts in."
-        },
         "error": {
-            "connection_error": "Det gick inte att ansluta.",
             "invalid_address": "Adress hittades inte i serviceomr\u00e5det Twente Milieu."
         },
         "step": {

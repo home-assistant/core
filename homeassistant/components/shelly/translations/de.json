@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "unsupported_firmware": "Das Ger\u00e4t verwendet eine nicht unterst\u00fctzte Firmware-Version."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "Shelly: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "M\u00f6chtest du das {model} bei {host} einrichten?\n\nBatteriebetriebene Ger\u00e4te, die passwortgesch\u00fctzt sind, m\u00fcssen aufgeweckt werden, bevor du mit dem Einrichten fortf\u00e4hrst.\nBatteriebetriebene Ger\u00e4te, die nicht passwortgesch\u00fctzt sind, werden hinzugef\u00fcgt, wenn das Ger\u00e4t aufwacht. Du kannst das Ger\u00e4t nun manuell \u00fcber eine Taste am Ger\u00e4t aufwecken oder auf das n\u00e4chste Datenupdate des Ger\u00e4ts warten."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Vor der Einrichtung m\u00fcssen batteriebetriebene Ger\u00e4te durch Dr\u00fccken der Taste am Ger\u00e4t aufgeweckt werden."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Taste",
+            "button1": "Erste Taste",
+            "button2": "Zweite Taste",
+            "button3": "Dritte Taste"
+        },
+        "trigger_type": {
+            "double": "{subtype} zweifach bet\u00e4tigt",
+            "long": "{subtype} gehalten",
+            "long_single": "{subtype} gehalten und dann einfach bet\u00e4tigt",
+            "single": "{subtype} einfach bet\u00e4tigt",
+            "single_long": "{subtype} einfach bet\u00e4tigt und dann gehalten",
+            "triple": "{subtype} dreifach bet\u00e4tigt"
+        }
+    }
+}

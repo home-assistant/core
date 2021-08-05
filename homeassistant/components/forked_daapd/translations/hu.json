@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "forbidden": "Nem tud csatlakozni. K\u00e9rj\u00fck, ellen\u0151rizze a forked-daapd h\u00e1l\u00f3zati enged\u00e9lyeket.",
+            "unknown_error": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                }
+            }
+        }
+    }
+}

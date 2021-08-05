@@ -1,7 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
         "error": {
-            "identifier_exists": "Postnummer er allerede registrert",
             "invalid_zip_code": "Postnummeret er ugyldig"
         },
         "step": {

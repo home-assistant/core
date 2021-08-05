@@ -1,4 +1,31 @@
 {
+    "device_automation": {
+        "action_type": {
+            "close": "\u5173\u95ed {entity_name}",
+            "close_tilt": "\u5173\u95ed {entity_name}",
+            "open": "\u6253\u5f00 {entity_name}",
+            "open_tilt": "\u65cb\u5f00 {entity_name}",
+            "set_position": "\u8bbe\u7f6e {entity_name} \u7684\u4f4d\u7f6e",
+            "set_tilt_position": "\u8bbe\u7f6e {entity_name} \u7684\u503e\u659c\u4f4d\u7f6e",
+            "stop": "\u505c\u6b62 {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} \u5df2\u5173\u95ed",
+            "is_closing": "{entity_name} \u6b63\u5728\u5173\u95ed",
+            "is_open": "{entity_name} \u5df2\u6253\u5f00",
+            "is_opening": "{entity_name} \u6b63\u5728\u6253\u5f00",
+            "is_position": "{entity_name} \u5f53\u524d\u4f4d\u7f6e\u4e3a",
+            "is_tilt_position": "{entity_name} \u5f53\u524d\u503e\u659c\u4f4d\u7f6e\u4e3a"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} \u5df2\u5173\u95ed",
+            "closing": "{entity_name} \u6b63\u5728\u5173\u95ed",
+            "opened": "{entity_name} \u5df2\u6253\u5f00",
+            "opening": "{entity_name} \u6b63\u5728\u6253\u5f00",
+            "position": "{entity_name} \u7684\u4f4d\u7f6e\u53d8\u5316",
+            "tilt_position": "{entity_name} \u7684\u503e\u659c\u4f4d\u7f6e\u53d8\u5316"
+        }
+    },
     "state": {
         "_": {
             "closed": "\u5df2\u5173\u95ed",

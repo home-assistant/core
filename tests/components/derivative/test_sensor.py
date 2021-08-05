@@ -1,11 +1,10 @@
 """The tests for the derivative sensor platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.const import POWER_WATT, TIME_HOURS, TIME_MINUTES, TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 
 async def test_state(hass):
@@ -23,11 +22,13 @@ async def test_state(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 1, {})
-    await hass.async_block_till_done()
+    base = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow") as now:
+        now.return_value = base
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
 
-    now = dt_util.utcnow() + timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        now.return_value += timedelta(seconds=3600)
         hass.states.async_set(entity_id, 1, {}, force_update=True)
         await hass.async_block_till_done()
 
@@ -63,9 +64,10 @@ async def setup_tests(hass, config, times, values, expected_state):
     config, entity_id = await _setup_sensor(hass, config)
 
     # Testing a energy sensor with non-monotonic intervals and values
-    for time, value in zip(times, values):
-        now = dt_util.utcnow() + timedelta(seconds=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
+    base = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow") as now:
+        for time, value in zip(times, values):
+            now.return_value = base + timedelta(seconds=time)
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
@@ -163,8 +165,9 @@ async def test_data_moving_average_for_discrete_sensor(hass):
         },
     )  # two minute window
 
+    base = dt_util.utcnow()
     for time, value in zip(times, temperature_values):
-        now = dt_util.utcnow() + timedelta(seconds=time)
+        now = base + timedelta(seconds=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
@@ -192,13 +195,15 @@ async def test_prefix(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(
-        entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
-    )
-    await hass.async_block_till_done()
+    base = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow") as now:
+        now.return_value = base
+        hass.states.async_set(
+            entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
+        )
+        await hass.async_block_till_done()
 
-    now = dt_util.utcnow() + timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        now.return_value += timedelta(seconds=3600)
         hass.states.async_set(
             entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
         )
@@ -228,11 +233,13 @@ async def test_suffix(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 1000, {})
-    await hass.async_block_till_done()
+    base = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow") as now:
+        now.return_value = base
+        hass.states.async_set(entity_id, 1000, {})
+        await hass.async_block_till_done()
 
-    now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        now.return_value += timedelta(seconds=10)
         hass.states.async_set(entity_id, 1000, {}, force_update=True)
         await hass.async_block_till_done()
 

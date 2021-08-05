@@ -41,6 +41,12 @@
                     "other": "Vazios"
                 }
             },
+            "simple_options": {
+                "data": {
+                    "track_clients": "Acompanhar clientes da rede",
+                    "track_devices": "Acompanhar dispositivos de rede (dispositivos Ubiquiti)"
+                }
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Criar sensores de uso de largura de banda para clientes da rede"

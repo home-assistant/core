@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_communicate": "Failed to communicate",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_communicate": "Failed to communicate",
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "Select DSMR version",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Select connection address"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "Select DSMR version",
+                    "port": "Select device"
+                },
+                "title": "Device"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "port": "USB Device Path"
+                },
+                "title": "Path"
+            },
+            "user": {
+                "data": {
+                    "type": "Connection type"
+                },
+                "title": "Select connection type"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimum time between entity updates [s]"
+                },
+                "title": "DSMR Options"
+            }
+        }
+    }
+}

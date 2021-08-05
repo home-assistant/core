@@ -1,8 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
         "error": {
-            "identifier_exists": "Conta j\u00e1 registada",
-            "invalid_credentials": "Credenciais inv\u00e1lidas"
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "step": {
             "user": {

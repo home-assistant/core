@@ -1,40 +1,53 @@
 {
   "config": {
     "step": {
-      "geography": {
+      "geography_by_coords": {
         "title": "Configure a Geography",
-        "description": "Use the AirVisual cloud API to monitor a geographical location.",
+        "description": "Use the AirVisual cloud API to monitor a latitude/longitude.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "Latitude",
-          "longitude": "Longitude"
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "geography_by_name": {
+        "title": "Configure a Geography",
+        "description": "Use the AirVisual cloud API to monitor a city/state/country.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "city": "City",
+          "country": "Country",
+          "state": "state"
         }
       },
       "node_pro": {
         "title": "Configure an AirVisual Node/Pro",
         "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
         "data": {
-          "ip_address": "Unit IP Address/Hostname",
+          "ip_address": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate AirVisual",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "user": {
         "title": "Configure AirVisual",
-        "description": "Pick what type of AirVisual data you want to monitor.",
-        "data": {
-          "cloud_api": "Geographical Location",
-          "node_pro": "AirVisual Node Pro",
-          "type": "Integration Type"
-        }
+        "description": "Pick what type of AirVisual data you want to monitor."
       }
     },
     "error": {
-      "general_error": "There was an unknown error.",
-      "invalid_api_key": "Invalid API key provided.",
-      "unable_to_connect": "Unable to connect to Node/Pro unit."
+      "general_error": "[%key:common::config_flow::error::unknown%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "location_not_found": "Location not found",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "These coordinates or Node/Pro ID are already registered."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%] or Node/Pro ID is already registered.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {

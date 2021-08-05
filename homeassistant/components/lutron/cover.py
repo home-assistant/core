@@ -64,8 +64,6 @@ class LutronCover(LutronDevice, CoverEntity):
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr["Lutron Integration ID"] = self._lutron_device.id
-        return attr
+        return {"lutron_integration_id": self._lutron_device.id}

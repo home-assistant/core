@@ -4,13 +4,13 @@
             "all_configured": "Tous les serveurs li\u00e9s sont d\u00e9j\u00e0 configur\u00e9s",
             "already_configured": "Ce serveur Plex est d\u00e9j\u00e0 configur\u00e9",
             "already_in_progress": "Plex en cours de configuration",
-            "invalid_import": "La configuration import\u00e9e est invalide",
-            "non-interactive": "Importation non interactive",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
             "token_request_timeout": "D\u00e9lai d'obtention du jeton",
             "unknown": "\u00c9chec pour une raison inconnue"
         },
         "error": {
             "faulty_credentials": "L'autorisation \u00e0 \u00e9chou\u00e9e",
+            "host_or_token": "Doit fournir au moins un h\u00f4te ou un jeton",
             "no_servers": "Aucun serveur li\u00e9 au compte",
             "not_found": "Serveur Plex introuvable",
             "ssl_error": "Probl\u00e8me de certificat SSL"
@@ -19,7 +19,7 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "H\u00f4te (facultatif si un jeton est fourni)",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "port": "Port",
                     "ssl": "Utiliser SSL",
                     "token": "Jeton (facultatif)",
@@ -35,6 +35,7 @@
                 "title": "S\u00e9lectionnez le serveur Plex"
             },
             "user": {
+                "description": "Continuez sur [plex.tv] (https://plex.tv) pour lier un serveur Plex.",
                 "title": "Plex Media Server"
             },
             "user_advanced": {

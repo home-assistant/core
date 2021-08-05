@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mikrotik is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding niet geslaagd",
-            "name_exists": "Naam bestaat al",
-            "wrong_credentials": "Ongeldige inloggegevens"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "name_exists": "Naam bestaat al"
         },
         "step": {
             "user": {

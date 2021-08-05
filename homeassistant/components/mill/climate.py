@@ -1,7 +1,4 @@
 """Support for mill wifi-enabled home heaters."""
-import logging
-
-from mill import Mill
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -14,15 +11,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-)
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ATTR_AWAY_TEMP,
@@ -35,8 +25,6 @@ from .const import (
     MIN_TEMP,
     SERVICE_SET_ROOM_TEMP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
@@ -52,15 +40,8 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Mill climate."""
-    mill_data_connection = Mill(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        websession=async_get_clientsession(hass),
-    )
-    if not await mill_data_connection.connect():
-        raise ConfigEntryNotReady
 
-    await mill_data_connection.find_all_heaters()
+    mill_data_connection = hass.data[DOMAIN]
 
     dev = []
     for heater in mill_data_connection.heaters.values():
@@ -85,15 +66,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MillHeater(ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
+    _attr_fan_modes = [FAN_ON, HVAC_MODE_OFF]
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_target_temperature_step = 1
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, heater, mill_data_connection):
         """Initialize the thermostat."""
         self._heater = heater
         self._conn = mill_data_connection
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        self._attr_unique_id = heater.device_id
+        self._attr_name = heater.name
 
     @property
     def available(self):
@@ -101,17 +87,7 @@ class MillHeater(ClimateEntity):
         return self._heater.available
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._heater.device_id
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._heater.name
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         res = {
             "open_window": self._heater.open_window,
@@ -127,19 +103,9 @@ class MillHeater(ClimateEntity):
         return res
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._heater.set_temp
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
 
     @property
     def current_temperature(self):
@@ -150,21 +116,6 @@ class MillHeater(ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
         return FAN_ON if self._heater.fan_status == 1 else HVAC_MODE_OFF
-
-    @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return [FAN_ON, HVAC_MODE_OFF]
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return MIN_TEMP
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return MAX_TEMP
 
     @property
     def hvac_action(self):

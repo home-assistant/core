@@ -1,6 +1,4 @@
 """Support for controlling projector via the PJLink protocol."""
-import logging
-
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
@@ -21,8 +19,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ENCODING = "encoding"
 
@@ -161,15 +157,13 @@ class PjLinkDevice(MediaPlayerEntity):
 
     def turn_off(self):
         """Turn projector off."""
-        if self._pwstate == STATE_ON:
-            with self.projector() as projector:
-                projector.set_power("off")
+        with self.projector() as projector:
+            projector.set_power("off")
 
     def turn_on(self):
         """Turn projector on."""
-        if self._pwstate == STATE_OFF:
-            with self.projector() as projector:
-                projector.set_power("on")
+        with self.projector() as projector:
+            projector.set_power("on")
 
     def mute_volume(self, mute):
         """Mute (true) of unmute (false) media player."""

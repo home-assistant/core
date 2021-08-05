@@ -1,6 +1,7 @@
 """Tests for Islamic Prayer Times init."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from prayer_times_calculator.exceptions import InvalidResponseError
 
@@ -16,11 +17,10 @@ from . import (
     PRAYER_TIMES_TIMESTAMPS,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup_with_config(hass):
+async def test_setup_with_config(hass, legacy_patchable_time):
     """Test that we import the config and setup the client."""
     config = {
         islamic_prayer_times.DOMAIN: {islamic_prayer_times.CONF_CALC_METHOD: "isna"}
@@ -33,12 +33,16 @@ async def test_setup_with_config(hass):
             await async_setup_component(hass, islamic_prayer_times.DOMAIN, config)
             is True
         )
+        await hass.async_block_till_done()
 
 
-async def test_successful_config_entry(hass):
+async def test_successful_config_entry(hass, legacy_patchable_time):
     """Test that Islamic Prayer Times is configured successfully."""
 
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
+    entry = MockConfigEntry(
+        domain=islamic_prayer_times.DOMAIN,
+        data={},
+    )
     entry.add_to_hass(hass)
 
     with patch(
@@ -46,17 +50,21 @@ async def test_successful_config_entry(hass):
         return_value=PRAYER_TIMES,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-        assert entry.state == config_entries.ENTRY_STATE_LOADED
+        assert entry.state is config_entries.ConfigEntryState.LOADED
         assert entry.options == {
             islamic_prayer_times.CONF_CALC_METHOD: islamic_prayer_times.DEFAULT_CALC_METHOD
         }
 
 
-async def test_setup_failed(hass):
+async def test_setup_failed(hass, legacy_patchable_time):
     """Test Islamic Prayer Times failed due to an error."""
 
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
+    entry = MockConfigEntry(
+        domain=islamic_prayer_times.DOMAIN,
+        data={},
+    )
     entry.add_to_hass(hass)
 
     # test request error raising ConfigEntryNotReady
@@ -65,12 +73,16 @@ async def test_setup_failed(hass):
         side_effect=InvalidResponseError(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+        await hass.async_block_till_done()
+        assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, legacy_patchable_time):
     """Test removing Islamic Prayer Times."""
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
+    entry = MockConfigEntry(
+        domain=islamic_prayer_times.DOMAIN,
+        data={},
+    )
     entry.add_to_hass(hass)
 
     with patch(
@@ -81,7 +93,7 @@ async def test_unload_entry(hass):
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+        assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
         assert islamic_prayer_times.DOMAIN not in hass.data
 
 
@@ -95,6 +107,7 @@ async def test_islamic_prayer_times_timestamp_format(hass, legacy_patchable_time
         return_value=PRAYER_TIMES,
     ), patch("homeassistant.util.dt.now", return_value=NOW):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert (
             hass.data[islamic_prayer_times.DOMAIN].prayer_times_info

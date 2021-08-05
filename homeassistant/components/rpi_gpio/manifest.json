@@ -2,6 +2,7 @@
   "domain": "rpi_gpio",
   "name": "Raspberry Pi GPIO",
   "documentation": "https://www.home-assistant.io/integrations/rpi_gpio",
-  "requirements": ["RPi.GPIO==0.7.0"],
-  "codeowners": []
+  "requirements": ["RPi.GPIO==0.7.1a4"],
+  "codeowners": [],
+  "iot_class": "local_push"
 }

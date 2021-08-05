@@ -1,18 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte de Logi Circule.",
+            "already_configured": "El compte ja ha estat configurat",
             "external_error": "S'ha produ\u00eft una excepci\u00f3 d'un altre flux de dades.",
             "external_setup": "Logi Circle s'ha configurat correctament des d'un altre flux de dades.",
-            "no_flows": "Necessites configurar Logi Circle abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Autenticaci\u00f3 exitosa amb Logi Circle."
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
         },
         "error": {
-            "auth_error": "Ha fallat l'autoritzaci\u00f3 de l'API.",
-            "auth_timeout": "L'autoritzaci\u00f3 ha expirat durant l'obtenci\u00f3 del token d'acc\u00e9s.",
-            "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia"
+            "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "auth": {

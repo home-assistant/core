@@ -98,6 +98,10 @@
             "off": "\u96fb\u91cf\u6b63\u5e38",
             "on": "\u96fb\u91cf\u4f4e"
         },
+        "battery_charging": {
+            "off": "\u672a\u5728\u5145\u96fb",
+            "on": "\u5145\u96fb\u4e2d"
+        },
         "cold": {
             "off": "\u6b63\u5e38",
             "on": "\u51b7"
@@ -122,6 +126,10 @@
             "off": "\u6b63\u5e38",
             "on": "\u71b1"
         },
+        "light": {
+            "off": "\u6c92\u6709\u5149\u7dda",
+            "on": "\u5075\u6e2c\u5230\u5149\u7dda"
+        },
         "lock": {
             "off": "\u5df2\u4e0a\u9396",
             "on": "\u5df2\u89e3\u9396"
@@ -134,6 +142,10 @@
             "off": "\u7121\u4eba",
             "on": "\u6709\u4eba"
         },
+        "moving": {
+            "off": "\u672a\u5728\u79fb\u52d5",
+            "on": "\u79fb\u52d5\u4e2d"
+        },
         "occupancy": {
             "off": "\u672a\u89f8\u767c",
             "on": "\u5df2\u89f8\u767c"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "\u95dc\u9589",
             "on": "\u958b\u555f"
+        },
+        "plug": {
+            "off": "\u5df2\u62d4\u9664",
+            "on": "\u5df2\u63d2\u4e0a"
         },
         "presence": {
             "off": "\u96e2\u5bb6",

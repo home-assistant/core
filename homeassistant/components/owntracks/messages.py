@@ -10,7 +10,7 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_GPS,
 )
-from homeassistant.const import STATE_HOME
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.util import decorator, slugify
 
 from .helper import supports_encryption
@@ -97,7 +97,10 @@ def _set_gps_from_zone(kwargs, location, zone):
     Async friendly.
     """
     if zone is not None:
-        kwargs["gps"] = (zone.attributes["latitude"], zone.attributes["longitude"])
+        kwargs["gps"] = (
+            zone.attributes[ATTR_LATITUDE],
+            zone.attributes[ATTR_LONGITUDE],
+        )
         kwargs["gps_accuracy"] = zone.attributes["radius"]
         kwargs["location_name"] = location
     return kwargs
@@ -301,7 +304,7 @@ async def async_handle_waypoint(hass, name_base, waypoint):
     if hass.states.get(entity_id) is not None:
         return
 
-    zone = zone_comp.Zone(
+    zone = zone_comp.Zone.from_yaml(
         {
             zone_comp.CONF_NAME: pretty_name,
             zone_comp.CONF_LATITUDE: lat,
@@ -310,7 +313,6 @@ async def async_handle_waypoint(hass, name_base, waypoint):
             zone_comp.CONF_ICON: zone_comp.ICON_IMPORT,
             zone_comp.CONF_PASSIVE: False,
         },
-        False,
     )
     zone.hass = hass
     zone.entity_id = entity_id

@@ -7,6 +7,14 @@
             "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
             "invalid_auth": "Ogiltig autentisering",
             "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API nyckel"
+                },
+                "title": "Anslut till Rachio-enheten"
+            }
         }
     }
 }

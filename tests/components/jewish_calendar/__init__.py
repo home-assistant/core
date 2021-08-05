@@ -2,14 +2,14 @@
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
+from unittest.mock import patch
 
 from homeassistant.components import jewish_calendar
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
-
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
 
+HDATE_DEFAULT_ALTITUDE = 754
 NYC_LATLNG = _LatLng(40.7128, -74.0060)
 JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
 
@@ -26,7 +26,9 @@ def make_nyc_test_params(dtime, results, havdalah_offset=0):
     if isinstance(results, dict):
         time_zone = dt_util.get_time_zone("America/New_York")
         results = {
-            key: time_zone.localize(value) if isinstance(value, datetime) else value
+            key: value.replace(tzinfo=time_zone)
+            if isinstance(value, datetime)
+            else value
             for key, value in results.items()
         }
     return (
@@ -46,7 +48,9 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
     if isinstance(results, dict):
         time_zone = dt_util.get_time_zone("Asia/Jerusalem")
         results = {
-            key: time_zone.localize(value) if isinstance(value, datetime) else value
+            key: value.replace(tzinfo=time_zone)
+            if isinstance(value, datetime)
+            else value
             for key, value in results.items()
         }
     return (

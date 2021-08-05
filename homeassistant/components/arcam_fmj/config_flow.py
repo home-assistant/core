@@ -1,5 +1,4 @@
 """Config flow to configure the Arcam FMJ component."""
-import logging
 from urllib.parse import urlparse
 
 from arcam.fmj.client import Client, ConnectionFailed
@@ -13,20 +12,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def get_entry_client(hass, entry):
     """Retrieve client associated with a config entry."""
     return hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id]
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class ArcamFmjFlowHandler(config_entries.ConfigFlow):
+class ArcamFmjFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _async_set_unique_id_and_update(self, host, port, uuid):
         await self.async_set_unique_id(uuid)
@@ -37,12 +32,13 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         try:
             await client.start()
         except ConnectionFailed:
-            return self.async_abort(reason="unable_to_connect")
+            return self.async_abort(reason="cannot_connect")
         finally:
             await client.stop()
 
         return self.async_create_entry(
-            title=f"{DEFAULT_NAME} ({host})", data={CONF_HOST: host, CONF_PORT: port},
+            title=f"{DEFAULT_NAME} ({host})",
+            data={CONF_HOST: host, CONF_PORT: port},
         )
 
     async def async_step_user(self, user_input=None):
@@ -73,7 +69,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        context = self.context  # pylint: disable=no-member
+        context = self.context
         placeholders = {
             "host": context[CONF_HOST],
         }
@@ -96,7 +92,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 
-        context = self.context  # pylint: disable=no-member
+        context = self.context
         context[CONF_HOST] = host
         context[CONF_PORT] = DEFAULT_PORT
         return await self.async_step_confirm()

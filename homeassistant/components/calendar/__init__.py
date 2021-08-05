@@ -1,12 +1,17 @@
 """Support for Google Calendar event device sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import re
+from typing import cast, final
 
 from aiohttp import web
 
 from homeassistant.components import http
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BAD_REQUEST, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -41,6 +46,18 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 def get_date(date):
@@ -116,13 +133,14 @@ def is_offset_reached(event):
 
 
 class CalendarEventDevice(Entity):
-    """A calendar event device."""
+    """Base class for calendar event entities."""
 
     @property
     def event(self):
         """Return the next upcoming event."""
         raise NotImplementedError()
 
+    @final
     @property
     def state_attributes(self):
         """Return the entity state attributes."""
@@ -207,10 +225,10 @@ class CalendarListView(http.HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
         hass = request.app["hass"]
-        calendar_list = []
+        calendar_list: list[dict[str, str]] = []
 
         for entity in self.component.entities:
             state = hass.states.get(entity.entity_id)
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
 
-        return self.json(sorted(calendar_list, key=lambda x: x["name"]))
+        return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))

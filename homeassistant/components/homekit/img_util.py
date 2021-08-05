@@ -27,7 +27,9 @@ def scale_jpeg_camera_image(cam_image, width, height):
             break
 
     return turbo_jpeg.scale_with_quality(
-        cam_image.content, scaling_factor=scaling_factor, quality=75,
+        cam_image.content,
+        scaling_factor=scaling_factor,
+        quality=75,
     )
 
 
@@ -51,6 +53,8 @@ class TurboJPEGSingleton:
 
     def __init__(self):
         """Try to create TurboJPEG only once."""
+        # pylint: disable=unused-private-member
+        # https://github.com/PyCQA/pylint/issues/4681
         try:
             # TurboJPEG checks for libturbojpeg
             # when its created, but it imports
@@ -61,6 +65,6 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton.__instance = TurboJPEG()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "libturbojpeg is not installed, cameras may impact HomeKit performance"
+                "Error loading libturbojpeg; Cameras may impact HomeKit performance"
             )
             TurboJPEGSingleton.__instance = False

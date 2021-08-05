@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Aucune coordonn\u00e9e du domicile n'est d\u00e9finie dans la configuration de Home Assistant"
+        },
         "error": {
-            "name_exists": "Emplacement d\u00e9j\u00e0 existant"
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9"
         },
         "step": {
             "user": {

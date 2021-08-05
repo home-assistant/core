@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Kan geen verbinding maken",
             "unknown": "Onverwachte fout"
         },
         "step": {
@@ -33,6 +33,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Verbinden mislukt",
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "init": {
                 "data": {

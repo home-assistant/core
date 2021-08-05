@@ -1,6 +1,4 @@
 """Support for Ambiclimate devices."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -8,8 +6,6 @@ from homeassistant.helpers import config_validation as cv
 
 from . import config_flow
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -24,7 +20,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, config) -> bool:
     """Set up Ambiclimate components."""
     if DOMAIN not in config:
         return True
@@ -38,7 +34,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, entry) -> bool:
     """Set up Ambiclimate from a config entry."""
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "climate")

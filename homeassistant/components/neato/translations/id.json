@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            },
+            "reauth_confirm": {
+                "title": "Ingin memulai penyiapan?"
+            }
+        }
+    },
+    "title": "Neato Botvac"
+}

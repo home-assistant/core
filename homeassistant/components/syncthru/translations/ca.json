@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "invalid_url": "URL inv\u00e0lid",
+            "syncthru_not_supported": "El dispositiu no \u00e9s compatible amb SyncThru",
+            "unknown_state": "Estat de la impressora desconegut, comprova l'URL i la connecci\u00f3 de la xarxa"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "Nom",
+                    "url": "URL de la interf\u00edcie web"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nom",
+                    "url": "URL de la interf\u00edcie web"
+                }
+            }
+        }
+    }
+}

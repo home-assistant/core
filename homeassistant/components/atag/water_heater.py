@@ -22,48 +22,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+    _attr_operation_list = OPERATION_LIST
+    _attr_supported_features = SUPPORT_FLAGS_HEATER
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.coordinator.atag.dhw.temperature
+        return self.coordinator.data.dhw.temperature
 
     @property
     def current_operation(self):
         """Return current operation."""
-        operation = self.coordinator.atag.dhw.current_operation
+        operation = self.coordinator.data.dhw.current_operation
         return operation if operation in self.operation_list else STATE_OFF
-
-    @property
-    def operation_list(self):
-        """List of available operation modes."""
-        return OPERATION_LIST
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if await self.coordinator.atag.dhw.set_temp(kwargs.get(ATTR_TEMPERATURE)):
+        if await self.coordinator.data.dhw.set_temp(kwargs.get(ATTR_TEMPERATURE)):
             self.async_write_ha_state()
 
     @property
     def target_temperature(self):
         """Return the setpoint if water demand, otherwise return base temp (comfort level)."""
-        return self.coordinator.atag.dhw.target_temperature
+        return self.coordinator.data.dhw.target_temperature
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self.coordinator.atag.dhw.max_temp
+        return self.coordinator.data.dhw.max_temp
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self.coordinator.atag.dhw.min_temp
+        return self.coordinator.data.dhw.min_temp

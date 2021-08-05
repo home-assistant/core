@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "project_error": "Could not get project info."
+        },
+        "flow_title": "{project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Personal Access Token (PAT)"
+                },
+                "description": "Authentication failed for {project_url}. Please enter your current credentials.",
+                "title": "Reauthentication"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organization",
+                    "personal_access_token": "Personal Access Token (PAT)",
+                    "project": "Project"
+                },
+                "description": "Set up an Azure DevOps instance to access your project. A Personal Access Token is only required for a private project.",
+                "title": "Add Azure DevOps Project"
+            }
+        }
+    }
+}

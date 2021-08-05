@@ -2,5 +2,6 @@
   "domain": "worxlandroid",
   "name": "Worx Landroid",
   "documentation": "https://www.home-assistant.io/integrations/worxlandroid",
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

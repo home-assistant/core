@@ -9,7 +9,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
+    ATTR_DEVICE_INFO,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -17,9 +20,6 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_PORT,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
-    ERROR_NOT_CONNECTED,
-    REASON_NOT_CONNECTED,
-    REASON_UNKNOWN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Panasonic Viera."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Panasonic Viera config flow."""
@@ -38,6 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: None,
             CONF_PORT: None,
             CONF_ON_ACTION: None,
+            ATTR_DEVICE_INFO: None,
         }
 
         self._remote = None
@@ -52,19 +52,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._remote = await self.hass.async_add_executor_job(
                     partial(RemoteControl, self._data[CONF_HOST], self._data[CONF_PORT])
                 )
-            except (TimeoutError, URLError, SOAPError, OSError) as err:
+
+                self._data[ATTR_DEVICE_INFO] = await self.hass.async_add_executor_job(
+                    self._remote.get_device_info
+                )
+            except (URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
-                errors["base"] = ERROR_NOT_CONNECTED
+                errors["base"] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("An unknown error occurred: %s", err)
-                return self.async_abort(reason=REASON_UNKNOWN)
+                return self.async_abort(reason="unknown")
 
             if "base" not in errors:
+                await self.async_set_unique_id(self._data[ATTR_DEVICE_INFO][ATTR_UDN])
+                self._abort_if_unique_id_configured()
+
+                if self._data[CONF_NAME] == DEFAULT_NAME:
+                    self._data[CONF_NAME] = self._data[ATTR_DEVICE_INFO][
+                        ATTR_FRIENDLY_NAME
+                    ].replace("_", " ")
+
                 if self._remote.type == TV_TYPE_ENCRYPTED:
                     return await self.async_step_pairing()
 
                 return self.async_create_entry(
-                    title=self._data[CONF_NAME], data=self._data,
+                    title=self._data[CONF_NAME],
+                    data=self._data,
                 )
 
         return self.async_show_form(
@@ -95,16 +108,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input[CONF_PIN]
             try:
-                self._remote.authorize_pin_code(pincode=pin)
+                await self.hass.async_add_executor_job(
+                    partial(self._remote.authorize_pin_code, pincode=pin)
+                )
             except SOAPError as err:
                 _LOGGER.error("Invalid PIN code: %s", err)
                 errors["base"] = ERROR_INVALID_PIN_CODE
-            except (TimeoutError, URLError, OSError) as err:
+            except (URLError, OSError) as err:
                 _LOGGER.error("The remote connection was lost: %s", err)
-                return self.async_abort(reason=REASON_NOT_CONNECTED)
+                return self.async_abort(reason="cannot_connect")
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unknown error: %s", err)
-                return self.async_abort(reason=REASON_UNKNOWN)
+                return self.async_abort(reason="unknown")
 
             if "base" not in errors:
                 encryption_data = {
@@ -115,17 +130,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data = {**self._data, **encryption_data}
 
                 return self.async_create_entry(
-                    title=self._data[CONF_NAME], data=self._data,
+                    title=self._data[CONF_NAME],
+                    data=self._data,
                 )
 
         try:
-            self._remote.request_pin_code(name="Home Assistant")
-        except (TimeoutError, URLError, SOAPError, OSError) as err:
+            await self.hass.async_add_executor_job(
+                partial(self._remote.request_pin_code, name="Home Assistant")
+            )
+        except (URLError, SOAPError, OSError) as err:
             _LOGGER.error("The remote connection was lost: %s", err)
-            return self.async_abort(reason=REASON_NOT_CONNECTED)
+            return self.async_abort(reason="cannot_connect")
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error: %s", err)
-            return self.async_abort(reason=REASON_UNKNOWN)
+            return self.async_abort(reason="unknown")
 
         return self.async_show_form(
             step_id="pairing",

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "IP c\u00edm",
+                    "port": "Port"
+                },
+                "description": "Add meg a ScreenLogic Gateway adatait.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Gateway"
+                },
+                "description": "A k\u00f6vetkez\u0151 ScreenLogic \u00e1tj\u00e1r\u00f3kat fedezt\u00e9k fel. V\u00e1lasszon egyet a konfigur\u00e1l\u00e1shoz, vagy v\u00e1lassza a ScreenLogic \u00e1tj\u00e1r\u00f3 k\u00e9zi konfigur\u00e1l\u00e1s\u00e1t.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Szkennel\u00e9sek k\u00f6z\u00f6tti m\u00e1sodpercek"
+                },
+                "description": "{gateway_name} be\u00e1ll\u00edt\u00e1sainak megad\u00e1sa",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

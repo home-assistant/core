@@ -1,0 +1,9 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa \u05de\u05d5\u05e4\u05e2\u05dc\u05ea",
+            "google_enabled": "Google \u05de\u05d5\u05e4\u05e2\u05dc",
+            "logged_in": "\u05de\u05d7\u05d5\u05d1\u05e8"
+        }
+    }
+}

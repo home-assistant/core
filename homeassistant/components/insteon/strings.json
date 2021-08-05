@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Insteon",
+        "description": "Select the Insteon modem type.",
+        "data": {
+          "modem_type": "Modem type."
+        }
+      },
+      "plm": {
+        "title": "Insteon PLM",
+        "description": "Configure the Insteon PowerLink Modem (PLM).",
+        "data": {
+          "device": "[%key:common::config_flow::data::usb_path%]"
+        }
+      },
+      "hubv1": {
+        "title": "Insteon Hub Version 1",
+        "description": "Configure the Insteon Hub Version 1 (pre-2014).",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "hubv2": {
+        "title": "Insteon Hub Version 2",
+        "description": "Configure the Insteon Hub Version 2.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "select_single": "Select one option."
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Insteon",
+        "description": "Select an option to configure.",
+        "data": {
+          "change_hub_config": "Change the Hub configuration.",
+          "add_override": "Add a device override.",
+          "add_x10": "Add an X10 device.",
+          "remove_override": "Remove a device override.",
+          "remove_x10": "Remove an X10 device."
+        }
+      },
+      "change_hub_config": {
+        "title": "Insteon",
+        "description": "Change the Insteon Hub connection information. You must restart Home Assistant after making this change. This does not change the configuration of the Hub itself. To change the configuration in the Hub use the Hub app.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "add_override": {
+        "title": "Insteon",
+        "description": "Add a device override.",
+        "data": {
+          "address": "Device address (i.e. 1a2b3c)",
+          "cat": "Device category (i.e. 0x10)",
+          "subcat": "Device subcategory (i.e. 0x0a)"
+        }
+      },
+      "add_x10": {
+        "title": "Insteon",
+        "description": "Change the Insteon Hub password.",
+        "data": {
+          "housecode": "Housecode (a - p)",
+          "unitcode": "Unitcode (1 - 16)",
+          "platform": "Platform",
+          "steps": "Dimmer steps (for light devices only, default 22)"
+        }
+      },
+      "remove_override":  {
+        "title": "Insteon",
+        "description": "Remove a device override",
+        "data": {
+          "address": "Select a device address to remove"
+        }
+      },
+      "remove_x10":  {
+        "title": "Insteon",
+        "description": "Remove an X10 device",
+        "data": {
+          "address": "Select a device address to remove"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "select_single": "Select one option.",
+      "input_error": "Invalid entries, please check your values."
+    }
+  }
+}

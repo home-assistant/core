@@ -1,18 +1,18 @@
 """Hass.io Add-on ingress service."""
+from __future__ import annotations
+
 import asyncio
 from ipaddress import ip_address
 import logging
 import os
-from typing import Dict, Union
 
 import aiohttp
-from aiohttp import hdrs, web
-from aiohttp.web_exceptions import HTTPBadGateway
+from aiohttp import ClientTimeout, hdrs, web
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 
 from .const import X_HASSIO, X_INGRESS_PATH
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistantType, host: str):
+def async_setup_ingress_view(hass: HomeAssistant, host: str):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
@@ -35,7 +35,7 @@ class HassIOIngress(HomeAssistantView):
     url = "/api/hassio_ingress/{token}/{path:.*}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession):
+    def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
         """Initialize a Hass.io ingress view."""
         self._host = host
         self._websession = websession
@@ -46,7 +46,7 @@ class HassIOIngress(HomeAssistantView):
 
     async def _handle(
         self, request: web.Request, token: str, path: str
-    ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
+    ) -> web.Response | web.StreamResponse | web.WebSocketResponse:
         """Route data to Hass.io ingress service."""
         try:
             # Websocket
@@ -114,10 +114,9 @@ class HassIOIngress(HomeAssistantView):
 
     async def _handle_request(
         self, request: web.Request, token: str, path: str
-    ) -> Union[web.Response, web.StreamResponse]:
+    ) -> web.Response | web.StreamResponse:
         """Ingress route for request."""
         url = self._create_url(token, path)
-        data = await request.read()
         source_header = _init_header(request, token)
 
         async with self._websession.request(
@@ -126,7 +125,8 @@ class HassIOIngress(HomeAssistantView):
             headers=source_header,
             params=request.query,
             allow_redirects=False,
-            data=data,
+            data=request.content,
+            timeout=ClientTimeout(total=None),
         ) as result:
             headers = _response_header(result)
 
@@ -159,9 +159,7 @@ class HassIOIngress(HomeAssistantView):
             return response
 
 
-def _init_header(
-    request: web.Request, token: str
-) -> Union[CIMultiDict, Dict[str, str]]:
+def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, str]:
     """Create initial header."""
     headers = {}
 
@@ -170,6 +168,7 @@ def _init_header(
         if name in (
             hdrs.CONTENT_LENGTH,
             hdrs.CONTENT_ENCODING,
+            hdrs.TRANSFER_ENCODING,
             hdrs.SEC_WEBSOCKET_EXTENSIONS,
             hdrs.SEC_WEBSOCKET_PROTOCOL,
             hdrs.SEC_WEBSOCKET_VERSION,
@@ -186,7 +185,11 @@ def _init_header(
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
-    connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
+    if (peername := request.transport.get_extra_info("peername")) is None:
+        _LOGGER.error("Can't set forward_for header, missing peername")
+        raise HTTPBadRequest()
+
+    connected_ip = ip_address(peername[0])
     if forward_for:
         forward_for = f"{forward_for}, {connected_ip!s}"
     else:
@@ -208,7 +211,7 @@ def _init_header(
     return headers
 
 
-def _response_header(response: aiohttp.ClientResponse) -> Dict[str, str]:
+def _response_header(response: aiohttp.ClientResponse) -> dict[str, str]:
     """Create response header."""
     headers = {}
 

@@ -1,7 +1,8 @@
 """Support for Z-Wave climate devices."""
 # Because we do not compile openzwave on CI
+from __future__ import annotations
+
 import logging
-from typing import Optional, Tuple
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -181,17 +182,19 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
                 int(self.node.manufacturer_id, 16),
                 int(self.node.product_id, 16),
             )
-            if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
-                    _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat workaround")
-                    self._zxt_120 = 1
+            if (
+                specific_sensor_key in DEVICE_MAPPINGS
+                and DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120
+            ):
+                _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat workaround")
+                self._zxt_120 = 1
         self.update_properties()
 
     def _mode(self) -> None:
         """Return thermostat mode Z-Wave value."""
         raise NotImplementedError()
 
-    def _current_mode_setpoints(self) -> Tuple:
+    def _current_mode_setpoints(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         raise NotImplementedError()
 
@@ -483,12 +486,12 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
         return self._target_temperature
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._target_temperature_range[0]
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._target_temperature_range[1]
 
@@ -566,14 +569,13 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
         _LOGGER.debug("Set swing_mode to %s", swing_mode)
-        if self._zxt_120 == 1:
-            if self.values.zxt_120_swing_mode:
-                self.values.zxt_120_swing_mode.data = swing_mode
+        if self._zxt_120 == 1 and self.values.zxt_120_swing_mode:
+            self.values.zxt_120_swing_mode.data = swing_mode
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self._fan_action:
             data[ATTR_FAN_ACTION] = self._fan_action
         return data
@@ -590,7 +592,7 @@ class ZWaveClimateSingleSetpoint(ZWaveClimateBase):
         """Return thermostat mode Z-Wave value."""
         return self.values.mode
 
-    def _current_mode_setpoints(self) -> Tuple:
+    def _current_mode_setpoints(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         return (self.values.primary,)
 
@@ -606,7 +608,7 @@ class ZWaveClimateMultipleSetpoint(ZWaveClimateBase):
         """Return thermostat mode Z-Wave value."""
         return self.values.primary
 
-    def _current_mode_setpoints(self) -> Tuple:
+    def _current_mode_setpoints(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         current_mode = str(self.values.primary.data).lower()
         setpoints_names = MODE_SETPOINT_MAPPINGS.get(current_mode, ())

@@ -1,6 +1,5 @@
 """Support for LG TV running on NetCast 3 or 4."""
 from datetime import datetime, timedelta
-import logging
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
 from requests import RequestException
@@ -13,6 +12,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -31,8 +31,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_NAME = "LG TV Remote"
 
 CONF_ON_ACTION = "turn_on_action"
@@ -49,6 +47,7 @@ SUPPORT_LGTV = (
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -70,7 +69,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     on_action = config.get(CONF_ON_ACTION)
 
     client = LgNetCastClient(host, access_token)
-    on_action_script = Script(hass, on_action) if on_action else None
+    domain = __name__.split(".")[-2]
+    on_action_script = Script(hass, on_action, name, domain) if on_action else None
 
     add_entities([LgTVDevice(client, name, on_action_script)], True)
 
@@ -87,6 +87,7 @@ class LgTVDevice(MediaPlayerEntity):
         # Assume that the TV is in Play mode
         self._playing = True
         self._volume = 0
+        self._channel_id = None
         self._channel_name = ""
         self._program_name = ""
         self._state = None
@@ -118,8 +119,11 @@ class LgTVDevice(MediaPlayerEntity):
                 channel_info = client.query_data("cur_channel")
                 if channel_info:
                     channel_info = channel_info[0]
+                    channel_id = channel_info.find("major")
                     self._channel_name = channel_info.find("chname").text
                     self._program_name = channel_info.find("progName").text
+                    if channel_id is not None:
+                        self._channel_id = int(channel_id.text)
                     if self._channel_name is None:
                         self._channel_name = channel_info.find("inputSourceName").text
                     if self._program_name is None:
@@ -135,7 +139,8 @@ class LgTVDevice(MediaPlayerEntity):
                     self._sources = dict(zip(channel_names, channel_list))
                     # sort source names by the major channel number
                     source_tuples = [
-                        (k, self._sources[k].find("major").text) for k in self._sources
+                        (k, source.find("major").text)
+                        for k, source in self._sources.items()
                     ]
                     sorted_sources = sorted(
                         source_tuples, key=lambda channel: int(channel[1])
@@ -175,6 +180,11 @@ class LgTVDevice(MediaPlayerEntity):
         return self._source_names
 
     @property
+    def media_content_id(self):
+        """Content id of current playing media."""
+        return self._channel_id
+
+    @property
     def media_content_type(self):
         """Content type of current playing media."""
         return MEDIA_TYPE_CHANNEL
@@ -210,7 +220,7 @@ class LgTVDevice(MediaPlayerEntity):
     def turn_on(self):
         """Turn on the media player."""
         if self._on_action_script:
-            self._on_action_script.run()
+            self._on_action_script.run(context=self._context)
 
     def volume_up(self):
         """Volume up the media player."""
@@ -254,3 +264,16 @@ class LgTVDevice(MediaPlayerEntity):
     def media_previous_track(self):
         """Send the previous track command."""
         self.send_command(37)
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Tune to channel."""
+        if media_type != MEDIA_TYPE_CHANNEL:
+            raise ValueError(f"Invalid media type: {media_type}")
+
+        for name, channel in self._sources.items():
+            channel_id = channel.find("major")
+            if channel_id is not None and int(channel_id.text) == int(media_id):
+                self.select_source(name)
+                return
+
+        raise ValueError(f"Invalid media id: {media_id}")

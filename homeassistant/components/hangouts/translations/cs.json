@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Slu\u017eba Google Hangouts je ji\u017e nakonfigurov\u00e1na",
-            "unknown": "Do\u0161lo k nezn\u00e1m\u00e9 chyb\u011b"
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "error": {
             "invalid_2fa": "Dfoufaktorov\u00e9 ov\u011b\u0159en\u00ed se nezda\u0159ilo. Zkuste to znovu.",
@@ -18,7 +18,8 @@
             },
             "user": {
                 "data": {
-                    "email": "E-mailov\u00e1 adresa",
+                    "authorization_code": "Autoriza\u010dn\u00ed k\u00f3d (vy\u017eadov\u00e1n pro ru\u010dn\u00ed ov\u011b\u0159en\u00ed)",
+                    "email": "E-mail",
                     "password": "Heslo"
                 },
                 "title": "P\u0159ihl\u00e1\u0161en\u00ed do slu\u017eby Google Hangouts"

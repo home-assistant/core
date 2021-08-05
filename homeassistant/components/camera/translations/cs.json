@@ -2,8 +2,8 @@
     "state": {
         "_": {
             "idle": "Ne\u010dinn\u00fd",
-            "recording": "Z\u00e1znam",
-            "streaming": "Streamov\u00e1n\u00ed"
+            "recording": "Nahr\u00e1v\u00e1 se",
+            "streaming": "Streamuje"
         }
     },
     "title": "Kamera"

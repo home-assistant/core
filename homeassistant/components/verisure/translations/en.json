@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Installation"
+                },
+                "description": "Home Assistant found multiple Verisure installations in your My Pages account. Please, select the installation to add to Home Assistant."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Re-authenticate with your Verisure My Pages account.",
+                    "email": "Email",
+                    "password": "Password"
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Sign-in with your Verisure My Pages account.",
+                    "email": "Email",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "The default PIN code does not match the required number of digits"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Number of digits in PIN code for locks",
+                    "lock_default_code": "Default PIN code for locks, used if none is given"
+                }
+            }
+        }
+    }
+}

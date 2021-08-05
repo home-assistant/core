@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit k instanci CoolMasterNet. Zkontrolujte pros\u00edm sv\u00e9ho hostitele.",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "no_units": "V hostiteli CoolMasterNet nelze naj\u00edt \u017e\u00e1dn\u00e9 jednotky HVAC."
         },
         "step": {

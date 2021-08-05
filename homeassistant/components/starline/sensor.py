@@ -1,7 +1,12 @@
 """Reads vehicle status from StarLine API."""
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE, VOLT
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
+from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
+    LENGTH_KILOMETERS,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    VOLUME_LITERS,
+)
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .account import StarlineAccount, StarlineDevice
@@ -9,11 +14,14 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 SENSOR_TYPES = {
-    "battery": ["Battery", None, VOLT, None],
+    "battery": ["Battery", None, ELECTRIC_POTENTIAL_VOLT, None],
     "balance": ["Balance", None, None, "mdi:cash-multiple"],
     "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
     "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
-    "gsm_lvl": ["GSM Signal", None, UNIT_PERCENTAGE, None],
+    "gsm_lvl": ["GSM Signal", None, PERCENTAGE, None],
+    "fuel": ["Fuel Volume", None, None, "mdi:fuel"],
+    "errors": ["OBD Errors", None, None, "mdi:alert-octagon"],
+    "mileage": ["Mileage", None, LENGTH_KILOMETERS, "mdi:counter"],
 }
 
 
@@ -29,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class StarlineSensor(StarlineEntity, Entity):
+class StarlineSensor(StarlineEntity, SensorEntity):
     """Representation of a StarLine sensor."""
 
     def __init__(
@@ -41,7 +49,7 @@ class StarlineSensor(StarlineEntity, Entity):
         device_class: str,
         unit: str,
         icon: str,
-    ):
+    ) -> None:
         """Initialize StarLine sensor."""
         super().__init__(account, device, key, name)
         self._device_class = device_class
@@ -73,6 +81,12 @@ class StarlineSensor(StarlineEntity, Entity):
             return self._device.temp_engine
         if self._key == "gsm_lvl":
             return self._device.gsm_level_percent
+        if self._key == "fuel" and self._device.fuel:
+            return self._device.fuel.get("val")
+        if self._key == "errors" and self._device.errors:
+            return self._device.errors.get("val")
+        if self._key == "mileage" and self._device.mileage:
+            return self._device.mileage.get("val")
         return None
 
     @property
@@ -80,6 +94,12 @@ class StarlineSensor(StarlineEntity, Entity):
         """Get the unit of measurement."""
         if self._key == "balance":
             return self._device.balance.get("currency") or "₽"
+        if self._key == "fuel":
+            type_value = self._device.fuel.get("type")
+            if type_value == "percents":
+                return PERCENTAGE
+            if type_value == "litres":
+                return VOLUME_LITERS
         return self._unit
 
     @property
@@ -88,10 +108,12 @@ class StarlineSensor(StarlineEntity, Entity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._key == "balance":
             return self._account.balance_attrs(self._device)
         if self._key == "gsm_lvl":
             return self._account.gsm_attrs(self._device)
+        if self._key == "errors":
+            return self._account.errors_attrs(self._device)
         return None

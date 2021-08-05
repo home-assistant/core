@@ -9,7 +9,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +28,10 @@ async def validate_input(hass: core.HomeAssistant, data):
         await juicenet.get_devices()
     except TokenError as error:
         _LOGGER.error("Token Error %s", error)
-        raise InvalidAuth
+        raise InvalidAuth from error
     except aiohttp.ClientError as error:
         _LOGGER.error("Error connecting %s", error)
-        raise CannotConnect
+        raise CannotConnect from error
 
     # Return info that you want to store in the config entry.
     return {"title": "JuiceNet"}
@@ -41,7 +41,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for JuiceNet."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MELCloud entegrasyonu bu e-posta i\u00e7in zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Eri\u015fim belirteci yenilendi."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "E-posta"
+                }
+            }
+        }
+    }
+}

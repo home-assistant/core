@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "link": {
+                "data": {
+                    "ip_address": "\u0130p Adresi"
+                }
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "\u0130p Adresi (Otomatik Bulma kullan\u0131l\u0131yorsa bo\u015f b\u0131rak\u0131n)."
+                }
+            }
+        }
+    }
+}

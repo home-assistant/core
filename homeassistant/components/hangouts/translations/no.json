@@ -1,29 +1,29 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts er allerede konfigurert",
-            "unknown": "Ukjent feil oppstod."
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "unknown": "Uventet feil"
         },
         "error": {
             "invalid_2fa": "Ugyldig totrinnsbekreftelse, vennligst pr\u00f8v igjen.",
-            "invalid_2fa_method": "Ugyldig 2FA-metode (Bekreft p\u00e5 telefon).",
+            "invalid_2fa_method": "Ugyldig 2FA-metode (bekreft p\u00e5 telefon).",
             "invalid_login": "Ugyldig innlogging, vennligst pr\u00f8v igjen."
         },
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "2FA Pin"
+                    "2fa": "2FA PIN"
                 },
-                "description": "Tom",
+                "description": "",
                 "title": "Totrinnsbekreftelse"
             },
             "user": {
                 "data": {
                     "authorization_code": "Godkjenningskode (kreves for manuell godkjenning)",
-                    "email": "E-postadresse",
+                    "email": "E-post",
                     "password": "Passord"
                 },
-                "description": "Tom",
+                "description": "",
                 "title": "Google Hangouts p\u00e5logging"
             }
         }

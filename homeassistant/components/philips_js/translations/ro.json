@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "Cod PIN"
+                }
+            }
+        }
+    }
+}

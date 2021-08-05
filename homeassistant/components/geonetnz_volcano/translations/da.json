@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Lokalitet allerede registreret"
-        },
         "step": {
             "user": {
                 "data": {

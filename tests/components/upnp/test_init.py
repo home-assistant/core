@@ -1,53 +1,58 @@
 """Test UPnP/IGD setup process."""
 
-from homeassistant.components import upnp
+from unittest.mock import AsyncMock, Mock, patch
+
+from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
-    DISCOVERY_LOCATION,
-    DISCOVERY_ST,
-    DISCOVERY_UDN,
+    CONFIG_ENTRY_ST,
+    CONFIG_ENTRY_UDN,
+    DOMAIN,
 )
 from homeassistant.components.upnp.device import Device
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .mock_device import MockDevice
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry_default(hass):
+async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
     udn = "uuid:device_1"
+    location = "http://192.168.1.1/desc.xml"
     mock_device = MockDevice(udn)
-    discovery_infos = [
-        {
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
-        }
-    ]
+    discovery = {
+        ssdp.ATTR_SSDP_LOCATION: location,
+        ssdp.ATTR_SSDP_ST: mock_device.device_type,
+        ssdp.ATTR_UPNP_UDN: mock_device.udn,
+        ssdp.ATTR_SSDP_USN: mock_device.usn,
+    }
     entry = MockConfigEntry(
-        domain=upnp.DOMAIN, data={"udn": mock_device.udn, "st": mock_device.device_type}
+        domain=DOMAIN,
+        data={
+            CONFIG_ENTRY_UDN: mock_device.udn,
+            CONFIG_ENTRY_ST: mock_device.device_type,
+        },
     )
 
     config = {
         # no upnp
     }
-    async_discover = AsyncMock(return_value=[])
-    with patch.object(
-        Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", async_discover):
+    async_create_device = AsyncMock(return_value=mock_device)
+    mock_get_discovery = Mock()
+    with patch.object(Device, "async_create_device", async_create_device), patch.object(
+        ssdp, "async_get_discovery_info_by_udn_st", mock_get_discovery
+    ):
         # initialisation of component, no device discovered
+        mock_get_discovery.return_value = None
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
         # loading of config_entry, device discovered
-        async_discover.return_value = discovery_infos
-        assert await upnp.async_setup_entry(hass, entry) is True
+        mock_get_discovery.return_value = discovery
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
 
         # ensure device is stored/used
-        assert hass.data[upnp.DOMAIN]["devices"][udn] == mock_device
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
+        async_create_device.assert_called_with(hass, discovery[ssdp.ATTR_SSDP_LOCATION])

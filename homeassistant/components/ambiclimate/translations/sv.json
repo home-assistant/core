@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "access_token": "Ok\u00e4nt fel vid generering av \u00e5tkomsttoken.",
-            "already_setup": "Ambiclientkontot \u00e4r konfigurerat",
-            "no_config": "Du m\u00e5ste konfigurera Ambiclimate innan du kan autentisera med den. [V\u00e4nligen l\u00e4s instruktionerna] (https://www.home-assistant.io/components/ambiclimate/)."
+            "access_token": "Ok\u00e4nt fel vid generering av \u00e5tkomsttoken."
         },
         "create_entry": {
             "default": "Lyckad autentisering med Ambiclimate"

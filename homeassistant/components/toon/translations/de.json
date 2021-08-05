@@ -1,32 +1,23 @@
 {
     "config": {
         "abort": {
-            "client_id": "Die Client-ID aus der Konfiguration ist ung\u00fcltig.",
-            "client_secret": "Das Client-Secret aus der Konfiguration ist ung\u00fcltig.",
+            "already_configured": "Die ausgew\u00e4hlte Vereinbarung ist bereits konfiguriert.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
             "no_agreements": "Dieses Konto hat keine Toon-Anzeigen.",
-            "no_app": "Toon muss konfiguriert werden, bevor die Authentifizierung durchgef\u00fchrt werden kann. [Lies bitte die Anleitung](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Beim Authentifizieren ist ein unerwarteter Fehler aufgetreten."
-        },
-        "error": {
-            "credentials": "Die angegebenen Anmeldeinformationen sind ung\u00fcltig.",
-            "display_exists": "Die ausgew\u00e4hlte Anzeige ist bereits konfiguriert."
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
         },
         "step": {
-            "authenticate": {
+            "agreement": {
                 "data": {
-                    "password": "Passwort",
-                    "tenant": "Tenant",
-                    "username": "Benutzername"
+                    "agreement": "Vereinbarung"
                 },
-                "description": "Authentifiziere dich mit deinem Eneco Toon-Konto (nicht dem Entwicklerkonto).",
-                "title": "Verkn\u00fcpfe dein Toon-Konto"
+                "description": "W\u00e4hle die Vereinbarungsadresse aus, die du hinzuf\u00fcgen m\u00f6chtest.",
+                "title": "W\u00e4hle deine Vereinbarung"
             },
-            "display": {
-                "data": {
-                    "display": "Anzeige w\u00e4hlen"
-                },
-                "description": "W\u00e4hle die Toon-Anzeige aus, die verbunden werden soll.",
-                "title": "Anzeige ausw\u00e4hlen"
+            "pick_implementation": {
+                "title": "W\u00e4hle deinen Mandanten f\u00fcr die Authentifizierung aus"
             }
         }
     }

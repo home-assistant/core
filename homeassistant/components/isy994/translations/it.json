@@ -9,7 +9,7 @@
             "invalid_host": "La voce host non era nel formato URL completo, ad esempio http://192.168.10.100:80",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Universal Devices ISY994 {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -37,5 +37,12 @@
             }
         }
     },
-    "title": "Universal Devices ISY994"
+    "system_health": {
+        "info": {
+            "device_connected": "ISY Connesso",
+            "host_reachable": "Host raggiungibile",
+            "last_heartbeat": "Tempo dell'ultimo battito cardiaco",
+            "websocket_status": "Stato socket evento"
+        }
+    }
 }

@@ -176,7 +176,7 @@ def state(new_state):
 
     def decorator(function):
         """Set up the decorator function."""
-        # pylint: disable=protected-access
+
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
 

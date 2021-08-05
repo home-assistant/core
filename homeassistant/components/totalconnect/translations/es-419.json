@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "La cuenta ya ha sido configurada"
         },
-        "error": {
-            "login": "Error de inicio de sesi\u00f3n: compruebe su nombre de usuario y contrase\u00f1a"
-        },
         "step": {
             "user": {
                 "data": {

@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Koordinata er allereie registrerte",
             "invalid_api_key": "Ugyldig API-n\u00f8kkel"
         },
         "step": {

@@ -4,10 +4,9 @@ import logging
 from pmsensor import serial_pm as pm
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for pmname in coll.supported_values():
         if config.get(CONF_NAME) is not None:
-            name = "{} PM{}".format(config.get(CONF_NAME), pmname)
+            name = f"{config.get(CONF_NAME)} PM{pmname}"
         else:
             name = f"PM{pmname}"
         dev.append(ParticulateMatterSensor(coll, name, pmname))
@@ -56,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class ParticulateMatterSensor(Entity):
+class ParticulateMatterSensor(SensorEntity):
     """Representation of an Particulate matter sensor."""
 
     def __init__(self, pmDataCollector, name, pmname):

@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -94,6 +94,12 @@ class LuciDeviceScanner(DeviceScanner):
 
         last_results = []
         for device in result:
-            last_results.append(device)
+            if (
+                not hasattr(self.router.router.owrt_version, "release")
+                or not self.router.router.owrt_version.release
+                or self.router.router.owrt_version.release[0] < 19
+                or device.reachable
+            ):
+                last_results.append(device)
 
         self.last_results = last_results

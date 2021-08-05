@@ -25,7 +25,7 @@ from .const import (
     DEFAULT_PREFERRED_UNIT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    KAITERRA_COMPONENTS,
+    PLATFORMS,
 )
 
 KAITERRA_DEVICE_SCHEMA = vol.Schema(
@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
-    """Set up the Kaiterra components."""
+    """Set up the Kaiterra integration."""
 
     conf = config[DOMAIN]
     scan_interval = conf[CONF_SCAN_INTERVAL]
@@ -76,11 +76,11 @@ async def async_setup(hass, config):
             device.get(CONF_NAME) or device[CONF_TYPE],
             device[CONF_DEVICE_ID],
         )
-        for component in KAITERRA_COMPONENTS:
+        for platform in PLATFORMS:
             hass.async_create_task(
                 async_load_platform(
                     hass,
-                    component,
+                    platform,
                     DOMAIN,
                     {CONF_NAME: device_name, CONF_DEVICE_ID: device_id},
                     config,

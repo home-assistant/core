@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "backoff": "Das Ger\u00e4t akzeptiert derzeit keine Kopplungsanfragen (M\u00f6glicherweise wurde zu oft ein ung\u00fcltiger PIN-Code eingegeben), versuche es sp\u00e4ter erneut.",
+            "device_did_not_pair": "Es wurde kein Versuch unternommen, den Kopplungsvorgang vom Ger\u00e4t aus abzuschlie\u00dfen.",
+            "invalid_config": "Die Konfiguration f\u00fcr dieses Ger\u00e4t ist unvollst\u00e4ndig. Bitte versuche, es erneut hinzuzuf\u00fcgen.",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "no_usable_service": "Es wurde ein Ger\u00e4t gefunden, aber es konnte keine M\u00f6glichkeit gefunden werden, eine Verbindung zu diesem Ger\u00e4t herzustellen. Wenn diese Meldung weiterhin erscheint, versuche, die IP-Adresse anzugeben oder den Apple TV neu zu starten.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Es wird der Apple TV mit dem Namen \" {name} \" zu Home Assistant hinzugef\u00fcgt. \n\n ** Um den Vorgang abzuschlie\u00dfen, m\u00fcssen m\u00f6glicherweise mehrere PIN-Codes eingegeben werden. ** \n\n Bitte beachte, dass der Apple TV mit dieser Integration * nicht * ausgeschalten werden kann. Nur der Media Player in Home Assistant wird ausgeschaltet!",
+                "title": "Best\u00e4tige das Hinzuf\u00fcgen vom Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "F\u00fcr den Dienst `{protocol}` ist eine Kopplung erforderlich. Bitte gebe die PIN {pin} am Apple TV ein, um fortzufahren.",
+                "title": "Kopplung"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN-Code"
+                },
+                "description": "F\u00fcr das Protokoll `{protocol}` ist eine Kopplung erforderlich. Bitte gebe den auf dem Bildschirm angezeigten PIN-Code ein. F\u00fchrende Nullen m\u00fcssen weggelassen werden, d.h. gebe 123 ein, wenn der angezeigte Code 0123 lautet.",
+                "title": "Kopplung"
+            },
+            "reconfigure": {
+                "description": "Dieser Apple TV hat Verbindungsprobleme und muss neu konfiguriert werden.",
+                "title": "Ger\u00e4teneukonfiguration"
+            },
+            "service_problem": {
+                "description": "Beim Koppeln des Protokolls `{protocol}` ist ein Problem aufgetreten. Es wird ignoriert.",
+                "title": "Fehler beim Hinzuf\u00fcgen des Dienstes"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Ger\u00e4t"
+                },
+                "description": "Gebe zun\u00e4chst den Ger\u00e4tenamen (z. B. K\u00fcche oder Schlafzimmer) oder die IP-Adresse des Apple TV ein, der hinzugef\u00fcgt werden soll. Wenn Ger\u00e4te automatisch im Netzwerk gefunden wurden, werden sie unten angezeigt. \n\nWenn das Ger\u00e4t nicht sichtbar ist oder Probleme auftreten, gebe die IP-Adresse des Ger\u00e4ts an. \n\n{devices}",
+                "title": "Neuen Apple TV einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Schalte das Ger\u00e4t nicht ein, wenn Home Assistant startet"
+                },
+                "description": "Konfiguriere die allgemeinen Ger\u00e4teeinstellungen"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mikrotik \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Connessione Non Riuscita",
-            "name_exists": "Il Nome esiste gi\u00e0",
-            "wrong_credentials": "Credenziali Errate"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "name_exists": "Il Nome esiste gi\u00e0"
         },
         "step": {
             "user": {

@@ -1,12 +1,8 @@
 """Base class for UniFi clients."""
-
-import logging
-
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 
 from .unifi_entity_base import UniFiBase
-
-LOGGER = logging.getLogger(__name__)
 
 
 class UniFiClient(UniFiBase):
@@ -17,11 +13,7 @@ class UniFiClient(UniFiBase):
         super().__init__(client, controller)
 
         self._is_wired = client.mac not in controller.wireless_clients
-
-    @property
-    def client(self):
-        """Wrap item."""
-        return self._item
+        self.client = self._item
 
     @property
     def is_wired(self):
@@ -34,6 +26,7 @@ class UniFiClient(UniFiBase):
 
         if self.controller.option_ignore_wired_bug:
             return self.client.is_wired
+
         return self._is_wired
 
     @property
@@ -52,6 +45,10 @@ class UniFiClient(UniFiBase):
         return self.controller.available
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
-        return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self.client.mac)},
+            "default_name": self.name,
+            "default_manufacturer": self.client.oui,
+        }

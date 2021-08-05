@@ -5,7 +5,7 @@ from qbittorrent.client import Client, LoginRequired
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,9 +50,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except LoginRequired:
         _LOGGER.error("Invalid authentication")
         return
-    except RequestException:
+    except RequestException as err:
         _LOGGER.error("Connection failed")
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     name = config.get(CONF_NAME)
 
@@ -71,7 +70,7 @@ def format_speed(speed):
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
-class QBittorrentSensor(Entity):
+class QBittorrentSensor(SensorEntity):
     """Representation of an qBittorrent sensor."""
 
     def __init__(self, sensor_type, qbittorrent_client, client_name, exception):

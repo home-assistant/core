@@ -10,7 +10,7 @@
             "no_server_found": "No s'ha pogut descobrir el servidor autom\u00e0ticament.",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {
@@ -24,10 +24,8 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3"
-                },
-                "title": "Configura el servidor Logitech Media"
+                }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

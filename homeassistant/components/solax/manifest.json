@@ -2,6 +2,7 @@
   "domain": "solax",
   "name": "SolaX Power",
   "documentation": "https://www.home-assistant.io/integrations/solax",
-  "requirements": ["solax==0.2.3"],
-  "codeowners": ["@squishykid"]
+  "requirements": ["solax==0.2.6"],
+  "codeowners": ["@squishykid"],
+  "iot_class": "local_polling"
 }

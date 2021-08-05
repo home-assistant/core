@@ -6,7 +6,7 @@ import logging
 import dweepy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([DweetSensor(hass, dweet, name, value_template, unit)], True)
 
 
-class DweetSensor(Entity):
+class DweetSensor(SensorEntity):
     """Representation of a Dweet sensor."""
 
     def __init__(self, hass, dweet, name, value_template, unit_of_measurement):

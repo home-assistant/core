@@ -1,4 +1,6 @@
 """Test HomeKit img_util module."""
+from unittest.mock import patch
+
 from homeassistant.components.camera import Image
 from homeassistant.components.homekit.img_util import (
     TurboJPEGSingleton,
@@ -6,8 +8,6 @@ from homeassistant.components.homekit.img_util import (
 )
 
 from .common import EMPTY_8_6_JPEG, mock_turbo_jpeg
-
-from tests.async_mock import patch
 
 EMPTY_16_12_JPEG = b"empty_16_12"
 

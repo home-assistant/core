@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Axis device: {name} ({host})",
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "title": "Set up Axis device",
@@ -13,14 +13,13 @@
       }
     },
     "error": {
-      "already_configured": "Device is already configured",
-      "already_in_progress": "Config flow for device is already in progress.",
-      "device_unavailable": "Device is not available",
-      "faulty_credentials": "Bad user credentials"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "Device is already configured",
-      "bad_config_file": "Bad data from configuration file",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "link_local_address": "Link local addresses are not supported",
       "not_axis_device": "Discovered device not an Axis device"
     }

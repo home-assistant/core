@@ -1,0 +1,830 @@
+{
+	"nodeId": 8,
+	"index": 0,
+	"status": 4,
+	"ready": true,
+	"isListening": true,
+	"isRouting": true,
+	"isSecure": false,
+	"manufacturerId": 152,
+	"productId": 263,
+	"productType": 25601,
+	"firmwareVersion": "9.1",
+	"deviceConfig": {
+		"filename": "/usr/src/node_modules/@zwave-js/config/config/devices/0x0098/ct100.json",
+		"manufacturer": "Radio Thermostat Company of America (RTC)",
+		"manufacturerId": 152,
+		"label": "CT100",
+		"description": "Z-Wave Thermostat",
+		"devices": [
+			{
+				"productType": 25601,
+				"productId": 21
+			},
+			{
+				"productType": 25601,
+				"productId": 259
+			},
+			{
+				"productType": 25601,
+				"productId": 261
+			},
+			{
+				"productType": 25601,
+				"productId": 262
+			},
+			{
+				"productType": 25601,
+				"productId": 263
+			},
+			{
+				"productType": 25601,
+				"productId": 509
+			},
+			{
+				"productType": 25602,
+				"productId": 1
+			}
+		],
+		"firmwareVersion": {
+			"min": "0.0",
+			"max": "255.255"
+		},
+		"associations": {}
+	},
+	"label": "CT100",
+	"neighbors": [2, 3, 4, 5, 6, 7, 9],
+	"endpointCountIsDynamic": false,
+	"endpointsHaveIdenticalCapabilities": true,
+	"individualEndpointCount": 2,
+	"interviewAttempts": 0,
+	"interviewStage": 6,
+	"endpoints": [
+		{
+			"nodeId": 8,
+			"index": 0
+		},
+		{
+			"nodeId": 8,
+			"index": 1
+		},
+		{
+			"nodeId": 8,
+			"index": 2
+		}
+	],
+	"values": [
+		{
+			"endpoint": 0,
+			"commandClass": 66,
+			"commandClassName": "Thermostat Operating State",
+			"property": "state",
+			"propertyName": "state",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Operating state",
+				"min": 0,
+				"max": 255,
+				"states": {
+					"0": "Idle",
+					"1": "Heating",
+					"2": "Cooling",
+					"3": "Fan Only",
+					"4": "Pending Heat",
+					"5": "Pending Cool",
+					"6": "Vent/Economizer",
+					"7": "Aux Heating",
+					"8": "2nd Stage Heating",
+					"9": "2nd Stage Cooling",
+					"10": "2nd Stage Aux Heat",
+					"11": "3rd Stage Aux Heat"
+				}
+			},
+			"value": 0
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 67,
+			"commandClassName": "Thermostat Setpoint",
+			"property": "setpoint",
+			"propertyKey": 1,
+			"propertyName": "setpoint",
+			"propertyKeyName": "Heating",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"ccSpecific": {
+					"setpointType": 1
+				},
+				"unit": "\u00b0F"
+			},
+			"value": 69
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 67,
+			"commandClassName": "Thermostat Setpoint",
+			"property": "setpoint",
+			"propertyKey": 2,
+			"propertyName": "setpoint",
+			"propertyKeyName": "Cooling",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"ccSpecific": {
+					"setpointType": 2
+				},
+				"unit": "\u00b0F"
+			},
+			"value": 72
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 68,
+			"commandClassName": "Thermostat Fan Mode",
+			"property": "mode",
+			"propertyName": "mode",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Thermostat fan mode",
+				"min": 0,
+				"max": 255,
+				"states": {
+					"0": "Auto low",
+					"1": "Low"
+				}
+			},
+			"value": 0
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 69,
+			"commandClassName": "Thermostat Fan State",
+			"property": "state",
+			"propertyName": "state",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Thermostat fan state",
+				"min": 0,
+				"max": 255,
+				"states": {
+					"0": "Idle / off",
+					"1": "Running / running low",
+					"2": "Running high",
+					"3": "Running medium",
+					"4": "Circulation mode",
+					"5": "Humidity circulation mode",
+					"6": "Right - left circulation mode",
+					"7": "Up - down circulation mode",
+					"8": "Quiet circulation mode"
+				}
+			},
+			"value": 0
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "manufacturerId",
+			"propertyName": "manufacturerId",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Manufacturer ID",
+				"min": 0,
+				"max": 65535
+			},
+			"value": 152
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productType",
+			"propertyName": "productType",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product type",
+				"min": 0,
+				"max": 65535
+			},
+			"value": 25601
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productId",
+			"propertyName": "productId",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product ID",
+				"min": 0,
+				"max": 65535
+			},
+			"value": 263
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 128,
+			"commandClassName": "Battery",
+			"property": "level",
+			"propertyName": "level",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Battery level",
+				"min": 0,
+				"max": 100,
+				"unit": "%"
+			},
+			"value": 100
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 128,
+			"commandClassName": "Battery",
+			"property": "isLow",
+			"propertyName": "isLow",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": false,
+				"label": "Low battery level"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "libraryType",
+			"propertyName": "libraryType",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Library type"
+			},
+			"value": 3
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "protocolVersion",
+			"propertyName": "protocolVersion",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave protocol version"
+			},
+			"value": "3.28"
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "firmwareVersions",
+			"propertyName": "firmwareVersions",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave chip firmware versions"
+			},
+			"value": ["9.1"]
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 135,
+			"commandClassName": "Indicator",
+			"property": "value",
+			"propertyName": "value",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Indicator value",
+				"ccSpecific": {
+					"indicatorId": 0
+				},
+				"min": 0,
+				"max": 255
+			},
+			"value": 0
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "manufacturerId",
+			"propertyName": "manufacturerId",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Manufacturer ID",
+				"min": 0,
+				"max": 65535
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productType",
+			"propertyName": "productType",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product type",
+				"min": 0,
+				"max": 65535
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productId",
+			"propertyName": "productId",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product ID",
+				"min": 0,
+				"max": 65535
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 64,
+			"commandClassName": "Thermostat Mode",
+			"property": "mode",
+			"propertyName": "mode",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Thermostat mode",
+				"min": 0,
+				"max": 255,
+				"states": {
+					"0": "Off",
+					"1": "Heat",
+					"2": "Cool",
+					"3": "Auto",
+					"4": "Auxiliary",
+					"5": "Resume (on)",
+					"6": "Fan",
+					"7": "Furnace",
+					"8": "Dry",
+					"9": "Moist",
+					"10": "Auto changeover",
+					"11": "Energy heat",
+					"12": "Energy cool",
+					"13": "Away",
+					"15": "Full power",
+					"31": "Manufacturer specific"
+				}
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 64,
+			"commandClassName": "Thermostat Mode",
+			"property": "manufacturerData",
+			"propertyName": "manufacturerData",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": true
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "libraryType",
+			"propertyName": "libraryType",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Library type"
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "protocolVersion",
+			"propertyName": "protocolVersion",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave protocol version"
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "firmwareVersions",
+			"propertyName": "firmwareVersions",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave chip firmware versions"
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 49,
+			"commandClassName": "Multilevel Sensor",
+			"property": "Air temperature",
+			"propertyName": "Air temperature",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Air temperature",
+				"ccSpecific": {
+					"sensorType": 1,
+					"scale": 1
+				},
+				"unit": "\u00b0F"
+			},
+			"value": 70
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 32,
+			"commandClassName": "Basic",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value",
+				"min": 0,
+				"max": 99
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "manufacturerId",
+			"propertyName": "manufacturerId",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Manufacturer ID",
+				"min": 0,
+				"max": 65535
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productType",
+			"propertyName": "productType",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product type",
+				"min": 0,
+				"max": 65535
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productId",
+			"propertyName": "productId",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Product ID",
+				"min": 0,
+				"max": 65535
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 64,
+			"commandClassName": "Thermostat Mode",
+			"property": "mode",
+			"propertyName": "mode",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": true,
+				"label": "Thermostat mode",
+				"min": 0,
+				"max": 255,
+				"states": {
+					"0": "Off",
+					"1": "Heat",
+					"2": "Cool",
+					"3": "Auto",
+					"4": "Auxiliary",
+					"5": "Resume (on)",
+					"6": "Fan",
+					"7": "Furnace",
+					"8": "Dry",
+					"9": "Moist",
+					"10": "Auto changeover",
+					"11": "Energy heat",
+					"12": "Energy cool",
+					"13": "Away",
+					"15": "Full power",
+					"31": "Manufacturer specific"
+				}
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 64,
+			"commandClassName": "Thermostat Mode",
+			"property": "manufacturerData",
+			"propertyName": "manufacturerData",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": true
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "libraryType",
+			"propertyName": "libraryType",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Library type"
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "protocolVersion",
+			"propertyName": "protocolVersion",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave protocol version"
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "firmwareVersions",
+			"propertyName": "firmwareVersions",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave chip firmware versions"
+			}
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 49,
+			"commandClassName": "Multilevel Sensor",
+			"property": "Humidity",
+			"propertyName": "Humidity",
+			"ccVersion": 0,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"label": "Humidity",
+				"ccSpecific": {
+					"sensorType": 5,
+					"scale": 0
+				},
+				"unit": "%"
+			},
+			"value": 60
+		}
+	],
+	"isFrequentListening": null,
+	"maxBaudRate": 40000,
+	"version": 3,
+	"deviceClass": {
+		"basic": {
+			"key": 4,
+			"label": "Routing Slave"
+		},
+		"generic": {
+			"key": 8,
+			"label": "Thermostat"
+		},
+		"specific": {
+			"key": 6,
+			"label": "General Thermostat V2"
+		},
+		"mandatorySupportedCCs": [32, 114, 64, 67, 134],
+		"mandatoryControlledCCs": []
+	},
+	"commandClasses": [
+		{
+			"id": 49,
+			"name": "Multilevel Sensor",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 64,
+			"name": "Thermostat Mode",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 66,
+			"name": "Thermostat Operating State",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 67,
+			"name": "Thermostat Setpoint",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 68,
+			"name": "Thermostat Fan Mode",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 69,
+			"name": "Thermostat Fan State",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 96,
+			"name": "Multi Channel",
+			"version": 3,
+			"isSecure": false
+		},
+		{
+			"id": 112,
+			"name": "Configuration",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 114,
+			"name": "Manufacturer Specific",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 128,
+			"name": "Battery",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 129,
+			"name": "Clock",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 133,
+			"name": "Association",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 134,
+			"name": "Version",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 135,
+			"name": "Indicator",
+			"version": 1,
+			"isSecure": false
+		}
+	]
+}

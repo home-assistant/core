@@ -1,6 +1,5 @@
 """Test ZHA Gateway."""
 import asyncio
-import logging
 import time
 from unittest.mock import patch
 
@@ -17,7 +16,6 @@ from .common import async_enable_traffic, async_find_group_entity_id, get_zha_ga
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -28,7 +26,7 @@ def zigpy_dev_basic(zigpy_device_mock):
             1: {
                 "in_clusters": [general.Basic.cluster_id],
                 "out_clusters": [],
-                "device_type": 0,
+                "device_type": zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -176,6 +174,24 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
         assert len(zha_group.members) == 1
         for member in zha_group.members:
             assert member.device.ieee in [device_light_1.ieee]
+
+
+async def test_gateway_create_group_with_id(hass, device_light_1, coordinator):
+    """Test creating a group with a specific ID."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+    zha_gateway.coordinator_zha_device = coordinator
+    coordinator._zha_gateway = zha_gateway
+    device_light_1._zha_gateway = zha_gateway
+
+    zha_group = await zha_gateway.async_create_zigpy_group(
+        "Test Group", [GroupMember(device_light_1.ieee, 1)], group_id=0x1234
+    )
+    await hass.async_block_till_done()
+
+    assert len(zha_group.members) == 1
+    assert zha_group.members[0].device is device_light_1
+    assert zha_group.group_id == 0x1234
 
 
 async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "create_entry": {
+            "default": "\n\nAva Android seadmes [rakendus OwnTracks] ( {android_url} ), mine eelistustele - > \u00fchendus. Muuda j\u00e4rgmisi seadeid:\n - Re\u017eiim: privaatne HTTP\n - Host: {webhook_url}\n - Identifitseerimine:\n - kasutajanimi: \" <Your name> \"\n - seadme ID: \" <Your device name> \"\n\n IOS-is ava rakendus [OwnTracks] ( {ios_url} ), puuduta vasakus \u00fclanurgas ikooni (i) - > seaded. Muuda j\u00e4rgmisi seadeid:\n - Re\u017eiim: HTTP\n - URL: {webhook_url}\n - L\u00fclita autentimine sisse\n - UserID: \" <Your name> \" \"\n\n {secret}\n\n Lisateavet leiad [dokumentatsioonist] ( {docs_url} )."
+        },
+        "step": {
+            "user": {
+                "description": "Kas soovid OwnTracks'i seadistada?",
+                "title": "Seadista OwnTracks"
+            }
+        }
+    }
+}

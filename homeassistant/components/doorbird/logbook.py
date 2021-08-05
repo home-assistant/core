@@ -13,7 +13,7 @@ def async_describe_events(hass, async_describe_event):
     @callback
     def async_describe_logbook_event(event):
         """Describe a logbook event."""
-        _, doorbird_event = event.event_type.split("_", 1)
+        doorbird_event = event.event_type.split("_", 1)[1]
 
         return {
             "name": "Doorbird",

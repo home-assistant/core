@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "invalid_host": "Tundmatu host",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Vale hostinimi v\u00f5i IP aadress",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "confirm_discovery": {
+                "description": "Soovitatav on DHCP aadressi reserveerimine ruuteris. Kui seda pole seadistatud, v\u00f5ib seade osutuda k\u00e4ttesaamatuks kuni Home Assistant tuvastab uue IP-aadressi. Vaata ruuteri kasutusjuhendit.",
+                "title": "Goal Zero Yeti"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "Nimi"
+                },
+                "description": "Alustuseks pead alla laadima rakenduse Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\nYeti Wifi-v\u00f5rguga \u00fchendamiseks j\u00e4rgi juhiseid. DHCP peab olema ruuteri seadetes seadistatud nii, et hosti IP ei muutuks. Vaata ruuteri kasutusjuhendit.",
+                "title": ""
+            }
+        }
+    }
+}

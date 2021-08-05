@@ -98,6 +98,10 @@
             "off": "Normal",
             "on": "Schwach"
         },
+        "battery_charging": {
+            "off": "L\u00e4dt nicht",
+            "on": "L\u00e4dt"
+        },
         "cold": {
             "off": "Normal",
             "on": "Kalt"
@@ -122,6 +126,10 @@
             "off": "Normal",
             "on": "Hei\u00df"
         },
+        "light": {
+            "off": "Kein Licht",
+            "on": "Licht erkannt"
+        },
         "lock": {
             "off": "Verriegelt",
             "on": "Entriegelt"
@@ -131,8 +139,12 @@
             "on": "Nass"
         },
         "motion": {
-            "off": "Ruhig",
-            "on": "Bewegung erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
+        },
+        "moving": {
+            "off": "Bewegt sich nicht",
+            "on": "Bewegt sich"
         },
         "occupancy": {
             "off": "Frei",
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Geschlossen",
             "on": "Offen"
+        },
+        "plug": {
+            "off": "Ausgesteckt",
+            "on": "Eingesteckt"
         },
         "presence": {
             "off": "Abwesend",
@@ -155,16 +171,16 @@
             "on": "Unsicher"
         },
         "smoke": {
-            "off": "OK",
-            "on": "Rauch erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "sound": {
-            "off": "Stille",
-            "on": "Ger\u00e4usch erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "vibration": {
             "off": "Normal",
-            "on": "Vibration"
+            "on": "Erkannt"
         },
         "window": {
             "off": "Geschlossen",

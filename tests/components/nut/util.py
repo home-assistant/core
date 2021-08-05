@@ -1,12 +1,12 @@
 """Tests for the nut integration."""
 
 import json
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_RESOURCES
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, load_fixture
 
 
@@ -28,7 +28,8 @@ async def async_init_integration(
     mock_pynut = _get_mock_pynutclient(list_ups={"ups1": "UPS 1"}, list_vars=list_vars)
 
     with patch(
-        "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
+        "homeassistant.components.nut.PyNUTClient",
+        return_value=mock_pynut,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

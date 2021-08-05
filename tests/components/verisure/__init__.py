@@ -1,1 +1,1 @@
-"""Tests for Verisure integration."""
+"""Tests for the Verisure integration."""

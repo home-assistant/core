@@ -1,72 +1,58 @@
 """Support for KNX scenes."""
+from __future__ import annotations
+
 from typing import Any
 
-import voluptuous as vol
+from xknx import XKNX
 from xknx.devices import Scene as XknxScene
 
-from homeassistant.components.scene import CONF_PLATFORM, Scene
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.scene import Scene
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
-
-CONF_SCENE_NUMBER = "scene_number"
-
-DEFAULT_NAME = "KNX SCENE"
-PLATFORM_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PLATFORM): "knx",
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
-    }
-)
+from .const import DOMAIN, KNX_ADDRESS
+from .knx_entity import KnxEntity
+from .schema import SceneSchema
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the scenes for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+    platform_config = discovery_info["platform_config"]
+    xknx: XKNX = hass.data[DOMAIN].xknx
 
-
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up scenes for KNX platform configured via xknx.yaml."""
-    entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXScene(device))
-    async_add_entities(entities)
-
-
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up scene for KNX platform configured within platform."""
-    scene = XknxScene(
-        hass.data[DATA_KNX].xknx,
-        name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
-        scene_number=config[CONF_SCENE_NUMBER],
+    async_add_entities(
+        KNXScene(xknx, entity_config) for entity_config in platform_config
     )
-    hass.data[DATA_KNX].xknx.devices.add(scene)
-    async_add_entities([KNXScene(scene)])
 
 
-class KNXScene(Scene):
+class KNXScene(KnxEntity, Scene):
     """Representation of a KNX scene."""
 
-    def __init__(self, scene):
-        """Init KNX scene."""
-        self.scene = scene
+    _device: XknxScene
 
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self.scene.name
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+        """Init KNX scene."""
+        super().__init__(
+            device=XknxScene(
+                xknx,
+                name=config[CONF_NAME],
+                group_address=config[KNX_ADDRESS],
+                scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
+            )
+        )
+        self._attr_unique_id = (
+            f"{self._device.scene_value.group_address}_{self._device.scene_number}"
+        )
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self.scene.run()
+        await self._device.run()

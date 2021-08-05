@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "name_exists": "\uc774\ub984\uc774 \uc774\ubbf8 \uc874\uc7ac\ud569\ub2c8\ub2e4"
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "user": {
                 "data": {
-                    "advertise_ip": "\uad11\uace0 IP",
+                    "advertise_ip": "\uad11\uace0 IP \uc8fc\uc18c",
                     "advertise_port": "\uad11\uace0 \ud3ec\ud2b8",
-                    "host_ip": "\ud638\uc2a4\ud2b8 IP",
+                    "host_ip": "\ud638\uc2a4\ud2b8 IP \uc8fc\uc18c",
                     "listen_port": "\uc218\uc2e0 \ud3ec\ud2b8",
                     "name": "\uc774\ub984",
                     "upnp_bind_multicast": "\uba40\ud2f0 \uce90\uc2a4\ud2b8 \ud560\ub2f9 (\ucc38/\uac70\uc9d3)"

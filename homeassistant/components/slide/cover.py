@@ -55,7 +55,7 @@ class SlideCover(CoverEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_ID: self._id}
 

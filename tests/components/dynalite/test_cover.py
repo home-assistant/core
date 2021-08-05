@@ -2,6 +2,8 @@
 from dynalite_devices_lib.cover import DynaliteTimeCoverWithTiltDevice
 import pytest
 
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
+
 from .common import (
     ATTR_ARGS,
     ATTR_METHOD,
@@ -24,7 +26,7 @@ async def test_cover_setup(hass, mock_device):
     """Test a successful setup."""
     await create_entity_from_device(hass, mock_device)
     entity_state = hass.states.get("cover.name")
-    assert entity_state.attributes["friendly_name"] == mock_device.name
+    assert entity_state.attributes[ATTR_FRIENDLY_NAME] == mock_device.name
     assert (
         entity_state.attributes["current_position"]
         == mock_device.current_cover_position
@@ -33,7 +35,7 @@ async def test_cover_setup(hass, mock_device):
         entity_state.attributes["current_tilt_position"]
         == mock_device.current_cover_tilt_position
     )
-    assert entity_state.attributes["device_class"] == mock_device.device_class
+    assert entity_state.attributes[ATTR_DEVICE_CLASS] == mock_device.device_class
     await run_service_tests(
         hass,
         mock_device,

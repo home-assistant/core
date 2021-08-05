@@ -1,9 +1,18 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
+            "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
         "step": {
             "hassio_confirm": {
-                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k Almond pomoc\u00ed hass.io {addon}?",
-                "title": "Almond prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k Almond pomoc\u00ed Supervisor {addon}?",
+                "title": "Almond prost\u0159ednictv\u00edm dopl\u0148ku Supervisor"
+            },
+            "pick_implementation": {
+                "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
             }
         }
     }

@@ -5,5 +5,6 @@
   "requirements": ["pynut2==2.1.2"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
-  "zeroconf": ["_nut._tcp.local."]
+  "zeroconf": ["_nut._tcp.local."],
+  "iot_class": "local_polling"
 }

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "usercode": "Kode pengguna tidak valid untuk pengguna ini di lokasi ini"
+        },
+        "step": {
+            "locations": {
+                "data": {
+                    "location": "Lokasi"
+                },
+                "description": "Masukkan kode pengguna untuk pengguna ini di lokasi ini",
+                "title": "Lokasi Kode Pengguna"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect perlu mengautentikasi ulang akun Anda",
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

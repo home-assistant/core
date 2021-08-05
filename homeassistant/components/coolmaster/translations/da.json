@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "connection_error": "Kunne ikke oprette forbindelse til CoolMasterNet-instansen. Tjek din v\u00e6rt.",
             "no_units": "Kunne ikke finde nogen klimaanl\u00e6g i CoolMasterNet-v\u00e6rt."
         },
         "step": {

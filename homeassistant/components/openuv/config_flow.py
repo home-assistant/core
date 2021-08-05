@@ -1,4 +1,8 @@
 """Config flow to configure the OpenUV component."""
+from __future__ import annotations
+
+from typing import Any
+
 from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
 import voluptuous as vol
@@ -10,37 +14,50 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN  # pylint: disable=unused-import
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): str,
-        vol.Inclusive(CONF_LATITUDE, "coords"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coords"): cv.longitude,
-        vol.Optional(CONF_ELEVATION): vol.Coerce(float),
-    }
-)
+from .const import DOMAIN
 
 
 class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors if errors else {},
+    @property
+    def config_schema(self) -> vol.Schema:
+        """Return the config schema."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): str,
+                vol.Inclusive(
+                    CONF_LATITUDE, "coords", default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Inclusive(
+                    CONF_LONGITUDE, "coords", default=self.hass.config.longitude
+                ): cv.longitude,
+                vol.Optional(
+                    CONF_ELEVATION, default=self.hass.config.elevation
+                ): vol.Coerce(float),
+            }
         )
 
-    async def async_step_import(self, import_config):
+    async def _show_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
+        """Show the form to the user."""
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.config_schema,
+            errors=errors if errors else {},
+        )
+
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()

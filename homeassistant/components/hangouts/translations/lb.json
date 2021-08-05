@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts ass scho konfigur\u00e9iert",
-            "unknown": "Onbekannten Feeler opgetrueden"
+            "already_configured": "Service ass scho konfigur\u00e9iert",
+            "unknown": "Onerwaarte Feeler"
         },
         "error": {
             "invalid_2fa": "Ong\u00eblteg 2-Faktor Authentifikatioun, prob\u00e9iert w.e.g. nach emol.",

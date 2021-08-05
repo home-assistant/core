@@ -1,6 +1,4 @@
 """Allows to configure a switch using BeagleBone Black GPIO."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import bbb_gpio
@@ -8,8 +6,6 @@ from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = "pins"
 CONF_INITIAL = "initial"
@@ -41,10 +37,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BBBGPIOSwitch(ToggleEntity):
     """Representation of a BeagleBone Black GPIO."""
 
+    _attr_should_poll = False
+
     def __init__(self, pin, params):
         """Initialize the pin."""
         self._pin = pin
-        self._name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
+        self._attr_name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
         self._state = params[CONF_INITIAL]
         self._invert_logic = params[CONF_INVERT_LOGIC]
 
@@ -56,17 +54,7 @@ class BBBGPIOSwitch(ToggleEntity):
             bbb_gpio.write_output(self._pin, 0 if self._invert_logic else 1)
 
     @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state
 

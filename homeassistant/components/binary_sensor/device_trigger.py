@@ -1,14 +1,15 @@
 """Provides device triggers for binary sensors."""
 import voluptuous as vol
 
-from homeassistant.components.automation import state as state_automation
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.components.homeassistant.triggers import state as state_trigger
+from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import (
@@ -177,7 +178,7 @@ ENTITY_TRIGGERS = {
 }
 
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
@@ -190,23 +191,20 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
     if trigger_type in TURNED_ON:
-        from_state = "off"
         to_state = "on"
     else:
-        from_state = "on"
         to_state = "off"
 
     state_config = {
-        state_automation.CONF_PLATFORM: "state",
-        state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_automation.CONF_FROM: from_state,
-        state_automation.CONF_TO: to_state,
+        state_trigger.CONF_PLATFORM: "state",
+        state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        state_trigger.CONF_TO: to_state,
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    state_config = state_automation.TRIGGER_SCHEMA(state_config)
-    return await state_automation.async_attach_trigger(
+    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
 
@@ -223,10 +221,7 @@ async def async_get_triggers(hass, device_id):
     ]
 
     for entry in entries:
-        device_class = DEVICE_CLASS_NONE
-        state = hass.states.get(entry.entity_id)
-        if state:
-            device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
 
         templates = ENTITY_TRIGGERS.get(
             device_class, ENTITY_TRIGGERS[DEVICE_CLASS_NONE]

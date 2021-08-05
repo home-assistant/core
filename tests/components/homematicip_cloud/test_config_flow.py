@@ -1,4 +1,7 @@
 """Tests for HomematicIP Cloud config flow."""
+from unittest.mock import patch
+
+from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud.const import (
     DOMAIN as HMIPC_DOMAIN,
     HMIPC_AUTHTOKEN,
@@ -7,7 +10,6 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_PIN,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DEFAULT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
@@ -26,7 +28,9 @@ async def test_flow_works(hass, simple_mock_home):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
+            HMIPC_DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=DEFAULT_CONFIG,
         )
 
     assert result["type"] == "form"
@@ -69,7 +73,9 @@ async def test_flow_init_connection_error(hass):
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
+            HMIPC_DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=DEFAULT_CONFIG,
         )
 
     assert result["type"] == "form"
@@ -89,7 +95,9 @@ async def test_flow_link_connection_error(hass):
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
+            HMIPC_DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=DEFAULT_CONFIG,
         )
 
     assert result["type"] == "abort"
@@ -106,7 +114,9 @@ async def test_flow_link_press_button(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
+            HMIPC_DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=DEFAULT_CONFIG,
         )
 
     assert result["type"] == "form"
@@ -118,7 +128,7 @@ async def test_init_flow_show_form(hass):
     """Test config flow shows up with a form."""
 
     result = await hass.config_entries.flow.async_init(
-        HMIPC_DOMAIN, context={"source": "user"}
+        HMIPC_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
@@ -132,7 +142,9 @@ async def test_init_already_configured(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
+            HMIPC_DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=DEFAULT_CONFIG,
         )
 
     assert result["type"] == "abort"
@@ -154,7 +166,9 @@ async def test_import_config(hass, simple_mock_home):
         "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
     ):
         result = await hass.config_entries.flow.async_init(
-            HMIPC_DOMAIN, context={"source": "import"}, data=IMPORT_CONFIG
+            HMIPC_DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=IMPORT_CONFIG,
         )
 
     assert result["type"] == "create_entry"
@@ -177,7 +191,9 @@ async def test_import_existing_config(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            HMIPC_DOMAIN, context={"source": "import"}, data=IMPORT_CONFIG
+            HMIPC_DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=IMPORT_CONFIG,
         )
 
     assert result["type"] == "abort"

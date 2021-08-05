@@ -12,6 +12,7 @@ ATTR_FREQUENCY = "frequency"
 ATTR_ENERGY_EXPORTED = "energy_exported_(in_kW)"
 ATTR_ENERGY_IMPORTED = "energy_imported_(in_kW)"
 ATTR_INSTANT_AVERAGE_VOLTAGE = "instant_average_voltage"
+ATTR_INSTANT_TOTAL_CURRENT = "instant_total_current"
 ATTR_IS_ACTIVE = "is_active"
 
 STATUS_VERSION = "version"
@@ -29,9 +30,5 @@ POWERWALL_API_SERIAL_NUMBERS = "serial_numbers"
 
 POWERWALL_HTTP_SESSION = "http_session"
 
-POWERWALL_BATTERY_METER = "battery"
-
 MODEL = "PowerWall 2"
 MANUFACTURER = "Tesla"
-
-ENERGY_KILO_WATT = "kW"

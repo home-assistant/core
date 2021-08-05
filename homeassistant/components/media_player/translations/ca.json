@@ -6,6 +6,13 @@
             "is_on": "{entity_name} est\u00e0 enc\u00e8s",
             "is_paused": "{entity_name} est\u00e0 en pausa",
             "is_playing": "{entity_name} est\u00e0 reproduint"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} es torna inactiu",
+            "paused": "{entity_name} est\u00e0 en pausa",
+            "playing": "{entity_name} comen\u00e7a a reproduir",
+            "turned_off": "{entity_name} s'ha apagat",
+            "turned_on": "{entity_name} s'ha engegat"
         }
     },
     "state": {
@@ -13,7 +20,7 @@
             "idle": "Inactiu",
             "off": "OFF",
             "on": "ON",
-            "paused": "Pausat/da",
+            "paused": "Pausat/ada",
             "playing": "Reproduint",
             "standby": "En espera"
         }

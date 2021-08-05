@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno po\u0142\u0105czenie iAqualink."
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "connection_failure": "Nie mo\u017cna po\u0142\u0105czy\u0107 z iAqualink. Sprawd\u017a nazw\u0119 u\u017cytkownika i has\u0142o."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "user": {

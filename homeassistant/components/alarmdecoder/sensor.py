@@ -1,31 +1,27 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
-import logging
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from homeassistant.helpers.entity import Entity
-
-from . import SIGNAL_PANEL_MESSAGE
-
-_LOGGER = logging.getLogger(__name__)
+from .const import SIGNAL_PANEL_MESSAGE
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up for AlarmDecoder sensor devices."""
-    _LOGGER.debug("AlarmDecoderSensor: setup_platform")
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+) -> bool:
+    """Set up for AlarmDecoder sensor."""
 
-    device = AlarmDecoderSensor(hass)
+    entity = AlarmDecoderSensor()
+    async_add_entities([entity])
+    return True
 
-    add_entities([device])
 
-
-class AlarmDecoderSensor(Entity):
+class AlarmDecoderSensor(SensorEntity):
     """Representation of an AlarmDecoder keypad."""
 
-    def __init__(self, hass):
-        """Initialize the alarm panel."""
-        self._display = ""
-        self._state = None
-        self._icon = "mdi:alarm-check"
-        self._name = "Alarm Panel Display"
+    _attr_icon = "mdi:alarm-check"
+    _attr_name = "Alarm Panel Display"
+    _attr_should_poll = False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -36,26 +32,6 @@ class AlarmDecoderSensor(Entity):
         )
 
     def _message_callback(self, message):
-        if self._display != message.text:
-            self._display = message.text
+        if self._attr_state != message.text:
+            self._attr_state = message.text
             self.schedule_update_ha_state()
-
-    @property
-    def icon(self):
-        """Return the icon if any."""
-        return self._icon
-
-    @property
-    def state(self):
-        """Return the overall state."""
-        return self._display
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

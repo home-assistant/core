@@ -1,6 +1,7 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from aiohttp import ClientResponseError
 from incomfortclient import Gateway as InComfortGateway
@@ -52,7 +53,7 @@ async def async_setup(hass, hass_config):
     for heater in heaters:
         await heater.update()
 
-    for platform in ["water_heater", "binary_sensor", "sensor", "climate"]:
+    for platform in ("water_heater", "binary_sensor", "sensor", "climate"):
         hass.async_create_task(
             async_load_platform(hass, platform, DOMAIN, {}, hass_config)
         )
@@ -68,12 +69,12 @@ class IncomfortEntity(Entity):
         self._unique_id = self._name = None
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the sensor."""
         return self._name
 

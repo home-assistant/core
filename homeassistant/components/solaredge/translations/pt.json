@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "invalid_api_key": "Chave de API inv\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key"
+                }
+            }
+        }
+    }
+}

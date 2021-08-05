@@ -2,17 +2,16 @@
 from homeassistant.components.switch import SwitchEntity
 
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
+from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    api = hass.data[KEY_API][config_entry.entry_id]
-    gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
+    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = tradfri_data[KEY_API]
+    devices = tradfri_data[DEVICES]
 
-    devices_commands = await api(gateway.get_devices())
-    devices = await api(devices_commands)
     switches = [dev for dev in devices if dev.has_socket_control]
     if switches:
         async_add_entities(

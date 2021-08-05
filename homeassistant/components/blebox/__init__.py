@@ -1,5 +1,4 @@
 """The BleBox devices integration."""
-import asyncio
 import logging
 
 from blebox_uniapi.error import Error
@@ -22,12 +21,7 @@ PLATFORMS = ["cover", "sensor", "switch", "air_quality", "light", "climate"]
 PARALLEL_UPDATES = 0
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the BleBox devices component."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BleBox devices from a config entry."""
 
     websession = async_get_clientsession(hass)
@@ -48,24 +42,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     domain_entry = domain.setdefault(entry.entry_id, {})
     product = domain_entry.setdefault(PRODUCT, product)
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -95,16 +79,16 @@ class BleBoxEntity(Entity):
     def __init__(self, feature):
         """Initialize a BleBox entity."""
         self._feature = feature
-
-    @property
-    def name(self):
-        """Return the internal entity name."""
-        return self._feature.full_name
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return self._feature.unique_id
+        self._attr_name = feature.full_name
+        self._attr_unique_id = feature.unique_id
+        product = feature.product
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, product.unique_id)},
+            "name": product.name,
+            "manufacturer": product.brand,
+            "model": product.model,
+            "sw_version": product.firmware_version,
+        }
 
     async def async_update(self):
         """Update the entity state."""
@@ -112,15 +96,3 @@ class BleBoxEntity(Entity):
             await self._feature.async_update()
         except Error as ex:
             _LOGGER.error("Updating '%s' failed: %s", self.name, ex)
-
-    @property
-    def device_info(self):
-        """Return device information for this entity."""
-        product = self._feature.product
-        return {
-            "identifiers": {(DOMAIN, product.unique_id)},
-            "name": product.name,
-            "manufacturer": product.brand,
-            "model": product.model,
-            "sw_version": product.firmware_version,
-        }

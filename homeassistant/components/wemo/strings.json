@@ -6,8 +6,13 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of Wemo is possible.",
-      "no_devices_found": "No Wemo devices found on the network."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "long_press": "Wemo button was pressed for 2 seconds"
     }
   }
 }

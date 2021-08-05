@@ -15,7 +15,7 @@
       }
     },
     "error": {
-      "connection_error": "Failed to connect to CoolMasterNet instance. Please check your host.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_units": "Could not find any HVAC units in CoolMasterNet host."
     }
   }

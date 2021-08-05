@@ -1,13 +1,13 @@
 {
   "config": {
     "error": {
-      "unknown": "Unexpected error",
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_thermostat": "The thermostat serial number is invalid."
     },
     "abort": {
-      "already_configured": "The thermostat is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "step": {
       "user": {

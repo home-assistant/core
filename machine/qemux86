@@ -1,0 +1,5 @@
+ARG BUILD_VERSION
+FROM homeassistant/i386-homeassistant:$BUILD_VERSION
+
+RUN apk --no-cache add \
+    usbutils

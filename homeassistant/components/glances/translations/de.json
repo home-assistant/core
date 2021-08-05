@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host ist bereits konfiguriert."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung zum Host nicht m\u00f6glich",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "wrong_version": "Version nicht unterst\u00fctzt (nur 2 oder 3)"
         },
         "step": {
@@ -14,9 +14,9 @@
                     "name": "Name",
                     "password": "Passwort",
                     "port": "Port",
-                    "ssl": "Verwende SSL / TLS, um eine Verbindung zum Glances-System herzustellen",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "\u00dcberpr\u00fcfe die Zertifizierung des Systems",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen",
                     "version": "Glances API-Version (2 oder 3)"
                 },
                 "title": "Glances einrichten"

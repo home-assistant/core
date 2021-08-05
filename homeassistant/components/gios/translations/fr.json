@@ -18,5 +18,10 @@
                 "title": "GIO\u015a (Inspection g\u00e9n\u00e9rale polonaise de la protection de l'environnement)"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Acc\u00e9der au serveur GIO\u015a"
+        }
     }
 }

@@ -12,16 +12,16 @@
     },
     "error": {
       "invalid_username": "Invalid username",
-      "invalid_credentials": "Invalid credentials",
-      "user_already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "unexpected": "Unexpected error communicating with Life360 server"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
       "default": "To set advanced options, see [Life360 documentation]({docs_url})."
     },
     "abort": {
-      "invalid_credentials": "Invalid credentials",
-      "user_already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

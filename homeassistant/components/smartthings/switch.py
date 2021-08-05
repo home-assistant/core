@@ -1,7 +1,9 @@
 """Support for switches through the SmartThings cloud API."""
-from typing import Optional, Sequence
+from __future__ import annotations
 
-from pysmartthings import Attribute, Capability
+from collections.abc import Sequence
+
+from pysmartthings import Capability
 
 from homeassistant.components.switch import SwitchEntity
 
@@ -21,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     # Must be able to be turned on/off.
     if Capability.switch in capabilities:
@@ -45,16 +47,6 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_write_ha_state()
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self._device.status.attributes[Attribute.power].value
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return self._device.status.attributes[Attribute.energy].value
 
     @property
     def is_on(self) -> bool:

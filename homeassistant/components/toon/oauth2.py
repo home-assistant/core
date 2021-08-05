@@ -1,14 +1,13 @@
 """OAuth2 implementations for Toon."""
-import logging
-from typing import Any, Optional, cast
+from __future__ import annotations
+
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import config_flow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def register_oauth2_implementations(
@@ -58,8 +57,8 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         client_secret: str,
         name: str,
         tenant_id: str,
-        issuer: Optional[str] = None,
-    ):
+        issuer: str | None = None,
+    ) -> None:
         """Local Toon Oauth Implementation."""
         self._name = name
         self.tenant_id = tenant_id
@@ -93,8 +92,8 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         """Initialize local Toon auth implementation."""
         data = {
             "grant_type": "authorization_code",
-            "code": external_data,
-            "redirect_uri": self.redirect_uri,
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
             "tenant_id": self.tenant_id,
         }
 
@@ -132,4 +131,8 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
 
         resp = await session.post(self.token_url, data=data, headers=headers)
         resp.raise_for_status()
-        return cast(dict, await resp.json())
+        resp_json = cast(dict, await resp.json())
+        # The Toon API returns "expires_in" as a string for some tenants.
+        # This is not according to OAuth specifications.
+        resp_json["expires_in"] = float(resp_json["expires_in"])
+        return resp_json

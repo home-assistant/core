@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw, de stroom- en ethernetkabels loskoppelen en opnieuw aansluiten kan helpen",
+            "not_denonavr_manufacturer": "Geen Denon AVR Netwerk Receiver, ontdekte fabrikant komt niet overeen",
+            "not_denonavr_missing": "Geen Denon AVR netwerkontvanger, zoekinformatie niet compleet"
+        },
+        "error": {
+            "discovery_error": "Kan geen Denon AVR netwerkontvanger vinden"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Bevestig het toevoegen van de ontvanger",
+                "title": "Denon AVR Network Receivers"
+            },
+            "select": {
+                "data": {
+                    "select_host": "Receiver IP-adres"
+                },
+                "description": "Voer de installatie opnieuw uit als u extra ontvangers wilt aansluiten",
+                "title": "Selecteer de receiver waarmee u verbinding wilt maken"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adres"
+                },
+                "description": "Maak verbinding met uw ontvanger. Als het IP-adres niet is ingesteld, wordt automatische detectie gebruikt",
+                "title": "Denon AVR Netwerk Ontvangers"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Toon alle bronnen",
+                    "update_audyssey": "Audyssey-instellingen bijwerken",
+                    "zone2": "Stel Zone 2 in",
+                    "zone3": "Stel Zone 3 in"
+                },
+                "description": "Optionele instellingen opgeven",
+                "title": "Denon AVR Network Receivers"
+            }
+        }
+    }
+}

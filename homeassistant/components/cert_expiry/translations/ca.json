@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta combinaci\u00f3 d'amfitri\u00f3 i port ja est\u00e0 configurada",
+            "already_configured": "El servei ja est\u00e0 configurat",
             "import_failed": "La importaci\u00f3 des de configuraci\u00f3 ha fallat"
         },
         "error": {

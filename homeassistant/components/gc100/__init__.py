@@ -1,13 +1,9 @@
 """Support for controlling Global Cache gc100."""
-import logging
-
 import gc100
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PORTS = "ports"
 
@@ -29,7 +25,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# pylint: disable=no-member
 def setup(hass, base_config):
     """Set up the gc100 component."""
     config = base_config[DOMAIN]

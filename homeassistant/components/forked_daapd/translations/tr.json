@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "unknown_error": "Beklenmeyen hata",
+            "wrong_password": "Yanl\u0131\u015f parola."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "name": "Kolay ad",
+                    "password": "API parolas\u0131 (parola yoksa bo\u015f b\u0131rak\u0131n)",
+                    "port": "API ba\u011flant\u0131 noktas\u0131"
+                }
+            }
+        }
+    }
+}

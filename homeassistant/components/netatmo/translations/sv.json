@@ -1,10 +1,12 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Du kan endast konfigurera ett Netatmo-konto."
-        },
         "create_entry": {
             "default": "Autentiserad med Netatmo."
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "schedule": "schema"
         }
     }
 }

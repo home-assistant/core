@@ -11,9 +11,7 @@
         },
         "error": {
             "authentication_error": "Nepravilna koda HomeKit. Preverite in poskusite znova.",
-            "busy_error": "Naprava je zavrnila seznanjanje, saj se \u017ee povezuje z drugim krmilnikom.",
             "max_peers_error": "Naprava je zavrnila seznanjanje, saj nima prostega pomnilnika za seznanjanje.",
-            "max_tries_error": "Napravaje zavrnila seznanjanje, saj je prejela ve\u010d kot 100 neuspe\u0161nih poskusov overjanja.",
             "pairing_failed": "Med poskusom seznanitev s to napravo je pri\u0161lo do napake. To je lahko za\u010dasna napaka ali pa va\u0161a naprava trenutno ni podprta.",
             "unable_to_pair": "Ni mogo\u010de seznaniti. Poskusite znova.",
             "unknown_error": "Naprava je sporo\u010dila neznano napako. Seznanjanje ni uspelo."
@@ -34,6 +32,21 @@
                 "description": "Izberite napravo, s katero se \u017eelite seznaniti",
                 "title": "Seznanite s HomeKit Opremo"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Gumb 1",
+            "button10": "Gumb 10",
+            "button2": "Gumb 2",
+            "button3": "Gumb 3",
+            "button4": "Gumb 4",
+            "button5": "Gumb 5",
+            "button6": "Gumb 6",
+            "button7": "Gumb 7",
+            "button8": "Gumb 8",
+            "button9": "Gumb 9",
+            "doorbell": "Zvonec"
         }
     },
     "title": "HomeKit oprema"

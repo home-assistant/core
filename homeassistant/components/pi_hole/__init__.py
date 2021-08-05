@@ -1,12 +1,13 @@
 """The pi_hole component."""
+from __future__ import annotations
+
 import logging
 
 from hole import Hole
 from hole.exceptions import HoleError
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -14,13 +15,21 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_LOCATION,
+    CONF_STATISTICS_ONLY,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DEFAULT_LOCATION,
@@ -29,11 +38,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
-    SERVICE_DISABLE,
-    SERVICE_DISABLE_ATTR_DURATION,
-    SERVICE_DISABLE_ATTR_NAME,
-    SERVICE_ENABLE,
-    SERVICE_ENABLE_ATTR_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,26 +56,16 @@ PI_HOLE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass, config):
-    """Set up the Pi_hole integration."""
-
-    service_disable_schema = vol.Schema(
-        vol.All(
-            {
-                vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
-                    cv.time_period_str, cv.positive_timedelta
-                ),
-                vol.Optional(SERVICE_DISABLE_ATTR_NAME): str,
-            },
-        )
-    )
-
-    service_enable_schema = vol.Schema({vol.Optional(SERVICE_ENABLE_ATTR_NAME): str})
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Pi-hole integration."""
 
     hass.data[DOMAIN] = {}
 
@@ -84,75 +78,10 @@ async def async_setup(hass, config):
                 )
             )
 
-    def get_api_from_name(name):
-        """Get Pi-hole API object from user configured name."""
-        hole_data = hass.data[DOMAIN].get(name)
-        if hole_data is None:
-            _LOGGER.error("Unknown Pi-hole name %s", name)
-            return None
-        api = hole_data[DATA_KEY_API]
-        if not api.api_token:
-            _LOGGER.error(
-                "Pi-hole %s must have an api_key provided in configuration to be enabled",
-                name,
-            )
-            return None
-        return api
-
-    async def disable_service_handler(call):
-        """Handle the service call to disable a single Pi-hole or all configured Pi-holes."""
-        duration = call.data[SERVICE_DISABLE_ATTR_DURATION].total_seconds()
-        name = call.data.get(SERVICE_DISABLE_ATTR_NAME)
-
-        async def do_disable(name):
-            """Disable the named Pi-hole."""
-            api = get_api_from_name(name)
-            if api is None:
-                return
-
-            _LOGGER.debug(
-                "Disabling Pi-hole '%s' (%s) for %d seconds", name, api.host, duration,
-            )
-            await api.disable(duration)
-
-        if name is not None:
-            await do_disable(name)
-        else:
-            for name in hass.data[DOMAIN]:
-                await do_disable(name)
-
-    async def enable_service_handler(call):
-        """Handle the service call to enable a single Pi-hole or all configured Pi-holes."""
-
-        name = call.data.get(SERVICE_ENABLE_ATTR_NAME)
-
-        async def do_enable(name):
-            """Enable the named Pi-hole."""
-            api = get_api_from_name(name)
-            if api is None:
-                return
-
-            _LOGGER.debug("Enabling Pi-hole '%s' (%s)", name, api.host)
-            await api.enable()
-
-        if name is not None:
-            await do_enable(name)
-        else:
-            for name in hass.data[DOMAIN]:
-                await do_enable(name)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE, disable_service_handler, schema=service_disable_schema
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE, enable_service_handler, schema=service_enable_schema
-    )
-
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pi-hole entry."""
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
@@ -161,24 +90,35 @@ async def async_setup_entry(hass, entry):
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY)
 
+    # For backward compatibility
+    if CONF_STATISTICS_ONLY not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_STATISTICS_ONLY: not api_key}
+        )
+
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
     try:
         session = async_get_clientsession(hass, verify_tls)
         api = Hole(
-            host, hass.loop, session, location=location, tls=use_tls, api_token=api_key,
+            host,
+            hass.loop,
+            session,
+            location=location,
+            tls=use_tls,
+            api_token=api_key,
         )
         await api.get_data()
     except HoleError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
-    async def async_update_data():
+    async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
             await api.get_data()
         except HoleError as err:
-            raise UpdateFailed(f"Failed to communicating with API: {err}")
+            raise UpdateFailed(f"Failed to communicate with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -187,19 +127,63 @@ async def async_setup_entry(hass, entry):
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
-    hass.data[DOMAIN][name] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
         DATA_KEY_COORDINATOR: coordinator,
     }
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, _async_platforms(entry))
 
     return True
 
 
-async def async_unload_entry(hass, entry):
-    """Unload pi-hole entry."""
-    hass.data[DOMAIN].pop(entry.data[CONF_NAME])
-    return await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Pi-hole entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, _async_platforms(entry)
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
+
+
+@callback
+def _async_platforms(entry: ConfigEntry) -> list[str]:
+    """Return platforms to be loaded / unloaded."""
+    platforms = ["sensor"]
+    if not entry.data[CONF_STATISTICS_ONLY]:
+        platforms.append("switch")
+    else:
+        platforms.append("binary_sensor")
+    return platforms
+
+
+class PiHoleEntity(CoordinatorEntity):
+    """Representation of a Pi-hole entity."""
+
+    def __init__(
+        self,
+        api: Hole,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        server_unique_id: str,
+    ) -> None:
+        """Initialize a Pi-hole entity."""
+        super().__init__(coordinator)
+        self.api = api
+        self._name = name
+        self._server_unique_id = server_unique_id
+
+    @property
+    def icon(self) -> str:
+        """Icon to use in the frontend, if any."""
+        return "mdi:pi-hole"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information of the entity."""
+        return {
+            "identifiers": {(DOMAIN, self._server_unique_id)},
+            "name": self._name,
+            "manufacturer": "Pi-hole",
+        }

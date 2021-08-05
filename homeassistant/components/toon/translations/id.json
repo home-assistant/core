@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perjanjian yang dipilih sudah dikonfigurasi.",
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_agreements": "Akun ini tidak memiliki tampilan Toon.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "unknown_authorize_url_generation": "Kesalahan tidak dikenal ketika menghasilkan URL otorisasi."
+        },
+        "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Persetujuan"
+                },
+                "description": "Pilih alamat persetujuan yang ingin ditambahkan.",
+                "title": "Pilih persetujuan Anda"
+            },
+            "pick_implementation": {
+                "title": "Pilih penyewa Anda untuk diautentikasi"
+            }
+        }
+    }
+}

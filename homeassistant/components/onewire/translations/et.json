@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus",
+            "invalid_path": "Kausta ei leitud."
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "title": "M\u00e4\u00e4ra owserver-i \u00fcksikasjad"
+            },
+            "user": {
+                "data": {
+                    "type": "\u00dchenduse t\u00fc\u00fcp"
+                },
+                "title": "Seadista 1-wire sidumine"
+            }
+        }
+    }
+}

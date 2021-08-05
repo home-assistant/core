@@ -1,14 +1,14 @@
 """Test config flow."""
 
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -33,7 +33,7 @@ async def test_user_connection_works(hass, mock_try_connection, mock_finish_setu
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -45,7 +45,7 @@ async def test_user_connection_works(hass, mock_try_connection, mock_finish_setu
     assert result["result"].data == {
         "broker": "127.0.0.1",
         "port": 1883,
-        "discovery": False,
+        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -58,7 +58,7 @@ async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setu
     mock_try_connection.return_value = False
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -84,7 +84,7 @@ async def test_manual_config_set(hass, mock_try_connection, mock_finish_setup):
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "abort"
 
@@ -94,7 +94,7 @@ async def test_user_single_instance(hass):
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
@@ -105,7 +105,7 @@ async def test_hassio_single_instance(hass):
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "hassio"}
+        "mqtt", context={"source": config_entries.SOURCE_HASSIO}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
@@ -125,7 +125,7 @@ async def test_hassio_confirm(hass, mock_try_connection, mock_finish_setup):
             "password": "mock-pass",
             "protocol": "3.1.1",
         },
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "hassio_confirm"
@@ -154,7 +154,6 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
     """Test config flow options."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
@@ -185,10 +184,12 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
         result["flow_id"],
         user_input={
             mqtt.CONF_DISCOVERY: True,
+            "birth_enable": True,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
             "birth_qos": 1,
             "birth_retain": True,
+            "will_enable": True,
             "will_topic": "ha_state/offline",
             "will_payload": "offline",
             "will_qos": 2,
@@ -221,6 +222,68 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
     assert mqtt_mock.async_connect.call_count == 1
 
 
+async def test_disable_birth_will(hass, mqtt_mock, mock_try_connection):
+    """Test disabling birth and will."""
+    mock_try_connection.return_value = True
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry.data = {
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 1234,
+    }
+
+    mqtt_mock.async_connect.reset_mock()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "broker"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "another-broker",
+            mqtt.CONF_PORT: 2345,
+            mqtt.CONF_USERNAME: "user",
+            mqtt.CONF_PASSWORD: "pass",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "options"
+
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_connect.call_count == 0
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_DISCOVERY: True,
+            "birth_enable": False,
+            "birth_topic": "ha_state/online",
+            "birth_payload": "online",
+            "birth_qos": 1,
+            "birth_retain": True,
+            "will_enable": False,
+            "will_topic": "ha_state/offline",
+            "will_payload": "offline",
+            "will_qos": 2,
+            "will_retain": True,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] is None
+    assert config_entry.data == {
+        mqtt.CONF_BROKER: "another-broker",
+        mqtt.CONF_PORT: 2345,
+        mqtt.CONF_USERNAME: "user",
+        mqtt.CONF_PASSWORD: "pass",
+        mqtt.CONF_DISCOVERY: True,
+        mqtt.CONF_BIRTH_MESSAGE: {},
+        mqtt.CONF_WILL_MESSAGE: {},
+    }
+
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_connect.call_count == 1
+
+
 def get_default(schema, key):
     """Get default value for key in voluptuous schema."""
     for k in schema.keys():
@@ -245,7 +308,6 @@ async def test_option_flow_default_suggested_values(
     """Test config flow options has default/suggested values."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
@@ -440,7 +502,8 @@ async def test_options_bad_birth_message_fails(hass, mock_try_connection):
     assert result["step_id"] == "options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"birth_topic": "ha_state/online/#"},
+        result["flow_id"],
+        user_input={"birth_topic": "ha_state/online/#"},
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "bad_birth"
@@ -475,7 +538,8 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
     assert result["step_id"] == "options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"will_topic": "ha_state/offline/#"},
+        result["flow_id"],
+        user_input={"will_topic": "ha_state/offline/#"},
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "bad_will"

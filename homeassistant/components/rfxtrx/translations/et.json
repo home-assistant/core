@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "title": "Vali \u00fchenduse aadress"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Vali seade"
+                },
+                "title": "Seade"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB seadme rada"
+                },
+                "title": "Rada"
+            },
+            "user": {
+                "data": {
+                    "type": "\u00dchenduse t\u00fc\u00fcp"
+                },
+                "title": "Vali \u00fchenduse t\u00fc\u00fcp"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud",
+            "invalid_event_code": "Vale s\u00fcndmuse kood",
+            "invalid_input_2262_off": "Vigane sisestus v\u00e4ljal\u00fclitamiseks",
+            "invalid_input_2262_on": "Vigane sisestus sissel\u00fclitamisks",
+            "invalid_input_off_delay": "Vigane sisestus v\u00e4ljal\u00fclitamise viivituseks",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Luba automaatne lisamine",
+                    "debug": "Luba silumine",
+                    "device": "Vali seadistatav seade",
+                    "event_code": "Sisesta lisatava s\u00fcndmuse kood",
+                    "remove_device": "Vali eemaldatav seade"
+                },
+                "title": "Rfxtrx valikud"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "V\u00e4ljal\u00fclitamise k\u00e4su andmebittide v\u00e4\u00e4rtus",
+                    "command_on": "Sissel\u00fclitamise k\u00e4su andmebittide v\u00e4\u00e4rtus",
+                    "data_bit": "Andmebittide arv",
+                    "fire_event": "Luba seadme s\u00fcndmus",
+                    "off_delay": "V\u00e4ljal\u00fclitamise viivitus",
+                    "off_delay_enabled": "Luba v\u00e4ljal\u00fclitusviivitus",
+                    "replace_device": "Vali asendav seade",
+                    "signal_repetitions": "Signaali korduste arv",
+                    "venetian_blind_mode": "Ribikardinate juhtimine"
+                },
+                "title": "Seadista seadme valikud"
+            }
+        }
+    }
+}

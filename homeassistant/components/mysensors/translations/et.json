@@ -1,0 +1,80 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "duplicate_persistence_file": "P\u00fcsivusfail on juba kasutusel",
+            "duplicate_topic": "Teema on juba kasutusel",
+            "invalid_auth": "Vigane autentimine",
+            "invalid_device": "Sobimatu seade",
+            "invalid_ip": "Sobimatu IP-aadress",
+            "invalid_persistence_file": "Sobimatu p\u00fcsivusfail",
+            "invalid_port": "Lubamatu pordinumber",
+            "invalid_publish_topic": "Kehtetu avaldamisteema",
+            "invalid_serial": "Sobimatu jadaport",
+            "invalid_subscribe_topic": "Kehtetu tellimisteema",
+            "invalid_version": "Sobimatu MySensors versioon",
+            "not_a_number": "Sisesta number",
+            "port_out_of_range": "Pordi number peab olema v\u00e4hemalt 1 ja k\u00f5ige rohkem 65535",
+            "same_topic": "Tellimise ja avaldamise teemad kattuvad",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "error": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "duplicate_persistence_file": "P\u00fcsivusfail on juba kasutusel",
+            "duplicate_topic": "Teema on juba kasutusel",
+            "invalid_auth": "Vigane autentimine",
+            "invalid_device": "Sobimatu seade",
+            "invalid_ip": "Sobimatu IP-aadress",
+            "invalid_persistence_file": "Sobimatu p\u00fcsivusfail",
+            "invalid_port": "Lubamatu pordinumber",
+            "invalid_publish_topic": "Kehtetu avaldamisteema",
+            "invalid_serial": "Sobimatu jadaport",
+            "invalid_subscribe_topic": "Kehtetu tellimisteema",
+            "invalid_version": "Sobimatu MySensors versioon",
+            "mqtt_required": "MQTT sidumine on loomata",
+            "not_a_number": "Sisesta number",
+            "port_out_of_range": "Pordi number peab olema v\u00e4hemalt 1 ja k\u00f5ige rohkem 65535",
+            "same_topic": "Tellimise ja avaldamise teemad kattuvad",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "p\u00fcsivusfail (j\u00e4ta automaatse genereerimise jaoks t\u00fchjaks)",
+                    "retain": "mqtt oleku s\u00e4ilitamine",
+                    "topic_in_prefix": "sisendteemade eesliide (topic_in_prefix)",
+                    "topic_out_prefix": "v\u00e4ljunditeemade eesliide (topic_out_prefix)",
+                    "version": "MySensors versioon"
+                },
+                "description": "MQTT-l\u00fc\u00fcsi seadistamine"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "andmeedastuskiirus",
+                    "device": "Jadaport",
+                    "persistence_file": "p\u00fcsivusfail (j\u00e4ta automaatse genereerimise jaoks t\u00fchjaks)",
+                    "version": "MySensors versioon"
+                },
+                "description": "Jadal\u00fc\u00fcsi h\u00e4\u00e4lestus"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "L\u00fc\u00fcsi IP-aadress",
+                    "persistence_file": "p\u00fcsivusfail (j\u00e4ta automaatse genereerimise jaoks t\u00fchjaks)",
+                    "tcp_port": "port",
+                    "version": "MySensors versioon"
+                },
+                "description": "Etherneti l\u00fc\u00fcsi seadistamine"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "L\u00fc\u00fcsi t\u00fc\u00fcp"
+                },
+                "description": "Vali l\u00fc\u00fcsi \u00fchendusviis"
+            }
+        }
+    },
+    "title": "MySensors"
+}

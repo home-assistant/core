@@ -189,7 +189,7 @@ class EcovacsVacuum(VacuumEntity):
         self.device.run(sucks.VacBotCommand(command, params))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device-specific state attributes of this vacuum."""
         data = {}
         data[ATTR_ERROR] = self._error

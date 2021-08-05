@@ -6,7 +6,8 @@
             "open": "\u00c5pne {entity_name}",
             "open_tilt": "\u00c5pne {entity_name} tilt",
             "set_position": "Angi {entity_name} posisjon",
-            "set_tilt_position": "Angi {entity_name} tilt posisjon"
+            "set_tilt_position": "Angi {entity_name} tilt posisjon",
+            "stop": "Stopp {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} er lukket",

@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Coordonatele deja \u00eenregistrate",
             "invalid_api_key": "Cheie API invalid\u0103"
         },
         "step": {

@@ -3,5 +3,6 @@
   "name": "Leviton Decora Wi-Fi",
   "documentation": "https://www.home-assistant.io/integrations/decora_wifi",
   "requirements": ["decora_wifi==1.4"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

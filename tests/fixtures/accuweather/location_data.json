@@ -1,0 +1,49 @@
+{
+  "Version": 1,
+  "Key": "268068",
+  "Type": "City",
+  "Rank": 85,
+  "LocalizedName": "Piątek",
+  "EnglishName": "Piątek",
+  "PrimaryPostalCode": "",
+  "Region": { "ID": "EUR", "LocalizedName": "Europe", "EnglishName": "Europe" },
+  "Country": { "ID": "PL", "LocalizedName": "Poland", "EnglishName": "Poland" },
+  "AdministrativeArea": {
+    "ID": "10",
+    "LocalizedName": "Łódź",
+    "EnglishName": "Łódź",
+    "Level": 1,
+    "LocalizedType": "Voivodship",
+    "EnglishType": "Voivodship",
+    "CountryID": "PL"
+  },
+  "TimeZone": {
+    "Code": "CEST",
+    "Name": "Europe/Warsaw",
+    "GmtOffset": 2.0,
+    "IsDaylightSaving": true,
+    "NextOffsetChange": "2020-10-25T01:00:00Z"
+  },
+  "GeoPosition": {
+    "Latitude": 52.069,
+    "Longitude": 19.479,
+    "Elevation": {
+      "Metric": { "Value": 94.0, "Unit": "m", "UnitType": 5 },
+      "Imperial": { "Value": 308.0, "Unit": "ft", "UnitType": 0 }
+    }
+  },
+  "IsAlias": false,
+  "SupplementalAdminAreas": [
+    { "Level": 2, "LocalizedName": "Łęczyca", "EnglishName": "Łęczyca" },
+    { "Level": 3, "LocalizedName": "Piątek", "EnglishName": "Piątek" }
+  ],
+  "DataSets": [
+    "AirQualityCurrentConditions",
+    "AirQualityForecasts",
+    "Alerts",
+    "ForecastConfidence",
+    "FutureRadar",
+    "MinuteCast",
+    "Radar"
+  ]
+}

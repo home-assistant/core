@@ -1,6 +1,7 @@
 """Tests for the command_line auth provider."""
 
 import os
+from unittest.mock import AsyncMock
 import uuid
 
 import pytest
@@ -9,8 +10,6 @@ from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManager, auth_store, models as auth_models
 from homeassistant.auth.providers import command_line
 from homeassistant.const import CONF_TYPE
-
-from tests.async_mock import AsyncMock
 
 
 @pytest.fixture

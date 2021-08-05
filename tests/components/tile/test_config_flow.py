@@ -1,4 +1,6 @@
 """Define tests for the Tile config flow."""
+from unittest.mock import patch
+
 from pytile.errors import TileError
 
 from homeassistant import data_entry_flow
@@ -6,7 +8,6 @@ from homeassistant.components.tile import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -37,13 +38,14 @@ async def test_invalid_credentials(hass):
     }
 
     with patch(
-        "homeassistant.components.tile.config_flow.async_login", side_effect=TileError,
+        "homeassistant.components.tile.config_flow.async_login",
+        side_effect=TileError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_step_import(hass):

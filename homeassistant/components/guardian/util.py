@@ -1,7 +1,10 @@
 """Define Guardian-specific utilities."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable
 from datetime import timedelta
-from typing import Awaitable, Callable
+from typing import Any, Callable, Dict, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -14,7 +17,7 @@ from .const import LOGGER
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-class GuardianDataUpdateCoordinator(DataUpdateCoordinator):
+class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Define an extended DataUpdateCoordinator with some Guardian goodies."""
 
     def __init__(
@@ -26,7 +29,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator):
         api_coro: Callable[..., Awaitable],
         api_lock: asyncio.Lock,
         valve_controller_uid: str,
-    ):
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
@@ -39,11 +42,11 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator):
         self._api_lock = api_lock
         self._client = client
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Execute a "locked" API request against the valve controller."""
         async with self._api_lock, self._client:
             try:
                 resp = await self._api_coro()
             except GuardianError as err:
-                raise UpdateFailed(err)
-        return resp["data"]
+                raise UpdateFailed(err) from err
+        return cast(Dict[str, Any], resp["data"])

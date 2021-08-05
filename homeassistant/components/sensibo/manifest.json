@@ -3,5 +3,6 @@
   "name": "Sensibo",
   "documentation": "https://www.home-assistant.io/integrations/sensibo",
   "requirements": ["pysensibo==1.0.3"],
-  "codeowners": ["@andrey-git"]
+  "codeowners": ["@andrey-git"],
+  "iot_class": "cloud_polling"
 }

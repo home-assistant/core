@@ -2,7 +2,9 @@
     "config": {
         "step": {
             "user": {
-                "title": "Anslut till Sonarr"
+                "data": {
+                    "api_key": "API nyckel"
+                }
             }
         }
     }

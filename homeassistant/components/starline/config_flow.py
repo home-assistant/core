@@ -1,5 +1,5 @@
 """Config flow to configure StarLine component."""
-from typing import Optional
+from __future__ import annotations
 
 from starline import StarlineAuth
 import voluptuous as vol
@@ -7,7 +7,8 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
+    _LOGGER,
     CONF_APP_ID,
     CONF_APP_SECRET,
     CONF_CAPTCHA_CODE,
@@ -20,7 +21,6 @@ from .const import (  # pylint: disable=unused-import
     ERROR_AUTH_APP,
     ERROR_AUTH_MFA,
     ERROR_AUTH_USER,
-    LOGGER,
 )
 
 
@@ -28,15 +28,14 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a StarLine config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
-        self._app_id: Optional[str] = None
-        self._app_secret: Optional[str] = None
-        self._username: Optional[str] = None
-        self._password: Optional[str] = None
-        self._mfa_code: Optional[str] = None
+        self._app_id: str | None = None
+        self._app_secret: str | None = None
+        self._username: str | None = None
+        self._password: str | None = None
+        self._mfa_code: str | None = None
 
         self._app_code = None
         self._app_token = None
@@ -174,19 +173,22 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_authenticate_app(self, error=None):
         """Authenticate application."""
         try:
-            self._app_code = self._auth.get_app_code(self._app_id, self._app_secret)
-            self._app_token = self._auth.get_app_token(
-                self._app_id, self._app_secret, self._app_code
+            self._app_code = await self.hass.async_add_executor_job(
+                self._auth.get_app_code, self._app_id, self._app_secret
+            )
+            self._app_token = await self.hass.async_add_executor_job(
+                self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
             )
             return self._async_form_auth_user(error)
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error auth StarLine: %s", err)
+            _LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
     async def _async_authenticate_user(self, error=None):
         """Authenticate user."""
         try:
-            state, data = self._auth.get_slid_user_token(
+            state, data = await self.hass.async_add_executor_job(
+                self._auth.get_slid_user_token,
                 self._app_token,
                 self._username,
                 self._password,
@@ -212,7 +214,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             raise Exception(data)
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error auth user: %s", err)
+            _LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 
     async def _async_get_entry(self):
@@ -221,7 +223,9 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._slnet_token,
             self._slnet_token_expires,
             self._user_id,
-        ) = self._auth.get_user_id(self._user_slid)
+        ) = await self.hass.async_add_executor_job(
+            self._auth.get_user_id, self._user_slid
+        )
 
         return self.async_create_entry(
             title=f"Application {self._app_id}",

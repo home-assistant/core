@@ -3,5 +3,6 @@
   "name": "Tautulli",
   "documentation": "https://www.home-assistant.io/integrations/tautulli",
   "requirements": ["pytautulli==0.5.0"],
-  "codeowners": ["@ludeeus"]
+  "codeowners": ["@ludeeus"],
+  "iot_class": "local_polling"
 }

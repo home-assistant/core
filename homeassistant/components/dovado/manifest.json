@@ -3,5 +3,6 @@
   "name": "Dovado",
   "documentation": "https://www.home-assistant.io/integrations/dovado",
   "requirements": ["dovado==0.4.1"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

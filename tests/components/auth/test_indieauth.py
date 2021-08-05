@@ -1,11 +1,11 @@
 """Tests for the client validator."""
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.auth import indieauth
 
-from tests.async_mock import patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -166,7 +166,8 @@ async def test_find_link_tag_max_size(hass, mock_session):
 
 
 @pytest.mark.parametrize(
-    "client_id", ["https://home-assistant.io/android", "https://home-assistant.io/iOS"],
+    "client_id",
+    ["https://home-assistant.io/android", "https://home-assistant.io/iOS"],
 )
 async def test_verify_redirect_uri_android_ios(client_id):
     """Test that we verify redirect uri correctly for Android/iOS."""

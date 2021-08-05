@@ -88,7 +88,7 @@ venv
 .venv
 Pipfile*
 share/*
-Scripts/
+/Scripts/
 
 # vimmy stuff
 *.swp

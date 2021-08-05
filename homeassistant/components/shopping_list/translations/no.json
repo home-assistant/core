@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Handlelisten er allerede konfigurert."
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "step": {
             "user": {

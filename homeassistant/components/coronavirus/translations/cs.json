@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Zem\u011b"
+                },
+                "title": "Vyberte zemi, kterou chcete sledovat"
+            }
+        }
+    }
+}

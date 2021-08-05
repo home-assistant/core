@@ -1,4 +1,5 @@
 """Base class for IKEA TRADFRI."""
+from functools import wraps
 import logging
 
 from pytradfri.error import PytradfriError
@@ -11,6 +12,20 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def handle_error(func):
+    """Handle tradfri api call error."""
+
+    @wraps(func)
+    async def wrapper(command):
+        """Decorate api call."""
+        try:
+            await func(command)
+        except PytradfriError as err:
+            _LOGGER.error("Unable to execute command %s: %s", command, err)
+
+    return wrapper
+
+
 class TradfriBaseClass(Entity):
     """Base class for IKEA TRADFRI.
 
@@ -19,7 +34,7 @@ class TradfriBaseClass(Entity):
 
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
-        self._api = api
+        self._api = handle_error(api)
         self._device = None
         self._device_control = None
         self._device_data = None

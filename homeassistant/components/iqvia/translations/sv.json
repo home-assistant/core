@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Postnummer redan registrerat",
             "invalid_zip_code": "Ogiltigt postnummer"
         },
         "step": {

@@ -1,6 +1,7 @@
 """Platform for Flexit AC units with CI66 Modbus adapter."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 from pyflexit.pyflexit import pyflexit
 import voluptuous as vol
@@ -93,7 +94,7 @@ class Flexit(ClimateEntity):
         self._current_operation = self.unit.get_operation
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             "filter_hours": self._filter_hours,
@@ -135,7 +136,7 @@ class Flexit(ClimateEntity):
         return self._current_operation
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.

@@ -11,7 +11,7 @@
                     "app_id": "Identyfikator aplikacji",
                     "app_secret": "Tajny kod"
                 },
-                "description": "Identyfikator aplikacji i tajny kod z <a href=\"https://my.starline.ru/developer\" target=\"_blank\">konta programisty StarLine</a>",
+                "description": "Identyfikator aplikacji i tajny kod z [konta programisty StarLine](https://my.starline.ru/developer)",
                 "title": "Po\u015bwiadczenia aplikacji"
             },
             "auth_captcha": {

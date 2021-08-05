@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Conexi\u00f3n fallida",
-            "name_exists": "El nombre existe",
-            "wrong_credentials": "Credenciales incorrectas"
+            "name_exists": "El nombre existe"
         },
         "step": {
             "user": {

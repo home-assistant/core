@@ -19,7 +19,7 @@
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
                 "description": "\ud638\uc2a4\ud2b8 \ud56d\ubaa9\uc740 \uc644\uc804\ud55c URL \ud615\uc2dd\uc774\uc5b4\uc57c \ud569\ub2c8\ub2e4. \uc608: http://192.168.10.100:80",
-                "title": "ISY994 \uc5d0 \uc5f0\uacb0\ud558\uae30"
+                "title": "ISY994\uc5d0 \uc5f0\uacb0\ud558\uae30"
             }
         }
     },
@@ -36,6 +36,5 @@
                 "title": "ISY994 \uc635\uc158"
             }
         }
-    },
-    "title": "ISY994 \ubc94\uc6a9 \uae30\uae30"
+    }
 }

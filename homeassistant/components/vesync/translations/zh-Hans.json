@@ -1,7 +1,16 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "\u53ea\u5141\u8bb8\u4e00\u4e2aVesync\u5b9e\u4f8b"
+        "error": {
+            "invalid_auth": "\u9a8c\u8bc1\u7801\u65e0\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7535\u5b50\u90ae\u4ef6"
+                },
+                "title": "\u8f93\u5165\u7528\u6237\u540d\u548c\u5bc6\u7801"
+            }
         }
     }
 }

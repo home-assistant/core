@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aksesuar zaten bu denetleyici ile yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r.",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+        },
+        "error": {
+            "authentication_error": "Yanl\u0131\u015f HomeKit kodu. L\u00fctfen kontrol edip tekrar deneyin.",
+            "unknown_error": "Cihaz bilinmeyen bir hata bildirdi. E\u015fle\u015ftirme ba\u015far\u0131s\u0131z oldu."
+        },
+        "step": {
+            "busy_error": {
+                "title": "Cihaz zaten ba\u015fka bir oyun kumandas\u0131yla e\u015fle\u015fiyor"
+            },
+            "max_tries_error": {
+                "title": "Maksimum kimlik do\u011frulama giri\u015fimi a\u015f\u0131ld\u0131"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "D\u00fc\u011fme 1",
+            "button10": "D\u00fc\u011fme 10",
+            "button2": "D\u00fc\u011fme 2",
+            "button3": "D\u00fc\u011fme 3",
+            "button4": "D\u00fc\u011fme 4",
+            "button5": "D\u00fc\u011fme 5",
+            "button6": "D\u00fc\u011fme 6",
+            "button7": "D\u00fc\u011fme 7",
+            "button8": "D\u00fc\u011fme 8",
+            "button9": "D\u00fc\u011fme 9",
+            "doorbell": "Kap\u0131 zili"
+        }
+    }
+}

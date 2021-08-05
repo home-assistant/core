@@ -1,16 +1,53 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Home Assistant m\u00e5 v\u00e6re tilgjengelig fra internett for \u00e5 kunne motta meldinger fra Plaato Airlock.",
-            "one_instance_allowed": "Kun en forekomst er n\u00f8dvendig."
+            "already_configured": "Kontoen er allerede konfigurert",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "webhook_not_internet_accessible": "Home Assistant forekomsten din m\u00e5 v\u00e6re tilgjengelig fra internett for \u00e5 kunne motta webhook meldinger"
         },
         "create_entry": {
-            "default": "For \u00e5 sende hendelser til Home Assistant, m\u00e5 du sette opp webhook-funksjonen i Plaato Airlock. \n\n Fyll ut f\u00f8lgende informasjon: \n\n - URL: `{webhook_url}` \n - Metode: POST \n\n Se [dokumentasjonen]({docs_url}) for ytterligere detaljer."
+            "default": "Plaato {device_type} med navnet **{device_name}** ble konfigurert!"
+        },
+        "error": {
+            "invalid_webhook_device": "Du har valgt en enhet som ikke st\u00f8tter sending av data til en webhook. Den er bare tilgjengelig for luftsluse",
+            "no_api_method": "Du m\u00e5 legge til et godkjenningstoken eller velge webhook",
+            "no_auth_token": "Du m\u00e5 legge til et godkjenningstoken"
         },
         "step": {
+            "api_method": {
+                "data": {
+                    "token": "Lim inn Auth Token her",
+                    "use_webhook": "Bruk webhook"
+                },
+                "description": "For \u00e5 kunne s\u00f8ke p\u00e5 API-en kreves det en `auth_token` som kan oppn\u00e5s ved \u00e5 f\u00f8lge [disse] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instruksjonene \n\n Valgt enhet: **{device_type}** \n\n Hvis du heller bruker den innebygde webhook-metoden (kun luftsperre), vennligst merk av i ruten nedenfor og la Auth Token v\u00e6re tom.",
+                "title": "Velg API-metode"
+            },
             "user": {
-                "description": "Er du sikker p\u00e5 at du vil sette opp Plato Airlock?",
-                "title": "Sett opp Plaato Webhook"
+                "data": {
+                    "device_name": "Navngi enheten din",
+                    "device_type": "Type Platon-enhet"
+                },
+                "description": "Vil du starte oppsettet?",
+                "title": "Sett opp Plaato-enhetene"
+            },
+            "webhook": {
+                "description": "For \u00e5 sende hendelser til Home Assistant, m\u00e5 du sette opp webhook-funksjonen i Plaato Airlock. \n\n Fyll ut f\u00f8lgende informasjon: \n\n - URL: `{webhook_url}` \n - Metode: POST \n\n Se [dokumentasjonen]({docs_url}) for ytterligere detaljer.",
+                "title": "Webhook \u00e5 bruke"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Oppdateringsintervall (minutter)"
+                },
+                "description": "Still inn oppdateringsintervallet (minutter)",
+                "title": "Alternativer for Plaato"
+            },
+            "webhook": {
+                "description": "Webhook info:\n\n- URL-adresse: {webhook_url}\n- Metode: POST\n\n",
+                "title": "Alternativer for Plaato Airlock"
             }
         }
     }

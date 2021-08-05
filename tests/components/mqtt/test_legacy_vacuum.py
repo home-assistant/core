@@ -1,6 +1,7 @@
 """The tests for the Legacy Mqtt vacuum platform."""
 from copy import deepcopy
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -10,6 +11,7 @@ from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_legacy import (
     ALL_SERVICES,
+    MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED,
     SERVICE_TO_STRING,
 )
 from homeassistant.components.vacuum import (
@@ -31,6 +33,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -40,6 +43,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -579,6 +583,17 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     )
 
 
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass,
+        mqtt_mock,
+        vacuum.DOMAIN,
+        DEFAULT_CONFIG_2,
+        MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED,
+    )
+
+
 async def test_setting_attribute_with_template(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
@@ -641,6 +656,17 @@ async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_vacuum(hass, mqtt_mock, caplog):
+    """Test update of discovered vacuum."""
+    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    with patch(
+        "homeassistant.components.mqtt.vacuum.schema_legacy.MqttVacuum.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

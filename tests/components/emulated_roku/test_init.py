@@ -1,8 +1,8 @@
 """Test emulated_roku component setup process."""
+from unittest.mock import AsyncMock, Mock, patch
+
 from homeassistant.components import emulated_roku
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 
 async def test_config_required_fields(hass):
@@ -93,7 +93,11 @@ async def test_setup_entry_successful(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     entry = Mock()
-    entry.data = {"name": "Emulated Roku Test", "listen_port": 8060}
+    entry.data = {
+        "name": "Emulated Roku Test",
+        "listen_port": 8060,
+        emulated_roku.CONF_HOST_IP: "1.2.3.5",
+    }
 
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",

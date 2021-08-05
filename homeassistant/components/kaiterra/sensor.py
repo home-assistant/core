@@ -1,13 +1,20 @@
 """Support for Kaiterra Temperature ahn Humidity Sensors."""
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DISPATCHER_KAITERRA, DOMAIN
 
 SENSORS = [
-    {"name": "Temperature", "prop": "rtemp", "device_class": "temperature"},
-    {"name": "Humidity", "prop": "rhumid", "device_class": "humidity"},
+    {"name": "Temperature", "prop": "rtemp", "device_class": DEVICE_CLASS_TEMPERATURE},
+    {"name": "Humidity", "prop": "rhumid", "device_class": DEVICE_CLASS_HUMIDITY},
 ]
 
 
@@ -25,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class KaiterraSensor(Entity):
+class KaiterraSensor(SensorEntity):
     """Implementation of a Kaittera sensor."""
 
     def __init__(self, api, name, device_id, sensor):

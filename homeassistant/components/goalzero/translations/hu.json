@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "confirm_discovery": {
+                "description": "DHCP foglal\u00e1s aj\u00e1nlott az \u00fatv\u00e1laszt\u00f3n. Ha nincs be\u00e1ll\u00edtva, akkor az eszk\u00f6z el\u00e9rhetetlenn\u00e9 v\u00e1lhat, am\u00edg a Home Assistant \u00e9szleli az \u00faj IP-c\u00edmet. Olvassa el az \u00fatv\u00e1laszt\u00f3 felhaszn\u00e1l\u00f3i k\u00e9zik\u00f6nyv\u00e9t.",
+                "title": "Goal Zero Yeti"
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "name": "N\u00e9v"
+                },
+                "description": "El\u0151sz\u00f6r le kell t\u00f6ltenie a Goal Zero alkalmaz\u00e1st: https://www.goalzero.com/product-features/yeti-app/ \n\nK\u00f6vesse az utas\u00edt\u00e1sokat, hogy csatlakoztassa Yeti k\u00e9sz\u00fcl\u00e9k\u00e9t a Wi-Fi h\u00e1l\u00f3zathoz. DHCP foglal\u00e1s aj\u00e1nlott az \u00fatv\u00e1laszt\u00f3n. Ha nincs be\u00e1ll\u00edtva, akkor az eszk\u00f6z el\u00e9rhetetlenn\u00e9 v\u00e1lhat, am\u00edg a Home Assistant \u00e9szleli az \u00faj IP-c\u00edmet. Olvassa el az \u00fatv\u00e1laszt\u00f3 felhaszn\u00e1l\u00f3i k\u00e9zik\u00f6nyv\u00e9t.",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

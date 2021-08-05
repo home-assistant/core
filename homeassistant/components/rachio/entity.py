@@ -23,9 +23,17 @@ class RachioDevice(Entity):
     def device_info(self):
         """Return the device_info of the device."""
         return {
-            "identifiers": {(DOMAIN, self._controller.serial_number,)},
+            "identifiers": {
+                (
+                    DOMAIN,
+                    self._controller.serial_number,
+                )
+            },
             "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self._controller.mac_address,)
+                (
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    self._controller.mac_address,
+                )
             },
             "name": self._controller.name,
             "model": self._controller.model,

@@ -4,8 +4,8 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "already_in_progress": "Il flusso di configurazione per il dispositivo \u00e8 gi\u00e0 in corso.",
-            "device_unavailable": "Il dispositivo non \u00e8 disponibile"
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {
@@ -16,6 +16,5 @@
                 "title": "Configurare Agent DVR"
             }
         }
-    },
-    "title": "Agente DVR"
+    }
 }

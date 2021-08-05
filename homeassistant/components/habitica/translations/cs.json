@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

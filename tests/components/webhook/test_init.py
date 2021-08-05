@@ -37,7 +37,8 @@ async def test_unregistering_webhook(hass, mock_client):
 async def test_generate_webhook_url(hass):
     """Test we generate a webhook url correctly."""
     await async_process_ha_core_config(
-        hass, {"external_url": "https://example.com"},
+        hass,
+        {"external_url": "https://example.com"},
     )
     url = hass.components.webhook.async_generate_url("some_id")
 
@@ -140,7 +141,9 @@ async def test_webhook_head(hass, mock_client):
     assert hooks[0][2].method == "HEAD"
 
 
-async def test_listing_webhook(hass, hass_ws_client, hass_access_token):
+async def test_listing_webhook(
+    hass, hass_ws_client, hass_access_token, enable_custom_integrations
+):
     """Test unregistering a webhook."""
     assert await async_setup_component(hass, "webhook", {})
     client = await hass_ws_client(hass, hass_access_token)

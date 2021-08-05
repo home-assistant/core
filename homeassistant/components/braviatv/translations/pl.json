@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "no_ip_control": "Sterowanie IP jest wy\u0142\u0105czone w telewizorze lub telewizor nie jest obs\u0142ugiwany"
         },
         "error": {
-            "cannot_connect": "Po\u0142\u0105czenie nieudane, nieprawid\u0142owy host lub kod PIN.",
-            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP.",
-            "unsupported_model": "Ten model telewizora nie jest obs\u0142ugiwany."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
+            "unsupported_model": "Ten model telewizora nie jest obs\u0142ugiwany"
         },
         "step": {
             "authorize": {

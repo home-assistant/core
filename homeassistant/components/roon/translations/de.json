@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "link": {
+                "description": "Du musst den Home Assistant in Roon autorisieren. Nachdem du auf \"Submit\" geklickt hast, gehe zur Roon Core-Anwendung, \u00f6ffne die Einstellungen und aktiviere HomeAssistant auf der Registerkarte \"Extensions\".",
+                "title": "HomeAssistant in Roon autorisieren"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Roon-Server konnte nicht gefunden werden, bitte gib den Hostnamen oder die IP ein."
+            }
+        }
+    }
+}

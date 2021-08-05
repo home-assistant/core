@@ -1,0 +1,3 @@
+<MediaContainer size="1">
+<Server name="SHIELD Android TV" host="1.2.3.11" address="1.2.3.11" port="32500" machineIdentifier="1234567890123456-com-plexapp-android" version="8.8.2.21525" protocol="plex" product="Plex for Android (TV)" deviceClass="mobile" protocolVersion="1" protocolCapabilities="timeline,playback,mirror,playqueues,provider-playback" />
+</MediaContainer>
