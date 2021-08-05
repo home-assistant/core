@@ -6,7 +6,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import NEATO_DOMAIN
@@ -27,11 +26,7 @@ class OAuth2FlowHandler(
     async def async_step_user(self, user_input: dict | None = None) -> dict:
         """Create an entry for the flow."""
         current_entries = self._async_current_entries()
-        if (
-            self.source != SOURCE_REAUTH
-            and current_entries
-            and CONF_TOKEN in current_entries[0].data
-        ):
+        if self.source != SOURCE_REAUTH and current_entries:
             # Already configured
             return self.async_abort(reason="already_configured")
 
