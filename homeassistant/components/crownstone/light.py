@@ -1,6 +1,7 @@
 """Support for Crownstone devices."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
@@ -49,7 +50,7 @@ async def async_setup_entry(
     """Set up crownstones from a config entry."""
     manager: CrownstoneEntryManager = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = []
+    entities: list[CrownstoneEntity] = []
 
     # Add Crownstone entities that support switching/dimming
     for sphere in manager.cloud.cloud_data:
@@ -111,7 +112,7 @@ class CrownstoneEntity(CrownstoneDevice, LightEntity):
         return 0
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """State attributes for Crownstone devices."""
         attributes: dict[str, Any] = {}
         # switch method
