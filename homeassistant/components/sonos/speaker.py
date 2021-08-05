@@ -190,6 +190,7 @@ class SonosSpeaker:
         self.night_mode: bool | None = None
         self.dialog_mode: bool | None = None
         self.bass_level: int | None = None
+        self.treble_level: int | None = None
 
         # Grouping
         self.coordinator: SonosSpeaker | None = None
@@ -452,6 +453,9 @@ class SonosSpeaker:
 
         if "bass_level" in variables:
             self.bass_level = variables["bass_level"]
+
+        if "treble_level" in variables:
+            self.treble_level = variables["treble_level"]
 
         self.async_write_entity_states()
 
@@ -936,6 +940,7 @@ class SonosSpeaker:
         self.night_mode = self.soco.night_mode
         self.dialog_mode = self.soco.dialog_mode
         self.bass_level = self.soco.bass
+        self.treble_level = self.soco.treble
 
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""

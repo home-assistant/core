@@ -129,6 +129,14 @@ set_option:
           min: -10
           max: 10
           mode: box
+    treble_level:
+      name: Treble Level
+      description: Treble level for EQ.
+      selector:
+        number:
+          min: -10
+          max: 10
+          mode: box
 
 play_queue:
   name: Play queue

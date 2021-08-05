@@ -126,6 +126,7 @@ ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
 ATTR_STATUS_LIGHT = "status_light"
 ATTR_EQ_BASS = "bass_level"
+ATTR_EQ_TREBLE = "treble_level"
 
 
 async def async_setup_entry(
@@ -237,6 +238,9 @@ async def async_setup_entry(
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
             vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
             vol.Optional(ATTR_EQ_BASS): vol.All(
+                vol.Coerce(int), vol.Range(min=-10, max=10)
+            ),
+            vol.Optional(ATTR_EQ_TREBLE): vol.All(
                 vol.Coerce(int), vol.Range(min=-10, max=10)
             ),
         },
@@ -619,6 +623,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         speech_enhance: bool | None = None,
         status_light: bool | None = None,
         bass_level: int | None = None,
+        treble_level: int | None = None,
     ) -> None:
         """Modify playback options."""
         if buttons_enabled is not None:
@@ -639,6 +644,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if bass_level is not None:
             self.soco.bass = bass_level
 
+        if treble_level is not None:
+            self.soco.treble = treble_level
+
     @soco_error()
     def play_queue(self, queue_position: int = 0) -> None:
         """Start playing the queue."""
@@ -658,6 +666,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.speaker.bass_level is not None:
             attributes[ATTR_EQ_BASS] = self.speaker.bass_level
+
+        if self.speaker.treble_level is not None:
+            attributes[ATTR_EQ_TREBLE] = self.speaker.treble_level
 
         if self.speaker.night_mode is not None:
             attributes[ATTR_NIGHT_SOUND] = self.speaker.night_mode
