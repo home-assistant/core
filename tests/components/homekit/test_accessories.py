@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     __version__,
+    __version__ as hass_version,
 )
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 
@@ -130,6 +131,7 @@ async def test_home_accessory(hass, hk_driver):
         serv.get_characteristic(CHAR_SERIAL_NUMBER).value
         == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
     )
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == "0.4.3"
 
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
@@ -155,6 +157,31 @@ async def test_home_accessory(hass, hk_driver):
     acc = HomeAccessory(hass, hk_driver, "test_name", entity_id, 2, None)
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_MODEL).value == "Test Model"
+
+
+async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
+    """Test HomeAccessory class."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, "on")
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory",
+        entity_id,
+        3,
+        {
+            ATTR_MODEL: None,
+            ATTR_MANUFACTURER: None,
+            ATTR_SW_VERSION: None,
+            ATTR_INTEGRATION: None,
+        },
+    )
+    serv = acc.get_service(SERV_ACCESSORY_INFO)
+    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
 
 
 async def test_battery_service(hass, hk_driver, caplog):
