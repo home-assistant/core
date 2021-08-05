@@ -180,7 +180,7 @@ SENSOR_PROCESS_DATA = [
         "scb:statistic:EnergyFlow",
         "Statistic:Autarky:Total",
         "Autarky Total",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut", ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
         "format_round",
     ),
     (
@@ -208,7 +208,7 @@ SENSOR_PROCESS_DATA = [
         "scb:statistic:EnergyFlow",
         "Statistic:OwnConsumptionRate:Total",
         "Own Consumption Rate Total",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut", ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
         "format_round",
     ),
     (
@@ -255,6 +255,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_energy",
     ),
@@ -295,6 +296,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_energy",
     ),
@@ -335,6 +337,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_energy",
     ),
@@ -375,6 +378,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+
         },
         "format_energy",
     ),
@@ -536,6 +540,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_energy",
     ),
