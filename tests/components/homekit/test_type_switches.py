@@ -329,7 +329,13 @@ async def test_reset_switch(hass, hk_driver, events):
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
+    assert acc.char_on.value is True
+
+    future = dt_util.utcnow() + timedelta(seconds=10)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
     assert acc.char_on.value is False
+
     assert len(events) == 1
     assert not call_turn_off
 
@@ -367,7 +373,13 @@ async def test_script_switch(hass, hk_driver, events):
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
+    assert acc.char_on.value is True
+
+    future = dt_util.utcnow() + timedelta(seconds=10)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
     assert acc.char_on.value is False
+
     assert len(events) == 1
     assert not call_turn_off
 
