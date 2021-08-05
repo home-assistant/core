@@ -196,7 +196,7 @@ async def _async_initialize(
     entry_data[DATA_DEVICE] = device
 
     # start listening for local pushes
-    await device.bulb.async_listen(device._async_update_callback)
+    await device.bulb.async_listen(device.async_update_callback)
 
     # register stop callback to shutdown listening for local pushes
     async def async_stop_listen_task(event):
@@ -571,7 +571,7 @@ class YeelightDevice:
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
     @callback
-    def _async_update_callback(self, data):
+    def async_update_callback(self, data):
         """Update push from device."""
         self._available = data.get(KEY_CONNECTED, True)
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
