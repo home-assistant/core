@@ -704,7 +704,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
-                await self._hass.async_add_executor_job(
+                await self.hass.async_add_executor_job(
                     self.set_music_mode, self.config[CONF_MODE_MUSIC]
                 )
             except BulbException as ex:
