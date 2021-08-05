@@ -587,7 +587,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb's color."""
         if hs_color and COLOR_MODE_HS in self.supported_color_modes:
             _LOGGER.debug("Setting HS: %s", hs_color)
-            self._bulb.async_set_hsv(
+            await self._bulb.async_set_hsv(
                 hs_color[0], hs_color[1], duration=duration, light_type=self.light_type
             )
 
@@ -596,7 +596,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb's color."""
         if rgb and COLOR_MODE_RGB in self.supported_color_modes:
             _LOGGER.debug("Setting RGB: %s", rgb)
-            self._bulb.async_set_rgb(
+            await self._bulb.async_set_rgb(
                 rgb[0], rgb[1], rgb[2], duration=duration, light_type=self.light_type
             )
 
@@ -607,7 +607,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             temp_in_k = mired_to_kelvin(colortemp)
             _LOGGER.debug("Setting color temp: %s K", temp_in_k)
 
-            self._bulb.async_set_color_temp(
+            await self._bulb.async_set_color_temp(
                 temp_in_k, duration=duration, light_type=self.light_type
             )
 
@@ -742,7 +742,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
         try:
-            self._bulb.async_set_power_mode(PowerMode[mode.upper()])
+            await self._bulb.async_set_power_mode(PowerMode[mode.upper()])
         except BulbException as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
 
