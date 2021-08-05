@@ -17,6 +17,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
 )
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
+from homeassistant.components.sensor import STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -724,6 +725,7 @@ class SensorSchema(KNXPlatformSchema):
 
     CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_STATE_CLASS = "state_class"
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
@@ -732,6 +734,7 @@ class SensorSchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
+            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
             vol.Required(CONF_TYPE): sensor_type_validator,
             vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
         }
