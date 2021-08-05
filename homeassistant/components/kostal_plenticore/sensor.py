@@ -5,6 +5,8 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable
 
+import homeassistant
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import utc_from_timestamp
 
 from .const import (
     ATTR_ENABLED_DEFAULT,
