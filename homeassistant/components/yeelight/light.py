@@ -1,7 +1,6 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
-from functools import partial
 import logging
 
 import voluptuous as vol
@@ -306,7 +305,7 @@ def _async_setup_services(hass: HomeAssistant):
         params = {**service_call.data}
         params.pop(ATTR_ENTITY_ID)
         params[ATTR_TRANSITIONS] = _transitions_config_parser(params[ATTR_TRANSITIONS])
-        await hass.async_add_executor_job(partial(entity.start_flow, **params))
+        await entity.async_start_flow(**params)
 
     async def _async_set_color_scene(entity, service_call):
         await entity.async_set_scene(
