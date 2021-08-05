@@ -3,6 +3,8 @@ Support to use FortiOS device like FortiGate as device tracker.
 
 This component is part of the device_tracker platform.
 """
+from __future__ import annotations
+
 import logging
 
 from fortiosapi import FortiOSAPI
@@ -68,8 +70,8 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def __init__(self, fgt, fos_major_version, api_url) -> None:
         """Initialize the scanner."""
-        self._clients: dict = {}
-        self._clients_json: dict = {}
+        self._clients: dict | list = {}
+        self._clients_json: dict | int = {}
         self._fgt = fgt
         self._fos_major_version = fos_major_version
         self._api_url = api_url
