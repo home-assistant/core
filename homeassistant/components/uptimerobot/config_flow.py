@@ -1,7 +1,7 @@
 """Config flow for Uptime Robot integration."""
 from __future__ import annotations
 
-from pyuptimerobot import UptimeRobot
+from pyuptimerobot import UptimeRobot, UptimeRobotAccount, UptimeRobotException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -9,24 +9,26 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import API_ATTR_OK, API_ATTR_STAT, DOMAIN, LOGGER
+from .const import API_ATTR_OK, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
-async def validate_input(hass: HomeAssistant, data: ConfigType) -> None:
+async def validate_input(hass: HomeAssistant, data: ConfigType) -> UptimeRobotAccount:
     """Validate the user input allows us to connect."""
+    uptime_robot_api = UptimeRobot(data[CONF_API_KEY], async_get_clientsession(hass))
 
-    uptime_robot_api = UptimeRobot()
-
-    monitors = await hass.async_add_executor_job(
-        uptime_robot_api.getMonitors, data[CONF_API_KEY]
-    )
-
-    if not monitors or monitors.get(API_ATTR_STAT) != API_ATTR_OK:
-        raise CannotConnect("Error communicating with Uptime Robot API")
+    try:
+        response = await uptime_robot_api.async_get_account_details()
+    except UptimeRobotException as exception:
+        raise CannotConnect(exception) from exception
+    else:
+        if response.status == API_ATTR_OK:
+            return response.data
+        raise CannotConnect(response.error.message)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -43,14 +45,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            await validate_input(self.hass, user_input)
+            account = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title=account.email, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -65,9 +67,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="already_configured")
 
-        return self.async_create_entry(
-            title="", data={CONF_API_KEY: import_config[CONF_API_KEY]}
-        )
+        imported_config = {CONF_API_KEY: import_config[CONF_API_KEY]}
+
+        account = await validate_input(self.hass, imported_config)
+        return self.async_create_entry(title=account.email, data=imported_config)
 
 
 class CannotConnect(HomeAssistantError):
