@@ -1,11 +1,16 @@
 """Asuswrt status sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from numbers import Number
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.core import HomeAssistant
@@ -14,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DATA_ASUSWRT,
@@ -25,64 +31,93 @@ from .const import (
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
+
+@dataclass
+class AsusWrtSensorEntityDescription(SensorEntityDescription):
+    """A class that describes AsusWrt sensor entities."""
+
+    factor: int | None = None
+    precision: int = 2
+
+
 DEFAULT_PREFIX = "Asuswrt"
-
-SENSOR_DEVICE_CLASS = "device_class"
-SENSOR_ICON = "icon"
-SENSOR_NAME = "name"
-SENSOR_UNIT = "unit"
-SENSOR_FACTOR = "factor"
-SENSOR_DEFAULT_ENABLED = "default_enabled"
-
 UNIT_DEVICES = "Devices"
 
-CONNECTION_SENSORS = {
-    SENSORS_CONNECTED_DEVICE[0]: {
-        SENSOR_NAME: "Devices Connected",
-        SENSOR_UNIT: UNIT_DEVICES,
-        SENSOR_FACTOR: 0,
-        SENSOR_ICON: "mdi:router-network",
-        SENSOR_DEFAULT_ENABLED: True,
-    },
-    SENSORS_RATES[0]: {
-        SENSOR_NAME: "Download Speed",
-        SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
-        SENSOR_FACTOR: 125000,
-        SENSOR_ICON: "mdi:download-network",
-    },
-    SENSORS_RATES[1]: {
-        SENSOR_NAME: "Upload Speed",
-        SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
-        SENSOR_FACTOR: 125000,
-        SENSOR_ICON: "mdi:upload-network",
-    },
-    SENSORS_BYTES[0]: {
-        SENSOR_NAME: "Download",
-        SENSOR_UNIT: DATA_GIGABYTES,
-        SENSOR_FACTOR: 1000000000,
-        SENSOR_ICON: "mdi:download",
-    },
-    SENSORS_BYTES[1]: {
-        SENSOR_NAME: "Upload",
-        SENSOR_UNIT: DATA_GIGABYTES,
-        SENSOR_FACTOR: 1000000000,
-        SENSOR_ICON: "mdi:upload",
-    },
-    SENSORS_LOAD_AVG[0]: {
-        SENSOR_NAME: "Load Avg (1m)",
-        SENSOR_ICON: "mdi:cpu-32-bit",
-    },
-    SENSORS_LOAD_AVG[1]: {
-        SENSOR_NAME: "Load Avg (5m)",
-        SENSOR_ICON: "mdi:cpu-32-bit",
-    },
-    SENSORS_LOAD_AVG[2]: {
-        SENSOR_NAME: "Load Avg (15m)",
-        SENSOR_ICON: "mdi:cpu-32-bit",
-    },
-}
+CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_CONNECTED_DEVICE[0],
+        name="Devices Connected",
+        icon="mdi:router-network",
+        unit_of_measurement=UNIT_DEVICES,
+        entity_registry_enabled_default=True,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_RATES[0],
+        name="Download Speed",
+        icon="mdi:download-network",
+        unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        factor=125000,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_RATES[1],
+        name="Upload Speed",
+        icon="mdi:upload-network",
+        unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        factor=125000,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_BYTES[0],
+        name="Download",
+        icon="mdi:download",
+        unit_of_measurement=DATA_GIGABYTES,
+        entity_registry_enabled_default=False,
+        factor=1000000000,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_BYTES[1],
+        name="Upload",
+        icon="mdi:upload",
+        unit_of_measurement=DATA_GIGABYTES,
+        entity_registry_enabled_default=False,
+        factor=1000000000,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_LOAD_AVG[0],
+        name="Load Avg (1m)",
+        icon="mdi:cpu-32-bit",
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_LOAD_AVG[1],
+        name="Load Avg (5m)",
+        icon="mdi:cpu-32-bit",
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_LOAD_AVG[2],
+        name="Load Avg (15m)",
+        icon="mdi:cpu-32-bit",
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_sensor_description(key: str) -> AsusWrtSensorEntityDescription | None:
+    """Get the sensor description based on the key."""
+    for sensor_descr in CONNECTION_SENSORS:
+        if sensor_descr.key == key:
+            return sensor_descr
+    return None
 
 
 async def async_setup_entry(
@@ -96,12 +131,9 @@ async def async_setup_entry(
         coordinator = sensor_data[KEY_COORDINATOR]
         sensors = sensor_data[KEY_SENSORS]
         for sensor_key in sensors:
-            if sensor_key in CONNECTION_SENSORS:
-                entities.append(
-                    AsusWrtSensor(
-                        coordinator, router, sensor_key, CONNECTION_SENSORS[sensor_key]
-                    )
-                )
+            sensor_descr = _get_sensor_description(sensor_key)
+            if sensor_descr:
+                entities.append(AsusWrtSensor(coordinator, router, sensor_descr))
 
     async_add_entities(entities, True)
 
@@ -113,31 +145,31 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         router: AsusWrtRouter,
-        sensor_type: str,
-        sensor_def: dict[str, Any],
+        description: AsusWrtSensorEntityDescription,
     ) -> None:
         """Initialize a AsusWrt sensor."""
         super().__init__(coordinator)
         self._router = router
-        self._sensor_type = sensor_type
-        self._attr_name = f"{DEFAULT_PREFIX} {sensor_def[SENSOR_NAME]}"
-        self._factor = sensor_def.get(SENSOR_FACTOR)
+        self.entity_description = description
+
+        self._sensor_key = description.key
+        self._factor = description.factor
+        self._precision = description.precision
+        self._attr_name = f"{DEFAULT_PREFIX} {description.name}"
         self._attr_unique_id = f"{DOMAIN} {self.name}"
-        self._attr_entity_registry_enabled_default = sensor_def.get(
-            SENSOR_DEFAULT_ENABLED, False
-        )
-        self._attr_unit_of_measurement = sensor_def.get(SENSOR_UNIT)
-        self._attr_icon = sensor_def.get(SENSOR_ICON)
-        self._attr_device_class = sensor_def.get(SENSOR_DEVICE_CLASS)
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
+
+        if description.unit_of_measurement == DATA_GIGABYTES:
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
 
     @property
     def state(self) -> str:
         """Return current state."""
-        state = self.coordinator.data.get(self._sensor_type)
+        state = self.coordinator.data.get(self._sensor_key)
         if state is None:
             return None
         if self._factor and isinstance(state, Number):
-            return round(state / self._factor, 2)
+            return round(state / self._factor, self._precision)
         return state
 
     @property
