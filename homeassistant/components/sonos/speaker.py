@@ -454,7 +454,7 @@ class SonosSpeaker:
     #
     # Speaker availability methods
     #
-    async def async_seen(self, soco: SoCo | None = None) -> None:
+    async def async_seen(self, soco: SoCo | None = None, force_was_unavailable: bool = False) -> None:
         """Record that this speaker was seen right now."""
         if soco is not None:
             self.soco = soco
@@ -468,7 +468,7 @@ class SonosSpeaker:
             SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
         )
 
-        if was_available:
+        if not force_was_unavailable and was_available:
             self.async_write_entity_states()
             return
 
@@ -539,7 +539,7 @@ class SonosSpeaker:
             soco,
         )
         await self.async_unseen(will_reconnect=True)
-        await self.async_seen(soco)
+        await self.async_seen(soco, force_was_unavailable=True)
 
     #
     # Battery management
