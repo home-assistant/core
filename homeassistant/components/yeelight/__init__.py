@@ -540,7 +540,7 @@ class YeelightDevice:
     async def _async_get_capabilities(self):
         """Request device capabilities."""
         try:
-            await self.hass.async_add_executor_job(self.bulb.get_capabilities)
+            await self._hass.async_add_executor_job(self.bulb.get_capabilities)
             _LOGGER.debug(
                 "Device %s, %s capabilities: %s",
                 self._host,
