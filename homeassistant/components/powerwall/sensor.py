@@ -6,10 +6,12 @@ from tesla_powerwall import MeterType
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     PERCENTAGE,
     POWER_KILO_WATT,
 )
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_ENERGY_EXPORTED,
@@ -28,6 +30,11 @@ from .const import (
     POWERWALL_COORDINATOR,
 )
 from .entity import PowerWallEntity
+
+_METER_DIRECTION_EXPORT = "export"
+_METER_DIRECTION_IMPORT = "import"
+_METER_DIRECTIONS = [_METER_DIRECTION_EXPORT, _METER_DIRECTION_IMPORT]
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +62,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 powerwalls_serial_numbers,
             )
         )
+        for meter_direction in _METER_DIRECTIONS:
+            entities.append(
+                PowerWallEnergyDirectionSensor(
+                    meter,
+                    coordinator,
+                    site_info,
+                    status,
+                    device_type,
+                    powerwalls_serial_numbers,
+                    meter_direction,
+                )
+            )
 
     entities.append(
         PowerWallChargeSensor(
@@ -130,3 +149,43 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
             ATTR_INSTANT_TOTAL_CURRENT: meter.get_instant_total_current(),
             ATTR_IS_ACTIVE: meter.is_active(),
         }
+
+
+class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
+    """Representation of an Powerwall Direction Energy sensor."""
+
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_unit_of_measurement = POWER_KILO_WATT
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_last_reset = dt_util.utc_from_timestamp(0)
+
+    def __init__(
+        self,
+        meter: MeterType,
+        coordinator,
+        site_info,
+        status,
+        device_type,
+        powerwalls_serial_numbers,
+        meter_direction,
+    ):
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator, site_info, status, device_type, powerwalls_serial_numbers
+        )
+        self._meter = meter
+        self._meter_direction = meter_direction
+        self._attr_name = (
+            f"Powerwall {self._meter.value.title()} {self._meter_direction.title()}"
+        )
+        self._attr_unique_id = (
+            f"{self.base_unique_id}_{self._meter.value}_{self._meter_direction}"
+        )
+
+    @property
+    def state(self):
+        """Get the current value in kW."""
+        meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
+        if self._meter_direction == _METER_DIRECTION_EXPORT:
+            return meter.get_energy_exported()
+        return meter.get_energy_imported()
