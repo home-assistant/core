@@ -50,7 +50,7 @@ async def async_setup_entry(
                 coordinator,
                 BinarySensorEntityDescription(
                     key=str(monitor.id),
-                    name=monitor.name,
+                    name=monitor.friendly_name,
                     device_class=DEVICE_CLASS_CONNECTIVITY,
                 ),
                 target=monitor.url,

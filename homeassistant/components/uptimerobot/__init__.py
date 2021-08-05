@@ -1,44 +1,35 @@
 """The Uptime Robot integration."""
 from __future__ import annotations
 
-import async_timeout
-from pyuptimerobot import UptimeRobot
+from pyuptimerobot import UptimeRobot, UptimeRobotException, UptimeRobotMonitor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    API_ATTR_MONITORS,
-    API_ATTR_OK,
-    API_ATTR_STAT,
-    CONNECTION_ERROR,
-    COORDINATOR_UPDATE_INTERVAL,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS,
-    MonitorData,
-)
+from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Uptime Robot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    uptime_robot_api = UptimeRobot()
+    uptime_robot_api = UptimeRobot(
+        entry.data[CONF_API_KEY], async_get_clientsession(hass)
+    )
 
-    async def async_update_data() -> list[MonitorData]:
+    async def async_update_data() -> list[UptimeRobotMonitor]:
         """Fetch data from API UptimeRobot API."""
-        async with async_timeout.timeout(10):
-            monitors = await hass.async_add_executor_job(
-                uptime_robot_api.getMonitors, entry.data[CONF_API_KEY]
-            )
-            if not monitors or monitors.get(API_ATTR_STAT) != API_ATTR_OK:
-                raise UpdateFailed(CONNECTION_ERROR)
-            return [
-                MonitorData.from_dict(monitor)
-                for monitor in monitors.get(API_ATTR_MONITORS, [])
-            ]
+        try:
+            response = await uptime_robot_api.async_get_monitors()
+        except UptimeRobotException as exception:
+            raise UpdateFailed(exception) from exception
+        else:
+            if response.status == API_ATTR_OK:
+                monitors: list[UptimeRobotMonitor] = response.data
+                return monitors
+            raise UpdateFailed(response.error.message)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator = DataUpdateCoordinator(
         hass,
