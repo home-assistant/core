@@ -555,7 +555,7 @@ class YeelightDevice:
                 ex,
             )
 
-    async def _initialize_device(self):
+    async def _async_initialize_device(self):
         await self._async_get_capabilities()
         self._initialized = True
         async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
