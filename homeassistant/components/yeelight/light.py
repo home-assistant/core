@@ -695,11 +695,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        await self.device.async_turn_on(
-            duration=duration,
-            light_type=self.light_type,
-            power_mode=self._turn_on_power_mode,
-        )
+        if not self.is_on:
+            await self.device.async_turn_on(
+                duration=duration,
+                light_type=self.light_type,
+                power_mode=self._turn_on_power_mode,
+            )
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -733,6 +734,9 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off."""
+        if not self.is_on:
+            return
+
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
