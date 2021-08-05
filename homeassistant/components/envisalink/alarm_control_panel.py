@@ -34,6 +34,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     ATTR_PARTITION,
+    CONF_DEVICE_CODE,
     CONF_PANIC,
     DATA_EVL,
     DOMAIN,
@@ -54,12 +55,26 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_HONEYWELL_ACTIVATE_DEVICE = "activate_output_device"
+ATTR_DEVICE_ID = "device_id"
+ATTR_DEVICE_STATE_ON = "device_state_on"
+HONEYWELL_ACTIVATE_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DEVICE_STATE_ON): cv.boolean,
+        vol.Required(ATTR_DEVICE_ID): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=16)
+        ),
+    }
+)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     configured_partitions = discovery_info["partitions"]
     code = discovery_info[CONF_CODE]
     panic_type = discovery_info[CONF_PANIC]
+    device_activation_code = discovery_info[CONF_DEVICE_CODE]
 
     devices = []
     for part_num in configured_partitions:
@@ -70,6 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_config_data[CONF_NAME],
             code,
             device_config_data[CONF_CODE],
+            device_activation_code,
             panic_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
@@ -98,6 +114,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         schema=ALARM_KEYPRESS_SCHEMA,
     )
 
+    @callback
+    def activate_output_device_handler(service):
+        """Map services to methods on Alarm."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        device_on = service.data.get(ATTR_DEVICE_STATE_ON)
+        device_id = service.data.get(ATTR_DEVICE_ID)
+
+        target_devices = [
+            device for device in devices if device.entity_id in entity_id
+        ]
+
+        for device in target_devices:
+            device.async_activate_output_device(device_on, device_id)
+
+    if device_activation_code:
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_HONEYWELL_ACTIVATE_DEVICE,
+            activate_output_device_handler,
+            schema=HONEYWELL_ACTIVATE_DEVICE_SCHEMA,
+        )
+
     return True
 
 
@@ -105,17 +143,26 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     """Representation of an Envisalink-based alarm panel."""
 
     def __init__(
-        self, hass, partition_number, alarm_name, code, partition_code, panic_type, info, controller
+        self,
+        hass,
+        partition_number,
+        alarm_name,
+        code,
+        partition_code,
+        device_activation_code,
+        panic_type,
+        info,
+        controller,
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
+        self._panic_type = panic_type
+        self._device_activation_code = device_activation_code
 
         if partition_code == "":
             self._code = code
         else:
             self._code = partition_code
-
-        self._panic_type = panic_type
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
@@ -244,6 +291,15 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     def async_alarm_keypress(self, keypress=None):
         """Send custom keypress."""
         if keypress:
+            self.hass.data[DATA_EVL].keypresses_to_partition(
+                self._partition_number, keypress
+            )
+
+    @callback
+    def async_activate_output_device(self, device_on=True, device_id=None):
+        """Send custom keypress."""
+        if device_id:
+            keypress = self._device_activation_code + ("#7" if device_on else "#8") + f"{device_id:02}"
             self.hass.data[DATA_EVL].keypresses_to_partition(
                 self._partition_number, keypress
             )
