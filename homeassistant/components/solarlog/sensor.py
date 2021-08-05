@@ -5,11 +5,11 @@ from urllib.parse import ParseResult, urlparse
 from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
-from .const import API_DICT, DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
+from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES, SolarLogSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class SolarlogSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(
-        self, entry_id, device_name, description: SensorEntityDescription, data
+        self, entry_id, device_name, description: SolarLogSensorEntityDescription, data
     ):
         """Initialize the sensor."""
         self.entry_id = entry_id
@@ -74,7 +74,7 @@ class SolarlogSensor(SensorEntity):
         self._unit_of_measurement = self.entity_description.unit_of_measurement
         self._state_class = self.entity_description.state_class
         self._device_class = self.entity_description.device_class
-        self._api_key = API_DICT[self._key]
+        self._json_key = self.entity_description.json_key
 
     @property
     def unique_id(self):
@@ -123,7 +123,7 @@ class SolarlogSensor(SensorEntity):
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data.update()
-        self._state = self.data.data[self._api_key]
+        self._state = self.data.data[self._json_key]
 
 
 class SolarlogData:
