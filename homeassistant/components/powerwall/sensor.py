@@ -8,6 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_KILO_WATT,
 )
@@ -151,7 +152,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = POWER_KILO_WATT
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_last_reset = dt_util.utc_from_timestamp(0)
 

@@ -53,6 +53,9 @@ async def test_sensors(hass):
     assert float(hass.states.get("sensor.powerwall_site_export").state) == 10429.5
     assert float(hass.states.get("sensor.powerwall_site_import").state) == 4824.2
 
+    export_attributes = hass.states.get("sensor.powerwall_site_export").attributes
+    assert export_attributes["unit_of_measurement"] == "kWh"
+
     state = hass.states.get("sensor.powerwall_load_now")
     assert state.state == "1.971"
     expected_attributes = {
