@@ -49,7 +49,10 @@ def setup_platform(
     try:
         if not acc.login():
             raise ValueError("Username or Password is incorrect")
-        add_entities(AladdinDevice(acc, door) for door in acc.get_doors())
+        add_entities(
+            (AladdinDevice(acc, door) for door in acc.get_doors()),
+            update_before_add = True
+        )
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
@@ -72,7 +75,6 @@ class AladdinDevice(CoverEntity):
         self._number = device["door_number"]
         self._attr_name = device["name"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
-        self._attr_is_closed = None
 
     def close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
