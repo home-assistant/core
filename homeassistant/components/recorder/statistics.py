@@ -228,8 +228,7 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
     if unit == VOLUME_CUBIC_METERS:
         if units.is_metric:
             return VOLUME_CUBIC_METERS
-        else:
-            return VOLUME_CUBIC_FEET
+        return VOLUME_CUBIC_FEET
     return unit
 
 
