@@ -100,13 +100,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
-ATTR_CUSTOM_FUNCTION = "pgm"
+SERVICE_DSC_CUSTOM_FUNCTION = "invoke_custom_function"
+ATTR_DSC_CUSTOM_FUNCTION = "pgm"
 ATTR_PARTITION = "partition"
 
-SERVICE_SCHEMA = vol.Schema(
+DSC_CUSTOM_FUNCTION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
+        vol.Required(ATTR_DSC_CUSTOM_FUNCTION): cv.string,
         vol.Required(ATTR_PARTITION): cv.string,
     }
 )
@@ -195,7 +195,7 @@ async def async_setup(hass, config):
 
     async def handle_custom_function(call):
         """Handle custom/PGM service."""
-        custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
+        custom_function = call.data.get(ATTR_DSC_CUSTOM_FUNCTION)
         partition = call.data.get(ATTR_PARTITION)
         controller.command_output(code, partition, custom_function)
 
@@ -240,10 +240,10 @@ async def async_setup(hass, config):
                 hass, "binary_sensor", "envisalink", {CONF_ZONES: zones}, config
             )
         )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
-    )
+    if panel_type == "DSC":
+        hass.services.async_register(
+            DOMAIN, SERVICE_DSC_CUSTOM_FUNCTION, handle_custom_function, schema=DSC_CUSTOM_FUNCTION_SCHEMA
+        )
 
     return True
 
