@@ -1,7 +1,9 @@
 """Test the Uptime Robot config flow."""
 from unittest.mock import patch
 
+from pytest import LogCaptureFixture
 from pyuptimerobot import UptimeRobotApiResponse
+from pyuptimerobot.exceptions import UptimeRobotException
 
 from homeassistant import config_entries, setup
 from homeassistant.components.uptimerobot.const import DOMAIN
@@ -20,14 +22,14 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         return_value=UptimeRobotApiResponse.from_dict(
             {
                 "stat": "ok",
-                "account": {"email": "test@test.test"},
+                "account": {"email": "test@test.test", "user_id": 123456890},
             }
         ),
     ), patch(
@@ -40,6 +42,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    assert result2["result"].unique_id == "123456890"
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test@test.test"
     assert result2["data"] == {"api_key": "1234"}
@@ -54,7 +57,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=UptimeRobotApiResponse.from_dict({"stat": "fail", "error": {}}),
+        side_effect=UptimeRobotException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -65,6 +68,87 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_unexpected_error(hass: HomeAssistant) -> None:
+    """Test we handle unexpected error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": "1234"},
+        )
+
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_api_key_error(hass: HomeAssistant) -> None:
+    """Test we handle unexpected error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "fail",
+                "error": {"message": "api_key not found."},
+            }
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": "1234"},
+        )
+
+    assert result2["errors"] == {"base": "invalid_api_key"}
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "fail",
+                "error": {"message": "api_key is invalid."},
+            }
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": "1234"},
+        )
+
+    assert result3["errors"] == {"base": "invalid_api_key"}
+
+
+async def test_form_api_error(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
+    """Test we handle unexpected error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "fail",
+                "error": {"message": "test error from API."},
+            }
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": "1234"},
+        )
+
+    assert result2["errors"] == {"base": "unknown"}
+    assert "test error from API." in caplog.text
+
+
 async def test_flow_import(hass):
     """Test an import flow."""
     with patch(
@@ -72,7 +156,7 @@ async def test_flow_import(hass):
         return_value=UptimeRobotApiResponse.from_dict(
             {
                 "stat": "ok",
-                "account": {"email": "test@test.test"},
+                "account": {"email": "test@test.test", "user_id": 123456890},
             }
         ),
     ), patch(
@@ -92,7 +176,12 @@ async def test_flow_import(hass):
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=UptimeRobotApiResponse.from_dict({"stat": "ok", "monitors": []}),
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "ok",
+                "account": {"email": "test@test.test", "user_id": 123456890},
+            }
+        ),
     ), patch(
         "homeassistant.components.uptimerobot.async_setup_entry",
         return_value=True,
@@ -106,3 +195,20 @@ async def test_flow_import(hass):
 
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict({"stat": "ok"}),
+    ), patch(
+        "homeassistant.components.uptimerobot.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"platform": DOMAIN, "api_key": "12345"},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "unknown"
