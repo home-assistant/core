@@ -28,28 +28,11 @@ class HarmonyActivitySelect(ConnectionStateMixin, SelectEntity):
     def __init__(self, name: str, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySelect class."""
         super().__init__()
-        self._name = name
         self._data = data
-
-    @property
-    def name(self):
-        """Return the Harmony select activities name."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return f"{self._data.unique_id}_activities"
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return self._data.device_info(DOMAIN)
-
-    @property
-    def should_poll(self):
-        """Return that we shouldn't be polled."""
-        return False
+        self._attr_name = name
+        self._attr_unique_id = f"{self._data.unique_id}_activities"
+        self._attr_device_info = self._data.device_info(DOMAIN)
+        self._attr_should_poll = False
 
     @property
     def available(self):
