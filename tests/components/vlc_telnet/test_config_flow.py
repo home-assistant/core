@@ -1,6 +1,9 @@
 """Test the VLC media player Telnet config flow."""
+from __future__ import annotations
+
 from unittest.mock import patch
 
+import pytest
 from python_telnet_vlc.vlctelnet import AuthError, ConnectionError as ConnErr
 
 from homeassistant import config_entries, setup
@@ -45,51 +48,42 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
+)
+@pytest.mark.parametrize(
+    "error, connect_side_effect, login_side_effect",
+    [
+        ("invalid_auth", None, AuthError),
+        ("cannot_connect", ConnErr, None),
+        ("unknown", Exception, None),
+    ],
+)
+async def test_errors(
+    hass: HomeAssistant,
+    error: str,
+    connect_side_effect: Exception | None,
+    login_side_effect: Exception | None,
+    source: str,
+) -> None:
+    """Test we handle form errors."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.connect"
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.login",
-        side_effect=AuthError,
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.disconnect"
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": source}
     )
 
     with patch(
         "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.connect",
-        side_effect=ConnErr,
-    ), patch("homeassistant.components.vlc_telnet.config_flow.VLCTelnet.login"), patch(
+        side_effect=connect_side_effect,
+    ), patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.login",
+        side_effect=login_side_effect,
+    ), patch(
         "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.disconnect"
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "password": "test-password",
-            },
+            {"password": "test-password"},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": error}
