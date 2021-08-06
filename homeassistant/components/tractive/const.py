@@ -15,6 +15,7 @@ DOMAIN = "tractive"
 
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
+ATTR_DAILY_GOAL = "daily_goal"
 ATTR_MINUTES_ACTIVE = "minutes_active"
 
 TRACKER_HARDWARE_STATUS_UPDATED = "tracker_hardware_status_updated"
@@ -37,5 +38,6 @@ SENSOR_TYPES = (
         icon="mdi:clock-time-eight-outline",
         unit_of_measurement=TIME_MINUTES,
         event_type="activity",
+        attributes=(ATTR_DAILY_GOAL,),
     ),
 )

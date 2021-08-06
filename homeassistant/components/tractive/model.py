@@ -11,3 +11,4 @@ class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
     event_type: str | None = None
+    attributes: tuple = ()

@@ -122,6 +122,10 @@ class TractiveActivitySensor(TractiveSensor):
     def handle_activity_status_update(self, event):
         """Handle activity status update."""
         self._attr_state = event[self.entity_description.key]
+        self._attr_extra_state_attributes = {
+            attr: event[attr] if attr in event else None
+            for attr in self.entity_description.attributes
+        }
         self._attr_available = True
         self.async_write_ha_state()
 

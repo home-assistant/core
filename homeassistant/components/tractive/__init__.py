@@ -19,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
     DOMAIN,
     RECONNECT_INTERVAL,
@@ -144,7 +145,10 @@ class TractiveClient:
         )
 
     def _send_activity_update(self, event):
-        payload = {ATTR_MINUTES_ACTIVE: event["progress"]["achieved_minutes"]}
+        payload = {
+            ATTR_MINUTES_ACTIVE: event["progress"]["achieved_minutes"],
+            ATTR_DAILY_GOAL: event["progress"]["goal_minutes"],
+        }
         self._dispatch_tracker_event(
             TRACKER_ACTIVITY_STATUS_UPDATED, event["pet_id"], payload
         )
