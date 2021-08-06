@@ -31,6 +31,7 @@
         "error": {
             "int": "Az al\u00e1bbi mez\u0151nek eg\u00e9sz sz\u00e1mnak kell lennie.",
             "loop_range": "Az RF hurok eg\u00e9sz sz\u00e1m\u00e1nak 1 \u00e9s 4 k\u00f6z\u00f6tt kell lennie.",
+            "loop_rfid": "Az RF hurok nem haszn\u00e1lhat\u00f3 RF sorozat n\u00e9lk\u00fcl.",
             "relay_inclusive": "A rel\u00e9c\u00edm \u00e9s a rel\u00e9csatorna egym\u00e1st\u00f3l f\u00fcgg, \u00e9s egy\u00fctt kell felt\u00fcntetni."
         },
         "step": {
@@ -55,6 +56,7 @@
                     "zone_name": "Z\u00f3na neve",
                     "zone_relayaddr": "Rel\u00e9 c\u00edm",
                     "zone_relaychan": "Rel\u00e9 csatorna",
+                    "zone_rfid": "RF soros",
                     "zone_type": "Z\u00f3na t\u00edpusa"
                 },
                 "description": "Adja meg a {zone_number} z\u00f3na adatait. {zone_number} z\u00f3na t\u00f6rl\u00e9s\u00e9hez hagyja \u00fcresen a Z\u00f3na neve elemet.",
