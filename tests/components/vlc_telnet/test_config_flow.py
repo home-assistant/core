@@ -48,6 +48,41 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_import_flow(hass: HomeAssistant) -> None:
+    """Test successful import flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.connect"
+    ), patch("homeassistant.components.vlc_telnet.config_flow.VLCTelnet.login"), patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.disconnect"
+    ), patch(
+        "homeassistant.components.vlc_telnet.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "password": "test-password",
+                "host": "1.1.1.1",
+                "port": 8888,
+                "name": "custom name",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "custom name"
+    assert result["data"] == {
+        "host": "1.1.1.1",
+        "password": "test-password",
+        "port": 8888,
+        "name": "custom name",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
 )
