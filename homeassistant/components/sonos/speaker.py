@@ -454,7 +454,7 @@ class SonosSpeaker:
     #
     # Speaker availability methods
     #
-    async def async_seen(self, soco: SoCo | None = None, force_was_unavailable: bool = False) -> None:
+    async def async_seen(self, soco: SoCo | None = None) -> None:
         """Record that this speaker was seen right now."""
         if soco is not None:
             self.soco = soco
@@ -468,7 +468,7 @@ class SonosSpeaker:
             SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
         )
 
-        if not force_was_unavailable and was_available:
+        if was_available:
             self.async_write_entity_states()
             return
 
@@ -497,7 +497,7 @@ class SonosSpeaker:
         self.async_write_entity_states()
 
     async def async_unseen(
-        self, now: datetime.datetime | None = None, will_reconnect: bool = False
+        self, now: datetime.datetime | None = None
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
         if self._seen_timer:
@@ -527,9 +527,8 @@ class SonosSpeaker:
 
         await self.async_unsubscribe()
 
-        if not will_reconnect:
-            self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-            self.async_write_entity_states()
+        self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
+        self.async_write_entity_states()
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
@@ -538,8 +537,25 @@ class SonosSpeaker:
             self.zone_name,
             soco,
         )
-        await self.async_unseen(will_reconnect=True)
-        await self.async_seen(soco, force_was_unavailable=True)
+        await self.async_unsubscribe()
+        self.soco = soco
+        await self.async_subscribe()
+        if self._seen_timer:
+            self._seen_timer()
+        self._seen_timer = self.hass.helpers.event.async_call_later(
+            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+        )
+        if self._poll_timer:
+            self._poll_timer()
+        self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+            partial(
+                async_dispatcher_send,
+                self.hass,
+                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+            ),
+            SCAN_INTERVAL,
+        )
+        self.async_write_entity_states()
 
     #
     # Battery management
