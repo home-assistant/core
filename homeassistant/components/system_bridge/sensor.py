@@ -23,6 +23,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
@@ -103,6 +104,9 @@ async def async_setup_entry(
 class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
     """Defines a System Bridge sensor."""
 
+    _attr_last_reset = utc_from_timestamp(0)
+    _attr_state_class = "measurement"
+
     def __init__(
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
@@ -114,15 +118,10 @@ class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
         enabled_by_default: bool,
     ) -> None:
         """Initialize System Bridge sensor."""
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(coordinator, key, name, icon, enabled_by_default)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        return self._device_class
 
     @property
     def native_unit_of_measurement(self) -> str | None:
