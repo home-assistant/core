@@ -244,10 +244,10 @@ class HomeAccessory(Accessory):
             sw_version = __version__
 
         self.set_info_service(
-            manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
-            model=model[:MAX_MODEL_LENGTH],
-            serial_number=entity_id[:MAX_SERIAL_LENGTH],
-            firmware_revision=sw_version[:MAX_VERSION_LENGTH],
+            manufacturer=f"{manufacturer}"[:MAX_MANUFACTURER_LENGTH],
+            model=f"{model}"[:MAX_MODEL_LENGTH],
+            serial_number=f"{entity_id}"[:MAX_SERIAL_LENGTH],
+            firmware_revision=f"{sw_version}"[:MAX_VERSION_LENGTH],
         )
 
         self.category = category
