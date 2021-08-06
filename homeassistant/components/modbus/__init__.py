@@ -142,7 +142,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
+        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT16): vol.In(
             [
                 DATA_TYPE_INT16,
                 DATA_TYPE_INT32,
