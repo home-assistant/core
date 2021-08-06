@@ -172,7 +172,7 @@ async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
         {
             ATTR_MODEL: None,
             ATTR_MANUFACTURER: None,
-            ATTR_SW_VERSION: None,
+            ATTR_SOFTWARE_VERSION: None,
             ATTR_INTEGRATION: None,
         },
     )
