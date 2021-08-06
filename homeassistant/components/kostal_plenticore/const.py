@@ -2,17 +2,19 @@
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_STATE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_NONE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
+)
+
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
 )
 
 DOMAIN = "kostal_plenticore"
