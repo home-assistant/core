@@ -23,8 +23,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import event as evt
 
 from . import (
-    CONF_DATA_BITS,
-    CONF_OFF_DELAY,
     RfxtrxEntity,
     connect_auto_add,
     find_possible_pt2262_device,
@@ -32,7 +30,13 @@ from . import (
     get_pt2262_cmd,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DEVICE_PACKET_TYPE_LIGHTING4
+from .const import (
+    COMMAND_OFF_LIST,
+    COMMAND_ON_LIST,
+    CONF_DATA_BITS,
+    CONF_OFF_DELAY,
+    DEVICE_PACKET_TYPE_LIGHTING4,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
