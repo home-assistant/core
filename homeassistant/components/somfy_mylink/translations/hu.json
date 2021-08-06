@@ -26,6 +26,9 @@
         },
         "step": {
             "entity_config": {
+                "data": {
+                    "reverse": "A bor\u00edt\u00f3 megfordult"
+                },
                 "description": "Konfigur\u00e1lja az \u201e {entity_id} \u201d be\u00e1ll\u00edt\u00e1sait",
                 "title": "Entit\u00e1s konfigur\u00e1l\u00e1sa"
             },

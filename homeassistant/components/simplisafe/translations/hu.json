@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Ez a SimpliSafe-fi\u00f3k m\u00e1r haszn\u00e1latban van.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
         },
         "error": {
@@ -9,10 +10,14 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "mfa": {
+                "title": "SimpliSafe t\u00f6bbt\u00e9nyez\u0151s hiteles\u00edt\u00e9s"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
+                "description": "Hozz\u00e1f\u00e9r\u00e9se lej\u00e1rt vagy visszavont\u00e1k. Adja meg jelszav\u00e1t a fi\u00f3k \u00fajb\u00f3li \u00f6sszekapcsol\u00e1s\u00e1hoz.",
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             },
             "user": {
@@ -22,6 +27,16 @@
                     "username": "E-mail"
                 },
                 "title": "T\u00f6ltsd ki az adataid"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "K\u00f3d (a Home Assistant felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n haszn\u00e1latos)"
+                },
+                "title": "A SimpliSafe konfigur\u00e1l\u00e1sa"
             }
         }
     }

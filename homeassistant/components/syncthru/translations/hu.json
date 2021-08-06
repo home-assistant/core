@@ -4,7 +4,8 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "invalid_url": "\u00c9rv\u00e9nytelen URL"
+            "invalid_url": "\u00c9rv\u00e9nytelen URL",
+            "unknown_state": "A nyomtat\u00f3 \u00e1llapota ismeretlen, ellen\u0151rizze az URL-t \u00e9s a h\u00e1l\u00f3zati kapcsolatot"
         },
         "flow_title": "{name}",
         "step": {
