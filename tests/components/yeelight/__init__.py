@@ -94,9 +94,21 @@ def _mocked_bulb(cannot_connect=False):
     bulb.bulb_type = BulbType.Color
     bulb.last_properties = PROPERTIES
     bulb.music_mode = False
+    bulb.async_get_properties = AsyncMock()
     bulb.async_listen = AsyncMock()
     bulb.async_stop_listening = AsyncMock()
     bulb.async_update = AsyncMock()
+    bulb.async_turn_on = AsyncMock()
+    bulb.async_turn_off = AsyncMock()
+    bulb.async_set_brightness = AsyncMock()
+    bulb.async_set_color_temp = AsyncMock()
+    bulb.async_set_hsv = AsyncMock()
+    bulb.async_set_rgb = AsyncMock()
+    bulb.async_start_flow = AsyncMock()
+    bulb.async_stop_flow = AsyncMock()
+    bulb.async_set_power_mode = AsyncMock()
+    bulb.async_set_scene = AsyncMock()
+    bulb.async_set_default = AsyncMock()
 
     return bulb
 
