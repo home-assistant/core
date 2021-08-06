@@ -64,7 +64,7 @@ def mock_get_exchange_rates():
     }
 
 
-async def init_mock_coinbase(hass, currencies=[], rates=[]):
+async def init_mock_coinbase(hass, currencies=None, rates=None):
     """Init Coinbase integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -72,8 +72,8 @@ async def init_mock_coinbase(hass, currencies=[], rates=[]):
         title="Test User",
         data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
         options={
-            CONF_CURRENCIES: currencies,
-            CONF_EXCHANGE_RATES: rates,
+            CONF_CURRENCIES: currencies or [],
+            CONF_EXCHANGE_RATES: rates or [],
         },
     )
     config_entry.add_to_hass(hass)
