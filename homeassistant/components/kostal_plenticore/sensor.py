@@ -199,7 +199,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_data.get(ATTR_ENABLED_DEFAULT, False)
 
     @property
-    def last_reset(self) -> str | None:
+    def last_reset(self) -> datetime | None:
         """Return the last_reset time."""
         return self._sensor_data.get(ATTR_LAST_RESET)
 
