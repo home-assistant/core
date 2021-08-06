@@ -238,9 +238,10 @@ class HomeAccessory(Accessory):
             model = self.config[ATTR_MODEL]
         else:
             model = domain.title()
+        sw_version = None
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
-        else:
+        if sw_version is None:
             sw_version = __version__
 
         self.set_info_service(
