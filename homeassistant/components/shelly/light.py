@@ -14,12 +14,14 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_TRANSITION,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     SUPPORT_EFFECT,
+    SUPPORT_TRANSITION,
     LightEntity,
     brightness_supported,
 )
@@ -37,9 +39,12 @@ from .const import (
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
+    LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
+    MODELS_SUPPORTING_LIGHT_TRANSITION,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
 )
@@ -109,6 +114,14 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
 
         if hasattr(block, "effect"):
             self._supported_features |= SUPPORT_EFFECT
+
+        if wrapper.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
+            match = FIRMWARE_PATTERN.search(wrapper.device.settings.get("fw"))
+            if (
+                match is not None
+                and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE
+            ):
+                self._supported_features |= SUPPORT_TRANSITION
 
     @property
     def supported_features(self) -> int:
@@ -261,6 +274,9 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         supported_color_modes = self._supported_color_modes
         params: dict[str, Any] = {"turn": "on"}
 
+        if ATTR_TRANSITION in kwargs:
+            params["transition"] = int(kwargs[ATTR_TRANSITION] * 1000)
+
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
             brightness_pct = int(100 * (kwargs[ATTR_BRIGHTNESS] + 1) / 255)
             if hasattr(self.block, "gain"):
@@ -312,7 +328,13 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        self.control_result = await self.set_state(turn="off")
+        params: dict[str, Any] = {"turn": "off"}
+
+        if ATTR_TRANSITION in kwargs:
+            params["transition"] = int(kwargs[ATTR_TRANSITION] * 1000)
+
+        self.control_result = await self.set_state(**params)
+
         self.async_write_ha_state()
 
     async def set_light_mode(self, set_mode: str | None) -> bool:
