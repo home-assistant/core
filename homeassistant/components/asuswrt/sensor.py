@@ -112,14 +112,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_sensor_description(key: str) -> AsusWrtSensorEntityDescription | None:
-    """Get the sensor description based on the key."""
-    for sensor_descr in CONNECTION_SENSORS:
-        if sensor_descr.key == key:
-            return sensor_descr
-    return None
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
@@ -131,9 +123,10 @@ async def async_setup_entry(
         coordinator = sensor_data[KEY_COORDINATOR]
         sensors = sensor_data[KEY_SENSORS]
         for sensor_key in sensors:
-            sensor_descr = _get_sensor_description(sensor_key)
-            if sensor_descr:
-                entities.append(AsusWrtSensor(coordinator, router, sensor_descr))
+            for sensor_descr in CONNECTION_SENSORS:
+                if sensor_descr.key == sensor_key:
+                    entities.append(AsusWrtSensor(coordinator, router, sensor_descr))
+                    break
 
     async_add_entities(entities, True)
 
