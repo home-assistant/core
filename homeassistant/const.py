@@ -1,5 +1,6 @@
 """Constants used by Home Assistant components."""
 from __future__ import annotations
+
 from typing import Final
 
 MAJOR_VERSION: Final = 2021

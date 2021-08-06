@@ -45,7 +45,11 @@ async def async_setup_entry(
 
     available_process_data = await plenticore.client.get_process_data()
     process_data_update_coordinator = ProcessDataUpdateCoordinator(
-        hass, _LOGGER, "Process Data", timedelta(seconds=10), plenticore
+        hass,
+        _LOGGER,
+        "Process Data",
+        timedelta(seconds=10),
+        plenticore,
     )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_PROCESS_DATA:
         if (

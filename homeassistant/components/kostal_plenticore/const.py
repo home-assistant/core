@@ -614,5 +614,11 @@ SENSOR_SETTINGS_DATA = [
         {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
         "format_round",
     ),
-    ("devices:local", "Battery:Strategy", "Battery Strategy", {}, "format_round"),
+    (
+        "devices:local",
+        "Battery:Strategy",
+        "Battery Strategy",
+        {},
+        "format_round",
+    ),
 ]
