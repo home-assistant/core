@@ -1,6 +1,7 @@
 """Test the VLC media player Telnet config flow."""
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +12,39 @@ from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 
-async def test_user_flow(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "input_data, entry_data",
+    [
+        (
+            {
+                "password": "test-password",
+                "host": "1.1.1.1",
+                "port": 8888,
+                "name": "custom name",
+            },
+            {
+                "password": "test-password",
+                "host": "1.1.1.1",
+                "port": 8888,
+                "name": "custom name",
+            },
+        ),
+        (
+            {
+                "password": "test-password",
+            },
+            {
+                "password": "test-password",
+                "host": "localhost",
+                "port": 4212,
+                "name": "VLC-TELNET",
+            },
+        ),
+    ],
+)
+async def test_user_flow(
+    hass: HomeAssistant, input_data: dict[str, Any], entry_data: dict[str, Any]
+) -> None:
     """Test successful user flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -30,23 +63,13 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "password": "test-password",
-                "host": "1.1.1.1",
-                "port": 8888,
-                "name": "custom name",
-            },
+            input_data,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "custom name"
-    assert result2["data"] == {
-        "password": "test-password",
-        "host": "1.1.1.1",
-        "port": 8888,
-        "name": "custom name",
-    }
+    assert result2["title"] == entry_data["name"]
+    assert result2["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
 
 
