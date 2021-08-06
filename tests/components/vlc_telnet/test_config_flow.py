@@ -11,6 +11,10 @@ from homeassistant import config_entries, setup
 from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
+# mypy: allow-untyped-calls
+
 
 @pytest.mark.parametrize(
     "input_data, entry_data",
@@ -147,3 +151,52 @@ async def test_errors(
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": error}
+
+
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test successful reauth flow."""
+    entry_data = {
+        "password": "old-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+    }
+
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    entry.add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry_data,
+    )
+
+    with patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.connect"
+    ), patch("homeassistant.components.vlc_telnet.config_flow.VLCTelnet.login"), patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.disconnect"
+    ), patch(
+        "homeassistant.components.vlc_telnet.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "new-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert dict(entry.data) == {
+        "password": "new-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+    }
