@@ -725,6 +725,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
 _ADAPTERS_WITH_MANUAL_CONFIG = [
     {
         "auto": True,
+        "index": 1,
         "default": False,
         "enabled": True,
         "ipv4": [],
@@ -746,6 +747,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     },
     {
         "auto": True,
+        "index": 2,
         "default": False,
         "enabled": True,
         "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
@@ -754,6 +756,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     },
     {
         "auto": True,
+        "index": 3,
         "default": False,
         "enabled": True,
         "ipv4": [{"address": "172.16.1.5", "network_prefix": 23}],
@@ -769,6 +772,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     },
     {
         "auto": False,
+        "index": 4,
         "default": False,
         "enabled": False,
         "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],
