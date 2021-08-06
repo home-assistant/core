@@ -73,7 +73,11 @@ async def async_setup_entry(
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass, _LOGGER, "Settings Data", timedelta(seconds=300), plenticore
+        hass,
+        _LOGGER,
+        "Settings Data",
+        timedelta(seconds=300),
+        plenticore,
     )
     for module_id, data_id, name, sensor_data, fmt in SENSOR_SETTINGS_DATA:
         if module_id not in available_settings_data or data_id not in (
