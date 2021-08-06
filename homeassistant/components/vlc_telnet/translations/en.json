@@ -11,6 +11,11 @@
         },
         "flow_title": "{host}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",
