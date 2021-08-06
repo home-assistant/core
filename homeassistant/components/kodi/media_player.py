@@ -282,6 +282,8 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties = {}
         self._media_position_updated_at = None
         self._media_position = None
+        self._dpms = None
+        self._screensaver = None
 
     def _reset_state(self, players=None):
         self._players = players
@@ -321,6 +323,30 @@ class KodiEntity(MediaPlayerEntity):
             return
 
         self._reset_state([])
+        self.async_write_ha_state()
+
+    @callback
+    def async_on_dpms_on(self, sender, data):
+        """Handle the activation of display power management."""
+        self._dpms = True
+        self.async_write_ha_state()
+
+    @callback
+    def async_on_dpms_off(self, sender, data):
+        """Handle the activation of display power management."""
+        self._dpms = False
+        self.async_write_ha_state()
+
+    @callback
+    def async_on_screensaver_on(self, sender, data):
+        """Handle the activation of the screensaver."""
+        self._screensaver = True
+        self.async_write_ha_state()
+
+    @callback
+    def async_on_screensaver_off(self, sender, data):
+        """Handle the activation of the screensaver."""
+        self._screensaver = False
         self.async_write_ha_state()
 
     @callback
@@ -404,6 +430,7 @@ class KodiEntity(MediaPlayerEntity):
         device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
 
+        await self.async_query_display_status()
         self.async_schedule_update_ha_state(True)
 
     async def _async_ws_connect(self):
@@ -442,9 +469,21 @@ class KodiEntity(MediaPlayerEntity):
         self._connection.server.Application.OnVolumeChanged = (
             self.async_on_volume_changed
         )
+        self._connection.server.GUI.OnDPMSActivated = self.async_on_dpms_on
+        self._connection.server.GUI.OnDPMSDeactivated = self.async_on_dpms_off
+        self._connection.server.GUI.OnScreensaverActivated = self.async_on_screensaver_on
+        self._connection.server.GUI.OnScreensaverDeactivated = self.async_on_screensaver_off
         self._connection.server.System.OnQuit = self.async_on_quit
         self._connection.server.System.OnRestart = self.async_on_quit
         self._connection.server.System.OnSleep = self.async_on_quit
+
+    @cmd
+    async def async_query_display_status(self):
+        """Retrieve diplay properties."""
+        display_properties = {"booleans":["System.DPMSActive", "System.ScreenSaverActive"]}
+        display_status = await self._kodi.call_method("XBMC.GetInfoBooleans", **display_properties)
+        self._dpms = display_status["System.DPMSActive"]
+        self._screensaver = display_status["System.ScreenSaverActive"]
 
     @cmd
     async def async_update(self):
@@ -500,6 +539,11 @@ class KodiEntity(MediaPlayerEntity):
     def should_poll(self):
         """Return True if entity has to be polled for state."""
         return not self._connection.can_subscribe
+
+    @property
+    def extra_state_attributes(self):
+        """Return the DPMS and screensaver status."""
+        return {"display_dpms": self._dpms, "screensaver": self._screensaver}
 
     @property
     def volume_level(self):
