@@ -84,19 +84,34 @@ def _mocked_bulb(cannot_connect=False):
     type(bulb).get_capabilities = MagicMock(
         return_value=None if cannot_connect else CAPABILITIES
     )
+    type(bulb).async_get_properties = AsyncMock(
+        side_effect=BulbException if cannot_connect else None
+    )
     type(bulb).get_properties = MagicMock(
         side_effect=BulbException if cannot_connect else None
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
 
-    bulb.capabilities = CAPABILITIES
+    bulb.capabilities = CAPABILITIES.copy()
     bulb.model = MODEL
     bulb.bulb_type = BulbType.Color
-    bulb.last_properties = PROPERTIES
+    bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
+    bulb.async_get_properties = AsyncMock()
     bulb.async_listen = AsyncMock()
     bulb.async_stop_listening = AsyncMock()
     bulb.async_update = AsyncMock()
+    bulb.async_turn_on = AsyncMock()
+    bulb.async_turn_off = AsyncMock()
+    bulb.async_set_brightness = AsyncMock()
+    bulb.async_set_color_temp = AsyncMock()
+    bulb.async_set_hsv = AsyncMock()
+    bulb.async_set_rgb = AsyncMock()
+    bulb.async_start_flow = AsyncMock()
+    bulb.async_stop_flow = AsyncMock()
+    bulb.async_set_power_mode = AsyncMock()
+    bulb.async_set_scene = AsyncMock()
+    bulb.async_set_default = AsyncMock()
 
     return bulb
 
