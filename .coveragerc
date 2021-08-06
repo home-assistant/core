@@ -1150,6 +1150,7 @@ omit =
     homeassistant/components/vilfo/const.py
     homeassistant/components/vivotek/camera.py
     homeassistant/components/vlc/media_player.py
+    homeassistant/components/vlc_telnet/__init__.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py
