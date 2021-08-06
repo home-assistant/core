@@ -1,4 +1,5 @@
 """Support for Enphase Envoy solar energy monitor."""
+from __future__ import annotations
 
 import logging
 
@@ -22,14 +23,15 @@ ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSORS]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
         vol.Optional(CONF_USERNAME, default="envoy"): cv.string,
         vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(list(SENSORS))]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Optional(CONF_NAME, default=""): cv.string,
     }
