@@ -132,8 +132,7 @@ async def test_home_accessory(hass, hk_driver):
         == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
     )
     assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == "0.4.3"
-    
-    
+
     acc4 = HomeAccessory(
         hass,
         hk_driver,
@@ -165,8 +164,7 @@ async def test_home_accessory(hass, hk_driver):
         serv.get_characteristic(CHAR_SERIAL_NUMBER).value
         == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
     )
-    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == "4"
-    
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
 
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
