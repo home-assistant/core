@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorEntity,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant

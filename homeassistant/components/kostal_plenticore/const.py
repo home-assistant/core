@@ -1,5 +1,10 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
 
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -11,13 +16,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
-
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    ATTR_LAST_RESET,
-    STATE_CLASS_MEASUREMENT,
-)
-
 from homeassistant.util.dt import utc_from_timestamp
 
 DOMAIN = "kostal_plenticore"
