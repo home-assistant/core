@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
+    CONF_LAST_RESET,
     CONF_NAME,
     CONF_SENSORS,
     CONF_STATE,
@@ -66,6 +67,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_LAST_RESET): cv.datetime,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     }
 )
@@ -87,6 +89,7 @@ LEGACY_SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_LAST_RESET): cv.datetime,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
@@ -163,6 +166,7 @@ def _async_create_template_tracking_entities(
         attribute_templates = entity_conf.get(CONF_ATTRIBUTES, {})
         unique_id = entity_conf.get(CONF_UNIQUE_ID)
         state_class = entity_conf.get(CONF_STATE_CLASS)
+        last_reset = entity_conf.get(CONF_LAST_RESET)
 
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
@@ -181,6 +185,7 @@ def _async_create_template_tracking_entities(
                 attribute_templates,
                 unique_id,
                 state_class,
+                last_reset,
             )
         )
 
@@ -230,6 +235,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         attribute_templates: dict[str, template.Template],
         unique_id: str | None,
         state_class: str | None,
+        last_reset: str | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
@@ -260,6 +266,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         self._attr_unique_id = unique_id
+        self._attr_last_reset = last_reset
 
     async def async_added_to_hass(self):
         """Register callbacks."""
