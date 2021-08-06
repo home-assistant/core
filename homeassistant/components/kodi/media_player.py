@@ -471,17 +471,25 @@ class KodiEntity(MediaPlayerEntity):
         )
         self._connection.server.GUI.OnDPMSActivated = self.async_on_dpms_on
         self._connection.server.GUI.OnDPMSDeactivated = self.async_on_dpms_off
-        self._connection.server.GUI.OnScreensaverActivated = self.async_on_screensaver_on
-        self._connection.server.GUI.OnScreensaverDeactivated = self.async_on_screensaver_off
+        self._connection.server.GUI.OnScreensaverActivated = (
+            self.async_on_screensaver_on
+        )
+        self._connection.server.GUI.OnScreensaverDeactivated = (
+            self.async_on_screensaver_off
+        )
         self._connection.server.System.OnQuit = self.async_on_quit
         self._connection.server.System.OnRestart = self.async_on_quit
         self._connection.server.System.OnSleep = self.async_on_quit
 
     @cmd
     async def async_query_display_status(self):
-        """Retrieve diplay properties."""
-        display_properties = {"booleans":["System.DPMSActive", "System.ScreenSaverActive"]}
-        display_status = await self._kodi.call_method("XBMC.GetInfoBooleans", **display_properties)
+        """Retrieve display properties."""
+        display_properties = {
+            "booleans": ["System.DPMSActive", "System.ScreenSaverActive"]
+        }
+        display_status = await self._kodi.call_method(
+            "XBMC.GetInfoBooleans", **display_properties
+        )
         self._dpms = display_status["System.DPMSActive"]
         self._screensaver = display_status["System.ScreenSaverActive"]
 
