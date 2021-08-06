@@ -143,7 +143,7 @@ async def test_home_accessory(hass, hk_driver):
         {
             ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
             ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
-            ATTR_SW_VERSION: 4,
+            ATTR_SW_VERSION: "will_not_match_regex",
             ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
         },
     )
