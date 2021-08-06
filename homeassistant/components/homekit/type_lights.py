@@ -66,6 +66,10 @@ class Light(HomeAccessory):
         self.color_and_temp_supported = (
             self.is_color_supported and self.is_color_temp_supported
         )
+        if self.color_and_temp_supported:
+            self.color_and_temp_supported = False
+            self.is_color_temp_supported = False
+
         self.is_brightness_supported = brightness_supported(color_modes)
 
         if self.is_brightness_supported:
