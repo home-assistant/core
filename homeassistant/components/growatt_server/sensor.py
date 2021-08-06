@@ -9,7 +9,11 @@ import re
 
 import growattServer
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -88,6 +92,8 @@ TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="totalEnergy",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0)
     ),
     GrowattSensorEntityDescription(
         key="total_maximum_output",
@@ -114,6 +120,8 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         precision=1,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0)
     ),
     GrowattSensorEntityDescription(
         key="inverter_voltage_input_1",
