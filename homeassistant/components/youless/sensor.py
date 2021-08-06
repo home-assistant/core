@@ -3,17 +3,18 @@ from __future__ import annotations
 
 from youless_api.youless_sensor import YoulessSensor
 
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.components.youless import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, DEVICE_CLASS_POWER
+from homeassistant.const import CONF_DEVICE, DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt
 
 
 async def async_setup_entry(
@@ -40,8 +41,10 @@ async def async_setup_entry(
     )
 
 
-class YoulessBaseSensor(CoordinatorEntity, Entity):
+class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
     """The base sensor for Youless."""
+
+    _attr_last_reset = dt.utc_from_timestamp(0)
 
     def __init__(
         self,
@@ -95,6 +98,8 @@ class YoulessBaseSensor(CoordinatorEntity, Entity):
 class GasSensor(YoulessBaseSensor):
     """The Youless gas sensor."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
         """Instantiate a gas sensor."""
         super().__init__(coordinator, device, "gas", "Gas meter", "gas")
@@ -111,6 +116,7 @@ class CurrentPowerSensor(YoulessBaseSensor):
     """The current power usage sensor."""
 
     _attr_device_class = DEVICE_CLASS_POWER
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
         """Instantiate the usage meter."""
@@ -128,6 +134,7 @@ class DeliveryMeterSensor(YoulessBaseSensor):
     """The Youless delivery meter value sensor."""
 
     _attr_device_class = DEVICE_CLASS_POWER
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
@@ -151,7 +158,8 @@ class DeliveryMeterSensor(YoulessBaseSensor):
 class PowerMeterSensor(YoulessBaseSensor):
     """The Youless low meter value sensor."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
