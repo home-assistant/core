@@ -48,7 +48,7 @@ class DSMRReaderSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_delivered_1",
-        name="Low tariff usage",
+        name="Current low tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -56,7 +56,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_returned_1",
-        name="Low tariff returned",
+        name="Current low tariff returned",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -64,7 +64,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_delivered_2",
-        name="High tariff usage",
+        name="Current high tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -72,7 +72,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_returned_2",
-        name="High tariff returned",
+        name="Current high tariff returned",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -142,7 +142,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/extra_device_delivered",
-        name="Gas meter usage",
+        name="Current gas meter usage",
         entity_registry_enabled_default=False,
         icon="mdi:fire",
         unit_of_measurement=VOLUME_CUBIC_METERS,
@@ -226,7 +226,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1",
-        name="Low tariff usage",
+        name="Current day low tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -234,7 +234,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity2",
-        name="High tariff usage",
+        name="Current day high tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -242,7 +242,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1_returned",
-        name="Low tariff return",
+        name="Current day low tariff return",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -250,7 +250,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity2_returned",
-        name="High tariff return",
+        name="Current day high tariff return",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -258,7 +258,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity_merged",
-        name="Power usage total",
+        name="Current day power usage total",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -266,7 +266,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity_returned_merged",
-        name="Power return total",
+        name="Current day power return total",
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -292,7 +292,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/gas",
-        name="Gas usage",
+        name="Current day gas usage",
         icon="mdi:counter",
         unit_of_measurement=VOLUME_CUBIC_METERS,
     ),
@@ -304,7 +304,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/total_cost",
-        name="Total cost",
+        name="Current day total cost",
         icon="mdi:currency-eur",
         unit_of_measurement=CURRENCY_EURO,
     ),
