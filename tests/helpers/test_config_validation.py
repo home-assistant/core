@@ -1085,3 +1085,18 @@ def test_whitespace():
 
     for value in ("  ", "   "):
         assert schema(value)
+
+
+def test_currency():
+    """Test currency validator."""
+    schema = vol.Schema(cv.currency)
+
+    for value in (
+        None,
+        "BTC",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("EUR", "USD"):
+        assert schema(value)

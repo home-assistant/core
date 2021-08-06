@@ -8,21 +8,27 @@ from homeassistant.components.onewire.const import DOMAIN, PRESSURE_CBAR
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_MBAR,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
-    VOLT,
 )
+
+MANUFACTURER = "Maxim Integrated"
 
 MOCK_OWPROXY_DEVICES = {
     "00.111111111111": {
@@ -36,10 +42,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS2405",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "05.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS2405",
-            "name": "05.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "05.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS2405",
+            ATTR_NAME: "05.111111111111",
         },
         SWITCH_DOMAIN: [
             {
@@ -58,10 +64,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS18S20",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "10.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS18S20",
-            "name": "10.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "10.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS18S20",
+            ATTR_NAME: "10.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -79,10 +85,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS2406",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "12.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS2406",
-            "name": "12.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "12.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS2406",
+            ATTR_NAME: "12.111111111111",
         },
         BINARY_SENSOR_DOMAIN: [
             {
@@ -168,10 +174,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS2423",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "1D.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS2423",
-            "name": "1D.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS2423",
+            ATTR_NAME: "1D.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -197,10 +203,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS2409",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "1F.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS2409",
-            "name": "1F.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS2409",
+            ATTR_NAME: "1F.111111111111",
         },
         "branches": {
             "aux": {},
@@ -210,10 +216,10 @@ MOCK_OWPROXY_DEVICES = {
                         b"DS2423",  # read device type
                     ],
                     "device_info": {
-                        "identifiers": {(DOMAIN, "1D.111111111111")},
-                        "manufacturer": "Maxim Integrated",
-                        "model": "DS2423",
-                        "name": "1D.111111111111",
+                        ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
+                        ATTR_MANUFACTURER: MANUFACTURER,
+                        ATTR_MODEL: "DS2423",
+                        ATTR_NAME: "1D.111111111111",
                     },
                     SENSOR_DOMAIN: [
                         {
@@ -244,10 +250,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS1822",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "22.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS1822",
-            "name": "22.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "22.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS1822",
+            ATTR_NAME: "22.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -265,10 +271,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS2438",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "26.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS2438",
-            "name": "26.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "26.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS2438",
+            ATTR_NAME: "26.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -347,7 +353,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unique_id": "/26.111111111111/VAD",
                 "injected_value": b"     2.97",
                 "result": "3.0",
-                "unit": VOLT,
+                "unit": ELECTRIC_POTENTIAL_VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
                 "disabled": True,
             },
@@ -356,7 +362,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unique_id": "/26.111111111111/VDD",
                 "injected_value": b"    4.74",
                 "result": "4.7",
-                "unit": VOLT,
+                "unit": ELECTRIC_POTENTIAL_VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
                 "disabled": True,
             },
@@ -365,7 +371,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unique_id": "/26.111111111111/IAD",
                 "injected_value": b"       1",
                 "result": "1.0",
-                "unit": ELECTRICAL_CURRENT_AMPERE,
+                "unit": ELECTRIC_CURRENT_AMPERE,
                 "class": DEVICE_CLASS_CURRENT,
                 "disabled": True,
             },
@@ -376,10 +382,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS18B20",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "28.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS18B20",
-            "name": "28.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "28.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS18B20",
+            ATTR_NAME: "28.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -397,10 +403,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS2408",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "29.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS2408",
-            "name": "29.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "29.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS2408",
+            ATTR_NAME: "29.111111111111",
         },
         BINARY_SENSOR_DOMAIN: [
             {
@@ -628,10 +634,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS1825",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "3B.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS1825",
-            "name": "3B.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "3B.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS1825",
+            ATTR_NAME: "3B.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -649,10 +655,10 @@ MOCK_OWPROXY_DEVICES = {
             b"DS28EA00",  # read device type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "42.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "DS28EA00",
-            "name": "42.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "42.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "DS28EA00",
+            ATTR_NAME: "42.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -670,10 +676,10 @@ MOCK_OWPROXY_DEVICES = {
             b"HobbyBoards_EF",  # read type
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "EF.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "HobbyBoards_EF",
-            "name": "EF.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "HobbyBoards_EF",
+            ATTR_NAME: "EF.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -711,10 +717,10 @@ MOCK_OWPROXY_DEVICES = {
             b"         0",  # read is_leaf_3
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "EF.111111111112")},
-            "manufacturer": "Maxim Integrated",
-            "model": "HB_MOISTURE_METER",
-            "name": "EF.111111111112",
+            ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111112")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "HB_MOISTURE_METER",
+            ATTR_NAME: "EF.111111111112",
         },
         SENSOR_DOMAIN: [
             {
@@ -757,10 +763,10 @@ MOCK_OWPROXY_DEVICES = {
             b"EDS0068",  # read device_type - note EDS specific
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "7E.111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "EDS",
-            "name": "7E.111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "7E.111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "EDS",
+            ATTR_NAME: "7E.111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -803,10 +809,10 @@ MOCK_OWPROXY_DEVICES = {
             b"EDS0066",  # read device_type - note EDS specific
         ],
         "device_info": {
-            "identifiers": {(DOMAIN, "7E.222222222222")},
-            "manufacturer": "Maxim Integrated",
-            "model": "EDS",
-            "name": "7E.222222222222",
+            ATTR_IDENTIFIERS: {(DOMAIN, "7E.222222222222")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "EDS",
+            ATTR_NAME: "7E.222222222222",
         },
         SENSOR_DOMAIN: [
             {
@@ -833,10 +839,10 @@ MOCK_SYSBUS_DEVICES = {
     "00-111111111111": {SENSOR_DOMAIN: []},
     "10-111111111111": {
         "device_info": {
-            "identifiers": {(DOMAIN, "10-111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "10",
-            "name": "10-111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "10-111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "10",
+            ATTR_NAME: "10-111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -853,10 +859,10 @@ MOCK_SYSBUS_DEVICES = {
     "1D-111111111111": {SENSOR_DOMAIN: []},
     "22-111111111111": {
         "device_info": {
-            "identifiers": {(DOMAIN, "22-111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "22",
-            "name": "22-111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "22-111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "22",
+            ATTR_NAME: "22-111111111111",
         },
         "sensor": [
             {
@@ -872,10 +878,10 @@ MOCK_SYSBUS_DEVICES = {
     "26-111111111111": {SENSOR_DOMAIN: []},
     "28-111111111111": {
         "device_info": {
-            "identifiers": {(DOMAIN, "28-111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "28",
-            "name": "28-111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "28-111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "28",
+            ATTR_NAME: "28-111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -891,10 +897,10 @@ MOCK_SYSBUS_DEVICES = {
     "29-111111111111": {SENSOR_DOMAIN: []},
     "3B-111111111111": {
         "device_info": {
-            "identifiers": {(DOMAIN, "3B-111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "3B",
-            "name": "3B-111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "3B-111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "3B",
+            ATTR_NAME: "3B-111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -909,10 +915,10 @@ MOCK_SYSBUS_DEVICES = {
     },
     "42-111111111111": {
         "device_info": {
-            "identifiers": {(DOMAIN, "42-111111111111")},
-            "manufacturer": "Maxim Integrated",
-            "model": "42",
-            "name": "42-111111111111",
+            ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111111")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "42",
+            ATTR_NAME: "42-111111111111",
         },
         SENSOR_DOMAIN: [
             {
@@ -927,10 +933,10 @@ MOCK_SYSBUS_DEVICES = {
     },
     "42-111111111112": {
         "device_info": {
-            "identifiers": {(DOMAIN, "42-111111111112")},
-            "manufacturer": "Maxim Integrated",
-            "model": "42",
-            "name": "42-111111111112",
+            ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111112")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "42",
+            ATTR_NAME: "42-111111111112",
         },
         SENSOR_DOMAIN: [
             {
@@ -945,10 +951,10 @@ MOCK_SYSBUS_DEVICES = {
     },
     "42-111111111113": {
         "device_info": {
-            "identifiers": {(DOMAIN, "42-111111111113")},
-            "manufacturer": "Maxim Integrated",
-            "model": "42",
-            "name": "42-111111111113",
+            ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111113")},
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: "42",
+            ATTR_NAME: "42-111111111113",
         },
         SENSOR_DOMAIN: [
             {

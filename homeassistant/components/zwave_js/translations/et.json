@@ -51,6 +51,21 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Seadeparameeteri {subtype} v\u00e4\u00e4rtus",
+            "node_status": "S\u00f5lme olek",
+            "value": "Z-Wave Value praegune v\u00e4\u00e4rtus"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "L\u00e4bip\u00e4\u00e4su kontrolli teavitus on saadetud",
+            "event.notification.notification": "Teavitus on saadetud",
+            "event.value_notification.basic": "CC p\u00f5his\u00fcndmus {subtype}",
+            "event.value_notification.central_scene": "Keskse stseeni tegevus {subtype}",
+            "event.value_notification.scene_activation": "Stseeni aktiveerimine saidil {subtype}",
+            "state.node_status": "S\u00f5lme olek muutus"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Z-Wave JS lisandmooduli tuvastusteabe hankimine nurjus.",

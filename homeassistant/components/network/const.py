@@ -16,7 +16,7 @@ ATTR_CONFIGURED_ADAPTERS: Final = "configured_adapters"
 DEFAULT_CONFIGURED_ADAPTERS: list[str] = []
 
 MDNS_TARGET_IP: Final = "224.0.0.251"
-
+PUBLIC_TARGET_IP: Final = "8.8.8.8"
 
 NETWORK_CONFIG_SCHEMA = vol.Schema(
     {

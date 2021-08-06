@@ -7,6 +7,7 @@ from homeassistant.components import network
 from homeassistant.components.network.const import (
     ATTR_ADAPTERS,
     ATTR_CONFIGURED_ADAPTERS,
+    MDNS_TARGET_IP,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -444,3 +445,66 @@ async def test_interfaces_configured_from_storage_websocket_update(
             "name": "vtun0",
         },
     ]
+
+
+async def test_async_get_source_ip_matching_interface(hass, hass_storage):
+    """Test getting the source ip address with interface matching."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=_generate_mock_adapters(),
+    ), patch(
+        "homeassistant.components.network.util.socket.socket.getsockname",
+        return_value=["192.168.1.5"],
+    ):
+        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+        assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
+
+
+async def test_async_get_source_ip_interface_not_match(hass, hass_storage):
+    """Test getting the source ip address with interface does not match."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["vtun0"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=_generate_mock_adapters(),
+    ), patch(
+        "homeassistant.components.network.util.socket.socket.getsockname",
+        return_value=["192.168.1.5"],
+    ):
+        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+        assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "169.254.3.2"
+
+
+async def test_async_get_source_ip_cannot_determine_target(hass, hass_storage):
+    """Test getting the source ip address when getsockname fails."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=_generate_mock_adapters(),
+    ), patch(
+        "homeassistant.components.network.util.socket.socket.getsockname",
+        return_value=[None],
+    ):
+        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+        assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"

@@ -617,9 +617,13 @@ async def test_tls_assets_writer(hass):
     }
     with patch("os.mkdir"), patch("builtins.open", mock_open()) as mocked_file:
         write_tls_asset(hass, CONF_SHC_CERT, assets["cert"])
-        mocked_file.assert_called_with(hass.config.path(DOMAIN, CONF_SHC_CERT), "w")
+        mocked_file.assert_called_with(
+            hass.config.path(DOMAIN, CONF_SHC_CERT), "w", encoding="utf8"
+        )
         mocked_file().write.assert_called_with("content_cert")
 
         write_tls_asset(hass, CONF_SHC_KEY, assets["key"])
-        mocked_file.assert_called_with(hass.config.path(DOMAIN, CONF_SHC_KEY), "w")
+        mocked_file.assert_called_with(
+            hass.config.path(DOMAIN, CONF_SHC_KEY), "w", encoding="utf8"
+        )
         mocked_file().write.assert_called_with("content_key")

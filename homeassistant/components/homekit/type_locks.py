@@ -3,7 +3,14 @@ import logging
 
 from pyhap.const import CATEGORY_DOOR_LOCK
 
-from homeassistant.components.lock import DOMAIN, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.components.lock import (
+    DOMAIN,
+    STATE_JAMMED,
+    STATE_LOCKED,
+    STATE_LOCKING,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
+)
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import callback
 
@@ -12,16 +19,37 @@ from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)
 
-HASS_TO_HOMEKIT = {
+HASS_TO_HOMEKIT_CURRENT = {
     STATE_UNLOCKED: 0,
+    STATE_UNLOCKING: 1,
+    STATE_LOCKING: 0,
     STATE_LOCKED: 1,
-    # Value 2 is Jammed which hass doesn't have a state for
+    STATE_JAMMED: 2,
     STATE_UNKNOWN: 3,
 }
 
-HOMEKIT_TO_HASS = {c: s for s, c in HASS_TO_HOMEKIT.items()}
+HASS_TO_HOMEKIT_TARGET = {
+    STATE_UNLOCKED: 0,
+    STATE_UNLOCKING: 0,
+    STATE_LOCKING: 1,
+    STATE_LOCKED: 1,
+}
 
-STATE_TO_SERVICE = {STATE_LOCKED: "lock", STATE_UNLOCKED: "unlock"}
+VALID_TARGET_STATES = {STATE_LOCKING, STATE_UNLOCKING, STATE_LOCKED, STATE_UNLOCKED}
+
+HOMEKIT_TO_HASS = {
+    0: STATE_UNLOCKED,
+    1: STATE_LOCKED,
+    2: STATE_JAMMED,
+    3: STATE_UNKNOWN,
+}
+
+STATE_TO_SERVICE = {
+    STATE_LOCKING: "unlock",
+    STATE_LOCKED: "lock",
+    STATE_UNLOCKING: "lock",
+    STATE_UNLOCKED: "unlock",
+}
 
 
 @TYPES.register("Lock")
@@ -39,11 +67,11 @@ class Lock(HomeAccessory):
 
         serv_lock_mechanism = self.add_preload_service(SERV_LOCK)
         self.char_current_state = serv_lock_mechanism.configure_char(
-            CHAR_LOCK_CURRENT_STATE, value=HASS_TO_HOMEKIT[STATE_UNKNOWN]
+            CHAR_LOCK_CURRENT_STATE, value=HASS_TO_HOMEKIT_CURRENT[STATE_UNKNOWN]
         )
         self.char_target_state = serv_lock_mechanism.configure_char(
             CHAR_LOCK_TARGET_STATE,
-            value=HASS_TO_HOMEKIT[STATE_LOCKED],
+            value=HASS_TO_HOMEKIT_CURRENT[STATE_LOCKED],
             setter_callback=self.set_state,
         )
         self.async_update_state(state)
@@ -52,11 +80,8 @@ class Lock(HomeAccessory):
         """Set lock state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
 
-        hass_value = HOMEKIT_TO_HASS.get(value)
+        hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
-
-        if self.char_current_state.value != value:
-            self.char_current_state.set_value(value)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
@@ -67,25 +92,28 @@ class Lock(HomeAccessory):
     def async_update_state(self, new_state):
         """Update lock after state changed."""
         hass_state = new_state.state
-        if hass_state in HASS_TO_HOMEKIT:
-            current_lock_state = HASS_TO_HOMEKIT[hass_state]
-            _LOGGER.debug(
-                "%s: Updated current state to %s (%d)",
-                self.entity_id,
-                hass_state,
-                current_lock_state,
-            )
-            # LockTargetState only supports locked and unlocked
-            # Must set lock target state before current state
-            # or there will be no notification
-            if (
-                hass_state in (STATE_LOCKED, STATE_UNLOCKED)
-                and self.char_target_state.value != current_lock_state
-            ):
-                self.char_target_state.set_value(current_lock_state)
+        current_lock_state = HASS_TO_HOMEKIT_CURRENT.get(
+            hass_state, HASS_TO_HOMEKIT_CURRENT[STATE_UNKNOWN]
+        )
+        target_lock_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
+        _LOGGER.debug(
+            "%s: Updated current state to %s (current=%d) (target=%s)",
+            self.entity_id,
+            hass_state,
+            current_lock_state,
+            target_lock_state,
+        )
+        # LockTargetState only supports locked and unlocked
+        # Must set lock target state before current state
+        # or there will be no notification
+        if (
+            target_lock_state is not None
+            and self.char_target_state.value != target_lock_state
+        ):
+            self.char_target_state.set_value(target_lock_state)
 
-            # Set lock current state ONLY after ensuring that
-            # target state is correct or there will be no
-            # notification
-            if self.char_current_state.value != current_lock_state:
-                self.char_current_state.set_value(current_lock_state)
+        # Set lock current state ONLY after ensuring that
+        # target state is correct or there will be no
+        # notification
+        if self.char_current_state.value != current_lock_state:
+            self.char_current_state.set_value(current_lock_state)

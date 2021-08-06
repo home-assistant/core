@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry):
             raise UpdateFailed from err
 
     init_data_update_tasks = []
-    for sensor_type, api_coro in [
+    for sensor_type, api_coro in (
         (TYPE_ALLERGY_FORECAST, client.allergens.extended),
         (TYPE_ALLERGY_INDEX, client.allergens.current),
         (TYPE_ALLERGY_OUTLOOK, client.allergens.outlook),
@@ -67,7 +67,7 @@ async def async_setup_entry(hass, entry):
         (TYPE_ASTHMA_INDEX, client.asthma.current),
         (TYPE_DISEASE_FORECAST, client.disease.extended),
         (TYPE_DISEASE_INDEX, client.disease.current),
-    ]:
+    ):
         coordinator = coordinators[sensor_type] = DataUpdateCoordinator(
             hass,
             LOGGER,

@@ -88,11 +88,11 @@ class ZwaveSensorBase(ZWaveDeviceEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         # We hide some of the more advanced sensors by default to not overwhelm users
-        if self.values.primary.command_class in [
+        if self.values.primary.command_class in (
             CommandClass.BASIC,
             CommandClass.INDICATOR,
             CommandClass.NOTIFICATION,
-        ]:
+        ):
             return False
         return True
 

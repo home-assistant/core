@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
+    DEVICE_CLASS_TEMPERATURE,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -105,6 +106,7 @@ class ThermoworksSmokeSensor(SensorEntity):
         self._unique_id = f"{serial}-{sensor_type}"
         self.serial = serial
         self.mgr = mgr
+        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
         self.update_unit()
 
     @property
@@ -158,7 +160,7 @@ class ThermoworksSmokeSensor(SensorEntity):
             }
 
             # set extended attributes for main probe sensors
-            if self.type in [PROBE_1, PROBE_2]:
+            if self.type in (PROBE_1, PROBE_2):
                 for key, val in values.items():
                     # add all attributes that don't contain any probe name
                     # or contain a matching probe name

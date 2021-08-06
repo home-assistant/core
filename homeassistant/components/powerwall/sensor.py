@@ -4,7 +4,12 @@ import logging
 from tesla_powerwall import MeterType
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_POWER,
+    PERCENTAGE,
+    POWER_KILO_WATT,
+)
 
 from .const import (
     ATTR_ENERGY_EXPORTED,
@@ -14,7 +19,6 @@ from .const import (
     ATTR_INSTANT_TOTAL_CURRENT,
     ATTR_IS_ACTIVE,
     DOMAIN,
-    ENERGY_KILO_WATT,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_METERS,
@@ -83,7 +87,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = ENERGY_KILO_WATT
+    _attr_unit_of_measurement = POWER_KILO_WATT
     _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(

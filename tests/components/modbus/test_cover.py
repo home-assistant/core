@@ -211,6 +211,7 @@ async def test_service_cover_update(hass, mock_pymodbus):
                     CONF_STATE_CLOSING: 3,
                     CONF_STATUS_REGISTER: 1234,
                     CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },
@@ -232,11 +233,13 @@ async def test_service_cover_move(hass, mock_pymodbus):
                 CONF_NAME: COVER_NAME,
                 CONF_ADDRESS: 1234,
                 CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_SCAN_INTERVAL: 0,
             },
             {
                 CONF_NAME: f"{COVER_NAME}2",
                 CONF_INPUT_TYPE: CALL_TYPE_COIL,
                 CONF_ADDRESS: 1234,
+                CONF_SCAN_INTERVAL: 0,
             },
         ]
     }

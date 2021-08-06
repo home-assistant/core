@@ -15,7 +15,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -121,6 +121,13 @@ async def test_value_template(hass, mqtt_mock):
 
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
+
+    async_fire_mqtt_message(hass, topic, '{"val": null}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_run_select_service_optimistic(hass, mqtt_mock):

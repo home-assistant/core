@@ -94,7 +94,7 @@ async def async_get_image(
     input_source: str,
     output_format: str = IMAGE_JPEG,
     extra_cmd: str | None = None,
-):
+) -> bytes | None:
     """Get an image from a frame of an RTSP stream."""
     manager = hass.data[DATA_FFMPEG]
     ffmpeg = ImageFrame(manager.binary)

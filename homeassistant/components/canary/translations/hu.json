@@ -22,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ffmpeg_arguments": "A kamer\u00e1khoz az ffmpeg-nek \u00e1tadott argumentumok",
                     "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s (opcion\u00e1lis)"
                 }
             }

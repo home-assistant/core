@@ -696,21 +696,21 @@ async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
     char = service.get_characteristic(CHAR_PROGRAMMABLE_SWITCH_EVENT)
     assert char
 
-    assert char.value == 0
+    assert char.value is None
 
     service2 = acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)
     assert service2
     char2 = service.get_characteristic(CHAR_PROGRAMMABLE_SWITCH_EVENT)
     assert char2
 
-    assert char2.value == 0
+    assert char2.value is None
 
     hass.states.async_set(
         doorbell_entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: DEVICE_CLASS_OCCUPANCY}
     )
     await hass.async_block_till_done()
-    assert char.value == 0
-    assert char2.value == 0
+    assert char.value is None
+    assert char2.value is None
 
     char.set_value(True)
     char2.set_value(True)
@@ -718,8 +718,8 @@ async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
         doorbell_entity_id, STATE_ON, {ATTR_DEVICE_CLASS: DEVICE_CLASS_OCCUPANCY}
     )
     await hass.async_block_till_done()
-    assert char.value == 0
-    assert char2.value == 0
+    assert char.value is None
+    assert char2.value is None
 
     # Ensure we do not throw when the linked
     # doorbell sensor is removed
@@ -727,8 +727,8 @@ async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
     await hass.async_block_till_done()
     await acc.run()
     await hass.async_block_till_done()
-    assert char.value == 0
-    assert char2.value == 0
+    assert char.value is None
+    assert char2.value is None
 
 
 async def test_camera_with_a_missing_linked_doorbell_sensor(hass, run_driver, events):

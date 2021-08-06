@@ -29,6 +29,8 @@ from .flow import FlowDispatcher, SSDPFlow
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
 
+IPV4_BROADCAST = IPv4Address("255.255.255.255")
+
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
@@ -236,14 +238,39 @@ class Scanner:
                     async_callback=self._async_process_entry, source_ip=source_ip
                 )
             )
-
+            try:
+                IPv4Address(source_ip)
+            except ValueError:
+                continue
+            # Some sonos devices only seem to respond if we send to the broadcast
+            # address. This matches pysonos' behavior
+            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+            self._ssdp_listeners.append(
+                SSDPListener(
+                    async_callback=self._async_process_entry,
+                    source_ip=source_ip,
+                    target_ip=IPV4_BROADCAST,
+                )
+            )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
         )
-        await asyncio.gather(
-            *[listener.async_start() for listener in self._ssdp_listeners]
+        results = await asyncio.gather(
+            *(listener.async_start() for listener in self._ssdp_listeners),
+            return_exceptions=True,
         )
+        failed_listeners = []
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                _LOGGER.warning(
+                    "Failed to setup listener for %s: %s",
+                    self._ssdp_listeners[idx].source_ip,
+                    result,
+                )
+                failed_listeners.append(self._ssdp_listeners[idx])
+        for listener in failed_listeners:
+            self._ssdp_listeners.remove(listener)
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL
         )

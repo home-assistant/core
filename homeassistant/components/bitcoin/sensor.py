@@ -79,39 +79,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_icon = ICON
+
     def __init__(self, data, option_type, currency):
         """Initialize the sensor."""
         self.data = data
-        self._name = OPTION_TYPES[option_type][0]
-        self._unit_of_measurement = OPTION_TYPES[option_type][1]
+        self._attr_name = OPTION_TYPES[option_type][0]
+        self._attr_unit_of_measurement = OPTION_TYPES[option_type][1]
         self._currency = currency
         self.type = option_type
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -120,48 +97,48 @@ class BitcoinSensor(SensorEntity):
         ticker = self.data.ticker
 
         if self.type == "exchangerate":
-            self._state = ticker[self._currency].p15min
-            self._unit_of_measurement = self._currency
+            self._attr_state = ticker[self._currency].p15min
+            self._attr_unit_of_measurement = self._currency
         elif self.type == "trade_volume_btc":
-            self._state = f"{stats.trade_volume_btc:.1f}"
+            self._attr_state = f"{stats.trade_volume_btc:.1f}"
         elif self.type == "miners_revenue_usd":
-            self._state = f"{stats.miners_revenue_usd:.0f}"
+            self._attr_state = f"{stats.miners_revenue_usd:.0f}"
         elif self.type == "btc_mined":
-            self._state = str(stats.btc_mined * 0.00000001)
+            self._attr_state = str(stats.btc_mined * 0.00000001)
         elif self.type == "trade_volume_usd":
-            self._state = f"{stats.trade_volume_usd:.1f}"
+            self._attr_state = f"{stats.trade_volume_usd:.1f}"
         elif self.type == "difficulty":
-            self._state = f"{stats.difficulty:.0f}"
+            self._attr_state = f"{stats.difficulty:.0f}"
         elif self.type == "minutes_between_blocks":
-            self._state = f"{stats.minutes_between_blocks:.2f}"
+            self._attr_state = f"{stats.minutes_between_blocks:.2f}"
         elif self.type == "number_of_transactions":
-            self._state = str(stats.number_of_transactions)
+            self._attr_state = str(stats.number_of_transactions)
         elif self.type == "hash_rate":
-            self._state = f"{stats.hash_rate * 0.000001:.1f}"
+            self._attr_state = f"{stats.hash_rate * 0.000001:.1f}"
         elif self.type == "timestamp":
-            self._state = stats.timestamp
+            self._attr_state = stats.timestamp
         elif self.type == "mined_blocks":
-            self._state = str(stats.mined_blocks)
+            self._attr_state = str(stats.mined_blocks)
         elif self.type == "blocks_size":
-            self._state = f"{stats.blocks_size:.1f}"
+            self._attr_state = f"{stats.blocks_size:.1f}"
         elif self.type == "total_fees_btc":
-            self._state = f"{stats.total_fees_btc * 0.00000001:.2f}"
+            self._attr_state = f"{stats.total_fees_btc * 0.00000001:.2f}"
         elif self.type == "total_btc_sent":
-            self._state = f"{stats.total_btc_sent * 0.00000001:.2f}"
+            self._attr_state = f"{stats.total_btc_sent * 0.00000001:.2f}"
         elif self.type == "estimated_btc_sent":
-            self._state = f"{stats.estimated_btc_sent * 0.00000001:.2f}"
+            self._attr_state = f"{stats.estimated_btc_sent * 0.00000001:.2f}"
         elif self.type == "total_btc":
-            self._state = f"{stats.total_btc * 0.00000001:.2f}"
+            self._attr_state = f"{stats.total_btc * 0.00000001:.2f}"
         elif self.type == "total_blocks":
-            self._state = f"{stats.total_blocks:.0f}"
+            self._attr_state = f"{stats.total_blocks:.0f}"
         elif self.type == "next_retarget":
-            self._state = f"{stats.next_retarget:.2f}"
+            self._attr_state = f"{stats.next_retarget:.2f}"
         elif self.type == "estimated_transaction_volume_usd":
-            self._state = f"{stats.estimated_transaction_volume_usd:.2f}"
+            self._attr_state = f"{stats.estimated_transaction_volume_usd:.2f}"
         elif self.type == "miners_revenue_btc":
-            self._state = f"{stats.miners_revenue_btc * 0.00000001:.1f}"
+            self._attr_state = f"{stats.miners_revenue_btc * 0.00000001:.1f}"
         elif self.type == "market_price_usd":
-            self._state = f"{stats.market_price_usd:.2f}"
+            self._attr_state = f"{stats.market_price_usd:.2f}"
 
 
 class BitcoinData:

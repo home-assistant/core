@@ -39,6 +39,7 @@ from .const import (
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
+    MAX_NAME_LENGTH,
     PROP_MIN_STEP,
     SERV_FANV2,
     SERV_SWITCH,
@@ -100,7 +101,8 @@ class Fan(HomeAccessory):
                 preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
-                    CHAR_NAME, value=f"{self.display_name} {preset_mode}"
+                    CHAR_NAME,
+                    value=f"{self.display_name} {preset_mode}"[:MAX_NAME_LENGTH],
                 )
 
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(

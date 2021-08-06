@@ -56,43 +56,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = data[NAME]
 
     entities = []
-    for condition in SENSORS:
-        entity_name = ""
+    for sensor_description in SENSORS:
         if (
-            condition == "inverters"
+            sensor_description.key == "inverters"
             and coordinator.data.get("inverters_production") is not None
         ):
             for inverter in coordinator.data["inverters_production"]:
-                entity_name = f"{name} {SENSORS[condition][0]} {inverter}"
+                entity_name = f"{name} {sensor_description.name} {inverter}"
                 split_name = entity_name.split(" ")
                 serial_number = split_name[-1]
                 entities.append(
                     Envoy(
-                        condition,
+                        sensor_description,
                         entity_name,
                         name,
                         config_entry.unique_id,
                         serial_number,
-                        SENSORS[condition][1],
-                        SENSORS[condition][2],
                         coordinator,
                     )
                 )
-        elif condition != "inverters":
-            data = coordinator.data.get(condition)
+        elif sensor_description.key != "inverters":
+            data = coordinator.data.get(sensor_description.key)
             if isinstance(data, str) and "not available" in data:
                 continue
 
-            entity_name = f"{name} {SENSORS[condition][0]}"
+            entity_name = f"{name} {sensor_description.name}"
             entities.append(
                 Envoy(
-                    condition,
+                    sensor_description,
                     entity_name,
                     name,
                     config_entry.unique_id,
                     None,
-                    SENSORS[condition][1],
-                    SENSORS[condition][2],
                     coordinator,
                 )
             )
@@ -105,23 +100,19 @@ class Envoy(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        sensor_type,
+        description,
         name,
         device_name,
         device_serial_number,
         serial_number,
-        unit,
-        state_class,
         coordinator,
     ):
         """Initialize Envoy entity."""
-        self._type = sensor_type
+        self.entity_description = description
         self._name = name
         self._serial_number = serial_number
         self._device_name = device_name
         self._device_serial_number = device_serial_number
-        self._unit_of_measurement = unit
-        self._attr_state_class = state_class
 
         super().__init__(coordinator)
 
@@ -136,16 +127,16 @@ class Envoy(CoordinatorEntity, SensorEntity):
         if self._serial_number:
             return self._serial_number
         if self._device_serial_number:
-            return f"{self._device_serial_number}_{self._type}"
+            return f"{self._device_serial_number}_{self.entity_description.key}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._type != "inverters":
-            value = self.coordinator.data.get(self._type)
+        if self.entity_description.key != "inverters":
+            value = self.coordinator.data.get(self.entity_description.key)
 
         elif (
-            self._type == "inverters"
+            self.entity_description.key == "inverters"
             and self.coordinator.data.get("inverters_production") is not None
         ):
             value = self.coordinator.data.get("inverters_production").get(
@@ -157,11 +148,6 @@ class Envoy(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
@@ -170,7 +156,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         if (
-            self._type == "inverters"
+            self.entity_description.key == "inverters"
             and self.coordinator.data.get("inverters_production") is not None
         ):
             value = self.coordinator.data.get("inverters_production").get(

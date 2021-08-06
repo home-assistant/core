@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(
                 XiaomiSensor(device, "Humidity", "humidity", gateway, config_entry)
             )
-        elif device["model"] in ["weather", "weather.v1"]:
+        elif device["model"] in ("weather", "weather.v1"):
             entities.append(
                 XiaomiSensor(
                     device, "Temperature", "temperature", gateway, config_entry
@@ -63,13 +63,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(
                 XiaomiSensor(device, "Illumination", "lux", gateway, config_entry)
             )
-        elif device["model"] in ["gateway", "gateway.v3", "acpartner.v3"]:
+        elif device["model"] in ("gateway", "gateway.v3", "acpartner.v3"):
             entities.append(
                 XiaomiSensor(
                     device, "Illumination", "illumination", gateway, config_entry
                 )
             )
-        elif device["model"] in ["vibration"]:
+        elif device["model"] in ("vibration",):
             entities.append(
                 XiaomiSensor(
                     device, "Bed Activity", "bed_activity", gateway, config_entry
@@ -151,13 +151,13 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         value = data.get(self._data_key)
         if value is None:
             return False
-        if self._data_key in ["coordination", "status"]:
+        if self._data_key in ("coordination", "status"):
             self._state = value
             return True
         value = float(value)
-        if self._data_key in ["temperature", "humidity", "pressure"]:
+        if self._data_key in ("temperature", "humidity", "pressure"):
             value /= 100
-        elif self._data_key in ["illumination"]:
+        elif self._data_key in ("illumination",):
             value = max(value - 300, 0)
         if self._data_key == "temperature" and (value < -50 or value > 60):
             return False
@@ -165,7 +165,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
             return False
         if self._data_key == "pressure" and value == 0:
             return False
-        if self._data_key in ["illumination", "lux"]:
+        if self._data_key in ("illumination", "lux"):
             self._state = round(value)
         else:
             self._state = round(value, 1)

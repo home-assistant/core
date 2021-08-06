@@ -299,7 +299,7 @@ def _validate_zone_input(zone_input):
         errors["base"] = "relay_inclusive"
 
     # The following keys must be int
-    for key in [CONF_ZONE_NUMBER, CONF_ZONE_LOOP, CONF_RELAY_ADDR, CONF_RELAY_CHAN]:
+    for key in (CONF_ZONE_NUMBER, CONF_ZONE_LOOP, CONF_RELAY_ADDR, CONF_RELAY_CHAN):
         if key in zone_input:
             try:
                 int(zone_input[key])
@@ -328,7 +328,7 @@ def _fix_input_types(zone_input):
     strings and then convert them to ints.
     """
 
-    for key in [CONF_ZONE_LOOP, CONF_RELAY_ADDR, CONF_RELAY_CHAN]:
+    for key in (CONF_ZONE_LOOP, CONF_RELAY_ADDR, CONF_RELAY_CHAN):
         if key in zone_input:
             zone_input[key] = int(zone_input[key])
 

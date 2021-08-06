@@ -133,6 +133,34 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
+    def __init__(self, client, controller):
+        """Set up tracked client."""
+        super().__init__(client, controller)
+
+        self.last_updated_time = self.client.uptime
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update sensor when time has changed significantly.
+
+        This will help avoid unnecessary updates to the state machine.
+        """
+        update_state = True
+
+        if self.client.uptime < 1000000000:
+            if self.client.uptime > self.last_updated_time:
+                update_state = False
+        else:
+            if self.client.uptime <= self.last_updated_time:
+                update_state = False
+
+        self.last_updated_time = self.client.uptime
+
+        if not update_state:
+            return None
+
+        super().async_update_callback()
+
     @property
     def name(self) -> str:
         """Return the name of the client."""

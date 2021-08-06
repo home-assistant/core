@@ -56,7 +56,7 @@ async def async_setup_entry(
             if coordinator_alert:
                 entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
 
-        elif sensor_type in ["rain_chance", "freeze_chance", "snow_chance"]:
+        elif sensor_type in ("rain_chance", "freeze_chance", "snow_chance"):
             if coordinator_forecast.data.probability_forecast:
                 entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
             else:
@@ -129,7 +129,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
             else:
                 value = data[path[1]]
 
-        if self._type in ["wind_speed", "wind_gust"]:
+        if self._type in ("wind_speed", "wind_gust"):
             # convert API wind speed from m/s to km/h
             value = round(value * 3.6)
         return value

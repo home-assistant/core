@@ -1,7 +1,9 @@
 """InfluxDB component which allows you to get data from an Influx database."""
 from __future__ import annotations
 
+import datetime
 import logging
+from typing import Final
 
 import voluptuous as vol
 
@@ -61,6 +63,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL: Final = datetime.timedelta(seconds=60)
 
 
 def _merge_connection_config_into_query(conf, query):

@@ -280,10 +280,10 @@ async def _async_setup_component(
         await hass.config_entries.flow.async_wait_init_flow_finish(domain)
 
         await asyncio.gather(
-            *[
+            *(
                 entry.async_setup(hass, integration=integration)
                 for entry in hass.config_entries.async_entries(domain)
-            ]
+            )
         )
 
         hass.config.components.add(domain)

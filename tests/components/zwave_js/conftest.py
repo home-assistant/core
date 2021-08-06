@@ -11,6 +11,11 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
+from homeassistant.components.sensor import ATTR_LAST_RESET
+from homeassistant.core import State
+
+from .common import DATETIME_LAST_RESET
+
 from tests.common import MockConfigEntry, load_fixture
 
 # Add-on fixtures
@@ -166,13 +171,13 @@ def uninstall_addon_fixture():
         yield uninstall_addon
 
 
-@pytest.fixture(name="create_shapshot")
-def create_snapshot_fixture():
-    """Mock create snapshot."""
+@pytest.fixture(name="create_backup")
+def create_backup_fixture():
+    """Mock create backup."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_create_snapshot"
-    ) as create_shapshot:
-        yield create_shapshot
+        "homeassistant.components.zwave_js.addon.async_create_backup"
+    ) as create_backup:
+        yield create_backup
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -350,6 +355,12 @@ def qubino_shutter_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_qubino_shutter_state.json"))
 
 
+@pytest.fixture(name="aeotec_nano_shutter_state", scope="session")
+def aeotec_nano_shutter_state_fixture():
+    """Load the Aeotec Nano Shutter node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_aeotec_nano_shutter_state.json"))
+
+
 @pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
 def aeon_smart_switch_6_state_fixture():
     """Load the AEON Labs (ZW096) Smart Switch 6 node state fixture data."""
@@ -427,6 +438,18 @@ def zem_31_state_fixture():
 def wallmote_central_scene_state_fixture():
     """Load the wallmote central scene node state fixture data."""
     return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch_state", scope="session")
+def ge_in_wall_dimmer_switch_state_fixture():
+    """Load the ge in-wall dimmer switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
+
+
+@pytest.fixture(name="aeotec_zw164_siren_state", scope="session")
+def aeotec_zw164_siren_state_fixture():
+    """Load the aeotec zw164 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/aeotec_zw164_siren_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -703,6 +726,14 @@ def qubino_shutter_cover_fixture(client, qubino_shutter_state):
     return node
 
 
+@pytest.fixture(name="aeotec_nano_shutter")
+def aeotec_nano_shutter_cover_fixture(client, aeotec_nano_shutter_state):
+    """Mock a Aeotec Nano Shutter node."""
+    node = Node(client, copy.deepcopy(aeotec_nano_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeon_smart_switch_6")
 def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
     """Mock an AEON Labs (ZW096) Smart Switch 6 node."""
@@ -789,7 +820,36 @@ def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
     return node
 
 
+@pytest.fixture(name="ge_in_wall_dimmer_switch")
+def ge_in_wall_dimmer_switch_fixture(client, ge_in_wall_dimmer_switch_state):
+    """Mock a ge in-wall dimmer switch scene node."""
+    node = Node(client, copy.deepcopy(ge_in_wall_dimmer_switch_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_zw164_siren")
+def aeotec_zw164_siren_fixture(client, aeotec_zw164_siren_state):
+    """Mock a wallmote central scene node."""
+    node = Node(client, copy.deepcopy(aeotec_zw164_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="firmware_file")
 def firmware_file_fixture():
     """Return mock firmware file stream."""
     return io.BytesIO(bytes(10))
+
+
+@pytest.fixture(name="restore_last_reset")
+def restore_last_reset_fixture():
+    """Return mock restore last reset."""
+    state = State(
+        "sensor.test", "test", {ATTR_LAST_RESET: DATETIME_LAST_RESET.isoformat()}
+    )
+    with patch(
+        "homeassistant.components.zwave_js.sensor.ZWaveMeterSensor.async_get_last_state",
+        return_value=state,
+    ):
+        yield state

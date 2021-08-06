@@ -673,21 +673,17 @@ class DataManager:
         response = await self._hass.async_add_executor_job(self._api.notify_list)
 
         subscribed_applis = frozenset(
-            [
-                profile.appli
-                for profile in response.profiles
-                if profile.callbackurl == self._webhook_config.url
-            ]
+            profile.appli
+            for profile in response.profiles
+            if profile.callbackurl == self._webhook_config.url
         )
 
         # Determine what subscriptions need to be created.
         ignored_applis = frozenset({NotifyAppli.USER, NotifyAppli.UNKNOWN})
         to_add_applis = frozenset(
-            [
-                appli
-                for appli in NotifyAppli
-                if appli not in subscribed_applis and appli not in ignored_applis
-            ]
+            appli
+            for appli in NotifyAppli
+            if appli not in subscribed_applis and appli not in ignored_applis
         )
 
         # Subscribe to each one.

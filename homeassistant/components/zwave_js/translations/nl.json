@@ -51,6 +51,21 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Config parameter {subtype} waarde",
+            "node_status": "Knooppuntstatus",
+            "value": "Huidige waarde van een Z-Wave-waarde"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Stuur een Entry Control melding",
+            "event.notification.notification": "Stuur een notificatie",
+            "event.value_notification.basic": "Basis CC-evenement op {subtype}",
+            "event.value_notification.central_scene": "Centrale Sc\u00e8ne actie op {subtype}",
+            "event.value_notification.scene_activation": "Sc\u00e8ne-activering op {subtype}",
+            "state.node_status": "Knooppuntstatus gewijzigd"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",
@@ -59,7 +74,8 @@
             "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
             "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "different_device": "Het aangesloten USB-apparaat is niet hetzelfde als eerder geconfigureerd voor dit configuratie-item. Maak in plaats daarvan een nieuw configuratie-item voor het nieuwe apparaat."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",

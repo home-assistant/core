@@ -11,16 +11,12 @@ import socket
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
-from zeroconf import (
-    InterfaceChoice,
-    IPVersion,
-    NonUniqueNameException,
-    ServiceStateChange,
-)
+from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
-from homeassistant import config_entries, util
+from homeassistant import config_entries
 from homeassistant.components import network
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -154,14 +150,21 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             if not adapter["enabled"]:
                 continue
             if ipv4s := adapter["ipv4"]:
-                interfaces.append(ipv4s[0]["address"])
-            elif ipv6s := adapter["ipv6"]:
-                interfaces.append(ipv6s[0]["scope_id"])
+                interfaces.extend(
+                    ipv4["address"]
+                    for ipv4 in ipv4s
+                    if not ipaddress.ip_address(ipv4["address"]).is_loopback
+                )
+            if adapter["ipv6"]:
+                ifi = socket.if_nametoindex(adapter["name"])
+                interfaces.append(ifi)
 
     ipv6 = True
     if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
         ipv6 = False
         zc_args["ip_version"] = IPVersion.V4Only
+    else:
+        zc_args["ip_version"] = IPVersion.All
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
@@ -194,6 +197,32 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
+def _get_announced_addresses(
+    adapters: list[Adapter],
+    first_ip: bytes | None = None,
+) -> list[bytes]:
+    """Return a list of IP addresses to announce via zeroconf.
+
+    If first_ip is not None, it will be the first address in the list.
+    """
+    addresses = {
+        addr.packed
+        for addr in [
+            ipaddress.ip_address(ip["address"])
+            for adapter in adapters
+            if adapter["enabled"]
+            for ip in cast(list, adapter["ipv6"]) + cast(list, adapter["ipv4"])
+        ]
+        if not (addr.is_unspecified or addr.is_loopback)
+    }
+    if first_ip:
+        address_list = [first_ip]
+        address_list.extend(addresses - set({first_ip}))
+    else:
+        address_list = list(addresses)
+    return address_list
+
+
 async def _async_register_hass_zc_service(
     hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
@@ -222,12 +251,15 @@ async def _async_register_hass_zc_service(
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
 
-    host_ip = util.get_local_ip()
+    adapters = await network.async_get_adapters(hass)
 
-    try:
+    # Puts the default IPv4 address first in the list to preserve compatibility,
+    # because some mDNS implementations ignores anything but the first announced address.
+    host_ip = await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
+    host_ip_pton = None
+    if host_ip:
         host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
-    except OSError:
-        host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
+    address_list = _get_announced_addresses(adapters, host_ip_pton)
 
     _suppress_invalid_properties(params)
 
@@ -235,18 +267,13 @@ async def _async_register_hass_zc_service(
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
-        addresses=[host_ip_pton],
+        addresses=address_list,
         port=hass.http.server_port,
         properties=params,
     )
 
     _LOGGER.info("Starting Zeroconf broadcast")
-    try:
-        await aio_zc.async_register_service(info)
-    except NonUniqueNameException:
-        _LOGGER.error(
-            "Home Assistant instance with identical name present in the local network"
-        )
+    await aio_zc.async_register_service(info, allow_name_change=True)
 
 
 class FlowDispatcher:

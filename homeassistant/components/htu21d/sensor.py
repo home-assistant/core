@@ -8,7 +8,13 @@ import smbus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, PERCENTAGE, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
@@ -31,6 +37,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
     }
 )
+
+DEVICE_CLASS_MAP = {
+    SENSOR_TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
+    SENSOR_HUMIDITY: DEVICE_CLASS_HUMIDITY,
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -79,6 +90,7 @@ class HTU21DSensor(SensorEntity):
         self._unit_of_measurement = unit
         self._client = htu21d_client
         self._state = None
+        self._attr_device_class = DEVICE_CLASS_MAP[variable]
 
     @property
     def name(self) -> str:

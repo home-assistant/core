@@ -196,7 +196,7 @@ class MqttSensor(MqttEntity, SensorEntity):
             self.async_write_ha_state()
 
         if CONF_LAST_RESET_TOPIC in self._config:
-            topics["state_topic"] = {
+            topics["last_reset_topic"] = {
                 "topic": self._config[CONF_LAST_RESET_TOPIC],
                 "msg_callback": last_reset_message_received,
                 "qos": self._config[CONF_QOS],

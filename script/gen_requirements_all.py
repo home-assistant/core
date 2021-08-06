@@ -19,6 +19,7 @@ COMMENT_REQUIREMENTS = (
     "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
+    "bme280spi",
     "bme680",
     "decora",
     "decora_wifi",
@@ -83,10 +84,9 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpcore 0.13.4 breaks several integrations
-# https://github.com/home-assistant/core/issues/51778
-httpcore==0.13.3
-
+# Temporary constraint on pandas, to unblock 2021.7 releases
+# until we have fixed the wheels builds for newer versions.
+pandas==1.3.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

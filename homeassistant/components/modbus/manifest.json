@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/modbus",
   "requirements": ["pymodbus==2.5.2"],
   "codeowners": ["@adamchengtkc", "@janiversen", "@vzahradnik"],
+  "quality_scale": "silver",
   "iot_class": "local_polling"
 }

@@ -1,6 +1,10 @@
 """Models for SQLAlchemy."""
+from __future__ import annotations
+
+from datetime import datetime
 import json
 import logging
+from typing import TypedDict
 
 from sqlalchemy import (
     Boolean,
@@ -97,7 +101,8 @@ class Events(Base):  # type: ignore
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=event_data or json.dumps(event.data, cls=JSONEncoder),
+            event_data=event_data
+            or json.dumps(event.data, cls=JSONEncoder, separators=(",", ":")),
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
@@ -180,7 +185,9 @@ class States(Base):  # type: ignore
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
-            dbstate.attributes = json.dumps(dict(state.attributes), cls=JSONEncoder)
+            dbstate.attributes = json.dumps(
+                dict(state.attributes), cls=JSONEncoder, separators=(",", ":")
+            )
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
@@ -204,6 +211,17 @@ class States(Base):  # type: ignore
             # When json.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
+
+
+class StatisticData(TypedDict, total=False):
+    """Statistic data class."""
+
+    mean: float
+    min: float
+    max: float
+    last_reset: datetime | None
+    state: float
+    sum: float
 
 
 class Statistics(Base):  # type: ignore
@@ -230,13 +248,21 @@ class Statistics(Base):  # type: ignore
     sum = Column(Float())
 
     @staticmethod
-    def from_stats(metadata_id, start, stats):
+    def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
         """Create object from a statistics."""
         return Statistics(
             metadata_id=metadata_id,
             start=start,
             **stats,
         )
+
+
+class StatisticMetaData(TypedDict, total=False):
+    """Statistic meta data class."""
+
+    unit_of_measurement: str | None
+    has_mean: bool
+    has_sum: bool
 
 
 class StatisticsMeta(Base):  # type: ignore
@@ -251,7 +277,13 @@ class StatisticsMeta(Base):  # type: ignore
     has_sum = Column(Boolean)
 
     @staticmethod
-    def from_meta(source, statistic_id, unit_of_measurement, has_mean, has_sum):
+    def from_meta(
+        source: str,
+        statistic_id: str,
+        unit_of_measurement: str | None,
+        has_mean: bool,
+        has_sum: bool,
+    ) -> StatisticsMeta:
         """Create object from meta data."""
         return StatisticsMeta(
             source=source,
@@ -340,7 +372,7 @@ def process_timestamp(ts):
     return dt_util.as_utc(ts)
 
 
-def process_timestamp_to_utc_isoformat(ts):
+def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     """Process a timestamp into UTC isotime."""
     if ts is None:
         return None

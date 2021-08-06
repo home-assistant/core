@@ -1,20 +1,19 @@
 {
-    "config": {
-        "error": {
-            "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "url": "[%key:common::config_flow::data::url%]",
-                    "name": "Override for Habitica’s username. Will be used for service calls",
-                    "api_user": "Habitica’s API user ID",
-                    "api_key": "[%key:common::config_flow::data::api_key%]"
-                },
-                "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks. Note that api_id and api_key must be gotten from https://habitica.com/user/settings/api"
-            }
-        }
+  "config": {
+    "error": {
+      "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "title": "Habitica"
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "name": "Override for Habitica’s username. Will be used for service calls",
+          "api_user": "Habitica’s API user ID",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks. Note that api_id and api_key must be gotten from https://habitica.com/user/settings/api"
+      }
+    }
+  }
 }

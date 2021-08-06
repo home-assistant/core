@@ -1,14 +1,18 @@
 """Support for monitoring a Sense energy sensor."""
+import datetime
+
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    VOLT,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ACTIVE_NAME,
@@ -96,8 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for i in range(len(data.active_voltage)):
         devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
-    for type_id in TRENDS_SENSOR_TYPES:
-        typ = TRENDS_SENSOR_TYPES[type_id]
+    for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for var in SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type
@@ -175,7 +178,7 @@ class SenseActiveSensor(SensorEntity):
 class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
-    _attr_unit_of_measurement = VOLT
+    _attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
     _attr_should_poll = False
@@ -219,6 +222,8 @@ class SenseVoltageSensor(SensorEntity):
 class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
@@ -252,6 +257,13 @@ class SenseTrendsSensor(SensorEntity):
     def available(self):
         """Return if entity is available."""
         return self._had_any_update and self._coordinator.last_update_success
+
+    @property
+    def last_reset(self) -> datetime.datetime:
+        """Return the time when the sensor was last reset, if any."""
+        if self._sensor_type == "DAY":
+            return dt_util.start_of_local_day()
+        return None
 
     @callback
     def _async_update(self):

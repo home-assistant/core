@@ -10,7 +10,12 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import (
+    DATA_GIGABYTES,
+    DATA_RATE_KILOBITS_PER_SECOND,
+    DATA_RATE_KILOBYTES_PER_SECOND,
+    DEVICE_CLASS_TIMESTAMP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -21,9 +26,9 @@ from .const import DOMAIN, UPTIME_DEVIATION
 _LOGGER = logging.getLogger(__name__)
 
 
-def _retrieve_uptime_state(status: FritzStatus, last_value: str) -> str:
-    """Return uptime from device."""
-    delta_uptime = utcnow() - datetime.timedelta(seconds=status.uptime)
+def _uptime_calculation(seconds_uptime: float, last_value: str | None) -> str:
+    """Calculate uptime with deviation."""
+    delta_uptime = utcnow() - datetime.timedelta(seconds=seconds_uptime)
 
     if (
         not last_value
@@ -37,39 +42,51 @@ def _retrieve_uptime_state(status: FritzStatus, last_value: str) -> str:
     return last_value
 
 
+def _retrieve_device_uptime_state(status: FritzStatus, last_value: str) -> str:
+    """Return uptime from device."""
+    return _uptime_calculation(status.device_uptime, last_value)
+
+
+def _retrieve_connection_uptime_state(
+    status: FritzStatus, last_value: str | None
+) -> str:
+    """Return uptime from connection."""
+    return _uptime_calculation(status.connection_uptime, last_value)
+
+
 def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     """Return external ip from device."""
-    return status.external_ip
+    return status.external_ip  # type: ignore[no-any-return]
 
 
-def _retrieve_kib_s_sent_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload transmission rate."""
-    return round(status.transmission_rate[0] * 8 / 1024, 1)
+    return round(status.transmission_rate[0] / 1000, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_kib_s_received_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download transmission rate."""
-    return round(status.transmission_rate[1] * 8 / 1024, 1)
+    return round(status.transmission_rate[1] / 1000, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_max_kib_s_sent_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_max_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload max transmission rate."""
-    return round(status.max_bit_rate[0] / 1024, 1)
+    return round(status.max_bit_rate[0] / 1000, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_max_kib_s_received_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_max_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download max transmission rate."""
-    return round(status.max_bit_rate[1] / 1024, 1)
+    return round(status.max_bit_rate[1] / 1000, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_gb_sent_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_gb_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload total data."""
-    return round(status.bytes_sent * 8 / 1024 / 1024 / 1024, 1)
+    return round(status.bytes_sent / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download total data."""
-    return round(status.bytes_received * 8 / 1024 / 1024 / 1024, 1)
+    return round(status.bytes_received / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
 class SensorData(TypedDict, total=False):
@@ -78,6 +95,7 @@ class SensorData(TypedDict, total=False):
     name: str
     device_class: str | None
     state_class: str | None
+    last_reset: bool
     unit_of_measurement: str | None
     icon: str | None
     state_provider: Callable
@@ -89,46 +107,55 @@ SENSOR_DATA = {
         icon="mdi:earth",
         state_provider=_retrieve_external_ip_state,
     ),
-    "uptime": SensorData(
-        name="Uptime",
+    "device_uptime": SensorData(
+        name="Device Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        state_provider=_retrieve_uptime_state,
+        state_provider=_retrieve_device_uptime_state,
     ),
-    "kib_s_sent": SensorData(
-        name="KiB/s sent",
+    "connection_uptime": SensorData(
+        name="Connection Uptime",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        state_provider=_retrieve_connection_uptime_state,
+    ),
+    "kb_s_sent": SensorData(
+        name="kB/s sent",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement="KiB/s",
+        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
-        state_provider=_retrieve_kib_s_sent_state,
+        state_provider=_retrieve_kb_s_sent_state,
     ),
-    "kib_s_received": SensorData(
-        name="KiB/s received",
+    "kb_s_received": SensorData(
+        name="kB/s received",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement="KiB/s",
+        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
-        state_provider=_retrieve_kib_s_received_state,
+        state_provider=_retrieve_kb_s_received_state,
     ),
-    "max_kib_s_sent": SensorData(
-        name="Max KiB/s sent",
-        unit_of_measurement="KiB/s",
+    "max_kb_s_sent": SensorData(
+        name="Max kbit/s sent",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
-        state_provider=_retrieve_max_kib_s_sent_state,
+        state_provider=_retrieve_max_kb_s_sent_state,
     ),
-    "max_kib_s_received": SensorData(
-        name="Max KiB/s received",
-        unit_of_measurement="KiB/s",
+    "max_kb_s_received": SensorData(
+        name="Max kbit/s received",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
-        state_provider=_retrieve_max_kib_s_received_state,
+        state_provider=_retrieve_max_kb_s_received_state,
     ),
-    "mb_sent": SensorData(
+    "gb_sent": SensorData(
         name="GB sent",
-        unit_of_measurement="GB",
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=True,
+        unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
         state_provider=_retrieve_gb_sent_state,
     ),
-    "mb_received": SensorData(
+    "gb_received": SensorData(
         name="GB received",
-        unit_of_measurement="GB",
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=True,
+        unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
     ),
@@ -165,7 +192,8 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
     ) -> None:
         """Init FRITZ!Box connectivity class."""
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
-        self._last_value: str | None = None
+        self._last_device_value: str | None = None
+        self._last_wan_value: str | None = None
         self._attr_available = True
         self._attr_device_class = self._sensor_data.get("device_class")
         self._attr_icon = self._sensor_data.get("icon")
@@ -192,6 +220,15 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        self._attr_state = self._last_value = self._state_provider(
-            status, self._last_value
+        self._attr_state = self._last_device_value = self._state_provider(
+            status, self._last_device_value
         )
+
+        if self._sensor_data.get("last_reset") is True:
+            self._last_wan_value = _retrieve_connection_uptime_state(
+                status, self._last_wan_value
+            )
+            self._attr_last_reset = datetime.datetime.strptime(
+                self._last_wan_value,
+                "%Y-%m-%dT%H:%M:%S%z",
+            )

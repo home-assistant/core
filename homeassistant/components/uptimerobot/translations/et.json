@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_api_key": "Vigane API v\u00f5ti",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                }
+            }
+        }
+    }
+}

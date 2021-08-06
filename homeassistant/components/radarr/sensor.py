@@ -194,7 +194,7 @@ class RadarrSensor(SensorEntity):
             return
 
         if res.status_code == HTTP_OK:
-            if self.type in ["upcoming", "movies", "commands"]:
+            if self.type in ("upcoming", "movies", "commands"):
                 self.data = res.json()
                 self._state = len(self.data)
             elif self.type == "diskspace":
@@ -207,7 +207,7 @@ class RadarrSensor(SensorEntity):
                         filter(lambda x: x["path"] in self.included, res.json())
                     )
                 self._state = "{:.2f}".format(
-                    to_unit(sum([data["freeSpace"] for data in self.data]), self._unit)
+                    to_unit(sum(data["freeSpace"] for data in self.data), self._unit)
                 )
             elif self.type == "status":
                 self.data = res.json()

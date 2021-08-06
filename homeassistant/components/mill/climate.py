@@ -1,5 +1,4 @@
 """Support for mill wifi-enabled home heaters."""
-from mill import Mill
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -12,15 +11,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-)
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ATTR_AWAY_TEMP,
@@ -48,15 +40,8 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Mill climate."""
-    mill_data_connection = Mill(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        websession=async_get_clientsession(hass),
-    )
-    if not await mill_data_connection.connect():
-        raise ConfigEntryNotReady
 
-    await mill_data_connection.find_all_heaters()
+    mill_data_connection = hass.data[DOMAIN]
 
     dev = []
     for heater in mill_data_connection.heaters.values():
@@ -109,8 +94,6 @@ class MillHeater(ClimateEntity):
             "heating": self._heater.is_heating,
             "controlled_by_tibber": self._heater.tibber_control,
             "heater_generation": 1 if self._heater.is_gen1 else 2,
-            "consumption_today": self._heater.day_consumption,
-            "consumption_total": self._heater.year_consumption,
         }
         if self._heater.room:
             res["room"] = self._heater.room.name

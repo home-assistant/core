@@ -1,11 +1,16 @@
 """Test Zeroconf component setup process."""
+from ipaddress import ip_address
 from unittest.mock import call, patch
 
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE, CONF_IPV6
+from homeassistant.components.zeroconf import (
+    CONF_DEFAULT_INTERFACE,
+    CONF_IPV6,
+    _get_announced_addresses,
+)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
@@ -726,10 +731,16 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
         "ipv6": [
             {
                 "address": "2001:db8::",
-                "network_prefix": 8,
+                "network_prefix": 64,
                 "flowinfo": 1,
                 "scope_id": 1,
-            }
+            },
+            {
+                "address": "fe80::1234:5678:9abc:def0",
+                "network_prefix": 64,
+                "flowinfo": 1,
+                "scope_id": 1,
+            },
         ],
         "name": "eth0",
     },
@@ -740,6 +751,21 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
         "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
         "ipv6": [],
         "name": "eth1",
+    },
+    {
+        "auto": True,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": "172.16.1.5", "network_prefix": 23}],
+        "ipv6": [
+            {
+                "address": "fe80::dead:beef:dead:beef",
+                "network_prefix": 64,
+                "flowinfo": 1,
+                "scope_id": 3,
+            }
+        ],
+        "name": "eth2",
     },
     {
         "auto": False,
@@ -764,9 +790,36 @@ async def test_async_detect_interfaces_setting_empty_route(hass, mock_async_zero
     ), patch(
         "homeassistant.components.zeroconf.AsyncServiceInfo",
         side_effect=get_service_info_mock,
+    ), patch(
+        "socket.if_nametoindex",
+        side_effect=lambda iface: {"eth0": 1, "eth1": 2, "eth2": 3, "vtun0": 4}.get(
+            iface, 0
+        ),
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
+    assert mock_zc.mock_calls[0] == call(
+        interfaces=[1, "192.168.1.5", "172.16.1.5", 3], ip_version=IPVersion.All
+    )
 
-    assert mock_zc.mock_calls[0] == call(interfaces=[1, "192.168.1.5"])
+
+async def test_get_announced_addresses(hass, mock_async_zeroconf):
+    """Test addresses for mDNS announcement."""
+    expected = {
+        ip_address(ip).packed
+        for ip in [
+            "fe80::1234:5678:9abc:def0",
+            "2001:db8::",
+            "192.168.1.5",
+            "fe80::dead:beef:dead:beef",
+            "172.16.1.5",
+        ]
+    }
+    first_ip = ip_address("172.16.1.5").packed
+    actual = _get_announced_addresses(_ADAPTERS_WITH_MANUAL_CONFIG, first_ip)
+    assert actual[0] == first_ip and set(actual) == expected
+
+    first_ip = ip_address("192.168.1.5").packed
+    actual = _get_announced_addresses(_ADAPTERS_WITH_MANUAL_CONFIG, first_ip)
+    assert actual[0] == first_ip and set(actual) == expected

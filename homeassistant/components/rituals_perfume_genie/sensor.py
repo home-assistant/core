@@ -13,15 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN, SENSORS
+from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
-
-ID = "id"
-PERFUME = "rfidc"
-FILL = "fillc"
-
-PERFUME_NO_CARTRIDGE_ID = 19
-FILL_NO_CARTRIDGE_ID = 12
 
 BATTERY_SUFFIX = " Battery"
 PERFUME_SUFFIX = " Perfume"
@@ -58,9 +51,12 @@ class DiffuserPerfumeSensor(DiffuserEntity):
         """Initialize the perfume sensor."""
         super().__init__(diffuser, coordinator, PERFUME_SUFFIX)
 
-        self._attr_icon = "mdi:tag-text"
-        if diffuser.hub_data[SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
-            self._attr_icon = "mdi:tag-remove"
+    @property
+    def icon(self) -> str:
+        """Return the perfume sensor icon."""
+        if self._diffuser.has_cartridge:
+            return "mdi:tag-text"
+        return "mdi:tag-remove"
 
     @property
     def state(self) -> str:
@@ -80,9 +76,9 @@ class DiffuserFillSensor(DiffuserEntity):
     @property
     def icon(self) -> str:
         """Return the fill sensor icon."""
-        if self._diffuser.hub_data[SENSORS][FILL][ID] == FILL_NO_CARTRIDGE_ID:
-            return "mdi:beaker-question"
-        return "mdi:beaker"
+        if self._diffuser.has_cartridge:
+            return "mdi:beaker"
+        return "mdi:beaker-question"
 
     @property
     def state(self) -> str:

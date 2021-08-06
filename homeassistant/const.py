@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 8
+MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -274,6 +274,9 @@ STATE_ALARM_DISARMING: Final = "disarming"
 STATE_ALARM_TRIGGERED: Final = "triggered"
 STATE_LOCKED: Final = "locked"
 STATE_UNLOCKED: Final = "unlocked"
+STATE_LOCKING: Final = "locking"
+STATE_UNLOCKING: Final = "unlocking"
+STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
@@ -393,21 +396,24 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
-
-# Voltage units
-VOLT: Final = "V"
+POWER_VOLT_AMPERE: Final = "VA"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
 
-# Electrical units
-ELECTRICAL_CURRENT_AMPERE: Final = "A"
-ELECTRICAL_VOLT_AMPERE: Final = "VA"
+# Electric_current units
+ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
+ELECTRIC_CURRENT_AMPERE: Final = "A"
+
+# Electric_potential units
+ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
+ELECTRIC_POTENTIAL_VOLT: Final = "V"
 
 # Degree units
 DEGREE: Final = "°"
@@ -446,6 +452,7 @@ LENGTH_MILES: Final = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
 # Pressure units
@@ -455,6 +462,10 @@ PRESSURE_BAR: Final = "bar"
 PRESSURE_MBAR: Final = "mbar"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
+
+# Sound pressure units
+SOUND_PRESSURE_DB: Final = "dB"
+SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
 
 # Volume units
 VOLUME_LITERS: Final = "L"
@@ -499,6 +510,8 @@ IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
 # Precipitation units
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
+PRECIPITATION_INCHES: Final = "in"
+PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
 
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
@@ -542,6 +555,8 @@ DATA_PEBIBYTES: Final = "PiB"
 DATA_EXBIBYTES: Final = "EiB"
 DATA_ZEBIBYTES: Final = "ZiB"
 DATA_YOBIBYTES: Final = "YiB"
+
+# Data_rate units
 DATA_RATE_BITS_PER_SECOND: Final = "bit/s"
 DATA_RATE_KILOBITS_PER_SECOND: Final = "kbit/s"
 DATA_RATE_MEGABITS_PER_SECOND: Final = "Mbit/s"
@@ -553,6 +568,7 @@ DATA_RATE_GIGABYTES_PER_SECOND: Final = "GB/s"
 DATA_RATE_KIBIBYTES_PER_SECOND: Final = "KiB/s"
 DATA_RATE_MEBIBYTES_PER_SECOND: Final = "MiB/s"
 DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
+
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP: Final = "stop"

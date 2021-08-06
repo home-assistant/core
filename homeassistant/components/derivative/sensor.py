@@ -136,8 +136,8 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             new_state = event.data.get("new_state")
             if (
                 old_state is None
-                or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-                or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
 

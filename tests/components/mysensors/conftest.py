@@ -156,3 +156,17 @@ def gps_sensor(gateway_nodes, gps_sensor_state) -> Sensor:
     nodes = update_gateway_nodes(gateway_nodes, gps_sensor_state)
     node = nodes[1]
     return node
+
+
+@pytest.fixture(name="power_sensor_state", scope="session")
+def power_sensor_state_fixture() -> dict:
+    """Load the power sensor state."""
+    return load_nodes_state("mysensors/power_sensor_state.json")
+
+
+@pytest.fixture
+def power_sensor(gateway_nodes, power_sensor_state) -> Sensor:
+    """Load the power sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, power_sensor_state)
+    node = nodes[1]
+    return node
