@@ -6,17 +6,13 @@ import logging
 from typing import Any, Callable
 
 from homeassistant.components.sensor import (
-    SensorEntity,
-    ATTR_STATE_CLASS,
     ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    SensorEntity,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
