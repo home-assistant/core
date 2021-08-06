@@ -27,7 +27,7 @@ BINARY_SENSOR_TYPES = (
         icon="mdi:water-off-outline",
     ),
     BinarySensorEntityDescription(
-        key="water_tank_detached",
+        key=ATTR_WATER_TANK_DETACHED,
         name="Water Tank Detached",
         icon="mdi:flask-empty-off-outline",
     ),
