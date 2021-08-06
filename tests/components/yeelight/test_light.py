@@ -152,7 +152,7 @@ async def test_services(hass: HomeAssistant, caplog):
             mocked_method = AsyncMock()
         else:
             mocked_method = MagicMock()
-        setattr(type(mocked_bulb), method, mocked_method)
+        setattr(mocked_bulb, method, mocked_method)
         await hass.services.async_call(domain, service, data, blocking=True)
         if payload is None:
             mocked_method.assert_called_once()
@@ -166,8 +166,11 @@ async def test_services(hass: HomeAssistant, caplog):
 
         # failure
         if failure_side_effect:
-            mocked_method = MagicMock(side_effect=failure_side_effect)
-            setattr(type(mocked_bulb), method, mocked_method)
+            if method.startswith("async_"):
+                mocked_method = AsyncMock(side_effect=failure_side_effect)
+            else:
+                mocked_method = MagicMock(side_effect=failure_side_effect)
+            setattr(mocked_bulb, method, mocked_method)
             await hass.services.async_call(domain, service, data, blocking=True)
             assert (
                 len([x for x in caplog.records if x.levelno == logging.ERROR])
@@ -311,6 +314,7 @@ async def test_services(hass: HomeAssistant, caplog):
         domain="light",
     )
 
+    mocked_bulb.last_properties["power"] = "on"
     # turn_off
     await _async_test_service(
         SERVICE_TURN_OFF,
@@ -862,7 +866,7 @@ async def test_effects(hass: HomeAssistant):
 
     async def _async_test_effect(name, target=None, called=True):
         async_mocked_start_flow = AsyncMock()
-        type(mocked_bulb).async_start_flow = async_mocked_start_flow
+        mocked_bulb.async_start_flow = async_mocked_start_flow
         await hass.services.async_call(
             "light",
             SERVICE_TURN_ON,
