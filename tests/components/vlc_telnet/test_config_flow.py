@@ -116,6 +116,31 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
 )
+async def test_abort_already_configured(hass: HomeAssistant, source: str) -> None:
+    """Test we handle already configured host."""
+    entry_data = {
+        "password": "test-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+    }
+
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source},
+        data=entry_data,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
+)
 @pytest.mark.parametrize(
     "error, connect_side_effect, login_side_effect",
     [
