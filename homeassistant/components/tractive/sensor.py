@@ -4,6 +4,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
+    ATTR_ACTIVITY,
+    ATTR_HARDWARE,
     DOMAIN,
     SENSOR_TYPES,
     SERVER_UNAVAILABLE,
@@ -26,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         tracker_details = await tracker.details()
         for description in SENSOR_TYPES:
             unique_id = f"{trackable['_id']}_{description.key}"
-            if description.event_type == "hardware":
+            if description.event_type == ATTR_HARDWARE:
                 entities.append(
                     TractiveHardwareSensor(
                         client.user_id,
@@ -36,7 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         description,
                     )
                 )
-            if description.event_type == "activity":
+            if description.event_type == ATTR_ACTIVITY:
                 entities.append(
                     TractiveActivitySensor(
                         client.user_id,
