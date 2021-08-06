@@ -33,6 +33,7 @@ def vlc_connect(vlc: VLCTelnet) -> None:
     """Connect to VLC."""
     vlc.connect()
     vlc.login()
+    vlc.disconnect()
 
 
 async def validate_input(
