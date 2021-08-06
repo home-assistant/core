@@ -13,7 +13,6 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
-import slugify as unicode_slug
 import xmltodict
 
 from homeassistant.components.network import async_get_source_ip
@@ -248,10 +247,18 @@ def wifi_entities_list(
         )
         if network_info:
             ssid = network_info["NewSSID"]
-            if unicode_slug.slugify(ssid, lowercase=False) in networks.values():
+            _LOGGER.debug("SSID from device: <%s>", ssid)
+            if (
+                slugify(
+                    ssid,
+                )
+                in [slugify(v) for v in networks.values()]
+            ):
+                _LOGGER.debug("SSID duplicated, adding suffix")
                 networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
             else:
                 networks[i] = ssid
+            _LOGGER.debug("SSID normalized: <%s>", networks[i])
 
     return [
         FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, network_name)
