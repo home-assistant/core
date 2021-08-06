@@ -1354,7 +1354,7 @@ youless-api==0.10
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.33.3
+zeroconf==0.33.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.59
