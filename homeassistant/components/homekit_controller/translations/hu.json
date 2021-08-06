@@ -21,6 +21,7 @@
         "flow_title": "HomeKit tartoz\u00e9k: {name}",
         "step": {
             "busy_error": {
+                "description": "Sz\u00fcntesse meg a p\u00e1ros\u00edt\u00e1st az \u00f6sszes vez\u00e9rl\u0151n, vagy pr\u00f3b\u00e1lja \u00fajraind\u00edtani az eszk\u00f6zt, majd folytassa a p\u00e1ros\u00edt\u00e1st.",
                 "title": "Az eszk\u00f6z m\u00e1r p\u00e1rosul egy m\u00e1sik vez\u00e9rl\u0151vel"
             },
             "max_tries_error": {
@@ -36,6 +37,7 @@
                 "title": "HomeKit tartoz\u00e9k p\u00e1ros\u00edt\u00e1sa"
             },
             "protocol_error": {
+                "description": "El\u0151fordulhat, hogy a k\u00e9sz\u00fcl\u00e9k nincs p\u00e1ros\u00edt\u00e1si m\u00f3dban, \u00e9s sz\u00fcks\u00e9g lehet fizikai vagy virtu\u00e1lis gombnyom\u00e1sra. Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy az eszk\u00f6z p\u00e1ros\u00edt\u00e1si m\u00f3dban van, vagy pr\u00f3b\u00e1lja \u00fajraind\u00edtani az eszk\u00f6zt, majd folytassa a p\u00e1ros\u00edt\u00e1st.",
                 "title": "Hiba t\u00f6rt\u00e9nt a tartoz\u00e9kkal val\u00f3 kommunik\u00e1ci\u00f3 sor\u00e1n"
             },
             "user": {

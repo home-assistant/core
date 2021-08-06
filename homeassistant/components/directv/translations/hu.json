@@ -7,7 +7,15 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
+        "flow_title": "{name}",
         "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "one": "\u00dcres",
+                    "other": "\u00dcres"
+                },
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}-t?"
+            },
             "user": {
                 "data": {
                     "host": "Hoszt"

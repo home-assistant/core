@@ -7,11 +7,29 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
+        "flow_title": "{name}",
         "step": {
+            "link": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}({host})-t?",
+                "title": "A Logitech Harmony Hub be\u00e1ll\u00edt\u00e1sa"
+            },
             "user": {
                 "data": {
-                    "host": "Hoszt"
-                }
+                    "host": "Hoszt",
+                    "name": "Hub neve"
+                },
+                "title": "A Logitech Harmony Hub be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "Az alap\u00e9rtelmezett tev\u00e9kenys\u00e9g, amelyet akkor kell v\u00e9grehajtani, ha nincs megadva.",
+                    "delay_secs": "A parancsok k\u00fcld\u00e9se k\u00f6z\u00f6tti k\u00e9s\u00e9s."
+                },
+                "description": "Harmony Hub be\u00e1ll\u00edt\u00e1sok"
             }
         }
     }
