@@ -44,10 +44,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
+    _attr_icon = "mdi:air-conditioner"
+    _attr_should_poll = False
+
     def __init__(self, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         self._ccb = ccb
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = self._ccb.unique_id
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
@@ -72,32 +76,12 @@ class ComfoConnectFan(FanEntity):
         self.schedule_update_ha_state()
 
     @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._ccb.unique_id
-
-    @property
-    def name(self):
-        """Return the name of the fan."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:air-conditioner"
-
-    @property
-    def supported_features(self) -> int:
+    def supported_features(self):
         """Flag supported features."""
         return SUPPORT_SET_SPEED
 
     @property
-    def percentage(self) -> int | None:
+    def percentage(self):
         """Return the current speed percentage."""
         speed = self._ccb.data.get(SENSOR_FAN_SPEED_MODE)
         if speed is None:
@@ -105,17 +89,15 @@ class ComfoConnectFan(FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, speed)
 
     @property
-    def speed_count(self) -> int:
+    def speed_count(self):
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
-    def turn_on(
-        self, speed: str = None, percentage=None, preset_mode=None, **kwargs
-    ) -> None:
+    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
         """Turn on the fan."""
         self.set_percentage(percentage)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs):
         """Turn off the fan (to away)."""
         self.set_percentage(0)
 
