@@ -81,12 +81,12 @@ def _retrieve_max_kb_s_received_state(status: FritzStatus, last_value: str) -> f
 
 def _retrieve_gb_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload total data."""
-    return round(status.bytes_sent * 8 / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
+    return round(status.bytes_sent / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download total data."""
-    return round(status.bytes_received * 8 / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
+    return round(status.bytes_received / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
 class SensorData(TypedDict, total=False):
