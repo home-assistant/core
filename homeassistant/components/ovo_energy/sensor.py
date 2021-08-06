@@ -1,13 +1,17 @@
 """Support for OVO Energy sensors."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEVICE_CLASS_ENERGY, DEVICE_CLASS_MONETARY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import OVOEnergyDeviceEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
@@ -64,15 +68,32 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         key: str,
         name: str,
         icon: str,
-        unit_of_measurement: str = "",
+        device_class: str | None,
+        unit_of_measurement: str | None,
     ) -> None:
         """Initialize OVO Energy sensor."""
+        self._device_class = device_class
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(coordinator, client, key, name, icon)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def device_class(self) -> str | None:
+        """Return the class of this sensor."""
+        return self._device_class
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        return utc_from_timestamp(0)
+
+    @property
+    def state_class(self) -> str:
+        """Return the state class of this entity."""
+        return "measurement"
+
+    @property
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
@@ -89,6 +110,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
             f"{client.account_id}_last_electricity_reading",
             "OVO Last Electricity Reading",
             "mdi:flash",
+            DEVICE_CLASS_ENERGY,
             "kWh",
         )
 
@@ -124,6 +146,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
             f"{DOMAIN}_{client.account_id}_last_gas_reading",
             "OVO Last Gas Reading",
             "mdi:gas-cylinder",
+            DEVICE_CLASS_ENERGY,
             "kWh",
         )
 
@@ -160,6 +183,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
             f"{DOMAIN}_{client.account_id}_last_electricity_cost",
             "OVO Last Electricity Cost",
             "mdi:cash-multiple",
+            DEVICE_CLASS_MONETARY,
             currency,
         )
 
@@ -196,6 +220,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
             f"{DOMAIN}_{client.account_id}_last_gas_cost",
             "OVO Last Gas Cost",
             "mdi:cash-multiple",
+            DEVICE_CLASS_MONETARY,
             currency,
         )
 
