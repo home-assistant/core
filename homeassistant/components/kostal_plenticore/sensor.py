@@ -1,9 +1,8 @@
 """Platform for Kostal Plenticore sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-import datetime
 from typing import Any, Callable
 
 from homeassistant.components.sensor import (
