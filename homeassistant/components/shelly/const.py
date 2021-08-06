@@ -17,6 +17,9 @@ FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 # Firmware 1.11.0 release date, this firmware supports light transition
 LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
 
+# max light transition time in milliseconds
+MAX_TRANSITION_TIME: Final = 5000
+
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHBDUO-1",
     "SHBLB-1",

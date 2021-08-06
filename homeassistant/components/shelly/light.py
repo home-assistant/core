@@ -44,6 +44,7 @@ from .const import (
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
     LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
+    MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
@@ -275,7 +276,9 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         params: dict[str, Any] = {"turn": "on"}
 
         if ATTR_TRANSITION in kwargs:
-            params["transition"] = int(kwargs[ATTR_TRANSITION] * 1000)
+            params["transition"] = min(
+                int(kwargs[ATTR_TRANSITION] * 1000), MAX_TRANSITION_TIME
+            )
 
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
             brightness_pct = int(100 * (kwargs[ATTR_BRIGHTNESS] + 1) / 255)
@@ -331,7 +334,9 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         params: dict[str, Any] = {"turn": "off"}
 
         if ATTR_TRANSITION in kwargs:
-            params["transition"] = int(kwargs[ATTR_TRANSITION] * 1000)
+            params["transition"] = min(
+                int(kwargs[ATTR_TRANSITION] * 1000), MAX_TRANSITION_TIME
+            )
 
         self.control_result = await self.set_state(**params)
 
