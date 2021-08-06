@@ -31,19 +31,21 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "password": "test-password",
+                "host": "1.1.1.1",
+                "port": 8888,
+                "name": "custom name",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "VLC-TELNET"
+    assert result2["title"] == "custom name"
     assert result2["data"] == {
-        "host": "1.1.1.1",
         "password": "test-password",
-        "port": 4212,
-        "name": "VLC-TELNET",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -75,8 +77,8 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     assert result["type"] == "create_entry"
     assert result["title"] == "custom name"
     assert result["data"] == {
-        "host": "1.1.1.1",
         "password": "test-password",
+        "host": "1.1.1.1",
         "port": 8888,
         "name": "custom name",
     }
