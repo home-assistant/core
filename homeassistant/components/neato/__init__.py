@@ -74,10 +74,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
-        _LOGGER.debug(
-            "Token not valid (%s - %s), automatic renewal", ex.code, ex.message
-        )
-        raise ConfigEntryAuthFailed from ex
+        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
+        if ex.code == 401 or ex.code == 403:
+            _LOGGER.info("Token not valid, trigger renewal")
+            raise ConfigEntryAuthFailed from ex
 
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hass.data[NEATO_DOMAIN][entry.entry_id] = neato_session
