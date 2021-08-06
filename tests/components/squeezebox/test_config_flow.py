@@ -234,6 +234,24 @@ async def test_dhcp_discovery_no_server_found(hass):
         assert result["step_id"] == "user"
 
 
+async def test_dhcp_discovery_existing_player(hass):
+    """Test that we properly ignore known players during dhcp discover."""
+    with patch(
+        "homeassistant.helpers.entity_registry.EntityRegistry.async_get_entity_id",
+        return_value="test_entity",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "any",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+
+
 async def test_import(hass):
     """Test handling of configuration imported."""
     with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
