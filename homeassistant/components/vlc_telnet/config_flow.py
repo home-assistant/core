@@ -17,14 +17,25 @@ from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_HOST, default="localhost"): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-    }
-)
+
+def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
+    """Return user form schema."""
+    user_input = user_input or {}
+    return vol.Schema(
+        {
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(
+                CONF_HOST, default=user_input.get(CONF_HOST, "localhost")
+            ): str,
+            vol.Optional(
+                CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
+            ): int,
+            vol.Optional(
+                CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+            ): str,
+        }
+    )
+
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
@@ -70,7 +81,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=user_form_schema(user_input)
             )
 
         self._async_abort_entries_match(
@@ -92,7 +103,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=user_form_schema(user_input), errors=errors
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
