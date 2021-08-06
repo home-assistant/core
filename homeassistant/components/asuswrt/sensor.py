@@ -122,11 +122,13 @@ async def async_setup_entry(
     for sensor_data in router.sensors_coordinator.values():
         coordinator = sensor_data[KEY_COORDINATOR]
         sensors = sensor_data[KEY_SENSORS]
-        for sensor_key in sensors:
-            for sensor_descr in CONNECTION_SENSORS:
-                if sensor_descr.key == sensor_key:
-                    entities.append(AsusWrtSensor(coordinator, router, sensor_descr))
-                    break
+        entities.extend(
+            [
+                AsusWrtSensor(coordinator, router, sensor_descr)
+                for sensor_descr in CONNECTION_SENSORS
+                if sensor_descr.key in sensors
+            ]
+        )
 
     async_add_entities(entities, True)
 
@@ -145,9 +147,6 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         self._router = router
         self.entity_description = description
 
-        self._sensor_key = description.key
-        self._factor = description.factor
-        self._precision = description.precision
         self._attr_name = f"{DEFAULT_PREFIX} {description.name}"
         self._attr_unique_id = f"{DOMAIN} {self.name}"
         self._attr_state_class = STATE_CLASS_MEASUREMENT
@@ -158,11 +157,12 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self) -> str:
         """Return current state."""
-        state = self.coordinator.data.get(self._sensor_key)
+        descr = self.entity_description
+        state = self.coordinator.data.get(descr.key)
         if state is None:
             return None
-        if self._factor and isinstance(state, Number):
-            return round(state / self._factor, self._precision)
+        if descr.factor and isinstance(state, Number):
+            return round(state / descr.factor, descr.precision)
         return state
 
     @property
