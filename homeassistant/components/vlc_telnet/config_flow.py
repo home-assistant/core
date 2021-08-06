@@ -50,10 +50,10 @@ async def validate_input(
 
     try:
         await hass.async_add_executor_job(vlc_connect, vlc)
-    except (ConnErr, EOFError):
-        raise CannotConnect
-    except AuthError:
-        raise InvalidAuth
+    except (ConnErr, EOFError) as err:
+        raise CannotConnect from err
+    except AuthError as err:
+        raise InvalidAuth from err
 
     return {"title": data[CONF_NAME]}
 
