@@ -61,15 +61,15 @@ async def test_user_flow(
         "homeassistant.components.vlc_telnet.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             input_data,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == entry_data["name"]
-    assert result2["data"] == entry_data
+    assert result["type"] == "create_entry"
+    assert result["title"] == entry_data["name"]
+    assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
 
 
