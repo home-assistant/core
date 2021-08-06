@@ -19,8 +19,8 @@ from tuya_iot import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.data_entry_flow import UnknownFlow, UnknownStep
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import UnknownFlow, UnknownStep
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
