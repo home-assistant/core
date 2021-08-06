@@ -7,18 +7,21 @@ from typing import Any, Callable
 
 import homeassistant
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorEntity,
+    ATTR_STATE_CLASS,
+    ATTR_LAST_RESET,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_STATE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utc_from_timestamp
 
 from .const import (
     ATTR_ENABLED_DEFAULT,
@@ -199,10 +202,8 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def last_reset(self) -> datetime | None:
-        """Display a generic last_reset time when ATTR_STATE_CLASS is set"""
-        if ATTR_STATE_CLASS in self._sensor_data:
-            return utc_from_timestamp(0)
-        return None
+        """Return the last_reset time"""
+        return self._sensor_data.get(ATTR_LAST_RESET)
 
     @property
     def state(self) -> Any | None:
