@@ -72,15 +72,10 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         unit_of_measurement: str | None,
     ) -> None:
         """Initialize OVO Energy sensor."""
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(coordinator, client, key, name, icon)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        return self._device_class
 
     @property
     def last_reset(self) -> datetime | None:
