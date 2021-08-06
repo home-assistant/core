@@ -28,9 +28,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
         vol.Optional(CONF_USERNAME, default="envoy"): cv.string,
         vol.Optional(CONF_PASSWORD, default=""): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(list(SENSORS))]
-        ),
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=[s.key for s in SENSORS]
+        ): vol.All(cv.ensure_list, [vol.In([s.key for s in SENSORS])]),
         vol.Optional(CONF_NAME, default=""): cv.string,
     }
 )
