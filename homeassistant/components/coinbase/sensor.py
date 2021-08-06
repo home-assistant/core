@@ -142,7 +142,10 @@ class AccountSensor(SensorEntity):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
-            if account[API_ACCOUNT_CURRENCY] == self._currency:
+            if (
+                account[API_ACCOUNT_CURRENCY] == self._currency
+                and account[API_RESOURCE_TYPE] != API_TYPE_VAULT
+            ):
                 self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
                 self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
                     API_ACCOUNT_AMOUNT
