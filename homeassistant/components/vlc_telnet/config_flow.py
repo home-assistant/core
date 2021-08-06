@@ -110,9 +110,10 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle reauth confirm."""
+        assert self.entry
         errors = {}
 
-        if user_input is not None and self.entry:
+        if user_input is not None:
             try:
                 await validate_input(self.hass, {**self.entry.data, **user_input})
             except CannotConnect:
@@ -136,7 +137,10 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm",
+            description_placeholders={CONF_HOST: self.entry.data[CONF_HOST]},
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
         )
 
 

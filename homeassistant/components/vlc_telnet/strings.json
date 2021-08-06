@@ -3,6 +3,7 @@
     "flow_title": "{host}",
     "step": {
       "reauth_confirm": {
+        "description": "Please enter the correct password for host: {host}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }

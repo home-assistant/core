@@ -14,7 +14,8 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Password"
-                }
+                },
+                "description": "Please enter the correct password for host: {host}"
             },
             "user": {
                 "data": {
