@@ -26,12 +26,18 @@
                     "host": "Hoszt",
                     "port": "Port"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e1lassza ki a felfedezett deCONZ \u00e1tj\u00e1r\u00f3t"
+                }
             }
         }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Mindk\u00e9t gomb",
+            "bottom_buttons": "Als\u00f3 gombok",
             "button_1": "Els\u0151 gomb",
             "button_2": "M\u00e1sodik gomb",
             "button_3": "Harmadik gomb",
@@ -52,6 +58,7 @@
             "side_4": "4. oldal",
             "side_5": "5. oldal",
             "side_6": "6. oldal",
+            "top_buttons": "Fels\u0151 gombok",
             "turn_off": "Kikapcsolva",
             "turn_on": "Bekapcsolva"
         },
@@ -63,6 +70,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" gombra n\u00e9gyszer kattintottak",
             "remote_button_quintuple_press": "\"{subtype}\" gombra \u00f6tsz\u00f6r kattintottak",
             "remote_button_rotated": "A gomb elforgatva: \"{subtype}\"",
+            "remote_button_rotated_fast": "A gomb gyorsan elfordult: \"{subtype}\"",
             "remote_button_rotation_stopped": "A (z) \"{subtype}\" gomb forg\u00e1sa le\u00e1llt",
             "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
             "remote_button_short_release": "\"{subtype}\" gomb elengedve",
@@ -93,7 +101,8 @@
                     "allow_deconz_groups": "DeCONZ f\u00e9nycsoportok enged\u00e9lyez\u00e9se",
                     "allow_new_devices": "Enged\u00e9lyezze az \u00faj eszk\u00f6z\u00f6k automatikus hozz\u00e1ad\u00e1s\u00e1t"
                 },
-                "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa"
+                "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa",
+                "title": "deCONZ opci\u00f3k"
             }
         }
     }

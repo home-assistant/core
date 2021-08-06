@@ -9,10 +9,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "one": "Leeg",
-                    "other": "Leeg"
-                },
                 "description": "Wil je beginnen met instellen?"
             }
         }

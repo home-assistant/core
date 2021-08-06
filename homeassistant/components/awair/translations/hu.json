@@ -21,7 +21,8 @@
                 "data": {
                     "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
                     "email": "E-mail"
-                }
+                },
+                "description": "Regisztr\u00e1lnia kell az Awair fejleszt\u0151i hozz\u00e1f\u00e9r\u00e9si tokenj\u00e9hez a k\u00f6vetkez\u0151 c\u00edmen: https://developer.getawair.com/onboard/login"
             }
         }
     }
