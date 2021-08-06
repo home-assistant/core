@@ -1,7 +1,7 @@
 """Support for OVO Energy sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
@@ -61,6 +61,9 @@ async def async_setup_entry(
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Defines a OVO Energy sensor."""
 
+    _attr_last_reset = utc_from_timestamp(0)
+    _attr_state_class = "measurement"
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -76,16 +79,6 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(coordinator, client, key, name, icon)
-
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return the time when the sensor was last reset, if any."""
-        return utc_from_timestamp(0)
-
-    @property
-    def state_class(self) -> str:
-        """Return the state class of this entity."""
-        return "measurement"
 
     @property
     def unit_of_measurement(self) -> str | None:
