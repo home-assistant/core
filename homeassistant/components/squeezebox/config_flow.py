@@ -199,12 +199,12 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
 
-        er = async_get(self.hass)
+        registry = async_get(self.hass)
 
         # if we have detected this player, do nothing. if not, there must be a server out there for us to configure, so start the normal user flow (which tries to autodetect server)
-        if er.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
+        if registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
             # this player is already known, so do nothing other than mark as configured
             raise data_entry_flow.AbortFlow("already_configured")
-        else:
-            # if the player is unknown, then we likely need to configure its server
-            return await self.async_step_user()
+
+        # if the player is unknown, then we likely need to configure its server
+        return await self.async_step_user()
