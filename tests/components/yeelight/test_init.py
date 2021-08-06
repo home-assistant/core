@@ -229,16 +229,16 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
         IP_ADDRESS.replace(".", "_")
     )
-    entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(binary_sensor_entity_id) is None
 
     type(mocked_bulb).get_capabilities = MagicMock(CAPABILITIES)
     type(mocked_bulb).get_properties = MagicMock(None)
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+        DATA_DEVICE
+    ].async_update()
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
         DATA_DEVICE
-    ].update_callback({})
+    ].async_update_callback({})
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
