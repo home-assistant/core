@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -53,16 +54,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an envoy flow."""
-        self.ip_address = None
-        self.name = None
-        self.username = None
-        self.serial = None
-        self._reauth_entry = None
+        self.ip_address: str | None = None
+        self.name: str | None = None
+        self.username: str | None = None
+        self.serial: str | None = None
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     @callback
-    def _async_generate_schema(self):
+    def _async_generate_schema(self) -> vol.Schema:
         """Generate schema."""
         schema = {}
 
@@ -77,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema[vol.Optional(CONF_PASSWORD, default="")] = str
         return vol.Schema(schema)
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Handle a flow import."""
         self.ip_address = import_config[CONF_IP_ADDRESS]
         self.username = import_config[CONF_USERNAME]
@@ -91,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_current_hosts(self):
+    def _async_current_hosts(self) -> set[str]:
         """Return a set of hosts."""
         return {
             entry.data[CONF_HOST]
@@ -99,7 +100,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_HOST in entry.data
         }
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         self.serial = discovery_info["properties"]["serialnum"]
         await self.async_set_unique_id(self.serial)
@@ -122,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, user_input):
+    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

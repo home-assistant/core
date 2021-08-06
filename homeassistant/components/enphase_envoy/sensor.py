@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
@@ -14,8 +19,15 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
@@ -38,7 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Enphase Envoy sensor."""
     _LOGGER.warning(
         "Loading enphase_envoy via platform config is deprecated; The configuration"
@@ -51,11 +68,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up envoy sensor platform."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data[COORDINATOR]
-    name = data[NAME]
+    entry_data: dict[str, Any] = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator = entry_data[COORDINATOR]
+    name = entry_data[NAME]
 
     entities = []
     for sensor_description in SENSORS:
@@ -64,7 +85,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             and coordinator.data.get("inverters_production") is not None
         ):
             for inverter in coordinator.data["inverters_production"]:
-                entity_name = f"{name} {sensor_description.name} {inverter}"
+                entity_name: str = f"{name} {sensor_description.name} {inverter}"
                 split_name = entity_name.split(" ")
                 serial_number = split_name[-1]
                 entities.append(
@@ -72,14 +93,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         sensor_description,
                         entity_name,
                         name,
-                        config_entry.unique_id,
+                        cast(str, config_entry.unique_id),
                         serial_number,
                         coordinator,
                     )
                 )
         elif sensor_description.key != "inverters":
-            data = coordinator.data.get(sensor_description.key)
-            if isinstance(data, str) and "not available" in data:
+            sensor_description_key_data = coordinator.data.get(sensor_description.key)
+            if (
+                isinstance(sensor_description_key_data, str)
+                and "not available" in sensor_description_key_data
+            ):
                 continue
 
             entity_name = f"{name} {sensor_description.name}"
@@ -88,7 +112,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     sensor_description,
                     entity_name,
                     name,
-                    config_entry.unique_id,
+                    cast(str, config_entry.unique_id),
                     None,
                     coordinator,
                 )
@@ -102,12 +126,12 @@ class Envoy(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        description,
-        name,
-        device_name,
-        device_serial_number,
-        serial_number,
-        coordinator,
+        description: SensorEntityDescription,
+        name: str,
+        device_name: str,
+        device_serial_number: str,
+        serial_number: str | None,
+        coordinator: DataUpdateCoordinator,
     ):
         """Initialize Envoy entity."""
         self.entity_description = description
@@ -119,20 +143,21 @@ class Envoy(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return the unique id of the sensor."""
         if self._serial_number:
             return self._serial_number
         if self._device_serial_number:
             return f"{self._device_serial_number}_{self.entity_description.key}"
+        return None
 
     @property
-    def native_value(self):
+    def native_value(self) -> Any:
         """Return the state of the sensor."""
         if self.entity_description.key != "inverters":
             value = self.coordinator.data.get(self.entity_description.key)
@@ -150,12 +175,12 @@ class Envoy(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
+    def icon(self) -> str:
+        """Icon to use in the frontend."""
         return ICON
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if (
             self.entity_description.key == "inverters"
@@ -169,13 +194,13 @@ class Envoy(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return the device_info of the device."""
         if not self._device_serial_number:
             return None
-        return {
-            "identifiers": {(DOMAIN, str(self._device_serial_number))},
-            "name": self._device_name,
-            "model": "Envoy",
-            "manufacturer": "Enphase",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_serial_number))},
+            name=self._device_name,
+            model="Envoy",
+            manufacturer="Enphase",
+        )

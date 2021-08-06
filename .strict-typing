@@ -37,6 +37,7 @@ homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
+homeassistant.components.enphase_envoy.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.flunearyou.*

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from envoy_reader.envoy_reader import EnvoyReader
@@ -36,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_client=get_async_client(hass),
     )
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any]:
         """Fetch data from API endpoint."""
         data = {}
         async with async_timeout.timeout(30):
