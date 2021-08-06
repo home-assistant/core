@@ -438,7 +438,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
 
     async def _async_setup(config_entry):
         with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
-            await hass.config_entries.async_setup(config_entry.entry_id)
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+            # We use asyncio.create_task now to avoid
+            # blocking starting so we need to block again
             await hass.async_block_till_done()
 
     async def _async_test(
@@ -460,6 +463,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         await _async_setup(config_entry)
 
         state = hass.states.get(entity_id)
+
         assert state.state == "on"
         target_properties["friendly_name"] = name
         target_properties["flowing"] = False
@@ -494,6 +498,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
         registry.async_clear_config_entry(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
     current_brightness = round(255 * int(PROPERTIES["current_brightness"]) / 100)

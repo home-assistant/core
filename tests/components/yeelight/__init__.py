@@ -92,10 +92,10 @@ def _mocked_bulb(cannot_connect=False):
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
 
-    bulb.capabilities = CAPABILITIES
+    bulb.capabilities = CAPABILITIES.copy()
     bulb.model = MODEL
     bulb.bulb_type = BulbType.Color
-    bulb.last_properties = PROPERTIES
+    bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
     bulb.async_get_properties = AsyncMock()
     bulb.async_listen = AsyncMock()
