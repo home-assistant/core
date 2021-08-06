@@ -65,51 +65,17 @@ class SolarlogSensor(SensorEntity):
         self.device_name = device_name
         self.entity_description = description
         self.data = data
-
-        self._state = None
-
-        self._key = self.entity_description.key
-        self._name = self.entity_description.name
-        self._icon = self.entity_description.icon
-        self._unit_of_measurement = self.entity_description.unit_of_measurement
-        self._state_class = self.entity_description.state_class
-        self._device_class = self.entity_description.device_class
-        self._json_key = self.entity_description.json_key
+        self._attr_state = None
 
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self.entry_id}_{self._key}"
+        return f"{self.entry_id}_{self.entity_description.key}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self.device_name} {self._name}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the state of the sensor."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return self._icon
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return self._state_class
-
-    @property
-    def device_class(self):
-        """Return the state class of the sensor."""
-        return self._device_class
+        return f"{self.device_name} {self.entity_description.name}"
 
     @property
     def device_info(self):
@@ -123,7 +89,7 @@ class SolarlogSensor(SensorEntity):
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data.update()
-        self._state = self.data.data[self._json_key]
+        self._attr_state = self.data.data[self.entity_description.json_key]
 
 
 class SolarlogData:

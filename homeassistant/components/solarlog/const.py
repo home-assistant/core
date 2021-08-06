@@ -90,7 +90,6 @@ SENSOR_TYPES = [
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.start_of_local_day(),
     ),
     SolarLogSensorEntityDescription(
         key="yield_yesterday",
@@ -143,7 +142,6 @@ SENSOR_TYPES = [
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.start_of_local_day(),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_yesterday",
