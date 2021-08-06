@@ -48,7 +48,6 @@ CONFIG_ENTRY_HANDLERS = {
 SERVICE_HANDLERS = {
     SERVICE_NETGEAR: ("device_tracker", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
-    SERVICE_SABNZBD: ("sabnzbd", None),
     "yamaha": ("media_player", "yamaha"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
@@ -87,6 +86,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    SERVICE_SABNZBD,
 ]
 
 DEFAULT_ENABLED = (
