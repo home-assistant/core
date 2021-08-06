@@ -257,6 +257,8 @@ def test_perodic_db_cleanups(hass_recorder):
     with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
         util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
 
-    text_obj = connect_mock.return_value.execute.mock_calls[0][1][0]
+    text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
+        1
+    ][0]
     assert isinstance(text_obj, TextClause)
-    assert str(text_obj) == ("PRAGMA wal_checkpoint(TRUNCATE);")
+    assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
