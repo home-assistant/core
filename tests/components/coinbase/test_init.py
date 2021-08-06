@@ -161,7 +161,7 @@ async def test_option_updates(hass: HomeAssistant):
         assert rates == [GOOD_EXCHANGE_RATE]
 
 
-async def test_ignore_vaults(hass: HomeAssistant):
+async def test_ignore_vaults_wallets(hass: HomeAssistant):
     """Test vaults are ignored in wallet sensors."""
 
     with patch(
