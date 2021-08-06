@@ -65,14 +65,12 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
         f"yeelight_color_{ID}"
     )
-    entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(binary_sensor_entity_id) is None
 
-    await hass.async_block_till_done()
+    type(mocked_bulb).async_get_properties = AsyncMock(None)
 
-    type(mocked_bulb).get_properties = MagicMock(None)
-
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+        DATA_DEVICE
+    ].async_update()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 

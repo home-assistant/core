@@ -84,6 +84,9 @@ def _mocked_bulb(cannot_connect=False):
     type(bulb).get_capabilities = MagicMock(
         return_value=None if cannot_connect else CAPABILITIES
     )
+    type(bulb).async_get_properties = AsyncMock(
+        side_effect=BulbException if cannot_connect else None
+    )
     type(bulb).get_properties = MagicMock(
         side_effect=BulbException if cannot_connect else None
     )
