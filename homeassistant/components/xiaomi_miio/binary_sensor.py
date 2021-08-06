@@ -44,7 +44,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         sensors = []
         if model in MODELS_HUMIDIFIER_MJJSQ:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         for description in BINARY_SENSOR_TYPES:
             if description.key not in sensors:
@@ -52,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(
                 XiaomiGenericBinarySensor(
                     f"{config_entry.title} {description.name}",
-                    device,
+                    hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
                     hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
