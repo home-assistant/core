@@ -66,6 +66,7 @@ DEVICE_CLASSES: Final[list[str]] = [
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
+CONF_STATE_CLASS: Final = "state_class"
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
 

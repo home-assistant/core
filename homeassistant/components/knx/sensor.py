@@ -6,8 +6,12 @@ from typing import Any
 from xknx import XKNX
 from xknx.devices import Sensor as XknxSensor
 
-from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_STATE_CLASS, CONF_TYPE
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType

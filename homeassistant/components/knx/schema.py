@@ -17,14 +17,13 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
 )
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
-from homeassistant.components.sensor import STATE_CLASSES_SCHEMA
+from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    CONF_STATE_CLASS,
     CONF_TYPE,
 )
 import homeassistant.helpers.config_validation as cv
