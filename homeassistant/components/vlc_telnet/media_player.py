@@ -131,8 +131,10 @@ class VlcDevice(MediaPlayerEntity):
             try:
                 self._vlc.login()
             except AuthError:
-                LOGGER.error("Failed to login to VLC")
-                self.hass.add_job(self._config_entry.async_start_reauth)
+                LOGGER.debug("Failed to login to VLC")
+                self.hass.add_job(
+                    self.hass.config_entries.async_reload, self._config_entry.entry_id
+                )
                 return
 
             self._state = STATE_IDLE

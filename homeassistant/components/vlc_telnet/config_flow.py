@@ -38,10 +38,7 @@ def vlc_connect(vlc: VLCTelnet) -> None:
 async def validate_input(
     hass: core.HomeAssistant, data: dict[str, Any]
 ) -> dict[str, str]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     vlc = VLCTelnet(
         host=data[CONF_HOST],
         password=data[CONF_PASSWORD],
@@ -138,7 +135,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
         )
 
 

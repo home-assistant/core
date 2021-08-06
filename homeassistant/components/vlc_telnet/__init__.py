@@ -33,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await hass.async_add_executor_job(vlc.login)
         except AuthError as err:
+            await hass.async_add_executor_job(disconnect_vlc, vlc)
             raise ConfigEntryAuthFailed() from err
 
     domain_data = hass.data.setdefault(DOMAIN, {})
@@ -51,11 +52,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data = hass.data[DOMAIN].pop(entry.entry_id)
         vlc = entry_data[DATA_VLC]
 
-        def disconnect_vlc():
-            """Disconnect from VLC."""
-            vlc.logout()
-            vlc.disconnect()
-
-        await hass.async_add_executor_job(disconnect_vlc)
+        await hass.async_add_executor_job(disconnect_vlc, vlc)
 
     return unload_ok
+
+
+def disconnect_vlc(vlc: VLCTelnet) -> None:
+    """Disconnect from VLC."""
+    LOGGER.debug("Disconnecting from VLC")
+    try:
+        vlc.disconnect()
+    except (ConnErr, EOFError) as err:
+        LOGGER.warning("Connection error: %s", err)
