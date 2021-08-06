@@ -57,6 +57,8 @@ VALVE_TYPE = {
 
 ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
 
+ACTIVATE_ONLY_RESET_SECONDS = 10
+
 
 @TYPES.register("Outlet")
 class Outlet(HomeAccessory):
@@ -141,7 +143,7 @@ class Switch(HomeAccessory):
         self.async_call_service(self._domain, service, params)
 
         if self.activate_only:
-            async_call_later(self.hass, 1, self.reset_switch)
+            async_call_later(self.hass, ACTIVATE_ONLY_RESET_SECONDS, self.reset_switch)
 
     @callback
     def async_update_state(self, new_state):
