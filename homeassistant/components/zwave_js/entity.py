@@ -154,7 +154,7 @@ class ZWaveBaseEntity(Entity):
 
     @property
     def extra_state_attributes(self) -> Optional[Dict[str, str]]:
-	"""Return additional entity attributes"""
+        """Return additional entity attributes"""
         return {"node_id": self.info.node.node_id}
 
 
