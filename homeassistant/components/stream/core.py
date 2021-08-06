@@ -50,18 +50,18 @@ class Part:
 class Segment:
     """Represent a segment."""
 
-    sequence: int = attr.ib(default=0)
+    sequence: int = attr.ib()
     # the init of the mp4 the segment is based on
-    init: bytes = attr.ib(default=None)
-    duration: float = attr.ib(default=0)
+    init: bytes = attr.ib()
     # For detecting discontinuities across stream restarts
-    stream_id: int = attr.ib(default=0)
+    stream_id: int = attr.ib()
+    _stream_outputs: Iterable[StreamOutput] = attr.ib()
+    start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
+    duration: float = attr.ib(default=0)
     # Parts are stored in a dict indexed by byterange for easy lookup
     # As of Python 3.7, insertion order is preserved, and we insert
     # in sequential order, so the Parts are ordered
     parts_by_byterange: dict[int, Part] = attr.ib(factory=dict)
-    start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
-    _stream_outputs: Iterable[StreamOutput] = attr.ib(factory=list)
     # Store text of this segment's hls playlist for reuse
     # Use list[str] for easy appends
     hls_playlist_template: list[str] = attr.ib(factory=list)

@@ -9,17 +9,19 @@ import pytest
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import HLS_PROVIDER, RECORDER_PROVIDER
-from homeassistant.components.stream.core import Part, Segment
+from homeassistant.components.stream.core import Part
 from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.components.stream.recorder import recorder_save_worker
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .test_hls import FAKE_TIME
-
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video, remux_with_audio
+from tests.components.stream.common import (
+    DefaultSegment as Segment,
+    generate_h264_video,
+    remux_with_audio,
+)
 
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
@@ -141,7 +143,7 @@ async def test_recorder_save(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    segment = Segment(sequence=1, start_time=FAKE_TIME)
+    segment = Segment(sequence=1)
     add_parts_to_segment(segment, source)
     segment.duration = 4
     recorder_save_worker(filename, [segment])
@@ -157,10 +159,10 @@ async def test_recorder_discontinuity(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    segment_1 = Segment(sequence=1, stream_id=0, start_time=FAKE_TIME)
+    segment_1 = Segment(sequence=1, stream_id=0)
     add_parts_to_segment(segment_1, source)
     segment_1.duration = 4
-    segment_2 = Segment(sequence=2, stream_id=1, start_time=FAKE_TIME)
+    segment_2 = Segment(sequence=2, stream_id=1)
     add_parts_to_segment(segment_2, source)
     segment_2.duration = 4
     recorder_save_worker(filename, [segment_1, segment_2])

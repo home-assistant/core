@@ -15,19 +15,17 @@ from homeassistant.components.stream.const import (
     DOMAIN,
     HLS_PROVIDER,
 )
-from homeassistant.components.stream.core import Part, Segment
+from homeassistant.components.stream.core import Part
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
-from .test_hls import (
-    FAKE_TIME,
-    SEGMENT_DURATION,
-    STREAM_SOURCE,
-    HlsClient,
-    make_playlist,
-)
+from .test_hls import SEGMENT_DURATION, STREAM_SOURCE, HlsClient, make_playlist
 
-from tests.components.stream.common import generate_h264_video
+from tests.components.stream.common import (
+    FAKE_TIME,
+    DefaultSegment as Segment,
+    generate_h264_video,
+)
 
 TEST_PART_DURATION = 1
 NUM_PART_SEGMENTS = int(-(-SEGMENT_DURATION // TEST_PART_DURATION))
@@ -52,9 +50,9 @@ def hls_stream(hass, hass_client):
     return create_client_for_stream
 
 
-def create_segment(sequence, start_time=FAKE_TIME):
+def create_segment(sequence):
     """Create an empty segment."""
-    segment = Segment(sequence=sequence, start_time=start_time)
+    segment = Segment(sequence=sequence)
     segment.init = INIT_BYTES
     return segment
 
@@ -321,9 +319,7 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
 
     for sequence in range(3):
         await hls_sync.wait_for_handler()
-        segment = Segment(
-            sequence=sequence, duration=SEGMENT_DURATION, start_time=FAKE_TIME
-        )
+        segment = Segment(sequence=sequence, duration=SEGMENT_DURATION)
         hls.put(segment)
 
     msn_responses = await msn_requests
@@ -342,9 +338,7 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
     )
     for sequence in range(3, 6):
         await hls_sync.wait_for_handler()
-        segment = Segment(
-            sequence=sequence, duration=SEGMENT_DURATION, start_time=FAKE_TIME
-        )
+        segment = Segment(sequence=sequence, duration=SEGMENT_DURATION)
         hls.put(segment)
 
     msn_responses = await msn_requests

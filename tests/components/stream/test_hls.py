@@ -1,5 +1,5 @@
 """The tests for hls streams."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 from urllib.parse import urlparse
 
@@ -13,13 +13,17 @@ from homeassistant.components.stream.const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from homeassistant.components.stream.core import Part, Segment
+from homeassistant.components.stream.core import Part
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video
+from tests.components.stream.common import (
+    FAKE_TIME,
+    DefaultSegment as Segment,
+    generate_h264_video,
+)
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"init"
@@ -27,7 +31,6 @@ FAKE_PAYLOAD = b"fake-payload"
 SEGMENT_DURATION = 10
 TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
-FAKE_TIME = datetime.utcnow()
 
 
 class HlsClient:
@@ -289,7 +292,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
     for i in range(2):
-        segment = Segment(sequence=i, duration=SEGMENT_DURATION, start_time=FAKE_TIME)
+        segment = Segment(sequence=i, duration=SEGMENT_DURATION)
         hls.put(segment)
     await hass.async_block_till_done()
 
@@ -301,7 +304,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
         sequence=0, segments=[make_segment(0), make_segment(1)]
     )
 
-    segment = Segment(sequence=2, duration=SEGMENT_DURATION, start_time=FAKE_TIME)
+    segment = Segment(sequence=2, duration=SEGMENT_DURATION)
     hls.put(segment)
     await hass.async_block_till_done()
     resp = await hls_client.get("/playlist.m3u8")
@@ -326,9 +329,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
 
     # Produce enough segments to overfill the output buffer by one
     for sequence in range(MAX_SEGMENTS + 1):
-        segment = Segment(
-            sequence=sequence, duration=SEGMENT_DURATION, start_time=FAKE_TIME
-        )
+        segment = Segment(sequence=sequence, duration=SEGMENT_DURATION)
         hls.put(segment)
         await hass.async_block_till_done()
 
@@ -375,19 +376,14 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
-    segment = Segment(
-        sequence=0, stream_id=0, duration=SEGMENT_DURATION, start_time=FAKE_TIME
-    )
+    segment = Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION)
     hls.put(segment)
-    segment = Segment(
-        sequence=1, stream_id=0, duration=SEGMENT_DURATION, start_time=FAKE_TIME
-    )
+    segment = Segment(sequence=1, stream_id=0, duration=SEGMENT_DURATION)
     hls.put(segment)
     segment = Segment(
         sequence=2,
         stream_id=1,
         duration=SEGMENT_DURATION,
-        start_time=FAKE_TIME,
     )
     hls.put(segment)
     await hass.async_block_till_done()
@@ -419,9 +415,7 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
 
     hls_client = await hls_stream(stream)
 
-    segment = Segment(
-        sequence=0, stream_id=0, duration=SEGMENT_DURATION, start_time=FAKE_TIME
-    )
+    segment = Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION)
     hls.put(segment)
 
     # Produce enough segments to overfill the output buffer by one
@@ -430,7 +424,6 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
             sequence=sequence,
             stream_id=1,
             duration=SEGMENT_DURATION,
-            start_time=FAKE_TIME,
         )
         hls.put(segment)
     await hass.async_block_till_done()
