@@ -4,8 +4,8 @@ import logging
 from velbusaio.controller import Velbus
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -19,25 +19,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
-
-
-async def async_setup(hass, config):
-    """Set up the Velbus platform."""
-    # Import from the configuration file if needed
-    if DOMAIN not in config:
-        return True
-    port = config[DOMAIN].get(CONF_PORT)
-    data = {}
-
-    if port:
-        data = {CONF_PORT: port, CONF_NAME: "Velbus import"}
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -56,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.services.async_register(DOMAIN, "scan", scan, schema=vol.Schema({}))
 
-    def syn_clock(self, service=None):
-        controller.sync_clock()
+    async def syn_clock(self, service=None):
+        await controller.sync_clock()
 
     hass.services.async_register(DOMAIN, "sync_clock", syn_clock, schema=vol.Schema({}))
 

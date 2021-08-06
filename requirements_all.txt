@@ -2354,7 +2354,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.8.3
+velbus-aio==2021.8.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
