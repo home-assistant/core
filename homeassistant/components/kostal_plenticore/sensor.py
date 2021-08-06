@@ -5,8 +5,6 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable
 
-import homeassistant
-
 from homeassistant.components.sensor import (
     SensorEntity,
     ATTR_STATE_CLASS,
@@ -201,8 +199,8 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_data.get(ATTR_ENABLED_DEFAULT, False)
 
     @property
-    def last_reset(self) -> datetime | None:
-        """Return the last_reset time"""
+    def last_reset(self) -> str | None:
+        """Return the last_reset time."""
         return self._sensor_data.get(ATTR_LAST_RESET)
 
     @property
