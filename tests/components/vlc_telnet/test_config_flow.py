@@ -200,3 +200,56 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         "port": 8888,
         "name": "custom name",
     }
+
+
+@pytest.mark.parametrize(
+    "error, connect_side_effect, login_side_effect",
+    [
+        ("invalid_auth", None, AuthError),
+        ("cannot_connect", ConnErr, None),
+        ("unknown", Exception, None),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    error: str,
+    connect_side_effect: Exception | None,
+    login_side_effect: Exception | None,
+) -> None:
+    """Test we handle reauth errors."""
+    entry_data = {
+        "password": "old-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+    }
+
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry_data,
+    )
+
+    with patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.connect",
+        side_effect=connect_side_effect,
+    ), patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.login",
+        side_effect=login_side_effect,
+    ), patch(
+        "homeassistant.components.vlc_telnet.config_flow.VLCTelnet.disconnect"
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": error}
