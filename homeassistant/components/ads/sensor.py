@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components import ads
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity, STATE_CLASS_MEASUREMENT
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import StateType
@@ -53,7 +53,8 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._attr_unit_of_measurement = unit_of_measurement
         self._ads_type = ads_type
         self._factor = factor
-
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        
     async def async_added_to_hass(self):
         """Register device notification."""
         await self.async_initialize_device(
