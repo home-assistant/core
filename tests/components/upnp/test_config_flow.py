@@ -1,6 +1,7 @@
 """Test UPnP/IGD config flow."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -203,11 +204,14 @@ async def test_flow_import_no_devices_found(hass: HomeAssistant):
     ssdp_scanner.cache.clear()
 
     # Discovered via step import.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_devices_found"
+    with patch(
+        "homeassistant.components.upnp.config_flow.SSDP_SEARCH_TIMEOUT", new=0.0
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "no_devices_found"
 
 
 @pytest.mark.usefixtures("mock_ssdp_scanner", "mock_async_create_device")

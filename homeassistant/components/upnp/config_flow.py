@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
     DOMAIN_DEVICES,
     LOGGER as _LOGGER,
+    SSDP_SEARCH_TIMEOUT,
     ST_IGD_V1,
     ST_IGD_V2,
 )
@@ -67,7 +68,9 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     )
 
     try:
-        await asyncio.wait_for(device_discovered_event.wait(), timeout=4)
+        await asyncio.wait_for(
+            device_discovered_event.wait(), timeout=SSDP_SEARCH_TIMEOUT
+        )
     except asyncio.TimeoutError:
         return False
     finally:
