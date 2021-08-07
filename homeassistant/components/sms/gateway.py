@@ -14,13 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 class Gateway:
     """SMS gateway to interact with a GSM modem."""
 
-    def __init__(self, worker, hass):
+    def __init__(self, config, hass):
         """Initialize the sms gateway."""
-        self._worker = worker
+        self._worker = GammuAsyncWorker(self.sms_pull)
+        self._worker.configure(config)
         self._hass = hass
 
     async def init_async(self):
         """Initialize the sms gateway asynchronously."""
+        await self._worker.init_async()
         try:
             await self._worker.set_incoming_sms_async()
         except gammu.ERR_NOTSUPPORTED:
@@ -31,6 +33,15 @@ class Gateway:
             )
         else:
             await self._worker.set_incoming_callback_async(self.sms_callback)
+
+    def sms_pull(self, state_machine):
+        """Pull device.
+
+        @param state_machine: state machine
+        @type state_machine: gammu.StateMachine
+        """
+        state_machine.ReadDevice()
+        self.sms_read_messages(state_machine)
 
     def sms_callback(self, state_machine, callback_type, callback_data):
         """Receive notification about incoming event.
@@ -45,6 +56,14 @@ class Gateway:
         _LOGGER.debug(
             "Received incoming event type:%s,data:%s", callback_type, callback_data
         )
+        self.sms_read_messages(state_machine)
+
+    def sms_read_messages(self, state_machine):
+        """Read all received SMS messages.
+
+        @param state_machine: state machine which invoked action
+        @type state_machine: gammu.StateMachine
+        """
         entries = self.get_and_delete_all_sms(state_machine)
         _LOGGER.debug("SMS entries:%s", entries)
         data = []
@@ -161,10 +180,7 @@ class Gateway:
 async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
-        worker = GammuAsyncWorker()
-        worker.configure(config)
-        await worker.init_async()
-        gateway = Gateway(worker, hass)
+        gateway = Gateway(config, hass)
         await gateway.init_async()
         return gateway
     except gammu.GSMError as exc:
