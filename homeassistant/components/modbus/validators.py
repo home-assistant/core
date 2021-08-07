@@ -86,6 +86,7 @@ def struct_validator(config):
         _LOGGER.warning(error)
         try:
             data_type = OLD_DATA_TYPES[data_type][config.get(CONF_COUNT, 1)]
+            config[CONF_DATA_TYPE] = data_type
         except KeyError as exp:
             error = f"{name}  cannot convert automatically {data_type}"
             raise vol.Invalid(error) from exp
