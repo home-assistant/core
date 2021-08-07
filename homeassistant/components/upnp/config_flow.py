@@ -195,28 +195,28 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_entry_from_discovery(discovery)
 
-    async def async_step_ssdp(self, discovery: Mapping) -> Mapping[str, Any]:
+    async def async_step_ssdp(self, discovery_info: Mapping) -> Mapping[str, Any]:
         """Handle a discovered UPnP/IGD device.
 
         This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        _LOGGER.debug("async_step_ssdp: discovery: %s", discovery)
+        _LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
 
         # Ensure complete discovery.
         if (
-            ssdp.ATTR_UPNP_UDN not in discovery
-            or ssdp.ATTR_SSDP_ST not in discovery
-            or ssdp.ATTR_SSDP_LOCATION not in discovery
-            or ssdp.ATTR_SSDP_USN not in discovery
+            ssdp.ATTR_UPNP_UDN not in discovery_info
+            or ssdp.ATTR_SSDP_ST not in discovery_info
+            or ssdp.ATTR_SSDP_LOCATION not in discovery_info
+            or ssdp.ATTR_SSDP_USN not in discovery_info
         ):
             _LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
         # Ensure not already configuring/configured.
-        unique_id = discovery[ssdp.ATTR_SSDP_USN]
+        unique_id = discovery_info[ssdp.ATTR_SSDP_USN]
         await self.async_set_unique_id(unique_id)
-        hostname = discovery["_host"]
+        hostname = discovery_info["_host"]
         self._abort_if_unique_id_configured(updates={CONFIG_ENTRY_HOSTNAME: hostname})
 
         # Handle devices changing their UDN, only allow a single host.
@@ -230,11 +230,11 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="discovery_ignored")
 
         # Store discovery.
-        self._discoveries = [discovery]
+        self._discoveries = [discovery_info]
 
         # Ensure user recognizable.
         self.context["title_placeholders"] = {
-            "name": _friendly_name_from_discovery(discovery),
+            "name": _friendly_name_from_discovery(discovery_info),
         }
 
         return await self.async_step_ssdp_confirm()
