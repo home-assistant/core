@@ -121,9 +121,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device_on = service.data.get(ATTR_DEVICE_STATE_ON)
         device_id = service.data.get(ATTR_DEVICE_ID)
 
-        target_devices = [
-            device for device in devices if device.entity_id in entity_id
-        ]
+        target_devices = [device for device in devices if device.entity_id in entity_id]
 
         for device in target_devices:
             device.async_activate_output_device(device_on, device_id)
@@ -242,34 +240,21 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        if code:
-            self.hass.data[DATA_EVL].disarm_partition(str(code), self._partition_number)
-        else:
-            self.hass.data[DATA_EVL].disarm_partition(
-                str(self._code), self._partition_number
-            )
+        self.hass.data[DATA_EVL].disarm_partition(
+            str(code) if code else str(self._code), self._partition_number
+        )
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if code:
-            self.hass.data[DATA_EVL].arm_stay_partition(
-                str(code), self._partition_number
-            )
-        else:
-            self.hass.data[DATA_EVL].arm_stay_partition(
-                str(self._code), self._partition_number
-            )
+        self.hass.data[DATA_EVL].arm_stay_partition(
+            str(code) if code else str(self._code), self._partition_number
+        )
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if code:
-            self.hass.data[DATA_EVL].arm_away_partition(
-                str(code), self._partition_number
-            )
-        else:
-            self.hass.data[DATA_EVL].arm_away_partition(
-                str(self._code), self._partition_number
-            )
+        self.hass.data[DATA_EVL].arm_away_partition(
+            str(code) if code else str(self._code), self._partition_number
+        )
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
@@ -299,7 +284,11 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     def async_activate_output_device(self, device_on=True, device_id=None):
         """Send custom keypress."""
         if device_id:
-            keypress = self._device_activation_code + ("#7" if device_on else "#8") + f"{device_id:02}"
+            keypress = (
+                self._device_activation_code
+                + ("#7" if device_on else "#8")
+                + f"{device_id:02}"
+            )
             self.hass.data[DATA_EVL].keypresses_to_partition(
                 self._partition_number, keypress
             )
