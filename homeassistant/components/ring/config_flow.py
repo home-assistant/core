@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, const, core, exceptions
 
-from . import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,12 +19,15 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         token = await hass.async_add_executor_job(
-            auth.fetch_token, data["username"], data["password"], data.get("2fa"),
+            auth.fetch_token,
+            data["username"],
+            data["password"],
+            data.get("2fa"),
         )
-    except MissingTokenError:
-        raise Require2FA
-    except AccessDeniedError:
-        raise InvalidAuth
+    except MissingTokenError as err:
+        raise Require2FA from err
+    except AccessDeniedError as err:
+        raise InvalidAuth from err
 
     return token
 
@@ -33,7 +36,6 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ring."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     user_pass = None
 
@@ -62,7 +64,9 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({"username": str, "password": str}),
+            data_schema=vol.Schema(
+                {vol.Required("username"): str, vol.Required("password"): str}
+            ),
             errors=errors,
         )
 
@@ -72,7 +76,8 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user({**self.user_pass, **user_input})
 
         return self.async_show_form(
-            step_id="2fa", data_schema=vol.Schema({"2fa": str}),
+            step_id="2fa",
+            data_schema=vol.Schema({vol.Required("2fa"): str}),
         )
 
 

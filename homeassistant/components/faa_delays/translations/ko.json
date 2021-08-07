@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacf5\ud56d\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_airport": "\uacf5\ud56d \ucf54\ub4dc\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "\uacf5\ud56d"
+                },
+                "description": "IATA \ud615\uc2dd\uc758 \ubbf8\uad6d \uacf5\ud56d \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "FAA \ud56d\uacf5 \uc5f0\ucc29 \uc815\ubcf4"
+            }
+        }
+    }
+}

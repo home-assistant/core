@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "U kunt alleen een enkele Heos-verbinding configureren, omdat deze alle apparaten in het netwerk ondersteunt."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
-            "connection_failure": "Kan geen verbinding maken met de opgegeven host."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {

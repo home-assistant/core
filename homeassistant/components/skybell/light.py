@@ -1,6 +1,4 @@
 """Light/LED support for the Skybell HD Doorbell."""
-import logging
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -11,8 +9,6 @@ from homeassistant.components.light import (
 import homeassistant.util.color as color_util
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

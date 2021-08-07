@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "non-interactive": "Importa\u00e7\u00e3o n\u00e3o interativa"
-        },
         "error": {
             "ssl_error": "Problema no certificado SSL"
         },
@@ -10,6 +7,7 @@
         "step": {
             "manual_setup": {
                 "data": {
+                    "port": "Porta",
                     "ssl": "Usar SSL",
                     "token": "Token (Opcional)",
                     "verify_ssl": "Verifique o certificado SSL"

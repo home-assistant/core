@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_communicate": "No s'ha pogut comunicar",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_communicate": "No s'ha pogut comunicar",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "Selecciona la versi\u00f3 DSMR",
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Selecciona l'adre\u00e7a de connexi\u00f3"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "Selecciona la versi\u00f3 DSMR",
+                    "port": "Selecciona el dispositiu"
+                },
+                "title": "Dispositiu"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "port": "Ruta del port USB del dispositiu"
+                },
+                "title": "Ruta"
+            },
+            "user": {
+                "data": {
+                    "type": "Tipus de connexi\u00f3"
+                },
+                "title": "Selecciona el tipus de connexi\u00f3"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Temps m\u00ednim entre actualitzacions d'entitats [s]"
+                },
+                "title": "Opcions de DSMR"
+            }
+        }
+    }
+}

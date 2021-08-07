@@ -11,7 +11,7 @@ from yarl import URL
 from homeassistant import config_entries, core, data_entry_flow
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
+from .const import DOMAIN as ALMOND_DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
 
 
 async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
@@ -28,11 +28,11 @@ async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
         return False
 
 
-@config_entries.HANDLERS.register(DOMAIN)
+@config_entries.HANDLERS.register(ALMOND_DOMAIN)
 class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     """Implementation of the Almond OAuth2 config flow."""
 
-    DOMAIN = DOMAIN
+    DOMAIN = ALMOND_DOMAIN
 
     host = None
     hassio_discovery = None
@@ -51,7 +51,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         """Handle a flow start."""
         # Only allow 1 instance.
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)
 
@@ -69,8 +69,6 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
         Ok to override if you want to fetch extra info or even add another step.
         """
-        # pylint: disable=invalid-name
-        self.CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
         data["type"] = TYPE_OAUTH2
         data["host"] = self.host
         return self.async_create_entry(title=self.flow_impl.name, data=data)
@@ -79,15 +77,13 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         """Import data."""
         # Only allow 1 instance.
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         if not await async_verify_local_connection(self.hass, user_input["host"]):
             self.logger.warning(
                 "Aborting import of Almond because we're unable to connect"
             )
             return self.async_abort(reason="cannot_connect")
-
-        self.CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         return self.async_create_entry(
             title="Configuration.yaml",
@@ -97,7 +93,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     async def async_step_hassio(self, discovery_info):
         """Receive a Hass.io discovery."""
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         self.hassio_discovery = discovery_info
 

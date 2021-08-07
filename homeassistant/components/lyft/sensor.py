@@ -7,10 +7,9 @@ from lyft_rides.client import LyftRidesClient
 from lyft_rides.errors import APIError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,6 +39,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lyft sensor."""
+    _LOGGER.warning(
+        "The Lyft integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.10"
+    )
 
     auth_flow = ClientCredentialGrant(
         client_id=config.get(CONF_CLIENT_ID),
@@ -74,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class LyftSensor(Entity):
+class LyftSensor(SensorEntity):
     """Implementation of an Lyft sensor."""
 
     def __init__(self, sensorType, products, product_id, product):
@@ -110,7 +113,7 @@ class LyftSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         params = {
             "Product ID": self._product["ride_type"],

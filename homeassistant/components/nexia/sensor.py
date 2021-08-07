@@ -2,12 +2,13 @@
 
 from nexia.const import UNIT_CELSIUS
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 
 from .const import DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
@@ -57,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     "get_current_compressor_speed",
                     "Current Compressor Speed",
                     None,
-                    UNIT_PERCENTAGE,
+                    PERCENTAGE,
                     percent_conv,
                 )
             )
@@ -68,7 +69,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     "get_requested_compressor_speed",
                     "Requested Compressor Speed",
                     None,
-                    UNIT_PERCENTAGE,
+                    PERCENTAGE,
                     percent_conv,
                 )
             )
@@ -98,7 +99,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     "get_relative_humidity",
                     "Relative Humidity",
                     DEVICE_CLASS_HUMIDITY,
-                    UNIT_PERCENTAGE,
+                    PERCENTAGE,
                     percent_conv,
                 )
             )
@@ -126,7 +127,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Zone Status
             entities.append(
                 NexiaThermostatZoneSensor(
-                    coordinator, zone, "get_status", "Zone Status", None, None,
+                    coordinator,
+                    zone,
+                    "get_status",
+                    "Zone Status",
+                    None,
+                    None,
                 )
             )
             # Setpoint Status
@@ -144,7 +150,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaThermostatSensor(NexiaThermostatEntity):
+class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
     """Provides Nexia thermostat sensor support."""
 
     def __init__(
@@ -191,7 +197,7 @@ class NexiaThermostatSensor(NexiaThermostatEntity):
         return self._unit_of_measurement
 
 
-class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity):
+class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
     """Nexia Zone Sensor Support."""
 
     def __init__(

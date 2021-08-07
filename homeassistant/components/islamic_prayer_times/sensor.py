@@ -1,14 +1,11 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
-import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -23,8 +20,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class IslamicPrayerTimeSensor(Entity):
+class IslamicPrayerTimeSensor(SensorEntity):
     """Representation of an Islamic prayer time sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_icon = PRAYER_TIMES_ICON
+    _attr_should_poll = False
 
     def __init__(self, sensor_type, client):
         """Initialize the Islamic prayer time sensor."""
@@ -42,11 +43,6 @@ class IslamicPrayerTimeSensor(Entity):
         return self.sensor_type
 
     @property
-    def icon(self):
-        """Icon to display in the front end."""
-        return PRAYER_TIMES_ICON
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         return (
@@ -54,16 +50,6 @@ class IslamicPrayerTimeSensor(Entity):
             .astimezone(dt_util.UTC)
             .isoformat()
         )
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""

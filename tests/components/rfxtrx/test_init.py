@@ -1,45 +1,15 @@
 """The tests for the Rfxtrx component."""
-# pylint: disable=protected-access
-import asyncio
 
-from async_timeout import timeout
+from unittest.mock import call
 
-from homeassistant.components import rfxtrx
+from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import _signal_event
-
-from tests.common import assert_setup_component
-
-
-async def test_default_config(hass):
-    """Test configuration."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
-            }
-        },
-    )
-
-    with assert_setup_component(1, "sensor"):
-        await async_setup_component(
-            hass,
-            "sensor",
-            {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
-        )
-
-    # Dummy startup is slow
-    async with timeout(10):
-        while len(hass.data[rfxtrx.DATA_RFXOBJECT].sensors()) < 2:
-            await asyncio.sleep(0.1)
-
-    assert len(hass.data[rfxtrx.DATA_RFXOBJECT].sensors()) == 2
+from tests.common import MockConfigEntry
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 async def test_valid_config(hass):
@@ -51,7 +21,6 @@ async def test_valid_config(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
             }
         },
     )
@@ -66,7 +35,6 @@ async def test_valid_config2(hass):
             "rfxtrx": {
                 "device": "/dev/serial/by-id/usb"
                 + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
                 "debug": True,
             }
         },
@@ -90,102 +58,85 @@ async def test_invalid_config(hass):
     )
 
 
-async def test_fire_event(hass):
+async def test_fire_event(hass, rfxtrx):
     """Test fire event."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
-            }
+    entry_data = create_rfx_test_cfg(
+        device="/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
+        automatic_add=True,
+        devices={
+            "0b1100cd0213c7f210010f51": {"fire_event": True},
+            "0716000100900970": {"fire_event": True},
         },
     )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    assert await async_setup_component(
-        hass,
-        "switch",
-        {
-            "switch": {
-                "platform": "rfxtrx",
-                "automatic_add": True,
-                "devices": {
-                    "0b1100cd0213c7f210010f51": {
-                        "name": "Test",
-                        rfxtrx.ATTR_FIRE_EVENT: True,
-                    }
-                },
-            }
-        },
-    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_start()
+
+    device_registry: dr.DeviceRegistry = dr.async_get(hass)
 
     calls = []
 
     @callback
     def record_event(event):
         """Add recorded event to set."""
-        calls.append(event)
+        assert event.event_type == "rfxtrx_event"
+        calls.append(event.data)
 
-    hass.bus.async_listen(rfxtrx.EVENT_BUTTON_PRESSED, record_event)
+    hass.bus.async_listen(EVENT_RFXTRX_EVENT, record_event)
 
-    state = hass.states.get("switch.test")
-    assert state
-    assert state.state == "off"
+    await rfxtrx.signal("0b1100cd0213c7f210010f51")
+    await rfxtrx.signal("0716000100900970")
 
-    await _signal_event(hass, "0b1100cd0213c7f210010f51")
-
-    state = hass.states.get("switch.test")
-    assert state
-    assert state.state == "on"
-
-    assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "switch.test", "state": "on"}
-
-
-async def test_fire_event_sensor(hass):
-    """Test fire event."""
-    await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "dummy": True,
-            }
-        },
+    device_id_1 = device_registry.async_get_device(
+        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}
     )
+    assert device_id_1
 
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "rfxtrx",
-                "automatic_add": True,
-                "devices": {
-                    "0a520802060100ff0e0269": {
-                        "name": "Test",
-                        rfxtrx.ATTR_FIRE_EVENT: True,
-                    }
-                },
-            }
-        },
+    device_id_2 = device_registry.async_get_device(
+        identifiers={("rfxtrx", "16", "0", "00:90")}
     )
+    assert device_id_2
+
+    assert calls == [
+        {
+            "packet_type": 17,
+            "sub_type": 0,
+            "type_string": "AC",
+            "id_string": "213c7f2:16",
+            "data": "0b1100cd0213c7f210010f51",
+            "values": {"Command": "On", "Rssi numeric": 5},
+            "device_id": device_id_1.id,
+        },
+        {
+            "packet_type": 22,
+            "sub_type": 0,
+            "type_string": "Byron SX",
+            "id_string": "00:90",
+            "data": "0716000100900970",
+            "values": {"Command": "Sound 9", "Rssi numeric": 7, "Sound": 9},
+            "device_id": device_id_2.id,
+        },
+    ]
+
+
+async def test_send(hass, rfxtrx):
+    """Test configuration."""
+    entry_data = create_rfx_test_cfg(device="/dev/null", devices={})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    calls = []
+    await hass.services.async_call(
+        "rfxtrx", "send", {"event": "0a520802060101ff0f0269"}, blocking=True
+    )
 
-    @callback
-    def record_event(event):
-        """Add recorded event to set."""
-        calls.append(event)
-
-    hass.bus.async_listen("signal_received", record_event)
-
-    await _signal_event(hass, "0a520802060101ff0f0269")
-    assert len(calls) == 5
-    assert any(call.data == {"entity_id": "sensor.test_temperature"} for call in calls)
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x0a\x52\x08\x02\x06\x01\x01\xff\x0f\x02\x69"))
+    ]

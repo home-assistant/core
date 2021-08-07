@@ -1,121 +1,29 @@
 """Support for Sonarr sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    DATA_BYTES,
-    DATA_EXABYTES,
-    DATA_GIGABYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_PETABYTES,
-    DATA_TERABYTES,
-    DATA_YOTTABYTES,
-    DATA_ZETTABYTES,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_GIGABYTES
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import SonarrEntity
-from .const import (
-    CONF_BASE_PATH,
-    CONF_DAYS,
-    CONF_INCLUDED,
-    CONF_UNIT,
-    CONF_UPCOMING_DAYS,
-    CONF_URLBASE,
-    CONF_WANTED_MAX_ITEMS,
-    DATA_SONARR,
-    DEFAULT_BASE_PATH,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DOMAIN,
-)
+from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DATA_SONARR, DOMAIN
+from .entity import SonarrEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-BYTE_SIZES = [
-    DATA_BYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_GIGABYTES,
-    DATA_TERABYTES,
-    DATA_PETABYTES,
-    DATA_EXABYTES,
-    DATA_ZETTABYTES,
-    DATA_YOTTABYTES,
-]
-
-DEFAULT_URLBASE = ""
-DEFAULT_DAYS = "1"
-DEFAULT_UNIT = DATA_GIGABYTES
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_INCLUDED, invalidation_version="0.112"),
-    cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.112"),
-    cv.deprecated(CONF_UNIT, invalidation_version="0.112"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-            vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
-            vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): cv.ensure_list,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
-            vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
-        }
-    ),
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    async_add_entities: Callable[[List[Entity], bool], None],
-    discovery_info: Any = None,
-) -> None:
-    """Import the platform into a config entry."""
-    if len(hass.config_entries.async_entries(DOMAIN)) > 0:
-        return True
-
-    config[CONF_BASE_PATH] = f"{config[CONF_URLBASE]}{DEFAULT_BASE_PATH}"
-    config[CONF_UPCOMING_DAYS] = int(config[CONF_DAYS])
-    config[CONF_VERIFY_SSL] = False
-
-    del config[CONF_DAYS]
-    del config[CONF_INCLUDED]
-    del config[CONF_MONITORED_CONDITIONS]
-    del config[CONF_URLBASE]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
     options = entry.options
@@ -158,7 +66,7 @@ def sonarr_exception_handler(func):
     return handler
 
 
-class SonarrSensor(SonarrEntity):
+class SonarrSensor(SonarrEntity, SensorEntity):
     """Implementation of the Sonarr sensor."""
 
     def __init__(
@@ -170,37 +78,27 @@ class SonarrSensor(SonarrEntity):
         icon: str,
         key: str,
         name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize Sonarr sensor."""
-        self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = f"{entry_id}_{key}"
+        self._attr_name = name
+        self._attr_icon = icon
+        self._attr_unique_id = f"{entry_id}_{key}"
+        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_entity_registry_enabled_default = enabled_default
         self.last_update_success = False
 
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
             device_id=entry_id,
-            name=name,
-            icon=icon,
-            enabled_default=enabled_default,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def available(self) -> bool:
         """Return sensor availability."""
         return self.last_update_success
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class SonarrCommandsSensor(SonarrSensor):
@@ -226,7 +124,7 @@ class SonarrCommandsSensor(SonarrSensor):
         self._commands = await self.sonarr.commands()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -236,7 +134,7 @@ class SonarrCommandsSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._commands)
 
@@ -259,37 +157,33 @@ class SonarrDiskspaceSensor(SonarrSensor):
             enabled_default=False,
         )
 
-    def _to_unit(self, value):
-        """Return a value converted to unit of measurement."""
-        return value / 1024 ** BYTE_SIZES.index(self._unit_of_measurement)
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
         app = await self.sonarr.update()
         self._disks = app.disks
-        self._total_free = sum([disk.free for disk in self._disks])
+        self._total_free = sum(disk.free for disk in self._disks)
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
         for disk in self._disks:
-            free = self._to_unit(disk.free)
-            total = self._to_unit(disk.total)
+            free = disk.free / 1024 ** 3
+            total = disk.total / 1024 ** 3
             usage = free / total * 100
 
             attrs[
                 disk.path
-            ] = f"{free:.2f}/{total:.2f}{self._unit_of_measurement} ({usage:.2f}%)"
+            ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
 
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> str:
         """Return the state of the sensor."""
-        free = self._to_unit(self._total_free)
+        free = self._total_free / 1024 ** 3
         return f"{free:.2f}"
 
 
@@ -316,7 +210,7 @@ class SonarrQueueSensor(SonarrSensor):
         self._queue = await self.sonarr.queue()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -329,7 +223,7 @@ class SonarrQueueSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._queue)
 
@@ -357,7 +251,7 @@ class SonarrSeriesSensor(SonarrSensor):
         self._items = await self.sonarr.series()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -367,7 +261,7 @@ class SonarrSeriesSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._items)
 
@@ -389,18 +283,6 @@ class SonarrUpcomingSensor(SonarrSensor):
             unit_of_measurement="Episodes",
         )
 
-    async def async_added_to_hass(self):
-        """Listen for signals."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"sonarr.{self._entry_id}.entry_options_update",
-                self.async_update_entry_options,
-            )
-        )
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
@@ -411,12 +293,8 @@ class SonarrUpcomingSensor(SonarrSensor):
             start=start.isoformat(), end=end.isoformat()
         )
 
-    async def async_update_entry_options(self, options: dict) -> None:
-        """Update sensor settings when config entry options are update."""
-        self._days = options[CONF_UPCOMING_DAYS]
-
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -426,7 +304,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._upcoming)
 
@@ -438,7 +316,7 @@ class SonarrWantedSensor(SonarrSensor):
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
         self._results = None
-        self._total = None
+        self._total: int | None = None
 
         super().__init__(
             sonarr=sonarr,
@@ -450,30 +328,14 @@ class SonarrWantedSensor(SonarrSensor):
             enabled_default=False,
         )
 
-    async def async_added_to_hass(self):
-        """Listen for signals."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"sonarr.{self._entry_id}.entry_options_update",
-                self.async_update_entry_options,
-            )
-        )
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
         self._results = await self.sonarr.wanted(page_size=self._max_items)
         self._total = self._results.total
 
-    async def async_update_entry_options(self, options: dict) -> None:
-        """Update sensor settings when config entry options are update."""
-        self._max_items = options[CONF_WANTED_MAX_ITEMS]
-
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -485,6 +347,6 @@ class SonarrWantedSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int | None:
         """Return the state of the sensor."""
         return self._total

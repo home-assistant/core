@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Sentry har redan konfigurerats"
-        },
         "error": {
             "bad_dsn": "Ogiltig DSN",
             "unknown": "Ov\u00e4ntat fel"

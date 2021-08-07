@@ -11,12 +11,12 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect. Please check the information you provided and try again.",
-      "invalid_auth": "Invalid authentication. Please check the access token and try again.",
-      "unknown": "An unexpected error occurred while setting up the integration."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "This Vilfo Router is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

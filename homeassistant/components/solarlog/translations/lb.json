@@ -5,7 +5,7 @@
         },
         "error": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "cannot_connect": "Feeler beim verbannen, iwwerpr\u00e9ift w.e.g d'Adresse vum Apparat"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "user": {

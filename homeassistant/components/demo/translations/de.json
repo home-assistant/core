@@ -10,13 +10,14 @@
             "options_1": {
                 "data": {
                     "bool": "Optionaler Boolescher Wert",
+                    "constant": "Konstante",
                     "int": "Numerische Eingabe"
                 }
             },
             "options_2": {
                 "data": {
                     "multi": "Mehrfachauswahl",
-                    "select": "W\u00e4hlen Sie eine Option",
+                    "select": "W\u00e4hle eine Option",
                     "string": "String-Wert"
                 }
             }

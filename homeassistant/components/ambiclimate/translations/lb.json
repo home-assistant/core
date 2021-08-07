@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "access_token": "Onbekannte Feeler beim gener\u00e9ieren vum Acc\u00e8s Jeton.",
-            "already_setup": "Den Ambiclimate Kont ass konfigur\u00e9iert.",
-            "no_config": "Dir musst Ambiclimate konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/ambiclimate/)."
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "missing_configuration": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun."
         },
         "create_entry": {
-            "default": "Erfollegr\u00e4ich mat Ambiclimate authentifiz\u00e9iert."
+            "default": "Erfollegr\u00e4ich authentifiz\u00e9iert."
         },
         "error": {
             "follow_link": "Follegt w.e.g. dem Link an authentifiz\u00e9iert de Kont ier dir op ofsch\u00e9cken dr\u00e9ckt.",

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ez a WLED eszk\u00f6z m\u00e1r konfigur\u00e1lva van.",
-            "connection_error": "Nem siker\u00fclt csatlakozni a WLED eszk\u00f6zh\u00f6z."
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "error": {
-            "connection_error": "Nem siker\u00fclt csatlakozni a WLED eszk\u00f6zh\u00f6z."
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "flow_title": "WLED: {name}",
         "step": {
@@ -18,6 +18,15 @@
             "zeroconf_confirm": {
                 "description": "Szeretn\u00e9d hozz\u00e1adni a(z) `{name}` WLED-et a Home Assistant-hoz?",
                 "title": "Felfedezett WLED eszk\u00f6z"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Tartsa a f\u0151f\u00e9nyt, m\u00e9g 1 LED szegmenssel is."
+                }
             }
         }
     }

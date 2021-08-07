@@ -1,4 +1,6 @@
 """The tests for the MQTT lock platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.lock import (
@@ -8,6 +10,7 @@ from homeassistant.components.lock import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
+from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
@@ -20,6 +23,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -29,6 +33,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -308,6 +313,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     )
 
 
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, LOCK_DOMAIN, DEFAULT_CONFIG, MQTT_LOCK_ATTRIBUTES_BLOCKED
+    )
+
+
 async def test_setting_attribute_with_template(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
@@ -380,6 +392,21 @@ async def test_discovery_update_lock(hass, mqtt_mock, caplog):
         '  "availability_topic": "availability_topic2" }'
     )
     await help_test_discovery_update(hass, mqtt_mock, caplog, LOCK_DOMAIN, data1, data2)
+
+
+async def test_discovery_update_unchanged_lock(hass, mqtt_mock, caplog):
+    """Test update of discovered lock."""
+    data1 = (
+        '{ "name": "Beer",'
+        '  "state_topic": "test_topic",'
+        '  "command_topic": "command_topic" }'
+    )
+    with patch(
+        "homeassistant.components.mqtt.lock.MqttLock.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, LOCK_DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

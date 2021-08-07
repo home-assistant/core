@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "La clave API para la cuenta Rachio."
+                    "api_key": "Clave API"
                 },
                 "description": "Necesitar\u00e1s la clave API de https://app.rach.io/. Selecciona 'Account Settings' y luego haz clic en 'GET API KEY'.",
                 "title": "Conectar a tu dispositivo Rachio"

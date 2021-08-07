@@ -5,7 +5,6 @@ import logging
 import os
 
 from adb_shell.auth.keygen import keygen
-from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from adb_shell.exceptions import (
     AdbTimeoutError,
     InvalidChecksumError,
@@ -14,6 +13,7 @@ from adb_shell.exceptions import (
     TcpTimeoutException,
 )
 from androidtv import ha_state_detection_rules_validator
+from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 from androidtv.setup_async import setup
@@ -40,6 +40,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -79,7 +80,9 @@ SUPPORT_FIRETV = (
     | SUPPORT_STOP
 )
 
+ATTR_ADB_RESPONSE = "adb_response"
 ATTR_DEVICE_PATH = "device_path"
+ATTR_HDMI_INPUT = "hdmi_input"
 ATTR_LOCAL_PATH = "local_path"
 
 CONF_ADBKEY = "adbkey"
@@ -175,9 +178,7 @@ def setup_androidtv(hass, config):
             keygen(adbkey)
 
         # Load the ADB key
-        with open(adbkey) as priv_key:
-            priv = priv_key.read()
-        signer = PythonRSASigner("", priv)
+        signer = ADBPythonSync.load_adbkey(adbkey)
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
@@ -230,6 +231,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         raise PlatformNotReady
 
+    async def _async_close(event):
+        """Close the ADB socket connection when HA stops."""
+        await aftv.adb_close()
+
+    # Close the ADB connection when HA stops
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+
     device_args = [
         aftv,
         config[CONF_NAME],
@@ -255,7 +263,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     async def service_adb_command(service):
         """Dispatch service calls to target entities."""
@@ -368,8 +376,14 @@ def adb_decorator(override_available=False):
                     err,
                 )
                 await self.aftv.adb_close()
-                self._available = False  # pylint: disable=protected-access
+                self._attr_available = False
                 return None
+            except Exception:
+                # An unforeseen exception occurred. Close the ADB connection so that
+                # it doesn't happen over and over again, then raise the exception.
+                await self.aftv.adb_close()
+                self._attr_available = False
+                raise
 
         return _adb_exception_catcher
 
@@ -392,17 +406,19 @@ class ADBDevice(MediaPlayerEntity):
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
-        self._name = name
+        self._attr_name = name
         self._app_id_to_name = APPS.copy()
         self._app_id_to_name.update(apps)
         self._app_name_to_id = {
             value: key for key, value in self._app_id_to_name.items() if value
         }
-        self._get_sources = get_sources
-        self._keys = KEYS
 
-        self._device_properties = self.aftv.device_properties
-        self._unique_id = self._device_properties.get("serialno")
+        # Make sure that apps overridden via the `apps` parameter are reflected
+        # in `self._app_name_to_id`
+        for key, value in apps.items():
+            self._app_name_to_id[value] = key
+        self._get_sources = get_sources
+        self._attr_unique_id = self.aftv.device_properties.get("serialno")
 
         self.turn_on_command = turn_on_command
         self.turn_off_command = turn_off_command
@@ -415,10 +431,8 @@ class ADBDevice(MediaPlayerEntity):
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AdbTimeoutError,
-                AttributeError,
                 BrokenPipeError,
                 ConnectionResetError,
-                TypeError,
                 ValueError,
                 InvalidChecksumError,
                 InvalidCommandError,
@@ -430,76 +444,34 @@ class ADBDevice(MediaPlayerEntity):
             self.exceptions = (ConnectionResetError, RuntimeError)
 
         # Property attributes
-        self._adb_response = None
-        self._available = True
-        self._current_app = None
-        self._sources = None
-        self._state = None
-
-    @property
-    def app_id(self):
-        """Return the current app."""
-        return self._current_app
-
-    @property
-    def app_name(self):
-        """Return the friendly name of the current app."""
-        return self._app_id_to_name.get(self._current_app, self._current_app)
-
-    @property
-    def available(self):
-        """Return whether or not the ADB connection is valid."""
-        return self._available
-
-    @property
-    def device_state_attributes(self):
-        """Provide the last ADB command's response as an attribute."""
-        return {"adb_response": self._adb_response}
+        self._attr_extra_state_attributes = {
+            ATTR_ADB_RESPONSE: None,
+            ATTR_HDMI_INPUT: None,
+        }
 
     @property
     def media_image_hash(self):
         """Hash value for media image."""
         return f"{datetime.now().timestamp()}" if self._screencap else None
 
-    @property
-    def name(self):
-        """Return the device name."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
-
-    @property
-    def source(self):
-        """Return the current app."""
-        return self._app_id_to_name.get(self._current_app, self._current_app)
-
-    @property
-    def source_list(self):
-        """Return a list of running apps."""
-        return self._sources
-
-    @property
-    def state(self):
-        """Return the state of the player."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return the device unique id."""
-        return self._unique_id
-
     @adb_decorator()
+    async def _adb_screencap(self):
+        """Take a screen capture from the device."""
+        return await self.aftv.adb_screencap()
+
     async def async_get_media_image(self):
         """Fetch current playing image."""
-        if not self._screencap or self.state in [STATE_OFF, None] or not self.available:
+        if not self._screencap or self.state in (STATE_OFF, None) or not self.available:
             return None, None
 
-        media_data = await self.aftv.adb_screencap()
+        media_data = await self._adb_screencap()
         if media_data:
             return media_data, "image/png"
+
+        # If an exception occurred and the device is no longer available, write the state
+        if not self.available:
+            self.async_write_ha_state()
+
         return None, None
 
     @adb_decorator()
@@ -560,15 +532,17 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def adb_command(self, cmd):
         """Send an ADB command to an Android TV / Fire TV device."""
-        key = self._keys.get(cmd)
+        key = KEYS.get(cmd)
         if key:
             await self.aftv.adb_shell(f"input keyevent {key}")
             return
 
         if cmd == "GET_PROPERTIES":
-            self._adb_response = str(await self.aftv.get_properties_dict())
+            self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = str(
+                await self.aftv.get_properties_dict()
+            )
             self.async_write_ha_state()
-            return self._adb_response
+            return
 
         try:
             response = await self.aftv.adb_shell(cmd)
@@ -576,22 +550,23 @@ class ADBDevice(MediaPlayerEntity):
             return
 
         if isinstance(response, str) and response.strip():
-            self._adb_response = response.strip()
+            self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = response.strip()
             self.async_write_ha_state()
 
-        return self._adb_response
+        return
 
     @adb_decorator()
     async def learn_sendevent(self):
         """Translate a key press on a remote to ADB 'sendevent' commands."""
         output = await self.aftv.learn_sendevent()
         if output:
-            self._adb_response = output
+            self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = output
             self.async_write_ha_state()
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
             self.hass.components.persistent_notification.async_create(
-                msg, title="Android TV",
+                msg,
+                title="Android TV",
             )
             _LOGGER.info("%s", msg)
 
@@ -609,83 +584,48 @@ class ADBDevice(MediaPlayerEntity):
 class AndroidTVDevice(ADBDevice):
     """Representation of an Android TV device."""
 
-    def __init__(
-        self,
-        aftv,
-        name,
-        apps,
-        get_sources,
-        turn_on_command,
-        turn_off_command,
-        exclude_unnamed_apps,
-        screencap,
-    ):
-        """Initialize the Android TV device."""
-        super().__init__(
-            aftv,
-            name,
-            apps,
-            get_sources,
-            turn_on_command,
-            turn_off_command,
-            exclude_unnamed_apps,
-            screencap,
-        )
-
-        self._is_volume_muted = None
-        self._volume_level = None
+    _attr_supported_features = SUPPORT_ANDROIDTV
 
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self._available:
+        if not self.available:
             # Try to connect
-            self._available = await self.aftv.adb_connect(always_log_errors=False)
+            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
 
         # If the ADB connection is not intact, don't update.
-        if not self._available:
+        if not self.available:
             return
 
         # Get the updated state and attributes.
         (
             state,
-            self._current_app,
+            self._attr_app_id,
             running_apps,
             _,
-            self._is_volume_muted,
-            self._volume_level,
+            self._attr_is_volume_muted,
+            self._attr_volume_level,
+            self._attr_extra_state_attributes[ATTR_HDMI_INPUT],
         ) = await self.aftv.update(self._get_sources)
 
-        self._state = ANDROIDTV_STATES.get(state)
-        if self._state is None:
-            self._available = False
+        self._attr_state = ANDROIDTV_STATES.get(state)
+        if self._attr_state is None:
+            self._attr_available = False
 
         if running_apps:
+            self._attr_source = self._attr_app_name = self._app_id_to_name.get(
+                self._attr_app_id, self._attr_app_id
+            )
             sources = [
                 self._app_id_to_name.get(
                     app_id, app_id if not self._exclude_unnamed_apps else None
                 )
                 for app_id in running_apps
             ]
-            self._sources = [source for source in sources if source]
+            self._attr_source_list = [source for source in sources if source]
         else:
-            self._sources = None
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._is_volume_muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ANDROIDTV
-
-    @property
-    def volume_level(self):
-        """Return the volume level."""
-        return self._volume_level
+            self._attr_source_list = None
 
     @adb_decorator()
     async def async_media_stop(self):
@@ -705,53 +645,56 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     async def async_volume_down(self):
         """Send volume down command."""
-        self._volume_level = await self.aftv.volume_down(self._volume_level)
+        self._attr_volume_level = await self.aftv.volume_down(self._attr_volume_level)
 
     @adb_decorator()
     async def async_volume_up(self):
         """Send volume up command."""
-        self._volume_level = await self.aftv.volume_up(self._volume_level)
+        self._attr_volume_level = await self.aftv.volume_up(self._attr_volume_level)
 
 
 class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
 
+    _attr_supported_features = SUPPORT_FIRETV
+
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self._available:
+        if not self.available:
             # Try to connect
-            self._available = await self.aftv.adb_connect(always_log_errors=False)
+            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
 
         # If the ADB connection is not intact, don't update.
-        if not self._available:
+        if not self.available:
             return
 
-        # Get the `state`, `current_app`, and `running_apps`.
-        state, self._current_app, running_apps = await self.aftv.update(
-            self._get_sources
-        )
+        # Get the `state`, `current_app`, `running_apps` and `hdmi_input`.
+        (
+            state,
+            self._attr_app_id,
+            running_apps,
+            self._attr_extra_state_attributes[ATTR_HDMI_INPUT],
+        ) = await self.aftv.update(self._get_sources)
 
-        self._state = ANDROIDTV_STATES.get(state)
-        if self._state is None:
-            self._available = False
+        self._attr_state = ANDROIDTV_STATES.get(state)
+        if self._attr_state is None:
+            self._attr_available = False
 
         if running_apps:
+            self._attr_source = self._app_id_to_name.get(
+                self._attr_app_id, self._attr_app_id
+            )
             sources = [
                 self._app_id_to_name.get(
                     app_id, app_id if not self._exclude_unnamed_apps else None
                 )
                 for app_id in running_apps
             ]
-            self._sources = [source for source in sources if source]
+            self._attr_source_list = [source for source in sources if source]
         else:
-            self._sources = None
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_FIRETV
+            self._attr_source_list = None
 
     @adb_decorator()
     async def async_media_stop(self):

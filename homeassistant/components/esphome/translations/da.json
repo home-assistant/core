@@ -5,7 +5,6 @@
         },
         "error": {
             "connection_error": "Kan ikke oprette forbindelse til ESP. S\u00f8rg for, at din YAML-fil indeholder en 'api:' linje.",
-            "invalid_password": "Ugyldig adgangskode!",
             "resolve_error": "Kan ikke finde adressen p\u00e5 ESP. Hvis denne fejl forts\u00e6tter skal du angive en statisk IP-adresse: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

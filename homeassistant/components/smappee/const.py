@@ -5,11 +5,18 @@ from datetime import timedelta
 DOMAIN = "smappee"
 DATA_CLIENT = "smappee_data"
 
-BASE = "BASE"
+CONF_HOSTNAME = "hostname"
+CONF_SERIALNUMBER = "serialnumber"
+CONF_TITLE = "title"
 
-SMAPPEE_PLATFORMS = ["binary_sensor", "sensor", "switch"]
+ENV_CLOUD = "cloud"
+ENV_LOCAL = "local"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+PLATFORMS = ["binary_sensor", "sensor", "switch"]
+
+SUPPORTED_LOCAL_DEVICES = ("Smappee1", "Smappee2", "Smappee50")
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=20)
 
 AUTHORIZE_URL = {
     "PRODUCTION": "https://app1pub.smappee.net/dev/v1/oauth2/authorize",

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "\u4f7f\u7528\u6b64\u4f4d\u5740\u7684\u4e00\u7d44 UPB PIM \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "cannot_connect": "UPB PIM \u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_upb_file": "UPB UPStart \u532f\u51fa\u6a94\u6848\u7121\u6548\u6216\u907a\u5931\uff0c\u8acb\u78ba\u8a8d\u6a94\u6848\u7684\u8def\u5f91\u8207\u540d\u7a31\u3002",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4\u3002"
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
             "user": {

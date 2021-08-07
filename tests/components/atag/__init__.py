@@ -1,7 +1,7 @@
 """Tests for the Atag integration."""
 
-from homeassistant.components.atag import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PORT
+from homeassistant.components.atag import DOMAIN, AtagException
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -9,12 +9,15 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 USER_INPUT = {
     CONF_HOST: "127.0.0.1",
-    CONF_EMAIL: "atag@domain.com",
     CONF_PORT: 10000,
 }
 UID = "xxxx-xxxx-xxxx_xx-xx-xxx-xxx"
-PAIR_REPLY = {"pair_reply": {"status": {"device_id": UID}, "acc_status": 2}}
-UPDATE_REPLY = {"update_reply": {"status": {"device_id": UID}, "acc_status": 2}}
+AUTHORIZED = 2
+UNAUTHORIZED = 3
+PAIR_REPLY = {"pair_reply": {"status": {"device_id": UID}, "acc_status": AUTHORIZED}}
+UPDATE_REPLY = {
+    "update_reply": {"status": {"device_id": UID}, "acc_status": AUTHORIZED}
+}
 RECEIVE_REPLY = {
     "retrieve_reply": {
         "status": {"device_id": UID},
@@ -46,35 +49,52 @@ RECEIVE_REPLY = {
             "dhw_max_set": 65,
             "dhw_min_set": 40,
         },
-        "acc_status": 2,
+        "acc_status": AUTHORIZED,
     }
 }
+
+
+def mock_connection(
+    aioclient_mock: AiohttpClientMocker, authorized=True, conn_error=False
+) -> None:
+    """Mock the requests to Atag endpoint."""
+    if conn_error:
+        aioclient_mock.post(
+            "http://127.0.0.1:10000/pair",
+            exc=AtagException,
+        )
+        aioclient_mock.post(
+            "http://127.0.0.1:10000/retrieve",
+            exc=AtagException,
+        )
+        return
+    PAIR_REPLY["pair_reply"].update(
+        {"acc_status": AUTHORIZED if authorized else UNAUTHORIZED}
+    )
+    RECEIVE_REPLY["retrieve_reply"].update(
+        {"acc_status": AUTHORIZED if authorized else UNAUTHORIZED}
+    )
+    aioclient_mock.post(
+        "http://127.0.0.1:10000/retrieve",
+        json=RECEIVE_REPLY,
+    )
+    aioclient_mock.post(
+        "http://127.0.0.1:10000/update",
+        json=UPDATE_REPLY,
+    )
+    aioclient_mock.post(
+        "http://127.0.0.1:10000/pair",
+        json=PAIR_REPLY,
+    )
 
 
 async def init_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    rgbw: bool = False,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Atag integration in Home Assistant."""
-
-    aioclient_mock.get(
-        "http://127.0.0.1:10000/retrieve",
-        json=RECEIVE_REPLY,
-        headers={"Content-Type": "application/json"},
-    )
-    aioclient_mock.post(
-        "http://127.0.0.1:10000/update",
-        json=UPDATE_REPLY,
-        headers={"Content-Type": "application/json"},
-    )
-    aioclient_mock.post(
-        "http://127.0.0.1:10000/pair",
-        json=PAIR_REPLY,
-        headers={"Content-Type": "application/json"},
-    )
-
+    mock_connection(aioclient_mock)
     entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT)
     entry.add_to_hass(hass)
 

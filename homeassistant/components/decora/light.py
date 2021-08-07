@@ -4,10 +4,11 @@ from functools import wraps
 import logging
 import time
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error, no-member
-import decora  # pylint: disable=import-error, no-member
+from bluepy.btle import BTLEException  # pylint: disable=import-error
+import decora  # pylint: disable=import-error
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -16,7 +17,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,8 @@ def retry(method):
                 return method(device, *args, **kwargs)
             except (decora.decoraException, AttributeError, BTLEException):
                 _LOGGER.warning(
-                    "Decora connect error for device %s. Reconnecting...", device.name,
+                    "Decora connect error for device %s. Reconnecting",
+                    device.name,
                 )
                 # pylint: disable=protected-access
                 device._switch.connect()
@@ -121,11 +122,6 @@ class DecoraLight(LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_DECORA_LED
-
-    @property
-    def should_poll(self):
-        """We can read the device state, so poll."""
-        return True
 
     @property
     def assumed_state(self):

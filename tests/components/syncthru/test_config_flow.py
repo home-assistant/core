@@ -1,6 +1,7 @@
 """Tests for syncthru config flow."""
 
 import re
+from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import ssdp
@@ -8,7 +9,6 @@ from homeassistant.components.syncthru.config_flow import SyncThru
 from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_URL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
 
 FIXTURE_USER_INPUT = {
@@ -24,6 +24,7 @@ def mock_connection(aioclient_mock):
         text="""
 {
 \tstatus: {
+\thrDeviceStatus: 2,
 \tstatus1: "  Sleeping...   "
 \t},
 \tidentity: {
@@ -57,7 +58,9 @@ async def test_already_configured_by_url(hass, aioclient_mock):
     mock_connection(aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT,
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=FIXTURE_USER_INPUT,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

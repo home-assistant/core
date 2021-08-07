@@ -1,29 +1,36 @@
 """Support for Notion sensors."""
-import logging
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from homeassistant.core import callback
+from . import NotionEntity
+from .const import DATA_COORDINATOR, DOMAIN, LOGGER, SENSOR_TEMPERATURE
 
-from . import SENSOR_TEMPERATURE, SENSOR_TYPES, NotionEntity
-from .const import DATA_CLIENT, DOMAIN
+SENSOR_TYPES = {
+    SENSOR_TEMPERATURE: ("Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+}
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Notion sensors based on a config entry."""
-    notion = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
     sensor_list = []
-    for task_id, task in notion.tasks.items():
+    for task_id, task in coordinator.data["tasks"].items():
         if task["task_type"] not in SENSOR_TYPES:
             continue
 
         name, device_class, unit = SENSOR_TYPES[task["task_type"]]
-        sensor = notion.sensors[task["sensor_id"]]
+        sensor = coordinator.data["sensors"][task["sensor_id"]]
 
         sensor_list.append(
             NotionSensor(
-                notion,
+                coordinator,
                 task_id,
                 sensor["id"],
                 sensor["bridge"]["id"],
@@ -34,42 +41,40 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
         )
 
-    async_add_entities(sensor_list, True)
+    async_add_entities(sensor_list)
 
 
-class NotionSensor(NotionEntity):
+class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
     def __init__(
-        self, notion, task_id, sensor_id, bridge_id, system_id, name, device_class, unit
-    ):
+        self,
+        coordinator: DataUpdateCoordinator,
+        task_id: str,
+        sensor_id: str,
+        bridge_id: str,
+        system_id: str,
+        name: str,
+        device_class: str,
+        unit: str,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
-            notion, task_id, sensor_id, bridge_id, system_id, name, device_class
+            coordinator, task_id, sensor_id, bridge_id, system_id, name, device_class
         )
 
-        self._unit = unit
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
+        self._attr_unit_of_measurement = unit
 
     @callback
-    def update_from_latest_data(self):
+    def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        task = self._notion.tasks[self._task_id]
+        task = self.coordinator.data["tasks"][self._task_id]
 
         if task["task_type"] == SENSOR_TEMPERATURE:
-            self._state = round(float(task["status"]["value"]), 1)
+            self._attr_state = round(float(task["status"]["value"]), 1)
         else:
-            _LOGGER.error(
+            LOGGER.error(
                 "Unknown task type: %s: %s",
-                self._notion.sensors[self._sensor_id],
+                self.coordinator.data["sensors"][self._sensor_id],
                 task["task_type"],
             )

@@ -15,5 +15,10 @@
                 "title": "Ubicaci\u00f3"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Endpoint de l'API d'IPMA accessible"
+        }
     }
 }

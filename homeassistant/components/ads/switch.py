@@ -1,6 +1,4 @@
 """Support for ADS switch platform."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -8,8 +6,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "ADS Switch"
 
@@ -39,7 +35,7 @@ class AdsSwitch(AdsEntity, SwitchEntity):
         await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 

@@ -13,8 +13,7 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
 )
 
-from .const import CONF_SERIAL_NUMBER
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,27 +35,27 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         await hass.async_add_executor_job(api.authenticate)
-    except requests.exceptions.Timeout:
-        raise CannotConnect
+    except requests.exceptions.Timeout as ex:
+        raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
         if (
             ex.response.status_code > HTTP_BAD_REQUEST
             and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
         ):
-            raise InvalidAuth
-        raise CannotConnect
+            raise InvalidAuth from ex
+        raise CannotConnect from ex
     #
     # The underlying module throws a generic exception on login failure
     #
-    except Exception:  # pylint: disable=broad-except
-        raise InvalidAuth
+    except Exception as ex:
+        raise InvalidAuth from ex
 
     try:
         thermostat = await hass.async_add_executor_job(
             api.get_thermostat, data[CONF_SERIAL_NUMBER]
         )
-    except requests.exceptions.HTTPError:
-        raise InvalidThermostat
+    except requests.exceptions.HTTPError as ex:
+        raise InvalidThermostat from ex
 
     return {"title": thermostat.room, "serial_number": thermostat.serial_number}
 
@@ -65,7 +64,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NuHeat."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -91,13 +89,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        await self.async_set_unique_id(user_input[CONF_SERIAL_NUMBER])
-        self._abort_if_unique_id_configured()
-
-        return await self.async_step_user(user_input)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

@@ -1,9 +1,11 @@
 """Support for Google Cloud Pub/Sub."""
+from __future__ import annotations
+
 import datetime
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 from google.cloud import pubsub_v1
 import voluptuous as vol
@@ -37,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+def setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     """Activate Google Pub/Sub component."""
 
     config = yaml_config[DOMAIN]
@@ -89,7 +91,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
-    def default(self, o):  # pylint: disable=method-hidden
+    def default(self, o):
         """Implement encoding logic."""
         if isinstance(o, datetime.datetime):
             return o.isoformat()

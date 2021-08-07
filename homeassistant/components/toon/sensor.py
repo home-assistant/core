@@ -1,7 +1,11 @@
 """Support for Toon sensors."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -24,9 +28,8 @@ from .models import (
     ToonEntity,
     ToonGasMeterDeviceEntity,
     ToonSolarDeviceEntity,
+    ToonWaterMeterDeviceEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -54,26 +57,39 @@ async def async_setup_entry(
         [ToonDisplayDeviceSensor(coordinator, key="current_display_temperature")]
     )
 
-    if coordinator.data.gas_usage and coordinator.data.gas_usage.is_smart:
-        sensors.extend(
-            [
-                ToonGasMeterDeviceSensor(coordinator, key=key)
-                for key in (
-                    "gas_average_daily",
-                    "gas_average",
-                    "gas_daily_cost",
-                    "gas_daily_usage",
-                    "gas_meter_reading",
-                    "gas_value",
-                )
-            ]
-        )
+    sensors.extend(
+        [
+            ToonGasMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "gas_average_daily",
+                "gas_average",
+                "gas_daily_cost",
+                "gas_daily_usage",
+                "gas_meter_reading",
+                "gas_value",
+            )
+        ]
+    )
+
+    sensors.extend(
+        [
+            ToonWaterMeterDeviceSensor(coordinator, key=key)
+            for key in (
+                "water_average_daily",
+                "water_average",
+                "water_daily_cost",
+                "water_daily_usage",
+                "water_meter_reading",
+                "water_value",
+            )
+        ]
+    )
 
     if coordinator.data.agreement.is_toon_solar:
         sensors.extend(
             [
                 ToonSolarDeviceSensor(coordinator, key=key)
-                for key in [
+                for key in (
                     "solar_value",
                     "solar_maximum",
                     "solar_produced",
@@ -82,60 +98,53 @@ async def async_setup_entry(
                     "power_usage_day_from_grid_usage",
                     "power_usage_day_to_grid_usage",
                     "power_usage_current_covered_by_solar",
-                ]
+                )
             ]
         )
 
     if coordinator.data.thermostat.have_opentherm_boiler:
         sensors.extend(
             [
-                ToonBoilerDeviceSensor(coordinator, key=key)
-                for key in ["thermostat_info_current_modulation_level"]
+                ToonBoilerDeviceSensor(
+                    coordinator, key="thermostat_info_current_modulation_level"
+                )
             ]
         )
 
     async_add_entities(sensors, True)
 
 
-class ToonSensor(ToonEntity):
+class ToonSensor(ToonEntity, SensorEntity):
     """Defines a Toon sensor."""
 
     def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
         """Initialize the Toon sensor."""
         self.key = key
+        super().__init__(coordinator)
 
-        super().__init__(
-            coordinator,
-            enabled_default=SENSOR_ENTITIES[key][ATTR_DEFAULT_ENABLED],
-            icon=SENSOR_ENTITIES[key][ATTR_ICON],
-            name=SENSOR_ENTITIES[key][ATTR_NAME],
+        sensor = SENSOR_ENTITIES[key]
+        self._attr_entity_registry_enabled_default = sensor.get(
+            ATTR_DEFAULT_ENABLED, True
+        )
+        self._attr_icon = sensor.get(ATTR_ICON)
+        self._attr_last_reset = sensor.get(ATTR_LAST_RESET)
+        self._attr_name = sensor[ATTR_NAME]
+        self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
+        self._attr_unit_of_measurement = sensor[ATTR_UNIT_OF_MEASUREMENT]
+        self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
+        self._attr_unique_id = (
+            # This unique ID is a bit ugly and contains unneeded information.
+            # It is here for legacy / backward compatible reasons.
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{key}"
         )
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        agreement_id = self.coordinator.data.agreement.agreement_id
-        # This unique ID is a bit ugly and contains unneeded information.
-        # It is here for legacy / backward compatible reasons.
-        return f"{DOMAIN}_{agreement_id}_sensor_{self.key}"
-
-    @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(
             self.coordinator.data, SENSOR_ENTITIES[self.key][ATTR_SECTION]
         )
         return getattr(section, SENSOR_ENTITIES[self.key][ATTR_MEASUREMENT])
-
-    @property
-    def unit_of_measurement(self) -> Optional[str]:
-        """Return the unit this state is expressed in."""
-        return SENSOR_ENTITIES[self.key][ATTR_UNIT_OF_MEASUREMENT]
-
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the device class."""
-        return SENSOR_ENTITIES[self.key][ATTR_DEVICE_CLASS]
 
 
 class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEntity):
@@ -144,6 +153,10 @@ class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEnt
 
 class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
     """Defines a Gas Meter sensor."""
+
+
+class ToonWaterMeterDeviceSensor(ToonSensor, ToonWaterMeterDeviceEntity):
+    """Defines a Water Meter sensor."""
 
 
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):

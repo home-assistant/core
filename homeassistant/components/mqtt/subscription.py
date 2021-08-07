@@ -1,34 +1,34 @@
 """Helper to handle a set of topics to subscribe to."""
-import logging
-from typing import Any, Callable, Dict, Optional
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import attr
 
-from homeassistant.components import mqtt
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
 from . import debug_info
+from .. import mqtt
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @attr.s(slots=True)
 class EntitySubscription:
     """Class to hold data about an active entity topic subscription."""
 
-    hass = attr.ib(type=HomeAssistantType)
-    topic = attr.ib(type=str)
-    message_callback = attr.ib(type=MessageCallbackType)
-    unsubscribe_callback = attr.ib(type=Optional[Callable[[], None]])
-    qos = attr.ib(type=int, default=0)
-    encoding = attr.ib(type=str, default="utf-8")
+    hass: HomeAssistant = attr.ib()
+    topic: str = attr.ib()
+    message_callback: MessageCallbackType = attr.ib()
+    unsubscribe_callback: Callable[[], None] | None = attr.ib()
+    qos: int = attr.ib(default=0)
+    encoding: str = attr.ib(default="utf-8")
 
     async def resubscribe_if_necessary(self, hass, other):
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
+            self.unsubscribe_callback = other.unsubscribe_callback
             return
 
         if other is not None and other.unsubscribe_callback is not None:
@@ -63,10 +63,10 @@ class EntitySubscription:
 
 @bind_hass
 async def async_subscribe_topics(
-    hass: HomeAssistantType,
-    new_state: Optional[Dict[str, EntitySubscription]],
-    topics: Dict[str, Any],
-):
+    hass: HomeAssistant,
+    new_state: dict[str, EntitySubscription] | None,
+    topics: dict[str, Any],
+) -> dict[str, EntitySubscription]:
     """(Re)Subscribe to a set of MQTT topics.
 
     State is kept in sub_state and a dictionary mapping from the subscription
@@ -106,6 +106,8 @@ async def async_subscribe_topics(
 
 
 @bind_hass
-async def async_unsubscribe_topics(hass: HomeAssistantType, sub_state: dict):
+async def async_unsubscribe_topics(
+    hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
+) -> dict[str, EntitySubscription]:
     """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
     return await async_subscribe_topics(hass, sub_state, {})

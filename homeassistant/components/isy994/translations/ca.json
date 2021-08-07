@@ -9,7 +9,7 @@
             "invalid_host": "L'entrada de l'amfitri\u00f3 no t\u00e9 el fromat d'URL complet, ex: http://192.168.10.100:80",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Dispositius universals ISY994 {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -37,5 +37,12 @@
             }
         }
     },
-    "title": "Dispositius universals ISY994"
+    "system_health": {
+        "info": {
+            "device_connected": "ISY connectat",
+            "host_reachable": "Amfitri\u00f3 accessible",
+            "last_heartbeat": "Hora de l'\u00faltim senyal",
+            "websocket_status": "Estat del Socket d'esdeveniments"
+        }
+    }
 }

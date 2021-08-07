@@ -1,12 +1,11 @@
 """Config flow to configure Coolmaster."""
 
-from pycoolmasternet import CoolMasterNet
+from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-# pylint: disable=unused-import
 from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
 
 MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
@@ -15,16 +14,15 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, **MODES_SCHEMA})
 
 
 async def _validate_connection(hass: core.HomeAssistant, host):
-    cool = CoolMasterNet(host, port=DEFAULT_PORT)
-    devices = await hass.async_add_executor_job(cool.devices)
-    return bool(devices)
+    cool = CoolMasterNet(host, DEFAULT_PORT)
+    units = await cool.status()
+    return bool(units)
 
 
 class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Coolmaster config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @core.callback
     def _async_get_entry(self, data):
@@ -53,8 +51,8 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await _validate_connection(self.hass, host)
             if not result:
                 errors["base"] = "no_units"
-        except (ConnectionRefusedError, TimeoutError):
-            errors["base"] = "connection_error"
+        except OSError:
+            errors["base"] = "cannot_connect"
 
         if errors:
             return self.async_show_form(

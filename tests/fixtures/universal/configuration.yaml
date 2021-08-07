@@ -1,0 +1,9 @@
+media_player:
+  - platform: universal
+    name: Master Bed TV
+    children:
+      - media_player.master_bedroom_2
+    attributes:
+      state: remote.alexander_master_bedroom
+      source_list: remote.alexander_master_bedroom|activity_list
+      source: remote.alexander_master_bedroom|current_activity

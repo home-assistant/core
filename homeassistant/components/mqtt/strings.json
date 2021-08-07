@@ -12,18 +12,18 @@
         }
       },
       "hassio_confirm": {
-        "title": "MQTT Broker via Hass.io add-on",
-        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the Hass.io add-on {addon}?",
+        "title": "MQTT Broker via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
         "data": {
           "discovery": "Enable discovery"
         }
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of MQTT is allowed."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "cannot_connect": "Unable to connect to the broker."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "device_automation": {
@@ -51,6 +51,7 @@
   "options": {
     "step": {
       "broker": {
+        "title": "Broker options",
         "description": "Please enter the connection information of your MQTT broker.",
         "data": {
           "broker": "Broker",
@@ -60,13 +61,16 @@
         }
       },
       "options": {
-        "description": "Please select MQTT options.",
+        "title": "MQTT options",
+        "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
         "data": {
           "discovery": "Enable discovery",
+          "birth_enable": "Enable birth message",
           "birth_topic": "Birth message topic",
           "birth_payload": "Birth message payload",
           "birth_qos": "Birth message QoS",
           "birth_retain": "Birth message retain",
+          "will_enable": "Enable will message",
           "will_topic": "Will message topic",
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",
@@ -75,7 +79,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect to the broker.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "bad_birth": "Invalid birth topic.",
       "bad_will": "Invalid will topic."
     }

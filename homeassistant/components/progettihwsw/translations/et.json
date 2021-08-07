@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "1. relee",
+                    "relay_10": "10. relee",
+                    "relay_11": "11. relee",
+                    "relay_12": "12. relee",
+                    "relay_13": "13. relee",
+                    "relay_14": "14. relee",
+                    "relay_15": "15. relee",
+                    "relay_16": "16. relee",
+                    "relay_2": "2. relee",
+                    "relay_3": "3. relee",
+                    "relay_4": "4. relee",
+                    "relay_5": "5. relee",
+                    "relay_6": "6. relee",
+                    "relay_7": "7. relee",
+                    "relay_8": "8. relee",
+                    "relay_9": "9. relee"
+                },
+                "title": "Seadista releed"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "title": "Seadista liides"
+            }
+        }
+    }
+}

@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "name_exists": "Lokacija \u017ee obstaja"
-        },
         "step": {
             "user": {
                 "data": {

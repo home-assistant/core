@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nombre del host o direcci\u00f3n IP",
+                    "host": "Host",
                     "name": "Nombre del concentrador"
                 },
                 "title": "Configurar Logitech Harmony Hub"
@@ -27,7 +27,6 @@
             "init": {
                 "data": {
                     "activity": "La actividad por defecto a ejecutar cuando no se especifica ninguna.",
-                    "activity_notify": "Actualice la actividad actual al inicio del cambio de actividad.",
                     "delay_secs": "El retraso entre el env\u00edo de comandos."
                 },
                 "description": "Ajustar las opciones de Harmony Hub"

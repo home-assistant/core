@@ -1,0 +1,11 @@
+{
+    "options": {
+        "abort": {
+            "cannot_connect": "Povezovanje ni uspelo."
+        },
+        "error": {
+            "dev_not_config": "Vrsta naprave ni nastavljiva",
+            "dev_not_found": "Naprave ni mogo\u010de najti"
+        }
+    }
+}

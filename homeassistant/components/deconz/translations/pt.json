@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "already_configured": "Bridge j\u00e1 est\u00e1 configurada",
+            "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer",
             "no_bridges": "Nenhum hub deCONZ descoberto",
-            "one_instance_only": "Componente suporta apenas uma conex\u00e3o deCONZ"
+            "not_deconz_bridge": "N\u00e3o \u00e9 uma bridge deCONZ"
         },
         "error": {
-            "no_key": "N\u00e3o foi poss\u00edvel obter uma chave de API"
+            "no_key": "N\u00e3o foi poss\u00edvel obter uma API Key"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Deseja configurar o Home Assistant para se conectar ao gateway deCONZ fornecido pelo addon Supervisor {addon} ?",
+                "title": "Gateway Zigbee deCONZ via addon Supervisor"
+            },
             "link": {
                 "description": "Desbloqueie o seu gateway deCONZ para se registar no Home Assistant. \n\n 1. V\u00e1 para as configura\u00e7\u00f5es do sistema deCONZ \n 2. Pressione o bot\u00e3o \"Desbloquear Gateway\"",
                 "title": "Liga\u00e7\u00e3o com deCONZ"
@@ -49,7 +54,18 @@
             "remote_awakened": "Dispositivo acordou",
             "remote_button_double_press": "Bot\u00e3o \"{subtype}\" clicado duas vezes",
             "remote_button_long_press": "Bot\u00e3o \"{subtype}\" pressionado continuamente",
-            "remote_falling": "Dispositivo em queda livre"
+            "remote_falling": "Dispositivo em queda livre",
+            "remote_gyro_activated": "Dispositivo agitado"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_deconz_groups": "Permitir grupos de luz deCONZ"
+                },
+                "description": "Configure a visibilidade dos tipos de dispositivos deCONZ"
+            }
         }
     }
 }

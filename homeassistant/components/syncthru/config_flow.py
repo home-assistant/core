@@ -12,7 +12,6 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import aiohttp_client
 
-# pylint: disable=unused-import # for DOMAIN https://github.com/PyCQA/pylint/issues/3202
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
 
 
@@ -20,7 +19,6 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Samsung SyncThru config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     url: str
     name: str
@@ -62,10 +60,7 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Remove trailing " (ip)" if present for consistency with user driven config
             self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
 
-        # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {  # pylint: disable=no-member
-            CONF_NAME: self.name
-        }
+        self.context["title_placeholders"] = {CONF_NAME: self.name}
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
@@ -74,7 +69,8 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_check_and_create("confirm", user_input)
 
         return await self._async_show_form(
-            step_id="confirm", user_input={CONF_URL: self.url, CONF_NAME: self.name},
+            step_id="confirm",
+            user_input={CONF_URL: self.url, CONF_NAME: self.name},
         )
 
     async def _async_show_form(self, step_id, user_input=None, errors=None):
@@ -133,5 +129,6 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=user_input.get(CONF_NAME), data=user_input,
+            title=user_input.get(CONF_NAME),
+            data=user_input,
         )

@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Activer la d\u00e9couverte"
                 },
-                "description": "Vous voulez configurer Home Assistant pour vous connecter au broker MQTT fourni par l\u2019Add-on hass.io {addon} ?",
-                "title": "MQTT Broker via le module compl\u00e9mentaire Hass.io"
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte au courtier MQTT fourni par le module compl\u00e9mentaire Hass.io {addon} ?",
+                "title": "Courtier MQTT via le module compl\u00e9mentaire Hass.io"
             }
         }
     },
@@ -49,12 +49,38 @@
         }
     },
     "options": {
+        "error": {
+            "bad_birth": "Topic de naissance invalide",
+            "bad_will": "Topic de testament invalide",
+            "cannot_connect": "Impossible de se connecter au broker."
+        },
         "step": {
             "broker": {
                 "data": {
+                    "broker": "Broker",
                     "password": "Mot de passe",
-                    "port": "Port"
-                }
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "description": "Veuillez entrer les informations de connexion de votre broker MQTT.",
+                "title": "Options de courtier"
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "Activer le message de naissance",
+                    "birth_payload": "Contenu du message de naissance",
+                    "birth_qos": "QoS du message de naissance",
+                    "birth_retain": "Retenir le message de naissance",
+                    "birth_topic": "Topic du message de naissance",
+                    "discovery": "Activer la d\u00e9couverte",
+                    "will_enable": "Activer le message de naissance",
+                    "will_payload": "Contenu du message de testament",
+                    "will_qos": "QoS du message de testament",
+                    "will_retain": "Retenir le message de testament",
+                    "will_topic": "Topic du message de testament"
+                },
+                "description": "D\u00e9couverte - Si la d\u00e9couverte est activ\u00e9e (recommand\u00e9e), Home Assistant d\u00e9couvrira automatiquement les appareils et les entit\u00e9s qui publient leur configuration sur le courtier MQTT. Si la d\u00e9couverte est d\u00e9sactiv\u00e9e, toute la configuration doit \u00eatre effectu\u00e9e manuellement.\n Message de naissance - Le message de naissance sera envoy\u00e9 chaque fois que Home Assistant (re) se connecte au courtier MQTT.\n Will message - Le message will sera envoy\u00e9 chaque fois que Home Assistant perd sa connexion avec le courtier, \u00e0 la fois en cas de nettoyage (par exemple, arr\u00eat de Home Assistant) et en cas de salet\u00e9 (par exemple, Home Assistant se bloque ou perd sa connexion r\u00e9seau) d\u00e9connecter.",
+                "title": "Options MQTT"
             }
         }
     }

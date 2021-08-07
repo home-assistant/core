@@ -1,5 +1,10 @@
 """Base class for a device entity integrated in devolo Home Control."""
+from __future__ import annotations
+
 import logging
+
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.helpers.entity import Entity
 
@@ -10,30 +15,41 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DevoloDeviceEntity(Entity):
-    """Representation of a sensor within devolo Home Control."""
+    """Abstract representation of a device within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid, name, sync):
+    def __init__(
+        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
+    ) -> None:
         """Initialize a devolo device entity."""
         self._device_instance = device_instance
-        self._name = name
-        self._unique_id = element_uid
         self._homecontrol = homecontrol
 
-        # This is not doing I/O. It fetches an internal state of the API
-        self._available = device_instance.is_online()
+        self._attr_available = (
+            device_instance.is_online()
+        )  # This is not doing I/O. It fetches an internal state of the API
+        self._attr_name: str = device_instance.settings_property[
+            "general_device_settings"
+        ].name
+        self._attr_should_poll = False
+        self._attr_unique_id = element_uid
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._device_instance.uid)},
+            "name": self._attr_name,
+            "manufacturer": device_instance.brand,
+            "model": device_instance.name,
+            "suggested_area": device_instance.settings_property[
+                "general_device_settings"
+            ].zone,
+        }
 
-        # Get the brand and model information
-        self._brand = device_instance.brand
-        self._model = device_instance.name
-
-        self.subscriber = None
-        self.sync_callback = sync
+        self.subscriber: Subscriber | None = None
+        self.sync_callback = self._sync
+        self._value: int
+        self._unit = ""
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        self.subscriber = Subscriber(
-            self._device_instance.itemName, callback=self.sync_callback
-        )
+        self.subscriber = Subscriber(self._attr_name, callback=self.sync_callback)
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.sync_callback
         )
@@ -44,32 +60,20 @@ class DevoloDeviceEntity(Entity):
             self._device_instance.uid, self.subscriber
         )
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._unique_id
+    def _sync(self, message: tuple) -> None:
+        """Update the state."""
+        if message[0] == self._attr_unique_id:
+            self._value = message[1]
+        else:
+            self._generic_message(message)
+        self.schedule_update_ha_state()
 
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device_instance.uid)},
-            "name": self._device_instance.itemName,
-            "manufacturer": self._brand,
-            "model": self._model,
-        }
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return the online state."""
-        return self._available
+    def _generic_message(self, message: tuple) -> None:
+        """Handle generic messages."""
+        if len(message) == 3 and message[2] == "battery_level":
+            self._value = message[1]
+        elif len(message) == 3 and message[2] == "status":
+            # Maybe the API wants to tell us, that the device went on- or offline.
+            self._attr_available = self._device_instance.is_online()
+        else:
+            _LOGGER.debug("No valid message received: %s", message)

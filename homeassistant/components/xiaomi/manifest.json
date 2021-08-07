@@ -3,5 +3,6 @@
   "name": "Xiaomi",
   "documentation": "https://www.home-assistant.io/integrations/xiaomi",
   "dependencies": ["ffmpeg"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

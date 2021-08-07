@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})"
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            }
+        }
+    }
+}

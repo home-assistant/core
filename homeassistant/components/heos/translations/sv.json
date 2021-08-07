@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Du kan bara konfigurera en enda Heos-anslutning eftersom den kommer att st\u00f6dja alla enheter i n\u00e4tverket."
-        },
-        "error": {
-            "connection_failure": "Det gick inte att ansluta till den angivna v\u00e4rden."
-        },
         "step": {
             "user": {
                 "data": {

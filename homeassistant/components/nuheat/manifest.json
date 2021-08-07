@@ -3,6 +3,13 @@
   "name": "NuHeat",
   "documentation": "https://www.home-assistant.io/integrations/nuheat",
   "requirements": ["nuheat==0.3.0"],
-  "codeowners": ["@bdraco"],
-  "config_flow": true
+  "codeowners": [],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "nuheat",
+      "macaddress": "002338*"
+    }
+  ],
+  "iot_class": "cloud_polling"
 }

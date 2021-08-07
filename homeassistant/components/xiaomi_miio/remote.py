@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 import time
 
-from miio import ChuangmiIr, DeviceException  # pylint: disable=import-error
+from miio import ChuangmiIr, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.remote import (
@@ -45,9 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
-            int, vol.Range(min=0)
-        ),
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_SLOT, default=DEFAULT_SLOT): vol.All(
             int, vol.Range(min=1, max=1000000)
         ),
@@ -86,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
     except DeviceException as ex:
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
@@ -145,12 +143,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
         )
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_LEARN,
         {
-            vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
             vol.Optional(CONF_SLOT, default=1): vol.All(
                 int, vol.Range(min=1, max=1000000)
             ),
@@ -158,10 +156,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_service_learn_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_REMOTE_LED_ON, {}, async_service_led_on_handler,
+        SERVICE_SET_REMOTE_LED_ON,
+        {},
+        async_service_led_on_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_REMOTE_LED_OFF, {}, async_service_led_off_handler,
+        SERVICE_SET_REMOTE_LED_OFF,
+        {},
+        async_service_led_off_handler,
     )
 
 

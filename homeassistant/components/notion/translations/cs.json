@@ -1,11 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "no_devices": "V \u00fa\u010dtu nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
+        },
         "step": {
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "title": "Vypl\u0148te sv\u00e9 \u00fadaje"
             }
         }
     }

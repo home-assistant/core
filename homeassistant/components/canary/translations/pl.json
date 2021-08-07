@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Po\u0142\u0105czenie z Canary"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumenty przekazane do ffmpeg dla kamer",
+                    "timeout": "Limit czasu \u017c\u0105dania (w sekundach)"
+                }
+            }
+        }
+    }
+}

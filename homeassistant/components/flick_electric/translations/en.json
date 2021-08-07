@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "That account is already configured"
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
@@ -19,6 +19,5 @@
                 "title": "Flick Login Credentials"
             }
         }
-    },
-    "title": "Flick Electric"
+    }
 }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La lista della spesa \u00e8 gi\u00e0 configurata."
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "step": {
             "user": {

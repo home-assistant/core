@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El termostato ya est\u00e1 configurado."
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor int\u00e9ntalo de nuevo",
+            "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_thermostat": "El n\u00famero de serie del termostato no es v\u00e1lido.",
             "unknown": "Error inesperado"

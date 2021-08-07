@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_communicate": "\u00c9chec de la communication",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "error": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_communicate": "\u00c9chec de la communication",
+            "cannot_connect": "\u00c9chec de connexion",
+            "one": "Vide",
+            "other": "Vide"
+        },
+        "step": {
+            "one": "",
+            "other": "Autre",
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "S\u00e9lectionner la version DSMR",
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                },
+                "title": "S\u00e9lectionner l'adresse de connexion"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "S\u00e9lectionner la version DSMR",
+                    "port": "S\u00e9lectionner un appareil"
+                },
+                "title": "Appareil"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "port": "Chemin du p\u00e9riph\u00e9rique USB"
+                },
+                "title": "Chemin"
+            },
+            "user": {
+                "data": {
+                    "type": "Type de connexion"
+                },
+                "title": "S\u00e9lectionner le type de connexion"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Temps minimum entre les mises \u00e0 jour des entit\u00e9s"
+                },
+                "title": "Options DSMR"
+            }
+        }
+    }
+}

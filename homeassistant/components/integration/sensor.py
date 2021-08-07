@@ -4,9 +4,18 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_METHOD,
     CONF_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -17,8 +26,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -31,7 +41,6 @@ CONF_ROUND_DIGITS = "round"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
 CONF_UNIT_OF_MEASUREMENT = "unit"
-CONF_METHOD = "method"
 
 TRAPEZOIDAL_METHOD = "trapezoidal"
 LEFT_METHOD = "left"
@@ -83,7 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([integral])
 
 
-class IntegrationSensor(RestoreEntity):
+class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
     def __init__(
@@ -115,24 +124,36 @@ class IntegrationSensor(RestoreEntity):
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
+        self._attr_last_reset = dt_util.utcnow()
         if state:
             try:
                 self._state = Decimal(state.state)
-            except ValueError as err:
+            except (DecimalException, ValueError) as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
+            else:
+                last_reset = dt_util.parse_datetime(
+                    state.attributes.get(ATTR_LAST_RESET, "")
+                )
+                self._attr_last_reset = (
+                    last_reset if last_reset else dt_util.utc_from_timestamp(0)
+                )
+                self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         @callback
-        def calc_integration(entity, old_state, new_state):
+        def calc_integration(event):
             """Handle the sensor state changes."""
+            old_state = event.data.get("old_state")
+            new_state = event.data.get("new_state")
             if (
                 old_state is None
-                or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-                or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
 
@@ -141,7 +162,11 @@ class IntegrationSensor(RestoreEntity):
                 self._unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
                 )
-
+            if (
+                self.device_class is None
+                and new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+            ):
+                self._attr_device_class = DEVICE_CLASS_ENERGY
             try:
                 # integration as the Riemann integral of previous measures.
                 area = 0
@@ -174,7 +199,9 @@ class IntegrationSensor(RestoreEntity):
                 self._state += integral
                 self.async_write_ha_state()
 
-        async_track_state_change(self.hass, self._sensor_source_id, calc_integration)
+        async_track_state_change_event(
+            self.hass, [self._sensor_source_id], calc_integration
+        )
 
     @property
     def name(self):
@@ -197,10 +224,9 @@ class IntegrationSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        state_attr = {ATTR_SOURCE_ID: self._sensor_source_id}
-        return state_attr
+        return {ATTR_SOURCE_ID: self._sensor_source_id}
 
     @property
     def icon(self):

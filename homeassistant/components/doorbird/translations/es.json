@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "DoorBird ya est\u00e1 configurado",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "link_local_address": "No se admiten direcciones locales",
             "not_doorbird_device": "Este dispositivo no es un DoorBird"
         },
@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host (Direcci\u00f3n IP)",
+                    "host": "Host",
                     "name": "Nombre del dispositivo",
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"

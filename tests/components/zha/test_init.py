@@ -1,5 +1,7 @@
 """Tests for ZHA integration init."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
@@ -12,7 +14,6 @@ from homeassistant.components.zha.core.const import (
 from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 DATA_RADIO_TYPE = "deconz"

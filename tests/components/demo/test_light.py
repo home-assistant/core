@@ -11,7 +11,6 @@ from homeassistant.components.light import (
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -54,13 +53,11 @@ async def test_state_attributes(hass):
         {
             ATTR_ENTITY_ID: ENTITY_LIGHT,
             ATTR_RGB_COLOR: (251, 253, 255),
-            ATTR_WHITE_VALUE: 254,
         },
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.attributes.get(ATTR_WHITE_VALUE) == 254
     assert state.attributes.get(ATTR_RGB_COLOR) == (250, 252, 255)
     assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.326)
 

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "service_id": "\u670d\u52a1 ID"
+                }
+            }
+        }
+    }
+}

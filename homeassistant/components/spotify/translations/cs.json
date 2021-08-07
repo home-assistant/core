@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "M\u016f\u017eete nakonfigurovat pouze jeden \u00fa\u010det Spotify.",
-            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
-            "missing_configuration": "Integrace Spotify nen\u00ed nakonfigurov\u00e1na. Postupujte podle n\u00e1vodu."
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el.",
+            "missing_configuration": "Integrace Spotify nen\u00ed nastavena. Postupujte podle dokumentace.",
+            "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})"
         },
         "create_entry": {
             "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno pomoc\u00ed Spotify."
@@ -11,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
+            },
+            "reauth_confirm": {
+                "description": "Integraci Spotify je t\u0159eba znovu ov\u011b\u0159it pomoc\u00ed \u00fa\u010dtu Spotify: {account}",
+                "title": "Znovu ov\u011b\u0159it integraci"
             }
         }
     }

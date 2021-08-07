@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Connexi\u00f3 amb Canary"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Par\u00e0metres enviats a ffmpeg per c\u00e0meres",
+                    "timeout": "Temps d'espera de sol\u00b7licitud (segons)"
+                }
+            }
+        }
+    }
+}

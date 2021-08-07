@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "step": {
+            "one": "Pi\u00f9",
+            "other": "Altri"
+        }
+    }
+}

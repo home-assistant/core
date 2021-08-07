@@ -22,14 +22,13 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
         self._errors = {}
 
     def _create_device(self, name: str, prt: str):
-        """Create an antry async."""
+        """Create an entry async."""
         return self.async_create_entry(title=name, data={CONF_PORT: prt})
 
     def _test_connection(self, prt):
@@ -37,7 +36,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             controller = velbus.Controller(prt)
         except Exception:  # pylint: disable=broad-except
-            self._errors[CONF_PORT] = "connection_failed"
+            self._errors[CONF_PORT] = "cannot_connect"
             return False
         controller.stop()
         return True
@@ -58,7 +57,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self._test_connection(prt):
                     return self._create_device(name, prt)
             else:
-                self._errors[CONF_PORT] = "port_exists"
+                self._errors[CONF_PORT] = "already_configured"
         else:
             user_input = {}
             user_input[CONF_NAME] = ""
@@ -82,5 +81,5 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._prt_in_configuration_exists(prt):
             # if the velbus import is already in the config
             # we should not proceed the import
-            return self.async_abort(reason="port_exists")
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "link": {
+                "description": "Vous devez autoriser Home Assistant dans Roon. Apr\u00e8s avoir cliqu\u00e9 sur soumettre, acc\u00e9dez \u00e0 l'application Roon Core, ouvrez Param\u00e8tres et activez Home Assistant dans l'onglet Extensions.",
+                "title": "Autoriser Home Assistant dans Roon"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "Veuillez entrer votre nom d\u2019h\u00f4te ou votre adresse IP sur votre serveur Roon."
+            }
+        }
+    }
+}

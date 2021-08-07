@@ -4,10 +4,10 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "description": "Do you want to setup {name} ({host})?",
@@ -27,7 +27,6 @@
             "init": {
                 "data": {
                     "activity": "The default activity to execute when none is specified.",
-                    "activity_notify": "Update current activity on start of activity switch.",
                     "delay_secs": "The delay between sending commands."
                 },
                 "description": "Adjust Harmony Hub Options"

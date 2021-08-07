@@ -1,15 +1,25 @@
 {
     "config": {
         "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha na liga\u00e7\u00e3o",
             "ipp_error": "Erro IPP encontrado.",
             "ipp_version_error": "Vers\u00e3o IPP n\u00e3o suportada pela impressora."
+        },
+        "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Servidor",
-                    "port": "Porta"
+                    "port": "Porta",
+                    "ssl": "Utiliza um certificado SSL",
+                    "verify_ssl": "Verificar o certificado SSL"
                 }
+            },
+            "zeroconf_confirm": {
+                "title": "Impressora encontrada"
             }
         }
     }

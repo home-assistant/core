@@ -5,11 +5,14 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.http import real_ip
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import (
+    CONF_ENTITIES,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.json import load_json, save_json
 
 from .hue_api import (
     HueAllGroupsStateView,
@@ -22,30 +25,33 @@ from .hue_api import (
     HueUnauthorizedUser,
     HueUsernameView,
 )
-from .upnp import DescriptionXmlView, UPNPResponderThread
+from .upnp import DescriptionXmlView, create_upnp_datagram_endpoint
 
 DOMAIN = "emulated_hue"
 
 _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_FILE = "emulated_hue_ids.json"
+DATA_KEY = "emulated_hue.ids"
+DATA_VERSION = "1"
+SAVE_DELAY = 60
 
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_ADVERTISE_PORT = "advertise_port"
-CONF_ENTITIES = "entities"
 CONF_ENTITY_HIDDEN = "hidden"
 CONF_ENTITY_NAME = "name"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
 CONF_HOST_IP = "host_ip"
+CONF_LIGHTS_ALL_DIMMABLE = "lights_all_dimmable"
 CONF_LISTEN_PORT = "listen_port"
 CONF_OFF_MAPS_TO_ON_DOMAINS = "off_maps_to_on_domains"
-CONF_TYPE = "type"
 CONF_UPNP_BIND_MULTICAST = "upnp_bind_multicast"
 
 TYPE_ALEXA = "alexa"
 TYPE_GOOGLE = "google_home"
 
+DEFAULT_LIGHTS_ALL_DIMMABLE = False
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_UPNP_BIND_MULTICAST = True
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ["script", "scene"]
@@ -85,6 +91,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENTITIES): vol.Schema(
                     {cv.entity_id: CONFIG_ENTITY_SCHEMA}
                 ),
+                vol.Optional(
+                    CONF_LIGHTS_ALL_DIMMABLE, default=DEFAULT_LIGHTS_ALL_DIMMABLE
+                ): cv.boolean,
             }
         )
     },
@@ -101,7 +110,6 @@ async def async_setup(hass, yaml_config):
     app = web.Application()
     app["hass"] = hass
 
-    real_ip.setup_real_ip(app, False, [])
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
     # pylint: disable=protected-access
@@ -113,6 +121,7 @@ async def async_setup(hass, yaml_config):
 
     DescriptionXmlView(config).register(app, app.router)
     HueUsernameView().register(app, app.router)
+    HueConfigView(config).register(app, app.router)
     HueUnauthorizedUser().register(app, app.router)
     HueAllLightsStateView(config).register(app, app.router)
     HueOneLightStateView(config).register(app, app.router)
@@ -120,19 +129,23 @@ async def async_setup(hass, yaml_config):
     HueAllGroupsStateView(config).register(app, app.router)
     HueGroupView(config).register(app, app.router)
     HueFullStateView(config).register(app, app.router)
-    HueConfigView(config).register(app, app.router)
 
-    upnp_listener = UPNPResponderThread(
+    listen = create_upnp_datagram_endpoint(
         config.host_ip_addr,
-        config.listen_port,
         config.upnp_bind_multicast,
         config.advertise_ip,
-        config.advertise_port,
+        config.advertise_port or config.listen_port,
     )
+    protocol = None
 
     async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
-        upnp_listener.stop()
+        nonlocal protocol
+        nonlocal site
+        nonlocal runner
+
+        if protocol:
+            protocol.close()
         if site:
             await site.stop()
         if runner:
@@ -140,9 +153,12 @@ async def async_setup(hass, yaml_config):
 
     async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
-        upnp_listener.start()
+        nonlocal protocol
         nonlocal site
         nonlocal runner
+        await config.async_setup()
+
+        _, protocol = await listen
 
         runner = web.AppRunner(app)
         await runner.setup()
@@ -155,6 +171,8 @@ async def async_setup(hass, yaml_config):
             _LOGGER.error(
                 "Failed to create HTTP server at port %d: %s", config.listen_port, error
             )
+            if protocol:
+                protocol.close()
         else:
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge
@@ -173,6 +191,7 @@ class Config:
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
         self.numbers = None
+        self.store = None
         self.cached_states = {}
         self._exposed_cache = {}
 
@@ -237,13 +256,24 @@ class Config:
             if hidden_value is not None:
                 self._entities_with_hidden_attr_in_config[entity_id] = hidden_value
 
+        # Get whether all non-dimmable lights should be reported as dimmable
+        # for compatibility with older installations.
+        self.lights_all_dimmable = conf.get(CONF_LIGHTS_ALL_DIMMABLE)
+
+    async def async_setup(self):
+        """Set up and migrate to storage."""
+        self.store = storage.Store(self.hass, DATA_VERSION, DATA_KEY)
+        self.numbers = (
+            await storage.async_migrator(
+                self.hass, self.hass.config.path(NUMBERS_FILE), self.store
+            )
+            or {}
+        )
+
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
             return entity_id
-
-        if self.numbers is None:
-            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         for number, ent_id in self.numbers.items():
@@ -254,16 +284,13 @@ class Config:
         if self.numbers:
             number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
-        save_json(self.hass.config.path(NUMBERS_FILE), self.numbers)
+        self.store.async_delay_save(lambda: self.numbers, SAVE_DELAY)
         return number
 
     def number_to_entity_id(self, number):
         """Convert unique number to entity id."""
         if self.type == TYPE_ALEXA:
             return number
-
-        if self.numbers is None:
-            self.numbers = _load_json(self.hass.config.path(NUMBERS_FILE))
 
         # Google Home
         assert isinstance(number, str)
@@ -318,12 +345,3 @@ class Config:
             return True
 
         return False
-
-
-def _load_json(filename):
-    """Load JSON, handling invalid syntax."""
-    try:
-        return load_json(filename)
-    except HomeAssistantError:
-        pass
-    return {}

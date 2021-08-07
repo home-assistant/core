@@ -1,20 +1,21 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
+from unittest.mock import Mock, call, patch
 
 import pytest
 
 from homeassistant.components.google_assistant import helpers
-from homeassistant.components.google_assistant.const import (  # noqa: F401
+from homeassistant.components.google_assistant.const import (
     EVENT_COMMAND_RECEIVED,
     NOT_EXPOSE_LOCAL,
 )
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from . import MockConfig
 
-from tests.async_mock import Mock, call, patch
 from tests.common import (
     async_capture_events,
     async_fire_time_changed,
@@ -27,7 +28,8 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     hass.states.async_set("light.ceiling_lights", "off")
     hass.config.api = Mock(port=1234, use_ssl=True)
     await async_process_ha_core_config(
-        hass, {"external_url": "https://hostname:1234"},
+        hass,
+        {"external_url": "https://hostname:1234"},
     )
 
     hass.http = Mock(server_port=1234)
@@ -221,13 +223,12 @@ async def test_report_state_all(agents):
     data = {}
     with patch.object(config, "async_report_state") as mock:
         await config.async_report_state_all(data)
-        assert sorted(mock.mock_calls) == sorted(
-            [call(data, agent) for agent in agents]
-        )
+        assert sorted(mock.mock_calls) == sorted(call(data, agent) for agent in agents)
 
 
 @pytest.mark.parametrize(
-    "agents, result", [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
+    "agents, result",
+    [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
 )
 async def test_sync_entities_all(agents, result):
     """Test sync entities ."""
@@ -238,5 +239,14 @@ async def test_sync_entities_all(agents, result):
         side_effect=lambda agent_user_id: agents[agent_user_id],
     ) as mock:
         res = await config.async_sync_entities_all()
-        assert sorted(mock.mock_calls) == sorted([call(agent) for agent in agents])
+        assert sorted(mock.mock_calls) == sorted(call(agent) for agent in agents)
         assert res == result
+
+
+def test_supported_features_string(caplog):
+    """Test bad supported features."""
+    entity = helpers.GoogleEntity(
+        None, None, State("test.entity_id", "on", {"supported_features": "invalid"})
+    )
+    assert entity.is_supported() is False
+    assert "Entity test.entity_id contains invalid supported_features value invalid"

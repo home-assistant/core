@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts jest ju\u017c skonfigurowany.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
-            "invalid_2fa": "Nieprawid\u0142owe uwierzytelnienie dwusk\u0142adnikowe, spr\u00f3buj ponownie.",
-            "invalid_2fa_method": "Nieprawid\u0142owa metoda uwierzytelniania dwusk\u0142adnikowego (u\u017cyj weryfikacji przez telefon).",
-            "invalid_login": "Nieprawid\u0142owy login, spr\u00f3buj ponownie."
+            "invalid_2fa": "Nieprawid\u0142owe uwierzytelnienie dwusk\u0142adnikowe, spr\u00f3buj ponownie",
+            "invalid_2fa_method": "Nieprawid\u0142owa metoda uwierzytelniania dwusk\u0142adnikowego (u\u017cyj weryfikacji przez telefon)",
+            "invalid_login": "Nieprawid\u0142owy login, spr\u00f3buj ponownie"
         },
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "PIN"
+                    "2fa": "Kod uwierzytelniania dwusk\u0142adnikowego"
                 },
                 "description": "Pusty",
                 "title": "Uwierzytelnianie dwusk\u0142adnikowe"

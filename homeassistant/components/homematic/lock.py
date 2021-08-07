@@ -1,12 +1,8 @@
 """Support for Homematic locks."""
-import logging
-
 from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

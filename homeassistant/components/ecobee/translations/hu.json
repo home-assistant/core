@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Ez az integr\u00e1ci\u00f3 jelenleg csak egy ecobee p\u00e9ld\u00e1nyt t\u00e1mogat."
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
         "error": {
             "pin_request_failed": "Hiba t\u00f6rt\u00e9nt a PIN-k\u00f3d ecobee-t\u0151l t\u00f6rt\u00e9n\u0151 k\u00e9r\u00e9sekor; ellen\u0151rizze, hogy az API-kulcs helyes-e.",

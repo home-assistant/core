@@ -1,17 +1,12 @@
 """Support for showing the time in a different time zone."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 CONF_TIME_FORMAT = "time_format"
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Worldclock Sensor"
 ICON = "mdi:clock"
@@ -32,11 +27,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
     async_add_entities(
-        [WorldClockSensor(time_zone, name, config.get(CONF_TIME_FORMAT),)], True,
+        [
+            WorldClockSensor(
+                time_zone,
+                name,
+                config.get(CONF_TIME_FORMAT),
+            )
+        ],
+        True,
     )
 
 
-class WorldClockSensor(Entity):
+class WorldClockSensor(SensorEntity):
     """Representation of a World clock sensor."""
 
     def __init__(self, time_zone, name, time_format):

@@ -1,9 +1,7 @@
 """Support for EnOcean sensors."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ID,
@@ -11,18 +9,16 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     POWER_WATT,
     STATE_CLOSED,
     STATE_OPEN,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .device import EnOceanEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -39,7 +35,7 @@ SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 SENSOR_TYPES = {
     SENSOR_TYPE_HUMIDITY: {
         "name": "Humidity",
-        "unit": UNIT_PERCENTAGE,
+        "unit": PERCENTAGE,
         "icon": "mdi:water-percent",
         "class": DEVICE_CLASS_HUMIDITY,
     },
@@ -105,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
 
-class EnOceanSensor(EnOceanEntity, RestoreEntity):
+class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
     def __init__(self, dev_id, dev_name, sensor_type):

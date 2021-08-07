@@ -1,5 +1,6 @@
 """Test zha binary sensor."""
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
 
@@ -15,7 +16,7 @@ from .common import (
 
 DEVICE_IAS = {
     1: {
-        "device_type": 1026,
+        "device_type": zigpy.profiles.zha.DeviceType.IAS_ZONE,
         "in_clusters": [security.IasZone.cluster_id],
         "out_clusters": [],
     }
@@ -24,7 +25,7 @@ DEVICE_IAS = {
 
 DEVICE_OCCUPANCY = {
     1: {
-        "device_type": 263,
+        "device_type": zigpy.profiles.zha.DeviceType.OCCUPANCY_SENSOR,
         "in_clusters": [measurement.OccupancySensing.cluster_id],
         "out_clusters": [],
     }

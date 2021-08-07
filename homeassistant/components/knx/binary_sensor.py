@@ -1,154 +1,81 @@
 """Support for KNX/IP binary sensors."""
-import voluptuous as vol
-from xknx.devices import BinarySensor
+from __future__ import annotations
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from typing import Any
+
+from xknx import XKNX
+from xknx.devices import BinarySensor as XknxBinarySensor
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX, KNXAutomation
-
-CONF_STATE_ADDRESS = "state_address"
-CONF_SIGNIFICANT_BIT = "significant_bit"
-CONF_DEFAULT_SIGNIFICANT_BIT = 1
-CONF_SYNC_STATE = "sync_state"
-CONF_AUTOMATION = "automation"
-CONF_HOOK = "hook"
-CONF_DEFAULT_HOOK = "on"
-CONF_COUNTER = "counter"
-CONF_DEFAULT_COUNTER = 1
-CONF_ACTION = "action"
-CONF_RESET_AFTER = "reset_after"
-
-CONF__ACTION = "turn_off_action"
-
-DEFAULT_NAME = "KNX Binary Sensor"
-AUTOMATION_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
-        vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
-        vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-    }
-)
-
-AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(
-            CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT
-        ): cv.positive_int,
-        vol.Optional(CONF_SYNC_STATE, default=True): cv.boolean,
-        vol.Required(CONF_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        vol.Optional(CONF_RESET_AFTER): cv.positive_int,
-        vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
-    }
-)
+from .const import ATTR_COUNTER, ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
+from .knx_entity import KnxEntity
+from .schema import BinarySensorSchema
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up binary sensor(s) for KNX platform."""
-    if discovery_info is not None:
-        async_add_entities_discovery(hass, discovery_info, async_add_entities)
-    else:
-        async_add_entities_config(hass, config, async_add_entities)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
 
+    platform_config = discovery_info["platform_config"]
+    xknx: XKNX = hass.data[DOMAIN].xknx
 
-@callback
-def async_add_entities_discovery(hass, discovery_info, async_add_entities):
-    """Set up binary sensors for KNX platform configured via xknx.yaml."""
-    entities = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXBinarySensor(device))
-    async_add_entities(entities)
-
-
-@callback
-def async_add_entities_config(hass, config, async_add_entities):
-    """Set up binary senor for KNX platform configured within platform."""
-    name = config[CONF_NAME]
-
-    binary_sensor = BinarySensor(
-        hass.data[DATA_KNX].xknx,
-        name=name,
-        group_address_state=config[CONF_STATE_ADDRESS],
-        sync_state=config[CONF_SYNC_STATE],
-        device_class=config.get(CONF_DEVICE_CLASS),
-        significant_bit=config[CONF_SIGNIFICANT_BIT],
-        reset_after=config.get(CONF_RESET_AFTER),
+    async_add_entities(
+        KNXBinarySensor(xknx, entity_config) for entity_config in platform_config
     )
-    hass.data[DATA_KNX].xknx.devices.add(binary_sensor)
-
-    entity = KNXBinarySensor(binary_sensor)
-    automations = config.get(CONF_AUTOMATION)
-    if automations is not None:
-        for automation in automations:
-            counter = automation[CONF_COUNTER]
-            hook = automation[CONF_HOOK]
-            action = automation[CONF_ACTION]
-            entity.automations.append(
-                KNXAutomation(
-                    hass=hass,
-                    device=binary_sensor,
-                    hook=hook,
-                    action=action,
-                    counter=counter,
-                )
-            )
-    async_add_entities([entity])
 
 
-class KNXBinarySensor(BinarySensorEntity):
+class KNXBinarySensor(KnxEntity, BinarySensorEntity):
     """Representation of a KNX binary sensor."""
 
-    def __init__(self, device):
+    _device: XknxBinarySensor
+
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX binary sensor."""
-        self.device = device
-        self.automations = []
-
-    @callback
-    def async_register_callbacks(self):
-        """Register callbacks to update hass after device was changed."""
-
-        async def after_update_callback(device):
-            """Call after device was updated."""
-            self.async_write_ha_state()
-
-        self.device.register_device_updated_cb(after_update_callback)
-
-    async def async_added_to_hass(self):
-        """Store register state change callback."""
-        self.async_register_callbacks()
-
-    async def async_update(self):
-        """Request a state update from KNX bus."""
-        await self.device.sync()
+        super().__init__(
+            device=XknxBinarySensor(
+                xknx,
+                name=config[CONF_NAME],
+                group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
+                invert=config[BinarySensorSchema.CONF_INVERT],
+                sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
+                ignore_internal_state=config[
+                    BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE
+                ],
+                context_timeout=config.get(BinarySensorSchema.CONF_CONTEXT_TIMEOUT),
+                reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
+            )
+        )
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_force_update = self._device.ignore_internal_state
+        self._attr_unique_id = str(self._device.remote_value.group_address_state)
 
     @property
-    def name(self):
-        """Return the name of the KNX device."""
-        return self.device.name
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.hass.data[DATA_KNX].connected
-
-    @property
-    def should_poll(self):
-        """No polling needed within KNX."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self.device.device_class
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.device.is_on()
+        return self._device.is_on()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return device specific state attributes."""
+        attr: dict[str, Any] = {}
+
+        if self._device.counter is not None:
+            attr[ATTR_COUNTER] = self._device.counter
+        if self._device.last_telegram is not None:
+            attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
+            attr[ATTR_LAST_KNX_UPDATE] = str(
+                dt.as_utc(self._device.last_telegram.timestamp)
+            )
+        return attr

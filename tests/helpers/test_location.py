@@ -62,7 +62,9 @@ async def test_coordinates_function_as_state(hass):
 async def test_coordinates_function_device_tracker_in_zone(hass):
     """Test coordinates function."""
     hass.states.async_set(
-        "zone.home", "zoning", {"latitude": 32.87336, "longitude": -117.22943},
+        "zone.home",
+        "zoning",
+        {"latitude": 32.87336, "longitude": -117.22943},
     )
     hass.states.async_set("device_tracker.device", "home")
     assert (
@@ -87,7 +89,8 @@ async def test_coordinates_function_device_tracker_from_input_select(hass):
 def test_coordinates_function_returns_none_on_recursion(hass):
     """Test coordinates function."""
     hass.states.async_set(
-        "test.first", "test.second",
+        "test.first",
+        "test.second",
     )
     hass.states.async_set("test.second", "test.first")
     assert location.find_coordinates(hass, "test.first") is None
@@ -96,7 +99,8 @@ def test_coordinates_function_returns_none_on_recursion(hass):
 async def test_coordinates_function_returns_none_if_invalid_coord(hass):
     """Test test_coordinates function."""
     hass.states.async_set(
-        "test.object", "abc",
+        "test.object",
+        "abc",
     )
     assert location.find_coordinates(hass, "test.object") is None
 

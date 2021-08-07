@@ -1,6 +1,7 @@
 """Support for Luftdaten sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -9,7 +10,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import (
     DATA_LUFTDATEN,
@@ -30,20 +30,31 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     sensors = []
     for sensor_type in luftdaten.sensor_conditions:
-        name, icon, unit = SENSORS[sensor_type]
+        try:
+            name, icon, unit, device_class = SENSORS[sensor_type]
+        except KeyError:
+            _LOGGER.debug("Unknown sensor value type: %s", sensor_type)
+            continue
+
         sensors.append(
             LuftdatenSensor(
-                luftdaten, sensor_type, name, icon, unit, entry.data[CONF_SHOW_ON_MAP]
+                luftdaten,
+                sensor_type,
+                name,
+                icon,
+                unit,
+                device_class,
+                entry.data[CONF_SHOW_ON_MAP],
             )
         )
 
     async_add_entities(sensors, True)
 
 
-class LuftdatenSensor(Entity):
+class LuftdatenSensor(SensorEntity):
     """Implementation of a Luftdaten sensor."""
 
-    def __init__(self, luftdaten, sensor_type, name, icon, unit, show):
+    def __init__(self, luftdaten, sensor_type, name, icon, unit, device_class, show):
         """Initialize the Luftdaten sensor."""
         self._async_unsub_dispatcher_connect = None
         self.luftdaten = luftdaten
@@ -54,6 +65,7 @@ class LuftdatenSensor(Entity):
         self._unit_of_measurement = unit
         self._show_on_map = show
         self._attrs = {}
+        self._attr_device_class = device_class
 
     @property
     def icon(self):
@@ -64,7 +76,10 @@ class LuftdatenSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self._data is not None:
-            return self._data[self.sensor_type]
+            try:
+                return self._data[self.sensor_type]
+            except KeyError:
+                return None
 
     @property
     def unit_of_measurement(self):
@@ -80,15 +95,21 @@ class LuftdatenSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
         if self._data is not None:
-            return f"{self._data['sensor_id']}_{self.sensor_type}"
+            try:
+                return f"{self._data['sensor_id']}_{self.sensor_type}"
+            except KeyError:
+                return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
 
         if self._data is not None:
-            self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            try:
+                self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+            except KeyError:
+                return None
 
             on_map = ATTR_LATITUDE, ATTR_LONGITUDE
             no_map = "lat", "long"

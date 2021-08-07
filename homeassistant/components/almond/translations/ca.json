@@ -1,17 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte amb Almond.",
-            "cannot_connect": "No es pot connectar amb el servidor d'Almond.",
-            "missing_configuration": "Consulta la documentaci\u00f3 sobre com configurar Almond."
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
+            "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb Almond proporcionat pel complement de Hass.io: {addon}?",
-                "title": "Almond (complement de Hass.io)"
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb Almond proporcionat pel complement: {addon}?",
+                "title": "Almond via complement de Home Assistant"
             },
             "pick_implementation": {
-                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+                "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
             }
         }
     }

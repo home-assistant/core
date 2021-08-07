@@ -1,4 +1,6 @@
 """Test Konnected setup process."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import konnected
@@ -7,7 +9,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -387,7 +388,8 @@ async def test_config_passed_to_config_entry(hass):
 async def test_unload_entry(hass, mock_panel):
     """Test being able to unload an entry."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     entry = MockConfigEntry(
         domain=konnected.DOMAIN, data={konnected.CONF_ID: "aabbccddeeff"}
@@ -411,12 +413,14 @@ async def test_api(hass, aiohttp_client, mock_panel):
             "id": "112233445566",
             "model": "Konnected Pro",
             "access_token": "abcdefgh",
+            "api_host": "http://192.168.86.32:8123",
             "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
         }
     )
 
     device_options = config_flow.OPTIONS_SCHEMA(
         {
+            "api_host": "http://192.168.86.32:8123",
             "io": {
                 "1": "Binary Sensor",
                 "2": "Binary Sensor",
@@ -568,7 +572,8 @@ async def test_api(hass, aiohttp_client, mock_panel):
 async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
@@ -718,7 +723,8 @@ async def test_state_updates_zone(hass, aiohttp_client, mock_panel):
 async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
@@ -775,7 +781,11 @@ async def test_state_updates_pin(hass, aiohttp_client, mock_panel):
     entry.add_to_hass(hass)
 
     # Add empty data field to ensure we process it correctly (possible if entry is ignored)
-    entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={},)
+    entry = MockConfigEntry(
+        domain="konnected",
+        title="Konnected Alarm Panel",
+        data={},
+    )
     entry.add_to_hass(hass)
 
     assert (

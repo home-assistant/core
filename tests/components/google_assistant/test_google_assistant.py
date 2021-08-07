@@ -134,8 +134,8 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
-    assert sorted([dev["id"] for dev in devices]) == sorted(
-        [dev["id"] for dev in DEMO_DEVICES]
+    assert sorted(dev["id"] for dev in devices) == sorted(
+        dev["id"] for dev in DEMO_DEVICES
     )
 
     for dev in devices:
@@ -231,6 +231,7 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
+        "currentFanSpeedSetting": "Auto Low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -238,6 +239,7 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
+        "currentFanSpeedSetting": "On High",
     }
 
 
@@ -288,6 +290,7 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
+        "currentFanSpeedSetting": "Auto Low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
@@ -295,6 +298,7 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
         "thermostatHumidityAmbient": 54,
+        "currentFanSpeedSetting": "On High",
     }
     hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
 
@@ -469,4 +473,4 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
     assert dehumidifier.attributes.get(humidifier.ATTR_HUMIDITY) == 45
 
     hygrostat = hass_fixture.states.get("humidifier.hygrostat")
-    assert hygrostat.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert hygrostat.attributes.get(const.ATTR_MODE) == "eco"

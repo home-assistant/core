@@ -1,0 +1,16 @@
+{
+    "state": {
+        "season__season": {
+            "autumn": "S\u00fcgis",
+            "spring": "Kevad",
+            "summer": "Suvi",
+            "winter": "Talv"
+        },
+        "season__season__": {
+            "autumn": "S\u00fcgis",
+            "spring": "Kevad",
+            "summer": "Suvi",
+            "winter": "Talv"
+        }
+    }
+}

@@ -1,3 +1,10 @@
 {
-    "title": "Lovelace"
+    "system_health": {
+        "info": {
+            "dashboards": "Tableaux de bord",
+            "mode": "Mode",
+            "resources": "Ressources",
+            "views": "Vues"
+        }
+    }
 }

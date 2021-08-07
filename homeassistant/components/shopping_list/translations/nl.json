@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "De Shopping List is al geconfigureerd."
+            "already_configured": "Service is al geconfigureerd"
         },
         "step": {
             "user": {

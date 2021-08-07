@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "DirecTV: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "description": "Vols configurar {name}?"

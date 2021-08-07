@@ -10,7 +10,7 @@
       },
       "authorize": {
         "title": "Authorize app on ecobee.com",
-        "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with pin code:\n\n{pin}\n\nThen, press Submit."
+        "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, press Submit."
       }
     },
     "error": {
@@ -18,7 +18,7 @@
       "token_request_failed": "Error requesting tokens from ecobee; please try again."
     },
     "abort": {
-      "one_instance_only": "This integration currently supports only one ecobee instance."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }

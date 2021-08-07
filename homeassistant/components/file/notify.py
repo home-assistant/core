@@ -1,5 +1,4 @@
 """Support for file notification."""
-import logging
 import os
 
 import voluptuous as vol
@@ -23,8 +22,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def get_service(hass, config, discovery_info=None):
     """Get the file notification service."""
@@ -44,7 +41,7 @@ class FileNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a file."""
-        with open(self.filepath, "a") as file:
+        with open(self.filepath, "a", encoding="utf8") as file:
             if os.stat(self.filepath).st_size == 0:
                 title = f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
                 file.write(title)

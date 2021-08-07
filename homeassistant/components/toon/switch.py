@@ -1,5 +1,4 @@
 """Support for Toon switches."""
-import logging
 from typing import Any
 
 from toonapi import (
@@ -11,12 +10,10 @@ from toonapi import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import (
-    ATTR_DEFAULT_ENABLED,
     ATTR_ICON,
-    ATTR_INVERTED,
     ATTR_MEASUREMENT,
     ATTR_NAME,
     ATTR_SECTION,
@@ -27,11 +24,9 @@ from .coordinator import ToonDataUpdateCoordinator
 from .helpers import toon_exception_handler
 from .models import ToonDisplayDeviceEntity, ToonEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Toon switches based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -47,19 +42,12 @@ class ToonSwitch(ToonEntity, SwitchEntity):
     def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
         """Initialize the Toon switch."""
         self.key = key
+        super().__init__(coordinator)
 
-        super().__init__(
-            coordinator,
-            enabled_default=SWITCH_ENTITIES[key][ATTR_DEFAULT_ENABLED],
-            icon=SWITCH_ENTITIES[key][ATTR_ICON],
-            name=SWITCH_ENTITIES[key][ATTR_NAME],
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this binary sensor."""
-        agreement_id = self.coordinator.data.agreement.agreement_id
-        return f"{agreement_id}_{self.key}"
+        switch = SWITCH_ENTITIES[key]
+        self._attr_icon = switch[ATTR_ICON]
+        self._attr_name = switch[ATTR_NAME]
+        self._attr_unique_id = f"{coordinator.data.agreement.agreement_id}_{key}"
 
     @property
     def is_on(self) -> bool:
@@ -67,12 +55,7 @@ class ToonSwitch(ToonEntity, SwitchEntity):
         section = getattr(
             self.coordinator.data, SWITCH_ENTITIES[self.key][ATTR_SECTION]
         )
-        value = getattr(section, SWITCH_ENTITIES[self.key][ATTR_MEASUREMENT])
-
-        if SWITCH_ENTITIES[self.key][ATTR_INVERTED]:
-            return not value
-
-        return value
+        return getattr(section, SWITCH_ENTITIES[self.key][ATTR_MEASUREMENT])
 
 
 class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):

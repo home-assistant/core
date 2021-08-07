@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/transmission",
   "requirements": ["transmissionrpc==0.11"],
-  "codeowners": ["@engrbm87", "@JPHutchins"]
+  "codeowners": ["@engrbm87", "@JPHutchins"],
+  "iot_class": "local_polling"
 }

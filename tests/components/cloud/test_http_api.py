@@ -1,9 +1,10 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
 from ipaddress import ip_network
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
-from hass_nabucasa import thingtalk
+from hass_nabucasa import thingtalk, voice
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
 from jose import jwt
@@ -19,7 +20,6 @@ from homeassistant.core import State
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.components.google_assistant import MockConfig
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
@@ -355,10 +355,13 @@ async def test_websocket_status(
             "google_enabled": True,
             "google_entity_configs": {},
             "google_secure_devices_pin": None,
+            "google_default_expose": None,
+            "alexa_default_expose": None,
             "alexa_entity_configs": {},
             "alexa_report_state": False,
             "google_report_state": False,
             "remote_enabled": False,
+            "tts_default_voice": ["en-US", "female"],
         },
         "alexa_entities": {
             "include_domains": [],
@@ -376,6 +379,7 @@ async def test_websocket_status(
             "exclude_entity_globs": [],
             "exclude_entities": [],
         },
+        "google_registered": False,
         "remote_domain": None,
         "remote_connected": False,
         "remote_certificate": None,
@@ -462,7 +466,8 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
     """Test querying the status."""
     client = await hass_ws_client(hass)
     with patch(
-        "hass_nabucasa.Cloud.fetch_subscription_info", return_value={"return": "value"},
+        "hass_nabucasa.Cloud.fetch_subscription_info",
+        return_value={"return": "value"},
     ):
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()
@@ -486,6 +491,9 @@ async def test_websocket_update_preferences(
             "alexa_enabled": False,
             "google_enabled": False,
             "google_secure_devices_pin": "1234",
+            "google_default_expose": ["light", "switch"],
+            "alexa_default_expose": ["sensor", "media_player"],
+            "tts_default_voice": ["en-GB", "male"],
         }
     )
     response = await client.receive_json()
@@ -494,6 +502,9 @@ async def test_websocket_update_preferences(
     assert not setup_api.google_enabled
     assert not setup_api.alexa_enabled
     assert setup_api.google_secure_devices_pin == "1234"
+    assert setup_api.google_default_expose == ["light", "switch"]
+    assert setup_api.alexa_default_expose == ["sensor", "media_player"]
+    assert setup_api.tts_default_voice == ("en-GB", "male")
 
 
 async def test_websocket_update_preferences_require_relink(
@@ -745,6 +756,25 @@ async def test_update_google_entity(hass, hass_ws_client, setup_api, mock_cloud_
         "disable_2fa": False,
     }
 
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "cloud/google_assistant/entities/update",
+            "entity_id": "light.kitchen",
+            "should_expose": None,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.google_entity_configs["light.kitchen"] == {
+        "should_expose": None,
+        "override_name": "updated name",
+        "aliases": ["lefty", "righty"],
+        "disable_2fa": False,
+    }
+
 
 async def test_enabling_remote_trusted_proxies_local4(
     hass, hass_ws_client, setup_api, mock_cloud_login
@@ -832,6 +862,20 @@ async def test_update_alexa_entity(hass, hass_ws_client, setup_api, mock_cloud_l
     assert response["success"]
     prefs = hass.data[DOMAIN].client.prefs
     assert prefs.alexa_entity_configs["light.kitchen"] == {"should_expose": False}
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "cloud/alexa/entities/update",
+            "entity_id": "light.kitchen",
+            "should_expose": None,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.alexa_entity_configs["light.kitchen"] == {"should_expose": None}
 
 
 async def test_sync_alexa_entities_timeout(
@@ -935,3 +979,25 @@ async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert response["error"]["message"] == "Did not understand"
+
+
+async def test_tts_info(hass, hass_ws_client, setup_api):
+    """Test that we can get TTS info."""
+    # Verify the format is as expected
+    assert voice.MAP_VOICE[("en-US", voice.Gender.FEMALE)] == "JennyNeural"
+
+    client = await hass_ws_client(hass)
+
+    with patch.dict(
+        "homeassistant.components.cloud.http_api.MAP_VOICE",
+        {
+            ("en-US", voice.Gender.MALE): "GuyNeural",
+            ("en-US", voice.Gender.FEMALE): "JennyNeural",
+        },
+        clear=True,
+    ):
+        await client.send_json({"id": 5, "type": "cloud/tts/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"languages": [["en-US", "male"], ["en-US", "female"]]}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi al Volumio rilevato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Vuoi aggiungere Volumio (`{name}`) a Home Assistant?",
+                "title": "Rilevato Volumio"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "connection_error": "Feeler beim verbanne mat der CoolMasterNet Instanz. Iwwerpr\u00e9ift w.e.g. \u00e4ren Apparat.",
+            "cannot_connect": "Feeler beim verbannen",
             "no_units": "Konnt keng HVAC Eenheeten am CoolMasterNet Apparat fannen."
         },
         "step": {

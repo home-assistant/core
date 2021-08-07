@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "L'identifiant ou le mot de passe est incorrect.",
+            "cannot_connect": "\u00c9chec de connexion",
+            "connection_error": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder.",
+            "invalid_auth": "Authentification invalide"
+        },
+        "create_entry": {
+            "default": "Serveur Zoneminder ajout\u00e9."
+        },
+        "error": {
+            "auth_fail": "L'identifiant ou le mot de passe est incorrect.",
+            "cannot_connect": "\u00c9chec de connexion",
+            "connection_error": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder.",
+            "invalid_auth": "Authentification invalide"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te et port (ex 10.10.0.4:8010)",
+                    "password": "Mot de passe",
+                    "path": "Chemin ZM",
+                    "path_zms": "Chemin ZMS",
+                    "ssl": "Utiliser SSL pour les connexions \u00e0 ZoneMinder",
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
+                },
+                "title": "Ajouter le serveur ZoneMinder."
+            }
+        }
+    }
+}

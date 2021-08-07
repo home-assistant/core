@@ -1,26 +1,20 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
-from datetime import timedelta
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 
-from .const import BASE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"
-SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee Comfort Plugs."""
-    smappee_base = hass.data[DOMAIN][BASE]
+    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
         for actuator_id, actuator in service_location.actuators.items():
-            if actuator.type in ["SWITCH", "COMFORT_PLUG"]:
+            if actuator.type in ("SWITCH", "COMFORT_PLUG"):
                 entities.append(
                     SmappeeActuator(
                         smappee_base,
@@ -108,7 +102,7 @@ class SmappeeActuator(SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn on Comport Plug."""
-        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
+        if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
             self._service_location.set_actuator_state(self._actuator_id, state="ON_ON")
         elif self._actuator_type == "INFINITY_OUTPUT_MODULE":
             self._service_location.set_actuator_state(
@@ -117,7 +111,7 @@ class SmappeeActuator(SwitchEntity):
 
     def turn_off(self, **kwargs):
         """Turn off Comport Plug."""
-        if self._actuator_type in ["SWITCH", "COMFORT_PLUG"]:
+        if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
             self._service_location.set_actuator_state(
                 self._actuator_id, state="OFF_OFF"
             )
@@ -146,7 +140,9 @@ class SmappeeActuator(SwitchEntity):
         return None
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this switch."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return (

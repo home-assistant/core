@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "name_exists": "O nome j\u00e1 existe"
-        },
         "step": {
             "user": {
                 "data": {

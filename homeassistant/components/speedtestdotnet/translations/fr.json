@@ -1,20 +1,16 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Une seule instance est n\u00e9cessaire.",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
             "wrong_server_id": "L'ID du serveur n'est pas valide"
         },
         "step": {
             "user": {
-                "description": "Voulez-vous vraiment configurer SpeedTest ?",
-                "title": "Configurer SpeedTest"
+                "description": "Voulez-vous vraiment configurer SpeedTest ?"
             }
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "Erreur lors de la r\u00e9cup\u00e9ration de la liste des serveurs"
-        },
         "step": {
             "init": {
                 "data": {

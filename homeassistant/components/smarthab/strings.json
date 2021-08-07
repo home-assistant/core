@@ -2,8 +2,8 @@
     "config": {
         "error": {
             "service": "Error while trying to reach SmartHab. Service might be down. Check your connection.",
-            "wrong_login": "[%key:common::config_flow::error::invalid_auth%]",
-            "unknown_error": "[%key:common::config_flow::error::unknown%]"
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {

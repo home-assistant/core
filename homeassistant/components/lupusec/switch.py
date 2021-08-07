@@ -1,6 +1,5 @@
 """Support for Lupusec Security System switches."""
 from datetime import timedelta
-import logging
 
 import lupupy.constants as CONST
 
@@ -9,8 +8,6 @@ from homeassistant.components.switch import SwitchEntity
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

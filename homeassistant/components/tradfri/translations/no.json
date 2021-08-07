@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge er allerede konfigurert.",
-            "already_in_progress": "Brokonfigurasjon er allerede i gang."
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede"
         },
         "error": {
-            "cannot_connect": "Kan ikke koble til gatewayen.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_key": "Kunne ikke registrere med gitt n\u00f8kkel. Hvis dette fortsetter, pr\u00f8v \u00e5 starte gatewayen p\u00e5 nytt.",
             "timeout": "Tidsavbrudd ved validering av kode."
         },
@@ -15,7 +15,7 @@
                     "host": "Vert",
                     "security_code": "Sikkerhetskode"
                 },
-                "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din.",
+                "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din",
                 "title": "Angi sikkerhetskode"
             }
         }

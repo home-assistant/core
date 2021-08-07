@@ -1,17 +1,76 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cas\u00e9ta \ube0c\ub9ac\uc9c0\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "cannot_connect": "Cas\u00e9ta \ube0c\ub9ac\uc9c0 \uc5f0\uacb0 \uc2e4\ud328\ub85c \uc124\uc815\uc774 \ucde8\uc18c\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "not_lutron_device": "\ubc1c\uacac\ub41c \uae30\uae30\ub294 Lutron \uae30\uae30\uac00 \uc544\ub2d9\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "Cas\u00e9ta \ube0c\ub9ac\uc9c0\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ud638\uc2a4\ud2b8 \ubc0f \uc778\uc99d\uc11c\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
+        "flow_title": "Lutron Cas\u00e9ta: {name} ({host})",
         "step": {
             "import_failed": {
                 "description": "configuration.yaml \uc5d0\uc11c \uac00\uc838\uc628 \ube0c\ub9ac\uc9c0 (\ud638\uc2a4\ud2b8:{host}) \ub97c \uc124\uc815\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
                 "title": "Cas\u00e9ta \ube0c\ub9ac\uc9c0 \uad6c\uc131\uc744 \uac00\uc838\uc624\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4."
+            },
+            "link": {
+                "description": "{name} ({host})\uacfc(\uc640) \ud398\uc5b4\ub9c1\ud558\ub824\uba74 \uc774 \uc591\uc2dd\uc744 \uc81c\ucd9c\ud55c \ud6c4 \ube0c\ub9ac\uc9c0 \ub4a4\ucabd\uc5d0 \uc788\ub294 \uac80\uc740\uc0c9 \ubc84\ud2bc\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694.",
+                "title": "\ube0c\ub9ac\uc9c0\uc640 \ud398\uc5b4\ub9c1\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8"
+                },
+                "description": "\uae30\uae30\uc758 IP \uc8fc\uc18c\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "\ube0c\ub9ac\uc9c0\uc5d0 \uc790\ub3d9\uc73c\ub85c \uc5f0\uacb0\ud558\uae30"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\uccab \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_2": "\ub450 \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_3": "\uc138 \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_4": "\ub124 \ubc88\uc9f8 \ubc84\ud2bc",
+            "close_1": "1 \ub2eb\uae30",
+            "close_2": "2 \ub2eb\uae30",
+            "close_3": "3 \ub2eb\uae30",
+            "close_4": "4 \ub2eb\uae30",
+            "close_all": "\ubaa8\ub450 \ub2eb\uae30",
+            "group_1_button_1": "\uccab \ubc88\uc9f8 \uadf8\ub8f9 \uccab \ubc88\uc9f8 \ubc84\ud2bc",
+            "group_1_button_2": "\uccab \ubc88\uc9f8 \uadf8\ub8f9 \ub450 \ubc88\uc9f8 \ubc84\ud2bc",
+            "group_2_button_1": "\ub450 \ubc88\uc9f8 \uadf8\ub8f9 \uccab \ubc88\uc9f8 \ubc84\ud2bc",
+            "group_2_button_2": "\ub450 \ubc88\uc9f8 \uadf8\ub8f9 \ub450 \ubc88\uc9f8 \ubc84\ud2bc",
+            "lower": "\ub0ae\ucd94\uae30",
+            "lower_1": "1 \ub0ae\ucd94\uae30",
+            "lower_2": "2 \ub0ae\ucd94\uae30",
+            "lower_3": "3 \ub0ae\ucd94\uae30",
+            "lower_4": "4 \ub0ae\ucd94\uae30",
+            "lower_all": "\ubaa8\ub450 \ub0ae\ucd94\uae30",
+            "off": "\ub044\uae30",
+            "on": "\ucf1c\uae30",
+            "open_1": "1 \uc5f4\uae30",
+            "open_2": "2 \uc5f4\uae30",
+            "open_3": "3 \uc5f4\uae30",
+            "open_4": "4 \uc5f4\uae30",
+            "open_all": "\ubaa8\ub450 \uc5f4\uae30",
+            "raise": "\ub192\uc774\uae30",
+            "raise_1": "1 \uc62c\ub9ac\uae30",
+            "raise_2": "2 \uc62c\ub9ac\uae30",
+            "raise_3": "3 \uc62c\ub9ac\uae30",
+            "raise_4": "4 \uc62c\ub9ac\uae30",
+            "raise_all": "\ubaa8\ub450 \uc62c\ub9ac\uae30",
+            "stop": "\uc911\uc9c0 (\uc990\uaca8 \ucc3e\uae30)",
+            "stop_1": "1 \uc911\uc9c0",
+            "stop_2": "2 \uc911\uc9c0",
+            "stop_3": "3 \uc911\uc9c0",
+            "stop_4": "4 \uc911\uc9c0",
+            "stop_all": "\ubaa8\ub450 \uc911\uc9c0"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\"\uc774(\uac00) \ub20c\ub838\uc744 \ub54c",
+            "release": "\"{subtype}\"\uc5d0\uc11c \uc190\uc744 \ub5bc\uc5c8\uc744 \ub54c"
         }
     }
 }

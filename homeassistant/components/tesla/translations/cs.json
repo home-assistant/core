@@ -1,10 +1,30 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
         "step": {
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "E-mail"
+                },
+                "description": "Zadejte sv\u00e9 \u00fadaje.",
+                "title": "Tesla - Nastaven\u00ed"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Po\u010det sekund mezi sledov\u00e1n\u00edm"
                 }
             }
         }

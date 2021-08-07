@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },
@@ -19,6 +19,5 @@
                 "title": "Flick Login Informatiounen"
             }
         }
-    },
-    "title": "Flick Electric"
+    }
 }

@@ -1,17 +1,13 @@
 """Support for the Torque OBD application."""
-import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 API_PATH = "/api/torque"
 
@@ -99,17 +95,17 @@ class TorqueReceiveDataView(HomeAssistantView):
                 if pid in self.sensors:
                     self.sensors[pid].async_on_update(data[key])
 
-        for pid in names:
+        for pid, name in names.items():
             if pid not in self.sensors:
                 self.sensors[pid] = TorqueSensor(
-                    ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]), units.get(pid)
+                    ENTITY_NAME_FORMAT.format(self.vehicle, name), units.get(pid)
                 )
                 hass.async_add_job(self.add_entities, [self.sensors[pid]])
 
         return "OK!"
 
 
-class TorqueSensor(Entity):
+class TorqueSensor(SensorEntity):
     """Representation of a Torque sensor."""
 
     def __init__(self, name, unit):

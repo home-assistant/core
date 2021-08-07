@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "\u90ae\u653f\u7f16\u7801\u5df2\u88ab\u6ce8\u518c",
             "invalid_zip_code": "\u90ae\u653f\u7f16\u7801\u65e0\u6548"
         },
         "step": {

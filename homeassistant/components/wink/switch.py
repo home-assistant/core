@@ -1,13 +1,9 @@
 """Support for Wink switches."""
-import logging
-
 import pywink
 
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -52,9 +48,9 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
         self.wink.set_state(False)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         try:
             event = self.wink.last_event()
             if event is not None:

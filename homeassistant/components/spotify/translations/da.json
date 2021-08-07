@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan kun konfigurere en enkelt Spotify-konto.",
             "authorize_url_timeout": "Timeout ved generering af godkendelses-url.",
             "missing_configuration": "Spotify-integrationen er ikke konfigureret. F\u00f8lg venligst dokumentationen."
         },

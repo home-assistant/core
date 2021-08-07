@@ -5,26 +5,10 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
-
-EVENTS = [
-    {
-        "operation": "Initialized",
-        "topic": "tns1:Device/tnsaxis:Sensor/PIR",
-        "source": "sensor",
-        "source_idx": "0",
-        "type": "state",
-        "value": "0",
-    },
-    {
-        "operation": "Initialized",
-        "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
-        "type": "active",
-        "value": "1",
-    },
-]
 
 
 async def test_platform_manually_configured(hass):
@@ -48,22 +32,40 @@ async def test_no_binary_sensors(hass):
     assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(hass, mock_rtsp_event):
     """Test that sensors are loaded properly."""
-    device = await setup_axis_integration(hass)
+    await setup_axis_integration(hass)
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Sensor/PIR",
+        data_type="state",
+        data_value="0",
+        source_name="sensor",
+        source_idx="0",
+    )
+    mock_rtsp_event(
+        topic="tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
+        data_type="active",
+        data_value="1",
+    )
+    # Unsupported event
+    mock_rtsp_event(
+        topic="tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
+        data_type="on_preset",
+        data_value="1",
+        source_name="PresetToken",
+        source_idx="0",
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 2
 
-    pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
-    assert pir.state == "off"
+    pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
+    assert pir.state == STATE_OFF
     assert pir.name == f"{NAME} PIR 0"
     assert pir.attributes["device_class"] == DEVICE_CLASS_MOTION
 
-    vmd4 = hass.states.get(f"binary_sensor.{NAME}_vmd4_camera1profile1")
-    assert vmd4.state == "on"
-    assert vmd4.name == f"{NAME} VMD4 Camera1Profile1"
+    vmd4 = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_vmd4_profile_1")
+    assert vmd4.state == STATE_ON
+    assert vmd4.name == f"{NAME} VMD4 Profile 1"
     assert vmd4.attributes["device_class"] == DEVICE_CLASS_MOTION

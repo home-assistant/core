@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "not_supported_device": "Seda WiLight'i sidumist ei toetata",
+            "not_wilight_device": "See seade ei ole WiLight"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Kas soovid seadistada WiLight'i {name} ?\n\n See toetab: {components}",
+                "title": ""
+            }
+        }
+    }
+}

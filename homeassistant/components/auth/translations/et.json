@@ -1,6 +1,34 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Teavitusteenused pole saadaval."
+            },
+            "error": {
+                "invalid_code": "Vale kood, palun proovi uuesti."
+            },
+            "step": {
+                "init": {
+                    "description": "Vali \u00fcks teavitusteenustest:",
+                    "title": "Seadista Notify poolt edastatud \u00fchekordne parool"
+                },
+                "setup": {
+                    "description": "\u00dchekordne parool on saadetud **notify. {notify_service}**. Palun sisesta see allpool:",
+                    "title": "Kontrolli seadistust"
+                }
+            },
+            "title": "Notify \u00fchekordne parool"
+        },
         "totp": {
+            "error": {
+                "invalid_code": "Vale kood, palun proovi uuesti. Kui saad selle vea pidevalt, veendu, et Home Assistant-i s\u00fcsteemi kell oleks t\u00e4pne."
+            },
+            "step": {
+                "init": {
+                    "description": "Kahefaktorilise autentimise aktiveerimiseks ajap\u00f5histe \u00fchekordsete paroolide abil skanni QR-kood oma autentimisrakendusega. Kui seda pole, soovitame kas [Google Authenticator] (https://support.google.com/accounts/answer/1066447) v\u00f5i [Authy] (https://authy.com/).\n\n {qr_code}\n\n P\u00e4rast koodi skannimist sisesta seadistuse kinnitamiseks rakenduse kuuekohaline kood. Kui on probleeme QR-koodi skannimisega, tehke koodiga **' {code}' ** k\u00e4sitsi seadistamine.",
+                    "title": "Seadista TOTP-ga kaheastmeline autentimine"
+                }
+            },
             "title": ""
         }
     }

@@ -1,5 +1,5 @@
 """Home Assistant Cast integration for Cast."""
-from typing import Optional
+from __future__ import annotations
 
 from pychromecast.controllers.homeassistant import HomeAssistantController
 import voluptuous as vol
@@ -20,8 +20,8 @@ async def async_setup_ha_cast(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up Home Assistant Cast."""
-    user_id: Optional[str] = entry.data.get("user_id")
-    user: Optional[auth.models.User] = None
+    user_id: str | None = entry.data.get("user_id")
+    user: auth.models.User | None = None
 
     if user_id is not None:
         user = await hass.auth.async_get_user(user_id)
@@ -41,7 +41,7 @@ async def async_setup_ha_cast(
 
     async def handle_show_view(call: core.ServiceCall):
         """Handle a Show View service call."""
-        hass_url = get_url(hass, require_ssl=True)
+        hass_url = get_url(hass, require_ssl=True, prefer_external=True)
 
         controller = HomeAssistantController(
             # If you are developing Home Assistant Cast, uncomment and set to your dev app id.
@@ -72,3 +72,15 @@ async def async_setup_ha_cast(
             }
         ),
     )
+
+
+async def async_remove_user(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Remove Home Assistant Cast user."""
+    user_id: str | None = entry.data.get("user_id")
+
+    if user_id is not None:
+        user = await hass.auth.async_get_user(user_id)
+        if user:
+            await hass.auth.async_remove_user(user)

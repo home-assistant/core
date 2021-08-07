@@ -1,5 +1,5 @@
 """Support for displaying weather info from Ecobee API."""
-from datetime import datetime
+from datetime import timedelta
 
 from pyecobee.const import ECOBEE_STATE_UNKNOWN
 
@@ -12,10 +12,11 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_FAHRENHEIT
+from homeassistant.util import dt as dt_util
+from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
-    _LOGGER,
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
     ECOBEE_WEATHER_SYMBOL_TO_HASS,
@@ -50,8 +51,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             forecast = self.weather["forecasts"][index]
             return forecast[param]
-        except (ValueError, IndexError, KeyError):
-            raise ValueError
+        except (IndexError, KeyError) as err:
+            raise ValueError from err
 
     @property
     def name(self):
@@ -70,15 +71,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
         except KeyError:
-            _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/home-assistant/issues/27172 "
-                "Unrecognized model number: %s",
-                thermostat["name"],
-                thermostat["modelNumber"],
-            )
-            return None
+            # Ecobee model is not in our list
+            model = None
 
         return {
             "identifiers": {(DOMAIN, thermostat["identifier"])},
@@ -112,7 +106,11 @@ class EcobeeWeather(WeatherEntity):
     def pressure(self):
         """Return the pressure."""
         try:
-            return int(self.get_forecast(0, "pressure"))
+            pressure = self.get_forecast(0, "pressure")
+            if not self.hass.config.units.is_metric:
+                pressure = pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
+                return round(pressure, 2)
+            return round(pressure)
         except ValueError:
             return None
 
@@ -165,10 +163,13 @@ class EcobeeWeather(WeatherEntity):
             return None
 
         forecasts = []
-        for day in range(1, 5):
+        date = dt_util.utcnow()
+        for day in range(0, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
                 continue
+            forecast[ATTR_FORECAST_TIME] = date.isoformat()
+            date += timedelta(days=1)
             forecasts.append(forecast)
 
         if forecasts:
@@ -186,9 +187,6 @@ def _process_forecast(json):
     """Process a single ecobee API forecast to return expected values."""
     forecast = {}
     try:
-        forecast[ATTR_FORECAST_TIME] = datetime.strptime(
-            json["dateTime"], "%Y-%m-%d %H:%M:%S"
-        ).isoformat()
         forecast[ATTR_FORECAST_CONDITION] = ECOBEE_WEATHER_SYMBOL_TO_HASS[
             json["weatherSymbol"]
         ]

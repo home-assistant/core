@@ -1,10 +1,10 @@
 """Provides device automations for Arcam FMJ Receiver control."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -13,14 +13,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, EVENT_TURN_ON
 
 TRIGGER_TYPES = {"turn_on"}
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -28,7 +28,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Arcam FMJ Receiver control devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -56,14 +56,26 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    job = HassJob(action)
 
     if config[CONF_TYPE] == "turn_on":
+        entity_id = config[CONF_ENTITY_ID]
 
         @callback
         def _handle_event(event: Event):
-            if event.data[ATTR_ENTITY_ID] == config[CONF_ENTITY_ID]:
-                hass.async_run_job(action({"trigger": config}, context=event.context))
+            if event.data[ATTR_ENTITY_ID] == entity_id:
+                hass.async_run_hass_job(
+                    job,
+                    {
+                        "trigger": {
+                            **trigger_data,
+                            **config,
+                            "description": f"{DOMAIN} - {entity_id}",
+                        }
+                    },
+                    event.context,
+                )
 
         return hass.bus.async_listen(EVENT_TURN_ON, _handle_event)
 

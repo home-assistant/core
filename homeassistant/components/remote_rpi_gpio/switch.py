@@ -1,6 +1,4 @@
 """Allows to configure a switch using RPi GPIO."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -9,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 
 from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
 from .. import remote_rpi_gpio
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PORTS = "ports"
 

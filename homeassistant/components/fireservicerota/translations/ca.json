@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "Els tokens d'autenticaci\u00f3 ja no s\u00f3n v\u00e0lids, inicia sessi\u00f3 per tornar-los a generar."
+            },
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "url": "Lloc web",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Azymut (360 stopni, 0 = P\u00f3\u0142noc, 90 = Wsch\u00f3d, 180 = Po\u0142udnie, 270 = Zach\u00f3d)",
+                    "declination": "Deklinacja (0 = Poziomo, 90 = Pionowo)",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "modules power": "Ca\u0142kowita moc szczytowa modu\u0142\u00f3w fotowoltaicznych w watach",
+                    "name": "Nazwa"
+                },
+                "description": "Wpisz dane swoich paneli s\u0142onecznych. Prosz\u0119 zapozna\u0107 si\u0119 z dokumentacj\u0105, je\u015bli pole jest niejasne."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "Klucz API dla Forecast.Solar (opcjonalnie)",
+                    "azimuth": "Azymut (360 stopni, 0 = P\u00f3\u0142noc, 90 = Wsch\u00f3d, 180 = Po\u0142udnie, 270 = Zach\u00f3d)",
+                    "damping": "Wsp\u00f3\u0142czynnik t\u0142umienia: dostosowuje wyniki rano i wieczorem",
+                    "declination": "Deklinacja (0 = Poziomo, 90 = Pionowo)",
+                    "modules power": "Ca\u0142kowita moc szczytowa modu\u0142\u00f3w fotowoltaicznych w watach"
+                },
+                "description": "Te warto\u015bci pozwalaj\u0105 dostosowa\u0107 wyniki dla  Solar.Forecast. Prosz\u0119 zapozna\u0107 si\u0119 z dokumentacj\u0105, je\u015bli pole jest niejasne."
+            }
+        }
+    }
+}

@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ja est\u00e0 en curs.",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "not_konn_panel": "No s'ha reconegut com a un dispositiu Konnected.io",
-            "unknown": "S'ha produ\u00eft un error desconegut"
+            "unknown": "Error inesperat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar amb el panell Konnected a {host}:{port}"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "confirm": {
@@ -41,7 +41,7 @@
                     "name": "Nom (opcional)",
                     "type": "Tipus de sensor binari"
                 },
-                "description": "Selecciona les opcions pel sensor binari de {zone}",
+                "description": "Opcions de {zone}",
                 "title": "Configuraci\u00f3 de sensor binari"
             },
             "options_digital": {
@@ -50,7 +50,7 @@
                     "poll_interval": "Interval de sondeig (minuts) (opcional)",
                     "type": "Tipus de sensor"
                 },
-                "description": "Selecciona les opcions pel sensor digital de {zone}",
+                "description": "Opcions de {zone}",
                 "title": "Configuraci\u00f3 de sensor digital"
             },
             "options_io": {
@@ -85,6 +85,7 @@
                 "data": {
                     "api_host": "Substitueix l'URL d'amfitri\u00f3 d'API (opcional)",
                     "blink": "Parpelleja el LED del panell quan s'envien canvis d'estat",
+                    "discovery": "Respon a peticions de descobriment a la teva xarxa",
                     "override_api_host": "Substitueix l'URL per defecte del panell d'amfitri\u00f3 de l'API de Home Assistant"
                 },
                 "description": "Selecciona el comportament desitjat del panell",
@@ -99,7 +100,7 @@
                     "pause": "Pausa entre polsos (ms) (opcional)",
                     "repeat": "Repeticions (-1 = infinit) (opcional)"
                 },
-                "description": "Selecciona les opcions de sortida per a {zone}: estat {state}",
+                "description": "Opcions de {zone}: estat {state}",
                 "title": "Configuraci\u00f3 de sortida commutable"
             }
         }

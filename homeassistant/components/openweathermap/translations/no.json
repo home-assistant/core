@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "language": "Spr\u00e5k",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "mode": "Modus",
+                    "name": "Navn p\u00e5 integrasjon"
+                },
+                "description": "Sett opp OpenWeatherMap-integrasjon. For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://openweathermap.org/appid",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Spr\u00e5k",
+                    "mode": "Modus"
+                }
+            }
+        }
+    }
+}

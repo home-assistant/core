@@ -14,7 +14,6 @@ class DeconzBase:
         """Set up device and add update callback to get data from websocket."""
         self._device = device
         self.gateway = gateway
-        self.listeners = []
 
     @property
     def unique_id(self):
@@ -35,8 +34,6 @@ class DeconzBase:
         if self.serial is None:
             return None
 
-        bridgeid = self.gateway.api.config.bridgeid
-
         return {
             "connections": {(CONNECTION_ZIGBEE, self.serial)},
             "identifiers": {(DECONZ_DOMAIN, self.serial)},
@@ -44,66 +41,52 @@ class DeconzBase:
             "model": self._device.modelid,
             "name": self._device.name,
             "sw_version": self._device.swversion,
-            "via_device": (DECONZ_DOMAIN, bridgeid),
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridgeid),
         }
 
 
 class DeconzDevice(DeconzBase, Entity):
     """Representation of a deCONZ device."""
 
+    _attr_should_poll = False
+
+    TYPE = ""
+
     def __init__(self, device, gateway):
         """Set up device and add update callback to get data from websocket."""
         super().__init__(device, gateway)
+        self.gateway.entities[self.TYPE].add(self.unique_id)
 
-        self.unsub_dispatcher = None
+        self._attr_name = self._device.name
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry.
 
         Daylight is a virtual sensor from deCONZ that should never be enabled by default.
         """
-        if self._device.type == "Daylight":
-            return False
-
-        return True
+        return self._device.type != "Daylight"
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
         self._device.register_callback(self.async_update_callback)
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
-        self.listeners.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.gateway.signal_reachable, self.async_update_callback
-            )
-        )
-        self.listeners.append(
-            async_dispatcher_connect(
-                self.hass, self.gateway.signal_remove_entity, self.async_remove_self
             )
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        if self.entity_id in self.gateway.deconz_ids:
-            del self.gateway.deconz_ids[self.entity_id]
-            for unsub_dispatcher in self.listeners:
-                unsub_dispatcher()
-
-    async def async_remove_self(self, deconz_ids: list) -> None:
-        """Schedule removal of this entity.
-
-        Called by signal_remove_entity scheduled by async_added_to_hass.
-        """
-        if self._device.deconz_id not in deconz_ids:
-            return
-        await self.async_remove()
+        del self.gateway.deconz_ids[self.entity_id]
+        self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the device's state."""
-        if ignore_update:
+        if not force_update and self.gateway.ignore_state_updates:
             return
 
         self.async_write_ha_state()
@@ -112,13 +95,3 @@ class DeconzDevice(DeconzBase, Entity):
     def available(self):
         """Return True if device is available."""
         return self.gateway.available and self._device.reachable
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

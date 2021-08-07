@@ -1,16 +1,17 @@
 """PyTest fixtures and test helpers."""
-
 from unittest import mock
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import blebox_uniapi
 import pytest
 
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, PropertyMock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 def patch_product_identify(path=None, **kwargs):
@@ -84,7 +85,7 @@ async def async_setup_entities(hass, config, entity_ids):
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
 
 

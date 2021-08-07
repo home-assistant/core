@@ -8,6 +8,10 @@
         "condition_type": {
             "is_locked": "{entity_name} je uzam\u010deno",
             "is_unlocked": "{entity_name} je odem\u010deno"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} zam\u010deno",
+            "unlocked": "{entity_name} odem\u010deno"
         }
     },
     "state": {

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_pin": "PIN\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "pairing_failure": "\ud398\uc5b4\ub9c1\uc744 \ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4: {error_id}",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN \ucf54\ub4dc"
+                },
+                "description": "TV\uc5d0 \ud45c\uc2dc\ub41c PIN \uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "title": "\ud398\uc5b4\ub9c1\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API \ubc84\uc804",
+                    "host": "\ud638\uc2a4\ud2b8"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "\uae30\uae30\uac00 \ucf1c\uc9c0\ub3c4\ub85d \uc694\uccad\ub418\uc5c8\uc744 \ub54c"
+        }
+    }
+}

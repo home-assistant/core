@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unauthorized": "Sidumine on keelatud, kontrolli seadme tuvastamistaotlust"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "title": "\u00dchendu seadmega"
+            }
+        }
+    }
+}

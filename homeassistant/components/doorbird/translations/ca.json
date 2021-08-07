@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest dispositiu DoorBird ja est\u00e0 configurat",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "link_local_address": "L'enlla\u00e7 amb adreces locals no est\u00e0 perm\u00e8s",
             "not_doorbird_device": "Aquest dispositiu no \u00e9s DoorBird"
         },
@@ -10,7 +10,7 @@
             "invalid_auth": "[%key::common::config_flow::error::invalid_auth%]",
             "unknown": "[%key::common::config_flow::error::unknown%]"
         },
-        "flow_title": "DoorBird {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

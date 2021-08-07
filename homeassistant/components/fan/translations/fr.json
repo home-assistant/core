@@ -15,8 +15,8 @@
     },
     "state": {
         "_": {
-            "off": "\u00c9teint",
-            "on": "Marche"
+            "off": "Inactif",
+            "on": "Actif"
         }
     },
     "title": "Ventilateur"

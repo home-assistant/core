@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "port_exists": "Questa porta \u00e8 gi\u00e0 configurata"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "connection_failed": "La connessione Velbus non \u00e8 riuscita",
-            "port_exists": "Questa porta \u00e8 gi\u00e0 configurata"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {

@@ -5,7 +5,6 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-# pylint: disable=unused-import
 from . import DOMAIN
 
 CONF_STRING = "string"
@@ -59,7 +58,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(CONF_BOOLEAN, False),
                     ): bool,
                     vol.Optional(
-                        CONF_INT, default=self.config_entry.options.get(CONF_INT, 10),
+                        CONF_INT,
+                        default=self.config_entry.options.get(CONF_INT, 10),
                     ): int,
                 }
             ),
@@ -77,7 +77,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_STRING,
-                        default=self.config_entry.options.get(CONF_STRING, "Default",),
+                        default=self.config_entry.options.get(
+                            CONF_STRING,
+                            "Default",
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_SELECT,

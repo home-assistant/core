@@ -1,16 +1,22 @@
 """Set up some common test helper things."""
 import asyncio
+import datetime
 import functools
 import logging
+import ssl
 import threading
+from unittest.mock import MagicMock, patch
 
+from aiohttp.test_utils import make_mocked_request
+import multidict
 import pytest
 import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, recorder
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -19,11 +25,10 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import event
+from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -34,6 +39,8 @@ from tests.common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
+    get_test_home_assistant,
+    init_recorder_component,
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
@@ -93,6 +100,21 @@ def verify_cleanup():
     assert not threads
 
 
+@pytest.fixture(autouse=True)
+def bcrypt_cost():
+    """Run with reduced rounds during tests, to speed up uses."""
+    import bcrypt
+
+    gensalt_orig = bcrypt.gensalt
+
+    def gensalt_mock(rounds=12, prefix=b"2b"):
+        return gensalt_orig(4, prefix)
+
+    bcrypt.gensalt = gensalt_mock
+    yield
+    bcrypt.gensalt = gensalt_orig
+
+
 @pytest.fixture
 def hass_storage():
     """Fixture to mock storage."""
@@ -101,16 +123,37 @@ def hass_storage():
 
 
 @pytest.fixture
-def hass(loop, hass_storage, request):
+def load_registries():
+    """Fixture to control the loading of registries when setting up the hass fixture.
+
+    To avoid loading the registries, tests can be marked with:
+    @pytest.mark.parametrize("load_registries", [False])
+    """
+    return True
+
+
+@pytest.fixture
+def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
-        exceptions.append(context["exception"])
+        # Most of these contexts will contain an exception, but not all.
+        # The docs note the key as "optional"
+        # See https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_exception_handler
+        if "exception" in context:
+            exceptions.append(context["exception"])
+        else:
+            exceptions.append(
+                Exception(
+                    "Received exception handler without exception, but with message: %s"
+                    % context["message"]
+                )
+            )
         orig_exception_handler(loop, context)
 
     exceptions = []
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
@@ -186,10 +229,24 @@ def mock_device_tracker_conf():
 
 
 @pytest.fixture
-def hass_access_token(hass, hass_admin_user):
+async def hass_admin_credential(hass, local_auth):
+    """Provide credentials for admin user."""
+    return Credentials(
+        id="mock-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "admin"},
+        is_new=False,
+    )
+
+
+@pytest.fixture
+async def hass_access_token(hass, hass_admin_user, hass_admin_credential):
     """Return an access token to access Home Assistant."""
-    refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID)
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -219,10 +276,21 @@ def hass_read_only_user(hass, local_auth):
 
 
 @pytest.fixture
-def hass_read_only_access_token(hass, hass_read_only_user):
+def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
     """Return a Home Assistant read only user."""
+    credential = Credentials(
+        id="mock-readonly-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "readonly"},
+        is_new=False,
+    )
+    hass_read_only_user.credentials.append(credential)
+
     refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_read_only_user, CLIENT_ID)
+        hass.auth.async_create_refresh_token(
+            hass_read_only_user, CLIENT_ID, credential=credential
+        )
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -245,6 +313,7 @@ def local_auth(hass):
     prv = homeassistant.HassAuthProvider(
         hass, hass.auth._store, {"type": "homeassistant"}
     )
+    hass.loop.run_until_complete(prv.async_initialize())
     hass.auth._providers[(prv.type, prv.id)] = prv
     return prv
 
@@ -260,6 +329,30 @@ def hass_client(hass, aiohttp_client, hass_access_token):
         )
 
     return auth_client
+
+
+@pytest.fixture
+def current_request():
+    """Mock current request."""
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
+        mocked_request = make_mocked_request(
+            "GET",
+            "/some/request",
+            headers={"Host": "example.com"},
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+        )
+        mock_request_context.get.return_value = mocked_request
+        yield mock_request_context
+
+
+@pytest.fixture
+def current_request_with_host(current_request):
+    """Mock current request with a host header."""
+    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=new_headers
+    )
 
 
 @pytest.fixture
@@ -318,15 +411,41 @@ def mqtt_config():
 def mqtt_client_mock(hass):
     """Fixture to mock MQTT client."""
 
-    @ha.callback
-    def _async_fire_mqtt_message(topic, payload, qos, retain):
-        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+    mid = 0
+
+    def get_mid():
+        nonlocal mid
+        mid += 1
+        return mid
+
+    class FakeInfo:
+        def __init__(self, mid):
+            self.mid = mid
+            self.rc = 0
 
     with patch("paho.mqtt.client.Client") as mock_client:
+
+        @ha.callback
+        def _async_fire_mqtt_message(topic, payload, qos, retain):
+            async_fire_mqtt_message(hass, topic, payload, qos, retain)
+            mid = get_mid()
+            mock_client.on_publish(0, 0, mid)
+            return FakeInfo(mid)
+
+        def _subscribe(topic, qos=0):
+            mid = get_mid()
+            mock_client.on_subscribe(0, 0, mid)
+            return (0, mid)
+
+        def _unsubscribe(topic):
+            mid = get_mid()
+            mock_client.on_unsubscribe(0, 0, mid)
+            return (0, mid)
+
         mock_client = mock_client.return_value
         mock_client.connect.return_value = 0
-        mock_client.subscribe.return_value = (0, 0)
-        mock_client.unsubscribe.return_value = (0, 0)
+        mock_client.subscribe.side_effect = _subscribe
+        mock_client.unsubscribe.side_effect = _unsubscribe
         mock_client.publish.side_effect = _async_fire_mqtt_message
         yield mock_client
 
@@ -335,15 +454,19 @@ def mqtt_client_mock(hass):
 async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     """Fixture to mock MQTT component."""
     if mqtt_config is None:
-        mqtt_config = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
     result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
     assert result
     await hass.async_block_till_done()
 
+    # Workaround: asynctest==0.13 fails on @functools.lru_cache
+    spec = dir(hass.data["mqtt"])
+    spec.remove("_matching_subscriptions")
+
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=hass.data["mqtt"],
+        spec_set=spec,
         wraps=hass.data["mqtt"],
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
@@ -352,6 +475,13 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     component = hass.data["mqtt"]
     component.reset_mock()
     return component
+
+
+@pytest.fixture
+def mock_zeroconf():
+    """Mock zeroconf."""
+    with patch("homeassistant.components.zeroconf.models.HaZeroconf") as mock_zc:
+        yield mock_zc.return_value
 
 
 @pytest.fixture
@@ -364,6 +494,10 @@ def legacy_patchable_time():
         """Add a listener that fires once after a specific point in UTC time."""
         # Ensure point_in_time is UTC
         point_in_time = event.dt_util.as_utc(point_in_time)
+
+        # Since this is called once, we accept a HassJob so we can avoid
+        # having to figure out how to call the action every time its called.
+        job = action if isinstance(action, ha.HassJob) else ha.HassJob(action)
 
         @ha.callback
         def point_in_time_listener(event):
@@ -381,14 +515,118 @@ def legacy_patchable_time():
             setattr(point_in_time_listener, "run", True)
             async_unsub()
 
-            hass.async_run_job(action, now)
+            hass.async_run_hass_job(job, now)
 
         async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
 
         return async_unsub
 
+    @ha.callback
+    @loader.bind_hass
+    def async_track_utc_time_change(
+        hass, action, hour=None, minute=None, second=None, local=False
+    ):
+        """Add a listener that will fire if time matches a pattern."""
+
+        job = ha.HassJob(action)
+        # We do not have to wrap the function with time pattern matching logic
+        # if no pattern given
+        if all(val is None for val in (hour, minute, second)):
+
+            @ha.callback
+            def time_change_listener(ev) -> None:
+                """Fire every time event that comes in."""
+                hass.async_run_hass_job(job, ev.data[ATTR_NOW])
+
+            return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
+
+        matching_seconds = event.dt_util.parse_time_expression(second, 0, 59)
+        matching_minutes = event.dt_util.parse_time_expression(minute, 0, 59)
+        matching_hours = event.dt_util.parse_time_expression(hour, 0, 23)
+
+        next_time = None
+
+        def calculate_next(now) -> None:
+            """Calculate and set the next time the trigger should fire."""
+            nonlocal next_time
+
+            localized_now = event.dt_util.as_local(now) if local else now
+            next_time = event.dt_util.find_next_time_expression_time(
+                localized_now, matching_seconds, matching_minutes, matching_hours
+            )
+
+        # Make sure rolling back the clock doesn't prevent the timer from
+        # triggering.
+        last_now = None
+
+        @ha.callback
+        def pattern_time_change_listener(ev) -> None:
+            """Listen for matching time_changed events."""
+            nonlocal next_time, last_now
+
+            now = ev.data[ATTR_NOW]
+
+            if last_now is None or now < last_now:
+                # Time rolled back or next time not yet calculated
+                calculate_next(now)
+
+            last_now = now
+
+            if next_time <= now:
+                hass.async_run_hass_job(
+                    job, event.dt_util.as_local(now) if local else now
+                )
+                calculate_next(now + datetime.timedelta(seconds=1))
+
+        # We can't use async_track_point_in_utc_time here because it would
+        # break in the case that the system time abruptly jumps backwards.
+        # Our custom last_now logic takes care of resolving that scenario.
+        return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
+
     with patch(
         "homeassistant.helpers.event.async_track_point_in_utc_time",
         async_track_point_in_utc_time,
+    ), patch(
+        "homeassistant.helpers.event.async_track_utc_time_change",
+        async_track_utc_time_change,
     ):
         yield
+
+
+@pytest.fixture
+def enable_custom_integrations(hass):
+    """Enable custom integrations defined in the test dir."""
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
+
+
+@pytest.fixture
+def enable_statistics():
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_statistics, hass_storage):
+    """Home Assistant fixture with in-memory recorder."""
+    hass = get_test_home_assistant()
+    stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        side_effect=stats,
+        autospec=True,
+    ):
+
+        def setup_recorder(config=None):
+            """Set up with params."""
+            init_recorder_component(hass, config)
+            hass.start()
+            hass.block_till_done()
+            hass.data[recorder.DATA_INSTANCE].block_till_done()
+            return hass
+
+        yield setup_recorder
+        hass.stop()

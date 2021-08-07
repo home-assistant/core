@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 import zigpy
@@ -14,8 +15,8 @@ from homeassistant.setup import async_setup_component
 
 from .common import FakeDevice, FakeEndpoint, get_zha_gateway
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
@@ -46,6 +47,15 @@ async def config_entry_fixture(hass):
         data={
             zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0"},
             zha_const.CONF_RADIO_TYPE: "ezsp",
+        },
+        options={
+            zha_const.CUSTOM_CONFIGURATION: {
+                zha_const.ZHA_ALARM_OPTIONS: {
+                    zha_const.CONF_ALARM_ARM_REQUIRES_CODE: False,
+                    zha_const.CONF_ALARM_MASTER_CODE: "4321",
+                    zha_const.CONF_ALARM_FAILED_TRIES: 2,
+                }
+            }
         },
     )
     entry.add_to_hass(hass)

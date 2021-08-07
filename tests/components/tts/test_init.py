@@ -1,4 +1,6 @@
 """The tests for the TTS component."""
+from unittest.mock import PropertyMock, patch
+
 import pytest
 import yarl
 
@@ -16,7 +18,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import assert_setup_component, async_mock_service
 
 
@@ -73,7 +74,7 @@ def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request
     assert False
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def mutagen_mock():
     """Mock writing tags."""
     with patch(
@@ -87,7 +88,8 @@ def mutagen_mock():
 async def internal_url_mock(hass):
     """Mock internal URL of the instance."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
 
@@ -100,6 +102,7 @@ async def test_setup_component_demo(hass):
 
     assert hass.services.has_service(tts.DOMAIN, "demo_say")
     assert hass.services.has_service(tts.DOMAIN, "clear_cache")
+    assert f"{tts.DOMAIN}.demo" in hass.config.components
 
 
 async def test_setup_component_demo_no_access_cache_folder(hass, mock_init_cache_dir):
@@ -173,6 +176,41 @@ async def test_setup_component_and_test_service_with_config_language(
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
+    ).is_file()
+
+
+async def test_setup_component_and_test_service_with_config_language_special(
+    hass, empty_cache_dir
+):
+    """Set up the demo platform and call service with extend language."""
+    import homeassistant.components.demo.tts as demo_tts
+
+    demo_tts.SUPPORT_LANGUAGES.append("en_US")
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+    config = {tts.DOMAIN: {"platform": "demo", "language": "en_US"}}
+
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(hass, tts.DOMAIN, config)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "demo_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is someone at the door.",
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+    assert (
+        calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
+    )
+    await hass.async_block_till_done()
+    assert (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
     ).is_file()
 
 
@@ -444,7 +482,7 @@ async def test_setup_component_and_test_service_with_receive_voice(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
         demo_data,
         demo_provider,
-        "AI person is in front of your door.",
+        "There is someone at the door.",
         "en",
         None,
     )
@@ -662,9 +700,10 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     req = await client.post(url, json=data)
     assert req.status == 200
     response = await req.json()
-    assert response.get("url") == (
-        "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
-    )
+    assert response == {
+        "url": "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+        "path": "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+    }
 
 
 async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
@@ -680,3 +719,24 @@ async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
 
     req = await client.post(url, json=data)
     assert req.status == 400
+
+
+async def test_tags_with_wave(hass, demo_provider):
+    """Set up the demo platform and call service and receive voice."""
+
+    # below data represents an empty wav file
+    demo_data = bytes.fromhex(
+        "52 49 46 46 24 00 00 00 57 41 56 45 66 6d 74 20 10 00 00 00 01 00 02 00"
+        + "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
+    )
+
+    tagged_data = tts.SpeechManager.write_tags(
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.wav",
+        demo_data,
+        demo_provider,
+        "AI person is in front of your door.",
+        "en",
+        None,
+    )
+
+    assert tagged_data != demo_data

@@ -1,13 +1,15 @@
 """The tests for the DirecTV remote platform."""
+from unittest.mock import patch
+
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.async_mock import patch
 from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -19,9 +21,7 @@ UNAVAILABLE_ENTITY_ID = f"{REMOTE_DOMAIN}.unavailable_client"
 # pylint: disable=redefined-outer-name
 
 
-async def test_setup(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup with basic config."""
     await setup_integration(hass, aioclient_mock)
     assert hass.states.get(MAIN_ENTITY_ID)
@@ -30,12 +30,12 @@ async def test_setup(
 
 
 async def test_unique_id(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test unique id."""
     await setup_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
     assert main.unique_id == "028877455858"
@@ -48,7 +48,7 @@ async def test_unique_id(
 
 
 async def test_main_services(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the different services."""
     await setup_integration(hass, aioclient_mock)

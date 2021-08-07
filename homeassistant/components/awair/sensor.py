@@ -1,18 +1,20 @@
 """Support for Awair sensors."""
-
-from typing import Callable, List, Optional
+from __future__ import annotations
 
 from python_awair.devices import AwairDevice
 import voluptuous as vol
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     API_DUST,
@@ -32,32 +34,35 @@ from .const import (
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCESS_TOKEN): cv.string}, extra=vol.ALLOW_EXTRA,
+    {vol.Required(CONF_ACCESS_TOKEN): cv.string},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Awair configuration from YAML."""
     LOGGER.warning(
-        "Loading Awair via platform setup is deprecated. Please remove it from your configuration."
+        "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
     )
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigType,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ):
     """Set up Awair sensor entity based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     sensors = []
 
-    data: List[AwairResult] = coordinator.data.values()
+    data: list[AwairResult] = coordinator.data.values()
     for result in data:
         if result.air_data:
             sensors.append(AwairSensor(API_SCORE, result.device, coordinator))
@@ -79,21 +84,19 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class AwairSensor(Entity):
+class AwairSensor(CoordinatorEntity, SensorEntity):
     """Defines an Awair sensor entity."""
 
     def __init__(
-        self, kind: str, device: AwairDevice, coordinator: AwairDataUpdateCoordinator,
+        self,
+        kind: str,
+        device: AwairDevice,
+        coordinator: AwairDataUpdateCoordinator,
     ) -> None:
         """Set up an individual AwairSensor."""
+        super().__init__(coordinator)
         self._kind = kind
         self._device = device
-        self._coordinator = coordinator
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def name(self) -> str:
@@ -122,7 +125,7 @@ class AwairSensor(Entity):
     def available(self) -> bool:
         """Determine if the sensor is available based on API results."""
         # If the last update was successful...
-        if self._coordinator.last_update_success and self._air_data:
+        if self.coordinator.last_update_success and self._air_data:
             # and the results included our sensor type...
             if self._kind in self._air_data.sensors:
                 # then we are available.
@@ -177,7 +180,7 @@ class AwairSensor(Entity):
         return SENSOR_TYPES[self._kind][ATTR_UNIT]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the Awair Index alongside state attributes.
 
         The Awair Index is a subjective score ranging from 0-4 (inclusive) that
@@ -207,7 +210,7 @@ class AwairSensor(Entity):
         return attrs
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Device information."""
         info = {
             "identifiers": {(DOMAIN, self._device.uuid)},
@@ -225,20 +228,10 @@ class AwairSensor(Entity):
 
         return info
 
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update Awair entity."""
-        await self._coordinator.async_request_refresh()
-
     @property
-    def _air_data(self) -> Optional[AwairResult]:
+    def _air_data(self) -> AwairResult | None:
         """Return the latest data for our device, or None."""
-        result: Optional[AwairResult] = self._coordinator.data.get(self._device.uuid)
+        result: AwairResult | None = self.coordinator.data.get(self._device.uuid)
         if result:
             return result.air_data
 

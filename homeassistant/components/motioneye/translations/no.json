@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_url": "Ugyldig URL-adresse",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant for \u00e5 koble til motionEye-tjenesten som tilbys av tillegget: {addon} ?",
+                "title": "motionEye via Home Assistant-tillegget"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Admin Passord",
+                    "admin_username": "Administrator Brukernavn",
+                    "surveillance_password": "Overv\u00e5king Passord",
+                    "surveillance_username": "Overv\u00e5king Brukernavn",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "Konfigurer motionEye webhooks for \u00e5 rapportere hendelser til Home Assistant",
+                    "webhook_set_overwrite": "Overskriv ukjente webhooks"
+                }
+            }
+        }
+    }
+}

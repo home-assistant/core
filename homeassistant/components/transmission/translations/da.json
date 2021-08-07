@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Kunne ikke oprette forbindelse til v\u00e6rt",
-            "name_exists": "Navnet findes allerede",
-            "wrong_credentials": "Ugyldigt brugernavn eller adgangskode"
+            "name_exists": "Navnet findes allerede"
         },
         "step": {
             "user": {

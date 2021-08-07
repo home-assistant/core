@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "Efectos de Hyperion a mostrar"
+                }
+            }
+        }
+    }
+}

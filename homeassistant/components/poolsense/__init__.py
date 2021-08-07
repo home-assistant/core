@@ -1,5 +1,4 @@
 """The PoolSense integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -10,10 +9,12 @@ from poolsense.exceptions import PoolSenseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DOMAIN
 
@@ -23,14 +24,7 @@ PLATFORMS = ["sensor", "binary_sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the PoolSense component."""
-    # Make sure coordinator is initialized.
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PoolSense from a config entry."""
 
     poolsense = PoolSense(
@@ -46,71 +40,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     coordinator = PoolSenseDataUpdateCoordinator(hass, entry)
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
-
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
-class PoolSenseEntity(Entity):
+class PoolSenseEntity(CoordinatorEntity):
     """Implements a common class elements representing the PoolSense component."""
 
     def __init__(self, coordinator, email, info_type):
         """Initialize poolsense sensor."""
+        super().__init__(coordinator)
         self._unique_id = f"{email}-{info_type}"
-        self.coordinator = coordinator
         self.info_type = info_type
 
     @property
     def unique_id(self):
         """Return a unique id."""
         return self._unique_id
-
-    @property
-    def available(self):
-        """Return if sensor is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling requirement of the entity."""
-        return False
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Request an update of the coordinator for entity."""
-        await self.coordinator.async_request_refresh()
 
 
 class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
@@ -135,7 +95,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:
-                _LOGGER.error("PoolSense query did not complete.")
-                raise UpdateFailed(error)
+                _LOGGER.error("PoolSense query did not complete")
+                raise UpdateFailed(error) from error
 
         return data

@@ -2,8 +2,10 @@
 import pytest
 
 from homeassistant.components.config import device_registry
+from homeassistant.helpers import device_registry as helpers_dr
 
 from tests.common import mock_device_registry
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -40,12 +42,13 @@ async def test_list_devices(hass, client, registry):
     await client.send_json({"id": 5, "type": "config/device_registry/list"})
     msg = await client.receive_json()
 
-    dev1, dev2 = [entry.pop("id") for entry in msg["result"]]
+    dev1, dev2 = (entry.pop("id") for entry in msg["result"])
 
     assert msg["result"] == [
         {
             "config_entries": ["1234"],
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "identifiers": [["bridgeid", "0123"]],
             "manufacturer": "manufacturer",
             "model": "model",
             "name": None,
@@ -54,10 +57,12 @@ async def test_list_devices(hass, client, registry):
             "via_device_id": None,
             "area_id": None,
             "name_by_user": None,
+            "disabled_by": None,
         },
         {
             "config_entries": ["1234"],
             "connections": [],
+            "identifiers": [["bridgeid", "1234"]],
             "manufacturer": "manufacturer",
             "model": "model",
             "name": None,
@@ -66,6 +71,7 @@ async def test_list_devices(hass, client, registry):
             "via_device_id": dev1,
             "area_id": None,
             "name_by_user": None,
+            "disabled_by": None,
         },
     ]
 
@@ -89,6 +95,7 @@ async def test_update_device(hass, client, registry):
             "device_id": device.id,
             "area_id": "12345A",
             "name_by_user": "Test Friendly Name",
+            "disabled_by": helpers_dr.DISABLED_USER,
             "type": "config/device_registry/update",
         }
     )
@@ -98,4 +105,5 @@ async def test_update_device(hass, client, registry):
     assert msg["result"]["id"] == device.id
     assert msg["result"]["area_id"] == "12345A"
     assert msg["result"]["name_by_user"] == "Test Friendly Name"
+    assert msg["result"]["disabled_by"] == helpers_dr.DISABLED_USER
     assert len(registry.devices) == 1

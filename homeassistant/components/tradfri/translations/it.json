@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge gi\u00e0 configurato.",
-            "already_in_progress": "La configurazione del Bridge \u00e8 gi\u00e0 in corso."
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi al gateway.",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_key": "Impossibile registrarsi con la chiave fornita. Se questo continua a succedere, prova a riavviare il gateway.",
             "timeout": "Tempo scaduto per la validazione del codice."
         },

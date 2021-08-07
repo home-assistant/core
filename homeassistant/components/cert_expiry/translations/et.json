@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud",
+            "import_failed": "Importimine konfiguratsioonist nurjus"
+        },
+        "error": {
+            "connection_refused": "Hostiga \u00fchenduse loomisel keelduti \u00fchendusest",
+            "connection_timeout": "Selle hostiga \u00fchenduse loomise ajal\u00f5pp",
+            "resolve_failed": "Seda hostinime ei saa lahendada"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "Sertifikaadi nimi",
+                    "port": ""
+                },
+                "title": "Testitava serdi m\u00e4\u00e4ramine"
+            }
+        }
+    },
+    "title": "Sertifikaadi aegumine"
+}

@@ -1,27 +1,35 @@
 """Support for Xiaomi Aqara sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
+    PERCENTAGE,
+    POWER_WATT,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from . import XiaomiDevice
-from .const import DOMAIN, GATEWAYS_KEY
+from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
+    "humidity": [PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
-    "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
-    "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
+    "lux": [LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
+    "pressure": [PRESSURE_HPA, None, DEVICE_CLASS_PRESSURE],
     "bed_activity": ["μm", None, None],
+    "load_power": [POWER_WATT, None, DEVICE_CLASS_POWER],
 }
 
 
@@ -39,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(
                 XiaomiSensor(device, "Humidity", "humidity", gateway, config_entry)
             )
-        elif device["model"] in ["weather", "weather.v1"]:
+        elif device["model"] in ("weather", "weather.v1"):
             entities.append(
                 XiaomiSensor(
                     device, "Temperature", "temperature", gateway, config_entry
@@ -55,13 +63,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(
                 XiaomiSensor(device, "Illumination", "lux", gateway, config_entry)
             )
-        elif device["model"] in ["gateway", "gateway.v3", "acpartner.v3"]:
+        elif device["model"] in ("gateway", "gateway.v3", "acpartner.v3"):
             entities.append(
                 XiaomiSensor(
                     device, "Illumination", "illumination", gateway, config_entry
                 )
             )
-        elif device["model"] in ["vibration"]:
+        elif device["model"] in ("vibration",):
             entities.append(
                 XiaomiSensor(
                     device, "Bed Activity", "bed_activity", gateway, config_entry
@@ -79,10 +87,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         else:
             _LOGGER.warning("Unmapped Device Model")
+
+    # Set up battery sensors
+    seen_sids = set()  # Set of device sids that are already seen
+    for devices in gateway.devices.values():
+        for device in devices:
+            if device["sid"] in seen_sids:
+                continue
+            seen_sids.add(device["sid"])
+            if device["model"] in BATTERY_MODELS:
+                entities.append(
+                    XiaomiBatterySensor(device, "Battery", gateway, config_entry)
+                )
+            if device["model"] in POWER_MODELS:
+                entities.append(
+                    XiaomiSensor(
+                        device, "Load Power", "load_power", gateway, config_entry
+                    )
+                )
     async_add_entities(entities)
 
 
-class XiaomiSensor(XiaomiDevice):
+class XiaomiSensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
@@ -125,13 +151,13 @@ class XiaomiSensor(XiaomiDevice):
         value = data.get(self._data_key)
         if value is None:
             return False
-        if self._data_key in ["coordination", "status"]:
+        if self._data_key in ("coordination", "status"):
             self._state = value
             return True
         value = float(value)
-        if self._data_key in ["temperature", "humidity", "pressure"]:
+        if self._data_key in ("temperature", "humidity", "pressure"):
             value /= 100
-        elif self._data_key in ["illumination"]:
+        elif self._data_key in ("illumination",):
             value = max(value - 300, 0)
         if self._data_key == "temperature" and (value < -50 or value > 60):
             return False
@@ -139,8 +165,42 @@ class XiaomiSensor(XiaomiDevice):
             return False
         if self._data_key == "pressure" and value == 0:
             return False
-        if self._data_key in ["illumination", "lux"]:
+        if self._data_key in ("illumination", "lux"):
             self._state = round(value)
         else:
             self._state = round(value, 1)
         return True
+
+
+class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
+    """Representation of a XiaomiSensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return PERCENTAGE
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        succeed = super().parse_voltage(data)
+        if not succeed:
+            return False
+        battery_level = int(self._extra_state_attributes.pop(ATTR_BATTERY_LEVEL))
+        if battery_level <= 0 or battery_level > 100:
+            return False
+        self._state = battery_level
+        return True
+
+    def parse_voltage(self, data):
+        """Parse battery level data sent by gateway."""
+        return False  # Override parse_voltage to do nothing

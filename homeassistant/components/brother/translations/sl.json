@@ -5,7 +5,6 @@
             "unsupported_model": "Ta model tiskalnika ni podprt."
         },
         "error": {
-            "connection_error": "Napaka v povezavi.",
             "snmp_error": "Stre\u017enik SNMP je izklopljen ali tiskalnik ni podprt.",
             "wrong_host": "Neveljavno ime gostitelja ali IP naslov."
         },

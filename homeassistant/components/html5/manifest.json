@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/html5",
   "requirements": ["pywebpush==1.9.2"],
   "dependencies": ["http"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

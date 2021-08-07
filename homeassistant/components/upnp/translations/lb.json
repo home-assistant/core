@@ -1,10 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP/IGD ass scho konfigur\u00e9iert",
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "incomplete_discovery": "Entdeckung net komplett",
-            "no_devices_discovered": "Keng UPnP/IGDs entdeckt",
-            "no_devices_found": "Keng UPnP/IGD Apparater am Netzwierk fonnt."
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt."
         },
         "error": {
             "one": "Een",

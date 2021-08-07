@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "invalid_zone": "Ge\u00e7ersiz b\u00f6lge"
+        },
+        "flow_title": "Cloudflare: {name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Kay\u0131tlar"
+                },
+                "title": "G\u00fcncellenecek Kay\u0131tlar\u0131 Se\u00e7in"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API Belirteci"
+                },
+                "title": "Cloudflare'ye ba\u011flan\u0131n"
+            },
+            "zone": {
+                "data": {
+                    "zone": "B\u00f6lge"
+                },
+                "title": "G\u00fcncellenecek B\u00f6lgeyi Se\u00e7in"
+            }
+        }
+    }
+}

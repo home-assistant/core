@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "unsupported_model": "Bu yaz\u0131c\u0131 modeli desteklenmiyor."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "flow_title": "Brother Yaz\u0131c\u0131: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "type": "Yaz\u0131c\u0131n\u0131n t\u00fcr\u00fc"
+                }
+            },
+            "zeroconf_confirm": {
+                "title": "Ke\u015ffedilen Brother Yaz\u0131c\u0131"
+            }
+        }
+    }
+}

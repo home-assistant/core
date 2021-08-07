@@ -2,7 +2,7 @@
   "domain": "directv",
   "name": "DirecTV",
   "documentation": "https://www.home-assistant.io/integrations/directv",
-  "requirements": ["directv==0.3.0"],
+  "requirements": ["directv==0.4.0"],
   "codeowners": ["@ctalkington"],
   "quality_scale": "gold",
   "config_flow": true,
@@ -11,5 +11,6 @@
       "manufacturer": "DIRECTV",
       "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
     }
-  ]
+  ],
+  "iot_class": "local_polling"
 }

@@ -1,14 +1,18 @@
 """Config flow for ZHA."""
+from __future__ import annotations
+
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 import serial.tools.list_ports
 import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .core.const import (  # pylint:disable=unused-import
+from .core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,
@@ -27,7 +31,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize flow instance."""
@@ -45,6 +48,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]
+
+        if not list_of_ports:
+            return await self.async_step_pick_radio()
+
         list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
@@ -60,7 +67,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if auto_detected_data is not None:
                 title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
                 title += f" - {port.manufacturer}" if port.manufacturer else ""
-                return self.async_create_entry(title=title, data=auto_detected_data,)
+                return self.async_create_entry(
+                    title=title,
+                    data=auto_detected_data,
+                )
 
             # did not detect anything
             self._device_path = dev_path
@@ -78,8 +88,39 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = {vol.Required(CONF_RADIO_TYPE): vol.In(sorted(RadioType.list()))}
         return self.async_show_form(
-            step_id="pick_radio", data_schema=vol.Schema(schema),
+            step_id="pick_radio",
+            data_schema=vol.Schema(schema),
         )
+
+    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+        """Handle zeroconf discovery."""
+        # Hostname is format: livingroom.local.
+        local_name = discovery_info["hostname"][:-1]
+        node_name = local_name[: -len(".local")]
+        host = discovery_info[CONF_HOST]
+        device_path = f"socket://{host}:6638"
+
+        await self.async_set_unique_id(node_name)
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_DEVICE: {CONF_DEVICE_PATH: device_path},
+            }
+        )
+
+        # Check if already configured
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        self.context["title_placeholders"] = {
+            CONF_NAME: node_name,
+        }
+
+        self._device_path = device_path
+        self._radio_type = (
+            RadioType.ezsp.name if "efr32" in local_name else RadioType.znp.name
+        )
+
+        return await self.async_step_port_config()
 
     async def async_step_port_config(self, user_input=None):
         """Enter port settings specific for this type of radio."""
@@ -108,16 +149,21 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if isinstance(radio_schema, vol.Schema):
             radio_schema = radio_schema.schema
 
+        source = self.context.get("source")
         for param, value in radio_schema.items():
             if param in SUPPORTED_PORT_SETTINGS:
                 schema[param] = value
+                if source == config_entries.SOURCE_ZEROCONF and param == CONF_BAUDRATE:
+                    schema[param] = 115200
 
         return self.async_show_form(
-            step_id="port_config", data_schema=vol.Schema(schema), errors=errors,
+            step_id="port_config",
+            data_schema=vol.Schema(schema),
+            errors=errors,
         )
 
 
-async def detect_radios(dev_path: str) -> Optional[Dict[str, Any]]:
+async def detect_radios(dev_path: str) -> dict[str, Any] | None:
     """Probe all radio types on the device port."""
     for radio in RadioType:
         dev_config = radio.controller.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})

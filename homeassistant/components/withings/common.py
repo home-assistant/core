@@ -1,4 +1,6 @@
 """Common code for Withings."""
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 import datetime
@@ -6,7 +8,7 @@ from datetime import timedelta
 from enum import Enum, IntEnum
 import logging
 import re
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict
 
 from aiohttp.web import Response
 import requests
@@ -26,13 +28,14 @@ from withings_api.common import (
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
+    HTTP_UNAUTHORIZED,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -53,7 +56,10 @@ from . import const
 from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
-NOT_AUTHENTICATED_ERROR = re.compile("^401,.*", re.IGNORECASE,)
+NOT_AUTHENTICATED_ERROR = re.compile(
+    f"^{HTTP_UNAUTHORIZED},.*",
+    re.IGNORECASE,
+)
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
 MeasurementData = Dict[Measurement, Any]
@@ -82,7 +88,7 @@ class WithingsAttribute:
     measute_type: Enum
     friendly_name: str
     unit_of_measurement: str
-    icon: Optional[str]
+    icon: str | None
     platform: str
     enabled_by_default: bool
     update_type: UpdateType
@@ -208,7 +214,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.FAT_RATIO_PCT,
         MeasureType.FAT_RATIO,
         "Fat Ratio",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,
@@ -248,7 +254,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SPO2_PCT,
         MeasureType.SP02,
         "SP02",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         None,
         SENSOR_DOMAIN,
         True,
@@ -398,8 +404,8 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SLEEP_SCORE,
         GetSleepSummaryField.SLEEP_SCORE,
         "Sleep score",
-        "",
-        None,
+        const.SCORE_POINTS,
+        "mdi:medal",
         SENSOR_DOMAIN,
         False,
         UpdateType.POLL,
@@ -450,19 +456,19 @@ WITHINGS_ATTRIBUTES = [
         NotifyAppli.BED_IN,
         "In bed",
         "",
-        "mdi:hotel",
+        "mdi:bed",
         BINARY_SENSOR_DOMAIN,
         True,
         UpdateType.WEBHOOK,
     ),
 ]
 
-WITHINGS_MEASUREMENTS_MAP: Dict[Measurement, WithingsAttribute] = {
+WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
     attr.measurement: attr for attr in WITHINGS_ATTRIBUTES
 }
 
-WITHINGS_MEASURE_TYPE_MAP: Dict[
-    Union[NotifyAppli, GetSleepSummaryField, MeasureType], WithingsAttribute
+WITHINGS_MEASURE_TYPE_MAP: dict[
+    NotifyAppli | GetSleepSummaryField | MeasureType, WithingsAttribute
 ] = {attr.measute_type: attr for attr in WITHINGS_ATTRIBUTES}
 
 
@@ -474,7 +480,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         implementation: AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize object."""
         self._hass = hass
         self._config_entry = config_entry
@@ -482,8 +488,8 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         self.session = OAuth2Session(hass, config_entry, implementation)
 
     def _request(
-        self, path: str, params: Dict[str, Any], method: str = "GET"
-    ) -> Dict[str, Any]:
+        self, path: str, params: dict[str, Any], method: str = "GET"
+    ) -> dict[str, Any]:
         """Perform an async request."""
         asyncio.run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self._hass.loop
@@ -520,7 +526,7 @@ class WebhookUpdateCoordinator:
         """Initialize the object."""
         self._hass = hass
         self._user_id = user_id
-        self._listeners: List[CALLBACK_TYPE] = []
+        self._listeners: list[CALLBACK_TYPE] = []
         self.data: MeasurementData = {}
 
     def async_add_listener(self, listener: CALLBACK_TYPE) -> Callable[[], None]:
@@ -558,7 +564,7 @@ class DataManager:
         api: ConfigEntryWithingsApi,
         user_id: int,
         webhook_config: WebhookConfig,
-    ):
+    ) -> None:
         """Initialize the data manager."""
         self._hass = hass
         self._api = api
@@ -569,10 +575,8 @@ class DataManager:
         self._notify_unsubscribe_delay = datetime.timedelta(seconds=1)
 
         self._is_available = True
-        self._cancel_interval_update_interval: Optional[CALLBACK_TYPE] = None
-        self._cancel_configure_webhook_subscribe_interval: Optional[
-            CALLBACK_TYPE
-        ] = None
+        self._cancel_interval_update_interval: CALLBACK_TYPE | None = None
+        self._cancel_configure_webhook_subscribe_interval: CALLBACK_TYPE | None = None
         self._api_notification_id = f"withings_{self._user_id}"
 
         self.subscription_update_coordinator = DataUpdateCoordinator(
@@ -582,7 +586,9 @@ class DataManager:
             update_interval=timedelta(minutes=120),
             update_method=self.async_subscribe_webhook,
         )
-        self.poll_data_update_coordinator = DataUpdateCoordinator(
+        self.poll_data_update_coordinator = DataUpdateCoordinator[
+            Dict[MeasureType, Any]
+        ](
             hass,
             _LOGGER,
             name="poll_data_update_coordinator",
@@ -594,7 +600,7 @@ class DataManager:
         self.webhook_update_coordinator = WebhookUpdateCoordinator(
             self._hass, self._user_id
         )
-        self._cancel_subscription_update: Optional[Callable[[], None]] = None
+        self._cancel_subscription_update: Callable[[], None] | None = None
         self._subscribe_webhook_run_count = 0
 
     @property
@@ -619,8 +625,8 @@ class DataManager:
         def empty_listener() -> None:
             pass
 
-        self._cancel_subscription_update = self.subscription_update_coordinator.async_add_listener(
-            empty_listener
+        self._cancel_subscription_update = (
+            self.subscription_update_coordinator.async_add_listener(empty_listener)
         )
 
     def async_stop_polling_webhook_subscriptions(self) -> None:
@@ -667,21 +673,17 @@ class DataManager:
         response = await self._hass.async_add_executor_job(self._api.notify_list)
 
         subscribed_applis = frozenset(
-            [
-                profile.appli
-                for profile in response.profiles
-                if profile.callbackurl == self._webhook_config.url
-            ]
+            profile.appli
+            for profile in response.profiles
+            if profile.callbackurl == self._webhook_config.url
         )
 
         # Determine what subscriptions need to be created.
-        ignored_applis = frozenset({NotifyAppli.USER})
+        ignored_applis = frozenset({NotifyAppli.USER, NotifyAppli.UNKNOWN})
         to_add_applis = frozenset(
-            [
-                appli
-                for appli in NotifyAppli
-                if appli not in subscribed_applis and appli not in ignored_applis
-            ]
+            appli
+            for appli in NotifyAppli
+            if appli not in subscribed_applis and appli not in ignored_applis
         )
 
         # Subscribe to each one.
@@ -722,7 +724,7 @@ class DataManager:
                 self._api.notify_revoke, profile.callbackurl, profile.appli
             )
 
-    async def async_get_all_data(self) -> Optional[Dict[MeasureType, Any]]:
+    async def async_get_all_data(self) -> dict[MeasureType, Any] | None:
         """Update all withings data."""
         try:
             return await self._do_retry(self._async_get_all_data)
@@ -734,7 +736,7 @@ class DataManager:
                 context = {
                     const.PROFILE: self._profile,
                     "userid": self._user_id,
-                    "source": "reauth",
+                    "source": SOURCE_REAUTH,
                 }
 
                 # Check if reauth flow already exists.
@@ -751,24 +753,29 @@ class DataManager:
 
                 # Start a reauth flow.
                 await self._hass.config_entries.flow.async_init(
-                    const.DOMAIN, context=context,
+                    const.DOMAIN,
+                    context=context,
                 )
                 return
 
             raise exception
 
-    async def _async_get_all_data(self) -> Optional[Dict[MeasureType, Any]]:
+    async def _async_get_all_data(self) -> dict[MeasureType, Any] | None:
         _LOGGER.info("Updating all withings data")
         return {
             **await self.async_get_measures(),
             **await self.async_get_sleep_summary(),
         }
 
-    async def async_get_measures(self) -> Dict[MeasureType, Any]:
+    async def async_get_measures(self) -> dict[MeasureType, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
+        now = dt.utcnow()
+        startdate = now - datetime.timedelta(days=7)
 
-        response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
+        response = await self._hass.async_add_executor_job(
+            self._api.measure_get_meas, None, None, startdate, now, None, startdate
+        )
 
         # Sort from oldest to newest.
         groups = sorted(
@@ -787,7 +794,7 @@ class DataManager:
             for measure in group.measures
         }
 
-    async def async_get_sleep_summary(self) -> Dict[MeasureType, Any]:
+    async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
         now = dt.utcnow()
@@ -804,12 +811,33 @@ class DataManager:
         )
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
-            return self._api.sleep_get_summary(lastupdate=yesterday_noon)
+            return self._api.sleep_get_summary(
+                lastupdate=yesterday_noon,
+                data_fields=[
+                    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
+                    GetSleepSummaryField.DEEP_SLEEP_DURATION,
+                    GetSleepSummaryField.DURATION_TO_SLEEP,
+                    GetSleepSummaryField.DURATION_TO_WAKEUP,
+                    GetSleepSummaryField.HR_AVERAGE,
+                    GetSleepSummaryField.HR_MAX,
+                    GetSleepSummaryField.HR_MIN,
+                    GetSleepSummaryField.LIGHT_SLEEP_DURATION,
+                    GetSleepSummaryField.REM_SLEEP_DURATION,
+                    GetSleepSummaryField.RR_AVERAGE,
+                    GetSleepSummaryField.RR_MAX,
+                    GetSleepSummaryField.RR_MIN,
+                    GetSleepSummaryField.SLEEP_SCORE,
+                    GetSleepSummaryField.SNORING,
+                    GetSleepSummaryField.SNORING_EPISODE_COUNT,
+                    GetSleepSummaryField.WAKEUP_COUNT,
+                    GetSleepSummaryField.WAKEUP_DURATION,
+                ],
+            )
 
         response = await self._hass.async_add_executor_job(get_sleep_summary)
 
         # Set the default to empty lists.
-        raw_values: Dict[GetSleepSummaryField, List[int]] = {
+        raw_values: dict[GetSleepSummaryField, list[int]] = {
             field: [] for field in GetSleepSummaryField
         }
 
@@ -818,11 +846,11 @@ class DataManager:
             data = serie.data
 
             for field in GetSleepSummaryField:
-                raw_values[field].append(data._asdict()[field.value])
+                raw_values[field].append(dict(data)[field.value])
 
-        values: Dict[GetSleepSummaryField, float] = {}
+        values: dict[GetSleepSummaryField, float] = {}
 
-        def average(data: List[int]) -> float:
+        def average(data: list[int]) -> float:
             return sum(data) / len(data)
 
         def set_value(field: GetSleepSummaryField, func: Callable) -> None:
@@ -879,9 +907,11 @@ def get_attribute_unique_id(attribute: WithingsAttribute, user_id: int) -> str:
 
 async def async_get_entity_id(
     hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
-) -> Optional[str]:
+) -> str | None:
     """Get an entity id for a user's attribute."""
-    entity_registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry: EntityRegistry = (
+        await hass.helpers.entity_registry.async_get_registry()
+    )
     unique_id = get_attribute_unique_id(attribute, user_id)
 
     entity_id = entity_registry.async_get_entity_id(
@@ -906,7 +936,7 @@ class BaseWithingsSensor(Entity):
         self._user_id = self._data_manager.user_id
         self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
         self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
-        self._state_data: Optional[Any] = None
+        self._state_data: Any | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -924,17 +954,18 @@ class BaseWithingsSensor(Entity):
         if self._attribute.update_type == UpdateType.POLL:
             return self._data_manager.poll_data_update_coordinator.last_update_success
 
+        if self._attribute.update_type == UpdateType.WEBHOOK:
+            return self._data_manager.webhook_config.enabled and (
+                self._attribute.measurement
+                in self._data_manager.webhook_update_coordinator.data
+            )
+
         return True
 
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._unique_id
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._attribute.unit_of_measurement
 
     @property
     def icon(self) -> str:
@@ -1017,7 +1048,7 @@ async def async_get_data_manager(
 
 def get_data_manager_by_webhook_id(
     hass: HomeAssistant, webhook_id: str
-) -> Optional[DataManager]:
+) -> DataManager | None:
     """Get a data manager by it's webhook id."""
     return next(
         iter(
@@ -1031,14 +1062,12 @@ def get_data_manager_by_webhook_id(
     )
 
 
-def get_all_data_managers(hass: HomeAssistant) -> Tuple[DataManager, ...]:
+def get_all_data_managers(hass: HomeAssistant) -> tuple[DataManager, ...]:
     """Get all configured data managers."""
     return tuple(
-        [
-            config_entry_data[const.DATA_MANAGER]
-            for config_entry_data in hass.data[const.DOMAIN].values()
-            if const.DATA_MANAGER in config_entry_data
-        ]
+        config_entry_data[const.DATA_MANAGER]
+        for config_entry_data in hass.data[const.DOMAIN].values()
+        if const.DATA_MANAGER in config_entry_data
     )
 
 
@@ -1052,7 +1081,7 @@ async def async_create_entities(
     entry: ConfigEntry,
     create_func: Callable[[DataManager, WithingsAttribute], Entity],
     platform: str,
-) -> List[Entity]:
+) -> list[Entity]:
     """Create withings entities from config entry."""
     data_manager = await async_get_data_manager(hass, entry)
 
@@ -1062,14 +1091,10 @@ async def async_create_entities(
     ]
 
 
-def get_platform_attributes(platform: str) -> Tuple[WithingsAttribute, ...]:
+def get_platform_attributes(platform: str) -> tuple[WithingsAttribute, ...]:
     """Get withings attributes used for a specific platform."""
     return tuple(
-        [
-            attribute
-            for attribute in WITHINGS_ATTRIBUTES
-            if attribute.platform == platform
-        ]
+        attribute for attribute in WITHINGS_ATTRIBUTES if attribute.platform == platform
     )
 
 

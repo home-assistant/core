@@ -1,9 +1,9 @@
 {
     "state": {
         "_": {
-            "clear-night": "pogodnie, noc",
+            "clear-night": "pogodna noc",
             "cloudy": "pochmurno",
-            "exceptional": "wyj\u0105tkowy",
+            "exceptional": "warunki nadzwyczajne",
             "fog": "mg\u0142a",
             "hail": "grad",
             "lightning": "b\u0142yskawice",
@@ -11,8 +11,8 @@
             "partlycloudy": "cz\u0119\u015bciowe zachmurzenie",
             "pouring": "ulewa",
             "rainy": "deszczowo",
-            "snowy": "\u015bnie\u017cnie",
-            "snowy-rainy": "\u015bnie\u017cnie, deszczowo",
+            "snowy": "opady \u015bniegu",
+            "snowy-rainy": "\u015bnieg z deszczem",
             "sunny": "s\u0142onecznie",
             "windy": "wietrznie",
             "windy-variant": "wietrznie"

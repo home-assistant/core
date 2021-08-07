@@ -25,5 +25,17 @@
                 "title": "\u8fde\u63a5\u4e2d\u67a2"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "turn_off": "\u5173\u95ed"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" \u957f\u6309\u540e\u677e\u5f00",
+            "remote_button_short_press": "\"{subtype}\" \u5355\u51fb",
+            "remote_button_short_release": "\"{subtype}\" \u677e\u5f00",
+            "remote_double_button_long_press": "\"{subtype}\" \u4e24\u952e\u540c\u65f6\u957f\u6309\u540e\u677e\u5f00",
+            "remote_double_button_short_press": "\"{subtype}\" \u4e24\u952e\u540c\u65f6\u677e\u5f00"
+        }
     }
 }

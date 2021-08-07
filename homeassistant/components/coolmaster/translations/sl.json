@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "connection_error": "Povezava s CoolMasterNet ni uspela. Preverite svojega gostitelja.",
             "no_units": "V gostitelju CoolMasterNet ni bilo mogo\u010de najti nobenih enot HVAC."
         },
         "step": {

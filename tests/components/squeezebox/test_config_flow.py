@@ -1,7 +1,10 @@
 """Test the Logitech Squeezebox config flow."""
+from unittest.mock import patch
+
 from pysqueezebox import Server
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.squeezebox.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -16,7 +19,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 HOST = "1.1.1.1"
@@ -44,9 +46,8 @@ async def patch_async_query_unauthorized(self, *args):
 async def test_user_form(hass):
     """Test user-initiated flow, including discovery and the edit step."""
     with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.squeezebox.async_setup_entry", return_value=True,
+        "homeassistant.components.squeezebox.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry, patch(
         "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover
     ):
@@ -75,7 +76,6 @@ async def test_user_form(hass):
         }
 
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -106,11 +106,11 @@ async def test_user_form_timeout(hass):
 async def test_user_form_duplicate(hass):
     """Test duplicate discovered servers are skipped."""
     with patch(
-        "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover,
+        "homeassistant.components.squeezebox.config_flow.async_discover",
+        mock_discover,
     ), patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1), patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.squeezebox.async_setup_entry", return_value=True,
+        "homeassistant.components.squeezebox.async_setup_entry",
+        return_value=True,
     ):
         entry = MockConfigEntry(domain=DOMAIN, unique_id=UUID)
         await hass.config_entries.async_add(entry)
@@ -153,7 +153,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "pysqueezebox.Server.async_query", return_value=False,
+        "pysqueezebox.Server.async_query",
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -172,11 +173,12 @@ async def test_form_cannot_connect(hass):
 async def test_discovery(hass):
     """Test handling of discovered server."""
     with patch(
-        "pysqueezebox.Server.async_query", return_value={"uuid": UUID},
+        "pysqueezebox.Server.async_query",
+        return_value={"uuid": UUID},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
         )
         assert result["type"] == RESULT_TYPE_FORM
@@ -188,19 +190,73 @@ async def test_discovery_no_uuid(hass):
     with patch("pysqueezebox.Server.async_query", new=patch_async_query_unauthorized):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT},
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "edit"
 
 
+async def test_dhcp_discovery(hass):
+    """Test we can process discovery from dhcp."""
+    with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "any",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "edit"
+
+
+async def test_dhcp_discovery_no_server_found(hass):
+    """Test we can handle dhcp discovery when no server is found."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover",
+        mock_failed_discover,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "any",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+
+async def test_dhcp_discovery_existing_player(hass):
+    """Test that we properly ignore known players during dhcp discover."""
+    with patch(
+        "homeassistant.helpers.entity_registry.EntityRegistry.async_get_entity_id",
+        return_value="test_entity",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "any",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+
+
 async def test_import(hass):
     """Test handling of configuration imported."""
     with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.squeezebox.async_setup_entry", return_value=True,
+        "homeassistant.components.squeezebox.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -210,7 +266,6 @@ async def test_import(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -246,11 +301,11 @@ async def test_import_bad_auth(hass):
 async def test_import_existing(hass):
     """Test handling of configuration import of existing server."""
     with patch(
-        "homeassistant.components.squeezebox.async_setup", return_value=True
+        "homeassistant.components.squeezebox.async_setup_entry",
+        return_value=True,
     ), patch(
-        "homeassistant.components.squeezebox.async_setup_entry", return_value=True,
-    ), patch(
-        "pysqueezebox.Server.async_query", return_value={"ip": HOST, "uuid": UUID},
+        "pysqueezebox.Server.async_query",
+        return_value={"ip": HOST, "uuid": UUID},
     ):
         entry = MockConfigEntry(domain=DOMAIN, unique_id=UUID)
         await hass.config_entries.async_add(entry)

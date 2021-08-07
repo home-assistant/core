@@ -5,7 +5,7 @@ from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -13,12 +13,12 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEVICE_CLASS_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class MfiSensor(Entity):
+class MfiSensor(SensorEntity):
     """Representation of a mFi sensor."""
 
     def __init__(self, port, hass):
@@ -84,7 +84,7 @@ class MfiSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of th sensor."""
+        """Return the name of the sensor."""
         return self._port.label
 
     @property
@@ -100,6 +100,19 @@ class MfiSensor(Entity):
             return STATE_ON if self._port.value > 0 else STATE_OFF
         digits = DIGITS.get(self._port.tag, 0)
         return round(self._port.value, digits)
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        try:
+            tag = self._port.tag
+        except ValueError:
+            return None
+
+        if tag == "temperature":
+            return DEVICE_CLASS_TEMPERATURE
+
+        return None
 
     @property
     def unit_of_measurement(self):

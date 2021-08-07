@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Forbindelsen mislykkedes",
-            "name_exists": "Navnet findes allerede",
-            "wrong_credentials": "Forkerte legitimationsoplysninger"
+            "name_exists": "Navnet findes allerede"
         },
         "step": {
             "user": {

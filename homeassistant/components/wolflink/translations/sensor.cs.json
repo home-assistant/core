@@ -1,0 +1,33 @@
+{
+    "state": {
+        "wolflink__state": {
+            "aktiviert": "Aktivov\u00e1no",
+            "aus": "Zak\u00e1z\u00e1no",
+            "auto": "Auto",
+            "automatik_aus": "Automatick\u00e9 vypnut\u00ed",
+            "automatik_ein": "Automatick\u00e9 zapnut\u00ed",
+            "cooling": "Chlazen\u00ed",
+            "deaktiviert": "Neaktivn\u00ed",
+            "eco": "Ekonomick\u00fd re\u017eim",
+            "ein": "Povoleno",
+            "externe_deaktivierung": "Extern\u00ed deaktivace",
+            "frostschutz": "Ochrana proti mrazu",
+            "gasdruck": "Tlak plynu",
+            "heizbetrieb": "Re\u017eim topen\u00ed",
+            "heizung": "Topen\u00ed",
+            "initialisierung": "Inicializace",
+            "kalibration": "Kalibrace",
+            "permanent": "Trval\u00fd",
+            "schornsteinfeger": "Zkou\u0161ka emis\u00ed",
+            "smart_grid": "SmartGrid",
+            "smart_home": "SmartHome",
+            "softstart": "M\u011bkk\u00fd start",
+            "sparbetrieb": "Ekonomick\u00fd re\u017eim",
+            "sparen": "Ekonomick\u00fd re\u017eim",
+            "standby": "Pohotovostn\u00ed re\u017eim",
+            "start": "Start",
+            "storung": "Chyba",
+            "urlaubsmodus": "Pr\u00e1zdninov\u00fd re\u017eim"
+        }
+    }
+}

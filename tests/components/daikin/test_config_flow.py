@@ -1,18 +1,14 @@
 # pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
+from unittest.mock import PropertyMock, patch
 
 from aiohttp import ClientError
 from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
-from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
-from homeassistant.config_entries import (
-    SOURCE_DISCOVERY,
-    SOURCE_IMPORT,
-    SOURCE_USER,
-    SOURCE_ZEROCONF,
-)
+from homeassistant.components.daikin.const import KEY_MAC
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -20,7 +16,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
@@ -54,14 +49,17 @@ def mock_daikin_discovery():
 async def test_user(hass, mock_daikin):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_USER},
+        "daikin",
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_USER}, data={CONF_HOST: HOST},
+        "daikin",
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
@@ -73,37 +71,22 @@ async def test_abort_if_already_setup(hass, mock_daikin):
     """Test we abort if Daikin is already setup."""
     MockConfigEntry(domain="daikin", unique_id=MAC).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_USER}, data={CONF_HOST: HOST, KEY_MAC: MAC},
+        "daikin",
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, KEY_MAC: MAC},
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_import(hass, mock_daikin):
-    """Test import step."""
-    result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_IMPORT}, data={},
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_IMPORT}, data={CONF_HOST: HOST},
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][KEY_MAC] == MAC
-
-
 @pytest.mark.parametrize(
     "s_effect,reason",
     [
-        (asyncio.TimeoutError, "device_timeout"),
-        (HTTPForbidden, "forbidden"),
-        (ClientError, "device_fail"),
-        (Exception, "device_fail"),
+        (asyncio.TimeoutError, "cannot_connect"),
+        (HTTPForbidden, "invalid_auth"),
+        (ClientError, "unknown"),
+        (Exception, "unknown"),
     ],
 )
 async def test_device_abort(hass, mock_daikin, s_effect, reason):
@@ -111,7 +94,9 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     mock_daikin.factory.side_effect = s_effect
 
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": SOURCE_USER}, data={CONF_HOST: HOST, KEY_MAC: MAC},
+        "daikin",
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, KEY_MAC: MAC},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": reason}
@@ -121,7 +106,6 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
 @pytest.mark.parametrize(
     "source, data, unique_id",
     [
-        (SOURCE_DISCOVERY, {KEY_IP: HOST, KEY_MAC: MAC}, MAC),
         (SOURCE_ZEROCONF, {CONF_HOST: HOST}, MAC),
     ],
 )
@@ -130,7 +114,9 @@ async def test_discovery_zeroconf(
 ):
     """Test discovery/zeroconf step."""
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": source}, data=data,
+        "daikin",
+        context={"source": source},
+        data=data,
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -146,7 +132,9 @@ async def test_discovery_zeroconf(
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
-        "daikin", context={"source": source}, data=data,
+        "daikin",
+        context={"source": source},
+        data=data,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT

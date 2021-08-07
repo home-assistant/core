@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "No valid dongle found for this path"
         },
-        "flow_title": "ENOcean setup",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Enter the path to you ENOcean dongle"
             }
         }
-    },
-    "title": "EnOcean"
+    }
 }

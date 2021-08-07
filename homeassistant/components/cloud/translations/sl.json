@@ -1,0 +1,9 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa omogo\u010dena",
+            "google_enabled": "Google omogo\u010den",
+            "logged_in": "Prijavljen kot"
+        }
+    }
+}

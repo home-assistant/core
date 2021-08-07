@@ -1,0 +1,7 @@
+sensor:
+  - platform: min_max
+    entity_ids:
+      - sensor.test_1
+      - sensor.test_2
+    name: second_test
+    type: mean

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "cannot_connect": "Impossibile connettersi",
             "unknown": "Errore imprevisto"
         },
         "step": {
@@ -15,7 +15,7 @@
                     "longitude": "Logitudine",
                     "station": "Codice stazione METAR"
                 },
-                "description": "Se non viene specificato un codice di stazione METAR, la latitudine e la longitudine verranno utilizzate per trovare la stazione pi\u00f9 vicina.",
+                "description": "Se non \u00e8 specificato un codice stazione METAR, la latitudine e la longitudine saranno utilizzate per trovare la stazione pi\u00f9 vicina. Per ora, una chiave API pu\u00f2 essere qualsiasi cosa. Si consiglia di utilizzare un indirizzo e-mail valido.",
                 "title": "Collegati al Servizio Meteorologico Nazionale"
             }
         }

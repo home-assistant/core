@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ONVIF-enheten er allerede konfigurert.",
-            "already_in_progress": "Konfigurasjonsflyt for ONVIF-enhet p\u00e5g\u00e5r allerede.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "no_h264": "Det var ingen H264-str\u00f8mmer tilgjengelig. Sjekk profilkonfigurasjonen p\u00e5 enheten din.",
             "no_mac": "Kunne ikke konfigurere unik ID for ONVIF-enhet.",
             "onvif_error": "Feil ved konfigurering av ONVIF-enhet. Sjekk logger for mer informasjon."
         },
         "error": {
-            "connection_failed": "Kan ikke koble til ONVIF-tjenesten med angitt legitimasjon."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "auth": {
@@ -17,6 +17,16 @@
                     "username": "Brukernavn"
                 },
                 "title": "Konfigurere godkjenning"
+            },
+            "configure": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                },
+                "title": "Konfigurere ONVIF-enhet"
             },
             "configure_profile": {
                 "data": {
@@ -40,6 +50,9 @@
                 "title": "Konfigurere ONVIF-enhet"
             },
             "user": {
+                "data": {
+                    "auto": "S\u00f8k automatisk"
+                },
                 "description": "Ved \u00e5 klikke send inn, vil vi s\u00f8ke nettverket etter ONVIF-enheter som st\u00f8tter Profil S.\n\nNoen produsenter har begynt \u00e5 deaktivere ONVIF som standard. Vennligst kontroller at ONVIF er aktivert i kameraets konfigurasjon.",
                 "title": "ONVIF enhetsoppsett"
             }

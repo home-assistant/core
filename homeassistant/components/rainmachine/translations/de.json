@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser RainMachine-Kontroller ist bereits konfiguriert."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "identifier_exists": "Konto bereits registriert",
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -15,6 +15,16 @@
                     "port": "Port"
                 },
                 "title": "Informationen eingeben"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Standard-Zonenlaufzeit (in Sekunden)"
+                },
+                "title": "RainMachine konfigurieren"
             }
         }
     }

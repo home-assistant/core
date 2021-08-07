@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Ni mogo\u010de vzpostaviti povezave z gostiteljem",
-            "name_exists": "Ime \u017ee obstaja",
-            "wrong_credentials": "Napa\u010dno uporabni\u0161ko ime ali geslo"
+            "name_exists": "Ime \u017ee obstaja"
         },
         "step": {
             "user": {

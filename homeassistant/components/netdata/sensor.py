@@ -6,19 +6,18 @@ from netdata import Netdata
 from netdata.exceptions import NetdataError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
     CONF_PORT,
     CONF_RESOURCES,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         try:
             resource_data = netdata.api.metrics[sensor]
             unit = (
-                UNIT_PERCENTAGE
+                PERCENTAGE
                 if resource_data["units"] == "percentage"
                 else resource_data["units"]
             )
@@ -97,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class NetdataSensor(Entity):
+class NetdataSensor(SensorEntity):
     """Implementation of a Netdata sensor."""
 
     def __init__(self, netdata, name, sensor, sensor_name, element, icon, unit, invert):
@@ -146,7 +145,7 @@ class NetdataSensor(Entity):
         )
 
 
-class NetdataAlarms(Entity):
+class NetdataAlarms(SensorEntity):
     """Implementation of a Netdata alarm sensor."""
 
     def __init__(self, netdata, name, host, port):

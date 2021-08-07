@@ -4,7 +4,7 @@ import xmlrpc.client
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -14,7 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,9 +58,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         rtorrent = xmlrpc.client.ServerProxy(url)
-    except (xmlrpc.client.ProtocolError, ConnectionRefusedError):
+    except (xmlrpc.client.ProtocolError, ConnectionRefusedError) as ex:
         _LOGGER.error("Connection to rtorrent daemon failed")
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(RTorrentSensor(variable, rtorrent, name))
@@ -75,7 +74,7 @@ def format_speed(speed):
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
-class RTorrentSensor(Entity):
+class RTorrentSensor(SensorEntity):
     """Representation of an rtorrent sensor."""
 
     def __init__(self, sensor_type, rtorrent_client, client_name):
@@ -123,7 +122,7 @@ class RTorrentSensor(Entity):
         try:
             self.data = multicall()
             self._available = True
-        except (xmlrpc.client.ProtocolError, ConnectionRefusedError, OSError) as ex:
+        except (xmlrpc.client.ProtocolError, OSError) as ex:
             _LOGGER.error("Connection to rtorrent failed (%s)", ex)
             self._available = False
             return

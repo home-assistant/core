@@ -1,11 +1,45 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "no_device": "\u017d\u00e1dn\u00e9 z va\u0161ich za\u0159\u00edzen\u00ed nem\u00e1 aktivovan\u00e9 \"Naj\u00edt m\u016fj iPhone\"",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "send_verification_code": "Odesl\u00e1n\u00ed ov\u011b\u0159ovac\u00edho k\u00f3du se nezda\u0159ilo",
+            "validate_verification_code": "Nepoda\u0159ilo se ov\u011b\u0159it v\u00e1\u0161 ov\u011b\u0159ovac\u00ed k\u00f3d, vyberte d\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed a spus\u0165te ov\u011b\u0159en\u00ed znovu"
+        },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "description": "Va\u0161e zadan\u00e9 heslo pro {username} ji\u017e nefunguje. Chcete-li tuto d\u00e1le integraci pou\u017e\u00edvat, aktualizujte sv\u00e9 heslo.",
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "D\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed"
+                },
+                "description": "Vyberte sv\u00e9 d\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed",
+                "title": "D\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed iCloud"
+            },
             "user": {
                 "data": {
                     "password": "Heslo",
-                    "username": "E-mail"
-                }
+                    "username": "E-mail",
+                    "with_family": "S rodinou"
+                },
+                "description": "Zadejte sv\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
+                "title": "P\u0159ihla\u0161ovac\u00ed \u00fadaje k iCloud"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Ov\u011b\u0159ovac\u00ed k\u00f3d"
+                },
+                "description": "Zadejte ov\u011b\u0159ovac\u00ed k\u00f3d, kter\u00fd jste pr\u00e1v\u011b obdr\u017eeli z iCloudu",
+                "title": "Ov\u011b\u0159ovac\u00ed k\u00f3d iCloudu"
             }
         }
     }

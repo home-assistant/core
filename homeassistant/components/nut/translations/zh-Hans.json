@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "\u8d44\u6e90"
+                }
+            },
+            "user": {
+                "data": {
+                    "username": "\u7528\u6237\u540d"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "unknown": "\u4e0d\u5728\u9884\u671f\u5185\u7684\u9519\u8bef"
+        }
+    }
+}

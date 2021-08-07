@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses JuiceNet-Konto ist bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_token": "JuiceNet API Token"
+                    "api_token": "API-Token"
                 },
-                "description": "Sie ben\u00f6tigen das API-Token von https://home.juice.net/Manage.",
-                "title": "Stellen Sie eine Verbindung zu JuiceNet her"
+                "description": "Du ben\u00f6tigst das API-Token von https://home.juice.net/Manage.",
+                "title": "Stelle eine Verbindung zu JuiceNet her"
             }
         }
     }

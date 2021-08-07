@@ -1,7 +1,8 @@
 """Provides the Toon DataUpdateCoordinator."""
+from __future__ import annotations
+
 import logging
 import secrets
-from typing import Optional
 
 from toonapi import Status, Toon, ToonError
 
@@ -21,12 +22,12 @@ from .const import CONF_CLOUDHOOK_URL, DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToonDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching WLED data from single endpoint."""
+class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
+    """Class to manage fetching Toon data from single endpoint."""
 
     def __init__(
         self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
-    ):
+    ) -> None:
         """Initialize global Toon data updater."""
         self.session = session
         self.entry = entry
@@ -50,7 +51,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
         for update_callback in self._listeners:
             update_callback()
 
-    async def register_webhook(self, event: Optional[Event] = None) -> None:
+    async def register_webhook(self, event: Event | None = None) -> None:
         """Register a webhook with Toon to get live updates."""
         if CONF_WEBHOOK_ID not in self.entry.data:
             data = {**self.entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
@@ -70,6 +71,9 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
             webhook_url = self.hass.components.webhook.async_generate_url(
                 self.entry.data[CONF_WEBHOOK_ID]
             )
+
+        # Ensure the webhook is not registered already
+        webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
 
         webhook_register(
             self.hass,
@@ -121,7 +125,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
         except ToonError as err:
             _LOGGER.error("Could not process data received from Toon webhook - %s", err)
 
-    async def unregister_webhook(self, event: Optional[Event] = None) -> None:
+    async def unregister_webhook(self, event: Event | None = None) -> None:
         """Remove / Unregister webhook for toon."""
         _LOGGER.debug(
             "Unregistering Toon webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
@@ -138,4 +142,4 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self.toon.update()
         except ToonError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}")
+            raise UpdateFailed(f"Invalid response from API: {error}") from error

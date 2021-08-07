@@ -1,12 +1,8 @@
 """Allows reading temperatures from ecoal/esterownik.pl controller."""
-import logging
-
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
 from . import AVAILABLE_SENSORS, DATA_ECOAL_BOILER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -21,7 +17,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class EcoalTempSensor(Entity):
+class EcoalTempSensor(SensorEntity):
     """Representation of a temperature sensor using ecoal status data."""
 
     def __init__(self, ecoal_contr, name, status_attr):
@@ -40,6 +36,11 @@ class EcoalTempSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def unit_of_measurement(self):

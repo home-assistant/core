@@ -1,10 +1,12 @@
 """Tests for Konnected Alarm Panel config flow."""
+from unittest.mock import patch
+
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -27,7 +29,7 @@ async def mock_panel_fixture():
 async def test_flow_works(hass, mock_panel):
     """Test config flow ."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -64,7 +66,7 @@ async def test_flow_works(hass, mock_panel):
 async def test_pro_flow_works(hass, mock_panel):
     """Test config flow ."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -109,7 +111,7 @@ async def test_ssdp(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://1.2.3.4:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -136,7 +138,7 @@ async def test_import_no_host_user_finish(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "default_options": {
                 "blink": True,
@@ -203,7 +205,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "default_options": {
                 "blink": True,
@@ -237,7 +239,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     # discover the panel via ssdp
     ssdp_result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://0.0.0.0:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -280,7 +282,7 @@ async def test_ssdp_already_configured(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://0.0.0.0:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -312,7 +314,7 @@ async def test_ssdp_host_update(hass, mock_panel):
                 "10": "Binary Sensor",
                 "3": "Digital Sensor",
                 "7": "Digital Sensor",
-                "11": "Digital Sensor",
+                "11": "Binary Sensor",
                 "4": "Switchable Output",
                 "out1": "Switchable Output",
                 "alarm1": "Switchable Output",
@@ -321,11 +323,11 @@ async def test_ssdp_host_update(hass, mock_panel):
                 {"zone": "2", "type": "door"},
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
                 {"zone": "10", "type": "door"},
+                {"zone": "11", "type": "window"},
             ],
             "sensors": [
                 {"zone": "3", "type": "dht"},
                 {"zone": "7", "type": "ds18b20", "name": "temper"},
-                {"zone": "11", "type": "dht"},
             ],
             "switches": [
                 {"zone": "4"},
@@ -356,7 +358,7 @@ async def test_ssdp_host_update(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://1.1.1.1:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -381,7 +383,7 @@ async def test_import_existing_config(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",
@@ -391,11 +393,11 @@ async def test_import_existing_config(hass, mock_panel):
                     {"zone": "2", "type": "door"},
                     {"zone": 6, "type": "window", "name": "winder", "inverse": True},
                     {"zone": "10", "type": "door"},
+                    {"zone": "11", "type": "window"},
                 ],
                 "sensors": [
                     {"zone": "3", "type": "dht"},
                     {"zone": 7, "type": "ds18b20", "name": "temper"},
-                    {"zone": "11", "type": "dht"},
                 ],
                 "switches": [
                     {"zone": "4"},
@@ -447,7 +449,7 @@ async def test_import_existing_config(hass, mock_panel):
                 "10": "Binary Sensor",
                 "3": "Digital Sensor",
                 "7": "Digital Sensor",
-                "11": "Digital Sensor",
+                "11": "Binary Sensor",
                 "4": "Switchable Output",
                 "8": "Switchable Output",
                 "out1": "Switchable Output",
@@ -460,11 +462,11 @@ async def test_import_existing_config(hass, mock_panel):
                 {"zone": "2", "type": "door", "inverse": False},
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
                 {"zone": "10", "type": "door", "inverse": False},
+                {"zone": "11", "type": "window", "inverse": False},
             ],
             "sensors": [
                 {"zone": "3", "type": "dht", "poll_interval": 3},
                 {"zone": "7", "type": "ds18b20", "name": "temper", "poll_interval": 3},
-                {"zone": "11", "type": "dht", "poll_interval": 3},
             ],
             "switches": [
                 {"activation": "high", "zone": "4"},
@@ -514,7 +516,7 @@ async def test_import_existing_config_entry(hass, mock_panel):
     hass.data[config_flow.DOMAIN] = {"access_token": "SUPERSECRETTOKEN"}
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -572,7 +574,7 @@ async def test_import_pin_config(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",
@@ -788,7 +790,12 @@ async def test_option_flow(hass, mock_panel):
     # make sure we enforce url format
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"blink": True, "override_api_host": True, "api_host": "badhosturl"},
+        user_input={
+            "discovery": False,
+            "blink": True,
+            "override_api_host": True,
+            "api_host": "badhosturl",
+        },
     )
 
     assert result["type"] == "form"
@@ -796,6 +803,7 @@ async def test_option_flow(hass, mock_panel):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            "discovery": False,
             "blink": True,
             "override_api_host": True,
             "api_host": "http://overridehost:1111",
@@ -810,6 +818,7 @@ async def test_option_flow(hass, mock_panel):
             "6": "Binary Sensor",
             "out": "Switchable Output",
         },
+        "discovery": False,
         "blink": True,
         "api_host": "http://overridehost:1111",
         "binary_sensors": [
@@ -889,7 +898,7 @@ async def test_option_flow_pro(hass, mock_panel):
             "8": "Switchable Output",
             "9": "Disabled",
             "10": "Binary Sensor",
-            "11": "Digital Sensor",
+            "11": "Binary Sensor",
             "12": "Disabled",
             "out1": "Switchable Output",
             "alarm1": "Switchable Output",
@@ -919,6 +928,13 @@ async def test_option_flow_pro(hass, mock_panel):
         result["flow_id"], user_input={"type": "door"}
     )
     assert result["type"] == "form"
+    assert result["step_id"] == "options_binary"
+
+    # zone 11
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"type": "window"}
+    )
+    assert result["type"] == "form"
     assert result["step_id"] == "options_digital"
 
     # zone 3
@@ -931,13 +947,6 @@ async def test_option_flow_pro(hass, mock_panel):
     # zone 7
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "ds18b20", "name": "temper"}
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "options_digital"
-
-    # zone 11
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"type": "dht"}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
@@ -978,14 +987,15 @@ async def test_option_flow_pro(hass, mock_panel):
     assert result["step_id"] == "options_misc"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"blink": True, "override_api_host": False},
+        result["flow_id"],
+        user_input={"discovery": False, "blink": True, "override_api_host": False},
     )
 
     assert result["type"] == "create_entry"
     assert result["data"] == {
         "io": {
             "10": "Binary Sensor",
-            "11": "Digital Sensor",
+            "11": "Binary Sensor",
             "2": "Binary Sensor",
             "3": "Digital Sensor",
             "4": "Switchable Output",
@@ -995,17 +1005,18 @@ async def test_option_flow_pro(hass, mock_panel):
             "alarm1": "Switchable Output",
             "out1": "Switchable Output",
         },
+        "discovery": False,
         "blink": True,
         "api_host": "",
         "binary_sensors": [
             {"zone": "2", "type": "door", "inverse": False},
             {"zone": "6", "type": "window", "name": "winder", "inverse": True},
             {"zone": "10", "type": "door", "inverse": False},
+            {"zone": "11", "type": "window", "inverse": False},
         ],
         "sensors": [
             {"zone": "3", "type": "dht", "poll_interval": 3},
             {"zone": "7", "type": "ds18b20", "name": "temper", "poll_interval": 3},
-            {"zone": "11", "type": "dht", "poll_interval": 3},
         ],
         "switches": [
             {"activation": "high", "zone": "4"},
@@ -1099,7 +1110,8 @@ async def test_option_flow_import(hass, mock_panel):
     assert schema["8"] == "Disabled"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={},
+        result["flow_id"],
+        user_input={},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
@@ -1120,7 +1132,8 @@ async def test_option_flow_import(hass, mock_panel):
     assert schema["type"] == "ds18b20"
     assert schema["name"] == "temper"
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"type": "dht"},
+        result["flow_id"],
+        user_input={"type": "dht"},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
@@ -1141,14 +1154,17 @@ async def test_option_flow_import(hass, mock_panel):
 
     schema = result["data_schema"]({})
     assert schema["blink"] is True
+    assert schema["discovery"] is True
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"blink": False, "override_api_host": False},
+        result["flow_id"],
+        user_input={"discovery": True, "blink": False, "override_api_host": False},
     )
 
     # verify the updated fields
     assert result["type"] == "create_entry"
     assert result["data"] == {
         "io": {"1": "Binary Sensor", "2": "Digital Sensor", "3": "Switchable Output"},
+        "discovery": True,
         "blink": False,
         "api_host": "",
         "binary_sensors": [

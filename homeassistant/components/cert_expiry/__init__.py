@@ -1,11 +1,12 @@
 """The cert_expiry component."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -16,22 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
 
-
-async def async_setup(hass, config):
-    """Platform setup, do nothing."""
-    return True
+PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
     coordinator = CertExpiryDataUpdateCoordinator(hass, host, port)
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -39,18 +34,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{host}:{port}")
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator):
+class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
     def __init__(self, hass, host, port):
@@ -64,15 +58,18 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator):
         name = f"{self.host}{display_port}"
 
         super().__init__(
-            hass, _LOGGER, name=name, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=name,
+            update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
             timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
         except TemporaryFailure as err:
-            raise UpdateFailed(err.args[0])
+            raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
             self.cert_error = err
             self.is_cert_valid = False

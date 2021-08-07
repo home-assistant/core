@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     HTTP_OK,
+    HTTP_UNAUTHORIZED,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -30,7 +31,7 @@ DEFAULT_VERIFY_SSL = True
 CONF_WIRELESS_ONLY = "wireless_only"
 DEFAULT_WIRELESS_ONLY = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -155,7 +156,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             return
         if response.status_code == HTTP_OK:
             return _parse_ddwrt_response(response.text)
-        if response.status_code == 401:
+        if response.status_code == HTTP_UNAUTHORIZED:
             # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"

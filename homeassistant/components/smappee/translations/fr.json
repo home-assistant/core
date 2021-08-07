@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_configured_local_device": "Le ou les p\u00e9riph\u00e9riques locaux sont d\u00e9j\u00e0 configur\u00e9s. Veuillez les supprimer avant de configurer un appareil cloud.",
+            "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_mdns": "Appareil non pris en charge pour l'int\u00e9gration Smappee.",
+            "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
+            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide] ( {docs_url} )"
+        },
+        "flow_title": "Smappee: {name}",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "Environnement"
+                },
+                "description": "Configurez votre Smappee pour qu'il s'int\u00e8gre \u00e0 Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "Entrez l'h\u00f4te pour lancer l'int\u00e9gration locale Smappee"
+            },
+            "pick_implementation": {
+                "title": "Choisissez la m\u00e9thode d'authentification"
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter l'appareil Smappee avec le num\u00e9ro de s\u00e9rie \u00ab {serialnumber} \u00bb \u00e0 Home Assistant?",
+                "title": "Appareil Smappee d\u00e9couvert"
+            }
+        }
+    }
+}

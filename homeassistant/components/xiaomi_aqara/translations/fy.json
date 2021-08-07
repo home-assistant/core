@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "mac": "MAC-adres (opsjoneel)"
+                }
+            }
+        }
+    }
+}

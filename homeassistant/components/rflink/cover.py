@@ -4,14 +4,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
-from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_OPEN
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE, STATE_OPEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_ALIASES,
     CONF_DEVICE_DEFAULTS,
-    CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_GROUP,
     CONF_GROUP_ALIASES,

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548",
+            "requests_exceeded": "\u5df2\u8d85\u904e Accuweather API \u5141\u8a31\u7684\u8acb\u6c42\u6b21\u6578\u3002\u5fc5\u9808\u7b49\u5019\u6216\u8b8a\u66f4 API \u5bc6\u9470\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u5047\u5982\u4f60\u9700\u8981\u5354\u52a9\u9032\u884c\u8a2d\u5b9a\uff0c\u8acb\u53c3\u95b1\uff1ahttps://www.home-assistant.io/integrations/accuweather/\n\n\u67d0\u4e9b\u50b3\u611f\u5668\u9810\u8a2d\u70ba\u672a\u555f\u7528\uff0c\u53ef\u4ee5\u65bc\u6574\u5408\u8a2d\u5b9a\u4e2d\u555f\u7528\u9019\u4e9b\u5be6\u9ad4\u3002\u5929\u6c23\u9810\u5831\u9810\u8a2d\u672a\u958b\u555f\u3002\u53ef\u4ee5\u65bc\u6574\u5408\u9078\u9805\u4e2d\u958b\u555f\u3002",
+                "title": "AccuWeather"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "\u5929\u6c23\u9810\u5831"
+                },
+                "description": "\u7531\u65bc AccuWeather API \u5bc6\u9470\u514d\u8cbb\u7248\u672c\u9650\u5236\uff0c\u7576\u958b\u555f\u5929\u6c23\u9810\u5831\u6642\u3001\u6578\u64da\u6703\u6bcf 80 \u5206\u9418\u66f4\u65b0\u4e00\u6b21\uff0c\u800c\u975e 40 \u5206\u9418\u3002",
+                "title": "AccuWeather \u9078\u9805"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u9023\u7dda AccuWeather \u4f3a\u670d\u5668",
+            "remaining_requests": "\u5176\u9918\u5141\u8a31\u7684\u8acb\u6c42"
+        }
+    }
+}

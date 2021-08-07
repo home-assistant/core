@@ -1,13 +1,9 @@
 """Roomba binary sensor entities."""
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import roomba_reported_state
 from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

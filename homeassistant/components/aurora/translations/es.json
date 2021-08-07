@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "Umbral (%)"
+                }
+            }
+        }
+    },
+    "title": "Sensor Aurora NOAA"
+}

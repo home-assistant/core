@@ -1,13 +1,12 @@
 """The iCloud component."""
-import asyncio
-import logging
 
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.util import slugify
 
 from .account import IcloudAccount
@@ -86,10 +85,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up iCloud from legacy config file."""
 
     conf = config.get(DOMAIN)
@@ -106,7 +103,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an iCloud account from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
@@ -131,15 +128,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         with_family,
         max_interval,
         gps_accuracy_threshold,
+        entry,
     )
     await hass.async_add_executor_job(account.setup)
 
     hass.data[DOMAIN][entry.unique_id] = account
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     def play_sound(service: ServiceDataType) -> None:
         """Play sound on the device."""
@@ -189,7 +184,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         icloud_account = hass.data[DOMAIN].get(account_identifier)
         if icloud_account is None:
             for account in hass.data[DOMAIN].values():
-                if account.name == account_identifier:
+                if account.username == account_identifier:
                     icloud_account = account
 
         if icloud_account is None:
@@ -223,17 +218,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.data[CONF_USERNAME])
-
     return unload_ok

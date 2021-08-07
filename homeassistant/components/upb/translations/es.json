@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Un PIM UPB con esta direcci\u00f3n ya est\u00e1 configurado."
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se conect\u00f3 con UPB PIM, por favor, int\u00e9ntelo de nuevo.",
+            "cannot_connect": "No se pudo conectar",
             "invalid_upb_file": "Archivo de exportaci\u00f3n UPB UPStart faltante o no v\u00e1lido, verifique el nombre y la ruta del archivo.",
             "unknown": "Error inesperado"
         },

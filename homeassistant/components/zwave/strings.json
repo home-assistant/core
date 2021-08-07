@@ -2,8 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Z-Wave",
-        "description": "See https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
+        "description": "This integration is no longer maintained. For new installations, use Z-Wave JS instead.\n\nSee https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
           "network_key": "Network Key (leave blank to auto-generate)"
@@ -14,8 +13,8 @@
       "option_error": "Z-Wave validation failed. Is the path to the USB stick correct?"
     },
     "abort": {
-      "already_configured": "Z-Wave is already configured",
-      "one_instance_only": "Component only supports one Z-Wave instance"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "state": {

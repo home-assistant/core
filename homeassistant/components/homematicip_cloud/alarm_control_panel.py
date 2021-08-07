@@ -1,6 +1,7 @@
 """Support for HomematicIP Cloud alarm control panel."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
@@ -16,8 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
@@ -28,7 +29,7 @@ CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -36,7 +37,7 @@ async def async_setup_entry(
 
 
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
-    """Representation of an alarm control panel."""
+    """Representation of the HomematicIP alarm control panel."""
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
@@ -44,7 +45,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         _LOGGER.info("Setting up %s", self.name)
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {
             "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
@@ -56,7 +57,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @property
     def state(self) -> str:
-        """Return the state of the device."""
+        """Return the state of the alarm control panel."""
         # check for triggered alarm
         if self._security_and_alarm.alarmActive:
             return STATE_ALARM_TRIGGERED
@@ -98,7 +99,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @callback
     def _async_device_changed(self, *args, **kwargs) -> None:
-        """Handle device state changes."""
+        """Handle entity state changes."""
         # Don't update disabled entities
         if self.enabled:
             _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
@@ -111,7 +112,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the generic device."""
+        """Return the name of the generic entity."""
         name = CONST_ALARM_CONTROL_PANEL_NAME
         if self._home.name:
             name = f"{self._home.name} {name}"
@@ -124,7 +125,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     @property
     def available(self) -> bool:
-        """Device available."""
+        """Return if alarm control panel is available."""
         return self._home.connected
 
     @property

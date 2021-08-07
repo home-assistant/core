@@ -15,6 +15,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    select,
     sensor,
     switch,
     vacuum,
@@ -30,9 +31,7 @@ CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
 CONF_PROJECT_ID = "project_id"
 CONF_ALIASES = "aliases"
-CONF_API_KEY = "api_key"
 CONF_ROOM_HINT = "room"
-CONF_ALLOW_UNLOCK = "allow_unlock"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
 CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
@@ -41,6 +40,8 @@ CONF_PRIVATE_KEY = "private_key"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
+    "alarm_control_panel",
+    "binary_sensor",
     "climate",
     "cover",
     "fan",
@@ -49,15 +50,14 @@ DEFAULT_EXPOSED_DOMAINS = [
     "input_boolean",
     "input_select",
     "light",
+    "lock",
     "media_player",
     "scene",
     "script",
+    "select",
+    "sensor",
     "switch",
     "vacuum",
-    "lock",
-    "binary_sensor",
-    "sensor",
-    "alarm_control_panel",
 ]
 
 PREFIX_TYPES = "action.devices.types."
@@ -69,7 +69,9 @@ TYPE_SCENE = f"{PREFIX_TYPES}SCENE"
 TYPE_FAN = f"{PREFIX_TYPES}FAN"
 TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
 TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
+TYPE_AWNING = f"{PREFIX_TYPES}AWNING"
 TYPE_BLINDS = f"{PREFIX_TYPES}BLINDS"
+TYPE_SHUTTER = f"{PREFIX_TYPES}SHUTTER"
 TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
 TYPE_OUTLET = f"{PREFIX_TYPES}OUTLET"
 TYPE_SENSOR = f"{PREFIX_TYPES}SENSOR"
@@ -80,6 +82,7 @@ TYPE_ALARM = f"{PREFIX_TYPES}SECURITYSYSTEM"
 TYPE_SETTOP = f"{PREFIX_TYPES}SETTOP"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
 TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
+TYPE_RECEIVER = f"{PREFIX_TYPES}AUDIO_VIDEO_RECEIVER"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
@@ -97,9 +100,12 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
+ERR_UNSUPPORTED_INPUT = "unsupportedInput"
+ERR_NO_AVAILABLE_CHANNEL = "noAvailableChannel"
 
 ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"
+ERR_ALREADY_STOPPED = "alreadyStopped"
 
 ERR_CHALLENGE_NEEDED = "challengeNeeded"
 ERR_CHALLENGE_NOT_SETUP = "challengeFailedNotSetup"
@@ -113,6 +119,7 @@ EVENT_QUERY_RECEIVED = "google_assistant_query"
 EVENT_SYNC_RECEIVED = "google_assistant_sync"
 
 DOMAIN_TO_GOOGLE_TYPES = {
+    alarm_control_panel.DOMAIN: TYPE_ALARM,
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_BLINDS,
@@ -126,15 +133,17 @@ DOMAIN_TO_GOOGLE_TYPES = {
     media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
+    select.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
-    alarm_control_panel.DOMAIN: TYPE_ALARM,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
     (cover.DOMAIN, cover.DEVICE_CLASS_GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.DEVICE_CLASS_DOOR): TYPE_DOOR,
+    (cover.DOMAIN, cover.DEVICE_CLASS_AWNING): TYPE_AWNING,
+    (cover.DOMAIN, cover.DEVICE_CLASS_SHUTTER): TYPE_SHUTTER,
     (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
     (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_DOOR): TYPE_DOOR,
@@ -143,6 +152,8 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
+    (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
+    (media_player.DOMAIN, media_player.DEVICE_CLASS_RECEIVER): TYPE_RECEIVER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
     (humidifier.DOMAIN, humidifier.DEVICE_CLASS_HUMIDIFIER): TYPE_HUMIDIFIER,

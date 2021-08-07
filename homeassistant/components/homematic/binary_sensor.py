@@ -1,6 +1,4 @@
 """Support for HomeMatic binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_MOTION,
@@ -12,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 
 from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES_CLASS = {
     "IPShutterContact": DEVICE_CLASS_OPENING,
@@ -78,10 +74,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
 class HMBatterySensor(HMDevice, BinarySensorEntity):
     """Representation of an HomeMatic low battery sensor."""
 
-    @property
-    def device_class(self):
-        """Return battery as a device class."""
-        return DEVICE_CLASS_BATTERY
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     @property
     def is_on(self):

@@ -10,7 +10,7 @@
             "no_server_found": "Could not automatically discover server.",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {
@@ -24,10 +24,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "title": "Configure Logitech Media Server"
+                }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }
