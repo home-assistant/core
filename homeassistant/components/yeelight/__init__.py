@@ -612,7 +612,7 @@ class YeelightEntity(Entity):
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
-        return True
+        return False
 
     async def async_update(self) -> None:
         """Update the entity."""
