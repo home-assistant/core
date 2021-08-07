@@ -15,6 +15,9 @@
                 },
                 "description": "V\u00e1lassza ki a hozz\u00e1adni k\u00edv\u00e1nt szerz\u0151d\u00e9sc\u00edmet.",
                 "title": "V\u00e1lassza ki a meg\u00e1llapod\u00e1st"
+            },
+            "pick_implementation": {
+                "title": "V\u00e1lassza ki a hiteles\u00edt\u00e9shez"
             }
         }
     }
