@@ -111,7 +111,7 @@ async def async_setup_entry(
         if description is None:
             description = BinarySensorEntityDescription(key=type_string)
         if device_class:
-            description = replace(description, device_class=device)
+            description = replace(description, device_class=device_class)
         return description
 
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
