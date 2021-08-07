@@ -26,6 +26,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.core import callback
@@ -170,6 +171,7 @@ class FroniusAdapter:
         self, key
     ) -> SensorEntityDescription:
         """Create entity description for a key."""
+        device_class: str | None = None
         if key.startswith("state_of_charge"):
             device_class = DEVICE_CLASS_BATTERY
         elif key.startswith("temperature"):
@@ -182,19 +184,18 @@ class FroniusAdapter:
             device_class = DEVICE_CLASS_ENERGY
         elif key.startswith("current"):
             device_class = DEVICE_CLASS_CURRENT
+        elif key.startswith("timestamp"):
+            device_class = DEVICE_CLASS_TIMESTAMP
         elif key.startswith("voltage"):
             device_class = DEVICE_CLASS_VOLTAGE
-        else:
-            device_class = None
 
+        last_reset: dt.dt.datetime | None = None
         if "day" in key:
             last_reset = dt.start_of_local_day()
         elif "year" in key:
             last_reset = dt.start_of_local_day(dt.dt.date(dt.now().year, 1, 1))
         elif "total" in key:
             last_reset = dt.utc_from_timestamp(0)
-        else:
-            last_reset = None
 
         return SensorEntityDescription(
             key=key,
