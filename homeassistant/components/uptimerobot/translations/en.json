@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Account is already configured",
             "unknown": "Unexpected error",
-            "reauth_successful": "Reauth successfull"
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -18,7 +18,7 @@
                 }
             },
             "reauth_confirm": {
-                "title": "Reauth",
+                "title": "Reauthenticate Integration",
                 "description": "You need to supply a read-only API key from Uptime Robot",
                 "data": {
                     "api_key": "API Key"
