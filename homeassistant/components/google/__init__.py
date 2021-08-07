@@ -41,7 +41,6 @@ CONF_CAL_ID = "cal_id"
 CONF_TRACK = "track"
 CONF_SEARCH = "search"
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
-CONF_MAX_RESULTS = "max_results"
 CONF_CALENDAR_ACCESS = "calendar_access"
 
 DEFAULT_CONF_TRACK_NEW = True
@@ -116,7 +115,6 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema(
         vol.Optional(CONF_OFFSET): cv.string,
         vol.Optional(CONF_SEARCH): cv.string,
         vol.Optional(CONF_TRACK): cv.boolean,
-        vol.Optional(CONF_MAX_RESULTS): cv.positive_int,
     }
 )
 
