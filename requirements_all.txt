@@ -865,7 +865,7 @@ influxdb-client==1.14.0
 influxdb==5.2.3
 
 # homeassistant.components.iotawatt
-iotawattpy==0.0.6
+iotawattpy==0.0.7
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
