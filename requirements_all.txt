@@ -1633,6 +1633,9 @@ pydelijn==1.0.0
 # homeassistant.components.dexcom
 pydexcom==0.2.3
 
+# homeassistant.components.discovergy
+pydiscovergy==0.1.0
+
 # homeassistant.components.doods
 pydoods==1.0.2
 
