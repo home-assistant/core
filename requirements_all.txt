@@ -1437,9 +1437,6 @@ pyfido==2.1.1
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
 
-# homeassistant.components.flexit
-pyflexit==0.3
-
 # homeassistant.components.flic
 pyflic==2.0.3
 
