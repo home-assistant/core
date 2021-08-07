@@ -257,7 +257,6 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
                 return await self.async_step_add_holidays()
             if action == ACTION_REMOVE_HOLIDAYS:
                 return await self.async_step_remove_holidays()
-            # errors[OPTIONS_ACTION] = "unsupported_action"
 
         return self.async_show_form(
             step_id="prompt_options",

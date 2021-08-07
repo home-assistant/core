@@ -99,9 +99,7 @@ async def async_setup_entry(
     workdays = config_entry.data[CONF_WORKDAYS]
     excludes = config_entry.data[CONF_EXCLUDES]
     add_holidays = config_entry.options.get(CONF_ADD_HOLIDAYS)
-    remove_holidays: vol.Optional[list[str]] = config_entry.options.get(
-        CONF_REMOVE_HOLIDAYS
-    )
+    remove_holidays: list[str] | None = config_entry.options.get(CONF_REMOVE_HOLIDAYS)
 
     year = (get_date(dt.now()) + timedelta(days=days_offset)).year
     obj_holidays = getattr(holidays, country)(prov=province, state=state, years=year)
@@ -113,7 +111,7 @@ async def async_setup_entry(
         _LOGGER.debug("No custom holidays or invalid holidays")
 
     # Remove holidays
-    try:
+    if remove_holidays:
         for date in remove_holidays:
             try:
                 # is this formatted as a date?
@@ -129,8 +127,6 @@ async def async_setup_entry(
                         _LOGGER.debug("Removed %s by name '%s'", holiday, date)
             except KeyError as unmatched:
                 _LOGGER.warning("No holiday found matching %s", unmatched)
-    except TypeError:
-        _LOGGER.debug("No holidays to remove or invalid holidays")
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
