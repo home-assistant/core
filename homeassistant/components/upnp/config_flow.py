@@ -38,6 +38,45 @@ def _friendly_name_from_discovery(discovery_info: Mapping[str, Any]) -> str:
     return discovery_info.get("_host", "")
 
 
+async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
+    """Wait for a device to be discovered."""
+    device_discovered_event = asyncio.Event()
+
+    @callback
+    def device_discovered(info: Mapping[str, Any]) -> None:
+        _LOGGER.info(
+            "Device discovered: %s, at: %s",
+            info[ssdp.ATTR_SSDP_USN],
+            info[ssdp.ATTR_SSDP_LOCATION],
+        )
+        device_discovered_event.set()
+
+    cancel_discovered_callback_1 = ssdp.async_register_callback(
+        hass,
+        device_discovered,
+        {
+            ssdp.ATTR_SSDP_ST: ST_IGD_V1,
+        },
+    )
+    cancel_discovered_callback_2 = ssdp.async_register_callback(
+        hass,
+        device_discovered,
+        {
+            ssdp.ATTR_SSDP_ST: ST_IGD_V2,
+        },
+    )
+
+    try:
+        await asyncio.wait_for(device_discovered_event.wait(), timeout=4)
+    except asyncio.TimeoutError:
+        return False
+    finally:
+        cancel_discovered_callback_1()
+        cancel_discovered_callback_2()
+
+    return True
+
+
 def _discovery_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
     """Discovery IGD devices."""
     return ssdp.async_get_discovery_info_by_st(
@@ -131,16 +170,16 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         # Discover devices.
-        await asyncio.sleep(4)  # Allow some time for ssdp to discover anything.
-        self._discoveries = _discovery_igd_devices(self.hass)
+        await _async_wait_for_discoveries(self.hass)
+        discoveries = _discovery_igd_devices(self.hass)
 
         # Ensure anything to add. If not, silently abort.
-        if not self._discoveries:
+        if not discoveries:
             _LOGGER.info("No UPnP devices discovered, aborting")
             return self.async_abort(reason="no_devices_found")
 
         # Ensure complete discovery.
-        discovery = self._discoveries[0]
+        discovery = discoveries[0]
         if (
             ssdp.ATTR_UPNP_UDN not in discovery
             or ssdp.ATTR_SSDP_ST not in discovery

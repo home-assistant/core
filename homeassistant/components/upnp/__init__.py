@@ -109,15 +109,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cancel_discovered_callback()
 
     # Create device.
-    device = await Device.async_create_device(
-        hass,
-        discovery_info[  # pylint: disable=unsubscriptable-object
-            ssdp.ATTR_SSDP_LOCATION
-        ],
-    )
+    location = discovery_info[  # pylint: disable=unsubscriptable-object
+        ssdp.ATTR_SSDP_LOCATION
+    ]
+    device = await Device.async_create_device(hass, location)
 
     # Save device.
-    hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device
+    hass.data[DOMAIN][DOMAIN_DEVICES][udn] = device
 
     # Ensure entry has a unique_id.
     if not entry.unique_id:
