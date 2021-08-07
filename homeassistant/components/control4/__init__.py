@@ -20,10 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONF_ACCOUNT,
@@ -62,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             exception,
         )
         return False
+
     entry_data[CONF_ACCOUNT] = account
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
@@ -69,12 +67,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
     director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-
+    _LOGGER.debug(director_token_dict)
     director = C4Director(
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
+
     entry_data[CONF_DIRECTOR] = director
     entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
+    await director.sio_connect()
 
     # Add Control4 controller to device registry
     controller_href = (await account.getAccountControllers())["href"]
@@ -133,31 +133,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
     """Return a list of all Control4 items with the specified category."""
-    director_all_items = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_ALL_ITEMS]
-    return_list = []
-    for item in director_all_items:
-        if "categories" in item and category in item["categories"]:
-            return_list.append(item)
-    return return_list
+    _LOGGER.debug(f"Getting items of category: {category}")
+    director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
+    return_list = await director.getAllItemsByCategory(category)
+    return json.loads(return_list)
 
 
-class Control4Entity(CoordinatorEntity):
+class Control4Entity(Entity):
     """Base entity for Control4."""
 
     def __init__(
         self,
         entry_data: dict,
         entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
         device_name: str | None,
         device_manufacturer: str | None,
         device_model: str | None,
         device_id: int,
+        device_area: str,
+        device_attributes: dict,
     ) -> None:
         """Initialize a Control4 entity."""
-        super().__init__(coordinator)
+        super().__init__()
         self.entry = entry
         self.entry_data = entry_data
         self._name = name
@@ -167,6 +166,34 @@ class Control4Entity(CoordinatorEntity):
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model
         self._device_id = device_id
+        self._device_area = device_area
+        self._extra_state_attributes = device_attributes
+
+    async def async_added_to_hass(self):
+        """Sync with HASS."""
+        await super().async_added_to_hass()
+        await self.hass.async_add_executor_job(
+            self.entry_data[CONF_DIRECTOR].add_device_callback,
+            self._idx,
+            self._update_callback,
+        )
+        _LOGGER.debug(f"Registering device {self._device_id} for callback")
+        return True
+
+    async def _update_callback(self, device, message):
+        _LOGGER.debug(message)
+
+        if message["evtName"] == "OnDataToUI":
+            data = message["data"]
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    if isinstance(value, dict):
+                        for k, v in value.items():
+                            self._extra_state_attributes[k.upper()] = value
+                    else:
+                        self._extra_state_attributes[key.upper()] = value
+        _LOGGER.debug(f"Message for device {device}")
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -188,4 +215,15 @@ class Control4Entity(CoordinatorEntity):
             "manufacturer": self._device_manufacturer,
             "model": self._device_model,
             "via_device": (DOMAIN, self._controller_unique_id),
+            "suggested_area": self._device_area,
         }
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return Extra state attributes."""
+        return self._extra_state_attributes
+
+    @property
+    def should_poll(self) -> bool:
+        """Disable polling (could have a config for this)."""
+        return False
