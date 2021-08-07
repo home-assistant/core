@@ -23,7 +23,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utc_from_timestamp
 
 from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
@@ -73,24 +72,25 @@ async def async_setup_entry(
         ]
 
     for index, _ in enumerate(coordinator.data.graphics.controllers):
-        # Remove vendor from name
-        name = (
-            coordinator.data.graphics.controllers[index]
-            .name.replace(coordinator.data.graphics.controllers[index].vendor, "")
-            .strip()
-        )
-        entities = [
-            *entities,
-            SystemBridgeGpuCoreClockSpeedSensor(coordinator, index, name),
-            SystemBridgeGpuFanSpeedSensor(coordinator, index, name),
-            SystemBridgeGpuMemoryClockSpeedSensor(coordinator, index, name),
-            SystemBridgeGpuMemoryFreeSensor(coordinator, index, name),
-            SystemBridgeGpuMemoryUsedPercentageSensor(coordinator, index, name),
-            SystemBridgeGpuMemoryUsedSensor(coordinator, index, name),
-            SystemBridgeGpuPowerUsageSensor(coordinator, index, name),
-            SystemBridgeGpuTemperatureSensor(coordinator, index, name),
-            SystemBridgeGpuUsagePercentageSensor(coordinator, index, name),
-        ]
+        if coordinator.data.graphics.controllers[index].name is not None:
+            # Remove vendor from name
+            name = (
+                coordinator.data.graphics.controllers[index]
+                .name.replace(coordinator.data.graphics.controllers[index].vendor, "")
+                .strip()
+            )
+            entities = [
+                *entities,
+                SystemBridgeGpuCoreClockSpeedSensor(coordinator, index, name),
+                SystemBridgeGpuFanSpeedSensor(coordinator, index, name),
+                SystemBridgeGpuMemoryClockSpeedSensor(coordinator, index, name),
+                SystemBridgeGpuMemoryFreeSensor(coordinator, index, name),
+                SystemBridgeGpuMemoryUsedPercentageSensor(coordinator, index, name),
+                SystemBridgeGpuMemoryUsedSensor(coordinator, index, name),
+                SystemBridgeGpuPowerUsageSensor(coordinator, index, name),
+                SystemBridgeGpuTemperatureSensor(coordinator, index, name),
+                SystemBridgeGpuUsagePercentageSensor(coordinator, index, name),
+            ]
 
     for index, _ in enumerate(coordinator.data.processes.load.cpus):
         entities = [
@@ -104,7 +104,6 @@ async def async_setup_entry(
 class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
     """Defines a System Bridge sensor."""
 
-    _attr_last_reset = utc_from_timestamp(0)
     _attr_state_class = "measurement"
 
     def __init__(
@@ -364,8 +363,11 @@ class SystemBridgeGpuMemoryUsedPercentageSensor(SystemBridgeSensor):
     def state(self) -> str | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
-        return (
-            round(
+        if (
+            bridge.graphics.controllers[self._index].memoryUsed is not None
+            and bridge.graphics.controllers[self._index].memoryTotal is not None
+        ):
+            return round(
                 (
                     bridge.graphics.controllers[self._index].memoryUsed
                     / bridge.graphics.controllers[self._index].memoryTotal
@@ -373,10 +375,7 @@ class SystemBridgeGpuMemoryUsedPercentageSensor(SystemBridgeSensor):
                 * 100,
                 2,
             )
-            if bridge.graphics.controllers[self._index].memoryUsed is not None
-            and bridge.graphics.controllers[self._index].memoryTotal is not None
-            else None
-        )
+        return None
 
 
 class SystemBridgeGpuUsagePercentageSensor(SystemBridgeSensor):
@@ -743,25 +742,6 @@ class SystemBridgeProcessesCpuLoadSensor(SystemBridgeSensor):
             if bridge.processes.load.cpus[self._index].load is not None
             else None
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the entity."""
-        bridge: Bridge = self.coordinator.data
-        attrs = {}
-        if bridge.processes.load.cpus[self._index].loadUser is not None:
-            attrs[ATTR_LOAD_USER] = round(
-                bridge.processes.load.cpus[self._index].loadUser, 2
-            )
-        if bridge.processes.load.cpus[self._index].loadSystem is not None:
-            attrs[ATTR_LOAD_SYSTEM] = round(
-                bridge.processes.load.cpus[self._index].loadSystem, 2
-            )
-        if bridge.processes.load.cpus[self._index].loadIdle is not None:
-            attrs[ATTR_LOAD_IDLE] = round(
-                bridge.processes.load.cpus[self._index].loadIdle, 2
-            )
-        return attrs
 
 
 class SystemBridgeBiosVersionSensor(SystemBridgeSensor):
