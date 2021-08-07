@@ -46,6 +46,8 @@ CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_WAIT_FOR_ACK = "wait_for_ack"
 CONF_KEEPALIVE_IDLE = "tcp_keepalive_idle_timer"
+CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
+CONF_TRAVELLING_TIME_UP = "travelling_time_up"
 
 DATA_DEVICE_REGISTER = "rflink_device_register"
 DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
@@ -53,6 +55,7 @@ DATA_ENTITY_GROUP_LOOKUP = "rflink_entity_group_only_lookup"
 DEFAULT_RECONNECT_INTERVAL = 10
 DEFAULT_SIGNAL_REPETITIONS = 1
 DEFAULT_TCP_KEEPALIVE_IDLE_TIMER = 3600
+DEFAULT_TRAVEL_TIME = 25
 CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = "button_pressed"
@@ -521,15 +524,12 @@ class RflinkCommand(RflinkDevice):
         # Cover options for RFlink
         elif command == "close_cover":
             cmd = "DOWN"
-            self._state = False
 
         elif command == "open_cover":
             cmd = "UP"
-            self._state = True
 
         elif command == "stop_cover":
             cmd = "STOP"
-            self._state = True
 
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to

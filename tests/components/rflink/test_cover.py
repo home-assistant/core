@@ -4,13 +4,19 @@ Test setup of RFLink covers component/platform. State tracking and
 control of RFLink cover devices.
 
 """
+import asyncio
+
+from homeassistant.components.cover import ATTR_CURRENT_POSITION, ATTR_POSITION
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import CoreState, State, callback
 
@@ -19,6 +25,7 @@ from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = "cover"
 
+TRAVELLING_TIME = 0.1
 CONFIG = {
     "rflink": {
         "port": "/dev/ttyABC0",
@@ -27,12 +34,36 @@ CONFIG = {
     DOMAIN: {
         "platform": "rflink",
         "devices": {
-            "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]},
+            "protocol_0_0": {
+                "name": "test",
+                "aliases": ["test_alias_0_0"],
+                "travelling_time_up": TRAVELLING_TIME,
+                "travelling_time_down": TRAVELLING_TIME,
+            },
             "cover_0_0": {"name": "dim_test"},
             "cover_0_1": {"name": "cover_test"},
         },
     },
 }
+
+
+async def async_sleep(hass, delay: float):
+    """Sleep after hass done."""
+    await hass.async_block_till_done()
+    await asyncio.sleep(delay)
+
+
+async def assert_state(hass, name, expected_state, position=None):
+    """Test the assertion of a cover state."""
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{DOMAIN}.{name}")
+    assert state.state == expected_state
+    if position is None:
+        assert "current_position" not in state.attributes
+    elif isinstance(position, list):
+        assert position[0] < state.attributes["current_position"] < position[1]
+    else:
+        assert state.attributes["current_position"] == position
 
 
 async def test_default_setup(hass, monkeypatch):
@@ -55,54 +86,56 @@ async def test_default_setup(hass, monkeypatch):
 
     # mock incoming command event for this device
     event_callback({"id": "protocol_0_0", "command": "up"})
-    await hass.async_block_till_done()
-
-    cover_after_first_command = hass.states.get(f"{DOMAIN}.test")
-    assert cover_after_first_command.state == STATE_OPEN
-    # not sure why, but cover have always assumed_state=true
-    assert cover_after_first_command.attributes.get("assumed_state")
+    await assert_state(hass, "test", STATE_OPENING, 100)
 
     # mock incoming command event for this device
     event_callback({"id": "protocol_0_0", "command": "down"})
-    await hass.async_block_till_done()
+    await assert_state(hass, "test", STATE_CLOSING, 0)
+    await async_sleep(hass, TRAVELLING_TIME / 2)
+    await assert_state(hass, "test", STATE_CLOSING, 0)
 
-    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
+    # mock incoming command event for this device
+    event_callback({"id": "protocol_0_0", "command": "stop"})
+    await assert_state(hass, "test", STATE_OPEN, [30, 70])
 
     # should respond to group command
     event_callback({"id": "protocol_0_0", "command": "allon"})
-    await hass.async_block_till_done()
-
-    cover_after_first_command = hass.states.get(f"{DOMAIN}.test")
-    assert cover_after_first_command.state == STATE_OPEN
+    await assert_state(hass, "test", STATE_OPENING, 100)
 
     # should respond to group command
     event_callback({"id": "protocol_0_0", "command": "alloff"})
-    await hass.async_block_till_done()
-
-    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
+    await assert_state(hass, "test", STATE_CLOSING, 0)
 
     # test following aliases
     # mock incoming command event for this device alias
     event_callback({"id": "test_alias_0_0", "command": "up"})
-    await hass.async_block_till_done()
+    await assert_state(hass, "test", STATE_OPENING, 100)
+    await async_sleep(hass, TRAVELLING_TIME)
+    await assert_state(hass, "test", STATE_OPEN, 100)
 
-    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
-
-    # test changing state from HA propagates to RFLink
+    # test service calls propagates to RFLink
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
-    await hass.async_block_till_done()
-    assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
+    await assert_state(hass, "test", STATE_CLOSING, 0)
     assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_0"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "DOWN"
 
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
-    await hass.async_block_till_done()
-    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
+    await async_sleep(hass, TRAVELLING_TIME)
+    await assert_state(hass, "test", STATE_OPEN, 100)
     assert protocol.send_command_ack.call_args_list[1][0][1] == "UP"
+
+    # test set position auto stop
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.test", ATTR_POSITION: 75},
+    )
+    await asyncio.sleep(TRAVELLING_TIME / 2)
+    await assert_state(hass, "test", STATE_OPEN, 75)
 
 
 async def test_firing_bus_event(hass, monkeypatch):
@@ -345,7 +378,11 @@ async def test_restore_state(hass, monkeypatch):
     }
 
     mock_restore_cache(
-        hass, (State(f"{DOMAIN}.c1", STATE_OPEN), State(f"{DOMAIN}.c2", STATE_CLOSED))
+        hass,
+        (
+            State(f"{DOMAIN}.c1", STATE_OPEN, {ATTR_CURRENT_POSITION: 100}),
+            State(f"{DOMAIN}.c2", STATE_CLOSED, {ATTR_CURRENT_POSITION: 0}),
+        ),
     )
 
     hass.state = CoreState.starting

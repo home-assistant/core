@@ -8,6 +8,8 @@ from voluptuous.error import MultipleInvalid
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL,
+    CONF_TRAVELLING_TIME_DOWN,
+    CONF_TRAVELLING_TIME_UP,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
@@ -52,6 +54,11 @@ async def mock_rflink(
     monkeypatch.setattr(
         "homeassistant.components.rflink.create_rflink_connection", mock_create
     )
+    if domain == "cover":
+        for key in config["cover"]["devices"]:
+            if CONF_TRAVELLING_TIME_DOWN not in config["cover"]["devices"][key]:
+                config["cover"]["devices"][key][CONF_TRAVELLING_TIME_DOWN] = 0
+                config["cover"]["devices"][key][CONF_TRAVELLING_TIME_UP] = 0
 
     await async_setup_component(hass, "rflink", config)
     await async_setup_component(hass, domain, config)
