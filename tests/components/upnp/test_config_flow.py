@@ -30,12 +30,12 @@ from .common import (
     TEST_USN,
 )
 from .mock_ssdp_scanner import mock_ssdp_scanner  # noqa: F401
-from .mock_upnp_device import mock_async_create_device  # noqa: F401
+from .mock_upnp_device import mock_upnp_device  # noqa: F401
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_async_create_device")
+@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
 async def test_flow_ssdp_discovery(
     hass: HomeAssistant,
 ):
@@ -114,7 +114,7 @@ async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
     assert result["reason"] == "discovery_ignored"
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_async_create_device")
+@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
 async def test_flow_user(hass: HomeAssistant):
     """Test config flow: discovered + configured through user."""
     # Ensure we have a ssdp Scanner.
@@ -146,7 +146,7 @@ async def test_flow_user(hass: HomeAssistant):
     }
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_async_create_device")
+@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
 async def test_flow_import(hass: HomeAssistant):
     """Test config flow: configured through configuration.yaml."""
     # Ensure we have a ssdp Scanner.
@@ -214,7 +214,7 @@ async def test_flow_import_no_devices_found(hass: HomeAssistant):
         assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_async_create_device")
+@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
 async def test_options_flow(hass: HomeAssistant):
     """Test options flow."""
     # Ensure we have a ssdp Scanner.

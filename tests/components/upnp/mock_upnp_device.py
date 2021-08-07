@@ -83,9 +83,9 @@ class MockDevice(Device):
 
 
 @pytest.fixture
-def mock_async_create_device():
+def mock_upnp_device():
     """Mock upnp Device.async_create_device."""
-    with patch.object(
-        Device, "async_create_device", AsyncMock(return_value=MockDevice(TEST_UDN))
+    with patch(
+        "homeassistant.components.upnp.Device", new=MockDevice
     ) as mock_async_create_device:
         yield mock_async_create_device

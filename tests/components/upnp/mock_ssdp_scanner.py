@@ -44,6 +44,6 @@ class MockSsdpScanner(ssdp.Scanner):
 def mock_ssdp_scanner():
     """Mock ssdp Scanner."""
     with patch(
-        "homeassistant.components.ssdp.Scanner", MockSsdpScanner
+        "homeassistant.components.ssdp.Scanner", new=MockSsdpScanner
     ) as mock_ssdp_scanner:
         yield mock_ssdp_scanner

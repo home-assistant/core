@@ -14,12 +14,12 @@ from homeassistant.setup import async_setup_component
 
 from .common import TEST_DISCOVERY, TEST_ST, TEST_UDN
 from .mock_ssdp_scanner import mock_ssdp_scanner  # noqa: F401
-from .mock_upnp_device import mock_async_create_device  # noqa: F401
+from .mock_upnp_device import mock_upnp_device  # noqa: F401
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_async_create_device")
+@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
 async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
     entry = MockConfigEntry(
