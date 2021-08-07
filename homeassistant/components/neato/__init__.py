@@ -77,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
         if ex.code in (401, 403):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+        raise ConfigEntryNotReady from ex
 
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hass.data[NEATO_DOMAIN][entry.entry_id] = neato_session
