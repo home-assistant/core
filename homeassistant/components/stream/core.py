@@ -55,8 +55,8 @@ class Segment:
     init: bytes = attr.ib()
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib()
+    start_time: datetime.datetime = attr.ib()
     _stream_outputs: Iterable[StreamOutput] = attr.ib()
-    start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
     duration: float = attr.ib(default=0)
     # Parts are stored in a dict indexed by byterange for easy lookup
     # As of Python 3.7, insertion order is preserved, and we insert

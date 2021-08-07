@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from collections.abc import Generator, Iterator, Mapping
+import datetime
 from io import BytesIO
 import logging
 from threading import Event
@@ -58,6 +59,7 @@ class SegmentBuffer:
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
         self._stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
+        self._start_time = datetime.datetime.utcnow()
 
     def make_new_av(
         self,
@@ -173,6 +175,10 @@ class SegmentBuffer:
                 # Fetch the latest StreamOutputs, which may have changed since the
                 # worker started.
                 stream_outputs=self._outputs_callback().values(),
+                start_time=self._start_time
+                + datetime.timedelta(
+                    seconds=float(self._segment_start_dts * packet.time_base)
+                ),
             )
             self._memory_file_pos = self._memory_file.tell()
             self._part_start_dts = self._segment_start_dts
