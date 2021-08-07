@@ -9,7 +9,7 @@ import holidays
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, WEEKDAYS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -25,6 +25,7 @@ from .const import (
     CONF_REMOVE_HOLIDAYS,
     CONF_STATE,
     CONF_WORKDAYS,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +74,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_REMOVE_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
+
+
+async def async_setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+    """Set up the Workday platform."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
 
 
 async def async_setup_entry(

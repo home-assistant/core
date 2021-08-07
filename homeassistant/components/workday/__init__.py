@@ -1,41 +1,14 @@
 """Sensor to indicate whether the current day is a workday."""
 import logging
 
-import voluptuous as vol
-
-from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_per_platform
 
-from .const import CONF_ADD_HOLIDAYS, CONF_REMOVE_HOLIDAYS, DOMAIN
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+from .const import CONF_ADD_HOLIDAYS, CONF_REMOVE_HOLIDAYS
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the workday component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    # Import configuration from sensor platform
-    config_platform = config_per_platform(config, "binary_sensor")
-    for p_type, p_config in config_platform:
-        if p_type != DOMAIN:
-            continue
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=p_config,
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):

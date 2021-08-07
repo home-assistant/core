@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant import config_entries
-from homeassistant.components.workday import DOMAIN
 from homeassistant.components.workday.const import (
     CONF_ADD_HOLIDAYS,
     CONF_COUNTRY,
@@ -16,6 +15,7 @@ from homeassistant.components.workday.const import (
     DEFAULT_EXCLUDES,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
+    DOMAIN,
     ERR_NO_SUBCOUNTRY,
 )
 from homeassistant.const import CONF_NAME

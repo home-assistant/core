@@ -1,12 +1,12 @@
 """Test the Workday config flow."""
 import logging
 
-from homeassistant.components.workday import DOMAIN
 from homeassistant.components.workday.config_flow import (
     ACTION_ADD_HOLIDAYS,
     ACTION_REMOVE_HOLIDAYS,
     CONF_HOLIDAY_TO_REMOVE,
     CONF_NEW_HOLIDAY,
+    DOMAIN,
     OPTIONS_ACTION,
 )
 from homeassistant.components.workday.const import (
