@@ -30,10 +30,6 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 
 ATTR_AVAILABLE = "available"
 ATTR_FILESYSTEM = "filesystem"
-ATTR_LOAD_AVERAGE = "load_average"
-ATTR_LOAD_IDLE = "load_idle"
-ATTR_LOAD_SYSTEM = "load_system"
-ATTR_LOAD_USER = "load_user"
 ATTR_MOUNT = "mount"
 ATTR_SIZE = "size"
 ATTR_TYPE = "type"
