@@ -61,6 +61,10 @@ async def async_setup_entry(
         SystemBridgeMemoryUsedSensor(coordinator),
         SystemBridgeOsSensor(coordinator),
         SystemBridgeProcessesLoadSensor(coordinator),
+        SystemBridgeProcessesAverageLoadSensor(coordinator),
+        SystemBridgeProcessesUserLoadSensor(coordinator),
+        SystemBridgeProcessesSystemLoadSensor(coordinator),
+        SystemBridgeProcessesIdleLoadSensor(coordinator),
         SystemBridgeVersionSensor(coordinator),
     ]
 
@@ -702,20 +706,109 @@ class SystemBridgeProcessesLoadSensor(SystemBridgeSensor):
             else None
         )
 
+
+class SystemBridgeProcessesAverageLoadSensor(SystemBridgeSensor):
+    """Defines a Processes Average Load sensor."""
+
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            "processes_load_average",
+            "Average Load",
+            "mdi:percent",
+            None,
+            PERCENTAGE,
+            False,
+        )
+
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the entity."""
+    def state(self) -> float | None:
+        """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
-        attrs = {}
-        if bridge.processes.load.avgLoad is not None:
-            attrs[ATTR_LOAD_AVERAGE] = round(bridge.processes.load.avgLoad, 2)
-        if bridge.processes.load.currentLoadUser is not None:
-            attrs[ATTR_LOAD_USER] = round(bridge.processes.load.currentLoadUser, 2)
-        if bridge.processes.load.currentLoadSystem is not None:
-            attrs[ATTR_LOAD_SYSTEM] = round(bridge.processes.load.currentLoadSystem, 2)
-        if bridge.processes.load.currentLoadIdle is not None:
-            attrs[ATTR_LOAD_IDLE] = round(bridge.processes.load.currentLoadIdle, 2)
-        return attrs
+        return (
+            round(bridge.processes.load.avgLoad, 2)
+            if bridge.processes.load.avgLoad is not None
+            else None
+        )
+
+
+class SystemBridgeProcessesUserLoadSensor(SystemBridgeSensor):
+    """Defines a Processes User Load sensor."""
+
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            "processes_load_user",
+            "User Load",
+            "mdi:percent",
+            None,
+            PERCENTAGE,
+            False,
+        )
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            round(bridge.processes.load.currentLoadUser, 2)
+            if bridge.processes.load.currentLoadUser is not None
+            else None
+        )
+
+
+class SystemBridgeProcessesSystemLoadSensor(SystemBridgeSensor):
+    """Defines a Processes System Load sensor."""
+
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            "processes_load_system",
+            "System Load",
+            "mdi:percent",
+            None,
+            PERCENTAGE,
+            False,
+        )
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            round(bridge.processes.load.currentLoadSystem, 2)
+            if bridge.processes.load.currentLoadSystem is not None
+            else None
+        )
+
+
+class SystemBridgeProcessesIdleLoadSensor(SystemBridgeSensor):
+    """Defines a Processes Idle Load sensor."""
+
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            "processes_load_idle",
+            "Idle Load",
+            "mdi:percent",
+            None,
+            PERCENTAGE,
+            False,
+        )
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            round(bridge.processes.load.currentLoadIdle, 2)
+            if bridge.processes.load.currentLoadIdle is not None
+            else None
+        )
 
 
 class SystemBridgeProcessesCpuLoadSensor(SystemBridgeSensor):
