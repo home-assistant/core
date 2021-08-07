@@ -89,7 +89,9 @@ async def async_setup_entry(
     workdays = config_entry.data[CONF_WORKDAYS]
     excludes = config_entry.data[CONF_EXCLUDES]
     add_holidays = config_entry.options.get(CONF_ADD_HOLIDAYS)
-    remove_holidays = config_entry.options.get(CONF_REMOVE_HOLIDAYS)
+    remove_holidays: vol.Optional[list[str]] = config_entry.options.get(
+        CONF_REMOVE_HOLIDAYS
+    )
 
     year = (get_date(dt.now()) + timedelta(days=days_offset)).year
     obj_holidays = getattr(holidays, country)(prov=province, state=state, years=year)
@@ -102,7 +104,7 @@ async def async_setup_entry(
 
     # Remove holidays
     try:
-        for date in remove_holidays:  # type: ignore
+        for date in remove_holidays:
             try:
                 # is this formatted as a date?
                 if dt.parse_date(date):
