@@ -24,7 +24,7 @@
                     "declination": "Deklinasjon (0 = horisontal, 90 = vertikal)",
                     "modules power": "Total Watt-toppeffekt i solcellemodulene dine"
                 },
-                "description": "Disse verdiene tillater justering av Solar.Forecast-resultatet. Se dokumentasjonen er et felt som er uklart."
+                "description": "Disse verdiene tillater justering av Solar.Forecast -resultatet. Se dokumentasjonen hvis et felt er uklart."
             }
         }
     }
