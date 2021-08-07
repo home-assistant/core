@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs"
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
+            "requests_exceeded": "T\u00fall\u00e9pt\u00e9k az Accuweather API-hoz beny\u00fajtott k\u00e9relmek megengedett sz\u00e1m\u00e1t. Meg kell v\u00e1rnia vagy m\u00f3dos\u00edtania kell az API-kulcsot."
         },
         "step": {
             "user": {

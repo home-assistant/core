@@ -58,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_hue_groups": "Hue csoportok enged\u00e9lyez\u00e9se"
+                    "allow_hue_groups": "Hue csoportok enged\u00e9lyez\u00e9se",
+                    "allow_unreachable": "Hagyja, hogy az el\u00e9rhetetlen izz\u00f3k helyesen jelents\u00e9k \u00e1llapotukat"
                 }
             }
         }
