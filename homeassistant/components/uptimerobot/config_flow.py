@@ -58,15 +58,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if response and response.data and response.data.email
             else None
         )
-        if account:
-            await self.async_set_unique_id(str(account.user_id))
-            self._abort_if_unique_id_configured()
 
         return errors, account
 
     async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -74,10 +70,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors, account = await self._validate_input(user_input)
         if account:
+            await self.async_set_unique_id(str(account.user_id))
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=account.email, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, user_input: ConfigType | None = None
+    ) -> FlowResult:
+        """Rerun the user step when reauth is requested."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: ConfigType | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+            )
+        errors, account = await self._validate_input(user_input)
+        if account:
+            existing_entry = await self.async_set_unique_id(str(account.user_id))
+            if existing_entry:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data=user_input
+                )
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
@@ -93,5 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _, account = await self._validate_input(imported_config)
         if account:
+            await self.async_set_unique_id(str(account.user_id))
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=account.email, data=imported_config)
         return self.async_abort(reason="unknown")

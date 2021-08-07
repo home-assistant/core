@@ -211,7 +211,7 @@ async def test_user_unique_id_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
     with patch(
@@ -233,5 +233,110 @@ async def test_user_unique_id_already_exists(hass):
         await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 0
-    assert result2["type"] == "abort"
+    assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_reauthentication(hass):
+    """Test Uptime Robot reauthentication."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"platform": DOMAIN, "api_key": "1234"},
+        unique_id="1234567890",
+    )
+    old_entry.add_to_hass(hass)
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "ok",
+                "account": {"email": "test@test.test", "user_id": 1234567890},
+            }
+        ),
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=old_entry.data,
+        )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "ok",
+                "account": {"email": "test@test.test", "user_id": 1234567890},
+            }
+        ),
+    ), patch(
+        "homeassistant.components.uptimerobot.async_setup_entry",
+        return_value=True,
+    ):
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": "1234"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauthentication_failure(hass):
+    """Test Uptime Robot reauthentication."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"platform": DOMAIN, "api_key": "1234"},
+        unique_id="1234567890",
+    )
+    old_entry.add_to_hass(hass)
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "ok",
+                "account": {"email": "test@test.test", "user_id": 1234567890},
+            }
+        ),
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=old_entry.data,
+        )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_account_details",
+        return_value=UptimeRobotApiResponse.from_dict(
+            {
+                "stat": "fail",
+                "error": {"message": "test error from API."},
+            }
+        ),
+    ), patch(
+        "homeassistant.components.uptimerobot.async_setup_entry",
+        return_value=True,
+    ):
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": "1234"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
