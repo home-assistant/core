@@ -225,9 +225,9 @@ async def async_setup(hass, config):
                 "alarm_control_panel",
                 "envisalink",
                 {
-                    CONF_PARTITIONS: partitions, 
-                    CONF_CODE: code, 
-                    CONF_PANIC: panic_type, 
+                    CONF_PARTITIONS: partitions,
+                    CONF_CODE: code,
+                    CONF_PANIC: panic_type,
                     CONF_DEVICE_CODE: device_code,
                 },
                 config,
