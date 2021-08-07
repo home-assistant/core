@@ -184,6 +184,7 @@ def execute(hass, filename, source, data=None):
     builtins["sorted"] = sorted
     builtins["time"] = TimeWrapper()
     builtins["dt_util"] = dt_util
+    builtins["enumerate"] = enumerate
     logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
         "__builtins__": builtins,
