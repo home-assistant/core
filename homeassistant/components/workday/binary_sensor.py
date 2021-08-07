@@ -165,7 +165,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._excludes = excludes
         self._days_offset = days_offset
         self._state = None
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
 
     @property
     def name(self) -> str:
@@ -220,8 +220,3 @@ class IsWorkdaySensor(BinarySensorEntity):
 
         if self.is_exclude(day_of_week, date):
             self._state = False
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
