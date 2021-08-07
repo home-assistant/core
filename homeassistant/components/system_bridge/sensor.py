@@ -57,7 +57,6 @@ async def async_setup_entry(
         SystemBridgeMemoryUsedSensor(coordinator),
         SystemBridgeOsSensor(coordinator),
         SystemBridgeProcessesLoadSensor(coordinator),
-        SystemBridgeProcessesAverageLoadSensor(coordinator),
         SystemBridgeProcessesUserLoadSensor(coordinator),
         SystemBridgeProcessesSystemLoadSensor(coordinator),
         SystemBridgeProcessesIdleLoadSensor(coordinator),
@@ -699,32 +698,6 @@ class SystemBridgeProcessesLoadSensor(SystemBridgeSensor):
         return (
             round(bridge.processes.load.currentLoad, 2)
             if bridge.processes.load.currentLoad is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesAverageLoadSensor(SystemBridgeSensor):
-    """Defines a Processes Average Load sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "processes_load_average",
-            "Average Load",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.avgLoad, 2)
-            if bridge.processes.load.avgLoad is not None
             else None
         )
 
