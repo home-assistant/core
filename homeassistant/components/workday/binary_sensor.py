@@ -102,23 +102,21 @@ async def async_setup_entry(
 
     # Remove holidays
     try:
-        if remove_holidays:
-            for date in remove_holidays:
-                try:
-                    # is this formatted as a date?
-                    if dt.parse_date(date):
-                        # remove holiday by date
-                        removed = obj_holidays.pop(date)
-                        _LOGGER.debug("Removed %s", date)
-                    else:
-                        # remove holiday by name
-                        _LOGGER.debug("Treating '%s' as named holiday", date)
-                        removed = obj_holidays.pop_named(date)
-                        for holiday in removed:
-                            _LOGGER.debug("Removed %s by name '%s'", holiday, date)
-                except KeyError as unmatched:
-                    _LOGGER.warning("No holiday found matching %s", unmatched)
-                obj_holidays.pop(date, "Not found")
+        for date in remove_holidays:  # type: ignore
+            try:
+                # is this formatted as a date?
+                if dt.parse_date(date):
+                    # remove holiday by date
+                    removed = obj_holidays.pop(date)
+                    _LOGGER.debug("Removed %s", date)
+                else:
+                    # remove holiday by name
+                    _LOGGER.debug("Treating '%s' as named holiday", date)
+                    removed = obj_holidays.pop_named(date)
+                    for holiday in removed:
+                        _LOGGER.debug("Removed %s by name '%s'", holiday, date)
+            except KeyError as unmatched:
+                _LOGGER.warning("No holiday found matching %s", unmatched)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 

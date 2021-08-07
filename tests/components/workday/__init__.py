@@ -47,7 +47,6 @@ def create_workday_test_data(
         advanced_data[CONF_SUBCOUNTRY] = state
     else:
         bracket = ""
-        advanced_data[CONF_SUBCOUNTRY] = subcountry
 
     if advanced_config:
         advanced_data[CONF_ADVANCED] = True
@@ -76,8 +75,10 @@ def create_flow_basic_data(
     """Generate Workday configuration dict."""
     basic_data = {
         CONF_COUNTRY: country,
-        CONF_SUBCOUNTRY: subcountry,
     }
+
+    if subcountry:
+        basic_data[CONF_SUBCOUNTRY] = subcountry
 
     if advanced_config:
         basic_data[CONF_ADVANCED] = True

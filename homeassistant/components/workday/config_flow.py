@@ -9,8 +9,7 @@ from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt
+from homeassistant.util import dt, slugify
 
 from .const import (
     ALLOWED_DAYS,
@@ -27,10 +26,10 @@ from .const import (
     DEFAULT_EXCLUDES,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
+    DOMAIN,
     ERR_NO_COUNTRY,
     ERR_NO_SUBCOUNTRY,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +95,6 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for workday."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     _countries = None
 
@@ -259,7 +257,7 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
                 return await self.async_step_add_holidays()
             if action == ACTION_REMOVE_HOLIDAYS:
                 return await self.async_step_remove_holidays()
-            errors[OPTIONS_ACTION] = "unsupported_action"
+            # errors[OPTIONS_ACTION] = "unsupported_action"
 
         return self.async_show_form(
             step_id="prompt_options",

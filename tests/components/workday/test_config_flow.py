@@ -30,6 +30,8 @@ from tests.components.workday import (
 _LOGGER = logging.getLogger(__name__)
 
 FLOW_BASIC_01 = create_flow_basic_data(country="Germany", subcountry="BW")
+FLOW_BASIC_02 = create_flow_basic_data(country="UnitedStates", subcountry="AL")
+FLOW_BASIC_03 = create_flow_basic_data(country="Ukraine")
 FLOW_ADVANCED_INIT = create_flow_basic_data(
     country="Germany", subcountry="BW", advanced_config=True
 )
@@ -38,6 +40,8 @@ FLOW_ADVANCED_01 = create_flow_advanced_data(
 )
 
 CONFIG_BASIC_01 = create_workday_test_data(country="Germany", province="BW")
+CONFIG_BASIC_02 = create_workday_test_data(country="UnitedStates", state="AL")
+CONFIG_BASIC_03 = create_workday_test_data(country="Ukraine")
 CONFIG_ADVANCED_01 = create_workday_test_data(
     country="Germany",
     province="BW",
@@ -47,7 +51,7 @@ CONFIG_ADVANCED_01 = create_workday_test_data(
 )
 
 
-async def test_basic_flow(hass: HomeAssistant):
+async def test_basic_flow_province(hass: HomeAssistant):
     """Test flow setup."""
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -64,6 +68,44 @@ async def test_basic_flow(hass: HomeAssistant):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Workday Germany (BW)"
     assert result2["data"] == CONFIG_BASIC_01
+
+
+async def test_basic_flow_state(hass: HomeAssistant):
+    """Test flow setup."""
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result1["type"] == "form"
+    assert result1["step_id"] == "user"
+    assert not result1["errors"]
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"], FLOW_BASIC_02
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Workday UnitedStates (AL)"
+    assert result2["data"] == CONFIG_BASIC_02
+
+
+async def test_basic_flow(hass: HomeAssistant):
+    """Test flow setup."""
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result1["type"] == "form"
+    assert result1["step_id"] == "user"
+    assert not result1["errors"]
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"], FLOW_BASIC_03
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Workday Ukraine"
+    assert result2["data"] == CONFIG_BASIC_03
 
 
 async def test_advanced_flow(hass: HomeAssistant):
