@@ -60,7 +60,11 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE)
+        # temporary fix,
+        # make sure slave is always defined to avoid an error in pymodbus
+        # attr(in_waiting) not defined.
+        # see issue #657 and PR #660 in riptideio/pymodbus
+        self._slave = entry.get(CONF_SLAVE, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value = None

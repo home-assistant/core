@@ -69,7 +69,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = [
         BroadlinkSensor(device, monitored_condition)
         for monitored_condition in sensor_data
-        if sensor_data[monitored_condition] != 0 or device.api.type == "A1"
+        if monitored_condition in SENSOR_TYPES
+        and (
+            # These devices have optional sensors.
+            # We don't create entities if the value is 0.
+            sensor_data[monitored_condition] != 0
+            or device.api.type not in {"RM4PRO", "RM4MINI"}
+        )
     ]
     async_add_entities(sensors)
 

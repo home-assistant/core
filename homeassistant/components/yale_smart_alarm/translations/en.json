@@ -9,16 +9,16 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]",
-                    "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
+                    "area_id": "Area ID",
+                    "name": "Name",
                     "password": "Password",
                     "username": "Username"
                 }
             },
             "user": {
                 "data": {
-                    "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]",
-                    "name": "[%key:component::yale_smart_alarm::config::step::user::data::name%]",
+                    "area_id": "Area ID",
+                    "name": "Name",
                     "password": "Password",
                     "username": "Username"
                 }

@@ -39,7 +39,7 @@ async def async_setup_entry(
     ]
     switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
     for switch in switches:
-        coordinator = coordinators[switch.mac]
+        coordinator = coordinators[switch.context or switch.mac]
         entities.append(SmartPlugSwitch(switch, coordinator))
 
     async_add_entities(entities)

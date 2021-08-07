@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 import time
+from typing import Any
 
 from pyHS100.smartdevice import SmartDevice, SmartDeviceException
 from pyHS100.smartplug import SmartPlug
@@ -22,9 +23,9 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utc_from_timestamp
@@ -44,6 +45,8 @@ from .const import (
     CONF_SWITCH,
     COORDINATORS,
     PLATFORMS,
+    UNAVAILABLE_DEVICES,
+    UNAVAILABLE_RETRY_DELAY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,16 +99,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
+    if config_data is None and entry.data:
+        config_data = entry.data
+    elif config_data is not None:
+        hass.config_entries.async_update_entry(entry, data=config_data)
 
     device_registry = dr.async_get(hass)
     tplink_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     device_count = len(tplink_devices)
+    hass_data: dict[str, Any] = hass.data[DOMAIN]
 
     # These will contain the initialized devices
-    hass.data[DOMAIN][CONF_LIGHT] = []
-    hass.data[DOMAIN][CONF_SWITCH] = []
-    lights: list[SmartDevice] = hass.data[DOMAIN][CONF_LIGHT]
-    switches: list[SmartPlug] = hass.data[DOMAIN][CONF_SWITCH]
+    hass_data[CONF_LIGHT] = []
+    hass_data[CONF_SWITCH] = []
+    hass_data[UNAVAILABLE_DEVICES] = []
+    lights: list[SmartDevice] = hass_data[CONF_LIGHT]
+    switches: list[SmartPlug] = hass_data[CONF_SWITCH]
+    unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
 
     # Add static devices
     static_devices = SmartDevices()
@@ -136,21 +146,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ", ".join(d.host for d in switches),
         )
 
+    async def async_retry_devices(self) -> None:
+        """Retry unavailable devices."""
+        unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
+        _LOGGER.debug(
+            "retry during setup unavailable devices: %s",
+            [d.host for d in unavailable_devices],
+        )
+
+        for device in unavailable_devices:
+            try:
+                device.get_sysinfo()
+            except SmartDeviceException:
+                continue
+            _LOGGER.debug(
+                "at least one device is available again, so reload integration"
+            )
+            await hass.config_entries.async_reload(entry.entry_id)
+            break
+
     # prepare DataUpdateCoordinators
-    hass.data[DOMAIN][COORDINATORS] = {}
+    hass_data[COORDINATORS] = {}
     for switch in switches:
 
         try:
             await hass.async_add_executor_job(switch.get_sysinfo)
-        except SmartDeviceException as ex:
-            _LOGGER.debug(ex)
-            raise ConfigEntryNotReady from ex
+        except SmartDeviceException:
+            _LOGGER.warning(
+                "Device at '%s' not reachable during setup, will retry later",
+                switch.host,
+            )
+            unavailable_devices.append(switch)
+            continue
 
-        hass.data[DOMAIN][COORDINATORS][
-            switch.mac
+        hass_data[COORDINATORS][
+            switch.context or switch.mac
         ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch)
-
         await coordinator.async_config_entry_first_refresh()
+
+    if unavailable_devices:
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, async_retry_devices, UNAVAILABLE_RETRY_DELAY
+            )
+        )
+        unavailable_devices_hosts = [d.host for d in unavailable_devices]
+        hass_data[CONF_SWITCH] = [
+            s for s in switches if s.host not in unavailable_devices_hosts
+        ]
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -159,10 +202,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    platforms = [platform for platform in PLATFORMS if hass.data[DOMAIN].get(platform)]
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hass_data: dict[str, Any] = hass.data[DOMAIN]
     if unload_ok:
-        hass.data[DOMAIN].clear()
+        hass_data.clear()
 
     return unload_ok
 
@@ -231,4 +274,5 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
 
+        self.name = data[CONF_ALIAS]
         return data

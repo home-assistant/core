@@ -285,7 +285,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         self._unit: None | str | Callable[[dict], str] = unit
         self._unique_id: str = f"{super().unique_id}-{self.attribute}"
         self._name = get_entity_name(wrapper.device, block, self.description.name)
-        self._last_value: str | None = None
 
     @property
     def unique_id(self) -> str:

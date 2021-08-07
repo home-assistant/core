@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -34,8 +34,8 @@ async def async_setup_entry(
     """Set up the Speedtestdotnet sensors."""
     speedtest_coordinator = hass.data[DOMAIN]
     async_add_entities(
-        SpeedtestSensor(speedtest_coordinator, sensor_type)
-        for sensor_type in SENSOR_TYPES
+        SpeedtestSensor(speedtest_coordinator, description)
+        for description in SENSOR_TYPES
     )
 
 
@@ -46,14 +46,17 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
 
     _attr_icon = ICON
 
-    def __init__(self, coordinator: SpeedTestDataCoordinator, sensor_type: str) -> None:
+    def __init__(
+        self,
+        coordinator: SpeedTestDataCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.type = sensor_type
+        self.entity_description = description
 
-        self._attr_name = f"{DEFAULT_NAME} {SENSOR_TYPES[sensor_type][0]}"
-        self._attr_unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._attr_unique_id = sensor_type
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
+        self._attr_unique_id = description.key
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
@@ -68,11 +71,11 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
                 }
             )
 
-            if self.type == "download":
+            if self.entity_description.key == "download":
                 self._attrs[ATTR_BYTES_RECEIVED] = self.coordinator.data[
                     "bytes_received"
                 ]
-            elif self.type == "upload":
+            elif self.entity_description.key == "upload":
                 self._attrs[ATTR_BYTES_SENT] = self.coordinator.data["bytes_sent"]
 
         return self._attrs
@@ -96,9 +99,9 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     def _update_state(self):
         """Update sensors state."""
         if self.coordinator.data:
-            if self.type == "ping":
+            if self.entity_description.key == "ping":
                 self._attr_state = self.coordinator.data["ping"]
-            elif self.type == "download":
+            elif self.entity_description.key == "download":
                 self._attr_state = round(self.coordinator.data["download"] / 10 ** 6, 2)
-            elif self.type == "upload":
+            elif self.entity_description.key == "upload":
                 self._attr_state = round(self.coordinator.data["upload"] / 10 ** 6, 2)

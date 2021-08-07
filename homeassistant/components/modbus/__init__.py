@@ -198,6 +198,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_DISCRETE,
                         CALL_TYPE_REGISTER_INPUT,
                         CALL_TYPE_COIL,
+                        CALL_TYPE_X_COILS,
+                        CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
                 vol.Optional(CONF_STATE_OFF): cv.positive_int,

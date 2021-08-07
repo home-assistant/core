@@ -29,7 +29,7 @@ def async_describe_events(
     def async_describe_shelly_click_event(event: EventType) -> dict[str, str]:
         """Describe shelly.click logbook event."""
         wrapper = get_device_wrapper(hass, event.data[ATTR_DEVICE_ID])
-        if wrapper:
+        if wrapper and wrapper.device.initialized:
             device_name = get_device_name(wrapper.device)
         else:
             device_name = event.data[ATTR_DEVICE]

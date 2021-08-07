@@ -547,7 +547,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
         return
     try:
-        await addon_manager.async_create_snapshot()
+        await addon_manager.async_create_backup()
     except AddonError as err:
         LOGGER.error(err)
         return
