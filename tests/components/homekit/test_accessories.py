@@ -133,6 +133,39 @@ async def test_home_accessory(hass, hk_driver):
     )
     assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == "0.4.3"
 
+    acc4 = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
+        entity_id2,
+        3,
+        {
+            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_SW_VERSION: "will_not_match_regex",
+            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
+        },
+    )
+    assert acc4.available is False
+    serv = acc4.services[0]  # SERV_ACCESSORY_INFO
+    assert (
+        serv.get_characteristic(CHAR_NAME).value
+        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+    )
+    assert (
+        serv.get_characteristic(CHAR_MANUFACTURER).value
+        == "Lux Brands that exceeds the maximum maximum maximum maximum maxi"
+    )
+    assert (
+        serv.get_characteristic(CHAR_MODEL).value
+        == "Awesome Model that exceeds the maximum maximum maximum maximum m"
+    )
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
     with patch(

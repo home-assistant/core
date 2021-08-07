@@ -744,7 +744,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.4
+ha-philipsjs==2.7.5
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1342,7 +1342,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.21
+pybotvac==0.0.22
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.10
@@ -1436,9 +1436,6 @@ pyfido==2.1.1
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
-
-# homeassistant.components.flexit
-pyflexit==0.3
 
 # homeassistant.components.flic
 pyflic==2.0.3
@@ -2442,7 +2439,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.33.2
+zeroconf==0.33.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.59
