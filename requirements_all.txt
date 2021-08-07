@@ -245,6 +245,9 @@ aioswitcher==2.0.4
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
 
+# homeassistant.components.tractive
+aiotractive==0.5.1
+
 # homeassistant.components.unifi
 aiounifi==26
 
@@ -783,7 +786,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210803.2
+home-assistant-frontend==20210804.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1294,7 +1297,7 @@ pyW215==0.7.0
 pyW800rf32==0.1
 
 # homeassistant.components.nextbus
-py_nextbusnext==0.1.4
+py_nextbusnext==0.1.5
 
 # homeassistant.components.ads
 pyads==3.2.2
@@ -1562,7 +1565,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.7.2
+pylitterbot==2021.8.0
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1948,7 +1951,7 @@ pytradfri[async]==7.0.6
 pytrafikverket==0.1.6.2
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==0.0.5
+pyuptimerobot==21.8.2
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
@@ -2439,7 +2442,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.33.2
+zeroconf==0.33.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.59
@@ -2454,7 +2457,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.12.0
+zigpy-deconz==0.12.1
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0
@@ -2463,7 +2466,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.5.2
+zigpy-znp==0.5.3
 
 # homeassistant.components.zha
 zigpy==0.36.1

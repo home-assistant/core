@@ -15,10 +15,9 @@ from motioneye_client.const import (
     KEY_VIDEO_STREAMING,
 )
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -26,26 +25,26 @@ from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
 
 MOTIONEYE_SWITCHES = [
-    EntityDescription(
+    SwitchEntityDescription(
         key=KEY_MOTION_DETECTION,
         name="Motion Detection",
         entity_registry_enabled_default=True,
     ),
-    EntityDescription(
+    SwitchEntityDescription(
         key=KEY_TEXT_OVERLAY, name="Text Overlay", entity_registry_enabled_default=False
     ),
-    EntityDescription(
+    SwitchEntityDescription(
         key=KEY_VIDEO_STREAMING,
         name="Video Streaming",
         entity_registry_enabled_default=False,
     ),
-    EntityDescription(
+    SwitchEntityDescription(
         key=KEY_STILL_IMAGES, name="Still Images", entity_registry_enabled_default=True
     ),
-    EntityDescription(
+    SwitchEntityDescription(
         key=KEY_MOVIES, name="Movies", entity_registry_enabled_default=True
     ),
-    EntityDescription(
+    SwitchEntityDescription(
         key=KEY_UPLOAD_ENABLED,
         name="Upload Enabled",
         entity_registry_enabled_default=False,
@@ -89,7 +88,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, str],
-        entity_description: EntityDescription,
+        entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(

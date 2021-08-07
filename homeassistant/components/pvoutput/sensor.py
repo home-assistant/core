@@ -1,12 +1,20 @@
 """Support for getting collected information from PVOutput."""
+from __future__ import annotations
+
 from collections import namedtuple
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from typing import cast
 
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ENERGY,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_TEMPERATURE,
@@ -14,9 +22,12 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_API_KEY,
     CONF_NAME,
+    ENERGY_WATT_HOUR,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = "http://pvoutput.org/service/r2/getstatus.jsp"
@@ -63,13 +74,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([PvoutputSensor(rest, name)])
 
 
-class PvoutputSensor(SensorEntity):
+class PvoutputSensor(SensorEntity, RestoreEntity):
     """Representation of a PVOutput sensor."""
+
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_unit_of_measurement = ENERGY_WATT_HOUR
+
+    _old_state: int | None = None
 
     def __init__(self, rest, name):
         """Initialize a PVOutput sensor."""
         self.rest = rest
-        self._name = name
+        self._attr_name = name
         self.pvcoutput = None
         self.status = namedtuple(
             "status",
@@ -85,11 +102,6 @@ class PvoutputSensor(SensorEntity):
                 ATTR_VOLTAGE,
             ],
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def state(self):
@@ -117,14 +129,44 @@ class PvoutputSensor(SensorEntity):
         await self.rest.async_update()
         self._async_update_from_rest_data()
 
+        new_state: int | None = None
+        state = cast("str | None", self.state)
+        if state is not None:
+            new_state = int(state)
+
+        did_reset = False
+        if new_state is None:
+            did_reset = False
+        elif self._old_state is None:
+            did_reset = True
+        elif new_state == 0:
+            did_reset = self._old_state != 0
+        elif new_state < self._old_state:
+            did_reset = True
+
+        if did_reset:
+            self._attr_last_reset = dt_util.utcnow()
+
+        if new_state is not None:
+            self._old_state = new_state
+
     async def async_added_to_hass(self):
         """Ensure the data from the initial update is reflected in the state."""
+        last_state = await self.async_get_last_state()
+        if last_state is not None:
+            if "last_reset" in last_state.attributes:
+                self._attr_last_reset = dt_util.as_utc(
+                    datetime.fromisoformat(last_state.attributes["last_reset"])
+                )
+            self._old_state = int(last_state.state)
+
         self._async_update_from_rest_data()
 
     @callback
     def _async_update_from_rest_data(self):
         """Update state from the rest data."""
         try:
+            # https://pvoutput.org/help/api_specification.html#get-status-service
             self.pvcoutput = self.status._make(self.rest.data.split(","))
         except TypeError:
             self.pvcoutput = None

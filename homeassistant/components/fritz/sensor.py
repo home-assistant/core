@@ -61,32 +61,32 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
 
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload transmission rate."""
-    return round(status.transmission_rate[0] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.transmission_rate[0] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download transmission rate."""
-    return round(status.transmission_rate[1] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.transmission_rate[1] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_max_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload max transmission rate."""
-    return round(status.max_bit_rate[0] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.max_bit_rate[0] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_max_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download max transmission rate."""
-    return round(status.max_bit_rate[1] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.max_bit_rate[1] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_gb_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload total data."""
-    return round(status.bytes_sent * 8 / 1024 / 1024 / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.bytes_sent / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download total data."""
-    return round(status.bytes_received * 8 / 1024 / 1024 / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.bytes_received / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
 class SensorData(TypedDict, total=False):
