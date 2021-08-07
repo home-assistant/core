@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
 )
-from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.core import CoreState, HomeAssistant, callback as core_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
@@ -30,7 +30,7 @@ from .flow import FlowDispatcher, SSDPFlow
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
 
-IPV4_BROADCAST = "255.255.255.255"
+IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
@@ -175,11 +175,12 @@ class Scanner:
 
         # Make sure any entries that happened
         # before the callback was registered are fired
-        for headers in self.cache.values():
-            if _async_headers_match(headers, match_dict):
-                _async_process_callbacks(
-                    [callback], self._async_headers_to_discovery_info(headers)
-                )
+        if self.hass.state != CoreState.running:
+            for headers in self.cache.values():
+                if _async_headers_match(headers, match_dict):
+                    _async_process_callbacks(
+                        [callback], self._async_headers_to_discovery_info(headers)
+                    )
 
         callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
@@ -234,7 +235,7 @@ class Scanner:
             # Some sonos devices only seem to respond if we send to the broadcast
             # address. This matches pysonos' behavior
             # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
-            listener.async_search((IPV4_BROADCAST, SSDP_PORT))
+            listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
         """Start the scanner."""

@@ -296,14 +296,14 @@ async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 2
-    assert async_search_mock.call_count == 2
+    assert async_search_mock.call_count == 1
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 2
-    assert async_search_mock.call_count == 2
+    assert async_search_mock.call_count == 1
 
 
 async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog):
@@ -787,7 +787,6 @@ async def test_async_detect_interfaces_setting_empty_route(hass):
 
     assert argset == {
         (IPv6Address("2001:db8::"), None),
-        (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
         (IPv4Address("192.168.1.5"), None),
     }
 
@@ -844,7 +843,6 @@ async def test_bind_failure_skips_adapter(hass, caplog):
 
     assert argset == {
         (IPv6Address("2001:db8::"), None),
-        (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
         (IPv4Address("192.168.1.5"), None),
     }
     assert "Failed to setup listener for" in caplog.text

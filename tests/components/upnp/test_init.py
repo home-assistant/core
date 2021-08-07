@@ -9,7 +9,7 @@ from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_UDN,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_DISCOVERY, TEST_ST, TEST_UDN
@@ -37,6 +37,8 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
     # Device is discovered.
     ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
     ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
+    # Speed up callback in ssdp.async_register_callback.
+    hass.state = CoreState.not_running
 
     # Load config_entry.
     entry.add_to_hass(hass)

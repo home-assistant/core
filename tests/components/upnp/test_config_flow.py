@@ -15,7 +15,7 @@ from homeassistant.components.upnp.const import (
     DOMAIN,
     DOMAIN_DEVICES,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -44,6 +44,8 @@ async def test_flow_ssdp_discovery(
     await hass.async_block_till_done()
     ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
     ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
+    # Speed up callback in ssdp.async_register_callback.
+    hass.state = CoreState.not_running
 
     # Discovered via step ssdp.
     result = await hass.config_entries.flow.async_init(
@@ -119,6 +121,8 @@ async def test_flow_user(hass: HomeAssistant):
     await hass.async_block_till_done()
     ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
     ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
+    # Speed up callback in ssdp.async_register_callback.
+    hass.state = CoreState.not_running
 
     # Discovered via step user.
     result = await hass.config_entries.flow.async_init(
@@ -149,6 +153,8 @@ async def test_flow_import(hass: HomeAssistant):
     await hass.async_block_till_done()
     ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
     ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
+    # Speed up callback in ssdp.async_register_callback.
+    hass.state = CoreState.not_running
 
     # Discovered via step import.
     result = await hass.config_entries.flow.async_init(
@@ -212,6 +218,8 @@ async def test_options_flow(hass: HomeAssistant):
     await hass.async_block_till_done()
     ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
     ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
+    # Speed up callback in ssdp.async_register_callback.
+    hass.state = CoreState.not_running
 
     # Set up config entry.
     config_entry = MockConfigEntry(
