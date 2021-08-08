@@ -257,6 +257,7 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         self.entity_description = entity_description
 
         # Entity class attributes
+        self._attr_force_update = True
         self._attr_name = self.generate_name(include_value_name=True)
 
 
