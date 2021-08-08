@@ -192,26 +192,28 @@ TRIGGER_SCHEMA = vol.Any(
 
 
 @dataclass
-class AutomationTracker:
+class ValueUpdatesAutomationTracker:
     """Class to store an unsubscription callback for a given automation."""
 
-    value_tracker: ValueTracker
+    value_tracker: ValueUpdatesValueTracker
     id: str
     unsub: Callable
 
 
 @dataclass
-class ValueTracker:
+class ValueUpdatesValueTracker:
     """Class to store tracked automations for a given value."""
 
-    device_tracker: DeviceTracker
+    device_tracker: ValueUpdatesDeviceTracker
     zwave_value: Value
     prev_value: Any
-    automations: dict[str, AutomationTracker] = field(default_factory=dict, init=False)
+    automations: dict[str, ValueUpdatesAutomationTracker] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
-class DeviceTracker:
+class ValueUpdatesDeviceTracker:
     """Class to store tracked values for a given device/node."""
 
     hass: HomeAssistant
@@ -219,7 +221,9 @@ class DeviceTracker:
     device_id: str
     node: Node
     value_update_unsub: Callable = field(init=False)
-    values: dict[str, ValueTracker] = field(default_factory=dict, init=False)
+    values: dict[str, ValueUpdatesValueTracker] = field(
+        default_factory=dict, init=False
+    )
 
     def __post_init__(self) -> None:
         """Handle post initialization."""
@@ -390,7 +394,9 @@ def copy_available_params(
 
 
 @callback
-def _detach_trigger(hass: HomeAssistant, automation_tracker: AutomationTracker) -> None:
+def _detach_trigger(
+    hass: HomeAssistant, automation_tracker: ValueUpdatesAutomationTracker
+) -> None:
     """Detach trigger and clean tracker up."""
     value_tracker = automation_tracker.value_tracker
     device_tracker = value_tracker.device_tracker
@@ -501,24 +507,24 @@ async def async_attach_trigger(
             event_config = event.TRIGGER_SCHEMA(event_config)
             # Get the device tracker for this device, creating a new one if it doesn't
             # exist
-            device_tracker: DeviceTracker = hass.data[DOMAIN][config_entry_id][
-                DATA_DEVICE_TRIGGER_TRACKERS
-            ].setdefault(
+            device_tracker: ValueUpdatesDeviceTracker = hass.data[DOMAIN][
+                config_entry_id
+            ][DATA_DEVICE_TRIGGER_TRACKERS].setdefault(
                 device_id,
-                DeviceTracker(hass, config_entry_id, device_id, node),
+                ValueUpdatesDeviceTracker(hass, config_entry_id, device_id, node),
             )
             # Get the value tracker for this value, creating a new one if it doesn't
             # exist
             value_tracker = device_tracker.values.setdefault(
                 value.value_id,
-                ValueTracker(device_tracker, value, value.value),
+                ValueUpdatesValueTracker(device_tracker, value, value.value),
             )
             # Every time we attach, we assume we have to create an automation tracker
             # since the same automation shouldn't attach multiple times without
             # detaching in between
             automation_tracker = value_tracker.automations[
                 automation_id
-            ] = AutomationTracker(
+            ] = ValueUpdatesAutomationTracker(
                 value_tracker,
                 automation_id,
                 await event.async_attach_trigger(
