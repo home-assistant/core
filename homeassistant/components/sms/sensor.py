@@ -40,7 +40,7 @@ class GSMSignalSensor(SensorEntity):
     def __init__(self, hass, gateway, imei, description):
         """Initialize the GSM Signal sensor."""
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, imei)},
+            "identifiers": {(DOMAIN, str(imei))},
             "name": "SMS Gateway",
         }
         self._attr_unique_id = str(imei)
