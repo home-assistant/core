@@ -16,7 +16,6 @@ from . import SimpliSafe, SimpliSafeEntity
 from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
-ATTR_JAMMED = "jammed"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
 
 
@@ -75,9 +74,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         self._attr_extra_state_attributes.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,
-                ATTR_JAMMED: self._lock.state == LockStates.jammed,
                 ATTR_PIN_PAD_LOW_BATTERY: self._lock.pin_pad_low_battery,
             }
         )
 
+        self._attr_is_jammed = self._lock.state == LockStates.jammed
         self._attr_is_locked = self._lock.state == LockStates.locked

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "invalid_credentials": "Autenticaci\u00f3n err\u00f3nea"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "locale": "Configuraci\u00f3n regional",
+                    "password": "Clave",
+                    "username": "Correo-e"
+                }
+            }
+        }
+    }
+}

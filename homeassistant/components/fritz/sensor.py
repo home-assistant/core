@@ -15,13 +15,14 @@ from homeassistant.const import (
     DATA_RATE_KILOBITS_PER_SECOND,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
+    SIGNAL_STRENGTH_DECIBELS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN, UPTIME_DEVIATION
+from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,32 +62,70 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
 
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload transmission rate."""
-    return round(status.transmission_rate[0] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.transmission_rate[0] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download transmission rate."""
-    return round(status.transmission_rate[1] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.transmission_rate[1] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_max_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload max transmission rate."""
-    return round(status.max_bit_rate[0] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.max_bit_rate[0] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_max_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download max transmission rate."""
-    return round(status.max_bit_rate[1] / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.max_bit_rate[1] / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_gb_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload total data."""
-    return round(status.bytes_sent * 8 / 1024 / 1024 / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.bytes_sent / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
 
 
 def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download total data."""
-    return round(status.bytes_received * 8 / 1024 / 1024 / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.bytes_received / 1000 / 1000 / 1000, 1)  # type: ignore[no-any-return]
+
+
+def _retrieve_link_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
+    """Return upload link rate."""
+    return round(status.max_linked_bit_rate[0] / 1000, 1)  # type: ignore[no-any-return]
+
+
+def _retrieve_link_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
+    """Return download link rate."""
+    return round(status.max_linked_bit_rate[1] / 1000, 1)  # type: ignore[no-any-return]
+
+
+def _retrieve_link_noise_margin_sent_state(
+    status: FritzStatus, last_value: str
+) -> float:
+    """Return upload noise margin."""
+    return status.noise_margin[0]  # type: ignore[no-any-return]
+
+
+def _retrieve_link_noise_margin_received_state(
+    status: FritzStatus, last_value: str
+) -> float:
+    """Return download noise margin."""
+    return status.noise_margin[1]  # type: ignore[no-any-return]
+
+
+def _retrieve_link_attenuation_sent_state(
+    status: FritzStatus, last_value: str
+) -> float:
+    """Return upload line attenuation."""
+    return status.attenuation[0]  # type: ignore[no-any-return]
+
+
+def _retrieve_link_attenuation_received_state(
+    status: FritzStatus, last_value: str
+) -> float:
+    """Return download line attenuation."""
+    return status.attenuation[1]  # type: ignore[no-any-return]
 
 
 class SensorData(TypedDict, total=False):
@@ -99,6 +138,7 @@ class SensorData(TypedDict, total=False):
     unit_of_measurement: str | None
     icon: str | None
     state_provider: Callable
+    connection_type: str | None
 
 
 SENSOR_DATA = {
@@ -118,27 +158,27 @@ SENSOR_DATA = {
         state_provider=_retrieve_connection_uptime_state,
     ),
     "kb_s_sent": SensorData(
-        name="kB/s sent",
+        name="Upload Throughput",
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_kb_s_sent_state,
     ),
     "kb_s_received": SensorData(
-        name="kB/s received",
+        name="Download Throughput",
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_kb_s_received_state,
     ),
     "max_kb_s_sent": SensorData(
-        name="Max kbit/s sent",
+        name="Max Connection Upload Throughput",
         unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_max_kb_s_sent_state,
     ),
     "max_kb_s_received": SensorData(
-        name="Max kbit/s received",
+        name="Max Connection Download Throughput",
         unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_max_kb_s_received_state,
@@ -159,6 +199,48 @@ SENSOR_DATA = {
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
     ),
+    "link_kb_s_sent": SensorData(
+        name="Link Upload Throughput",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        icon="mdi:upload",
+        state_provider=_retrieve_link_kb_s_sent_state,
+        connection_type=DSL_CONNECTION,
+    ),
+    "link_kb_s_received": SensorData(
+        name="Link Download Throughput",
+        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        icon="mdi:download",
+        state_provider=_retrieve_link_kb_s_received_state,
+        connection_type=DSL_CONNECTION,
+    ),
+    "link_noise_margin_sent": SensorData(
+        name="Link Upload Noise Margin",
+        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        icon="mdi:upload",
+        state_provider=_retrieve_link_noise_margin_sent_state,
+        connection_type=DSL_CONNECTION,
+    ),
+    "link_noise_margin_received": SensorData(
+        name="Link Download Noise Margin",
+        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        icon="mdi:download",
+        state_provider=_retrieve_link_noise_margin_received_state,
+        connection_type=DSL_CONNECTION,
+    ),
+    "link_attenuation_sent": SensorData(
+        name="Link Upload Power Attenuation",
+        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        icon="mdi:upload",
+        state_provider=_retrieve_link_attenuation_sent_state,
+        connection_type=DSL_CONNECTION,
+    ),
+    "link_attenuation_received": SensorData(
+        name="Link Download Power Attenuation",
+        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        icon="mdi:download",
+        state_provider=_retrieve_link_attenuation_received_state,
+        connection_type=DSL_CONNECTION,
+    ),
 }
 
 
@@ -177,7 +259,16 @@ async def async_setup_entry(
         return
 
     entities = []
-    for sensor_type in SENSOR_DATA:
+    dslinterface = await hass.async_add_executor_job(
+        fritzbox_tools.connection.call_action,
+        "WANDSLInterfaceConfig:1",
+        "GetInfo",
+    )
+    dsl: bool = dslinterface["NewEnable"]
+
+    for sensor_type, sensor_data in SENSOR_DATA.items():
+        if not dsl and sensor_data.get("connection_type") == DSL_CONNECTION:
+            continue
         entities.append(FritzBoxSensor(fritzbox_tools, entry.title, sensor_type))
 
     if entities:
