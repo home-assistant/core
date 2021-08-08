@@ -1,6 +1,10 @@
 """Open ports in your router for Home Assistant and provide statistics."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Mapping
 from ipaddress import ip_address
+from typing import Any
 
 import voluptuous as vol
 
@@ -9,7 +13,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -44,21 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_construct_device(hass: HomeAssistant, udn: str, st: str) -> Device:
-    """Discovery devices and construct a Device for one."""
-    # pylint: disable=invalid-name
-    _LOGGER.debug("Constructing device: %s::%s", udn, st)
-    discovery_info = ssdp.async_get_discovery_info_by_udn_st(hass, udn, st)
-
-    if not discovery_info:
-        _LOGGER.info("Device not discovered")
-        return None
-
-    return await Device.async_create_device(
-        hass, discovery_info[ssdp.ATTR_SSDP_LOCATION]
-    )
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up UPnP component."""
     _LOGGER.debug("async_setup, config: %s", config)
@@ -86,20 +75,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     _LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
-    # Discover and construct.
     udn = entry.data[CONFIG_ENTRY_UDN]
     st = entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
-    try:
-        device = await async_construct_device(hass, udn, st)
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady from err
+    usn = f"{udn}::{st}"
 
-    if not device:
-        _LOGGER.info("Unable to create UPnP/IGD, aborting")
-        raise ConfigEntryNotReady
+    # Register device discovered-callback.
+    device_discovered_event = asyncio.Event()
+    discovery_info: Mapping[str, Any] | None = None
+
+    @callback
+    def device_discovered(info: Mapping[str, Any]) -> None:
+        nonlocal discovery_info
+        _LOGGER.info(
+            "Device discovered: %s, at: %s", usn, info[ssdp.ATTR_SSDP_LOCATION]
+        )
+        discovery_info = info
+        device_discovered_event.set()
+
+    cancel_discovered_callback = ssdp.async_register_callback(
+        hass,
+        device_discovered,
+        {
+            "usn": usn,
+        },
+    )
+
+    try:
+        await asyncio.wait_for(device_discovered_event.wait(), timeout=10)
+    except asyncio.TimeoutError as err:
+        _LOGGER.debug("Device not discovered: %s", usn)
+        raise ConfigEntryNotReady from err
+    finally:
+        cancel_discovered_callback()
+
+    # Create device.
+    location = discovery_info[  # pylint: disable=unsubscriptable-object
+        ssdp.ATTR_SSDP_LOCATION
+    ]
+    device = await Device.async_create_device(hass, location)
 
     # Save device.
-    hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device
+    hass.data[DOMAIN][DOMAIN_DEVICES][udn] = device
 
     # Ensure entry has a unique_id.
     if not entry.unique_id:

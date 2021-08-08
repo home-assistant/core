@@ -296,14 +296,14 @@ async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 2
-    assert async_search_mock.call_count == 2
+    assert async_search_mock.call_count == 1
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 2
-    assert async_search_mock.call_count == 2
+    assert async_search_mock.call_count == 1
 
 
 async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog):
@@ -787,7 +787,6 @@ async def test_async_detect_interfaces_setting_empty_route(hass):
 
     assert argset == {
         (IPv6Address("2001:db8::"), None),
-        (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
         (IPv4Address("192.168.1.5"), None),
     }
 
@@ -844,7 +843,6 @@ async def test_bind_failure_skips_adapter(hass, caplog):
 
     assert argset == {
         (IPv6Address("2001:db8::"), None),
-        (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
         (IPv4Address("192.168.1.5"), None),
     }
     assert "Failed to setup listener for" in caplog.text
@@ -852,3 +850,59 @@ async def test_bind_failure_skips_adapter(hass, caplog):
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert did_search == 2
+
+
+async def test_ipv4_does_additional_search_for_sonos(hass, caplog):
+    """Test that only ipv4 does an additional search for Sonos."""
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
+    search_args = []
+
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            pass
+
+        @callback
+        def _callback(*args):
+            nonlocal search_args
+            search_args.append(args)
+            pass
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    ), patch(
+        "homeassistant.components.ssdp.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+
+    assert set(search_args) == {
+        (),
+        (
+            (
+                "255.255.255.255",
+                1900,
+            ),
+        ),
+    }
