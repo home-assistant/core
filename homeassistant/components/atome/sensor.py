@@ -278,7 +278,7 @@ class AtomeSensor(SensorEntity):
             }
         else:
             self._attr_state = getattr(self._data, f"{self._sensor_type}_usage")
+            self._attr_last_reset = dt_util.parse_datetime(getattr(self._data, f"{self._sensor_type}_last_reset"))
             self._attr_extra_state_attributes = {
-                "price": getattr(self._data, f"{self._sensor_type}_price"),
-                "last_reset": dt_util.parse_datetime(getattr(self._data, f"{self._sensor_type}_last_reset"))
+                "price": getattr(self._data, f"{self._sensor_type}_price")
             }
