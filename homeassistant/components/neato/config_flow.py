@@ -26,7 +26,9 @@ class OAuth2FlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Create an entry for the flow."""
         current_entries = self._async_current_entries()
         if self.source != SOURCE_REAUTH and current_entries:
