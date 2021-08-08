@@ -72,6 +72,7 @@ FLOWS = [
     "enocean",
     "enphase_envoy",
     "epson",
+    "erse",
     "esphome",
     "ezviz",
     "faa_delays",

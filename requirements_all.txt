@@ -1425,6 +1425,9 @@ pyenvisalink==4.0
 # homeassistant.components.ephember
 pyephember==0.3.1
 
+# homeassistant.components.erse
+pyerse==0.0.3
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
