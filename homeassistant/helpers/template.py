@@ -44,6 +44,8 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
+    area_registry,
+    config_validation as cv,
     device_registry,
     entity_registry,
     location as loc_helper,
@@ -68,6 +70,9 @@ _ENVIRONMENT_STRICT = "template.environment_strict"
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
+# Match ID strings generated using homeassistant.util.uuid.random_uuid_hex
+# ("0a" matches but "0x0a" and "0A" don't match)
+_ID_STRING = re.compile(r"^[0-9a-f]+$")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -949,6 +954,28 @@ def is_device_attr(
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
 
 
+def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the area ID from an area name, device id, or entity id."""
+    try:
+        cv.entity_id(lookup_value)
+        ent_reg = entity_registry.async_get(hass)
+        if entity := ent_reg.async_get(lookup_value):
+            return entity.area_id
+    except vol.Invalid:
+        pass
+
+    # Check if this could be a device ID (hex string). If not, assume it is an area
+    # name
+    if _ID_STRING.match(lookup_value):
+        dev_reg = device_registry.async_get(hass)
+        if device := dev_reg.async_get(lookup_value):
+            return device.area_id
+
+    area_reg = area_registry.async_get(hass)
+    area = area_reg.async_get_area_by_name(lookup_value)
+    return area.id if area else None
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1532,6 +1559,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = pass_context(self.globals["device_id"])
 
+        self.globals["area_id"] = hassfunction(area_id)
+        self.filters["area_id"] = pass_context(self.globals["area_id"])
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -1556,8 +1586,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_attr",
                 "is_device_attr",
                 "device_id",
+                "area_id",
             ]
-            hass_filters = ["closest", "expand", "device_id"]
+            hass_filters = ["closest", "expand", "device_id", "area_id"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
