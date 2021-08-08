@@ -54,12 +54,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._value = state.state
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._value
+            self._attr_state = state.state
 
     async def async_update(self, now=None):
         """Update the state of the sensor."""
@@ -73,6 +68,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
             self.async_write_ha_state()
             return
 
-        self.unpack_structure_result(result.registers)
+        self._attr_state = self.unpack_structure_result(result.registers)
         self._attr_available = True
         self.async_write_ha_state()
