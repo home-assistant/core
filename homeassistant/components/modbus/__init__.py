@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -114,12 +115,10 @@ from .const import (
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
 )
-from .modbus import async_modbus_setup
+from .modbus import ModbusHub, async_modbus_setup
 from .validators import number_validator, scan_interval_validator, struct_validator
 
 _LOGGER = logging.getLogger(__name__)
-
-ModbusDict: dict = {}
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -359,7 +358,7 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def get_hub(hass, name: str):
+def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
     """Return modbus hub with name."""
     return hass.data[DOMAIN][name]
 
