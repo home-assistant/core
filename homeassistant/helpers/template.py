@@ -45,7 +45,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
     area_registry,
-    config_validation as cv,
     device_registry,
     entity_registry,
     location as loc_helper,
@@ -962,6 +961,11 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
         return area.id
 
     try:
+        # Import here, not at top-level to avoid circular import
+        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+            config_validation as cv,
+        )
+
         cv.entity_id(lookup_value)
         ent_reg = entity_registry.async_get(hass)
         if entity := ent_reg.async_get(lookup_value):
