@@ -104,7 +104,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, self._meter.get_meter_id())},
             ATTR_NAME: self.device_name,
-            ATTR_MODEL: f"{self._meter.type} {self._meter.measurement_type.capitalize()}",
+            ATTR_MODEL: f"{self._meter.type.capitalize()} {self._meter.measurement_type.capitalize()}",
             ATTR_MANUFACTURER: MANUFACTURER,
         }
 

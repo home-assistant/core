@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Gerät bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Fehler bei der Verbingung zu Discovergy",
+            "cannot_connect": "Fehler bei der Verbindung zu Discovergy",
             "invalid_auth": "Zugangsdaten ungültig",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "E-Mail",
+                    "email": "E-Mail Adresse",
                     "password": "Password"
                 }
             }

@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pydiscovergy import Discovergy
+import pydiscovergy
 import pydiscovergy.error as discovergyError
 import voluptuous as vol
 
@@ -39,7 +39,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
-        discovergy_instance = Discovergy(
+        discovergy_instance = pydiscovergy.Discovergy(
             APP_NAME, data[CONF_EMAIL], data[CONF_PASSWORD]
         )
         access_token = await discovergy_instance.login()
