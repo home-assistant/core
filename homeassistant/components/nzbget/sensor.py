@@ -72,6 +72,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="UpTimeSec",
         name="Uptime",
         unit_of_measurement=None,
+        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
 )
 
@@ -112,14 +113,6 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
             entry_id=entry_id,
             name=f"{entry_name} {description.name}",
         )
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        if "UpTimeSec" in self.entity_description.key:
-            return DEVICE_CLASS_TIMESTAMP
-
-        return None
 
     @property
     def native_value(self):
