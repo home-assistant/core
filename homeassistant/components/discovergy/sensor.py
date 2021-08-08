@@ -65,9 +65,13 @@ async def async_setup_entry(
             await coordinator.async_config_entry_first_refresh()
 
             for value, description in ELECTRICITY_SENSORS.items():
-                entities.append(
-                    DiscovergyElectricitySensor(value, description, meter, coordinator)
-                )
+                # check if this meter has this data, then add this sensor
+                if coordinator.data.values[value]:
+                    entities.append(
+                        DiscovergyElectricitySensor(
+                            value, description, meter, coordinator
+                        )
+                    )
 
     async_add_entities(entities, False)
 
@@ -117,7 +121,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
     def state(self) -> StateType:
         """Return the sensor state."""
         if self.coordinator.data:
-            if self._value == "energy":
+            if self._value == "energy" or self._value == "energyOut":
                 return self.coordinator.data.values[self._value] / 10000000000
             else:
                 return self.coordinator.data.values[self._value] / 1000
