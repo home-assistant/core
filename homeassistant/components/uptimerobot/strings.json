@@ -18,7 +18,8 @@
         "error": {
             "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
             "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
+            "unknown": "[%key:common::config_flow::error::unknown%]",
+            "reauth_failed_matching_account": "The API key you provided does not match the account ID for existing configuration."
         },
         "abort": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",

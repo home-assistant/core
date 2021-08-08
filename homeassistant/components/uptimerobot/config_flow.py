@@ -94,14 +94,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         errors, account = await self._validate_input(user_input)
         if account:
-            existing_entry = await self.async_set_unique_id(str(account.user_id))
-            if existing_entry:
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-            return self.async_abort(reason="reauth_failed_existing")
+            if (
+                self.context.get("unique_id")
+                and self.context["unique_id"] != account.user_id
+            ):
+                errors["base"] = "reauth_failed_matching_account"
+            else:
+                existing_entry = await self.async_set_unique_id(str(account.user_id))
+                if existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, data=user_input
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+                return self.async_abort(reason="reauth_failed_existing")
 
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
