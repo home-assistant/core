@@ -28,18 +28,50 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_CLASS, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_ENTITY_DESC_KEY,
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
     DATA_CLIENT,
     DOMAIN,
+    ENTITY_DESC_KEY_BATTERY,
+    ENTITY_DESC_KEY_CO,
+    ENTITY_DESC_KEY_CO2,
+    ENTITY_DESC_KEY_CURRENT,
+    ENTITY_DESC_KEY_ENERGY,
+    ENTITY_DESC_KEY_HUMIDITY,
+    ENTITY_DESC_KEY_ILLUMINANCE,
+    ENTITY_DESC_KEY_POWER,
+    ENTITY_DESC_KEY_POWER_FACTOR,
+    ENTITY_DESC_KEY_PRESSURE,
+    ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+    ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+    ENTITY_DESC_KEY_TEMPERATURE,
+    ENTITY_DESC_KEY_TIMESTAMP,
+    ENTITY_DESC_KEY_VOLTAGE,
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
@@ -56,6 +88,85 @@ class ZwaveSensorEntityDescription(SensorEntityDescription):
     info: ZwaveDiscoveryInfo | None = None
 
 
+ENTITY_DESCRIPTION_KEY_MAP = {
+    ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_BATTERY,
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_CURRENT: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_CURRENT,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_VOLTAGE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_VOLTAGE,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_ENERGY: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_POWER: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_POWER,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_POWER_FACTOR: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_POWER_FACTOR,
+        device_class=DEVICE_CLASS_POWER_FACTOR,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_CO: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_CO,
+        device_class=DEVICE_CLASS_CO,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_CO2: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_CO2,
+        device_class=DEVICE_CLASS_CO2,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_HUMIDITY: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_HUMIDITY,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_ILLUMINANCE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_ILLUMINANCE,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_PRESSURE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_PRESSURE,
+        device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_SIGNAL_STRENGTH: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_TEMPERATURE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TEMPERATURE,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_TIMESTAMP: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TIMESTAMP,
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_TARGET_TEMPERATURE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=None,
+    ),
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -69,12 +180,12 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
-        entity_description = ZwaveSensorEntityDescription(
-            "sensor",
-            device_class=info.platform_data.get(ATTR_DEVICE_CLASS),
-            state_class=info.platform_data.get(ATTR_STATE_CLASS),
-            info=info,
-        )
+        entity_description_key = info.platform_data.get(ATTR_ENTITY_DESC_KEY)
+        if entity_description_key is not None:
+            entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(entity_description_key)
+        if entity_description is None:
+            entity_description = ZwaveSensorEntityDescription("base_sensor")
+        entity_description.info = info
 
         if info.platform_hint == "string_sensor":
             entities.append(ZWaveStringSensor(config_entry, client, entity_description))

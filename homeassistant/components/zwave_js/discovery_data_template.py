@@ -34,47 +34,47 @@ from zwave_js_server.const import (
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
-from homeassistant.components.zwave_js.const import ATTR_METER_TYPE
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLTAGE,
+from .const import (
+    ATTR_ENTITY_DESC_KEY,
+    ATTR_METER_TYPE,
+    ENTITY_DESC_KEY_BATTERY,
+    ENTITY_DESC_KEY_CO,
+    ENTITY_DESC_KEY_CO2,
+    ENTITY_DESC_KEY_CURRENT,
+    ENTITY_DESC_KEY_ENERGY,
+    ENTITY_DESC_KEY_HUMIDITY,
+    ENTITY_DESC_KEY_ILLUMINANCE,
+    ENTITY_DESC_KEY_POWER,
+    ENTITY_DESC_KEY_POWER_FACTOR,
+    ENTITY_DESC_KEY_PRESSURE,
+    ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+    ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+    ENTITY_DESC_KEY_TEMPERATURE,
+    ENTITY_DESC_KEY_TIMESTAMP,
+    ENTITY_DESC_KEY_VOLTAGE,
 )
 
 METER_DEVICE_CLASS_MAP = {
-    DEVICE_CLASS_CURRENT: CURRENT_METER_TYPES,
-    DEVICE_CLASS_VOLTAGE: VOLTAGE_METER_TYPES,
-    DEVICE_CLASS_ENERGY: ENERGY_METER_TYPES,
-    DEVICE_CLASS_POWER: POWER_METER_TYPES,
-    DEVICE_CLASS_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
+    ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
+    ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_METER_TYPES,
+    ENTITY_DESC_KEY_ENERGY: ENERGY_METER_TYPES,
+    ENTITY_DESC_KEY_POWER: POWER_METER_TYPES,
+    ENTITY_DESC_KEY_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
 }
 
 MULTILEVEL_SENSOR_DEVICE_CLASS_MAP = {
-    DEVICE_CLASS_CO: CO_SENSORS,
-    DEVICE_CLASS_CO2: CO2_SENSORS,
-    DEVICE_CLASS_CURRENT: CURRENT_SENSORS,
-    DEVICE_CLASS_ENERGY: ENERGY_SENSORS,
-    DEVICE_CLASS_HUMIDITY: HUMIDITY_SENSORS,
-    DEVICE_CLASS_ILLUMINANCE: ILLUMINANCE_SENSORS,
-    DEVICE_CLASS_POWER: POWER_SENSORS,
-    DEVICE_CLASS_PRESSURE: PRESSURE_SENSORS,
-    DEVICE_CLASS_SIGNAL_STRENGTH: SIGNAL_STRENGTH_SENSORS,
-    DEVICE_CLASS_TEMPERATURE: TEMPERATURE_SENSORS,
-    DEVICE_CLASS_TIMESTAMP: TIMESTAMP_SENSORS,
-    DEVICE_CLASS_VOLTAGE: VOLTAGE_SENSORS,
+    ENTITY_DESC_KEY_CO: CO_SENSORS,
+    ENTITY_DESC_KEY_CO2: CO2_SENSORS,
+    ENTITY_DESC_KEY_CURRENT: CURRENT_SENSORS,
+    ENTITY_DESC_KEY_ENERGY: ENERGY_SENSORS,
+    ENTITY_DESC_KEY_HUMIDITY: HUMIDITY_SENSORS,
+    ENTITY_DESC_KEY_ILLUMINANCE: ILLUMINANCE_SENSORS,
+    ENTITY_DESC_KEY_POWER: POWER_SENSORS,
+    ENTITY_DESC_KEY_PRESSURE: PRESSURE_SENSORS,
+    ENTITY_DESC_KEY_SIGNAL_STRENGTH: SIGNAL_STRENGTH_SENSORS,
+    ENTITY_DESC_KEY_TEMPERATURE: TEMPERATURE_SENSORS,
+    ENTITY_DESC_KEY_TIMESTAMP: TIMESTAMP_SENSORS,
+    ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_SENSORS,
 }
 
 
@@ -184,17 +184,9 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
         """Resolve helper class data for a discovered value."""
         data = {}
 
-        # Battery CC devices all have the same state and device classes
         if value.command_class == CommandClass.BATTERY:
-            data[ATTR_DEVICE_CLASS] = DEVICE_CLASS_BATTERY
-            data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
-
-        # Meter CC devices all have the same state class, but their device class
-        # depends on the ScaleType (dependent on ccSpecific meterType and scaleType).
-        # We also want to pass the MeterType enum to the sensor class instance so it
-        # can display state attributes about the meter type.
+            data[ATTR_ENTITY_DESC_KEY] = ENTITY_DESC_KEY_BATTERY
         elif value.command_class == CommandClass.METER:
-            data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
             cc_specific = value.metadata.cc_specific
             meter_type_id = cc_specific[CC_SPECIFIC_METER_TYPE]
             scale_type_id = cc_specific[CC_SPECIFIC_SCALE]
@@ -202,16 +194,15 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 meter_type = MeterType(meter_type_id)
             except ValueError:
                 return data
-            data[ATTR_METER_TYPE] = meter_type
             scale_enum = METER_TYPE_TO_SCALE_ENUM_MAP[meter_type]
             try:
                 scale_type = scale_enum(scale_type_id)
             except ValueError:
                 return data
-            for device_class, scale_type_set in METER_DEVICE_CLASS_MAP.items():
+            for key, scale_type_set in METER_DEVICE_CLASS_MAP.items():
                 if scale_type in scale_type_set:
-                    data[ATTR_DEVICE_CLASS] = device_class
-                    break
+                    data[ATTR_ENTITY_DESC_KEY] = key
+            data[ATTR_METER_TYPE] = meter_type
 
         # Sensor Multilevel CC devices' device class and state class is determined by
         # MultiLevelSensorType (ccSpecific sensorType attribute)
@@ -223,13 +214,13 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             except ValueError:
                 return data
             for (
-                device_class,
+                key,
                 sensor_type_set,
             ) in MULTILEVEL_SENSOR_DEVICE_CLASS_MAP.items():
                 if sensor_type in sensor_type_set:
-                    data[ATTR_DEVICE_CLASS] = device_class
+                    data[ATTR_ENTITY_DESC_KEY] = key
                     break
-            if sensor_type != MultilevelSensorType.TARGET_TEMPERATURE:
-                data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
+            if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
+                data[ATTR_ENTITY_DESC_KEY] = ENTITY_DESC_KEY_TARGET_TEMPERATURE
 
         return data
