@@ -955,20 +955,23 @@ def is_device_attr(
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area ID from an area name, device id, or entity id."""
-    # Check area name first to handle area names that may be valid entity IDs or device IDs
     area_reg = area_registry.async_get(hass)
-    if area := area_reg.async_get_area_by_name(str(lookup_value)):
-        return area.id
+    area = area_reg.async_get_area_by_name(str(lookup_value))
 
     try:
+        ent_reg = entity_registry.async_get(hass)
         # Import here, not at top-level to avoid circular import
         from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
             config_validation as cv,
         )
 
         cv.entity_id(lookup_value)
-        ent_reg = entity_registry.async_get(hass)
         if entity := ent_reg.async_get(lookup_value):
+            # If area name matches a valid entity ID, raise an exception
+            if area:
+                raise TemplateError(
+                    f"Ambiguous area name '{lookup_value}' matches valid entity ID"  # type: ignore
+                )
             return entity.area_id
     except vol.Invalid:
         pass
@@ -978,7 +981,15 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     if _ID_STRING.match(str(lookup_value)):
         dev_reg = device_registry.async_get(hass)
         if device := dev_reg.async_get(lookup_value):
+            # If area name matches a valid device ID, raise an exception
+            if area:
+                raise TemplateError(
+                    f"Ambiguous area name '{lookup_value}' matches valid device ID"  # type: ignore
+                )
             return device.area_id
+
+    if area:
+        return area.id
 
     return None
 
@@ -1008,18 +1019,19 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     except vol.Invalid:
         pass
 
-    # Check area ID before device ID to handle area IDs that may be valid device IDs
-    if area := area_reg.async_get_area(str(lookup_value)):
-        return area.name
+    area = area_reg.async_get_area(lookup_value)
 
-    # Check if this could be a device ID (hex string). If not, assume it is an area
-    # name
-    if _ID_STRING.match(str(lookup_value)):
-        dev_reg = device_registry.async_get(hass)
-        if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-            return _get_area_name(area_reg, device.area_id)
+    dev_reg = device_registry.async_get(hass)
+    if (device := dev_reg.async_get(lookup_value)) and device.area_id:
+        # On the off chance that area ID and device ID match, we should raise an exception
+        # since we can't know which one is correct.
+        if area:
+            raise TemplateError(
+                f"Ambiguous ID {lookup_value} matches valid area and device IDs"  # type: ignore
+            )
+        return _get_area_name(area_reg, device.area_id)
 
-    return None
+    return area.name if area else None
 
 
 def closest(hass, *args):
