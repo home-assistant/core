@@ -42,7 +42,7 @@ class OAuth2FlowHandler(
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reauth upon migration of old entries."""
         if user_input is None:
