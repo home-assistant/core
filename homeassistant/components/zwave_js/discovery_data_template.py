@@ -183,9 +183,16 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
         data = {}
+
+        # Battery CC devices all have the same state and device classes
         if value.command_class == CommandClass.BATTERY:
             data[ATTR_DEVICE_CLASS] = DEVICE_CLASS_BATTERY
             data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
+
+        # Meter CC devices all have the same state class, but their device class
+        # depends on the ScaleType (dependent on ccSpecific meterType and scaleType).
+        # We also want to pass the MeterType enum to the sensor class instance so it
+        # can display state attributes about the meter type.
         elif value.command_class == CommandClass.METER:
             data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
             cc_specific = value.metadata.cc_specific
@@ -205,6 +212,9 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 if scale_type in scale_type_set:
                     data[ATTR_DEVICE_CLASS] = device_class
                     break
+
+        # Sensor Multilevel CC devices' device class and state class is determined by
+        # MultiLevelSensorType (ccSpecific sensorType attribute)
         elif value.command_class == CommandClass.SENSOR_MULTILEVEL:
             cc_specific = value.metadata.cc_specific
             sensor_type_id = cc_specific[CC_SPECIFIC_SENSOR_TYPE]
