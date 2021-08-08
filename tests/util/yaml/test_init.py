@@ -372,7 +372,7 @@ class TestSecrets(unittest.TestCase):
 
         load_yaml(
             os.path.join(self._mounted_secrets, yaml.SECRET_YAML),
-            "http_pw_external: pwhttp_external\n"
+            "http_pw_external: pwhttp_external\n",
         )
 
         load_yaml(
@@ -424,7 +424,7 @@ class TestSecrets(unittest.TestCase):
         assert mock_error.call_count == 1, "Expected an error about logger: value"
 
     def test_secrets_are_not_dict(self):
-        """Did secrets handle non - dict file."""
+        """Did secrets handle non-dict file."""
         FILES[
             self._secret_path
         ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"

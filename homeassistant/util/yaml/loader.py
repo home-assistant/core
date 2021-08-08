@@ -27,7 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 class Secrets:
     """Store secrets while loading YAML."""
 
-    def __init__(self, config_dir: Path, mounted_secrets_dir: Path | None = None) -> None:
+    def __init__(
+        self, config_dir: Path, mounted_secrets_dir: Path | None = None
+    ) -> None:
         """Initialize secrets."""
         self.config_dir = config_dir
         self.mounted_secrets_dir = mounted_secrets_dir
