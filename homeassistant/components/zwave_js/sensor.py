@@ -87,7 +87,7 @@ class ZwaveSensorEntityDescription(SensorEntityDescription):
     info: ZwaveDiscoveryInfo | None = None
 
 
-ENTITY_DESCRIPTION_KEY_MAP = {
+ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_BATTERY,
         device_class=DEVICE_CLASS_BATTERY,
@@ -107,6 +107,7 @@ ENTITY_DESCRIPTION_KEY_MAP = {
         ENTITY_DESC_KEY_ENERGY,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
     ),
     ENTITY_DESC_KEY_POWER: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_POWER,
