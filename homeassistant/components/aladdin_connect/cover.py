@@ -75,6 +75,7 @@ class AladdinDevice(CoverEntity):
         self._number = device["door_number"]
         self._attr_name = device["name"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
+        self._attr_is_closed = bool(STATES_MAP.get(device["status"]))
 
     def close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
