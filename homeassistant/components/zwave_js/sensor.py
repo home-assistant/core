@@ -78,6 +78,29 @@ from .helpers import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 
+METER_DEVICE_CLASS_MAP = {
+    DEVICE_CLASS_CURRENT: CURRENT_METER_TYPES,
+    DEVICE_CLASS_VOLTAGE: VOLTAGE_METER_TYPES,
+    DEVICE_CLASS_ENERGY: ENERGY_METER_TYPES,
+    DEVICE_CLASS_POWER: POWER_METER_TYPES,
+    DEVICE_CLASS_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
+}
+
+MULTILEVEL_SENSOR_DEVICE_CLASS_MAP = {
+    DEVICE_CLASS_CO: CO_SENSORS,
+    DEVICE_CLASS_CO2: CO2_SENSORS,
+    DEVICE_CLASS_CURRENT: CURRENT_SENSORS,
+    DEVICE_CLASS_ENERGY: ENERGY_SENSORS,
+    DEVICE_CLASS_HUMIDITY: HUMIDITY_SENSORS,
+    DEVICE_CLASS_ILLUMINANCE: ILLUMINANCE_SENSORS,
+    DEVICE_CLASS_POWER: POWER_SENSORS,
+    DEVICE_CLASS_PRESSURE: PRESSURE_SENSORS,
+    DEVICE_CLASS_SIGNAL_STRENGTH: SIGNAL_STRENGTH_SENSORS,
+    DEVICE_CLASS_TEMPERATURE: TEMPERATURE_SENSORS,
+    DEVICE_CLASS_TIMESTAMP: TIMESTAMP_SENSORS,
+    DEVICE_CLASS_VOLTAGE: VOLTAGE_SENSORS,
+}
+
 
 @dataclass
 class ZwaveSensorBaseEntityDescription(SensorEntityDescription):
@@ -130,16 +153,9 @@ class ZwaveMeterSensorEntityDescription(ZwaveSensorBaseEntityDescription):
     @property
     def _device_class(self) -> str | None:
         """Return the device class."""
-        if self.scale_type in CURRENT_METER_TYPES:
-            return DEVICE_CLASS_CURRENT
-        if self.scale_type in VOLTAGE_METER_TYPES:
-            return DEVICE_CLASS_VOLTAGE
-        if self.scale_type in ENERGY_METER_TYPES:
-            return DEVICE_CLASS_ENERGY
-        if self.scale_type in POWER_METER_TYPES:
-            return DEVICE_CLASS_POWER
-        if self.scale_type in POWER_FACTOR_METER_TYPES:
-            return DEVICE_CLASS_POWER_FACTOR
+        for device_class, scale_type_set in METER_DEVICE_CLASS_MAP.items():
+            if self.scale_type in scale_type_set:
+                return device_class
 
         return None
 
@@ -162,30 +178,9 @@ class ZwaveMultilevelSensorEntityDescription(ZwaveSensorBaseEntityDescription):
     @property
     def _device_class(self) -> str | None:
         """Return the device class."""
-        if self.sensor_type in CO_SENSORS:
-            return DEVICE_CLASS_CO
-        if self.sensor_type in CO2_SENSORS:
-            return DEVICE_CLASS_CO2
-        if self.sensor_type in CURRENT_SENSORS:
-            return DEVICE_CLASS_CURRENT
-        if self.sensor_type in ENERGY_SENSORS:
-            return DEVICE_CLASS_ENERGY
-        if self.sensor_type in HUMIDITY_SENSORS:
-            return DEVICE_CLASS_HUMIDITY
-        if self.sensor_type in ILLUMINANCE_SENSORS:
-            return DEVICE_CLASS_ILLUMINANCE
-        if self.sensor_type in POWER_SENSORS:
-            return DEVICE_CLASS_POWER
-        if self.sensor_type in PRESSURE_SENSORS:
-            return DEVICE_CLASS_PRESSURE
-        if self.sensor_type in SIGNAL_STRENGTH_SENSORS:
-            return DEVICE_CLASS_SIGNAL_STRENGTH
-        if self.sensor_type in TEMPERATURE_SENSORS:
-            return DEVICE_CLASS_TEMPERATURE
-        if self.sensor_type in TIMESTAMP_SENSORS:
-            return DEVICE_CLASS_TIMESTAMP
-        if self.sensor_type in VOLTAGE_SENSORS:
-            return DEVICE_CLASS_VOLTAGE
+        for device_class, sensor_type_set in MULTILEVEL_SENSOR_DEVICE_CLASS_MAP.items():
+            if self.sensor_type in sensor_type_set:
+                return device_class
 
         return None
 
