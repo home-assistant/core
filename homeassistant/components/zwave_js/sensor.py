@@ -51,7 +51,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_ENTITY_DESC_KEY,
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
@@ -164,7 +163,6 @@ ENTITY_DESCRIPTION_KEY_MAP = {
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=None,
     ),
-    None: ZwaveSensorEntityDescription("base_sensor"),
 }
 
 
@@ -181,8 +179,9 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
-        ed_key = info.platform_data.get(ATTR_ENTITY_DESC_KEY)
-        entity_description = ENTITY_DESCRIPTION_KEY_MAP[ed_key]
+        entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(
+            info.platform_data
+        ) or ZwaveSensorEntityDescription("base_sensor")
         entity_description.info = info
 
         if info.platform_hint == "string_sensor":
@@ -321,10 +320,11 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     @property
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
-        if meter_type := self.info.platform_data.get(ATTR_METER_TYPE):
+        # FIXME: This is a temporary fix to get a commit in
+        if self._attr_state_class:
             return {
-                ATTR_METER_TYPE: meter_type.value,
-                ATTR_METER_TYPE_NAME: meter_type.name.lower(),
+                ATTR_METER_TYPE: "placeholder",
+                ATTR_METER_TYPE_NAME: "placeholder",
             }
         return None
 

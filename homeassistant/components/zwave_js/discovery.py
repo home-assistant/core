@@ -61,7 +61,7 @@ class ZwaveDiscoveryInfo:
     # the home assistant platform for which an entity should be created
     platform: str
     # helper data to use in platform setup
-    platform_data: dict[str, Any]
+    platform_data: Any
     # additional values that need to be watched by entity
     additional_value_ids_to_watch: set[str]
     # hint for the platform about this discovered entity
@@ -749,7 +749,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 continue
 
             # resolve helper data from template
-            resolved_data = {}
+            resolved_data = None
             additional_value_ids_to_watch = set()
             if schema.data_template:
                 resolved_data = schema.data_template.resolve_data(value)

@@ -35,8 +35,6 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from .const import (
-    ATTR_ENTITY_DESC_KEY,
-    ATTR_METER_TYPE,
     ENTITY_DESC_KEY_BATTERY,
     ENTITY_DESC_KEY_CO,
     ENTITY_DESC_KEY_CO2,
@@ -91,7 +89,7 @@ class ZwaveValueID:
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> Any:
         """
         Resolve helper class data for a discovered value.
 
@@ -101,7 +99,7 @@ class BaseDiscoverySchemaDataTemplate:
         # pylint: disable=no-self-use
         return {}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue]:
         """
         Return list of all ZwaveValues resolved by helper that should be watched.
 
@@ -110,7 +108,7 @@ class BaseDiscoverySchemaDataTemplate:
         # pylint: disable=no-self-use
         return []
 
-    def value_ids_to_watch(self, resolved_data: dict[str, Any]) -> set[str]:
+    def value_ids_to_watch(self, resolved_data: Any) -> set[str]:
         """
         Return list of all Value IDs resolved by helper that should be watched.
 
@@ -180,12 +178,11 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
 class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave Sensor entities."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> str | None:
         """Resolve helper class data for a discovered value."""
-        data = {}
 
         if value.command_class == CommandClass.BATTERY:
-            data[ATTR_ENTITY_DESC_KEY] = ENTITY_DESC_KEY_BATTERY
+            return ENTITY_DESC_KEY_BATTERY
         elif value.command_class == CommandClass.METER:
             cc_specific = value.metadata.cc_specific
             meter_type_id = cc_specific[CC_SPECIFIC_METER_TYPE]
@@ -193,16 +190,16 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             try:
                 meter_type = MeterType(meter_type_id)
             except ValueError:
-                return data
+                return None
             scale_enum = METER_TYPE_TO_SCALE_ENUM_MAP[meter_type]
             try:
                 scale_type = scale_enum(scale_type_id)
             except ValueError:
-                return data
+                return None
             for key, scale_type_set in METER_DEVICE_CLASS_MAP.items():
                 if scale_type in scale_type_set:
-                    data[ATTR_ENTITY_DESC_KEY] = key
-            data[ATTR_METER_TYPE] = meter_type
+                    return key
+            # data[ATTR_METER_TYPE] = meter_type
 
         # Sensor Multilevel CC devices' device class and state class is determined by
         # MultiLevelSensorType (ccSpecific sensorType attribute)
@@ -212,15 +209,14 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             try:
                 sensor_type = MultilevelSensorType(sensor_type_id)
             except ValueError:
-                return data
+                return None
+            if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
+                return ENTITY_DESC_KEY_TARGET_TEMPERATURE
             for (
                 key,
                 sensor_type_set,
             ) in MULTILEVEL_SENSOR_DEVICE_CLASS_MAP.items():
                 if sensor_type in sensor_type_set:
-                    data[ATTR_ENTITY_DESC_KEY] = key
-                    break
-            if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
-                data[ATTR_ENTITY_DESC_KEY] = ENTITY_DESC_KEY_TARGET_TEMPERATURE
+                    return key
 
-        return data
+        return None

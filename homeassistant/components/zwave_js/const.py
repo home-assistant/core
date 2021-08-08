@@ -73,7 +73,6 @@ ATTR_METER_TYPE_NAME = "meter_type_name"
 ADDON_SLUG = "core_zwave_js"
 
 # Sensor entity description constants
-ATTR_ENTITY_DESC_KEY = "entity_desc_key"
 ENTITY_DESC_KEY_BATTERY = "battery"
 ENTITY_DESC_KEY_CURRENT = "current"
 ENTITY_DESC_KEY_VOLTAGE = "voltage"
