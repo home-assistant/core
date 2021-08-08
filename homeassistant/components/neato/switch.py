@@ -1,11 +1,19 @@
 """Support for Neato Connected Vacuums switches."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pybotvac.exceptions import NeatoRobotException
+from pybotvac.robot import Robot
 
+from homeassistant.components.neato import NeatoHub
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 
@@ -18,10 +26,13 @@ SWITCH_TYPE_SCHEDULE = "schedule"
 SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Neato switch with config entry."""
     dev = []
-    neato = hass.data.get(NEATO_LOGIN)
+    neato: NeatoHub = hass.data[NEATO_LOGIN]
+
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(neato, robot, type_name))
@@ -36,18 +47,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoConnectedSwitch(ToggleEntity):
     """Neato Connected Switches."""
 
-    def __init__(self, neato, robot, switch_type):
+    def __init__(self, neato: NeatoHub, robot: Robot, switch_type: str) -> None:
         """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
         self._available = False
         self._robot_name = f"{self.robot.name} {SWITCH_TYPES[self.type][0]}"
-        self._state = None
-        self._schedule_state = None
+        self._state: dict[str, Any] | None = None
+        self._schedule_state: str | None = None
         self._clean_state = None
-        self._robot_serial = self.robot.serial
+        self._robot_serial: str = self.robot.serial
 
-    def update(self):
+    def update(self) -> None:
         """Update the states of Neato switches."""
         _LOGGER.debug("Running Neato switch update for '%s'", self.entity_id)
         try:
@@ -65,7 +76,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         _LOGGER.debug("self._state=%s", self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
-            if self._state["details"]["isScheduleEnabled"]:
+            if self._state is not None and self._state["details"]["isScheduleEnabled"]:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF
@@ -74,34 +85,33 @@ class NeatoConnectedSwitch(ToggleEntity):
             )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the switch."""
         return self._robot_name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return self._robot_serial
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
-        if self.type == SWITCH_TYPE_SCHEDULE:
-            if self._schedule_state == STATE_ON:
-                return True
-            return False
+        return bool(
+            self.type == SWITCH_TYPE_SCHEDULE and self._schedule_state == STATE_ON
+        )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
         return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
@@ -111,7 +121,7 @@ class NeatoConnectedSwitch(ToggleEntity):
                     "Neato switch connection error '%s': %s", self.entity_id, ex
                 )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
