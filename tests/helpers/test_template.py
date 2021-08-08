@@ -1784,8 +1784,8 @@ async def test_area_id(hass):
     assert_result_info(info, None)
     assert info.rate_limit is None
 
-    # Test device ID, entity ID and area name as input with area name that looks like a device ID
-    # try a filter too
+    # Test device ID, entity ID and area name as input with area name that looks like
+    # a device ID. Try a filter too
     area_entry_hex = area_registry.async_get_or_create("123abc")
     device_entry = device_registry.async_update_device(
         device_entry.id, area_id=area_entry_hex.id
@@ -1806,7 +1806,8 @@ async def test_area_id(hass):
     assert_result_info(info, area_entry_hex.id)
     assert info.rate_limit is None
 
-    # Test device ID, entity ID and area name as input with area name that looks like a entity ID
+    # Test device ID, entity ID and area name as input with area name that looks like an
+    # entity ID
     area_entry_entity_id = area_registry.async_get_or_create("sensor.fake")
     device_entry = device_registry.async_update_device(
         device_entry.id, area_id=area_entry_entity_id.id
@@ -1824,6 +1825,19 @@ async def test_area_id(hass):
     assert info.rate_limit is None
 
     info = render_to_info(hass, f"{{{{ area_id('{area_entry_entity_id.name}') }}}}")
+    assert_result_info(info, area_entry_entity_id.id)
+    assert info.rate_limit is None
+
+    # Try to get an area name that's a valid device ID or entity ID as it should be
+    # preferred
+    area_entry_device_id = area_registry.async_get_or_create(device_entry.id)
+    area_entry_entity_id = area_registry.async_get_or_create(entity_entry.entity_id)
+
+    info = render_to_info(hass, f"{{{{ area_id('{device_entry.id}') }}}}")
+    assert_result_info(info, area_entry_device_id.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, area_entry_entity_id.id)
     assert info.rate_limit is None
 

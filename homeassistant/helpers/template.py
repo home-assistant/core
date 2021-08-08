@@ -956,10 +956,15 @@ def is_device_attr(
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area ID from an area name, device id, or entity id."""
+    # Check area name first to handle area names that may be valid entity IDs or device IDs
+    area_reg = area_registry.async_get(hass)
+    if area := area_reg.async_get_area_by_name(str(lookup_value)):
+        return area.id
+
     try:
         cv.entity_id(lookup_value)
         ent_reg = entity_registry.async_get(hass)
-        if entity := ent_reg.async_get(lookup_value):
+        if (entity := ent_reg.async_get(lookup_value)) and entity.area_id:
             return entity.area_id
     except vol.Invalid:
         pass
@@ -968,12 +973,10 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     # name
     if _ID_STRING.match(str(lookup_value)):
         dev_reg = device_registry.async_get(hass)
-        if device := dev_reg.async_get(lookup_value):
+        if (device := dev_reg.async_get(lookup_value)) and device.area_id:
             return device.area_id
 
-    area_reg = area_registry.async_get(hass)
-    area = area_reg.async_get_area_by_name(str(lookup_value))
-    return area.id if area else None
+    return None
 
 
 def closest(hass, *args):
