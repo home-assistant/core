@@ -3,13 +3,10 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
-    SensorEntity,
     STATE_CLASS_MEASUREMENT,
+    SensorEntity,
 )
-from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
-)
+from homeassistant.const import ELECTRIC_CURRENT_AMPERE, ENERGY_KILO_WATT_HOUR
 from homeassistant.util import dt
 
 from . import DOMAIN
