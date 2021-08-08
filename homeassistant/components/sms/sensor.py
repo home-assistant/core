@@ -16,25 +16,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
     entities = []
     imei = await gateway.get_imei_async()
-    entities.append(
-        GSMSignalSensor(
-            hass,
-            gateway,
-            imei,
-        )
-    )
+    entities.append(GSMSignalSensor(hass, gateway, imei))
     async_add_entities(entities, True)
 
 
 class GSMSignalSensor(SensorEntity):
     """Implementation of a GSM Signal sensor."""
 
-    def __init__(
-        self,
-        hass,
-        gateway,
-        imei,
-    ):
+    def __init__(self, hass, gateway, imei):
         """Initialize the GSM Signal sensor."""
         self._attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
         self._attr_device_info = {
