@@ -983,6 +983,45 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
+def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> str:
+    """Get area name from valid area ID."""
+    area = area_reg.async_get_area(valid_area_id)
+    assert area
+    return area.name
+
+
+def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the area name from an area id, device id, or entity id."""
+    area_reg = area_registry.async_get(hass)
+    try:
+        # Import here, not at top-level to avoid circular import
+        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+            config_validation as cv,
+        )
+
+        cv.entity_id(lookup_value)
+        ent_reg = entity_registry.async_get(hass)
+        if entity := ent_reg.async_get(lookup_value):
+            if entity.area_id:
+                return _get_area_name(area_reg, entity.area_id)
+            return None
+    except vol.Invalid:
+        pass
+
+    # Check area ID before device ID to handle area IDs that may be valid device IDs
+    if area := area_reg.async_get_area(str(lookup_value)):
+        return area.name
+
+    # Check if this could be a device ID (hex string). If not, assume it is an area
+    # name
+    if _ID_STRING.match(str(lookup_value)):
+        dev_reg = device_registry.async_get(hass)
+        if (device := dev_reg.async_get(lookup_value)) and device.area_id:
+            return _get_area_name(area_reg, device.area_id)
+
+    return None
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1569,6 +1608,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["area_id"] = hassfunction(area_id)
         self.filters["area_id"] = pass_context(self.globals["area_id"])
 
+        self.globals["area_name"] = hassfunction(area_name)
+        self.filters["area_name"] = pass_context(self.globals["area_name"])
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -1594,8 +1636,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_device_attr",
                 "device_id",
                 "area_id",
+                "area_name",
             ]
-            hass_filters = ["closest", "expand", "device_id", "area_id"]
+            hass_filters = ["closest", "expand", "device_id", "area_id", "area_name"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
