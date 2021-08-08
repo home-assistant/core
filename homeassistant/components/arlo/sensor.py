@@ -1,4 +1,5 @@
 """Sensor support for Netgear Arlo IP cameras."""
+from dataclasses import replace
 import logging
 
 import voluptuous as vol
@@ -26,44 +27,40 @@ from . import ATTRIBUTION, DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "last_capture": SensorEntityDescription(
-        key="last_capture", name="Last", icon="run-fast"
-    ),
-    "total_cameras": SensorEntityDescription(
-        key="total_cameras", name="Arlo Cameras", icon="video"
-    ),
-    "captured_today": SensorEntityDescription(
+SENSOR_TYPES = (
+    SensorEntityDescription(key="last_capture", name="Last", icon="run-fast"),
+    SensorEntityDescription(key="total_cameras", name="Arlo Cameras", icon="video"),
+    SensorEntityDescription(
         key="captured_today", name="Captured Today", icon="file-video"
     ),
-    "battery_level": SensorEntityDescription(
+    SensorEntityDescription(
         key="battery_level",
         name="Battery Level",
         unit_of_measurement=PERCENTAGE,
         icon="battery-50",
     ),
-    "signal_strength": SensorEntityDescription(
+    SensorEntityDescription(
         key="signal_strength", name="Signal Strength", icon="signal"
     ),
-    "temperature": SensorEntityDescription(
+    SensorEntityDescription(
         key="temperature",
         name="Temperature",
         unit_of_measurement=TEMP_CELSIUS,
         icon="thermometer",
     ),
-    "humidity": SensorEntityDescription(
+    SensorEntityDescription(
         key="humidity",
         name="Humidity",
         unit_of_measurement=PERCENTAGE,
         icon="water-percent",
     ),
-    "air_quality": SensorEntityDescription(
+    SensorEntityDescription(
         key="air_quality",
         name="Air Quality",
         unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="biohazard",
     ),
-}
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -81,25 +78,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        sensor_entry = SensorEntityDescription(SENSOR_TYPES[sensor_type])
-        if sensor_type == "total_cameras":
-            sensors.append(ArloSensor(sensor_entry.name, arlo, sensor_entry))
+    for sensor_original in SENSOR_TYPES:
+        if sensor_original.key not in config[CONF_MONITORED_CONDITIONS]:
+            continue
+        sensor_entry = replace(sensor_original)
+        if sensor_entry.key == "total_cameras":
+            sensors.append(ArloSensor(arlo, sensor_entry))
         else:
             for camera in arlo.cameras:
-                if sensor_type in ("temperature", "humidity", "air_quality"):
+                if sensor_entry.key in ("temperature", "humidity", "air_quality"):
                     continue
 
-                name = f"{sensor_entry.name} {camera.name}"
-                sensors.append(ArloSensor(name, camera, sensor_entry))
+                sensor_entry.name = f"{sensor_entry.name} {camera.name}"
+                sensors.append(ArloSensor(camera, sensor_entry))
 
             for base_station in arlo.base_stations:
                 if (
-                    sensor_type in ("temperature", "humidity", "air_quality")
+                    sensor_entry.key in ("temperature", "humidity", "air_quality")
                     and base_station.model_id == "ABC1000"
                 ):
-                    name = f"{sensor_entry.name} {base_station.name}"
-                    sensors.append(ArloSensor(name, base_station, sensor_entry))
+                    sensor_entry.name = f"{sensor_entry.name} {base_station.name}"
+                    sensors.append(ArloSensor(base_station, sensor_entry))
 
     add_entities(sensors, True)
 
@@ -107,19 +106,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ArloSensor(SensorEntity):
     """An implementation of a Netgear Arlo IP sensor."""
 
-    def __init__(self, name, device, sensor_entry):
+    def __init__(self, device, sensor_entry):
         """Initialize an Arlo sensor."""
-        _LOGGER.debug("ArloSensor created for %s", name)
-        sensor_entry.name = name
-        if sensor_entry.key == "temperature":
-            sensor_entry.device_class = DEVICE_CLASS_TEMPERATURE
-        elif sensor_entry.key == "humidity":
-            sensor_entry.device_class = DEVICE_CLASS_HUMIDITY
         self.entity_description = sensor_entry
+        _LOGGER.debug("ArloSensor created for %s", self.entity_description.name)
+        if self.entity_description.key == "temperature":
+            self.entity_description.device_class = DEVICE_CLASS_TEMPERATURE
+        elif self.entity_description.key == "humidity":
+            self.entity_description.device_class = DEVICE_CLASS_HUMIDITY
         self._data = device
-        self._sensor_type = sensor_entry.key
         self._state = None
-        self._icon = f"mdi:{sensor_entry.icon}"
+        self._icon = f"mdi:{self.entity_description.icon}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -193,7 +190,7 @@ class ArloSensor(SensorEntity):
             except TypeError:
                 self._state = None
 
-        elif self._sensor_type == "air_quality":
+        elif self.entity_description.key == "air_quality":
             try:
                 self._state = self._data.ambient_air_quality
             except TypeError:

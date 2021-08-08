@@ -1,5 +1,6 @@
 """The tests for the Netgear Arlo sensors."""
 from collections import namedtuple
+from dataclasses import replace
 from unittest.mock import patch
 
 import pytest
@@ -21,7 +22,14 @@ def _get_named_tuple(input_dict):
 def _get_sensor(name="Last", sensor_type="last_capture", data=None):
     if data is None:
         data = {}
-    return arlo.ArloSensor(name, data, SENSOR_TYPES[sensor_type])
+    for entry in SENSOR_TYPES:
+        if entry.key != sensor_type:
+            continue
+        sensor_entry = replace(entry)
+        assert sensor_entry.name == entry.name
+        sensor_entry.name = name
+        return arlo.ArloSensor(data, sensor_entry)
+    pytest.fail("wrong sensor_type")
 
 
 @pytest.fixture()
