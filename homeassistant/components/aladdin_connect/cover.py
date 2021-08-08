@@ -51,7 +51,7 @@ def setup_platform(
             raise ValueError("Username or Password is incorrect")
         add_entities(
             (AladdinDevice(acc, door) for door in acc.get_doors()),
-            update_before_add = True
+            update_before_add=True,
         )
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
