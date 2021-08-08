@@ -8,7 +8,7 @@ from pyuptimerobot.exceptions import (
     UptimeRobotException,
 )
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.uptimerobot.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -22,6 +22,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -247,7 +248,11 @@ async def test_reauthentication(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
         data=old_entry.data,
     )
 
@@ -289,7 +294,11 @@ async def test_reauthentication_failure(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
         data=old_entry.data,
     )
 
@@ -331,7 +340,11 @@ async def test_reauthentication_failure_no_existing_entry(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
         data=old_entry.data,
     )
 
@@ -373,7 +386,11 @@ async def test_reauthentication_failure_account_not_matching(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "unique_id": "1234567890"},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
         data=old_entry.data,
     )
 
