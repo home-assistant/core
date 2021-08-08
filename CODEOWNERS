@@ -151,7 +151,6 @@ homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epson/* @pszafer
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
-homeassistant/components/erse/* @dgomes
 homeassistant/components/esphome/* @OttoWinter @jesserockz
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
