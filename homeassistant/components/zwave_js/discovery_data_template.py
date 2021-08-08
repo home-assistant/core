@@ -1,12 +1,79 @@
-"""Data template classes for discovery used to generate device specific data for setup."""
+"""Data template classes for discovery used to generate additional data for setup."""
 from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
+from zwave_js_server.const import (
+    CC_SPECIFIC_METER_TYPE,
+    CC_SPECIFIC_SCALE,
+    CC_SPECIFIC_SENSOR_TYPE,
+    CO2_SENSORS,
+    CO_SENSORS,
+    CURRENT_METER_TYPES,
+    CURRENT_SENSORS,
+    ENERGY_METER_TYPES,
+    ENERGY_SENSORS,
+    HUMIDITY_SENSORS,
+    ILLUMINANCE_SENSORS,
+    METER_TYPE_TO_SCALE_ENUM_MAP,
+    POWER_FACTOR_METER_TYPES,
+    POWER_METER_TYPES,
+    POWER_SENSORS,
+    PRESSURE_SENSORS,
+    SIGNAL_STRENGTH_SENSORS,
+    TEMPERATURE_SENSORS,
+    TIMESTAMP_SENSORS,
+    VOLTAGE_METER_TYPES,
+    VOLTAGE_SENSORS,
+    CommandClass,
+    MeterType,
+    MultilevelSensorType,
+)
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
+)
+
+METER_DEVICE_CLASS_MAP = {
+    DEVICE_CLASS_CURRENT: CURRENT_METER_TYPES,
+    DEVICE_CLASS_VOLTAGE: VOLTAGE_METER_TYPES,
+    DEVICE_CLASS_ENERGY: ENERGY_METER_TYPES,
+    DEVICE_CLASS_POWER: POWER_METER_TYPES,
+    DEVICE_CLASS_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
+}
+
+MULTILEVEL_SENSOR_DEVICE_CLASS_MAP = {
+    DEVICE_CLASS_CO: CO_SENSORS,
+    DEVICE_CLASS_CO2: CO2_SENSORS,
+    DEVICE_CLASS_CURRENT: CURRENT_SENSORS,
+    DEVICE_CLASS_ENERGY: ENERGY_SENSORS,
+    DEVICE_CLASS_HUMIDITY: HUMIDITY_SENSORS,
+    DEVICE_CLASS_ILLUMINANCE: ILLUMINANCE_SENSORS,
+    DEVICE_CLASS_POWER: POWER_SENSORS,
+    DEVICE_CLASS_PRESSURE: PRESSURE_SENSORS,
+    DEVICE_CLASS_SIGNAL_STRENGTH: SIGNAL_STRENGTH_SENSORS,
+    DEVICE_CLASS_TEMPERATURE: TEMPERATURE_SENSORS,
+    DEVICE_CLASS_TIMESTAMP: TIMESTAMP_SENSORS,
+    DEVICE_CLASS_VOLTAGE: VOLTAGE_SENSORS,
+}
 
 
 @dataclass
@@ -19,7 +86,6 @@ class ZwaveValueID:
     property_key: str | int | None = None
 
 
-@dataclass
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
 
@@ -107,3 +173,50 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
             return lookup_table.get(lookup_key)
 
         return None
+
+
+class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
+    """Data template class for Z-Wave Sensor entities."""
+
+    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+        """Resolve helper class data for a discovered value."""
+        data = {}
+        if value.command_class == CommandClass.BATTERY:
+            data["device_class"] = DEVICE_CLASS_BATTERY
+            data["state_class"] = STATE_CLASS_MEASUREMENT
+        elif value.command_class == CommandClass.METER:
+            data["state_class"] = STATE_CLASS_MEASUREMENT
+            cc_specific = value.metadata.cc_specific
+            meter_type_id = cc_specific[CC_SPECIFIC_METER_TYPE]
+            scale_type_id = cc_specific[CC_SPECIFIC_SCALE]
+            try:
+                meter_type = MeterType(meter_type_id)
+            except ValueError:
+                return data
+            scale_enum = METER_TYPE_TO_SCALE_ENUM_MAP[meter_type]
+            try:
+                scale_type = scale_enum(scale_type_id)
+            except ValueError:
+                return data
+            for device_class, scale_type_set in METER_DEVICE_CLASS_MAP.items():
+                if scale_type in scale_type_set:
+                    data["device_class"] = device_class
+                    break
+        elif value.command_class == CommandClass.SENSOR_MULTILEVEL:
+            cc_specific = value.metadata.cc_specific
+            sensor_type_id = cc_specific[CC_SPECIFIC_SENSOR_TYPE]
+            try:
+                sensor_type = MultilevelSensorType(sensor_type_id)
+            except ValueError:
+                return data
+            for (
+                device_class,
+                sensor_type_set,
+            ) in MULTILEVEL_SENSOR_DEVICE_CLASS_MAP.items():
+                if sensor_type in sensor_type_set:
+                    data["device_class"] = device_class
+                    break
+            if sensor_type != MultilevelSensorType.TARGET_TEMPERATURE:
+                data["state_class"] = STATE_CLASS_MEASUREMENT
+
+        return data

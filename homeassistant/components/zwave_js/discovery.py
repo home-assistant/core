@@ -16,6 +16,7 @@ from homeassistant.core import callback
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
+    NumericSensorDataTemplate,
     ZwaveValueID,
 )
 
@@ -487,6 +488,7 @@ DISCOVERY_SCHEMAS = [
             },
             type={"number"},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
     ZWaveDiscoverySchema(
         platform="sensor",
@@ -495,6 +497,7 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.INDICATOR},
             type={"number"},
         ),
+        data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
@@ -508,6 +511,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
             property={"value"},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
     # special list sensors (Notification CC)
     ZWaveDiscoverySchema(
@@ -542,6 +546,7 @@ DISCOVERY_SCHEMAS = [
                 property={"targetValue"},
             )
         ],
+        data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
     ),
     # binary switches
