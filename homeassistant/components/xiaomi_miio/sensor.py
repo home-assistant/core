@@ -45,6 +45,8 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRHUMIDIFIER_CA1,
+    MODEL_AIRHUMIDIFIER_CB1,
     MODELS_HUMIDIFIER_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
@@ -63,16 +65,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ATTR_POWER = "power"
+ATTR_ACTUAL_SPEED = "actual_speed"
 ATTR_CHARGING = "charging"
 ATTR_DISPLAY_CLOCK = "display_clock"
+ATTR_HUMIDITY = "humidity"
+ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
+ATTR_POWER = "power"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
-ATTR_HUMIDITY = "humidity"
-ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 
 
 @dataclass
@@ -121,6 +124,13 @@ SENSOR_TYPES = {
         valid_min_value=200.0,
         valid_max_value=2000.0,
     ),
+    "motor_speed": SensorType(
+        unit="rpm",
+        icon="mdi:fast-forward",
+        state_class=STATE_CLASS_MEASUREMENT,
+        valid_min_value=200.0,
+        valid_max_value=2000.0,
+    ),
 }
 
 HUMIDIFIER_SENSORS = {
@@ -128,11 +138,17 @@ HUMIDIFIER_SENSORS = {
     ATTR_TEMPERATURE: "temperature",
 }
 
+HUMIDIFIER_CA1_CB1_SENSORS = {
+    ATTR_HUMIDITY: "humidity",
+    ATTR_TEMPERATURE: "temperature",
+    ATTR_MOTOR_SPEED: "motor_speed",
+}
+
 HUMIDIFIER_SENSORS_MIOT = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
     ATTR_WATER_LEVEL: "water_level",
-    ATTR_ACTUAL_MOTOR_SPEED: "actual_speed",
+    ATTR_ACTUAL_SPEED: "actual_speed",
 }
 
 
@@ -191,11 +207,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors = []
         if model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_SENSORS_MIOT
+        elif model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = HUMIDIFIER_CA1_CB1_SENSORS
         elif model.startswith("zhimi.humidifier."):
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             sensors = HUMIDIFIER_SENSORS
         else:
             unique_id = config_entry.unique_id
