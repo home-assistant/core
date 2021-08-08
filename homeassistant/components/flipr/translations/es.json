@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Error desconocido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correo-e",
+                    "password": "Clave"
+                }
+            }
+        }
+    }
+}

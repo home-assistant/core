@@ -75,4 +75,6 @@ class UptimeRobotEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Returtn if entity is available."""
+        if not self.coordinator.last_update_success:
+            return False
         return self.monitor is not None
