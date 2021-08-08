@@ -90,16 +90,16 @@ class AtomeData:
         self._is_connected = None
         self._day_usage = None
         self._day_price = None
-        self._day_lastreset = None
+        self._day_last_reset = None
         self._week_usage = None
         self._week_price = None
-        self._week_lastreset = None
+        self._week_last_reset = None
         self._month_usage = None
         self._month_price = None
-        self._month_lastreset = None
+        self._month_last_reset = None
         self._year_usage = None
         self._year_price = None
-        self._year_lastreset = None
+        self._year_last_reset = None
 
     @property
     def live_power(self):
@@ -145,9 +145,9 @@ class AtomeData:
         return self._day_price
 
     @property
-    def day_lastreset(self):
+    def day_last_reset(self):
         """Return latest daily last reset."""
-        return self._day_lastreset
+        return self._day_last_reset
 
     @Throttle(DAILY_SCAN_INTERVAL)
     def update_day_usage(self):
@@ -156,7 +156,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(DAILY_TYPE)
             self._day_usage = values["total"] / 1000
             self._day_price = values["price"]
-            self._day_lastreset = values["startPeriod"]
+            self._day_last_reset = values["startPeriod"]
             _LOGGER.debug("Updating Atome daily data. Got: %d", self._day_usage)
 
         except KeyError as error:
@@ -173,9 +173,9 @@ class AtomeData:
         return self._week_price
 
     @property
-    def week_lastreset(self):
+    def week_last_reset(self):
         """Return latest weekly last reset value."""
-        return self._week_lastreset
+        return self._week_last_reset
 
     @Throttle(WEEKLY_SCAN_INTERVAL)
     def update_week_usage(self):
@@ -184,7 +184,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(WEEKLY_TYPE)
             self._week_usage = values["total"] / 1000
             self._week_price = values["price"]
-            self._week_lastreset = values["startPeriod"]
+            self._week_last_reset = values["startPeriod"]
             _LOGGER.debug("Updating Atome weekly data. Got: %d", self._week_usage)
 
         except KeyError as error:
@@ -201,9 +201,9 @@ class AtomeData:
         return self._month_price
 
     @property
-    def month_lastreset(self):
+    def month_last_reset(self):
         """Return latest monthly last reset value."""
-        return self._month_lastreset
+        return self._month_last_reset
 
     @Throttle(MONTHLY_SCAN_INTERVAL)
     def update_month_usage(self):
@@ -212,7 +212,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(MONTHLY_TYPE)
             self._month_usage = values["total"] / 1000
             self._month_price = values["price"]
-            self._month_lastreset = values["startPeriod"]
+            self._month_last_reset = values["startPeriod"]
             _LOGGER.debug("Updating Atome monthly data. Got: %d", self._month_usage)
 
         except KeyError as error:
@@ -229,9 +229,9 @@ class AtomeData:
         return self._year_price
 
     @property
-    def year_lastreset(self):
+    def year_last_reset(self):
         """Return latest yearly last reset value."""
-        return self._year_lastreset
+        return self._year_last_reset
 
     @Throttle(YEARLY_SCAN_INTERVAL)
     def update_year_usage(self):
@@ -240,7 +240,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(YEARLY_TYPE)
             self._year_usage = values["total"] / 1000
             self._year_price = values["price"]
-            self._year_lastreset = values["startPeriod"]
+            self._year_last_reset = values["startPeriod"]
             _LOGGER.debug("Updating Atome yearly data. Got: %d", self._year_usage)
 
         except KeyError as error:
@@ -280,5 +280,5 @@ class AtomeSensor(SensorEntity):
             self._attr_state = getattr(self._data, f"{self._sensor_type}_usage")
             self._attr_extra_state_attributes = {
                 "price": getattr(self._data, f"{self._sensor_type}_price"),
-                "last_reset": dt_util.parse_datetime(getattr(self._data, f"{self._sensor_type}_lastreset"))
+                "last_reset": dt_util.parse_datetime(getattr(self._data, f"{self._sensor_type}_last_reset"))
             }
