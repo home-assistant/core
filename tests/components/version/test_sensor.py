@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pyhaversion import HaVersionSource, exceptions as pyhaversionexceptions
 import pytest
 
+from homeassistant.components.version.sensor import ALL_SOURCES
 from homeassistant.setup import async_setup_component
 
 MOCK_VERSION = "10.0"
@@ -11,15 +12,7 @@ MOCK_VERSION = "10.0"
 
 @pytest.mark.parametrize(
     "source",
-    [
-        HaVersionSource.CONTAINER,
-        HaVersionSource.PYPI,
-        HaVersionSource.SUPERVISOR,
-        HaVersionSource.HAIO,
-        HaVersionSource.LOCAL,
-        "docker",
-        "hassio",
-    ],
+    ALL_SOURCES,
 )
 async def test_version_source(hass, source):
     """Test the Version sensor with different sources."""
