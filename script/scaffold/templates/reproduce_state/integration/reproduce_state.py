@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Iterable
+from typing import Any, Final, Iterable
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -16,10 +16,10 @@ from homeassistant.core import Context, HomeAssistant, State
 
 from . import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 # TODO add valid states here
-VALID_STATES = {STATE_ON, STATE_OFF}
+VALID_STATES: Final = {STATE_ON, STATE_OFF}
 
 
 async def _async_reproduce_state(

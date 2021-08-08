@@ -1,6 +1,8 @@
 """Provide the device conditions for NEW_NAME."""
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -21,9 +23,9 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import DOMAIN
 
 # TODO specify your supported condition types.
-CONDITION_TYPES = {"is_on", "is_off"}
+CONDITION_TYPES: Final = {"is_on", "is_off"}
 
-CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+CONDITION_SCHEMA: Final = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),

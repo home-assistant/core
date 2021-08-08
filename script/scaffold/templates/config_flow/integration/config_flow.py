@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -13,10 +13,10 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA: Final = vol.Schema(
     {
         vol.Required("host"): str,
         vol.Required("username"): str,

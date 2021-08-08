@@ -1,6 +1,8 @@
 """Provides device triggers for NEW_NAME."""
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
@@ -22,9 +24,9 @@ from homeassistant.helpers.typing import ConfigType
 from . import DOMAIN
 
 # TODO specify your supported trigger types.
-TRIGGER_TYPES = {"turned_on", "turned_off"}
+TRIGGER_TYPES: Final = {"turned_on", "turned_off"}
 
-TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),

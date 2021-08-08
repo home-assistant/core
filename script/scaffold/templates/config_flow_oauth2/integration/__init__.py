@@ -1,7 +1,7 @@
 """The NEW_NAME integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -17,7 +17,7 @@ from homeassistant.helpers import (
 from . import api, config_flow
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA: Final = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
@@ -31,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS: Final = ["light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:

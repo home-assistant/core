@@ -1,6 +1,8 @@
 """Provides device actions for NEW_NAME."""
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -19,9 +21,9 @@ import homeassistant.helpers.config_validation as cv
 from . import DOMAIN
 
 # TODO specify your supported action types.
-ACTION_TYPES = {"turn_on", "turn_off"}
+ACTION_TYPES: Final = {"turn_on", "turn_off"}
 
-ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),

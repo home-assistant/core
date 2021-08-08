@@ -1,3 +1,5 @@
 """Constants for the NEW_NAME integration."""
 
-DOMAIN = "NEW_DOMAIN"
+from typing import Final
+
+DOMAIN: Final = "NEW_DOMAIN"
