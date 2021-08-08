@@ -16,16 +16,24 @@ from homeassistant.const import (
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_DIRECTION,
+    DEVICE_CLASS_DISTANCE,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_LEVEL,
     DEVICE_CLASS_MASS,
     DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_PARTICULATE_MATTER_2_5,
+    DEVICE_CLASS_PARTICULATE_MATTER_10,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_SOUND_PRESSURE,
+    DEVICE_CLASS_SPEED,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
@@ -56,14 +64,22 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
     DEVICE_CLASS_CURRENT,  # current (A)
+    DEVICE_CLASS_DIRECTION,  # direction in degree (0-360 - 0 is North)
+    DEVICE_CLASS_DISTANCE,  # distance in meter
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
+    DEVICE_CLASS_FREQUENCY,  # frequency in Hz
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
-    DEVICE_CLASS_MASS,  # mass (kg/lb)
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
+    DEVICE_CLASS_LEVEL,  # Current level (mm, %, or other unit)
+    DEVICE_CLASS_MASS,  # mass (kg/lb)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
+    DEVICE_CLASS_SOUND_PRESSURE,  # Sound pressure level (dB)
+    DEVICE_CLASS_SPEED,  # Speed in km/h or mph
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
+    DEVICE_CLASS_PARTICULATE_MATTER_2_5,  # PM 2.5 - in ppm (parts per million)
+    DEVICE_CLASS_PARTICULATE_MATTER_10,  # PM 10 - in ppm
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
     DEVICE_CLASS_POWER,  # power (W/kW)
     DEVICE_CLASS_POWER_FACTOR,  # power factor (%)

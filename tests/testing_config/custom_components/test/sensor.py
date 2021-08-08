@@ -33,6 +33,14 @@ UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_VOLTAGE: "V",  # voltage (V)
     sensor.DEVICE_CLASS_GAS: VOLUME_CUBIC_METERS,  # gas (m³)
     sensor.DEVICE_CLASS_MASS: "kg",  # mass (kg/lb)
+    sensor.DEVICE_CLASS_DIRECTION: "deg",  # degree (360, 0 = North)
+    sensor.DEVICE_CLASS_DISTANCE: "m",  # Meter
+    sensor.DEVICE_CLASS_FREQUENCY: "Hz",  # Hertz
+    sensor.DEVICE_CLASS_LEVEL: "%",  # Percent
+    sensor.DEVICE_CLASS_PARTICULATE_MATTER_2_5: "ppm",  # Parts per million
+    sensor.DEVICE_CLASS_PARTICULATE_MATTER_10: "ppm",  # PPM
+    sensor.DEVICE_CLASS_SOUND_PRESSURE: "dB",  # Decibel
+    sensor.DEVICE_CLASS_SPEED: "km/h",  # Kilometer per hour
 }
 
 ENTITIES = {}
