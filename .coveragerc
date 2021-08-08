@@ -677,6 +677,7 @@ omit =
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
+    homeassistant/components/neato/hub.py
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py

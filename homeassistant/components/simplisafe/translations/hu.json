@@ -7,10 +7,12 @@
         "error": {
             "identifier_exists": "Fi\u00f3k m\u00e1r regisztr\u00e1lva van",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "still_awaiting_mfa": "M\u00e9g v\u00e1r az MFA e-mail kattint\u00e1sra",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
             "mfa": {
+                "description": "Ellen\u0151rizze e-mailj\u00e9ben a SimpliSafe linkj\u00e9t. A link ellen\u0151rz\u00e9se ut\u00e1n t\u00e9rjen vissza ide, \u00e9s fejezze be az integr\u00e1ci\u00f3 telep\u00edt\u00e9s\u00e9t.",
                 "title": "SimpliSafe t\u00f6bbt\u00e9nyez\u0151s hiteles\u00edt\u00e9s"
             },
             "reauth_confirm": {

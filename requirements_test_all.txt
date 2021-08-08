@@ -422,7 +422,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.4
+ha-philipsjs==2.7.5
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -767,7 +767,7 @@ pyatv==0.8.2
 pyblackbird==0.5
 
 # homeassistant.components.neato
-pybotvac==0.0.21
+pybotvac==0.0.22
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.1

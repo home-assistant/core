@@ -51,6 +51,21 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Konfigurer parameter {subtype} verdi",
+            "node_status": "Nodestatus",
+            "value": "Gjeldende verdi for en Z-Wave-verdi"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Sendte et varsel om oppf\u00f8ringskontroll",
+            "event.notification.notification": "Sendte et varsel",
+            "event.value_notification.basic": "Grunnleggende CC -hendelse p\u00e5 {subtype}",
+            "event.value_notification.central_scene": "Sentral scenehandling p\u00e5 {subtype}",
+            "event.value_notification.scene_activation": "Sceneaktivering p\u00e5 {subtype}",
+            "state.node_status": "Nodestatus endret"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon om Z-Wave JS-tillegg",

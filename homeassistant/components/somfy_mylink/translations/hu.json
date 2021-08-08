@@ -34,6 +34,7 @@
             },
             "init": {
                 "data": {
+                    "default_reverse": "A konfigur\u00e1latlan bor\u00edt\u00f3k alap\u00e9rtelmezett megford\u00edt\u00e1si \u00e1llapota",
                     "entity_id": "Konfigur\u00e1ljon egy adott entit\u00e1st.",
                     "target_id": "Az \u00e1rny\u00e9kol\u00f3 be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa."
                 },
