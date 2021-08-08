@@ -181,6 +181,7 @@ homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garages_amsterdam/* @klaasnicolaas
 homeassistant/components/gdacs/* @exxamalte
 homeassistant/components/generic_hygrostat/* @Shulyaka
+homeassistant/components/generic_water_heater/* @dgomes
 homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_json_events/* @exxamalte
 homeassistant/components/geo_rss_events/* @exxamalte
