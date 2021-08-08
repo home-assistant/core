@@ -39,6 +39,7 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLOSE_COMM_ON_ERROR,
+    CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
@@ -227,6 +228,12 @@ class ModbusHub:
                 self._pb_params["framer"] = ModbusRtuFramer
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
+        if CONF_MSG_WAIT in client_config:
+            self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
+        elif self._config_type == CONF_SERIAL:
+            self._msg_wait = 30 / 1000
+        else:
+            self._msg_wait = 0
 
     def _log_error(self, text: str, error_state=True):
         log_text = f"Pymodbus: {text}"
@@ -322,7 +329,7 @@ class ModbusHub:
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )
-            if self._config_type == "serial":
+            if self._msg_wait:
                 # small delay until next request/response
-                await asyncio.sleep(30 / 1000)
+                await asyncio.sleep(self._msg_wait)
             return result
