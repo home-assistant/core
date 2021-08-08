@@ -164,6 +164,7 @@ ENTITY_DESCRIPTION_KEY_MAP = {
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=None,
     ),
+    None: ZwaveSensorEntityDescription("base_sensor"),
 }
 
 
@@ -180,11 +181,9 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
-        entity_description_key = info.platform_data.get(ATTR_ENTITY_DESC_KEY)
-        if entity_description_key is not None:
-            entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(entity_description_key)
-        if entity_description is None:
-            entity_description = ZwaveSensorEntityDescription("base_sensor")
+        entity_description = ENTITY_DESCRIPTION_KEY_MAP[
+            info.platform_data.get(ATTR_ENTITY_DESC_KEY)
+        ]
         entity_description.info = info
 
         if info.platform_hint == "string_sensor":
