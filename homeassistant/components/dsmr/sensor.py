@@ -157,7 +157,9 @@ async def async_setup_entry(
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                await asyncio.sleep(entry.data[CONF_RECONNECT_INTERVAL])
+                await asyncio.sleep(
+                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
+                )
 
             except (serial.serialutil.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
@@ -167,7 +169,9 @@ async def async_setup_entry(
                 protocol = None
 
                 # throttle reconnect attempts
-                await asyncio.sleep(entry.data[CONF_RECONNECT_INTERVAL])
+                await asyncio.sleep(
+                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
+                )
             except CancelledError:
                 if stop_listener:
                     stop_listener()  # pylint: disable=not-callable

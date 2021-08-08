@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "description": "Eseguire nuovamente l'autenticazione con l'account Prosegur.",
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            },
+            "user": {
+                "data": {
+                    "country": "Nazione",
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    }
+}

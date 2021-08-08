@@ -35,7 +35,8 @@
                     "name": "Nom du service de notification (red\u00e9marrage requis)",
                     "recipient": "Destinataires des notifications SMS",
                     "track_new_devices": "Suivre les nouveaux appareils",
-                    "track_wired_clients": "Suivre les clients du r\u00e9seau filaire"
+                    "track_wired_clients": "Suivre les clients du r\u00e9seau filaire",
+                    "unauthenticated_mode": "Mode non authentifi\u00e9 (le changement n\u00e9cessite un rechargement)"
                 }
             }
         }

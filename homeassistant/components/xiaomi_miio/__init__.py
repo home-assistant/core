@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from miio import AirHumidifier, AirHumidifierMiot, DeviceException
+from miio import AirHumidifier, AirHumidifierMiot, AirHumidifierMjjsq, DeviceException
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
@@ -25,6 +25,7 @@ from .const import (
     MODELS_FAN,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MIOT,
+    MODELS_HUMIDIFIER_MJJSQ,
     MODELS_LIGHT,
     MODELS_SWITCH,
     MODELS_VACUUM,
@@ -107,6 +108,8 @@ async def async_create_miio_device_and_coordinator(
 
     if model in MODELS_HUMIDIFIER_MIOT:
         device = AirHumidifierMiot(host, token)
+    elif model in MODELS_HUMIDIFIER_MJJSQ:
+        device = AirHumidifierMjjsq(host, token, model=model)
     else:
         device = AirHumidifier(host, token, model=model)
 
@@ -123,7 +126,9 @@ async def async_create_miio_device_and_coordinator(
         """Fetch data from the device using async_add_executor_job."""
         try:
             async with async_timeout.timeout(10):
-                return await hass.async_add_executor_job(device.status)
+                state = await hass.async_add_executor_job(device.status)
+                _LOGGER.debug("Got new state: %s", state)
+                return state
 
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex

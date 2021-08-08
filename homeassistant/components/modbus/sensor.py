@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_hub
 from .base_platform import BaseStructPlatform
-from .const import MODBUS_DOMAIN
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -31,7 +31,7 @@ async def async_setup_platform(
         return
 
     for entry in discovery_info[CONF_SENSORS]:
-        hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub = get_hub(hass, discovery_info[CONF_NAME])
         sensors.append(ModbusRegisterSensor(hub, entry))
 
     async_add_entities(sensors)
@@ -54,12 +54,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._value = state.state
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._value
+            self._attr_state = state.state
 
     async def async_update(self, now=None):
         """Update the state of the sensor."""
@@ -73,6 +68,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
             self.async_write_ha_state()
             return
 
-        self.unpack_structure_result(result.registers)
+        self._attr_state = self.unpack_structure_result(result.registers)
         self._attr_available = True
         self.async_write_ha_state()

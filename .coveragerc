@@ -677,6 +677,7 @@ omit =
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
+    homeassistant/components/neato/hub.py
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
@@ -1007,8 +1008,9 @@ omit =
     homeassistant/components/synology_srm/device_tracker.py
     homeassistant/components/syslog/notify.py
     homeassistant/components/system_bridge/__init__.py
-    homeassistant/components/system_bridge/const.py
     homeassistant/components/system_bridge/binary_sensor.py
+    homeassistant/components/system_bridge/const.py
+    homeassistant/components/system_bridge/coordinator.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/*
@@ -1078,6 +1080,8 @@ omit =
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/traccar/const.py
     homeassistant/components/trackr/device_tracker.py
+    homeassistant/components/tractive/__init__.py
+    homeassistant/components/tractive/device_tracker.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
@@ -1111,7 +1115,10 @@ omit =
     homeassistant/components/upcloud/switch.py
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*
+    homeassistant/components/uptimerobot/__init__.py
     homeassistant/components/uptimerobot/binary_sensor.py
+    homeassistant/components/uptimerobot/const.py
+    homeassistant/components/uptimerobot/entity.py
     homeassistant/components/uscis/sensor.py
     homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py

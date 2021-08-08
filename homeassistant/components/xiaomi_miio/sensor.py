@@ -1,4 +1,6 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 import logging
@@ -8,6 +10,7 @@ from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
+    GATEWAY_MODEL_AQARA,
     GATEWAY_MODEL_EU,
     GatewayException,
 )
@@ -17,6 +20,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -45,7 +49,11 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRHUMIDIFIER_CA1,
+    MODEL_AIRHUMIDIFIER_CB1,
+    MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
+    MODELS_HUMIDIFIER_MJJSQ,
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
@@ -63,77 +71,106 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ATTR_POWER = "power"
+ATTR_ACTUAL_SPEED = "actual_speed"
+ATTR_AIR_QUALITY = "air_quality"
 ATTR_CHARGING = "charging"
 ATTR_DISPLAY_CLOCK = "display_clock"
+ATTR_HUMIDITY = "humidity"
+ATTR_ILLUMINANCE = "illuminance"
+ATTR_LOAD_POWER = "load_power"
+ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
+ATTR_POWER = "power"
+ATTR_PRESSURE = "pressure"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
-ATTR_HUMIDITY = "humidity"
-ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 
 
 @dataclass
-class SensorType:
+class XiaomiMiioSensorDescription(SensorEntityDescription):
     """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
-    unit: str = None
-    icon: str = None
-    device_class: str = None
-    state_class: str = None
-    valid_min_value: float = None
-    valid_max_value: float = None
+    valid_min_value: float | None = None
+    valid_max_value: float | None = None
 
 
 SENSOR_TYPES = {
-    "temperature": SensorType(
-        unit=TEMP_CELSIUS,
+    ATTR_TEMPERATURE: XiaomiMiioSensorDescription(
+        key=ATTR_TEMPERATURE,
+        name="Temperature",
+        unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    "humidity": SensorType(
-        unit=PERCENTAGE,
+    ATTR_HUMIDITY: XiaomiMiioSensorDescription(
+        key=ATTR_HUMIDITY,
+        name="Humidity",
+        unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    "pressure": SensorType(
-        unit=PRESSURE_HPA,
+    ATTR_PRESSURE: XiaomiMiioSensorDescription(
+        key=ATTR_PRESSURE,
+        name="Pressure",
+        unit_of_measurement=PRESSURE_HPA,
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    "load_power": SensorType(
-        unit=POWER_WATT,
+    ATTR_LOAD_POWER: XiaomiMiioSensorDescription(
+        key=ATTR_LOAD_POWER,
+        name="Load Power",
+        unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
-    "water_level": SensorType(
-        unit=PERCENTAGE,
+    ATTR_WATER_LEVEL: XiaomiMiioSensorDescription(
+        key=ATTR_WATER_LEVEL,
+        name="Water Level",
+        unit_of_measurement=PERCENTAGE,
         icon="mdi:water-check",
         state_class=STATE_CLASS_MEASUREMENT,
         valid_min_value=0.0,
         valid_max_value=100.0,
     ),
-    "actual_speed": SensorType(
-        unit="rpm",
+    ATTR_ACTUAL_SPEED: XiaomiMiioSensorDescription(
+        key=ATTR_ACTUAL_SPEED,
+        name="Actual Speed",
+        unit_of_measurement="rpm",
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
-        valid_min_value=200.0,
-        valid_max_value=2000.0,
+    ),
+    ATTR_MOTOR_SPEED: XiaomiMiioSensorDescription(
+        key=ATTR_MOTOR_SPEED,
+        name="Motor Speed",
+        unit_of_measurement="rpm",
+        icon="mdi:fast-forward",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_ILLUMINANCE: XiaomiMiioSensorDescription(
+        key=ATTR_ILLUMINANCE,
+        name="Illuminance",
+        unit_of_measurement=UNIT_LUMEN,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_AIR_QUALITY: XiaomiMiioSensorDescription(
+        key=ATTR_AIR_QUALITY,
+        unit_of_measurement="AQI",
+        icon="mdi:cloud",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
 
-HUMIDIFIER_SENSORS = {
-    ATTR_HUMIDITY: "humidity",
-    ATTR_TEMPERATURE: "temperature",
-}
-
-HUMIDIFIER_SENSORS_MIOT = {
-    ATTR_HUMIDITY: "humidity",
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_WATER_LEVEL: "water_level",
-    ATTR_ACTUAL_MOTOR_SPEED: "actual_speed",
-}
+HUMIDIFIER_MIIO_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
+HUMIDIFIER_CA1_CB1_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_MOTOR_SPEED)
+HUMIDIFIER_MIOT_SENSORS = (
+    ATTR_HUMIDITY,
+    ATTR_TEMPERATURE,
+    ATTR_WATER_LEVEL,
+    ATTR_ACTUAL_SPEED,
+)
+HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -162,26 +199,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             GATEWAY_MODEL_AC_V1,
             GATEWAY_MODEL_AC_V2,
             GATEWAY_MODEL_AC_V3,
+            GATEWAY_MODEL_AQARA,
             GATEWAY_MODEL_EU,
         ]:
+            description = SENSOR_TYPES[ATTR_ILLUMINANCE]
             entities.append(
                 XiaomiGatewayIlluminanceSensor(
-                    gateway, config_entry.title, config_entry.unique_id
+                    gateway, config_entry.title, config_entry.unique_id, description
                 )
             )
         # Gateway sub devices
         sub_devices = gateway.devices
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
-            sensor_variables = set(sub_device.status) & set(SENSOR_TYPES)
-            if sensor_variables:
-                entities.extend(
-                    [
-                        XiaomiGatewaySensor(
-                            coordinator, sub_device, config_entry, variable
-                        )
-                        for variable in sensor_variables
-                    ]
+            for sensor, description in SENSOR_TYPES.items():
+                if sensor not in sub_device.status:
+                    continue
+                entities.append(
+                    XiaomiGatewaySensor(
+                        coordinator, sub_device, config_entry, description
+                    )
                 )
     elif config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         host = config_entry.data[CONF_HOST]
@@ -189,32 +226,41 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         device = None
         sensors = []
-        if model in MODELS_HUMIDIFIER_MIOT:
+        if model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-            sensors = HUMIDIFIER_SENSORS_MIOT
-        elif model.startswith("zhimi.humidifier."):
+            sensors = HUMIDIFIER_CA1_CB1_SENSORS
+        elif model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-            sensors = HUMIDIFIER_SENSORS
+            sensors = HUMIDIFIER_MIOT_SENSORS
+        elif model in MODELS_HUMIDIFIER_MJJSQ:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = HUMIDIFIER_MJJSQ_SENSORS
+        elif model in MODELS_HUMIDIFIER_MIIO:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = HUMIDIFIER_MIIO_SENSORS
         else:
             unique_id = config_entry.unique_id
             name = config_entry.title
             _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
             device = AirQualityMonitor(host, token)
+            description = SENSOR_TYPES[ATTR_AIR_QUALITY]
             entities.append(
-                XiaomiAirQualityMonitor(name, device, config_entry, unique_id)
+                XiaomiAirQualityMonitor(
+                    name, device, config_entry, unique_id, description
+                )
             )
-        for sensor in sensors:
+        for sensor, description in SENSOR_TYPES.items():
+            if sensor not in sensors:
+                continue
             entities.append(
                 XiaomiGenericSensor(
-                    f"{config_entry.title} {sensor.replace('_', ' ').title()}",
+                    f"{config_entry.title} {description.name}",
                     device,
                     config_entry,
                     f"{sensor}_{config_entry.unique_id}",
-                    sensor,
                     hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                    description,
                 )
             )
 
@@ -224,34 +270,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     """Representation of a Xiaomi Humidifier sensor."""
 
-    def __init__(self, name, device, entry, unique_id, attribute, coordinator):
+    def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._sensor_config = SENSOR_TYPES[attribute]
-        self._attr_device_class = self._sensor_config.device_class
-        self._attr_state_class = self._sensor_config.state_class
-        self._attr_icon = self._sensor_config.icon
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_unit_of_measurement = self._sensor_config.unit
-        self._device = device
-        self._entry = entry
-        self._attribute = attribute
         self._state = None
+        self.entity_description = description
 
     @property
     def state(self):
         """Return the state of the device."""
         self._state = self._extract_value_from_attribute(
-            self.coordinator.data, self._attribute
+            self.coordinator.data, self.entity_description.key
         )
         if (
-            self._sensor_config.valid_min_value
-            and self._state < self._sensor_config.valid_min_value
+            self.entity_description.valid_min_value
+            and self._state < self.entity_description.valid_min_value
         ) or (
-            self._sensor_config.valid_max_value
-            and self._state > self._sensor_config.valid_max_value
+            self.entity_description.valid_max_value
+            and self._state > self.entity_description.valid_max_value
         ):
             return None
         return self._state
@@ -268,12 +307,10 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(self, name, device, entry, unique_id, description):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._icon = "mdi:cloud"
-        self._unit_of_measurement = "AQI"
         self._available = None
         self._state = None
         self._state_attrs = {
@@ -286,16 +323,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
             ATTR_NIGHT_TIME_END: None,
             ATTR_SENSOR_STATE: None,
         }
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._icon
+        self.entity_description = description
 
     @property
     def available(self):
@@ -342,68 +370,32 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
 class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     """Representation of a XiaomiGatewaySensor."""
 
-    def __init__(self, coordinator, sub_device, entry, data_key):
+    def __init__(self, coordinator, sub_device, entry, description):
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
-        self._data_key = data_key
-        self._unique_id = f"{sub_device.sid}-{data_key}"
-        self._name = f"{data_key} ({sub_device.sid})".capitalize()
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return SENSOR_TYPES[self._data_key].icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return SENSOR_TYPES[self._data_key].unit
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return SENSOR_TYPES[self._data_key].device_class
-
-    @property
-    def state_class(self):
-        """Return the state class of this entity."""
-        return SENSOR_TYPES[self._data_key].state_class
+        self._unique_id = f"{sub_device.sid}-{description.key}"
+        self._name = f"{description.key} ({sub_device.sid})".capitalize()
+        self.entity_description = description
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._sub_device.status[self._data_key]
+        return self._sub_device.status[self.entity_description.key]
 
 
 class XiaomiGatewayIlluminanceSensor(SensorEntity):
     """Representation of the gateway device's illuminance sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
-    _attr_unit_of_measurement = UNIT_LUMEN
-
-    def __init__(self, gateway_device, gateway_name, gateway_device_id):
+    def __init__(self, gateway_device, gateway_name, gateway_device_id, description):
         """Initialize the entity."""
+
+        self._attr_name = f"{gateway_name} {description.name}"
+        self._attr_unique_id = f"{gateway_device_id}-{description.key}"
+        self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}
         self._gateway = gateway_device
-        self._name = f"{gateway_name} Illuminance"
-        self._gateway_device_id = gateway_device_id
-        self._unique_id = f"{gateway_device_id}-illuminance"
+        self.entity_description = description
         self._available = False
         self._state = None
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info of the gateway."""
-        return {"identifiers": {(DOMAIN, self._gateway_device_id)}}
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
 
     @property
     def available(self):

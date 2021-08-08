@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -66,6 +67,7 @@ from .const import (
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_RETRIES,
@@ -113,7 +115,7 @@ from .const import (
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
 )
-from .modbus import async_modbus_setup
+from .modbus import ModbusHub, async_modbus_setup
 from .validators import number_validator, scan_interval_validator, struct_validator
 
 _LOGGER = logging.getLogger(__name__)
@@ -198,6 +200,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_DISCRETE,
                         CALL_TYPE_REGISTER_INPUT,
                         CALL_TYPE_COIL,
+                        CALL_TYPE_X_COILS,
+                        CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
                 vol.Optional(CONF_STATE_OFF): cv.positive_int,
@@ -281,6 +285,7 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
         vol.Optional(CONF_RETRY_ON_EMPTY, default=False): cv.boolean,
+        vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
@@ -351,6 +356,11 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         ),
     }
 )
+
+
+def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
+    """Return modbus hub with name."""
+    return hass.data[DOMAIN][name]
 
 
 async def async_setup(hass, config):

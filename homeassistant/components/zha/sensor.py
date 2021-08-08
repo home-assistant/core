@@ -214,6 +214,7 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = POWER_WATT
 
     @property

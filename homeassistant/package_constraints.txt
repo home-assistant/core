@@ -17,7 +17,7 @@ defusedxml==0.7.1
 distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.44.0
-home-assistant-frontend==20210730.0
+home-assistant-frontend==20210804.0
 httpx==0.18.2
 ifaddr==0.1.7
 jinja2==3.0.1
@@ -33,7 +33,7 @@ sqlalchemy==1.4.17
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
 yarl==1.6.3
-zeroconf==0.33.2
+zeroconf==0.33.4
 
 pycryptodome>=3.6.6
 
@@ -50,6 +50,11 @@ httplib2>=0.19.0
 # gRPC 1.32+ currently causes issues on ARMv7, see:
 # https://github.com/home-assistant/core/issues/40148
 grpcio==1.31.0
+
+# Newer versions of cloud pubsub pin a higher version of grpcio. This can
+# be reverted when the grpcio pin is reverted, see:
+# https://github.com/home-assistant/core/issues/53427
+google-cloud-pubsub==2.1.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

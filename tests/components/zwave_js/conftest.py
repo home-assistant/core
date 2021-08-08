@@ -171,13 +171,13 @@ def uninstall_addon_fixture():
         yield uninstall_addon
 
 
-@pytest.fixture(name="create_shapshot")
-def create_snapshot_fixture():
-    """Mock create snapshot."""
+@pytest.fixture(name="create_backup")
+def create_backup_fixture():
+    """Mock create backup."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_create_snapshot"
-    ) as create_shapshot:
-        yield create_shapshot
+        "homeassistant.components.zwave_js.addon.async_create_backup"
+    ) as create_backup:
+        yield create_backup
 
 
 @pytest.fixture(name="controller_state", scope="session")
