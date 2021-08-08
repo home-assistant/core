@@ -404,7 +404,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.3.5
+google-nest-sdm==0.3.6
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
