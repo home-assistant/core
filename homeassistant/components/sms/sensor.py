@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 imei,
                 SensorEntityDescription(
                     key="signal",
-                    name="GSM Signal IMEI",
+                    name=f"gsm_signal_imei_{imei}",
                     device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
                     unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
                     entity_registry_enabled_default=False,
@@ -43,8 +43,7 @@ class GSMSignalSensor(SensorEntity):
             "identifiers": {(DOMAIN, imei)},
             "name": "SMS Gateway",
         }
-        self._attr_name = f"{description.name} {imei}"
-        self._attr_unique_id = imei
+        self._attr_unique_id = str(imei)
         self._hass = hass
         self._gateway = gateway
         self._state = None
