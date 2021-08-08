@@ -68,5 +68,6 @@ ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
 ATTR_BROADCAST = "broadcast"
 # meter reset
 ATTR_METER_TYPE = "meter_type"
+ATTR_METER_TYPE_NAME = "meter_type_name"
 
 ADDON_SLUG = "core_zwave_js"

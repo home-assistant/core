@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import Mapping, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -34,7 +34,14 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_METER_TYPE, ATTR_VALUE, DATA_CLIENT, DOMAIN, SERVICE_RESET_METER
+from .const import (
+    ATTR_METER_TYPE,
+    ATTR_METER_TYPE_NAME,
+    ATTR_VALUE,
+    DATA_CLIENT,
+    DOMAIN,
+    SERVICE_RESET_METER,
+)
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_id
@@ -62,10 +69,12 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
-        entity_description = ZwaveSensorEntityDescription("sensor", info=info)
-        if info.platform_data:
-            entity_description.device_class = info.platform_data.get(ATTR_DEVICE_CLASS)
-            entity_description.state_class = info.platform_data.get(ATTR_STATE_CLASS)
+        entity_description = ZwaveSensorEntityDescription(
+            "sensor",
+            device_class=info.platform_data.get(ATTR_DEVICE_CLASS),
+            state_class=info.platform_data.get(ATTR_STATE_CLASS),
+            info=info,
+        )
 
         if info.platform_hint == "string_sensor":
             entities.append(ZWaveStringSensor(config_entry, client, entity_description))
@@ -199,6 +208,16 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         else:
             self._attr_state_class = STATE_CLASS_MEASUREMENT
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, int | str] | None:
+        """Return extra state attributes."""
+        if meter_type := self.info.platform_data.get(ATTR_METER_TYPE):
+            return {
+                ATTR_METER_TYPE: meter_type.value,
+                ATTR_METER_TYPE_NAME: meter_type.name.lower(),
+            }
+        return None
 
     async def async_reset_meter(
         self, meter_type: int | None = None, value: int | None = None

@@ -35,6 +35,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.zwave_js.const import ATTR_METER_TYPE
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     DEVICE_CLASS_BATTERY,
@@ -194,6 +195,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 meter_type = MeterType(meter_type_id)
             except ValueError:
                 return data
+            data[ATTR_METER_TYPE] = meter_type
             scale_enum = METER_TYPE_TO_SCALE_ENUM_MAP[meter_type]
             try:
                 scale_type = scale_enum(scale_type_id)
