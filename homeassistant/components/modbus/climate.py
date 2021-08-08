@@ -165,8 +165,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_available = False
             return -1
 
-        self.unpack_structure_result(result.registers)
-
+        self._value = self.unpack_structure_result(result.registers)
         self._attr_available = True
 
         if self._value is None:
