@@ -100,7 +100,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     existing_entry, data=user_input
                 )
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+                return self.async_abort(reason="reauth_successful")
+            return self.async_abort(reason="reauth_failed_existing")
 
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
