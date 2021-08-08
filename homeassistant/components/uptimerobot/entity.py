@@ -34,20 +34,18 @@ class UptimeRobotEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return the unique_id of the entity."""
-        return str(self.monitor.id) if self.monitor else None
+        return str(self.monitor.id)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
-        if self.monitor:
-            return {
-                "identifiers": {(DOMAIN, str(self.monitor.id))},
-                "name": "Uptime Robot",
-                "manufacturer": "Uptime Robot Team",
-                "entry_type": "service",
-                "model": self.monitor.type.name,
-            }
-        return {}
+        return {
+            "identifiers": {(DOMAIN, str(self.monitor.id))},
+            "name": "Uptime Robot",
+            "manufacturer": "Uptime Robot Team",
+            "entry_type": "service",
+            "model": self.monitor.type.name,
+        }
 
     @property
     def monitors(self) -> list[UptimeRobotMonitor]:
@@ -55,26 +53,15 @@ class UptimeRobotEntity(CoordinatorEntity):
         return self.coordinator.data or []
 
     @property
-    def monitor(self) -> UptimeRobotMonitor | None:
+    def monitor(self) -> UptimeRobotMonitor:
         """Return the monitor for this entity."""
         return next(
-            (
-                monitor
-                for monitor in self.monitors
-                if str(monitor.id) == self.entity_description.key
-            ),
-            None,
+            monitor
+            for monitor in self.monitors
+            if str(monitor.id) == self.entity_description.key
         )
 
     @property
     def monitor_available(self) -> bool:
         """Returtn if the monitor is available."""
-        status: bool = self.monitor.status == 2 if self.monitor else False
-        return status
-
-    @property
-    def available(self) -> bool:
-        """Returtn if entity is available."""
-        if not self.coordinator.last_update_success:
-            return False
-        return self.monitor is not None
+        return bool(self.monitor.status == 2)
