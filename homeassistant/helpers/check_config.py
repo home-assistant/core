@@ -93,10 +93,16 @@ async def async_check_ha_config_file(  # noqa: C901
 
         assert hass.config.config_dir is not None
 
+        secret_path = (
+            Path(hass.config.secrets_location)
+            if hass.config.secrets_location is not None
+            else None
+        )
+
         config = await hass.async_add_executor_job(
             load_yaml_config_file,
             config_path,
-            yaml_loader.Secrets(Path(hass.config.config_dir)),
+            yaml_loader.Secrets(Path(hass.config.config_dir), secret_path),
         )
     except FileNotFoundError:
         return result.add_error(f"File not found: {config_path}")
