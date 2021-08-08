@@ -36,7 +36,7 @@ async def async_setup_entry(
     """Set up Neato camera with config entry."""
     dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
-    mapdata: dict | None = hass.data.get(NEATO_MAP_DATA)
+    mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
     for robot in hass.data[NEATO_ROBOTS]:
         if "maps" in robot.traits:
             dev.append(NeatoCleaningMap(neato, robot, mapdata))
@@ -51,7 +51,9 @@ async def async_setup_entry(
 class NeatoCleaningMap(Camera):
     """Neato cleaning map for last clean."""
 
-    def __init__(self, neato: NeatoHub, robot: Robot, mapdata: dict | None) -> None:
+    def __init__(
+        self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
+    ) -> None:
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
@@ -135,7 +137,7 @@ class NeatoCleaningMap(Camera):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
-        data: dict = {}
+        data: dict[str, Any] = {}
 
         if self._generated_at is not None:
             data[ATTR_GENERATED_AT] = self._generated_at

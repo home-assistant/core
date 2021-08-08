@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
@@ -49,7 +50,7 @@ class NeatoSensor(SensorEntity):
         self._available: bool = False
         self._robot_name: str = f"{self.robot.name} {BATTERY}"
         self._robot_serial: str = self.robot.serial
-        self._state: dict | None = None
+        self._state: dict[str, Any] | None = None
 
     def update(self) -> None:
         """Update Neato Sensor."""

@@ -53,7 +53,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot = robot
         self._available = False
         self._robot_name = f"{self.robot.name} {SWITCH_TYPES[self.type][0]}"
-        self._state: dict | None = None
+        self._state: dict[str, Any] | None = None
         self._schedule_state: str | None = None
         self._clean_state = None
         self._robot_serial: str = self.robot.serial

@@ -1,5 +1,6 @@
 """API for Neato Botvac bound to Home Assistant OAuth."""
 from asyncio import run_coroutine_threadsafe
+from typing import Any
 
 import pybotvac
 
@@ -39,7 +40,7 @@ class NeatoImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """
 
     @property
-    def extra_authorize_data(self) -> dict:
+    def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"client_secret": self.client_secret}
 

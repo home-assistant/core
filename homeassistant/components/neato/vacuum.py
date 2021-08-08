@@ -87,8 +87,8 @@ async def async_setup_entry(
     """Set up Neato vacuum with config entry."""
     dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
-    mapdata: dict | None = hass.data.get(NEATO_MAP_DATA)
-    persistent_maps: dict | None = hass.data.get(NEATO_PERSISTENT_MAPS)
+    mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
+    persistent_maps: dict[str, Any] | None = hass.data.get(NEATO_PERSISTENT_MAPS)
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps))
 
@@ -120,8 +120,8 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         self,
         neato: NeatoHub,
         robot: Robot,
-        mapdata: dict | None,
-        persistent_maps: dict | None,
+        mapdata: dict[str, Any] | None,
+        persistent_maps: dict[str, Any] | None,
     ) -> None:
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
@@ -133,7 +133,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         self._robot_serial: str = self.robot.serial
         self._status_state: str | None = None
         self._clean_state: str | None = None
-        self._state: dict | None = None
+        self._state: dict[str, Any] | None = None
         self._clean_time_start: str | None = None
         self._clean_time_stop: str | None = None
         self._clean_area: float | None = None
@@ -146,7 +146,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         self._launched_from: str | None = None
         self._battery_level: int | None = None
         self._robot_boundaries: list = []
-        self._robot_stats: dict | None = None
+        self._robot_stats: dict[str, Any] | None = None
 
     def update(self) -> None:
         """Update the states of Neato Vacuums."""
@@ -222,7 +222,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         ):
             return
 
-        mapdata: dict = self._mapdata[self._robot_serial]["maps"][0]
+        mapdata: dict[str, Any] = self._mapdata[self._robot_serial]["maps"][0]
         self._clean_time_start = mapdata["start_at"]
         self._clean_time_stop = mapdata["end_at"]
         self._clean_area = mapdata["cleaned_area"]
@@ -308,7 +308,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
-        data: dict = {}
+        data: dict[str, Any] = {}
 
         if self._status_state is not None:
             data[ATTR_STATUS] = self._status_state

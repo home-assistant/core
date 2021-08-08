@@ -42,7 +42,7 @@ class OAuth2FlowHandler(
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reauth upon migration of old entries."""
         if user_input is None:
@@ -51,7 +51,7 @@ class OAuth2FlowHandler(
             )
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow. Update an entry if one already exist."""
         current_entries = self._async_current_entries()
         if self.source == SOURCE_REAUTH and current_entries:
