@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -28,37 +29,40 @@ from . import ATTRIBUTION, DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = (
-    SensorEntityDescription(key="last_capture", name="Last", icon="run-fast"),
-    SensorEntityDescription(key="total_cameras", name="Arlo Cameras", icon="video"),
+    SensorEntityDescription(key="last_capture", name="Last", icon="mdi:run-fast"),
+    SensorEntityDescription(key="total_cameras", name="Arlo Cameras", icon="mdi:video"),
     SensorEntityDescription(
-        key="captured_today", name="Captured Today", icon="file-video"
+        key="captured_today", name="Captured Today", icon="mdi:file-video"
     ),
     SensorEntityDescription(
         key="battery_level",
         name="Battery Level",
         unit_of_measurement=PERCENTAGE,
-        icon="battery-50",
+        icon="mdi:battery-50",
+        device_class=DEVICE_CLASS_BATTERY,
     ),
     SensorEntityDescription(
-        key="signal_strength", name="Signal Strength", icon="signal"
+        key="signal_strength", name="Signal Strength", icon="mdi:signal"
     ),
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
         unit_of_measurement=TEMP_CELSIUS,
-        icon="thermometer",
+        icon="mdi:thermometer",
+        device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
         unit_of_measurement=PERCENTAGE,
-        icon="water-percent",
+        icon="mdi:water-percent",
+        device_class=DEVICE_CLASS_HUMIDITY,
     ),
     SensorEntityDescription(
         key="air_quality",
         name="Air Quality",
         unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="biohazard",
+        icon="mdi:biohazard",
     ),
 )
 
@@ -109,14 +113,8 @@ class ArloSensor(SensorEntity):
     def __init__(self, device, sensor_entry):
         """Initialize an Arlo sensor."""
         self.entity_description = sensor_entry
-        _LOGGER.debug("ArloSensor created for %s", self.entity_description.name)
-        if self.entity_description.key == "temperature":
-            self.entity_description.device_class = DEVICE_CLASS_TEMPERATURE
-        elif self.entity_description.key == "humidity":
-            self.entity_description.device_class = DEVICE_CLASS_HUMIDITY
         self._data = device
         self._state = None
-        self._icon = f"mdi:{self.entity_description.icon}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -143,7 +141,7 @@ class ArloSensor(SensorEntity):
             return icon_for_battery_level(
                 battery_level=int(self._state), charging=False
             )
-        return self._icon
+        return self.entity_description.icon
 
     def update(self):
         """Get the latest data and updates the state."""
