@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, user_input: ConfigType | None = None
     ) -> FlowResult:
-        """Rerun the user step when reauth is requested."""
+        """Return the reauth confirm step."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
