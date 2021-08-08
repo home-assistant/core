@@ -246,21 +246,11 @@ async def test_reauthentication(hass):
     )
     old_entry.add_to_hass(hass)
 
-    with patch(
-        "pyuptimerobot.UptimeRobot.async_get_account_details",
-        return_value=UptimeRobotApiResponse.from_dict(
-            {
-                "stat": "ok",
-                "account": {"email": "test@test.test", "user_id": 1234567890},
-            }
-        ),
-    ):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH},
-            data=old_entry.data,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data=old_entry.data,
+    )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
