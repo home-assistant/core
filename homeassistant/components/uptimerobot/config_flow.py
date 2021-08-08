@@ -94,9 +94,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         errors, account = await self._validate_input(user_input)
         if account:
-            if (
-                self.context.get("unique_id")
-                and self.context["unique_id"] != account.user_id
+            if self.context.get("unique_id") and self.context["unique_id"] != str(
+                account.user_id
             ):
                 errors["base"] = "reauth_failed_matching_account"
             else:
