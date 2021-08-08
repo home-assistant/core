@@ -86,7 +86,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Neato vacuum with config entry."""
     dev = []
-    neato: NeatoHub | None = hass.data.get(NEATO_LOGIN)
+    neato: NeatoHub = hass.data[NEATO_LOGIN]
     mapdata: dict | None = hass.data.get(NEATO_MAP_DATA)
     persistent_maps: dict | None = hass.data.get(NEATO_PERSISTENT_MAPS)
     for robot in hass.data[NEATO_ROBOTS]:
@@ -118,7 +118,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
 
     def __init__(
         self,
-        neato: NeatoHub | None,
+        neato: NeatoHub,
         robot: Robot,
         mapdata: dict | None,
         persistent_maps: dict | None,
@@ -222,8 +222,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         ):
             return
 
-        if self._mapdata:
-            mapdata: dict = self._mapdata[self._robot_serial]["maps"][0]
+        mapdata: dict = self._mapdata[self._robot_serial]["maps"][0]
         self._clean_time_start = mapdata["start_at"]
         self._clean_time_stop = mapdata["end_at"]
         self._clean_area = mapdata["cleaned_area"]

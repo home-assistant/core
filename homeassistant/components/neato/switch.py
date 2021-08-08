@@ -31,9 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Neato switch with config entry."""
     dev = []
-    neato: NeatoHub | None = hass.data.get(NEATO_LOGIN)
-    if neato is None:
-        return
+    neato: NeatoHub = hass.data[NEATO_LOGIN]
 
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
@@ -49,7 +47,7 @@ async def async_setup_entry(
 class NeatoConnectedSwitch(ToggleEntity):
     """Neato Connected Switches."""
 
-    def __init__(self, neato: NeatoHub | None, robot: Robot, switch_type: str) -> None:
+    def __init__(self, neato: NeatoHub, robot: Robot, switch_type: str) -> None:
         """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
@@ -104,9 +102,9 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        if self.type == SWITCH_TYPE_SCHEDULE and self._schedule_state == STATE_ON:
-            return True
-        return False
+        return bool(
+            self.type == SWITCH_TYPE_SCHEDULE and self._schedule_state == STATE_ON
+        )
 
     @property
     def device_info(self) -> DeviceInfo:

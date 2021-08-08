@@ -35,9 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Neato camera with config entry."""
     dev = []
-    neato: NeatoHub | None = hass.data.get(NEATO_LOGIN)
-    if neato is None:
-        return
+    neato: NeatoHub = hass.data[NEATO_LOGIN]
     mapdata: dict | None = hass.data.get(NEATO_MAP_DATA)
     for robot in hass.data[NEATO_ROBOTS]:
         if "maps" in robot.traits:
