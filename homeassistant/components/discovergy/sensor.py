@@ -89,7 +89,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = description
         self._attr_name = (
-            f"{self._meter.measurement_type} "
+            f"{self._meter.measurement_type.capitalize()} "
             f"{self._meter.location.street} "
             f"{self._meter.location.street_number} - "
             f"{self.entity_description.name}"
@@ -100,7 +100,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, self._meter.get_meter_id())},
             ATTR_NAME: self.device_name,
-            ATTR_MODEL: f"{self._meter.type} {self._meter.measurement_type}",
+            ATTR_MODEL: f"{self._meter.type} {self._meter.measurement_type.capitalize()}",
             ATTR_MANUFACTURER: MANUFACTURER,
         }
 
@@ -109,7 +109,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         """Return the name of the actual physical meter."""
         return (
             f"{self._meter.type} ",
-            f"{self._meter.measurement_type} ",
+            f"{self._meter.measurement_type.capitalize()} ",
             f"{self._meter.location.street} " f"{self._meter.location.street_number}",
         )
 
