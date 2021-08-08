@@ -24,12 +24,8 @@ from zwave_js_server.const import (
     VOLTAGE_METER_TYPES,
     VOLTAGE_SENSORS,
     CommandClass,
-    CoolingScale,
-    ElectricScale,
-    GasScale,
-    HeatingScale,
+    MeterScaleType,
     MultilevelSensorType,
-    WaterScale,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
@@ -56,9 +52,7 @@ from .const import (
     ENTITY_DESC_KEY_VOLTAGE,
 )
 
-METER_DEVICE_CLASS_MAP: dict[
-    str, set[CoolingScale | ElectricScale | GasScale | HeatingScale | WaterScale]
-] = {
+METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_METER_TYPES,
     ENTITY_DESC_KEY_ENERGY: ENERGY_METER_TYPES,
