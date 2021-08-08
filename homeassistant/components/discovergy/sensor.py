@@ -81,7 +81,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         description: SensorEntityDescription,
         meter: Meter,
         coordinator: DataUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._value = value
         self._meter = meter

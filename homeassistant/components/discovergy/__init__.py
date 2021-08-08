@@ -36,11 +36,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
 
     if not entry.data[CONF_CONSUMER_KEY] or not entry.data[CONF_CONSUMER_SECRET]:
+        _LOGGER.debug("No consumer token found. Init without consumer token")
         hass.data[DOMAIN][entry.entry_id] = Discovergy(
             APP_NAME, entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
         )
     else:
         # uses stored consumer token pair from config
+        _LOGGER.debug("Reusing consumer token from config")
         hass.data[DOMAIN][entry.entry_id] = Discovergy(
             APP_NAME,
             entry.data[CONF_EMAIL],
