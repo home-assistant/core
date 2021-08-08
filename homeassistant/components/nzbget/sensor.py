@@ -24,61 +24,51 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        # key="article_cache",
         key="ArticleCacheMB",
         name="Article Cache",
         unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
-        # key="average_download_rate",
         key="AverageDownloadRate",
         name="Average Speed",
         unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
-        # key="download_paused",
         key="DownloadPaused",
         name="Download Paused",
         unit_of_measurement=None,
     ),
     SensorEntityDescription(
-        # key="download_rate",
         key="DownloadRate",
         name="Speed",
         unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
-        # key="download_size",
         key="DownloadedSizeMB",
         name="Size",
         unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
-        # key="free_disk_space",
         key="FreeDiskSpaceMB",
         name="Disk Free",
         unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
-        # key="post_job_count",
         key="PostJobCount",
         name="Post Processing Jobs",
         unit_of_measurement="Jobs",
     ),
     SensorEntityDescription(
-        # key="post_paused",
         key="PostPaused",
         name="Post Processing Paused",
         unit_of_measurement=None,
     ),
     SensorEntityDescription(
-        # key="remaining_size",
         key="RemainingSizeMB",
         name="Queue Size",
         unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
-        # key="uptime",
         key="UpTimeSec",
         name="Uptime",
         unit_of_measurement=None,
