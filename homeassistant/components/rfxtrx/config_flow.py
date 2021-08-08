@@ -547,30 +547,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config=None):
-        """Handle the initial step."""
-        entry = await self.async_set_unique_id(DOMAIN)
-        if entry:
-            if CONF_DEVICES not in entry.data:
-                # In version 0.113, devices key was not written to config entry. Update the entry with import data
-                self._abort_if_unique_id_configured(import_config)
-            else:
-                self._abort_if_unique_id_configured()
-
-        host = import_config[CONF_HOST]
-        port = import_config[CONF_PORT]
-        device = import_config[CONF_DEVICE]
-
-        try:
-            if host is not None:
-                await self.async_validate_rfx(host=host, port=port)
-            else:
-                await self.async_validate_rfx(device=device)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(title="RFXTRX", data=import_config)
-
     async def async_validate_rfx(self, host=None, port=None, device=None):
         """Create data for rfxtrx entry."""
         success = await self.hass.async_add_executor_job(
