@@ -250,7 +250,7 @@ def _add_camera(
                 KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
                 camera,
             )
-            | _set_webhook(
+            or _set_webhook(
                 _build_url(
                     device,
                     url,
