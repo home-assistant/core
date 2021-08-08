@@ -181,9 +181,8 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
-        entity_description = ENTITY_DESCRIPTION_KEY_MAP[
-            info.platform_data.get(ATTR_ENTITY_DESC_KEY)
-        ]
+        ed_key = info.platform_data.get(ATTR_ENTITY_DESC_KEY)
+        entity_description = ENTITY_DESCRIPTION_KEY_MAP[ed_key]
         entity_description.info = info
 
         if info.platform_hint == "string_sensor":
