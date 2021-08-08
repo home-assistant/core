@@ -10,22 +10,28 @@ from .const import DOMAIN, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_DESCRIPTION = {
-    "signal": SensorEntityDescription(
-        key="signal",
-        name="GSM Signal IMEI",
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        entity_registry_enabled_default=False,
-    )
-}
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the GSM Signal Sensor sensor."""
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
     imei = await gateway.get_imei_async()
-    async_add_entities([GSMSignalSensor(hass, gateway, imei, SENSOR_DESCRIPTION)], True)
+    async_add_entities(
+        [
+            GSMSignalSensor(
+                hass,
+                gateway,
+                imei,
+                SensorEntityDescription(
+                    key="signal",
+                    name="GSM Signal IMEI",
+                    device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+                    unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+                    entity_registry_enabled_default=False,
+                ),
+            )
+        ],
+        True,
+    )
 
 
 class GSMSignalSensor(SensorEntity):
