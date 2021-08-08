@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
+    CONF_SECRETS_LOCATION,
     CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE,
     CONF_TYPE,
@@ -199,6 +200,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         CONF_TIME_ZONE: cv.time_zone,
         vol.Optional(CONF_INTERNAL_URL): cv.url,
         vol.Optional(CONF_EXTERNAL_URL): cv.url,
+        vol.Optional(CONF_SECRETS_LOCATION): cv.path,
         vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
             cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
         ),

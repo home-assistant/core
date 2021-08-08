@@ -1650,6 +1650,7 @@ class Config:
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
+            "secrets_location": self.secrets_location,
             "safe_mode": self.safe_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
