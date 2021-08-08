@@ -86,7 +86,7 @@ class KebaSensor(SensorEntity):
         device_class=None,
         state_class=None,
         last_reset=None,
-    ):    
+    ):
         """Initialize the KEBA Sensor."""
         self._keba = keba
         self._key = key
