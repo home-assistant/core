@@ -5,11 +5,13 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.dt import utcnow
 
 from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
@@ -70,6 +72,10 @@ class NumberEntity(WiffiEntity, SensorEntity):
             metric.unit_of_measurement, metric.unit_of_measurement
         )
         self._value = metric.value
+
+        if self._is_measurement_entity():
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+
         self.reset_expiration_date()
 
     @property
@@ -97,7 +103,18 @@ class NumberEntity(WiffiEntity, SensorEntity):
         self._unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
         )
+
+        if self._is_metered_entity():
+            # try to detect reset for metered entities
+            if (
+                metric.value is not None
+                and self._value is not None
+                and metric.value < self._value
+            ):
+                self._attr_last_reset = utcnow()
+
         self._value = metric.value
+
         self.async_write_ha_state()
 
 

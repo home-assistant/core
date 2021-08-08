@@ -222,3 +222,10 @@ class WiffiEntity(Entity):
         ):
             self._value = None
             self.async_write_ha_state()
+
+    def _is_measurement_entity(self):
+        return not self._name.endswith("_gestern")
+
+    def _is_metered_entity(self):
+        """Metered entities have a value that keeps increasing until reset."""
+        return self._name.endswith("_pro_h") or self._name.endswith("_heute")
