@@ -73,16 +73,12 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
             STATE_OFF,
         ]
         self._attr_available = False
+        self._attr_should_poll = False
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         return self._support_flags
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def current_temperature(self):
