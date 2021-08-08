@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import (
     ATTR_TEMPERATURE,
@@ -40,7 +41,7 @@ from .const import (
     DATA_TYPE_UINT32,
     DATA_TYPE_UINT64,
 )
-from .modbus import ModbusHub, get_hub
+from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +59,7 @@ async def async_setup_platform(
 
     entities = []
     for entity in discovery_info[CONF_CLIMATES]:
-        hub: ModbusHub = get_hub(discovery_info[CONF_NAME])
+        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
         entities.append(ModbusThermostat(hub, entity))
 
     async_add_entities(entities)

@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.components.modbus import get_hub
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -18,7 +19,7 @@ from homeassistant.components.modbus.const import (
     CONF_HUB,
     DEFAULT_HUB,
 )
-from homeassistant.components.modbus.modbus import ModbusHub, get_hub
+from homeassistant.components.modbus.modbus import ModbusHub
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -52,7 +53,7 @@ async def async_setup_platform(
     """Set up the Flexit Platform."""
     modbus_slave = config.get(CONF_SLAVE)
     name = config.get(CONF_NAME)
-    hub = get_hub(config[CONF_HUB])
+    hub = get_hub(hass, config[CONF_HUB])
     async_add_entities([Flexit(hub, modbus_slave, name)], True)
 
 

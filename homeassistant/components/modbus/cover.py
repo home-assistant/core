@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_hub
 from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
@@ -31,7 +32,7 @@ from .const import (
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
 )
-from .modbus import ModbusHub, get_hub
+from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ async def async_setup_platform(
 
     covers = []
     for cover in discovery_info[CONF_COVERS]:
-        hub: ModbusHub = get_hub(discovery_info[CONF_NAME])
+        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
         covers.append(ModbusCover(hub, cover))
 
     async_add_entities(covers)

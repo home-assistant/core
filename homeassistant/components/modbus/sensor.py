@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_hub
 from .base_platform import BaseStructPlatform
-from .modbus import ModbusHub, get_hub
+from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ async def async_setup_platform(
         return
 
     for entry in discovery_info[CONF_SENSORS]:
-        hub = get_hub(discovery_info[CONF_NAME])
+        hub = get_hub(hass, discovery_info[CONF_NAME])
         sensors.append(ModbusRegisterSensor(hub, entry))
 
     async_add_entities(sensors)

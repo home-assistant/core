@@ -106,18 +106,15 @@ PYMODBUS_CALL = [
 ]
 
 
-_MODBUSHUBS: dict[str, ModbusHub] = {}
-
-
 async def async_modbus_setup(
     hass, config, service_write_register_schema, service_write_coil_schema
 ):
     """Set up Modbus component."""
 
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
-        _MODBUSHUBS[conf_hub[CONF_NAME]] = my_hub
+        hub_collect[conf_hub[CONF_NAME]] = my_hub
 
         # modbus needs to be activated before components are loaded
         # to avoid a racing problem
@@ -134,7 +131,7 @@ async def async_modbus_setup(
     async def async_stop_modbus(event):
         """Stop Modbus service."""
 
-        for client in _MODBUSHUBS.values():
+        for client in hub_collect.values():
             await client.async_close()
             del client
 
@@ -149,11 +146,11 @@ async def async_modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(value, list):
-            await _MODBUSHUBS[client_name].async_pymodbus_call(
+            await hub_collect[client_name].async_pymodbus_call(
                 unit, address, [int(float(i)) for i in value], CALL_TYPE_WRITE_REGISTERS
             )
         else:
-            await _MODBUSHUBS[client_name].async_pymodbus_call(
+            await hub_collect[client_name].async_pymodbus_call(
                 unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
@@ -173,11 +170,11 @@ async def async_modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(state, list):
-            await _MODBUSHUBS[client_name].async_pymodbus_call(
+            await hub_collect[client_name].async_pymodbus_call(
                 unit, address, state, CALL_TYPE_WRITE_COILS
             )
         else:
-            await _MODBUSHUBS[client_name].async_pymodbus_call(
+            await hub_collect[client_name].async_pymodbus_call(
                 unit, address, state, CALL_TYPE_WRITE_COIL
             )
 
@@ -335,8 +332,3 @@ class ModbusHub:
                 # small delay until next request/response
                 await asyncio.sleep(self._msg_wait)
             return result
-
-
-def get_hub(name: str) -> ModbusHub:
-    """Return modbus hub with name."""
-    return _MODBUSHUBS[name]

@@ -359,6 +359,11 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
+def get_hub(hass, name: str):
+    """Return modbus hub with name."""
+    return hass.data[DOMAIN][name]
+
+
 async def async_setup(hass, config):
     """Set up Modbus component."""
     return await async_modbus_setup(
