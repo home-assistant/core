@@ -964,7 +964,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     try:
         cv.entity_id(lookup_value)
         ent_reg = entity_registry.async_get(hass)
-        if (entity := ent_reg.async_get(lookup_value)) and entity.area_id:
+        if entity := ent_reg.async_get(lookup_value):
             return entity.area_id
     except vol.Invalid:
         pass
@@ -973,7 +973,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     # name
     if _ID_STRING.match(str(lookup_value)):
         dev_reg = device_registry.async_get(hass)
-        if (device := dev_reg.async_get(lookup_value)) and device.area_id:
+        if device := dev_reg.async_get(lookup_value):
             return device.area_id
 
     return None
