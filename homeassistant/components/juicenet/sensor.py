@@ -28,6 +28,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="status",
         name="Charging Status",
         unit_of_measurement=None,
+        icon=None,
         device_class=None,
         state_class=None,
     ),
@@ -35,6 +36,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         unit_of_measurement=TEMP_CELSIUS,
+        icon="mdi:thermometer",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -42,6 +44,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="voltage",
         name="Voltage",
         unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=None,
     ),
@@ -49,6 +52,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="amps",
         name="Amps",
         unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        icon="mdi:flash",
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -56,6 +60,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="watts",
         name="Watts",
         unit_of_measurement=POWER_WATT,
+        icon="mdi:flash",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -63,6 +68,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="charge_time",
         name="Charge time",
         unit_of_measurement=TIME_SECONDS,
+        icon="mdi:timer-outline",
         device_class=None,
         state_class=None,
     ),
@@ -70,6 +76,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="energy_added",
         name="Energy added",
         unit_of_measurement=ENERGY_WATT_HOUR,
+        icon="mdi:flash",
         device_class=DEVICE_CLASS_ENERGY,
         state_class=None,
     ),
@@ -103,8 +110,7 @@ class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
     def icon(self):
         """Return the icon of the sensor."""
         icon = None
-        sensor_type = self.entity_description.key
-        if sensor_type == "status":
+        if self.entity_description.key == "status":
             status = self.device.status
             if status == "standby":
                 icon = "mdi:power-plug-off"
@@ -112,18 +118,8 @@ class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
                 icon = "mdi:power-plug"
             elif status == "charging":
                 icon = "mdi:battery-positive"
-        elif sensor_type == "temperature":
-            icon = "mdi:thermometer"
-        elif sensor_type == "voltage":
-            icon = "mdi:flash"
-        elif sensor_type == "amps":
-            icon = "mdi:flash"
-        elif sensor_type == "watts":
-            icon = "mdi:flash"
-        elif sensor_type == "charge_time":
-            icon = "mdi:timer-outline"
-        elif sensor_type == "energy_added":
-            icon = "mdi:flash"
+        else:
+            icon = self.entity_description.icon
         return icon
 
     @property
