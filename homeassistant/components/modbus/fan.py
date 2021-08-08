@@ -8,8 +8,9 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
+from . import get_hub
 from .base_platform import BaseSwitch
-from .const import CONF_FANS, MODBUS_DOMAIN
+from .const import CONF_FANS
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -25,7 +26,7 @@ async def async_setup_platform(
     fans = []
 
     for entry in discovery_info[CONF_FANS]:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
         fans.append(ModbusFan(hub, entry))
     async_add_entities(fans)
 
