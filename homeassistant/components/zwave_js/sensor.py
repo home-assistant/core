@@ -16,6 +16,7 @@ from zwave_js_server.const import (
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
+from zwave_js_server.util.command_class import get_meter_type
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -321,11 +322,11 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     @property
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
-        # FIXME: This is a temporary fix to get a commit in
-        if self._attr_state_class:
+        meter_type = get_meter_type(self.info.primary_value)
+        if meter_type:
             return {
-                ATTR_METER_TYPE: "placeholder",
-                ATTR_METER_TYPE_NAME: "placeholder",
+                ATTR_METER_TYPE: meter_type.value,
+                ATTR_METER_TYPE_NAME: meter_type.name,
             }
         return None
 

@@ -6,9 +6,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from zwave_js_server.const import (
-    CC_SPECIFIC_METER_TYPE,
-    CC_SPECIFIC_SCALE,
-    CC_SPECIFIC_SENSOR_TYPE,
     CO2_SENSORS,
     CO_SENSORS,
     CURRENT_METER_TYPES,
@@ -17,7 +14,6 @@ from zwave_js_server.const import (
     ENERGY_SENSORS,
     HUMIDITY_SENSORS,
     ILLUMINANCE_SENSORS,
-    METER_TYPE_TO_SCALE_ENUM_MAP,
     POWER_FACTOR_METER_TYPES,
     POWER_METER_TYPES,
     POWER_SENSORS,
@@ -28,11 +24,19 @@ from zwave_js_server.const import (
     VOLTAGE_METER_TYPES,
     VOLTAGE_SENSORS,
     CommandClass,
-    MeterType,
+    CoolingScale,
+    ElectricScale,
+    GasScale,
+    HeatingScale,
     MultilevelSensorType,
+    WaterScale,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+from zwave_js_server.util.command_class import (
+    get_meter_scale_type,
+    get_multilevel_sensor_type,
+)
 
 from .const import (
     ENTITY_DESC_KEY_BATTERY,
@@ -52,7 +56,9 @@ from .const import (
     ENTITY_DESC_KEY_VOLTAGE,
 )
 
-METER_DEVICE_CLASS_MAP = {
+METER_DEVICE_CLASS_MAP: dict[
+    str, set[CoolingScale | ElectricScale | GasScale | HeatingScale | WaterScale]
+] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_METER_TYPES,
     ENTITY_DESC_KEY_ENERGY: ENERGY_METER_TYPES,
@@ -60,7 +66,7 @@ METER_DEVICE_CLASS_MAP = {
     ENTITY_DESC_KEY_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
 }
 
-MULTILEVEL_SENSOR_DEVICE_CLASS_MAP = {
+MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_CO: CO_SENSORS,
     ENTITY_DESC_KEY_CO2: CO2_SENSORS,
     ENTITY_DESC_KEY_CURRENT: CURRENT_SENSORS,
@@ -184,31 +190,18 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
         if value.command_class == CommandClass.BATTERY:
             return ENTITY_DESC_KEY_BATTERY
         elif value.command_class == CommandClass.METER:
-            cc_specific = value.metadata.cc_specific
-            meter_type_id = cc_specific[CC_SPECIFIC_METER_TYPE]
-            scale_type_id = cc_specific[CC_SPECIFIC_SCALE]
-            try:
-                meter_type = MeterType(meter_type_id)
-            except ValueError:
-                return None
-            scale_enum = METER_TYPE_TO_SCALE_ENUM_MAP[meter_type]
-            try:
-                scale_type = scale_enum(scale_type_id)
-            except ValueError:
+            scale_type = get_meter_scale_type(value)
+            if not scale_type:
                 return None
             for key, scale_type_set in METER_DEVICE_CLASS_MAP.items():
                 if scale_type in scale_type_set:
                     return key
-            # data[ATTR_METER_TYPE] = meter_type
 
         # Sensor Multilevel CC devices' device class and state class is determined by
         # MultiLevelSensorType (ccSpecific sensorType attribute)
         elif value.command_class == CommandClass.SENSOR_MULTILEVEL:
-            cc_specific = value.metadata.cc_specific
-            sensor_type_id = cc_specific[CC_SPECIFIC_SENSOR_TYPE]
-            try:
-                sensor_type = MultilevelSensorType(sensor_type_id)
-            except ValueError:
+            sensor_type = get_multilevel_sensor_type(value)
+            if not sensor_type:
                 return None
             if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
                 return ENTITY_DESC_KEY_TARGET_TEMPERATURE
