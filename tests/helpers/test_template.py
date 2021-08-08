@@ -1757,6 +1757,11 @@ async def test_area_id(hass):
     assert_result_info(info, None)
     assert info.rate_limit is None
 
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_id(56) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
     area_entry_entity_id = area_registry.async_get_or_create("sensor.fake")
 
     # Test device with single entity, which has no area

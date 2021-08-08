@@ -966,13 +966,13 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
 
     # Check if this could be a device ID (hex string). If not, assume it is an area
     # name
-    if _ID_STRING.match(lookup_value):
+    if _ID_STRING.match(str(lookup_value)):
         dev_reg = device_registry.async_get(hass)
         if device := dev_reg.async_get(lookup_value):
             return device.area_id
 
     area_reg = area_registry.async_get(hass)
-    area = area_reg.async_get_area_by_name(lookup_value)
+    area = area_reg.async_get_area_by_name(str(lookup_value))
     return area.id if area else None
 
 
