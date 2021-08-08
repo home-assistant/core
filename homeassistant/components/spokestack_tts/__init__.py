@@ -1,1 +1,0 @@
-"""The Spokestack TTS component."""

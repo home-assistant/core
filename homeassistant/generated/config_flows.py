@@ -252,6 +252,7 @@ FLOWS = [
     "sonos",
     "speedtestdotnet",
     "spider",
+    "spokestack",
     "spotify",
     "squeezebox",
     "srp_energy",

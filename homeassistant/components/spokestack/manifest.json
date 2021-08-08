@@ -1,0 +1,8 @@
+{
+  "domain": "spokestack",
+  "name": "Spokestack",
+  "documentation": "https://www.home-assistant.io/integrations/spokestack",
+  "config_flow": true,
+  "requirements": ["spokestack==0.0.22"],
+  "codeowners": ["@spokestack", "@will-rice", "@space-pope"]
+}
