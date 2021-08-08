@@ -16,12 +16,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
     entities = []
     imei = await gateway.get_imei_async()
-    name = f"gsm_signal_imei_{imei}"
     entities.append(
         GSMSignalSensor(
             hass,
             gateway,
-            name,
+            imei,
         )
     )
     async_add_entities(entities, True)
@@ -34,28 +33,21 @@ class GSMSignalSensor(SensorEntity):
         self,
         hass,
         gateway,
-        name,
+        imei,
     ):
         """Initialize the GSM Signal sensor."""
+        self._attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, imei)},
+            "name": "SMS Gateway",
+        }
+        self._attr_entity_registry_enabled_default = False
+        self._attr_name = f"GSM Signal IMEI {imei}"
+        self._attr_unique_id = f"{imei}_gsm_signal"
+        self._attr_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
         self._hass = hass
         self._gateway = gateway
-        self._name = name
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SIGNAL_STRENGTH_DECIBELS
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_SIGNAL_STRENGTH
 
     @property
     def available(self):
@@ -78,8 +70,3 @@ class GSMSignalSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the sensor attributes."""
         return self._state
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
