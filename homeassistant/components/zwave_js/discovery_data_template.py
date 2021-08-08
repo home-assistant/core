@@ -34,8 +34,9 @@ from zwave_js_server.const import (
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
@@ -182,10 +183,10 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
         """Resolve helper class data for a discovered value."""
         data = {}
         if value.command_class == CommandClass.BATTERY:
-            data["device_class"] = DEVICE_CLASS_BATTERY
-            data["state_class"] = STATE_CLASS_MEASUREMENT
+            data[ATTR_DEVICE_CLASS] = DEVICE_CLASS_BATTERY
+            data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
         elif value.command_class == CommandClass.METER:
-            data["state_class"] = STATE_CLASS_MEASUREMENT
+            data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
             cc_specific = value.metadata.cc_specific
             meter_type_id = cc_specific[CC_SPECIFIC_METER_TYPE]
             scale_type_id = cc_specific[CC_SPECIFIC_SCALE]
@@ -200,7 +201,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 return data
             for device_class, scale_type_set in METER_DEVICE_CLASS_MAP.items():
                 if scale_type in scale_type_set:
-                    data["device_class"] = device_class
+                    data[ATTR_DEVICE_CLASS] = device_class
                     break
         elif value.command_class == CommandClass.SENSOR_MULTILEVEL:
             cc_specific = value.metadata.cc_specific
@@ -214,9 +215,9 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 sensor_type_set,
             ) in MULTILEVEL_SENSOR_DEVICE_CLASS_MAP.items():
                 if sensor_type in sensor_type_set:
-                    data["device_class"] = device_class
+                    data[ATTR_DEVICE_CLASS] = device_class
                     break
             if sensor_type != MultilevelSensorType.TARGET_TEMPERATURE:
-                data["state_class"] = STATE_CLASS_MEASUREMENT
+                data[ATTR_STATE_CLASS] = STATE_CLASS_MEASUREMENT
 
         return data

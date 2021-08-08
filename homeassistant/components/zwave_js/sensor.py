@@ -19,6 +19,7 @@ from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
+    ATTR_STATE_CLASS,
     DEVICE_CLASS_ENERGY,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
@@ -27,7 +28,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_DEVICE_CLASS, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -63,8 +64,8 @@ async def async_setup_entry(
 
         entity_description = ZwaveSensorEntityDescription("sensor", info=info)
         if info.platform_data:
-            entity_description.device_class = info.platform_data.get("device_class")
-            entity_description.state_class = info.platform_data.get("state_class")
+            entity_description.device_class = info.platform_data.get(ATTR_DEVICE_CLASS)
+            entity_description.state_class = info.platform_data.get(ATTR_STATE_CLASS)
 
         if info.platform_hint == "string_sensor":
             entities.append(ZWaveStringSensor(config_entry, client, entity_description))
