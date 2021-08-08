@@ -139,8 +139,6 @@ SENSOR_TYPES = {
         unit_of_measurement="rpm",
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
-        valid_min_value=200.0,
-        valid_max_value=2000.0,
     ),
     ATTR_MOTOR_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_MOTOR_SPEED,
@@ -148,8 +146,6 @@ SENSOR_TYPES = {
         unit_of_measurement="rpm",
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
-        valid_min_value=200.0,
-        valid_max_value=2000.0,
     ),
     ATTR_ILLUMINANCE: XiaomiMiioSensorDescription(
         key=ATTR_ILLUMINANCE,
