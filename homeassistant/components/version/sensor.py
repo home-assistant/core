@@ -85,8 +85,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         source = HaVersionSource.SUPERVISOR
     elif source == "docker":
         source = HaVersionSource.CONTAINER
-    else:
-        source = HaVersionSource.LOCAL
 
     if (
         source in (HaVersionSource.SUPERVISOR, HaVersionSource.CONTAINER)

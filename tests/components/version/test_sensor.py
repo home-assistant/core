@@ -1,26 +1,63 @@
 """The test for the version sensor platform."""
 from unittest.mock import patch
 
+from pyhaversion import HaVersionSource, exceptions as pyhaversionexceptions
+import pytest
+
 from homeassistant.setup import async_setup_component
 
 MOCK_VERSION = "10.0"
 
 
-async def test_version_sensor(hass):
-    """Test the Version sensor."""
-    config = {"sensor": {"platform": "version"}}
+@pytest.mark.parametrize(
+    "source",
+    [
+        HaVersionSource.CONTAINER,
+        HaVersionSource.PYPI,
+        HaVersionSource.SUPERVISOR,
+        HaVersionSource.HAIO,
+        HaVersionSource.LOCAL,
+        "docker",
+        "hassio",
+    ],
+)
+async def test_version_source(hass, source):
+    """Test the Version sensor with different sources."""
+    config = {
+        "sensor": {"platform": "version", "source": source, "image": "qemux86-64"}
+    }
 
-    assert await async_setup_component(hass, "sensor", config)
-
-
-async def test_version(hass):
-    """Test the Version sensor."""
-    config = {"sensor": {"platform": "version", "name": "test"}}
-
-    with patch("homeassistant.const.__version__", MOCK_VERSION):
+    with patch("pyhaversion.version.HaVersion.version", MOCK_VERSION):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test")
+    name = "current_version" if source == HaVersionSource.LOCAL else "latest_version"
+    state = hass.states.get(f"sensor.{name}")
 
-    assert state.state == "10.0"
+    assert state.state == MOCK_VERSION
+
+
+async def test_version_fetch_exception(hass, caplog):
+    """Test fetch exception thrown during updates."""
+    config = {"sensor": {"platform": "version"}}
+    with patch(
+        "pyhaversion.version.HaVersion.get_version",
+        side_effect=pyhaversionexceptions.HaVersionFetchException(
+            "Fetch exception from pyhaversion"
+        ),
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        assert "Fetch exception from pyhaversion" in caplog.text
+
+
+async def test_version_parse_exception(hass, caplog):
+    """Test parse exception thrown during updates."""
+    config = {"sensor": {"platform": "version"}}
+    with patch(
+        "pyhaversion.version.HaVersion.get_version",
+        side_effect=pyhaversionexceptions.HaVersionParseException,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        assert "Could not parse data received for HaVersionSource.LOCAL" in caplog.text
