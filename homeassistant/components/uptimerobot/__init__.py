@@ -1,11 +1,17 @@
 """The Uptime Robot integration."""
 from __future__ import annotations
 
-from pyuptimerobot import UptimeRobot, UptimeRobotException, UptimeRobotMonitor
+from pyuptimerobot import (
+    UptimeRobot,
+    UptimeRobotAuthenticationException,
+    UptimeRobotException,
+    UptimeRobotMonitor,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     DeviceRegistry,
@@ -74,6 +80,8 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data."""
         try:
             response = await self._api.async_get_monitors()
+        except UptimeRobotAuthenticationException as exception:
+            raise ConfigEntryAuthFailed(exception) from exception
         except UptimeRobotException as exception:
             raise UpdateFailed(exception) from exception
         else:
