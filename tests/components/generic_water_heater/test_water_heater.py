@@ -11,6 +11,7 @@ from homeassistant.components.generic_water_heater import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -24,7 +25,7 @@ from tests.common import mock_restore_cache
 from tests.components.water_heater import common
 
 WATER_HEATER = "water_heater.my_water_heater"
-SWITCH_HEATER = "switch.ac_2"
+SWITCH_HEATER = "switch.ac"
 SENSOR_TEMPERATURE = "sensor.temperature"
 
 
@@ -37,11 +38,10 @@ async def setup_entities(hass):
     await hass.async_block_till_done()
 
     # Got the next code from tests/components/switch/test_init.py
-    platform = getattr(hass.components, "test.switch")
-    platform.init()
-    assert await async_setup_component(
-        hass, switch.DOMAIN, {"switch": {"platform": "test"}}
+    await async_setup_component(
+        hass, switch.DOMAIN, {switch.DOMAIN: [{CONF_PLATFORM: "demo"}]}
     )
+
     await hass.async_block_till_done()
 
     hass.states.async_set(SENSOR_TEMPERATURE, 48)

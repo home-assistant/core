@@ -59,7 +59,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         self, name, heater_entity_id, sensor_entity_id, target_temp, temp_delta, unit
     ):
         """Initialize the water_heater device."""
-        self._name = name
+        self._attr_name = name
         self.heater_entity_id = heater_entity_id
         self.sensor_entity_id = sensor_entity_id
         self._support_flags = SUPPORT_FLAGS_HEATER
@@ -72,7 +72,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
             STATE_ON,
             STATE_OFF,
         ]
-        self._available = False
+        self._attr_available = False
 
     @property
     def supported_features(self):
@@ -83,16 +83,6 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
     def should_poll(self):
         """Return the polling state."""
         return False
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self._available
-
-    @property
-    def name(self):
-        """Return the name of the water_heater device."""
-        return self._name
 
     @property
     def current_temperature(self):
@@ -158,7 +148,7 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
-            self._available = True
+            self._attr_available = True
         self.async_write_ha_state()
 
     async def _async_sensor_changed(self, event):
@@ -182,9 +172,9 @@ class GenericWaterHeater(WaterHeaterEntity, RestoreEntity):
         """Handle heater switch state changes."""
         new_state = event.data.get("new_state")
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._available = False
+            self._attr_available = False
         else:
-            self._available = True
+            self._attr_available = True
             if new_state.state == STATE_ON and self._current_operation == STATE_OFF:
                 self._current_operation = new_state.state
 
