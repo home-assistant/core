@@ -3,40 +3,46 @@ import logging
 
 import gammu  # pylint: disable=import-error
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
 
 from .const import DOMAIN, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_DESCRIPTION = {
+    "signal": SensorEntityDescription(
+        key="signal",
+        name="GSM Signal IMEI",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_registry_enabled_default=False,
+    )
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the GSM Signal Sensor sensor."""
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
-    entities = []
     imei = await gateway.get_imei_async()
-    entities.append(GSMSignalSensor(hass, gateway, imei))
-    async_add_entities(entities, True)
+    async_add_entities([GSMSignalSensor(hass, gateway, imei, SENSOR_DESCRIPTION)], True)
 
 
 class GSMSignalSensor(SensorEntity):
     """Implementation of a GSM Signal sensor."""
 
-    def __init__(self, hass, gateway, imei):
+    def __init__(self, hass, gateway, imei, description):
         """Initialize the GSM Signal sensor."""
-        self._attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
         self._attr_device_info = {
             "identifiers": {(DOMAIN, imei)},
             "name": "SMS Gateway",
         }
-        self._attr_entity_registry_enabled_default = False
-        self._attr_name = f"GSM Signal IMEI {imei}"
-        self._attr_unique_id = f"{imei}_gsm_signal"
-        self._attr_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
+        self._attr_name = f"{description.name} {imei}"
+        self._attr_unique_id = imei
         self._hass = hass
         self._gateway = gateway
         self._state = None
+        self.entity_description = description
 
     @property
     def available(self):
