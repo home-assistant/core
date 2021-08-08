@@ -286,23 +286,17 @@ class ModbusHub:
         self._async_cancel_listener = None
         self._config_delay = 0
 
-    def _pymodbus_close(self):
-        """Close sync. pymodbus."""
+    async def async_close(self):
+        """Disconnect client."""
+        if self._async_cancel_listener:
+            self._async_cancel_listener()
+            self._async_cancel_listener = None
         if self._client:
             try:
                 self._client.close()
             except ModbusException as exception_error:
                 self._log_error(str(exception_error))
         self._client = None
-
-    async def async_close(self):
-        """Disconnect client."""
-        if self._async_cancel_listener:
-            self._async_cancel_listener()
-            self._async_cancel_listener = None
-
-        async with self._lock:
-            return await self.hass.async_add_executor_job(self._pymodbus_close)
 
     def _pymodbus_connect(self):
         """Connect client."""
