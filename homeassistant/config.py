@@ -332,7 +332,8 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     if hass.config.config_dir is None:
         secrets = None
     else:
-        secrets = Secrets(Path(hass.config.config_dir))
+        secrets_dir = Path(hass.config.secrets_location) if hass.config.secrets_location is not None else None
+        secrets = Secrets(Path(hass.config.config_dir), secrets_dir)
 
     # Not using async_add_executor_job because this is an internal method.
     config = await hass.loop.run_in_executor(

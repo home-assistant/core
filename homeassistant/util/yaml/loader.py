@@ -27,13 +27,29 @@ _LOGGER = logging.getLogger(__name__)
 class Secrets:
     """Store secrets while loading YAML."""
 
-    def __init__(self, config_dir: Path) -> None:
+    def __init__(self, config_dir: Path, mounted_secrets_dir: Path | None = None) -> None:
         """Initialize secrets."""
         self.config_dir = config_dir
+        self.mounted_secrets_dir = mounted_secrets_dir
         self._cache: dict[Path, dict[str, str]] = {}
 
     def get(self, requester_path: str, secret: str) -> str:
         """Return the value of a secret."""
+        for secrets in self._recursive_dir_lookup(requester_path):
+            if secret in secrets:
+                _LOGGER.debug(
+                    "Secret %s retrieved from secrets.yaml in folder %s",
+                    secret,
+                    self.mounted_secrets_dir,
+                )
+                return secrets[secret]
+
+        raise HomeAssistantError(f"Secret {secret} not defined")
+
+    def _recursive_dir_lookup(self, requester_path) -> dict[str, str]:
+        if self.mounted_secrets_dir is not None:
+            yield self._load_secret_yaml(self.mounted_secrets_dir)
+
         current_path = Path(requester_path)
 
         secret_dir = current_path
@@ -46,17 +62,7 @@ class Secrets:
                 # We went above the config dir
                 break
 
-            secrets = self._load_secret_yaml(secret_dir)
-
-            if secret in secrets:
-                _LOGGER.debug(
-                    "Secret %s retrieved from secrets.yaml in folder %s",
-                    secret,
-                    secret_dir,
-                )
-                return secrets[secret]
-
-        raise HomeAssistantError(f"Secret {secret} not defined")
+            yield self._load_secret_yaml(secret_dir)
 
     def _load_secret_yaml(self, secret_dir: Path) -> dict[str, str]:
         """Load the secrets yaml from path."""

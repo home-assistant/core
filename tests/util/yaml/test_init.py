@@ -1,6 +1,7 @@
 """Test Home Assistant yaml loader."""
 import io
 import os
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -294,6 +295,7 @@ class TestSecrets(unittest.TestCase):
         config_dir = get_test_config_dir()
         self._yaml_path = os.path.join(config_dir, YAML_CONFIG_FILE)
         self._secret_path = os.path.join(config_dir, yaml.SECRET_YAML)
+        self._mounted_secrets = os.path.join(config_dir, "..")
         self._sub_folder_path = os.path.join(config_dir, "subFolder")
         self._unrelated_path = os.path.join(config_dir, "unrelated")
 
@@ -363,6 +365,39 @@ class TestSecrets(unittest.TestCase):
 
         assert expected == self._yaml["http"]
 
+    def test_secrets_stored_externally(self):
+        """Test loading secrets from an external folder."""
+        expected_http = {"api_password": "pwhttp_external"}
+        expected_component = {"username": "un1", "password": "pw1"}
+
+        load_yaml(
+            os.path.join(self._mounted_secrets, yaml.SECRET_YAML),
+            "http_pw_external: pwhttp_external\n"
+        )
+
+        load_yaml(
+            self._secret_path,
+            "http_pw: pwhttp\n"
+            "comp1_un: un1\n"
+            "comp1_pw: pw1\n"
+            "stale_pw: not_used\n"
+            "logger: debug\n",
+        )
+
+        self._yaml = load_yaml(
+            self._yaml_path,
+            "http:\n"
+            "  api_password: !secret http_pw_external\n"
+            "component:\n"
+            "  username: !secret comp1_un\n"
+            "  password: !secret comp1_pw\n"
+            "",
+            yaml_loader.Secrets(get_test_config_dir(), Path(self._mounted_secrets)),
+        )
+
+        assert expected_http == self._yaml["http"]
+        assert expected_component == self._yaml["component"]
+
     def test_secrets_from_unrelated_fails(self):
         """Test loading secrets from unrelated folder fails."""
         load_yaml(os.path.join(self._unrelated_path, yaml.SECRET_YAML), "test: failure")
@@ -389,7 +424,7 @@ class TestSecrets(unittest.TestCase):
         assert mock_error.call_count == 1, "Expected an error about logger: value"
 
     def test_secrets_are_not_dict(self):
-        """Did secrets handle non-dict file."""
+        """Did secrets handle non - dict file."""
         FILES[
             self._secret_path
         ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"

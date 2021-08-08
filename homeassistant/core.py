@@ -1576,6 +1576,9 @@ class Config:
         # Use legacy template behavior
         self.legacy_templates: bool = False
 
+        # Store secrets outside configuration folder
+        self.secrets_location: str | None = None
+
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
 
