@@ -119,6 +119,8 @@ from .validators import number_validator, scan_interval_validator, struct_valida
 
 _LOGGER = logging.getLogger(__name__)
 
+ModbusDict: dict = {}
+
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
 

@@ -10,7 +10,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .base_platform import BasePlatform
-from .const import MODBUS_DOMAIN
+from .modbus import get_hub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ async def async_setup_platform(
         return
 
     for entry in discovery_info[CONF_BINARY_SENSORS]:
-        hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub = get_hub(discovery_info[CONF_NAME])
         sensors.append(ModbusBinarySensor(hub, entry))
 
     async_add_entities(sensors)

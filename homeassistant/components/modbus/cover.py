@@ -30,9 +30,8 @@ from .const import (
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
-    MODBUS_DOMAIN,
 )
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +49,7 @@ async def async_setup_platform(
 
     covers = []
     for cover in discovery_info[CONF_COVERS]:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub: ModbusHub = get_hub(discovery_info[CONF_NAME])
         covers.append(ModbusCover(hub, cover))
 
     async_add_entities(covers)

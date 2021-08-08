@@ -9,8 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .base_platform import BaseSwitch
-from .const import MODBUS_DOMAIN
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ async def async_setup_platform(
 
     lights = []
     for entry in discovery_info[CONF_LIGHTS]:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub: ModbusHub = get_hub(discovery_info[CONF_NAME])
         lights.append(ModbusLight(hub, entry))
     async_add_entities(lights)
 
