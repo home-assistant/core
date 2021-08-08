@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    STATE_CLASS_MEASUREMENT,
     SensorEntityDescription,
 )
 from homeassistant.const import (
@@ -77,7 +78,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "ups.load": SensorEntityDescription(
         key="ups.load",
@@ -85,7 +86,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
         device_class=None,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "ups.load.high": SensorEntityDescription(
         key="ups.load.high",
@@ -197,7 +198,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
         device_class=None,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "ups.power": SensorEntityDescription(
         key="ups.power",
@@ -205,7 +206,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=POWER_VOLT_AMPERE,
         icon="mdi:flash",
         device_class=None,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "ups.power.nominal": SensorEntityDescription(
         key="ups.power.nominal",
@@ -221,7 +222,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=POWER_WATT,
         icon=None,
         device_class=DEVICE_CLASS_POWER,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "ups.realpower.nominal": SensorEntityDescription(
         key="ups.realpower.nominal",
@@ -293,7 +294,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=PERCENTAGE,
         icon=None,
         device_class=DEVICE_CLASS_BATTERY,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "battery.charge.low": SensorEntityDescription(
         key="battery.charge.low",
@@ -333,7 +334,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         icon=None,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "battery.voltage.nominal": SensorEntityDescription(
         key="battery.voltage.nominal",
@@ -373,7 +374,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         icon="mdi:flash",
         device_class=None,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "battery.current.total": SensorEntityDescription(
         key="battery.current.total",
@@ -389,7 +390,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "battery.runtime": SensorEntityDescription(
         key="battery.runtime",
@@ -501,7 +502,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         icon=None,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "input.voltage.nominal": SensorEntityDescription(
         key="input.voltage.nominal",
@@ -517,7 +518,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=FREQUENCY_HERTZ,
         icon="mdi:flash",
         device_class=None,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "input.frequency.nominal": SensorEntityDescription(
         key="input.frequency.nominal",
@@ -541,7 +542,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         icon="mdi:flash",
         device_class=None,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "output.current.nominal": SensorEntityDescription(
         key="output.current.nominal",
@@ -557,7 +558,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         icon=None,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "output.voltage.nominal": SensorEntityDescription(
         key="output.voltage.nominal",
@@ -573,7 +574,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=FREQUENCY_HERTZ,
         icon="mdi:flash",
         device_class=None,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "output.frequency.nominal": SensorEntityDescription(
         key="output.frequency.nominal",
@@ -589,7 +590,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=PERCENTAGE,
         icon=None,
         device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "ambient.temperature": SensorEntityDescription(
         key="ambient.temperature",
@@ -597,7 +598,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
 
