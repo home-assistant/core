@@ -1,10 +1,16 @@
 """Support for KEBA charging station sensors."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
+from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
 )
+from homeassistant.util import dt
 
 from . import DOMAIN
 
@@ -24,6 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "max_current",
             "mdi:flash",
             ELECTRIC_CURRENT_AMPERE,
+            DEVICE_CLASS_CURRENT,
         ),
         KebaSensor(
             keba,
@@ -32,6 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "energy_target",
             "mdi:gauge",
             ENERGY_KILO_WATT_HOUR,
+            DEVICE_CLASS_ENERGY,
         ),
         KebaSensor(
             keba,
@@ -41,6 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "mdi:flash",
             "kW",
             DEVICE_CLASS_POWER,
+            STATE_CLASS_MEASUREMENT,
         ),
         KebaSensor(
             keba,
@@ -49,6 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "session_energy",
             "mdi:gauge",
             ENERGY_KILO_WATT_HOUR,
+            DEVICE_CLASS_ENERGY,
         ),
         KebaSensor(
             keba,
@@ -57,6 +67,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "total_energy",
             "mdi:gauge",
             ENERGY_KILO_WATT_HOUR,
+            DEVICE_CLASS_ENERGY,
+            STATE_CLASS_MEASUREMENT,
+            dt.utc_from_timestamp(0),
         ),
     ]
     async_add_entities(sensors)
@@ -65,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class KebaSensor(SensorEntity):
     """The entity class for KEBA charging stations sensors."""
 
-    def __init__(self, keba, key, name, entity_type, icon, unit, device_class=None):
+    def __init__(self, keba, key, name, entity_type, icon, unit, device_class=None, state_class=None, last_reset=None):
         """Initialize the KEBA Sensor."""
         self._keba = keba
         self._key = key
@@ -74,6 +87,10 @@ class KebaSensor(SensorEntity):
         self._icon = icon
         self._unit = unit
         self._device_class = device_class
+
+        self._attr_device_class = device_class
+        self._attr_state_class = state_class
+        self._attr_last_reset = last_reset
 
         self._state = None
         self._attributes = {}
