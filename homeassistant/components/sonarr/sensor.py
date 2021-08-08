@@ -162,7 +162,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         """Update entity."""
         app = await self.sonarr.update()
         self._disks = app.disks
-        self._total_free = sum([disk.free for disk in self._disks])
+        self._total_free = sum(disk.free for disk in self._disks)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

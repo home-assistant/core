@@ -126,14 +126,28 @@ def test_types(type_name, entity_id, state, attrs, config):
             "Window",
             "cover.set_position",
             "open",
-            {ATTR_DEVICE_CLASS: "window", ATTR_SUPPORTED_FEATURES: 4},
+            {
+                ATTR_DEVICE_CLASS: "window",
+                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+            },
         ),
-        ("WindowCovering", "cover.set_position", "open", {ATTR_SUPPORTED_FEATURES: 4}),
+        (
+            "WindowCovering",
+            "cover.set_position",
+            "open",
+            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION},
+        ),
+        (
+            "WindowCovering",
+            "cover.tilt",
+            "open",
+            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_TILT_POSITION},
+        ),
         (
             "WindowCoveringBasic",
             "cover.open_window",
             "open",
-            {ATTR_SUPPORTED_FEATURES: 3},
+            {ATTR_SUPPORTED_FEATURES: (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)},
         ),
     ],
 )

@@ -1,4 +1,8 @@
 """Binary sensor for Shelly."""
+from __future__ import annotations
+
+from typing import Final
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_GAS,
@@ -12,6 +16,9 @@ from homeassistant.components.binary_sensor import (
     STATE_ON,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import (
     BlockAttributeDescription,
@@ -24,7 +31,7 @@ from .entity import (
 )
 from .utils import is_momentary_input
 
-SENSORS = {
+SENSORS: Final = {
     ("device", "overtemp"): BlockAttributeDescription(
         name="Overheating", device_class=DEVICE_CLASS_PROBLEM
     ),
@@ -83,7 +90,7 @@ SENSORS = {
     ),
 }
 
-REST_SENSORS = {
+REST_SENSORS: Final = {
     "cloud": RestAttributeDescription(
         name="Cloud",
         value=lambda status, _: status["cloud"]["connected"],
@@ -103,7 +110,11 @@ REST_SENSORS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up sensors for device."""
     if config_entry.data["sleep_period"]:
         await async_setup_entry_attribute_entities(
@@ -130,7 +141,7 @@ class ShellyBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
     """Shelly binary sensor entity."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sensor state is on."""
         return bool(self.attribute_value)
 
@@ -139,7 +150,7 @@ class ShellyRestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     """Shelly REST binary sensor entity."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if REST sensor state is on."""
         return bool(self.attribute_value)
 
@@ -150,7 +161,7 @@ class ShellySleepingBinarySensor(
     """Represent a shelly sleeping binary sensor."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sensor state is on."""
         if self.block is not None:
             return bool(self.attribute_value)

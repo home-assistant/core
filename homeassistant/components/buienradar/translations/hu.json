@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "A kamera k\u00e9peinek megjelen\u00edt\u00e9s\u00e9hez az orsz\u00e1g k\u00f3dja.",
+                    "delta": "A kamera k\u00e9pfriss\u00edt\u00e9s\u00e9nek id\u0151tartama m\u00e1sodpercekben",
+                    "timeframe": "Percek, hogy el\u0151retekints\u00fcnk a csapad\u00e9k el\u0151rejelz\u00e9s\u00e9re"
+                }
+            }
+        }
+    }
+}

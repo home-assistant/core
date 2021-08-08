@@ -241,7 +241,7 @@ class OctoPrintAPI:
             return response.json()
 
         except requests.ConnectionError as exc_con:
-            log_string = "Failed to connect to Octoprint server. Error: %s" % exc_con
+            log_string = f"Failed to connect to Octoprint server. Error: {exc_con}"
 
             if not self.available_error_logged:
                 _LOGGER.error(log_string)
@@ -254,7 +254,7 @@ class OctoPrintAPI:
         except requests.HTTPError as ex_http:
             status_code = ex_http.response.status_code
 
-            log_string = "Failed to update OctoPrint status. Error: %s" % ex_http
+            log_string = f"Failed to update OctoPrint status. Error: {ex_http}"
             # Only log the first failure
             if endpoint == "job":
                 log_string = f"Endpoint: job {log_string}"

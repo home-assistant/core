@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Coroutine
 
-import zigpy.zcl.clusters.smartenergy as smartenergy
+from zigpy.zcl.clusters import smartenergy
 
 from homeassistant.const import (
     POWER_WATT,

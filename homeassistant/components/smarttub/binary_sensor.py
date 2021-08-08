@@ -29,9 +29,16 @@ ATTR_CREATED_AT = "created_at"
 ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
-ATTR_SNOOZE_DAYS = "days"
+ATTR_REMINDER_DAYS = "days"
+RESET_REMINDER_SCHEMA = {
+    vol.Required(ATTR_REMINDER_DAYS): vol.All(
+        vol.Coerce(int), vol.Range(min=30, max=365)
+    )
+}
 SNOOZE_REMINDER_SCHEMA = {
-    vol.Required(ATTR_SNOOZE_DAYS): vol.All(vol.Coerce(int), vol.Range(min=10, max=120))
+    vol.Required(ATTR_REMINDER_DAYS): vol.All(
+        vol.Coerce(int), vol.Range(min=10, max=120)
+    )
 }
 
 
@@ -57,6 +64,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         "snooze_reminder",
         SNOOZE_REMINDER_SCHEMA,
         "async_snooze",
+    )
+    platform.async_register_entity_service(
+        "reset_reminder",
+        RESET_REMINDER_SCHEMA,
+        "async_reset",
     )
 
 
@@ -117,11 +129,17 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         """Return the state attributes."""
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
+            ATTR_REMINDER_DAYS: self.reminder.remaining_days,
         }
 
     async def async_snooze(self, days):
         """Snooze this reminder for the specified number of days."""
         await self.reminder.snooze(days)
+        await self.coordinator.async_request_refresh()
+
+    async def async_reset(self, days):
+        """Dismiss this reminder, and reset it to the specified number of days."""
+        await self.reminder.reset(days)
         await self.coordinator.async_request_refresh()
 
 

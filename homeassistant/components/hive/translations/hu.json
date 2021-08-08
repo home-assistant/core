@@ -31,6 +31,7 @@
             "user": {
                 "data": {
                     "password": "Jelsz\u00f3",
+                    "scan_interval": "Szkennel\u00e9si intervallum (m\u00e1sodperc)",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
                 "description": "Add meg a Hive bejelentkez\u00e9si adatait \u00e9s konfigur\u00e1ci\u00f3j\u00e1t.",
@@ -41,6 +42,10 @@
     "options": {
         "step": {
             "user": {
+                "data": {
+                    "scan_interval": "Szkennel\u00e9si intervallum (m\u00e1sodperc)"
+                },
+                "description": "Friss\u00edtse a vizsg\u00e1lati intervallumot az adatok gyakrabban t\u00f6rt\u00e9n\u0151 lek\u00e9rdez\u00e9s\u00e9hez.",
                 "title": "Hive be\u00e1ll\u00edt\u00e1sok"
             }
         }

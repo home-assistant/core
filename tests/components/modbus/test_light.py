@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_LIGHTS,
     CONF_NAME,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_TYPE,
     STATE_OFF,
@@ -32,84 +33,100 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+from .conftest import ReadResult, base_test, prepare_service_update
 
-from tests.common import mock_restore_cache
+LIGHT_NAME = "test_light"
+ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
 
 
 @pytest.mark.parametrize(
     "do_config",
     [
         {
-            CONF_ADDRESS: 1234,
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: LIGHT_NAME,
+                    CONF_ADDRESS: 1234,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_WRITE_TYPE: CALL_TYPE_COIL,
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: LIGHT_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: {
-                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_ADDRESS: 1235,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-            },
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: LIGHT_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: {
-                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_ADDRESS: 1235,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-            },
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: LIGHT_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: {
-                CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-                CONF_ADDRESS: 1235,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-            },
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: LIGHT_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: None,
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: LIGHT_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: None,
+                }
+            ]
         },
     ],
 )
-async def test_config_light(hass, do_config):
-    """Run test for light."""
-    device_name = "test_light"
-
-    device_config = {
-        CONF_NAME: device_name,
-        **do_config,
-    }
-
-    await base_config_test(
-        hass,
-        device_config,
-        device_name,
-        LIGHT_DOMAIN,
-        CONF_LIGHTS,
-        None,
-        method_discovery=True,
-    )
+async def test_config_light(hass, mock_modbus):
+    """Run configuration test for light."""
+    assert LIGHT_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])
@@ -145,17 +162,16 @@ async def test_config_light(hass, do_config):
 )
 async def test_all_light(hass, call_type, regs, verify, expected):
     """Run test for given config."""
-    light_name = "modbus_test_light"
     state = await base_test(
         hass,
         {
-            CONF_NAME: light_name,
+            CONF_NAME: LIGHT_NAME,
             CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
             CONF_WRITE_TYPE: call_type,
             **verify,
         },
-        light_name,
+        LIGHT_NAME,
         LIGHT_DOMAIN,
         CONF_LIGHTS,
         None,
@@ -167,34 +183,34 @@ async def test_all_light(hass, call_type, regs, verify, expected):
     assert state == expected
 
 
-async def test_restore_state_light(hass):
+@pytest.mark.parametrize(
+    "mock_test_state",
+    [(State(ENTITY_ID, STATE_ON),)],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: LIGHT_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ]
+        },
+    ],
+)
+async def test_restore_state_light(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
-
-    light_name = "test_light"
-    entity_id = f"{LIGHT_DOMAIN}.{light_name}"
-    test_value = STATE_ON
-    config_light = {CONF_NAME: light_name, CONF_ADDRESS: 17}
-    mock_restore_cache(
-        hass,
-        (State(f"{entity_id}", test_value),),
-    )
-    await base_config_test(
-        hass,
-        config_light,
-        light_name,
-        LIGHT_DOMAIN,
-        CONF_LIGHTS,
-        None,
-        method_discovery=True,
-    )
-    assert hass.states.get(entity_id).state == test_value
+    assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
 
 
 async def test_light_service_turn(hass, caplog, mock_pymodbus):
     """Run test for service turn_on/turn_off."""
 
-    entity_id1 = f"{LIGHT_DOMAIN}.light1"
-    entity_id2 = f"{LIGHT_DOMAIN}.light2"
+    ENTITY_ID2 = f"{ENTITY_ID}2"
     config = {
         MODBUS_DOMAIN: {
             CONF_TYPE: "tcp",
@@ -202,14 +218,16 @@ async def test_light_service_turn(hass, caplog, mock_pymodbus):
             CONF_PORT: 5501,
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: "light1",
+                    CONF_NAME: LIGHT_NAME,
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
                 },
                 {
-                    CONF_NAME: "light2",
+                    CONF_NAME: f"{LIGHT_NAME}2",
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {},
                 },
             ],
@@ -219,54 +237,53 @@ async def test_light_service_turn(hass, caplog, mock_pymodbus):
     await hass.async_block_till_done()
     assert MODBUS_DOMAIN in hass.config.components
 
-    assert hass.states.get(entity_id1).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": entity_id1}
+        "light", "turn_on", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id1).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity_id1}
+        "light", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id1).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
-    assert hass.states.get(entity_id2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": entity_id2}
+        "light", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_ON
+    assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity_id2}
+        "light", "turn_off", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
 
     mock_pymodbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": entity_id2}
+        "light", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
     mock_pymodbus.write_coil.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity_id1}
+        "light", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id1).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_service_light_update(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
 
-    entity_id = "light.test"
     config = {
         CONF_LIGHTS: [
             {
-                CONF_NAME: "test",
+                CONF_NAME: LIGHT_NAME,
                 CONF_ADDRESS: 1234,
                 CONF_WRITE_TYPE: CALL_TYPE_COIL,
                 CONF_VERIFY: {},
@@ -279,11 +296,11 @@ async def test_service_light_update(hass, mock_pymodbus):
         config,
     )
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
     mock_pymodbus.read_coils.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF

@@ -3,8 +3,12 @@
   "name": "motionEye",
   "documentation": "https://www.home-assistant.io/integrations/motioneye",
   "config_flow": true,
+  "dependencies": [
+    "http",
+    "webhook"
+  ],
   "requirements": [
-    "motioneye-client==0.3.6"
+    "motioneye-client==0.3.11"
   ],
   "codeowners": [
     "@dermotduffy"

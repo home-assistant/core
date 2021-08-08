@@ -1,22 +1,23 @@
 """Component to interface with binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import StateType
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ DEVICE_CLASSES = [
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""
     component = hass.data[DOMAIN] = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
@@ -137,19 +138,27 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class BinarySensorEntityDescription(EntityDescription):
+    """A class that describes binary sensor entities."""
 
 
 class BinarySensorEntity(Entity):
     """Represent a binary sensor."""
 
+    entity_description: BinarySensorEntityDescription
     _attr_is_on: bool | None = None
     _attr_state: None = None
 
@@ -168,9 +177,9 @@ class BinarySensorEntity(Entity):
 class BinarySensorDevice(BinarySensorEntity):
     """Represent a binary sensor (for backwards compatibility)."""
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any):
         """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
         _LOGGER.warning(
             "BinarySensorDevice is deprecated, modify %s to extend BinarySensorEntity",
             cls.__name__,

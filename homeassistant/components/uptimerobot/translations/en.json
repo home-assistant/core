@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "unknown": "Unexpected error",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "description": "You need to supply a read-only API key from Uptime Robot",
+                "data": {
+                    "api_key": "API Key"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Reauthenticate Integration",
+                "description": "You need to supply a read-only API key from Uptime Robot",
+                "data": {
+                    "api_key": "API Key"
+                }
+            }
+        }
+    }
+}

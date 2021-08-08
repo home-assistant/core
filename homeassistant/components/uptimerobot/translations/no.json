@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                }
+            }
+        }
+    }
+}

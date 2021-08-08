@@ -96,7 +96,7 @@ def nest_update_event_broker(hass, nest):
     _LOGGER.debug("Stop listening for nest.update_event")
 
 
-async def async_setup_legacy(hass, config):
+async def async_setup_legacy(hass, config) -> bool:
     """Set up Nest components using the legacy nest API."""
     if DOMAIN not in config:
         return True
@@ -122,7 +122,7 @@ async def async_setup_legacy(hass, config):
     return True
 
 
-async def async_setup_legacy_entry(hass, entry):
+async def async_setup_legacy_entry(hass, entry) -> bool:
     """Set up Nest from legacy config entry."""
 
     nest = Nest(access_token=entry.data["tokens"]["access_token"])

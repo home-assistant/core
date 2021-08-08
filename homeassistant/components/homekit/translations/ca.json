@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Dominis a incloure"
                 },
-                "description": "Selecciona els dominis a incloure. S'inclouran totes les entitats del domini compatibles. Es crear\u00e0 una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
+                "description": "Selecciona els dominis a incloure. S'inclouran totes les entitats del domini compatibles. Es crear\u00e0 una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV, control remot basat per activitat i c\u00e0mera.",
                 "title": "Selecciona els dominis a incloure"
             }
         }

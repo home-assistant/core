@@ -1,6 +1,11 @@
 """Support for monitoring a Smappee energy sensor."""
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
+from homeassistant.const import (
+    DEVICE_CLASS_POWER,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+)
 
 from .const import DOMAIN
 
@@ -93,7 +98,7 @@ VOLTAGE_SENSORS = {
     "phase_voltages_a": [
         "Phase voltages - A",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_a",
         None,
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
@@ -101,7 +106,7 @@ VOLTAGE_SENSORS = {
     "phase_voltages_b": [
         "Phase voltages - B",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_b",
         None,
         ["TWO", "THREE_STAR", "THREE_DELTA"],
@@ -109,7 +114,7 @@ VOLTAGE_SENSORS = {
     "phase_voltages_c": [
         "Phase voltages - C",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_c",
         None,
         ["THREE_STAR"],
@@ -117,7 +122,7 @@ VOLTAGE_SENSORS = {
     "line_voltages_a": [
         "Line voltages - A",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_a",
         None,
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
@@ -125,7 +130,7 @@ VOLTAGE_SENSORS = {
     "line_voltages_b": [
         "Line voltages - B",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_b",
         None,
         ["TWO", "THREE_STAR", "THREE_DELTA"],
@@ -133,7 +138,7 @@ VOLTAGE_SENSORS = {
     "line_voltages_c": [
         "Line voltages - C",
         "mdi:flash",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_c",
         None,
         ["THREE_STAR", "THREE_DELTA"],
@@ -149,38 +154,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for service_location in smappee_base.smappee.service_locations.values():
         # Add all basic sensors (realtime values and aggregators)
         # Some are available in local only env
-        for sensor in TREND_SENSORS:
-            if not service_location.local_polling or TREND_SENSORS[sensor][5]:
+        for sensor, attributes in TREND_SENSORS.items():
+            if not service_location.local_polling or attributes[5]:
                 entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
                         service_location=service_location,
                         sensor=sensor,
-                        attributes=TREND_SENSORS[sensor],
+                        attributes=attributes,
                     )
                 )
 
         if service_location.has_reactive_value:
-            for reactive_sensor in REACTIVE_SENSORS:
+            for reactive_sensor, attributes in REACTIVE_SENSORS.items():
                 entities.append(
                     SmappeeSensor(
                         smappee_base=smappee_base,
                         service_location=service_location,
                         sensor=reactive_sensor,
-                        attributes=REACTIVE_SENSORS[reactive_sensor],
+                        attributes=attributes,
                     )
                 )
 
         # Add solar sensors (some are available in local only env)
         if service_location.has_solar_production:
-            for sensor in SOLAR_SENSORS:
-                if not service_location.local_polling or SOLAR_SENSORS[sensor][5]:
+            for sensor, attributes in SOLAR_SENSORS.items():
+                if not service_location.local_polling or attributes[5]:
                     entities.append(
                         SmappeeSensor(
                             smappee_base=smappee_base,
                             service_location=service_location,
                             sensor=sensor,
-                            attributes=SOLAR_SENSORS[sensor],
+                            attributes=attributes,
                         )
                     )
 
@@ -263,7 +268,7 @@ class SmappeeSensor(SensorEntity):
     @property
     def name(self):
         """Return the name for this sensor."""
-        if self._sensor in ["sensor", "load"]:
+        if self._sensor in ("sensor", "load"):
             return (
                 f"{self._service_location.service_location_name} - "
                 f"{self._sensor.title()} - {self._name}"
@@ -296,7 +301,7 @@ class SmappeeSensor(SensorEntity):
         self,
     ):
         """Return the unique ID for this sensor."""
-        if self._sensor in ["load", "sensor"]:
+        if self._sensor in ("load", "sensor"):
             return (
                 f"{self._service_location.device_serial_number}-"
                 f"{self._service_location.service_location_id}-"
@@ -332,11 +337,11 @@ class SmappeeSensor(SensorEntity):
             self._state = self._service_location.solar_power
         elif self._sensor == "alwayson":
             self._state = self._service_location.alwayson
-        elif self._sensor in [
+        elif self._sensor in (
             "phase_voltages_a",
             "phase_voltages_b",
             "phase_voltages_c",
-        ]:
+        ):
             phase_voltages = self._service_location.phase_voltages
             if phase_voltages is not None:
                 if self._sensor == "phase_voltages_a":
@@ -345,7 +350,7 @@ class SmappeeSensor(SensorEntity):
                     self._state = phase_voltages[1]
                 elif self._sensor == "phase_voltages_c":
                     self._state = phase_voltages[2]
-        elif self._sensor in ["line_voltages_a", "line_voltages_b", "line_voltages_c"]:
+        elif self._sensor in ("line_voltages_a", "line_voltages_b", "line_voltages_c"):
             line_voltages = self._service_location.line_voltages
             if line_voltages is not None:
                 if self._sensor == "line_voltages_a":
@@ -354,14 +359,14 @@ class SmappeeSensor(SensorEntity):
                     self._state = line_voltages[1]
                 elif self._sensor == "line_voltages_c":
                     self._state = line_voltages[2]
-        elif self._sensor in [
+        elif self._sensor in (
             "power_today",
             "power_current_hour",
             "power_last_5_minutes",
             "solar_today",
             "solar_current_hour",
             "alwayson_today",
-        ]:
+        ):
             trend_value = self._service_location.aggregated_values.get(self._sensor)
             self._state = round(trend_value) if trend_value is not None else None
         elif self._sensor == "load":

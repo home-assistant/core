@@ -34,7 +34,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
     _async_get_device_automations as async_get_device_automations,
 )
-from homeassistant.components.mqtt.models import Message
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -353,7 +353,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = Message(topic, payload, qos, retain)
+    msg = ReceiveMessage(topic, payload, qos, retain)
     hass.data["mqtt"]._mqtt_handle_message(msg)
 
 

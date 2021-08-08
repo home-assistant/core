@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
+    CONF_CURRENCY,
     CONF_CUSTOMIZE,
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
@@ -238,6 +239,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         # pylint: disable=no-value-for-parameter
         vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
         vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
+        vol.Optional(CONF_CURRENCY): cv.currency,
     }
 )
 
@@ -288,30 +290,30 @@ def _write_default_config(config_dir: str) -> bool:
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
-        with open(config_path, "wt") as config_file:
+        with open(config_path, "wt", encoding="utf8") as config_file:
             config_file.write(DEFAULT_CONFIG)
 
         if not os.path.isfile(secret_path):
-            with open(secret_path, "wt") as secret_file:
+            with open(secret_path, "wt", encoding="utf8") as secret_file:
                 secret_file.write(DEFAULT_SECRETS)
 
-        with open(version_path, "wt") as version_file:
+        with open(version_path, "wt", encoding="utf8") as version_file:
             version_file.write(__version__)
 
         if not os.path.isfile(group_yaml_path):
-            with open(group_yaml_path, "wt"):
+            with open(group_yaml_path, "wt", encoding="utf8"):
                 pass
 
         if not os.path.isfile(automation_yaml_path):
-            with open(automation_yaml_path, "wt") as automation_file:
+            with open(automation_yaml_path, "wt", encoding="utf8") as automation_file:
                 automation_file.write("[]")
 
         if not os.path.isfile(script_yaml_path):
-            with open(script_yaml_path, "wt"):
+            with open(script_yaml_path, "wt", encoding="utf8"):
                 pass
 
         if not os.path.isfile(scene_yaml_path):
-            with open(scene_yaml_path, "wt"):
+            with open(scene_yaml_path, "wt", encoding="utf8"):
                 pass
 
         return True
@@ -377,7 +379,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     version_path = hass.config.path(VERSION_FILE)
 
     try:
-        with open(version_path) as inp:
+        with open(version_path, encoding="utf8") as inp:
             conf_version = inp.readline().strip()
     except FileNotFoundError:
         # Last version to not have this file
@@ -421,7 +423,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
-    with open(version_path, "wt") as outp:
+    with open(version_path, "wt", encoding="utf8") as outp:
         outp.write(__version__)
 
 
@@ -511,7 +513,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     if any(
         k in config
-        for k in [
+        for k in (
             CONF_LATITUDE,
             CONF_LONGITUDE,
             CONF_NAME,
@@ -520,7 +522,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
-        ]
+            CONF_CURRENCY,
+        )
     ):
         hac.config_source = SOURCE_YAML
 
@@ -533,6 +536,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
         (CONF_EXTERNAL_URL, "external_url"),
         (CONF_MEDIA_DIRS, "media_dirs"),
         (CONF_LEGACY_TEMPLATES, "legacy_templates"),
+        (CONF_CURRENCY, "currency"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -719,7 +723,22 @@ async def merge_packages_config(
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
-            merge_list = hasattr(component, "PLATFORM_SCHEMA")
+            try:
+                config_platform: ModuleType | None = integration.get_platform("config")
+                # Test if config platform has a config validator
+                if not hasattr(config_platform, "async_validate_config"):
+                    config_platform = None
+            except ImportError:
+                config_platform = None
+
+            merge_list = False
+
+            # If integration has a custom config validator, it needs to provide a hint.
+            if config_platform is not None:
+                merge_list = config_platform.PACKAGE_MERGE_HINT == "list"  # type: ignore[attr-defined]
+
+            if not merge_list:
+                merge_list = hasattr(component, "PLATFORM_SCHEMA")
 
             if not merge_list and hasattr(component, "CONFIG_SCHEMA"):
                 merge_list = _identify_config_schema(component) == "list"
@@ -899,7 +918,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     This method is a coroutine.
     """
     # pylint: disable=import-outside-toplevel
-    import homeassistant.helpers.check_config as check_config
+    from homeassistant.helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
 

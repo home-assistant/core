@@ -10,7 +10,7 @@ import attr
 import pychromecast
 import pytest
 
-from homeassistant.components import tts
+from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.components.media_player.const import (
@@ -27,7 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -702,8 +702,20 @@ async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock):
     chromecast.start_app.assert_called_once_with("abc123")
 
     # Play_media - cast with app name (quick play)
-    await common.async_play_media(hass, "cast", '{"app_name": "youtube"}', entity_id)
-    quick_play_mock.assert_called_once_with(ANY, "youtube", {})
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            media_player.ATTR_MEDIA_CONTENT_TYPE: "cast",
+            media_player.ATTR_MEDIA_CONTENT_ID: '{"app_name":"youtube"}',
+            media_player.ATTR_MEDIA_EXTRA: {"metadata": {"metadatatype": 3}},
+        },
+        blocking=True,
+    )
+    quick_play_mock.assert_called_once_with(
+        ANY, "youtube", {"metadata": {"metadatatype": 3}}
+    )
 
 
 async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):

@@ -73,6 +73,8 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
 
+        self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+
         # If we read cover status from coil, and not from optional status register,
         # we interpret boolean value False as closed cover, and value True as open cover.
         # Intermediate states are not supported in such a setup.
@@ -110,11 +112,6 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._value = convert[state.state]
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
     def is_opening(self):
         """Return if the cover is opening or not."""
         return self._value == self._state_opening
@@ -134,7 +131,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, self._write_address, self._state_open, self._write_type
         )
-        self._available = result is not None
+        self._attr_available = result is not None
         await self.async_update()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -142,21 +139,26 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, self._write_address, self._state_closed, self._write_type
         )
-        self._available = result is not None
+        self._attr_available = result is not None
         await self.async_update()
 
     async def async_update(self, now=None):
         """Update the state of the cover."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, 1, self._input_type
         )
+        self._call_active = False
         if result is None:
-            self._available = False
+            self._attr_available = False
             self.async_write_ha_state()
             return None
-        self._available = True
+        self._attr_available = True
         if self._input_type == CALL_TYPE_COIL:
             self._value = bool(result.bits[0] & 1)
         else:

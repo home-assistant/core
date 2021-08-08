@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -38,75 +39,98 @@ from homeassistant.core import State
 
 from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
-from tests.common import mock_restore_cache
+SENSOR_NAME = "test_sensor"
+ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
 
 
 @pytest.mark.parametrize(
     "do_config",
     [
         {
-            CONF_ADDRESS: 51,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_SLAVE: 10,
-            CONF_COUNT: 1,
-            CONF_DATA_TYPE: "int",
-            CONF_PRECISION: 0,
-            CONF_SCALE: 1,
-            CONF_OFFSET: 0,
-            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-            CONF_DEVICE_CLASS: "battery",
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_COUNT: 1,
+                    CONF_DATA_TYPE: "int",
+                    CONF_PRECISION: 0,
+                    CONF_SCALE: 1,
+                    CONF_OFFSET: 0,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DEVICE_CLASS: "battery",
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_SLAVE: 10,
-            CONF_COUNT: 1,
-            CONF_DATA_TYPE: "int",
-            CONF_PRECISION: 0,
-            CONF_SCALE: 1,
-            CONF_OFFSET: 0,
-            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-            CONF_DEVICE_CLASS: "battery",
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_COUNT: 1,
+                    CONF_DATA_TYPE: "int",
+                    CONF_PRECISION: 0,
+                    CONF_SCALE: 1,
+                    CONF_OFFSET: 0,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                    CONF_DEVICE_CLASS: "battery",
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 1,
-            CONF_SWAP: CONF_SWAP_NONE,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 1,
+                    CONF_SWAP: CONF_SWAP_NONE,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 1,
-            CONF_SWAP: CONF_SWAP_BYTE,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 1,
+                    CONF_SWAP: CONF_SWAP_BYTE,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 2,
-            CONF_SWAP: CONF_SWAP_WORD,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 2,
+                    CONF_SWAP: CONF_SWAP_WORD,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 2,
-            CONF_SWAP: CONF_SWAP_WORD_BYTE,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 2,
+                    CONF_SWAP: CONF_SWAP_WORD_BYTE,
+                }
+            ]
         },
     ],
 )
-async def test_config_sensor(hass, do_config):
-    """Run test for sensor."""
-    sensor_name = "test_sensor"
-    config_sensor = {
-        CONF_NAME: sensor_name,
-        **do_config,
-    }
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        CONF_REGISTERS,
-        method_discovery=True,
-    )
+async def test_config_sensor(hass, mock_modbus):
+    """Run configuration test for sensor."""
+    assert SENSOR_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize(
@@ -117,19 +141,10 @@ async def test_config_sensor(hass, do_config):
                 CONF_ADDRESS: 1234,
                 CONF_COUNT: 8,
                 CONF_PRECISION: 2,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
-            },
-            "Unable to detect data type for test_sensor sensor, try a custom type",
-        ),
-        (
-            {
-                CONF_ADDRESS: 1234,
-                CONF_COUNT: 8,
-                CONF_PRECISION: 2,
                 CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
                 CONF_STRUCTURE: ">no struct",
             },
-            "Error in sensor test_sensor structure: bad char in struct format",
+            "bad char in struct format",
         ),
         (
             {
@@ -149,7 +164,7 @@ async def test_config_sensor(hass, do_config):
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_STRUCTURE: "invalid",
             },
-            "Error in sensor test_sensor structure: bad char in struct format",
+            "bad char in struct format",
         ),
         (
             {
@@ -159,7 +174,7 @@ async def test_config_sensor(hass, do_config):
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_STRUCTURE: "",
             },
-            "Error in sensor test_sensor. The `structure` field can not be empty if the parameter `data_type` is set to the `custom`",
+            "Error in sensor test_sensor. The `structure` field can not be empty",
         ),
         (
             {
@@ -188,9 +203,8 @@ async def test_config_wrong_struct_sensor(
 ):
     """Run test for sensor with wrong struct."""
 
-    sensor_name = "test_sensor"
     config_sensor = {
-        CONF_NAME: sensor_name,
+        CONF_NAME: SENSOR_NAME,
         **do_config,
     }
     caplog.set_level(logging.WARNING)
@@ -199,7 +213,7 @@ async def test_config_wrong_struct_sensor(
     await base_config_test(
         hass,
         config_sensor,
-        sensor_name,
+        SENSOR_NAME,
         SENSOR_DOMAIN,
         CONF_SENSORS,
         None,
@@ -207,7 +221,7 @@ async def test_config_wrong_struct_sensor(
         expect_setup_to_fail=True,
     )
 
-    assert error_message in caplog.text
+    assert caplog.text.count(error_message)
 
 
 @pytest.mark.parametrize(
@@ -483,11 +497,10 @@ async def test_config_wrong_struct_sensor(
 async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
 
-    sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
-        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
-        sensor_name,
+        {CONF_NAME: SENSOR_NAME, CONF_ADDRESS: 1234, **cfg},
+        SENSOR_NAME,
         SENSOR_DOMAIN,
         CONF_SENSORS,
         CONF_REGISTERS,
@@ -538,11 +551,10 @@ async def test_all_sensor(hass, cfg, regs, expected):
 async def test_struct_sensor(hass, cfg, regs, expected):
     """Run test for sensor struct."""
 
-    sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
-        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
-        sensor_name,
+        {CONF_NAME: SENSOR_NAME, CONF_ADDRESS: 1234, **cfg},
+        SENSOR_NAME,
         SENSOR_DOMAIN,
         CONF_SENSORS,
         None,
@@ -554,78 +566,36 @@ async def test_struct_sensor(hass, cfg, regs, expected):
     assert state == expected
 
 
-async def test_restore_state_sensor(hass):
-    """Run test for sensor restore state."""
-
-    sensor_name = "test_sensor"
-    test_value = "117"
-    config_sensor = {CONF_NAME: sensor_name, CONF_ADDRESS: 17}
-    mock_restore_cache(
-        hass,
-        (State(f"{SENSOR_DOMAIN}.{sensor_name}", test_value),),
-    )
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        method_discovery=True,
-    )
-    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
-    assert hass.states.get(entity_id).state == test_value
-
-
 @pytest.mark.parametrize(
-    "swap_type, error_message",
+    "mock_test_state",
+    [(State(ENTITY_ID, "117"),)],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "do_config",
     [
-        (
-            CONF_SWAP_WORD,
-            "Error in sensor modbus_test_sensor swap(word) not possible due to the registers count: 1, needed: 2",
-        ),
-        (
-            CONF_SWAP_WORD_BYTE,
-            "Error in sensor modbus_test_sensor swap(word_byte) not possible due to the registers count: 1, needed: 2",
-        ),
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: SENSOR_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ]
+        },
     ],
 )
-async def test_swap_sensor_wrong_config(
-    hass, caplog, swap_type, error_message, mock_pymodbus
-):
-    """Run test for sensor swap."""
-    sensor_name = "modbus_test_sensor"
-    config = {
-        CONF_NAME: sensor_name,
-        CONF_ADDRESS: 1234,
-        CONF_COUNT: 1,
-        CONF_SWAP: swap_type,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-    }
-
-    caplog.set_level(logging.ERROR)
-    caplog.clear()
-    await base_config_test(
-        hass,
-        config,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        method_discovery=True,
-        expect_setup_to_fail=True,
-    )
-    assert error_message in "".join(caplog.messages)
+async def test_restore_state_sensor(hass, mock_test_state, mock_modbus):
+    """Run test for sensor restore state."""
+    assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
 
 
 async def test_service_sensor_update(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
-
-    entity_id = "sensor.test"
     config = {
         CONF_SENSORS: [
             {
-                CONF_NAME: "test",
+                CONF_NAME: SENSOR_NAME,
                 CONF_ADDRESS: 1234,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
             }
@@ -637,11 +607,11 @@ async def test_service_sensor_update(hass, mock_pymodbus):
         config,
     )
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == "27"
+    assert hass.states.get(ENTITY_ID).state == "27"
     mock_pymodbus.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == "32"
+    assert hass.states.get(ENTITY_ID).state == "32"

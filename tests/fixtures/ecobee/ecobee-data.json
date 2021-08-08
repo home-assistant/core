@@ -12,7 +12,7 @@
                 "currentClimateRef": "c1"
             },
             "runtime": {
-                "connected": false,
+                "connected": true,
                 "actualTemperature": 300,
                 "actualHumidity": 15,
                 "desiredHeat": 400,

@@ -62,10 +62,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class CertExpiryEntity(CoordinatorEntity):
     """Defines a base Cert Expiry entity."""
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:certificate"
+    _attr_icon = "mdi:certificate"
 
     @property
     def extra_state_attributes(self):
@@ -79,15 +76,13 @@ class CertExpiryEntity(CoordinatorEntity):
 class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Cert Expiry Timestamp ({self.coordinator.name})"
+    def __init__(self, coordinator) -> None:
+        """Initialize a Cert Expiry timestamp sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"Cert Expiry Timestamp ({coordinator.name})"
+        self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
 
     @property
     def state(self):
@@ -95,8 +90,3 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
         if self.coordinator.data:
             return self.coordinator.data.isoformat()
         return None
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}-timestamp"

@@ -337,6 +337,30 @@ async def test_remove_entry(hass, manager):
     assert not entity_entry_list
 
 
+async def test_remove_entry_cancels_reauth(hass, manager):
+    """Tests that removing a config entry, also aborts existing reauth flows."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryAuthFailed())
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    entry.add_to_hass(hass)
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+    await manager.async_remove(entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
 async def test_remove_entry_handles_callback_error(hass, manager):
     """Test that exceptions in the remove callback are handled."""
     mock_setup_entry = AsyncMock(return_value=True)

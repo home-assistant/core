@@ -139,8 +139,8 @@
             "on": "Nass"
         },
         "motion": {
-            "off": "Ruhig",
-            "on": "Bewegung erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "moving": {
             "off": "Bewegt sich nicht",
@@ -171,16 +171,16 @@
             "on": "Unsicher"
         },
         "smoke": {
-            "off": "OK",
-            "on": "Rauch erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "sound": {
-            "off": "Stille",
-            "on": "Ger\u00e4usch erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "vibration": {
             "off": "Normal",
-            "on": "Vibration"
+            "on": "Erkannt"
         },
         "window": {
             "off": "Geschlossen",

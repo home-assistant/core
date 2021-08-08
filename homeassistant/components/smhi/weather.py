@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Final, TypedDict
+from typing import Final, TypedDict
 
 import aiohttp
 import async_timeout
@@ -31,6 +31,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -235,12 +236,12 @@ class SmhiWeather(WeatherEntity):
         return "Swedish weather institute (SMHI)"
 
     @property
-    def forecast(self) -> list[dict[str, Any]] | None:
+    def forecast(self) -> list[Forecast] | None:
         """Return the forecast."""
         if self._forecasts is None or len(self._forecasts) < 2:
             return None
 
-        data = []
+        data: list[Forecast] = []
 
         for forecast in self._forecasts[1:]:
             condition = next(

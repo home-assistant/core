@@ -44,7 +44,7 @@ class TeslaSensor(TeslaDevice, SensorEntity):
             if self.type == "outside":
                 return self.tesla_device.get_outside_temp()
             return self.tesla_device.get_inside_temp()
-        if self.tesla_device.type in ["range sensor", "mileage sensor"]:
+        if self.tesla_device.type in ("range sensor", "mileage sensor"):
             units = self.tesla_device.measurement
             if units == "LENGTH_MILES":
                 return self.tesla_device.get_value()

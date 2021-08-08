@@ -67,7 +67,7 @@ class DeconzFan(DeconzDevice, FanEntity):
         if self._device.speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = self._device.speed
 
-        self._features = SUPPORT_SET_SPEED
+        self._attr_supported_features = SUPPORT_SET_SPEED
 
     @property
     def is_on(self) -> bool:
@@ -128,7 +128,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return self._features
+        return self._attr_supported_features
 
     @callback
     def async_update_callback(self, force_update=False) -> None:

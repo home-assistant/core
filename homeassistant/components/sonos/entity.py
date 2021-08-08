@@ -4,8 +4,9 @@ from __future__ import annotations
 import datetime
 import logging
 
-from pysonos.core import SoCo
-from pysonos.exceptions import SoCoException
+import soco.config as soco_config
+from soco.core import SoCo
+from soco.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import (
     DOMAIN,
     SONOS_ENTITY_CREATED,
-    SONOS_HOUSEHOLD_UPDATED,
+    SONOS_FAVORITES_UPDATED,
     SONOS_POLL_UPDATE,
     SONOS_STATE_UPDATED,
 )
@@ -54,7 +55,7 @@ class SonosEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_HOUSEHOLD_UPDATED}-{self.soco.household_id}",
+                f"{SONOS_FAVORITES_UPDATED}-{self.soco.household_id}",
                 self.async_write_ha_state,
             )
         )
@@ -65,10 +66,14 @@ class SonosEntity(Entity):
     async def async_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
+            if soco_config.EVENT_ADVERTISE_IP:
+                listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
+            else:
+                listener_msg = self.speaker.subscription_address
             _LOGGER.warning(
-                "%s cannot reach [%s], falling back to polling, functionality may be limited",
+                "%s cannot reach %s, falling back to polling, functionality may be limited",
                 self.speaker.zone_name,
-                self.speaker.subscription_address,
+                listener_msg,
             )
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()

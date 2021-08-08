@@ -55,6 +55,14 @@ CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_COMMAND_TEMPLATE = "command_template"
 
+MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        alarm.ATTR_CHANGED_BY,
+        alarm.ATTR_CODE_ARM_REQUIRED,
+        alarm.ATTR_CODE_FORMAT,
+    }
+)
+
 DEFAULT_COMMAND_TEMPLATE = "{{action}}"
 DEFAULT_ARM_NIGHT = "ARM_NIGHT"
 DEFAULT_ARM_AWAY = "ARM_AWAY"
@@ -111,6 +119,8 @@ async def _async_setup_entity(
 
 class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     """Representation of a MQTT alarm status."""
+
+    _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Alarm Control Panel."""

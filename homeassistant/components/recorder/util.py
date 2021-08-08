@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -22,6 +22,7 @@ from .models import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
+    TABLE_STATISTICS_META,
     RecorderRuns,
     process_timestamp,
 )
@@ -90,7 +91,7 @@ def commit(session, work):
     return False
 
 
-def execute(qry, to_native=False, validate_entity_ids=True):
+def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -133,6 +134,8 @@ def execute(qry, to_native=False, validate_entity_ids=True):
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
+
+    return None
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
@@ -179,7 +182,7 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
-        if table == TABLE_STATISTICS:
+        if table in [TABLE_STATISTICS, TABLE_STATISTICS_META]:
             continue
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
@@ -287,13 +290,13 @@ def end_incomplete_runs(session, start_time):
         session.add(run)
 
 
-def retryable_database_job(description: str):
+def retryable_database_job(description: str) -> Callable:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: callable):
+    def decorator(job: Callable) -> Callable:
         @functools.wraps(job)
         def wrapper(instance: Recorder, *args, **kwargs):
             try:

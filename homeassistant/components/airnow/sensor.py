@@ -67,16 +67,13 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self.kind = kind
-        self._device_class = None
         self._state = None
-        self._icon = None
-        self._unit_of_measurement = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"AirNow {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
+        self._attr_name = f"AirNow {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
+        self._attr_icon = SENSOR_TYPES[self.kind][ATTR_ICON]
+        self._attr_device_class = SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
+        self._attr_unit_of_measurement = SENSOR_TYPES[self.kind][ATTR_UNIT]
+        self._attr_unique_id = f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
 
     @property
     def state(self):
@@ -96,24 +93,3 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
             ]
 
         return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        self._icon = SENSOR_TYPES[self.kind][ATTR_ICON]
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device_class."""
-        return SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.kind][ATTR_UNIT]

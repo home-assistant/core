@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajhiteles\u00edt\u00e9s sikeres volt"
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_url": "\u00c9rv\u00e9nytelen URL",
+            "unknown": "Ismeretlen hiba"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a Home Assistant, hogy csatlakozzon a(z) {addon} \u00e1ltal biztos\u00edtott motionEye szolg\u00e1ltat\u00e1shoz?",
+                "title": "motionEye a Home Assistant kieg\u00e9sz\u00edt\u0151 seg\u00edts\u00e9g\u00e9vel"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Rendszergazda Jelsz\u00f3",
+                    "admin_username": "Rendszergazda Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "surveillance_password": "Fel\u00fcgyelet Jelsz\u00f3",
+                    "surveillance_username": "Fel\u00fcgyelet Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "\u00c1ll\u00edtsa be a motionEye webhookokat az esem\u00e9nyek jelent\u00e9s\u00e9nek a Home Assistant sz\u00e1m\u00e1ra",
+                    "webhook_set_overwrite": "Fel\u00fcl\u00edrja a fel nem ismert webhookokat"
+                }
+            }
+        }
+    }
+}

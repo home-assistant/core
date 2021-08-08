@@ -8,7 +8,7 @@ from accuweather.const import ENDPOINT
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .const import COORDINATOR, DOMAIN
+from .const import DOMAIN
 
 
 @callback
@@ -21,8 +21,8 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    remaining_requests = list(hass.data[DOMAIN].values())[0][
-        COORDINATOR
+    remaining_requests = list(hass.data[DOMAIN].values())[
+        0
     ].accuweather.requests_remaining
 
     return {

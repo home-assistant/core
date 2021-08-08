@@ -6,6 +6,7 @@ import pytest
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.alexa.errors import UnsupportedProperty
 from homeassistant.components.climate import const as climate
+from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -227,15 +228,27 @@ async def test_report_lock_state(hass):
     """Test LockController implements lockState property."""
     hass.states.async_set("lock.locked", STATE_LOCKED, {})
     hass.states.async_set("lock.unlocked", STATE_UNLOCKED, {})
+    hass.states.async_set("lock.unlocking", STATE_UNLOCKING, {})
+    hass.states.async_set("lock.locking", STATE_LOCKING, {})
+    hass.states.async_set("lock.jammed", STATE_JAMMED, {})
     hass.states.async_set("lock.unknown", STATE_UNKNOWN, {})
 
     properties = await reported_properties(hass, "lock.locked")
     properties.assert_equal("Alexa.LockController", "lockState", "LOCKED")
 
+    properties = await reported_properties(hass, "lock.unlocking")
+    properties.assert_equal("Alexa.LockController", "lockState", "LOCKED")
+
     properties = await reported_properties(hass, "lock.unlocked")
     properties.assert_equal("Alexa.LockController", "lockState", "UNLOCKED")
 
+    properties = await reported_properties(hass, "lock.locking")
+    properties.assert_equal("Alexa.LockController", "lockState", "UNLOCKED")
+
     properties = await reported_properties(hass, "lock.unknown")
+    properties.assert_equal("Alexa.LockController", "lockState", "JAMMED")
+
+    properties = await reported_properties(hass, "lock.jammed")
     properties.assert_equal("Alexa.LockController", "lockState", "JAMMED")
 
 

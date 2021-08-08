@@ -82,25 +82,8 @@ class BrottsplatskartanSensor(SensorEntity):
 
     def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
-        self._attributes = {}
         self._brottsplatskartan = bpk
-        self._name = name
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
+        self._attr_name = name
 
     def update(self):
         """Update device state."""
@@ -116,6 +99,8 @@ class BrottsplatskartanSensor(SensorEntity):
             incident_type = incident.get("title_type")
             incident_counts[incident_type] += 1
 
-        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
-        self._attributes.update(incident_counts)
-        self._state = len(incidents)
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION
+        }
+        self._attr_extra_state_attributes.update(incident_counts)
+        self._attr_state = len(incidents)

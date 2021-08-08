@@ -10,11 +10,13 @@ from xknx.telegram.address import parse_device_group_address
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
@@ -43,15 +45,12 @@ async def async_setup_platform(
     if not discovery_info or not discovery_info["platform_config"]:
         return
     platform_config = discovery_info["platform_config"]
-    _async_migrate_unique_id(hass, platform_config)
-
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXLight(xknx, entity_config))
-
-    async_add_entities(entities)
+    _async_migrate_unique_id(hass, platform_config)
+    async_add_entities(
+        KNXLight(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 @callback
@@ -161,6 +160,12 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
         group_address_color_state=config.get(LightSchema.CONF_COLOR_STATE_ADDRESS),
         group_address_rgbw=config.get(LightSchema.CONF_RGBW_ADDRESS),
         group_address_rgbw_state=config.get(LightSchema.CONF_RGBW_STATE_ADDRESS),
+        group_address_hue=config.get(LightSchema.CONF_HUE_ADDRESS),
+        group_address_hue_state=config.get(LightSchema.CONF_HUE_STATE_ADDRESS),
+        group_address_saturation=config.get(LightSchema.CONF_SATURATION_ADDRESS),
+        group_address_saturation_state=config.get(
+            LightSchema.CONF_SATURATION_STATE_ADDRESS
+        ),
         group_address_xyy_color=config.get(LightSchema.CONF_XYY_ADDRESS),
         group_address_xyy_color_state=config.get(LightSchema.CONF_XYY_STATE_ADDRESS),
         group_address_tunable_white=group_address_tunable_white,
@@ -223,19 +228,21 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
 class KNXLight(KnxEntity, LightEntity):
     """Representation of a KNX light."""
 
+    _device: XknxLight
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX light."""
-        self._device: XknxLight
         super().__init__(_create_light(xknx, config))
-        self._unique_id = self._device_unique_id()
-        self._min_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
         self._max_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
-        self._min_mireds = color_util.color_temperature_kelvin_to_mired(
-            self._max_kelvin
-        )
-        self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+        self._min_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
+
+        self._attr_max_mireds = color_util.color_temperature_kelvin_to_mired(
             self._min_kelvin
         )
+        self._attr_min_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._max_kelvin
+        )
+        self._attr_unique_id = self._device_unique_id()
 
     def _device_unique_id(self) -> str:
         """Return unique id for this device."""
@@ -285,6 +292,13 @@ class KNXLight(KnxEntity, LightEntity):
         return None
 
     @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        # Hue is scaled 0..360 int encoded in 1 byte in KNX (-> only 256 possible values)
+        # Saturation is scaled 0..100 int
+        return self._device.current_hs_color
+
+    @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         if self._device.current_xyy_color is not None:
@@ -312,20 +326,12 @@ class KNXLight(KnxEntity, LightEntity):
         return None
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color temp this light supports in mireds."""
-        return self._min_mireds
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the warmest color temp this light supports in mireds."""
-        return self._max_mireds
-
-    @property
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if self._device.supports_xyy_color:
             return COLOR_MODE_XY
+        if self._device.supports_hs_color:
+            return COLOR_MODE_HS
         if self._device.supports_rgbw:
             return COLOR_MODE_RGBW
         if self._device.supports_color:
@@ -350,6 +356,7 @@ class KNXLight(KnxEntity, LightEntity):
         mireds = kwargs.get(ATTR_COLOR_TEMP)
         rgb = kwargs.get(ATTR_RGB_COLOR)
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         xy_color = kwargs.get(ATTR_XY_COLOR)
 
         if (
@@ -358,6 +365,7 @@ class KNXLight(KnxEntity, LightEntity):
             and mireds is None
             and rgb is None
             and rgbw is None
+            and hs_color is None
             and xy_color is None
         ):
             await self._device.set_on()
@@ -406,6 +414,12 @@ class KNXLight(KnxEntity, LightEntity):
                 XYYColor(color=xy_color, brightness=brightness)
             )
             return
+
+        if hs_color is not None:
+            # round so only one telegram will be sent if the other matches state
+            hue = round(hs_color[0])
+            sat = round(hs_color[1])
+            await self._device.set_hs_color((hue, sat))
 
         if brightness is not None:
             # brightness: 1..255; 0 brightness will call async_turn_off()

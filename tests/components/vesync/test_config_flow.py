@@ -33,18 +33,6 @@ async def test_invalid_login_error(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_config_flow_configuration_yaml(hass):
-    """Test config flow with configuration.yaml user input."""
-    test_dict = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
-    flow = config_flow.VeSyncFlowHandler()
-    flow.hass = hass
-    with patch("pyvesync.vesync.VeSync.login", return_value=True):
-        result = await flow.async_step_import(test_dict)
-
-    assert result["data"].get(CONF_USERNAME) == test_dict[CONF_USERNAME]
-    assert result["data"].get(CONF_PASSWORD) == test_dict[CONF_PASSWORD]
-
-
 async def test_config_flow_user_input(hass):
     """Test config flow with user input."""
     flow = config_flow.VeSyncFlowHandler()

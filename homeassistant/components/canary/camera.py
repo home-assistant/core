@@ -21,7 +21,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle
@@ -30,7 +29,6 @@ from .const import (
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_TIMEOUT,
     DOMAIN,
     MANUFACTURER,
 )
@@ -73,7 +71,6 @@ async def async_setup_entry(
                         coordinator,
                         location_id,
                         device,
-                        DEFAULT_TIMEOUT,
                         ffmpeg_arguments,
                     )
                 )
@@ -92,7 +89,6 @@ class CanaryCamera(CoordinatorEntity, Camera):
         coordinator: CanaryDataUpdateCoordinator,
         location_id: str,
         device: Device,
-        timeout: int,
         ffmpeg_args: str,
     ) -> None:
         """Initialize a Canary security camera."""
@@ -102,36 +98,20 @@ class CanaryCamera(CoordinatorEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_args
         self._location_id = location_id
         self._device = device
-        self._device_id: str = device.device_id
-        self._device_name: str = device.name
-        self._device_type_name = device.device_type["name"]
-        self._timeout = timeout
         self._live_stream_session: LiveStreamSession | None = None
+        self._attr_name = device.name
+        self._attr_unique_id = str(device.device_id)
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, str(device.device_id))},
+            "name": device.name,
+            "model": device.device_type["name"],
+            "manufacturer": MANUFACTURER,
+        }
 
     @property
     def location(self) -> Location:
         """Return information about the location."""
         return self.coordinator.data["locations"][self._location_id]
-
-    @property
-    def name(self) -> str:
-        """Return the name of this device."""
-        return self._device_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this camera."""
-        return str(self._device_id)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, str(self._device_id))},
-            "name": self._device_name,
-            "model": self._device_type_name,
-            "manufacturer": MANUFACTURER,
-        }
 
     @property
     def is_recording(self) -> bool:

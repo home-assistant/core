@@ -240,7 +240,7 @@ class SnmpSwitch(SwitchEntity):
             await self._set(command)
         # User set vartype Null, command must be an empty string
         elif self._vartype == "Null":
-            await self._set(Null)("")
+            await self._set("")
         # user did not set vartype but command is digit: defaulting to Integer
         # or user did set vartype
         else:

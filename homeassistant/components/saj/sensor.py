@@ -1,17 +1,24 @@
 """SAJ solar inverter interface."""
+from __future__ import annotations
+
 from datetime import date
 import logging
 
 import pysaj
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -27,6 +34,7 @@ from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,6 +177,11 @@ class SAJsensor(SensorEntity):
         self._serialnumber = serialnumber
         self._state = self._sensor.value
 
+        if pysaj_sensor.name in ("current_power", "total_yield", "temperature"):
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+        if pysaj_sensor.name == "total_yield":
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -192,6 +205,8 @@ class SAJsensor(SensorEntity):
         """Return the device class the sensor belongs to."""
         if self.unit_of_measurement == POWER_WATT:
             return DEVICE_CLASS_POWER
+        if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            return DEVICE_CLASS_ENERGY
         if (
             self.unit_of_measurement == TEMP_CELSIUS
             or self._sensor.unit == TEMP_FAHRENHEIT

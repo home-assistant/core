@@ -121,19 +121,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-    def __init__(self, msg=""):
-        """Create a log record."""
-        super().__init__()
-        _LOGGER.error("Cannot connect to Wallbox API. %s", msg)
-
-
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-    def __init__(self, msg=""):
-        """Create a log record."""
-        super().__init__()
-        _LOGGER.error("Cannot authenticate with Wallbox API. %s", msg)

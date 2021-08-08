@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast, final
@@ -17,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
@@ -30,7 +32,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -52,6 +54,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
+    DEVICE_CLASS_MONETARY,  # Amount of money (currency)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
@@ -93,21 +96,38 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class SensorEntityDescription(EntityDescription):
+    """A class that describes sensor entities."""
+
+    state_class: str | None = None
+    last_reset: datetime | None = None
+
+
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
-    _attr_state_class: str | None = None
-    _attr_last_reset: datetime | None = None
+    entity_description: SensorEntityDescription
+    _attr_state_class: str | None
+    _attr_last_reset: datetime | None
 
     @property
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return self._attr_state_class
+        if hasattr(self, "_attr_state_class"):
+            return self._attr_state_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.state_class
+        return None
 
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        return self._attr_last_reset
+        if hasattr(self, "_attr_last_reset"):
+            return self._attr_last_reset
+        if hasattr(self, "entity_description"):
+            return self.entity_description.last_reset
+        return None
 
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:

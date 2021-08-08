@@ -1,4 +1,5 @@
 """Support for Brunt Blind Engine covers."""
+from __future__ import annotations
 
 import logging
 
@@ -69,37 +70,19 @@ class BruntDevice(CoverEntity):
     Contains the common logic for all Brunt devices.
     """
 
+    _attr_device_class = DEVICE_CLASS_WINDOW
+    _attr_supported_features = COVER_FEATURES
+
     def __init__(self, bapi, name, thing_uri):
         """Init the Brunt device."""
         self._bapi = bapi
-        self._name = name
+        self._attr_name = name
         self._thing_uri = thing_uri
 
         self._state = {}
-        self._available = None
 
     @property
-    def name(self):
-        """Return the name of the device as reported by tellcore."""
-        return self._name
-
-    @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self._available
-
-    @property
-    def current_cover_position(self):
-        """
-        Return current position of cover.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
-        pos = self._state.get("currentPosition")
-        return int(pos) if pos else None
-
-    @property
-    def request_cover_position(self):
+    def request_cover_position(self) -> int | None:
         """
         Return request position of cover.
 
@@ -111,7 +94,7 @@ class BruntDevice(CoverEntity):
         return int(pos) if pos else None
 
     @property
-    def move_state(self):
+    def move_state(self) -> int | None:
         """
         Return current moving state of cover.
 
@@ -120,47 +103,23 @@ class BruntDevice(CoverEntity):
         mov = self._state.get("moveState")
         return int(mov) if mov else None
 
-    @property
-    def is_opening(self):
-        """Return if the cover is opening or not."""
-        return self.move_state == 1
-
-    @property
-    def is_closing(self):
-        """Return if the cover is closing or not."""
-        return self.move_state == 2
-
-    @property
-    def extra_state_attributes(self):
-        """Return the detailed device state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_REQUEST_POSITION: self.request_cover_position,
-        }
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_WINDOW
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return COVER_FEATURES
-
-    @property
-    def is_closed(self):
-        """Return true if cover is closed, else False."""
-        return self.current_cover_position == CLOSED_POSITION
-
     def update(self):
         """Poll the current state of the device."""
         try:
             self._state = self._bapi.getState(thingUri=self._thing_uri).get("thing")
-            self._available = True
+            self._attr_available = True
         except (TypeError, KeyError, NameError, ValueError) as ex:
             _LOGGER.error("%s", ex)
-            self._available = False
+            self._attr_available = False
+        self._attr_is_opening = self.move_state == 1
+        self._attr_is_closing = self.move_state == 2
+        pos = self._state.get("currentPosition")
+        self._attr_current_cover_position = int(pos) if pos else None
+        self._attr_is_closed = self.current_cover_position == CLOSED_POSITION
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_REQUEST_POSITION: self.request_cover_position,
+        }
 
     def open_cover(self, **kwargs):
         """Set the cover to the open position."""

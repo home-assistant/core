@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema({"username": str, "password": str})
+DATA_SCHEMA = vol.Schema({vol.Required("username"): str, vol.Required("password"): str})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
