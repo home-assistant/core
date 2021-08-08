@@ -7,12 +7,14 @@ from typing import Any
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
+from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.core import callback
 
+from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
@@ -752,7 +754,13 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             resolved_data = None
             additional_value_ids_to_watch = set()
             if schema.data_template:
-                resolved_data = schema.data_template.resolve_data(value)
+                try:
+                    resolved_data = schema.data_template.resolve_data(value)
+                except UnknownValueData as err:
+                    LOGGER.error(
+                        f"Discovery for value {value} will be skipped: {err.args[0]}"
+                    )
+                    continue
                 additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
                     resolved_data
                 )
