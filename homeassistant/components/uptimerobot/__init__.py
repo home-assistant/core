@@ -7,7 +7,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
+from homeassistant.helpers.device_registry import (
+    DeviceRegistry,
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER, PLATFORMS
@@ -80,9 +84,9 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
 
         current_monitors = {
             list(device.identifiers)[0][1]
-            for device in self._device_registry.devices.values()
-            if self._config_entry_id in device.config_entries
-            and list(device.identifiers)[0][0] == DOMAIN
+            for device in async_entries_for_config_entry(
+                self._device_registry, self._config_entry_id
+            )
         }
         new_monitors = {str(monitor.id) for monitor in monitors}
         if stale_monitors := current_monitors - new_monitors:
