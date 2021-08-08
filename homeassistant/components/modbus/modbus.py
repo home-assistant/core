@@ -106,16 +106,18 @@ PYMODBUS_CALL = [
 ]
 
 
+_MODBUSHUBS: dict[str, ModbusHub] = {}
+
+
 async def async_modbus_setup(
     hass, config, service_write_register_schema, service_write_coil_schema
 ):
     """Set up Modbus component."""
-    global _ModbusHubs
 
-    hass.data[DOMAIN] = _ModbusHubs = {}
+    hass.data[DOMAIN] = {}
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
-        _ModbusHubs[conf_hub[CONF_NAME]] = my_hub
+        _MODBUSHUBS[conf_hub[CONF_NAME]] = my_hub
 
         # modbus needs to be activated before components are loaded
         # to avoid a racing problem
@@ -132,7 +134,7 @@ async def async_modbus_setup(
     async def async_stop_modbus(event):
         """Stop Modbus service."""
 
-        for client in _ModbusHubs.values():
+        for client in _MODBUSHUBS.values():
             await client.async_close()
             del client
 
@@ -147,11 +149,11 @@ async def async_modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(value, list):
-            await _ModbusHubs[client_name].async_pymodbus_call(
+            await _MODBUSHUBS[client_name].async_pymodbus_call(
                 unit, address, [int(float(i)) for i in value], CALL_TYPE_WRITE_REGISTERS
             )
         else:
-            await _ModbusHubs[client_name].async_pymodbus_call(
+            await _MODBUSHUBS[client_name].async_pymodbus_call(
                 unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
@@ -171,11 +173,11 @@ async def async_modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(state, list):
-            await _ModbusHubs[client_name].async_pymodbus_call(
+            await _MODBUSHUBS[client_name].async_pymodbus_call(
                 unit, address, state, CALL_TYPE_WRITE_COILS
             )
         else:
-            await _ModbusHubs[client_name].async_pymodbus_call(
+            await _MODBUSHUBS[client_name].async_pymodbus_call(
                 unit, address, state, CALL_TYPE_WRITE_COIL
             )
 
@@ -268,7 +270,7 @@ class ModbusHub:
         """Try to connect, and retry if needed."""
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                err = f"{self._config_name} connect failed, retry in pymodbus"
+                err = f"{self.name} connect failed, retry in pymodbus"
                 self._log_error(err, error_state=False)
                 return
 
@@ -341,9 +343,6 @@ class ModbusHub:
             return result
 
 
-_ModbusHubs: dict[str, ModbusHub] = {}
-
-
 def get_hub(name: str) -> ModbusHub:
     """Return modbus hub with name."""
-    return _ModbusHubs[name]
+    return _MODBUSHUBS[name]
