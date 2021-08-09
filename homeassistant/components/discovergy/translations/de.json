@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Gerät bereits konfiguriert"
+            "already_configured_account": "Account bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Fehler bei der Verbindung zu Discovergy",

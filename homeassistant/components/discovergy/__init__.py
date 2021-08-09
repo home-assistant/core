@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
+from ...exceptions import ConfigEntryNotReady
 from .const import (
     APP_NAME,
     CONF_ACCESS_TOKEN,
@@ -25,15 +26,9 @@ PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Discovergy component."""
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
     if not entry.data[CONF_CONSUMER_KEY] or not entry.data[CONF_CONSUMER_SECRET]:
         _LOGGER.debug("No consumer token found. Init without consumer token")
@@ -79,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     except discovergyError.HTTPError as err:
         _LOGGER.error("Error connecting to Discovergy: %s", err)
-        return False
+        raise ConfigEntryNotReady from err
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

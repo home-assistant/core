@@ -25,18 +25,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    Data has the keys from schema with values provided by the user.
     """
     try:
         discovergy_instance = pydiscovergy.Discovergy(
@@ -44,7 +37,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         )
         access_token = await discovergy_instance.login()
 
-        # store token pairs for later use so we don't need to request new pair each time
+        # store token pairs for later use so we don't need to request new pairs each time
         data[CONF_CONSUMER_KEY] = discovergy_instance.consumer_token.key
         data[CONF_CONSUMER_SECRET] = discovergy_instance.consumer_token.secret
         data[CONF_ACCESS_TOKEN] = access_token.token
@@ -57,6 +50,22 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"title": discovergy_instance.email, "data": data}
 
 
+def make_schema(user_input: dict[str, Any] = None) -> vol.Schema:
+    """Return the schema filled with user_input defaults."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_EMAIL,
+                default=(user_input[CONF_EMAIL] if user_input is not None else ""),
+            ): str,
+            vol.Required(
+                CONF_PASSWORD,
+                default=(user_input[CONF_PASSWORD] if user_input is not None else ""),
+            ): str,
+        }
+    )
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discovergy."""
 
@@ -67,9 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+            return self.async_show_form(step_id="user", data_schema=make_schema())
 
         errors = {}
 
@@ -90,7 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=result["title"], data=result["data"])
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=make_schema(user_input), errors=errors
         )
 
 
