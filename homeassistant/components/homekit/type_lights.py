@@ -205,13 +205,10 @@ class Light(HomeAccessory):
             color_temp_mode = color_mode == COLOR_MODE_COLOR_TEMP
             primary_on_value = char_on_value if not color_temp_mode else 0
             secondary_on_value = char_on_value if color_temp_mode else 0
-            if self.char_on_primary.value != primary_on_value:
-                self.char_on_primary.set_value(primary_on_value)
-            if self.char_on_secondary.value != secondary_on_value:
-                self.char_on_secondary.set_value(secondary_on_value)
+            self.char_on_primary.set_value(primary_on_value)
+            self.char_on_secondary.set_value(secondary_on_value)
         else:
-            if self.char_on_primary.value != char_on_value:
-                self.char_on_primary.set_value(char_on_value)
+            self.char_on_primary.set_value(char_on_value)
 
         # Handle Brightness
         if self.is_brightness_supported:
@@ -230,12 +227,8 @@ class Light(HomeAccessory):
                 # order to avoid this incorrect behavior.
                 if brightness == 0 and state == STATE_ON:
                     brightness = 1
-                if self.char_brightness_primary.value != brightness:
-                    self.char_brightness_primary.set_value(brightness)
-                if (
-                    self.color_and_temp_supported
-                    and self.char_brightness_secondary.value != brightness
-                ):
+                self.char_brightness_primary.set_value(brightness)
+                if self.color_and_temp_supported:
                     self.char_brightness_secondary.set_value(brightness)
 
         # Handle color temperature
@@ -243,8 +236,7 @@ class Light(HomeAccessory):
             color_temperature = attributes.get(ATTR_COLOR_TEMP)
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
-                if self.char_color_temperature.value != color_temperature:
-                    self.char_color_temperature.set_value(color_temperature)
+                self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
         if self.is_color_supported:
@@ -252,7 +244,5 @@ class Light(HomeAccessory):
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)
-                if hue != self.char_hue.value:
-                    self.char_hue.set_value(hue)
-                if saturation != self.char_saturation.value:
-                    self.char_saturation.set_value(saturation)
+                self.char_hue.set_value(hue)
+                self.char_saturation.set_value(saturation)
