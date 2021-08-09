@@ -301,7 +301,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # fallback to setting the color(s) one by one if multicolor fails
         # not sure this is needed at all, but just in case
         for color, value in colors.items():
-            await self._async_set_color(color, value, zwave_transition)
+            await self._async_set_color(color, value)
 
     async def _async_set_color(
         self,
