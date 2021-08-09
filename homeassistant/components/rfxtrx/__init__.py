@@ -79,6 +79,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.SIREN,
 ]
 
 
