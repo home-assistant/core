@@ -40,7 +40,6 @@ def mock_pymodbus():
 
 
 @pytest.fixture(
-    scope="function",
     params=[
         {"testLoad": True},
     ],
