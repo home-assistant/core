@@ -94,6 +94,9 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     property_key_name: set[str] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
+    # [optional] whether the value's value can be None. Used for primary values that
+    # are not expected to ever hold a value.
+    none_value_allowed: bool = False
 
 
 @dataclass
@@ -181,7 +184,10 @@ SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 )
 
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
-    command_class={CommandClass.SOUND_SWITCH}, property={"toneId"}, type={"number"}
+    command_class={CommandClass.SOUND_SWITCH},
+    property={"toneId"},
+    type={"number"},
+    none_value_allowed=True,
 )
 
 # For device class mapping see:
@@ -640,111 +646,126 @@ DISCOVERY_SCHEMAS = [
 def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
-        for schema in DISCOVERY_SCHEMAS:
-            # check manufacturer_id
-            if (
-                schema.manufacturer_id is not None
-                and value.node.manufacturer_id not in schema.manufacturer_id
-            ):
-                continue
+        yield from async_discover_value(value)
 
-            # check product_id
-            if (
-                schema.product_id is not None
-                and value.node.product_id not in schema.product_id
-            ):
-                continue
 
-            # check product_type
-            if (
-                schema.product_type is not None
-                and value.node.product_type not in schema.product_type
-            ):
-                continue
+@callback
+def async_discover_value(
+    value: ZwaveValue,
+) -> Generator[ZwaveDiscoveryInfo, None, None]:
+    """Run discovery on ZWave value and return matching discovery info."""
+    for schema in DISCOVERY_SCHEMAS:
+        # check manufacturer_id
+        if (
+            schema.manufacturer_id is not None
+            and value.node.manufacturer_id not in schema.manufacturer_id
+        ):
+            continue
 
-            # check firmware_version_range
-            if schema.firmware_version_range is not None and (
-                (
-                    schema.firmware_version_range.min is not None
-                    and schema.firmware_version_range.min_ver
-                    > AwesomeVersion(value.node.firmware_version)
-                )
-                or (
-                    schema.firmware_version_range.max is not None
-                    and schema.firmware_version_range.max_ver
-                    < AwesomeVersion(value.node.firmware_version)
-                )
-            ):
-                continue
+        # check product_id
+        if (
+            schema.product_id is not None
+            and value.node.product_id not in schema.product_id
+        ):
+            continue
 
-            # check firmware_version
-            if (
-                schema.firmware_version is not None
-                and value.node.firmware_version not in schema.firmware_version
-            ):
-                continue
+        # check product_type
+        if (
+            schema.product_type is not None
+            and value.node.product_type not in schema.product_type
+        ):
+            continue
 
-            # check device_class_basic
-            if not check_device_class(
-                value.node.device_class.basic, schema.device_class_basic
-            ):
-                continue
+        # check firmware_version_range
+        if schema.firmware_version_range is not None and (
+            (
+                schema.firmware_version_range.min is not None
+                and schema.firmware_version_range.min_ver
+                > AwesomeVersion(value.node.firmware_version)
+            )
+            or (
+                schema.firmware_version_range.max is not None
+                and schema.firmware_version_range.max_ver
+                < AwesomeVersion(value.node.firmware_version)
+            )
+        ):
+            continue
 
-            # check device_class_generic
-            if not check_device_class(
-                value.node.device_class.generic, schema.device_class_generic
-            ):
-                continue
+        # check firmware_version
+        if (
+            schema.firmware_version is not None
+            and value.node.firmware_version not in schema.firmware_version
+        ):
+            continue
 
-            # check device_class_specific
-            if not check_device_class(
-                value.node.device_class.specific, schema.device_class_specific
-            ):
-                continue
+        # check device_class_basic
+        if not check_device_class(
+            value.node.device_class.basic, schema.device_class_basic
+        ):
+            continue
 
-            # check primary value
-            if not check_value(value, schema.primary_value):
-                continue
+        # check device_class_generic
+        if not check_device_class(
+            value.node.device_class.generic, schema.device_class_generic
+        ):
+            continue
 
-            # check additional required values
-            if schema.required_values is not None and not all(
-                any(check_value(val, val_scheme) for val in node.values.values())
-                for val_scheme in schema.required_values
-            ):
-                continue
+        # check device_class_specific
+        if not check_device_class(
+            value.node.device_class.specific, schema.device_class_specific
+        ):
+            continue
 
-            # check for values that may not be present
-            if schema.absent_values is not None and any(
-                any(check_value(val, val_scheme) for val in node.values.values())
-                for val_scheme in schema.absent_values
-            ):
-                continue
+        # check primary value
+        if not check_value(value, schema.primary_value):
+            continue
 
-            # resolve helper data from template
-            resolved_data = None
-            additional_value_ids_to_watch = None
-            if schema.data_template:
-                resolved_data = schema.data_template.resolve_data(value)
-                additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
-                    resolved_data
-                )
+        # check if value is None/not readable and whether we can still discover it.
+        # Values that start as None and become non-None later will be rediscovered.
+        if not schema.primary_value.none_value_allowed and (
+            value.value is None or not value.metadata.readable
+        ):
+            continue
 
-            # all checks passed, this value belongs to an entity
-            yield ZwaveDiscoveryInfo(
-                node=value.node,
-                primary_value=value,
-                assumed_state=schema.assumed_state,
-                platform=schema.platform,
-                platform_hint=schema.hint,
-                platform_data_template=schema.data_template,
-                platform_data=resolved_data,
-                additional_value_ids_to_watch=additional_value_ids_to_watch,
-                entity_registry_enabled_default=schema.entity_registry_enabled_default,
+        # check additional required values
+        if schema.required_values is not None and not all(
+            any(check_value(val, val_scheme) for val in value.node.values.values())
+            for val_scheme in schema.required_values
+        ):
+            continue
+
+        # check for values that may not be present
+        if schema.absent_values is not None and any(
+            any(check_value(val, val_scheme) for val in value.node.values.values())
+            for val_scheme in schema.absent_values
+        ):
+            continue
+
+        # resolve helper data from template
+        resolved_data = None
+        additional_value_ids_to_watch = None
+        if schema.data_template:
+            resolved_data = schema.data_template.resolve_data(value)
+            additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
+                resolved_data
             )
 
-            if not schema.allow_multi:
-                # break out of loop, this value may not be discovered by other schemas/platforms
-                break
+        # all checks passed, this value belongs to an entity
+        yield ZwaveDiscoveryInfo(
+            node=value.node,
+            primary_value=value,
+            assumed_state=schema.assumed_state,
+            platform=schema.platform,
+            platform_hint=schema.hint,
+            platform_data_template=schema.data_template,
+            platform_data=resolved_data,
+            additional_value_ids_to_watch=additional_value_ids_to_watch,
+            entity_registry_enabled_default=schema.entity_registry_enabled_default,
+        )
+
+        if not schema.allow_multi:
+            # break out of loop, this value may not be discovered by other schemas/platforms
+            break
 
 
 @callback

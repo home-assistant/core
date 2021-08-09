@@ -131,9 +131,36 @@ async def test_disabled_indcator_sensor(
     assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
 
 
-async def test_disabled_basic_sensor(hass, ge_in_wall_dimmer_switch, integration):
-    """Test sensor is created from Basic CC and is disabled."""
+async def test_value_update_creates_entity(hass, ge_in_wall_dimmer_switch, integration):
+    """Test sensor is created from Basic CC when a value is received and is disabled."""
     ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BASIC_SENSOR)
+
+    # We expect no entity because the value has no value
+    assert entity_entry is None
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": ge_in_wall_dimmer_switch.node_id,
+            "args": {
+                "commandClassName": "Basic",
+                "commandClass": 32,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 1,
+                "prevValue": None,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+
+    # Now that we've received a value for this value, we should see an entity created
+    ge_in_wall_dimmer_switch.receive_event(event)
+    await hass.async_block_till_done()
+
     entity_entry = ent_reg.async_get(BASIC_SENSOR)
 
     assert entity_entry

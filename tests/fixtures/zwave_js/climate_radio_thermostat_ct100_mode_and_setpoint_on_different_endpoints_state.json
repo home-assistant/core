@@ -455,7 +455,8 @@
 					"15": "Full power",
 					"31": "Manufacturer specific"
 				}
-			}
+			},
+			"value": 0
 		},
 		{
 			"endpoint": 1,

@@ -67,7 +67,7 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import ZwaveDiscoveryInfo, async_discover_values
+from .discovery import ZwaveDiscoveryInfo, async_discover_value, async_discover_values
 from .helpers import async_enable_statistics, get_device_id, get_unique_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
@@ -111,6 +111,47 @@ def register_node_in_dev_reg(
     return device
 
 
+async def async_handle_discovered_info(
+    hass: HomeAssistant,
+    ent_reg: entity_registry.EntityRegistry,
+    entry: ConfigEntry,
+    client: ZwaveClient,
+    device: device_registry.DeviceEntry,
+    disc_info: ZwaveDiscoveryInfo,
+    registered_unique_ids: dict[str, dict[str, set[str]]],
+    platform_setup_tasks: dict[str, asyncio.Task],
+    value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+) -> None:
+    """Handle new ZwaveDiscoveryInfo."""
+    platform = disc_info.platform
+
+    # This migration logic was added in 2021.3 to handle a breaking change to
+    # the value_id format. Some time in the future, this call (as well as the
+    # helper functions) can be removed.
+    async_migrate_discovered_value(
+        hass,
+        ent_reg,
+        registered_unique_ids[device.id][platform],
+        device,
+        client,
+        disc_info,
+    )
+
+    if platform not in platform_setup_tasks:
+        platform_setup_tasks[platform] = hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+
+    await platform_setup_tasks[platform]
+
+    LOGGER.debug("Discovered entity: %s", disc_info)
+    async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info)
+
+    # Capture discovery info for values we want to watch for updates
+    if disc_info.assumed_state:
+        value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
+
+
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
@@ -126,8 +167,28 @@ async def async_setup_entry(  # noqa: C901
 
     entry_hass_data[DATA_CLIENT] = client
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
+    entry_hass_data["value_update_events_enabled"] = False
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
+
+    @callback
+    def listen_to_value_updated_events_if_needed(
+        node: ZwaveNode, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo]
+    ) -> None:
+        # add listener for value updated events if necessary
+        if (
+            not entry_hass_data["value_update_events_enabled"]
+            and value_updates_disc_info
+        ):
+            entry.async_on_unload(
+                node.on(
+                    "value updated",
+                    lambda event: async_fire_event_on_value_updated(
+                        value_updates_disc_info, event["value"]
+                    ),
+                )
+            )
+            entry_hass_data["value_update_events_enabled"] = True
 
     async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -145,46 +206,79 @@ async def async_setup_entry(  # noqa: C901
 
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
-            platform = disc_info.platform
-
-            # This migration logic was added in 2021.3 to handle a breaking change to
-            # the value_id format. Some time in the future, this call (as well as the
-            # helper functions) can be removed.
-            async_migrate_discovered_value(
+            await async_handle_discovered_info(
                 hass,
                 ent_reg,
-                registered_unique_ids[device.id][platform],
-                device,
+                entry,
                 client,
+                device,
                 disc_info,
+                registered_unique_ids,
+                platform_setup_tasks,
+                value_updates_disc_info,
             )
 
-            if platform not in platform_setup_tasks:
-                platform_setup_tasks[platform] = hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(entry, platform)
+        async def async_on_value_update_discover_new_value(
+            hass: HomeAssistant,
+            ent_reg: entity_registry.EntityRegistry,
+            entry: ConfigEntry,
+            client: ZwaveClient,
+            device: device_registry.DeviceEntry,
+            disc_info: ZwaveDiscoveryInfo,
+            registered_unique_ids: dict[str, dict[str, set[str]]],
+            platform_setup_tasks: dict[str, asyncio.Task],
+            value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+            event: dict,
+        ) -> None:
+            """Discover values that previously had no value."""
+            # We only care about values that were previously not known
+            if (
+                event["args"]["prevValue"] is not None
+                or event["args"]["newValue"] is None
+            ):
+                return
+
+            value: Value = event["value"]
+
+            for disc_info in async_discover_value(value):
+                await async_handle_discovered_info(
+                    hass,
+                    ent_reg,
+                    entry,
+                    client,
+                    device,
+                    disc_info,
+                    registered_unique_ids,
+                    platform_setup_tasks,
+                    value_updates_disc_info,
                 )
 
-            await platform_setup_tasks[platform]
-
-            LOGGER.debug("Discovered entity: %s", disc_info)
-            async_dispatcher_send(
-                hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
+            listen_to_value_updated_events_if_needed(
+                disc_info.node, value_updates_disc_info
             )
 
-            # Capture discovery info for values we want to watch for updates
-            if disc_info.assumed_state:
-                value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
-
-        # add listener for value updated events if necessary
-        if value_updates_disc_info:
-            entry.async_on_unload(
-                node.on(
-                    "value updated",
-                    lambda event: async_on_value_updated(
-                        value_updates_disc_info, event["value"]
-                    ),
-                )
+        # add listener for value update events
+        entry.async_on_unload(
+            node.on(
+                "value updated",
+                lambda event: hass.async_create_task(
+                    async_on_value_update_discover_new_value(
+                        hass,
+                        ent_reg,
+                        entry,
+                        client,
+                        device,
+                        disc_info,
+                        registered_unique_ids,
+                        platform_setup_tasks,
+                        value_updates_disc_info,
+                        event,
+                    )
+                ),
             )
+        )
+
+        listen_to_value_updated_events_if_needed(node, value_updates_disc_info)
 
         # add listener for stateless node value notification events
         entry.async_on_unload(
@@ -312,7 +406,7 @@ async def async_setup_entry(  # noqa: C901
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
     @callback
-    def async_on_value_updated(
+    def async_fire_event_on_value_updated(
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
     ) -> None:
         """Fire value updated event."""
