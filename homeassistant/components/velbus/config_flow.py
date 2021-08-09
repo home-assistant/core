@@ -35,16 +35,14 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _test_connection(self, prt):
         """Try to connect to the velbus with the port specified."""
-        print(prt)
         try:
             controller = Velbus(prt)
             await controller.connect(True)
-            controller.stop()
-        except Exception:  # pylint: disable=broad-except
+            await controller.stop()
+        except Exception as excep:  # pylint: disable=broad-except
             self._errors[CONF_PORT] = "cannot_connect"
-            print("HERE")
+            print(excep)
             return False
-        print("HERE2")
         return True
 
     def _prt_in_configuration_exists(self, prt: str) -> bool:

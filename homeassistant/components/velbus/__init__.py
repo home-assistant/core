@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Remove the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
+    await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
@@ -106,8 +106,8 @@ class VelbusEntity(Entity):
         """Add listener for state changes."""
         self._channel.on_status_update(self._on_update)
 
-    def _on_update(self, state):
-        self.schedule_update_ha_state()
+    async def _on_update(self):
+        self.async_schedule_update_ha_state()
 
     @property
     def device_info(self):

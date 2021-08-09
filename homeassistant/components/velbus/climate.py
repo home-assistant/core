@@ -20,7 +20,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for channel in cntrl.get_all("climate"):
         entities.append(VelbusClimate(channel))
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class VelbusClimate(VelbusEntity, ClimateEntity):

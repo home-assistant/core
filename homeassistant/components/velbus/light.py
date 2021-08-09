@@ -23,34 +23,34 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus switch based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]
     entities = []
-    for channel in cntrl.get_all("climate"):
-        entities.append(VelbusLight(channel))
+    for channel in cntrl.get_all("light"):
+        entities.append(VelbusLight(channel, False))
+    for channel in cntrl.get_all("led"):
+        entities.append(VelbusLight(channel, True))
     async_add_entities(entities)
 
 
 class VelbusLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
+    def __init__(self, channel, led):
+        """Initialize a light Velbus entity."""
+        super().__init__(channel)
+        self._is_led = led
+
     @property
     def name(self):
         """Return the display name of this entity."""
-        if self._channel.light_is_buttonled():
+        if self._is_led:
             return f"LED {self._channel.get_name()}"
         return self._channel.get_name()
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._channel.light_is_buttonled():
+        if self._is_led:
             return SUPPORT_FLASH
         return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Disable Button LEDs by default."""
-        if self._channel.light_is_buttonled():
-            return False
-        return True
 
     @property
     def is_on(self):
@@ -62,18 +62,18 @@ class VelbusLight(VelbusEntity, LightEntity):
         """Return the brightness of the light."""
         return int((self._channel.get_dimmer_state() * 255) / 100)
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Instruct the Velbus light to turn on."""
-        if self._channel.light_is_buttonled(self._channel):
+        if self._is_led:
             if ATTR_FLASH in kwargs:
                 if kwargs[ATTR_FLASH] == FLASH_LONG:
-                    attr, *args = "set_led_state", self._channel, "slow"
+                    attr, *args = "set_led_state", "slow"
                 elif kwargs[ATTR_FLASH] == FLASH_SHORT:
-                    attr, *args = "set_led_state", self._channel, "fast"
+                    attr, *args = "set_led_state", "fast"
                 else:
-                    attr, *args = "set_led_state", self._channel, "on"
+                    attr, *args = "set_led_state", "on"
             else:
-                attr, *args = "set_led_state", self._channel, "on"
+                attr, *args = "set_led_state", "on"
         else:
             if ATTR_BRIGHTNESS in kwargs:
                 # Make sure a low but non-zero value is not rounded down to zero
@@ -83,22 +83,20 @@ class VelbusLight(VelbusEntity, LightEntity):
                     brightness = max(int((kwargs[ATTR_BRIGHTNESS] * 100) / 255), 1)
                 attr, *args = (
                     "set_dimmer_state",
-                    self._channel,
                     brightness,
                     kwargs.get(ATTR_TRANSITION, 0),
                 )
             else:
                 attr, *args = (
                     "restore_dimmer_state",
-                    self._channel,
                     kwargs.get(ATTR_TRANSITION, 0),
                 )
-        getattr(self._channel, attr)(*args)
+        await getattr(self._channel, attr)(*args)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Instruct the velbus light to turn off."""
-        if self._channel.light_is_buttonled():
-            attr, *args = "set_led_state", self._channel, "off"
+        if self._is_led:
+            attr, *args = "set_led_state", "off"
         else:
             attr, *args = (
                 "set_dimmer_state",
@@ -106,4 +104,4 @@ class VelbusLight(VelbusEntity, LightEntity):
                 0,
                 kwargs.get(ATTR_TRANSITION, 0),
             )
-        getattr(self._channel, attr)(*args)
+        await getattr(self._channel, attr)(*args)
