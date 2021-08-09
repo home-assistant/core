@@ -36,7 +36,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="DownloadPaused",
         name="Download Paused",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="DownloadRate",
@@ -61,7 +60,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="PostPaused",
         name="Post Processing Paused",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="RemainingSizeMB",
@@ -71,7 +69,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="UpTimeSec",
         name="Uptime",
-        unit_of_measurement=None,
         device_class=DEVICE_CLASS_TIMESTAMP,
     ),
 )
