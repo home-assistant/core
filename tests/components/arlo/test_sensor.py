@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.arlo import DATA_ARLO, sensor as arlo
+from homeassistant.components.arlo.sensor import SENSOR_TYPES
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
@@ -20,7 +21,11 @@ def _get_named_tuple(input_dict):
 def _get_sensor(name="Last", sensor_type="last_capture", data=None):
     if data is None:
         data = {}
-    return arlo.ArloSensor(name, data, sensor_type)
+    sensor_entry = next(
+        sensor_entry for sensor_entry in SENSOR_TYPES if sensor_entry.key == sensor_type
+    )
+    sensor_entry.name = name
+    return arlo.ArloSensor(data, sensor_entry)
 
 
 @pytest.fixture()
