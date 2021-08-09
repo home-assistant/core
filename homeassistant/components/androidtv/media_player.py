@@ -128,11 +128,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Android TV entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
-    dev_class = aftv.DEVICE_CLASS
-    if dev_class == DEVICE_ANDROIDTV:
-        device_name = "Android TV "
-    else:
-        device_name = "Fire TV "
+    device_class = aftv.DEVICE_CLASS
+    device_name = "Android TV " if device_class == DEVICE_ANDROIDTV else "Fire TV "
     device_name += entry.data[CONF_HOST]
 
     device_args = [
@@ -145,7 +142,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             AndroidTVDevice(*device_args)
-            if dev_class == DEVICE_ANDROIDTV
+            if device_class == DEVICE_ANDROIDTV
             else FireTVDevice(*device_args)
         ]
     )
