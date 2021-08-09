@@ -137,6 +137,8 @@ class VersionData:
 class VersionSensor(SensorEntity):
     """Representation of a Home Assistant version sensor."""
 
+    _attr_icon = "mdi:package-up"
+
     def __init__(
         self,
         data: VersionData,
