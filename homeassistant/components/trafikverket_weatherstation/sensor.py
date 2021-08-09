@@ -80,9 +80,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="precipitation",
         api_key="precipitationtype",
         name="Precipitation type",
-        unit_of_measurement=None,
         icon="mdi:weather-snowy-rainy",
-        device_class=None,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction",
@@ -90,15 +88,12 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind direction",
         unit_of_measurement=DEGREE,
         icon="mdi:flag-triangle",
-        device_class=None,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction_text",
         api_key="winddirectiontext",
         name="Wind direction text",
-        unit_of_measurement=None,
         icon="mdi:flag-triangle",
-        device_class=None,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed",
@@ -106,7 +101,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind speed",
         unit_of_measurement=SPEED_METERS_PER_SECOND,
         icon="mdi:weather-windy",
-        device_class=None,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed_max",
@@ -114,7 +108,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind speed max",
         unit_of_measurement=SPEED_METERS_PER_SECOND,
         icon="mdi:weather-windy-variant",
-        device_class=None,
     ),
     TrafikverketSensorEntityDescription(
         key="humidity",
@@ -130,15 +123,12 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Precipitation amount",
         unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:cup-water",
-        device_class=None,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amountname",
         api_key="precipitation_amountname",
         name="Precipitation name",
-        unit_of_measurement=None,
         icon="mdi:weather-pouring",
-        device_class=None,
     ),
 )
 
