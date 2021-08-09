@@ -496,9 +496,7 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(
-        self, now: datetime.datetime | None = None
-    ) -> None:
+    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         if self._seen_timer:
             self._seen_timer()
