@@ -27,10 +27,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
         name="Charging Status",
-        unit_of_measurement=None,
-        icon=None,
-        device_class=None,
-        state_class=None,
     ),
     SensorEntityDescription(
         key="temperature",
@@ -46,7 +42,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         icon="mdi:flash",
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=None,
     ),
     SensorEntityDescription(
         key="amps",
@@ -69,8 +64,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Charge time",
         unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
-        device_class=None,
-        state_class=None,
     ),
     SensorEntityDescription(
         key="energy_added",
@@ -78,7 +71,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         unit_of_measurement=ENERGY_WATT_HOUR,
         icon="mdi:flash",
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=None,
     ),
 )
 
