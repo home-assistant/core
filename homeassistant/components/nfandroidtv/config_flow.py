@@ -30,25 +30,15 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address = discovery_info[IP_ADDRESS]
         mac = format_mac(discovery_info[MAC_ADDRESS])
 
-        for entry in self._async_current_entries():
-            # The mac is not always the correct format. Discovery seems to run twice.
-            # Once with 17 characters, once with missing 0s.
-            if entry.domain == DOMAIN and len(mac) == 17:
-                entry_updates = {**entry.data}
-                entry_updates[CONF_HOST] = self.ip_address
-                self.hass.config_entries.async_update_entry(
-                    entry, unique_id=mac, data=entry_updates
-                )
-                return self.async_abort(reason="already_configured")
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
-        self._async_abort_entries_match({CONF_HOST: self.ip_address})
-        error = await self._async_try_connect(self.ip_address)
-        if error is None and len(mac) >= 12:
-            if "amazon-f" in discovery_info[HOSTNAME]:
-                return await self.async_step_confirm_discovery_fire_tv()
-            return await self.async_step_confirm_discovery_android_tv()
-        return self.async_abort(reason=error)
+        for entry in self._async_current_entries():
+            if entry.data[CONF_HOST] == self.ip_address:
+                self.hass.config_entries.async_update_entry(entry, unique_id=mac)
+                return self.async_abort(reason="already_configured")
+        if "amazon-f" in discovery_info[HOSTNAME]:
+            return await self.async_step_confirm_discovery_fire_tv()
+        return await self.async_step_confirm_discovery_android_tv()
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initiated by the user."""

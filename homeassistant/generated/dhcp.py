@@ -124,7 +124,7 @@ DHCP = [
     },
     {
         "domain": "nfandroidtv",
-        "hostname": "amazon-f*"
+        "hostname": "amazon-*"
     },
     {
         "domain": "nuheat",
