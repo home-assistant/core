@@ -16,7 +16,7 @@ cryptography==3.3.2
 defusedxml==0.7.1
 distro==1.5.0
 emoji==1.2.0
-hass-nabucasa==0.44.0
+hass-nabucasa==0.45.1
 home-assistant-frontend==20210809.0
 httpx==0.18.2
 ifaddr==0.1.7
