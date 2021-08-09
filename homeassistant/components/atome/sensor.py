@@ -156,7 +156,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(DAILY_TYPE)
             self._day_usage = values["total"] / 1000
             self._day_price = values["price"]
-            self._day_last_reset = values["startPeriod"]
+            self._day_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome daily data. Got: %d", self._day_usage)
 
         except KeyError as error:
@@ -184,7 +184,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(WEEKLY_TYPE)
             self._week_usage = values["total"] / 1000
             self._week_price = values["price"]
-            self._week_last_reset = values["startPeriod"]
+            self._week_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome weekly data. Got: %d", self._week_usage)
 
         except KeyError as error:
@@ -212,7 +212,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(MONTHLY_TYPE)
             self._month_usage = values["total"] / 1000
             self._month_price = values["price"]
-            self._month_last_reset = values["startPeriod"]
+            self._month_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome monthly data. Got: %d", self._month_usage)
 
         except KeyError as error:
@@ -240,7 +240,7 @@ class AtomeData:
             values = self.atome_client.get_consumption(YEARLY_TYPE)
             self._year_usage = values["total"] / 1000
             self._year_price = values["price"]
-            self._year_last_reset = values["startPeriod"]
+            self._year_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome yearly data. Got: %d", self._year_usage)
 
         except KeyError as error:
@@ -278,7 +278,7 @@ class AtomeSensor(SensorEntity):
             }
         else:
             self._attr_state = getattr(self._data, f"{self._sensor_type}_usage")
-            self._attr_last_reset = dt_util.parse_datetime(getattr(self._data, f"{self._sensor_type}_last_reset"))
+            self._attr_last_reset = dt_util.as_utc(getattr(self._data, f"{self._sensor_type}_last_reset"))
             self._attr_extra_state_attributes = {
                 "price": getattr(self._data, f"{self._sensor_type}_price")
             }
