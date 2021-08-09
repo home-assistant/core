@@ -53,13 +53,7 @@ class LogiSensor(SensorEntity):
         self._attr_unique_id = f"{self._camera.mac_address}-{description.key}"
         self._attr_name = f"{self._camera.name} {description.name}"
         self._activity: dict[Any, Any] = {}
-        self._state = None
         self._tz = time_zone
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
 
     @property
     def device_info(self):
@@ -92,14 +86,18 @@ class LogiSensor(SensorEntity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         sensor_type = self.entity_description.key
-        if sensor_type == "battery_level" and self._state is not None:
+        if sensor_type == "battery_level" and self._attr_native_value is not None:
             return icon_for_battery_level(
-                battery_level=int(self._state), charging=False
+                battery_level=int(self._attr_native_value), charging=False
             )
-        if sensor_type == "recording_mode" and self._state is not None:
-            return "mdi:eye" if self._state == STATE_ON else "mdi:eye-off"
-        if sensor_type == "streaming_mode" and self._state is not None:
-            return "mdi:camera" if self._state == STATE_ON else "mdi:camera-off"
+        if sensor_type == "recording_mode" and self._attr_native_value is not None:
+            return "mdi:eye" if self._attr_native_value == STATE_ON else "mdi:eye-off"
+        if sensor_type == "streaming_mode" and self._attr_native_value is not None:
+            return (
+                "mdi:camera"
+                if self._attr_native_value == STATE_ON
+                else "mdi:camera-off"
+            )
         return self.entity_description.icon
 
     async def async_update(self):
@@ -111,13 +109,11 @@ class LogiSensor(SensorEntity):
             last_activity = await self._camera.get_last_activity(force_refresh=True)
             if last_activity is not None:
                 last_activity_time = as_local(last_activity.end_time_utc)
-                self._state = (
+                self._attr_native_value = (
                     f"{last_activity_time.hour:0>2}:{last_activity_time.minute:0>2}"
                 )
         else:
             state = getattr(self._camera, self.entity_description.key, None)
             if isinstance(state, bool):
-                self._state = STATE_ON if state is True else STATE_OFF
-            else:
-                self._state = state
-            self._state = state
+                self._attr_native_value = STATE_ON if state is True else STATE_OFF
+            self._attr_native_value = state
