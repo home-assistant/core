@@ -417,15 +417,15 @@ async def test_option_flow(hass, entry, mock_plex_server):
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
+        CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
         MP_DOMAIN: {
-            CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: {
                 user: {"enabled": True} for user in mock_plex_server.accounts
             },
             CONF_IGNORE_PLEX_WEB_CLIENTS: False,
-        }
+        },
     }
 
 
@@ -451,15 +451,15 @@ async def test_missing_option_flow(hass, entry, mock_plex_server):
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
+        CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
         MP_DOMAIN: {
-            CONF_CONFIGURED_HOST: mock_plex_server.url_in_use,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: {
                 user: {"enabled": True} for user in mock_plex_server.accounts
             },
             CONF_IGNORE_PLEX_WEB_CLIENTS: False,
-        }
+        },
     }
 
 
@@ -870,15 +870,15 @@ async def test_changing_hostname_with_option_flow(
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
+        CONF_CONFIGURED_HOST: PLEX_DIRECT_URL,
         MP_DOMAIN: {
-            CONF_CONFIGURED_HOST: PLEX_DIRECT_URL,
             CONF_USE_EPISODE_ART: True,
             CONF_IGNORE_NEW_SHARED_USERS: True,
             CONF_MONITORED_USERS: {
                 user: {"enabled": True} for user in mock_plex_server.accounts
             },
             CONF_IGNORE_PLEX_WEB_CLIENTS: False,
-        }
+        },
     }
     assert f"Configured hostname changed to {PLEX_DIRECT_URL}" in caplog.text
 

@@ -359,7 +359,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     new_host,
                 )
 
-            self.options[MP_DOMAIN][CONF_CONFIGURED_HOST] = new_host
+            self.options[CONF_CONFIGURED_HOST] = new_host
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
                 CONF_USE_EPISODE_ART
             ]
@@ -399,7 +399,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         else:
             available_connections[self.current_host_used] = self.current_host_used
         desired_or_current = (
-            self.options[MP_DOMAIN].get(CONF_CONFIGURED_HOST) or self.current_host_used
+            self.options.get(CONF_CONFIGURED_HOST) or self.current_host_used
         )
         default_connection = available_connections.get(desired_or_current)
 

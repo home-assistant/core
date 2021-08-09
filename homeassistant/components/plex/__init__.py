@@ -90,7 +90,7 @@ async def async_setup_entry(hass, entry):  # noqa: C901
         hass.config_entries.async_update_entry(entry, options=options)
 
     # Update config entry with config option override
-    desired_hostname = entry.options[MP_DOMAIN].get(CONF_CONFIGURED_HOST)
+    desired_hostname = entry.options.get(CONF_CONFIGURED_HOST)
     if desired_hostname and desired_hostname != server_config[CONF_URL]:
         _LOGGER.debug(
             "Changing hostname from %s to %s", server_config[CONF_URL], desired_hostname
