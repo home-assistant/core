@@ -144,6 +144,8 @@ class Light(HomeAccessory):
 
         self.async_update_state(state)
         self.setter_callback = self._set_chars
+        self.serv_primary = serv_light_primary
+        self.serv_secondary = serv_light_secondary
 
     def _set_chars(self, service_values):
         _LOGGER.debug("Light _set_chars: %s", service_values)
@@ -170,32 +172,41 @@ class Light(HomeAccessory):
                 self.async_call_service(
                     DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}, ", ".join(events)
                 )
-                break
+                return
 
             if CHAR_COLOR_TEMPERATURE in char_values:
-                params[ATTR_COLOR_TEMP] = char_values.get(
-                    CHAR_COLOR_TEMPERATURE, self.char_color_temperature.value
-                )
+                params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
                 events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
             if CHAR_HUE in char_values and CHAR_SATURATION in char_values:
-                color = (
-                    char_values.get(CHAR_HUE, self.char_hue.value),
-                    char_values.get(CHAR_SATURATION, self.char_saturation.value),
+                params[ATTR_HS_COLOR] = (
+                    char_values[CHAR_HUE],
+                    char_values[CHAR_SATURATION],
                 )
-                _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, color)
-                params[ATTR_HS_COLOR] = color
-                events.append(f"set color at {color}")
+                _LOGGER.debug(
+                    "%s: Set hs_color to %s", self.entity_id, params[ATTR_HS_COLOR]
+                )
+                events.append(f"set color at {params[ATTR_HS_COLOR]}")
 
-        # If Siri sets both at the same time, we use the current color mode to resolve the conflict
-        if ATTR_HS_COLOR in params and ATTR_COLOR_TEMP in params:
-            if (
+        if self.color_and_temp_supported:
+            modifed_rgb = self.serv_primary in service_values
+            modifed_temp = self.serv_secondary in service_values
+            color_temp_mode = (
                 self.hass.states.get(self.entity_id).attributes.get(ATTR_COLOR_MODE)
                 == COLOR_MODE_COLOR_TEMP
-            ):
-                del params[ATTR_HS_COLOR]
-            else:
-                del params[ATTR_COLOR_TEMP]
+            )
+            if modifed_rgb and modifed_temp:
+                params.pop(ATTR_HS_COLOR, None)
+                params.pop(ATTR_COLOR_TEMP, None)
+            elif modifed_rgb and color_temp_mode and ATTR_HS_COLOR not in params:
+                params[ATTR_HS_COLOR] = (
+                    self.char_hue.value,
+                    self.char_saturation.value,
+                )
+                events.append(f"set color at {params[ATTR_HS_COLOR]}")
+            elif modifed_temp and not color_temp_mode and ATTR_COLOR_TEMP not in params:
+                params[ATTR_COLOR_TEMP] = self.char_color_temperature.value
+                events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
