@@ -140,26 +140,22 @@ class Light(HomeAccessory):
             )
 
         self.async_update_state(state)
+        self.accessory.setter_callback = self._set_chars
+        self.serv_light_primary = serv_light_primary
+        self.serv_light_secondary = serv_light_secondary
 
-        if self.color_and_temp_supported:
-            serv_light_primary.setter_callback = self._set_chars_primary
-            serv_light_secondary.setter_callback = self._set_chars_secondary
-        else:
-            serv_light_primary.setter_callback = self._set_chars
+        # if self.color_and_temp_supported:
+        #    serv_light_primary.setter_callback = self._set_chars_primary
+        #    serv_light_secondary.setter_callback = self._set_chars_secondary
+        # else:
+        #    serv_light_primary.setter_callback = self._set_chars
 
-    def _set_chars_primary(self, char_values):
-        """Primary service is RGB or W if only color or color temp is supported."""
-        self._set_chars(char_values, True)
-
-    def _set_chars_secondary(self, char_values):
-        """Secondary service is W if both color or color temp are supported."""
-        self._set_chars(char_values, False)
-
-    def _set_chars(self, char_values, is_primary=None):
-        _LOGGER.debug("Light _set_chars: %s, is_primary: %s", char_values, is_primary)
+    def _set_chars(self, service_values):
+        _LOGGER.debug("Light _set_chars: %s, service_values: %s", service_values)
         events = []
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
+
         if CHAR_ON in char_values:
             if not char_values[CHAR_ON]:
                 service = SERVICE_TURN_OFF
