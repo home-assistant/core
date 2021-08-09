@@ -327,10 +327,21 @@ class SonosSpeaker:
                 for service in SUBSCRIPTION_SERVICES
             ]
             await asyncio.gather(*subscriptions)
-            return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.zone_name, ex)
             return False
+
+        # Create a polling task as a fallback if callback events cannot be received
+        if not self._poll_timer:
+            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+                partial(
+                    async_dispatcher_send,
+                    self.hass,
+                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                ),
+                SCAN_INTERVAL,
+            )
+        return True
 
     async def _subscribe(
         self, target: SubscriptionBase, sub_callback: Callable
@@ -478,15 +489,6 @@ class SonosSpeaker:
             self.soco.ip_address,
         )
 
-        self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            partial(
-                async_dispatcher_send,
-                self.hass,
-                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
-            ),
-            SCAN_INTERVAL,
-        )
-
         if self._is_ready and not self.subscriptions_failed:
             done = await self.async_subscribe()
             if not done:
@@ -543,15 +545,6 @@ class SonosSpeaker:
         self._seen_timer = self.hass.helpers.event.async_call_later(
             SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
         )
-        if not self._poll_timer:
-            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-                partial(
-                    async_dispatcher_send,
-                    self.hass,
-                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
-                ),
-                SCAN_INTERVAL,
-            )
         self.async_write_entity_states()
 
     #
