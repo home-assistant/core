@@ -93,8 +93,13 @@ class SegmentBuffer:
                         # Create a fragment every TARGET_PART_DURATION. The data from each fragment is stored in
                         # a "Part" that can be combined with the data from all the other "Part"s, plus an init
                         # section, to reconstitute the data in a "Segment".
+                        # frag_duration seems to be a minimum threshold for determining part boundaries, so some
+                        # parts may have a higher duration. Since Part Target Duration is used in LL-HLS as a
+                        # maximum threshold for part durations, we scale that number down here by .85 and hope
+                        # that the output part durations stay below the maximum Part Target Duration threshold.
+                        # See https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis#section-4.4.4.9
                         "frag_duration": str(
-                            int(self._stream_settings.target_part_duration * 1e6)
+                            int(self._stream_settings.part_target_duration * 85e4)
                         ),
                     }
                     if self._stream_settings.ll_hls

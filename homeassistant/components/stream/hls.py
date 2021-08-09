@@ -146,9 +146,9 @@ class HlsPlaylistView(StreamView):
         if track.stream_settings.ll_hls:
             playlist.extend(
                 [
-                    f"#EXT-X-PART-INF:PART-TARGET={track.stream_settings.target_part_duration:.3f}",
-                    f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*track.stream_settings.target_part_duration:.3f}",
-                    f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*track.stream_settings.target_part_duration:.3f},PRECISE=YES",
+                    f"#EXT-X-PART-INF:PART-TARGET={track.stream_settings.part_target_duration:.3f}",
+                    f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*track.stream_settings.part_target_duration:.3f}",
+                    f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*track.stream_settings.part_target_duration:.3f},PRECISE=YES",
                 ]
             )
         else:

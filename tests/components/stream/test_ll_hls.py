@@ -258,7 +258,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(2)
         ],
         hint=make_hint(2, 0),
-        target_part_duration=hls.stream_settings.target_part_duration,
+        part_target_duration=hls.stream_settings.part_target_duration,
     )
 
     # add one more segment
@@ -281,7 +281,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(3)
         ],
         hint=make_hint(3, 0),
-        target_part_duration=hls.stream_settings.target_part_duration,
+        part_target_duration=hls.stream_settings.part_target_duration,
     )
 
     stream_worker_sync.resume()

@@ -31,7 +31,7 @@ class StreamSettings:
 
     ll_hls: bool = attr.ib()
     min_segment_duration: float = attr.ib()
-    target_part_duration: float = attr.ib()
+    part_target_duration: float = attr.ib()
     hls_advance_part_limit: int = attr.ib()
     hls_part_timeout: float = attr.ib()
 

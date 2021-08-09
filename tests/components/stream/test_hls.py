@@ -84,7 +84,7 @@ def make_playlist(
     discontinuity_sequence=0,
     segments=None,
     hint=None,
-    target_part_duration=None,
+    part_target_duration=None,
 ):
     """Create a an hls playlist response for tests to assert on."""
     response = [
@@ -99,9 +99,9 @@ def make_playlist(
     if hint:
         response.extend(
             [
-                f"#EXT-X-PART-INF:PART-TARGET={target_part_duration:.3f}",
-                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*target_part_duration:.3f}",
-                f"#EXT-X-START:TIME-OFFSET=-{3*target_part_duration:.3f},PRECISE=YES",
+                f"#EXT-X-PART-INF:PART-TARGET={part_target_duration:.3f}",
+                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*part_target_duration:.3f}",
+                f"#EXT-X-START:TIME-OFFSET=-{3*part_target_duration:.3f},PRECISE=YES",
             ]
         )
     else:
