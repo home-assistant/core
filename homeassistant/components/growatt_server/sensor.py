@@ -5,10 +5,8 @@ import logging
 import re
 
 import growattServer
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -31,10 +29,9 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
 
-from .const import CONF_PLANT_ID, DEFAULT_NAME, DEFAULT_PLANT_ID, DEFAULT_URL, DOMAIN
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -548,30 +545,6 @@ SENSOR_TYPES = {
     **STORAGE_SENSOR_TYPES,
     **MIX_SENSOR_TYPES,
 }
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PLANT_ID, default=DEFAULT_PLANT_ID): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_URL, default=DEFAULT_URL): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up growatt server from yaml."""
-    if not hass.config_entries.async_entries(DOMAIN):
-        _LOGGER.warning(
-            "Loading Growatt via platform setup is deprecated."
-            "Please remove it from your configuration"
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
 
 
 def get_device_list(api, config):
