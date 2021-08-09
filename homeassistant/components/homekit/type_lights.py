@@ -107,7 +107,7 @@ class Light(HomeAccessory):
             serv_light_secondary = self.add_preload_service(
                 SERV_LIGHTBULB, self.chars_secondary
             )
-            #serv_light_primary.add_linked_service(serv_light_secondary)
+            serv_light_primary.add_linked_service(serv_light_secondary)
             serv_light_primary.configure_char(CHAR_NAME, value="RGB")
             self.char_on_secondary = serv_light_secondary.configure_char(
                 CHAR_ON, value=0
