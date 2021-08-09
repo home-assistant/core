@@ -1828,17 +1828,6 @@ async def test_area_id(hass):
     assert_result_info(info, area_entry_entity_id.id)
     assert info.rate_limit is None
 
-    # Try to get an area name that's a valid device ID or entity ID as it should have
-    # an exception
-    area_registry.async_get_or_create(device_entry.id)
-    area_registry.async_get_or_create(entity_entry.entity_id)
-
-    info = render_to_info(hass, f"{{{{ area_id('{device_entry.id}') }}}}")
-    assert isinstance(info.exception, TemplateError)
-
-    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
-    assert isinstance(info.exception, TemplateError)
-
 
 async def test_area_name(hass):
     """Test area_name function."""
@@ -1907,12 +1896,6 @@ async def test_area_name(hass):
     info = render_to_info(hass, f"{{{{ area_name('{area_entry.id}') }}}}")
     assert_result_info(info, area_entry.name)
     assert info.rate_limit is None
-
-    # Try to get an area ID that's a valid device ID as it should have an exception
-    area_registry.async_get_or_create(device_entry.id)
-
-    info = render_to_info(hass, f"{{{{ area_name('{device_entry.id}') }}}}")
-    assert isinstance(info.exception, TemplateError)
 
 
 def test_closest_function_to_coord(hass):

@@ -956,7 +956,8 @@ def is_device_attr(
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area ID from an area name, device id, or entity id."""
     area_reg = area_registry.async_get(hass)
-    area = area_reg.async_get_area_by_name(str(lookup_value))
+    if area := area_reg.async_get_area_by_name(str(lookup_value)):
+        return area.id
 
     try:
         ent_reg = entity_registry.async_get(hass)
@@ -967,29 +968,15 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
 
         cv.entity_id(lookup_value)
         if entity := ent_reg.async_get(lookup_value):
-            # If area name matches a valid entity ID, raise an exception
-            if area:
-                raise TemplateError(
-                    f"Ambiguous area name '{lookup_value}' matches valid entity ID"  # type: ignore
-                )
             return entity.area_id
     except vol.Invalid:
         pass
 
-    # Check if this could be a device ID (hex string). If not, assume it is an area
-    # name
+    # Check if this could be a device ID (hex string)
     if _ID_STRING.match(str(lookup_value)):
         dev_reg = device_registry.async_get(hass)
         if device := dev_reg.async_get(lookup_value):
-            # If area name matches a valid device ID, raise an exception
-            if area:
-                raise TemplateError(
-                    f"Ambiguous area name '{lookup_value}' matches valid device ID"  # type: ignore
-                )
             return device.area_id
-
-    if area:
-        return area.id
 
     return None
 
@@ -1004,6 +991,10 @@ def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> 
 def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area name from an area id, device id, or entity id."""
     area_reg = area_registry.async_get(hass)
+    area = area_reg.async_get_area(lookup_value)
+    if area:
+        return area.name
+
     try:
         # Import here, not at top-level to avoid circular import
         from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
@@ -1019,19 +1010,11 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     except vol.Invalid:
         pass
 
-    area = area_reg.async_get_area(lookup_value)
-
     dev_reg = device_registry.async_get(hass)
     if (device := dev_reg.async_get(lookup_value)) and device.area_id:
-        # On the off chance that area ID and device ID match, we should raise an exception
-        # since we can't know which one is correct.
-        if area:
-            raise TemplateError(
-                f"Ambiguous ID {lookup_value} matches valid area and device IDs"  # type: ignore
-            )
         return _get_area_name(area_reg, device.area_id)
 
-    return area.name if area else None
+    return None
 
 
 def closest(hass, *args):
