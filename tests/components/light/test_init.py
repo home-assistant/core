@@ -776,12 +776,16 @@ async def test_light_brightness_step(hass, enable_custom_integrations):
     platform.init(empty=True)
     platform.ENTITIES.append(platform.MockLight("Test_0", STATE_ON))
     platform.ENTITIES.append(platform.MockLight("Test_1", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_2", STATE_ON))
     entity0 = platform.ENTITIES[0]
     entity0.supported_features = light.SUPPORT_BRIGHTNESS
     entity0.brightness = 100
     entity1 = platform.ENTITIES[1]
     entity1.supported_features = light.SUPPORT_BRIGHTNESS
     entity1.brightness = 50
+    entity2 = platform.ENTITIES[2]
+    entity2.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_BRIGHTNESS_INC
+    entity2.brightness = 50
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
@@ -830,6 +834,17 @@ async def test_light_brightness_step(hass, enable_custom_integrations):
     )
 
     assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity2.entity_id, "brightness_step": -10},
+        blocking=True,
+    )
+
+    _, data = entity2.last_call("turn_on")
+    assert "brightness_step" in data
+    assert data["brightness_step"] == -10
 
 
 async def test_light_brightness_pct_conversion(hass, enable_custom_integrations):

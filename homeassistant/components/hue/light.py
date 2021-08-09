@@ -9,6 +9,7 @@ import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_STEP,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -19,6 +20,7 @@ from homeassistant.components.light import (
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS_INC,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
@@ -51,7 +53,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_HUE_ON_OFF = SUPPORT_FLASH | SUPPORT_TRANSITION
-SUPPORT_HUE_DIMMABLE = SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS
+SUPPORT_HUE_DIMMABLE = SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS | SUPPORT_BRIGHTNESS_INC
 SUPPORT_HUE_COLOR_TEMP = SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP
 SUPPORT_HUE_COLOR = SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT | SUPPORT_COLOR
 SUPPORT_HUE_EXTENDED = SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR
@@ -484,6 +486,9 @@ class HueLight(CoordinatorEntity, LightEntity):
 
         if ATTR_BRIGHTNESS in kwargs:
             command["bri"] = hass_to_hue_brightness(kwargs[ATTR_BRIGHTNESS])
+
+        if ATTR_BRIGHTNESS_STEP in kwargs:
+            command["bri_inc"] = kwargs[ATTR_BRIGHTNESS_STEP]
 
         flash = kwargs.get(ATTR_FLASH)
 

@@ -46,6 +46,7 @@ SUPPORT_FLASH = 8
 SUPPORT_COLOR = 16  # Deprecated, replaced by color modes
 SUPPORT_TRANSITION = 32
 SUPPORT_WHITE_VALUE = 128  # Deprecated, replaced by color modes
+SUPPORT_BRIGHTNESS_INC = 256
 
 # Color mode of the light
 ATTR_COLOR_MODE = "color_mode"
@@ -353,17 +354,21 @@ async def async_setup(hass, config):  # noqa: C901
         if params and (
             ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
         ):
-            brightness = light.brightness if light.is_on else 0
+            supports_inc = light.supported_features & SUPPORT_BRIGHTNESS_INC
+            if not supports_inc or ATTR_BRIGHTNESS_STEP_PCT in params:
+                brightness = light.brightness if light.is_on else 0
 
-            if ATTR_BRIGHTNESS_STEP in params:
-                brightness += params.pop(ATTR_BRIGHTNESS_STEP)
+                if ATTR_BRIGHTNESS_STEP in params:
+                    brightness += params.pop(ATTR_BRIGHTNESS_STEP)
 
-            else:
-                brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
+                else:
+                    brightness += round(
+                        params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255
+                    )
 
-            params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+                params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
 
-            preprocess_turn_on_alternatives(hass, params)
+                preprocess_turn_on_alternatives(hass, params)
 
         if (not params or not light.is_on) or (
             params and ATTR_TRANSITION not in params
