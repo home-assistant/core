@@ -615,6 +615,10 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Turn the device on."""
+        result = await self._try_command(
+            "Turning the miio device on failed.", self._device.on
+        )
+
         # Remove the async_set_speed call is async_set_percentage and async_set_preset_modes have been implemented
         if speed:
             await self.async_set_speed(speed)
@@ -623,10 +627,6 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
             await self.async_set_percentage(percentage)
         if preset_mode:
             await self.async_set_preset_mode(preset_mode)
-        else:
-            result = await self._try_command(
-                "Turning the miio device on failed.", self._device.on
-            )
 
         if result:
             self._state = True
