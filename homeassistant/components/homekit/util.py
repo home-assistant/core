@@ -38,6 +38,7 @@ from .const import (
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_DISABLE_COLOR_TEMP_RGB,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -194,6 +195,11 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 )
 
 
+LIGHT_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {vol.Optional(CONF_DISABLE_COLOR_TEMP_RGB, default=False): cv.boolean}
+)
+
+
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
     10: " ",  # nl
@@ -266,6 +272,9 @@ def validate_entity_config(values):
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
+
+        elif domain == "light":
+            config = LIGHT_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)
