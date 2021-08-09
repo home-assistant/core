@@ -81,7 +81,7 @@ from .const import (
     SERVICE_SET_VOLUME,
     SUCCESS,
 )
-from .device import XiaomiMiioEntity
+from .device import XiaomiCoordinatedMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -506,12 +506,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
+class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     """Representation of a generic Xiaomi device."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
-        super().__init__(name, device, entry, unique_id)
+        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
 
         self._available = False
         self._state = None
@@ -706,9 +706,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
     REVERSE_SPEED_MODE_MAPPING = {v: k for k, v in SPEED_MODE_MAPPING.items()}
 
-    def __init__(self, name, device, entry, unique_id, allowed_failures=0):
+    def __init__(self, name, device, entry, unique_id, coordinator, allowed_failures=0):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id)
+        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
         self._allowed_failures = allowed_failures
         self._failure = 0
 
@@ -1128,9 +1128,9 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         "Interval": AirfreshOperationMode.Interval,
     }
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the miio device."""
-        super().__init__(name, device, entry, unique_id)
+        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
 
         self._device_features = FEATURE_FLAGS_AIRFRESH
         self._available_attributes = AVAILABLE_ATTRIBUTES_AIRFRESH
