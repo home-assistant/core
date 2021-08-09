@@ -68,7 +68,6 @@ from .const import (
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
     CONF_AUTO_START,
-    CONF_COLOR_TEMP_RGB,
     CONF_ENTITY_CONFIG,
     CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
@@ -179,11 +178,6 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
 
-# Only CONF_COLOR_TEMP_RGB supported for now
-# but this will be used to simplify configure camera audio and
-# codecs from the UI in the future
-ENTRY_CONFIG_OPTIONS = {CONF_COLOR_TEMP_RGB}
-
 
 def _async_get_entries_by_name(current_entries):
     """Return a dict of the entries by name."""
@@ -282,7 +276,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
-    entry_config = {k: v for k, v in options.items() if k in ENTRY_CONFIG_OPTIONS}
 
     homekit = HomeKit(
         hass,
@@ -296,7 +289,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         advertise_ip,
         entry.entry_id,
         entry.title,
-        entry_config,
     )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -499,7 +491,6 @@ class HomeKit:
         advertise_ip=None,
         entry_id=None,
         entry_title=None,
-        entry_config=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -513,7 +504,6 @@ class HomeKit:
         self._entry_id = entry_id
         self._entry_title = entry_title
         self._homekit_mode = homekit_mode
-        self._entry_config = entry_config or {}
         self.aid_storage = None
         self.status = STATUS_READY
 
@@ -630,7 +620,7 @@ class HomeKit:
             )
 
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
-        conf = {**self._entry_config, **self._config.get(state.entity_id, {})}
+        conf = self._config.get(state.entity_id, {}).copy()
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
@@ -781,7 +771,7 @@ class HomeKit:
             )
             return None
         state = entity_states[0]
-        conf = {**self._entry_config, **self._config.get(state.entity_id, {})}
+        conf = self._config.get(state.entity_id, {}).copy()
         acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
         if acc is None:
             _LOGGER.error(
