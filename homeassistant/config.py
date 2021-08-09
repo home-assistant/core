@@ -167,7 +167,7 @@ def _filter_bad_internal_external_urls(conf: dict) -> dict:
     for key in CONF_INTERNAL_URL, CONF_EXTERNAL_URL:
         if key in conf and urlparse(conf[key]).path not in ("", "/"):
             # We warn but do not fix, because if this was incorrectly configured,
-            # adjusting this valie might impact security.
+            # adjusting this value might impact security.
             _LOGGER.warning(
                 "Invalid %s set. It's not allowed to have a path (/bla)", key
             )
