@@ -649,6 +649,16 @@ def url(value: Any) -> str:
     raise vol.Invalid("invalid url")
 
 
+def url_no_path(value: Any) -> str:
+    """Validate a url without a path."""
+    url_in = url(value)
+
+    if urlparse(url_in).path not in ("", "/"):
+        raise vol.Invalid("url it not allowed to have a path component")
+
+    return url_in
+
+
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
     regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
