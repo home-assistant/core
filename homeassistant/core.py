@@ -1723,13 +1723,13 @@ class Config:
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
         # but this data still lives in storage, so we print a warning.
-        if "external_url" in data and urlparse(data["external_url"]).path not in (
+        if data.get("external_url") and urlparse(data["external_url"]).path not in (
             "",
             "/",
         ):
             _LOGGER.warning("Invalid external_url set. It's not allowed to have a path")
 
-        if "internal_url" in data and urlparse(data["internal_url"]).path not in (
+        if data.get("internal_url") and urlparse(data["internal_url"]).path not in (
             "",
             "/",
         ):
