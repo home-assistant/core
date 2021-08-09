@@ -38,7 +38,6 @@ SENSOR_TYPES = (
         key="battery_level",
         name="Battery Level",
         unit_of_measurement=PERCENTAGE,
-        icon="mdi:battery-50",
         device_class=DEVICE_CLASS_BATTERY,
     ),
     SensorEntityDescription(
@@ -48,14 +47,12 @@ SENSOR_TYPES = (
         key="temperature",
         name="Temperature",
         unit_of_measurement=TEMP_CELSIUS,
-        icon="mdi:thermometer",
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
         unit_of_measurement=PERCENTAGE,
-        icon="mdi:water-percent",
         device_class=DEVICE_CLASS_HUMIDITY,
     ),
     SensorEntityDescription(
