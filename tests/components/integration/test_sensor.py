@@ -73,6 +73,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                 {
                     "last_reset": "2019-10-06T21:00:00",
                     "device_class": DEVICE_CLASS_ENERGY,
+                    "unit_of_measurement": "kWh",
                 },
             ),
         ),
