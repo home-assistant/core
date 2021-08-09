@@ -151,13 +151,12 @@ class Light(HomeAccessory):
         #    serv_light_primary.setter_callback = self._set_chars
 
     def _set_chars(self, service_values):
-        _LOGGER.debug("Light _set_chars: %s, service_values: %s", service_values)
+        _LOGGER.debug("Light _set_chars: %s", service_values)
         events = []
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
 
-        for service, chars in self.service_values.items():
-            is_primary = service == self.serv_light_primary
+        for chars in service_values.values():
             char_values = {char.display_name: value for char, value in chars.items()}
             if CHAR_ON in char_values:
                 if not char_values[CHAR_ON]:
@@ -176,20 +175,15 @@ class Light(HomeAccessory):
                 self.async_call_service(
                     DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}, ", ".join(events)
                 )
-                return
+                break
 
-            if self.color_temp_supported and (
-                is_primary is False or CHAR_COLOR_TEMPERATURE in char_values
-            ):
+            if CHAR_COLOR_TEMPERATURE in char_values:
                 params[ATTR_COLOR_TEMP] = char_values.get(
                     CHAR_COLOR_TEMPERATURE, self.char_color_temperature.value
                 )
                 events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
-            if self.color_supported and (
-                is_primary is True
-                or (CHAR_HUE in char_values and CHAR_SATURATION in char_values)
-            ):
+            if CHAR_HUE in char_values and CHAR_SATURATION in char_values:
                 color = (
                     char_values.get(CHAR_HUE, self.char_hue.value),
                     char_values.get(CHAR_SATURATION, self.char_saturation.value),
@@ -198,15 +192,12 @@ class Light(HomeAccessory):
                 params[ATTR_HS_COLOR] = color
                 events.append(f"set color at {color}")
 
-        # If Siri sets both at the same time, we use the current color mode
-        # to resolve the conflict if its present, otherwise we
-        # use HS_COLOR
+        # If Siri sets both at the same time, we use the current color mode to resolve the conflict
         if ATTR_HS_COLOR in params and ATTR_COLOR_TEMP in params:
-            color_mode = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_COLOR_MODE
-            )
-            color_temp_mode = color_mode == COLOR_MODE_COLOR_TEMP
-            if color_temp_mode:
+            if (
+                self.hass.states.get(self.entity_id).attributes.get(ATTR_COLOR_MODE)
+                == COLOR_MODE_COLOR_TEMP
+            ):
                 del params[ATTR_HS_COLOR]
             else:
                 del params[ATTR_COLOR_TEMP]
