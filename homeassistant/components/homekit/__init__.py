@@ -296,7 +296,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
     devices = options.get(CONF_DEVICES, [])
-    entry_config = {k: v for k, v in options if k in ENTRY_CONFIG_OPTIONS}
+    entry_config = {k: v for k, v in options.items() if k in ENTRY_CONFIG_OPTIONS}
 
     homekit = HomeKit(
         hass,
