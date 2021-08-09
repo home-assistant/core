@@ -237,8 +237,8 @@ def _add_camera(
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
         url = async_generate_motioneye_webhook(hass, entry.data[CONF_WEBHOOK_ID])
 
-        if url and (
-            _set_webhook(
+        if url:
+            set_motion_event = _set_webhook(
                 _build_url(
                     device,
                     url,
@@ -250,7 +250,8 @@ def _add_camera(
                 KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
                 camera,
             )
-            | _set_webhook(
+
+            set_storage_event = _set_webhook(
                 _build_url(
                     device,
                     url,
@@ -262,8 +263,8 @@ def _add_camera(
                 KEY_WEB_HOOK_STORAGE_ENABLED,
                 camera,
             )
-        ):
-            hass.async_create_task(client.async_set_camera(camera_id, camera))
+            if set_motion_event or set_storage_event:
+                hass.async_create_task(client.async_set_camera(camera_id, camera))
 
     async_dispatcher_send(
         hass,
