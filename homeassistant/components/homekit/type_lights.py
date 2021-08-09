@@ -140,7 +140,7 @@ class Light(HomeAccessory):
             )
 
         self.async_update_state(state)
-        self.accessory.setter_callback = self._set_chars
+        self.setter_callback = self._set_chars
         self.serv_light_primary = serv_light_primary
         self.serv_light_secondary = serv_light_secondary
 
