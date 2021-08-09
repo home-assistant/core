@@ -82,8 +82,7 @@ class Light(HomeAccessory):
             self.chars_primary.append(CHAR_BRIGHTNESS)
 
         if self.color_supported:
-            self.chars_primary.append(CHAR_HUE)
-            self.chars_primary.append(CHAR_SATURATION)
+            self.chars_primary.extend([CHAR_HUE, CHAR_SATURATION])
 
         if self.color_temp_supported:
             if self.color_and_temp_supported:
@@ -141,14 +140,6 @@ class Light(HomeAccessory):
 
         self.async_update_state(state)
         self.setter_callback = self._set_chars
-        self.serv_light_primary = serv_light_primary
-        self.serv_light_secondary = serv_light_secondary
-
-        # if self.color_and_temp_supported:
-        #    serv_light_primary.setter_callback = self._set_chars_primary
-        #    serv_light_secondary.setter_callback = self._set_chars_secondary
-        # else:
-        #    serv_light_primary.setter_callback = self._set_chars
 
     def _set_chars(self, service_values):
         _LOGGER.debug("Light _set_chars: %s", service_values)
