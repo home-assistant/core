@@ -64,18 +64,15 @@ def hls_stream(hass, hass_client):
 
 def make_segment(segment, discontinuity=False):
     """Create a playlist response for a segment."""
-    response = []
+    response = [
+        "#EXT-X-PROGRAM-DATE-TIME:"
+        + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+        + "Z",
+        f"#EXTINF:{SEGMENT_DURATION:.3f},",
+        f"./segment/{segment}.m4s",
+    ]
     if discontinuity:
-        response.append("#EXT-X-DISCONTINUITY")
-    response.extend(
-        [
-            "#EXT-X-PROGRAM-DATE-TIME:"
-            + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-            + "Z",
-            f"#EXTINF:{SEGMENT_DURATION:.3f},",
-            f"./segment/{segment}.m4s",
-        ]
-    )
+        response.insert(1, "#EXT-X-DISCONTINUITY")
     return "\n".join(response)
 
 

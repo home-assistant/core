@@ -148,8 +148,6 @@ class Segment:
         if self.hls_playlist_complete:
             return self.hls_playlist_template[0]
         if not self.hls_playlist_template:
-            if last_stream_id != self.stream_id:
-                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
             # This is a placeholder where the rendered parts will be inserted
             self.hls_playlist_template.append("{}")
         if render_parts:
@@ -164,20 +162,22 @@ class Segment:
                     f'@{http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
                 )
         if self.complete:
-            # Replace the previous placeholder with a new placeholder and segment metadata
-            self.hls_playlist_template.pop()
-            self.hls_playlist_template.extend(
-                [
-                    # Squeeze the placeholder on the same line as #EXT-X-PROGRAM-DATE-TIME
-                    # just to keep tidy when there are no parts
-                    "{}"
-                    + "#EXT-X-PROGRAM-DATE-TIME:"
-                    + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                    + "Z",
-                    f"#EXTINF:{self.duration:.3f},",
-                    f"./segment/{self.sequence}.m4s",
-                ]
-            )
+            # Remake the playlist template with the remaining segment metadata
+            self.hls_playlist_template = [
+                # Squeeze the placeholder on the same line as #EXT-X-PROGRAM-DATE-TIME
+                # just to keep tidy when there are no parts. The playlist parts will contain
+                # a trailing newline.
+                "{}"
+                + "#EXT-X-PROGRAM-DATE-TIME:"
+                + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                + "Z",
+                f"#EXTINF:{self.duration:.3f},",
+                f"./segment/{self.sequence}.m4s",
+            ]
+            # Logically EXT-X-DISCONTINUITY would make sense above the parts, but Apple's
+            # media stream validator seems to only want it before the segment
+            if last_stream_id != self.stream_id:
+                self.hls_playlist_template.insert(1, "#EXT-X-DISCONTINUITY")
             # Append another line to parts because we don't include a newline before #EXT-X-PROGRAM-DATE-TIME
             self.hls_playlist_parts.append("")
 
