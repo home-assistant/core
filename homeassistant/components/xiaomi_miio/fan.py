@@ -1,11 +1,9 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 import asyncio
 from enum import Enum
-from functools import partial
 import logging
 import math
 
-from miio import AirFresh, AirPurifier, AirPurifierMiot, DeviceException
 from miio.airfresh import (
     LedBrightness as AirfreshLedBrightness,
     OperationMode as AirfreshOperationMode,
@@ -35,6 +33,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -56,6 +55,8 @@ from .const import (
     FEATURE_SET_LED,
     FEATURE_SET_LED_BRIGHTNESS,
     FEATURE_SET_VOLUME,
+    KEY_COORDINATOR,
+    KEY_DEVICE,
     MODEL_AIRPURIFIER_2H,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_PRO,
@@ -79,7 +80,6 @@ from .const import (
     SERVICE_SET_LEARN_MODE_ON,
     SERVICE_SET_LED_BRIGHTNESS,
     SERVICE_SET_VOLUME,
-    SUCCESS,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -434,35 +434,33 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if DATA_KEY not in hass.data:
             hass.data[DATA_KEY] = {}
 
-        host = config_entry.data[CONF_HOST]
-        token = config_entry.data[CONF_TOKEN]
         name = config_entry.title
         model = config_entry.data[CONF_MODEL]
         unique_id = config_entry.unique_id
-
-        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
         if model in MODELS_PURIFIER_MIOT:
-            air_purifier = AirPurifierMiot(host, token)
+            air_purifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             entity = XiaomiAirPurifierMiot(
-                name, air_purifier, config_entry, unique_id, allowed_failures=2
+                name,
+                air_purifier,
+                config_entry,
+                unique_id,
+                coordinator,
             )
         elif model.startswith("zhimi.airpurifier."):
-            air_purifier = AirPurifier(host, token)
-            entity = XiaomiAirPurifier(name, air_purifier, config_entry, unique_id)
-        elif model.startswith("zhimi.airfresh."):
-            air_fresh = AirFresh(host, token)
-            entity = XiaomiAirFresh(name, air_fresh, config_entry, unique_id)
-        else:
-            _LOGGER.error(
-                "Unsupported device found! Please create an issue at "
-                "https://github.com/syssi/xiaomi_airpurifier/issues "
-                "and provide the following data: %s",
-                model,
+            air_purifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            entity = XiaomiAirPurifier(
+                name, air_purifier, config_entry, unique_id, coordinator
             )
+        elif model.startswith("zhimi.airfresh."):
+            air_fresh = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            entity = XiaomiAirFresh(
+                name, air_fresh, config_entry, unique_id, coordinator
+            )
+        else:
             return
 
-        hass.data[DATA_KEY][host] = entity
         entities.append(entity)
 
         async def async_service_handler(service):
@@ -503,7 +501,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 DOMAIN, air_purifier_service, async_service_handler, schema=schema
             )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
@@ -514,6 +512,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         super().__init__(name, device, entry, unique_id, coordinator=coordinator)
 
         self._available = False
+        self._available_attributes = {}
         self._state = None
         self._state_attrs = {ATTR_MODEL: self._model}
         self._device_features = FEATURE_SET_CHILD_LOCK
@@ -583,22 +582,22 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
 
         return value
 
-    async def _try_command(self, mask_error, func, *args, **kwargs):
-        """Call a miio device command handling error messages."""
-        try:
-            result = await self.hass.async_add_executor_job(
-                partial(func, *args, **kwargs)
-            )
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        # On state change the device doesn't provide the new state immediately.
+        if self._skip_update:
+            self._skip_update = False
+            return
 
-            _LOGGER.debug("Response received from miio device: %s", result)
-
-            return result == SUCCESS
-        except DeviceException as exc:
-            if self._available:
-                _LOGGER.error(mask_error, exc)
-                self._available = False
-
-            return False
+        self._available = True
+        self._state = self.coordinator.data.is_on
+        self._state_attrs.update(
+            {
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
+                for key, value in self._available_attributes.items()
+            }
+        )
 
     #
     # The fan entity model has changed to use percentages and preset_modes
@@ -706,11 +705,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
     REVERSE_SPEED_MODE_MAPPING = {v: k for k, v in SPEED_MODE_MAPPING.items()}
 
-    def __init__(self, name, device, entry, unique_id, coordinator, allowed_failures=0):
+    def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, coordinator=coordinator)
-        self._allowed_failures = allowed_failures
-        self._failure = 0
 
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
@@ -774,45 +771,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
         )
-
-    async def async_update(self):
-        """Fetch state from the device."""
-        # On state change the device doesn't provide the new state immediately.
-        if self._skip_update:
-            self._skip_update = False
-            return
-
-        try:
-            state = await self.hass.async_add_executor_job(self._device.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._state_attrs.update(
-                {
-                    key: self._extract_value_from_attribute(state, value)
-                    for key, value in self._available_attributes.items()
-                }
-            )
-
-            self._failure = 0
-
-        except DeviceException as ex:
-            self._failure += 1
-            if self._failure < self._allowed_failures:
-                _LOGGER.info(
-                    "Got exception while fetching the state: %s, failure: %d",
-                    ex,
-                    self._failure,
-                )
-            else:
-                if self._available:
-                    self._available = False
-                    _LOGGER.error(
-                        "Got exception while fetching the state: %s, failure: %d",
-                        ex,
-                        self._failure,
-                    )
 
     @property
     def preset_mode(self):
@@ -1143,30 +1101,22 @@ class XiaomiAirFresh(XiaomiGenericDevice):
             {attribute: None for attribute in self._available_attributes}
         )
 
-    async def async_update(self):
+    @callback
+    def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
             return
 
-        try:
-            state = await self.hass.async_add_executor_job(self._device.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._state_attrs.update(
-                {
-                    key: self._extract_value_from_attribute(state, value)
-                    for key, value in self._available_attributes.items()
-                }
-            )
-
-        except DeviceException as ex:
-            if self._available:
-                self._available = False
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
+        self._available = True
+        self._state = self.coordinator.data.is_on
+        self._state_attrs.update(
+            {
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
+                for key, value in self._available_attributes.items()
+            }
+        )
 
     @property
     def preset_mode(self):
