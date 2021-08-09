@@ -1377,6 +1377,18 @@ async def test_additional_data_in_core_config(hass, hass_storage):
 async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
     """Test that we warn when detecting invalid internal/extenral url."""
     config = ha.Config(hass)
+
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "internal_url": None,
+            "external_url": None,
+        },
+    }
+    await config.async_load()
+    assert "Invalid external_url set" not in caplog.text
+    assert "Invalid internal_url set" not in caplog.text
+
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,
         "data": {
