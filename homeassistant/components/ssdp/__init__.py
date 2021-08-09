@@ -270,6 +270,17 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL
         )
 
+        # Trigger a manual broadcast-search.
+        for listener in self._ssdp_listeners:
+            try:
+                IPv4Address(listener.source_ip)
+            except ValueError:
+                continue
+            # Some sonos devices only seem to respond if we send to the broadcast
+            # address. This matches pysonos' behavior
+            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+            listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
+
     @core_callback
     def _async_get_matching_callbacks(
         self, headers: Mapping[str, str]

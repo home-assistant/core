@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def device_discovered(info: Mapping[str, Any]) -> None:
         nonlocal discovery_info
-        _LOGGER.info(
+        _LOGGER.debug(
             "Device discovered: %s, at: %s", usn, info[ssdp.ATTR_SSDP_LOCATION]
         )
         discovery_info = info
