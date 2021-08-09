@@ -5,8 +5,6 @@ import logging
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
-from homeassistant.util import dt as dt_util
-
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
@@ -16,13 +14,13 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
