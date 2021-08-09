@@ -64,13 +64,11 @@ async def async_setup_entry(
             coordinator = get_coordinator_for_meter(hass, meter, discovergy_instance)
             await coordinator.async_config_entry_first_refresh()
 
-            for value, description in ELECTRICITY_SENSORS.items():
+            for description in ELECTRICITY_SENSORS:
                 # check if this meter has this data, then add this sensor
-                if coordinator.data.values[value]:
+                if coordinator.data.values[description.key]:
                     entities.append(
-                        DiscovergyElectricitySensor(
-                            value, description, meter, coordinator
-                        )
+                        DiscovergyElectricitySensor(description, meter, coordinator)
                     )
 
     async_add_entities(entities, False)
@@ -81,13 +79,11 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        value: str,
         description: SensorEntityDescription,
         meter: Meter,
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        self._value = value
         self._meter = meter
         self.coordinator = coordinator
 
@@ -121,9 +117,15 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
     def state(self) -> StateType:
         """Return the sensor state."""
         if self.coordinator.data:
-            if self._value == "energy" or self._value == "energyOut":
-                return self.coordinator.data.values[self._value] / 10000000000
+            if (
+                self.entity_description.key == "energy"
+                or self.entity_description.key == "energyOut"
+            ):
+                return (
+                    self.coordinator.data.values[self.entity_description.key]
+                    / 10000000000
+                )
             else:
-                return self.coordinator.data.values[self._value] / 1000
+                return self.coordinator.data.values[self.entity_description.key] / 1000
 
         return None

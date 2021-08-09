@@ -10,8 +10,8 @@ from pydiscovergy.models import ConsumerToken, RequestToken
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from ...exceptions import ConfigEntryNotReady
 from .const import (
     APP_NAME,
     CONF_ACCESS_TOKEN,
