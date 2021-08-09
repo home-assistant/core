@@ -22,7 +22,7 @@ MAX_TRANSITION_TIME: Final = 5000
 
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHBDUO-1",
-    "SHBLB-1",
+    "SHCB-1",
     "SHDM-1",
     "SHDM-2",
     "SHRGBW2",
