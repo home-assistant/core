@@ -35,7 +35,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="exchangerate",
         name="Exchange rate (1 BTC)",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="trade_volume_btc",
@@ -60,7 +59,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="difficulty",
         name="Difficulty",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="minutes_between_blocks",
@@ -70,7 +68,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="number_of_transactions",
         name="No. of Transactions",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="hash_rate",
@@ -80,17 +77,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="timestamp",
         name="Timestamp",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="mined_blocks",
         name="Mined Blocks",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="blocks_size",
         name="Block size",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="total_fees_btc",
@@ -115,12 +109,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="total_blocks",
         name="Total Blocks",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="next_retarget",
         name="Next retarget",
-        unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="estimated_transaction_volume_usd",
