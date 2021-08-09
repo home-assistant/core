@@ -25,6 +25,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin,
+    color_temperature_to_hs,
+)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -57,30 +61,35 @@ class Light(HomeAccessory):
 
         self.chars_primary = []
         self.chars_secondary = []
+        disable_color_temp_rgb = False
 
         state = self.hass.states.get(self.entity_id)
         attributes = state.attributes
         color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
-        self.is_color_supported = color_supported(color_modes)
-        self.is_color_temp_supported = color_temp_supported(color_modes)
+        self.color_supported = color_supported(color_modes)
+        self.color_temp_supported = color_temp_supported(color_modes)
         self.color_and_temp_supported = (
-            self.is_color_supported and self.is_color_temp_supported
+            self.color_supported and self.color_temp_supported
         )
-        self.is_brightness_supported = brightness_supported(color_modes)
 
-        if self.is_brightness_supported:
+        if self.color_temp_supported and disable_color_temp_rgb:
+            self.color_temp_supported = False
+            self.color_and_temp_supported = False
+
+        self.brightness_supported = brightness_supported(color_modes)
+
+        if self.brightness_supported:
             self.chars_primary.append(CHAR_BRIGHTNESS)
 
-        if self.is_color_supported:
+        if self.color_supported:
             self.chars_primary.append(CHAR_HUE)
             self.chars_primary.append(CHAR_SATURATION)
 
-        if self.is_color_temp_supported:
+        if self.color_temp_supported:
             if self.color_and_temp_supported:
                 self.chars_primary.append(CHAR_NAME)
-                self.chars_secondary.append(CHAR_NAME)
-                self.chars_secondary.append(CHAR_COLOR_TEMPERATURE)
-                if self.is_brightness_supported:
+                self.chars_secondary.extend([CHAR_NAME, CHAR_COLOR_TEMPERATURE])
+                if self.brightness_supported:
                     self.chars_secondary.append(CHAR_BRIGHTNESS)
             else:
                 self.chars_primary.append(CHAR_COLOR_TEMPERATURE)
@@ -102,7 +111,7 @@ class Light(HomeAccessory):
             )
             serv_light_secondary.configure_char(CHAR_NAME, value="Temperature")
 
-        if self.is_brightness_supported:
+        if self.brightness_supported:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
             # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
@@ -114,7 +123,7 @@ class Light(HomeAccessory):
                     CHAR_BRIGHTNESS, value=100
                 )
 
-        if self.is_color_temp_supported:
+        if self.color_temp_supported:
             min_mireds = attributes.get(ATTR_MIN_MIREDS, 153)
             max_mireds = attributes.get(ATTR_MAX_MIREDS, 500)
             serv_light = serv_light_secondary or serv_light_primary
@@ -124,7 +133,7 @@ class Light(HomeAccessory):
                 properties={PROP_MIN_VALUE: min_mireds, PROP_MAX_VALUE: max_mireds},
             )
 
-        if self.is_color_supported:
+        if self.color_supported:
             self.char_hue = serv_light_primary.configure_char(CHAR_HUE, value=0)
             self.char_saturation = serv_light_primary.configure_char(
                 CHAR_SATURATION, value=75
@@ -170,7 +179,7 @@ class Light(HomeAccessory):
             )
             return
 
-        if self.is_color_temp_supported and (
+        if self.color_temp_supported and (
             is_primary is False or CHAR_COLOR_TEMPERATURE in char_values
         ):
             params[ATTR_COLOR_TEMP] = char_values.get(
@@ -232,15 +241,25 @@ class Light(HomeAccessory):
                     self.char_brightness_secondary.set_value(brightness)
 
         # Handle color temperature
-        if self.is_color_temp_supported:
+        if self.color_temp_supported:
             color_temperature = attributes.get(ATTR_COLOR_TEMP)
             if isinstance(color_temperature, (int, float)):
                 color_temperature = round(color_temperature, 0)
                 self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
-        if self.is_color_supported:
-            hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
+        if self.color_supported:
+            if (
+                not self.color_and_temp_supported
+                and ATTR_COLOR_TEMP in new_state.attributes
+            ):
+                hue, saturation = color_temperature_to_hs(
+                    color_temperature_mired_to_kelvin(
+                        new_state.attributes[ATTR_COLOR_TEMP]
+                    )
+                )
+            else:
+                hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 hue = round(hue, 0)
                 saturation = round(saturation, 0)
