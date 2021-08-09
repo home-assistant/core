@@ -97,5 +97,7 @@ class AquaLogicSensor(SensorEntity):
                 self.async_write_ha_state()
             else:
                 self._attr_unit_of_measurement = SENSOR_TYPES[self._type][1][1]
+                self._attr_state = getattr(panel, self._type)
+                self.async_write_ha_state()
         else:
             self._attr_unit_of_measurement = None
