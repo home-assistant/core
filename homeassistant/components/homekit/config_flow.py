@@ -331,7 +331,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.hk_options.get(CONF_AUTO_START, DEFAULT_AUTO_START),
             ): bool
         }
-        if self.hk_options[CONF_FILTER][CONF_INCLUDE_DOMAINS]:
+        if self._async_has_lights():
             schema[
                 vol.Optional(
                     CONF_COLOR_TEMP_RGB,
@@ -345,6 +345,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="advanced",
             data_schema=vol.Schema(schema),
         )
+
+    @callback
+    def _async_has_lights(self):
+        filter = self.hk_options[CONF_FILTER]
+        if "light" in filter[CONF_INCLUDE_DOMAINS]:
+            return True
+        for entity_id in filter[CONF_INCLUDE_ENTITIES]:
+            if entity_id.startswith("light."):
+                return True
+        return False
 
     async def async_step_cameras(self, user_input=None):
         """Choose camera config."""
