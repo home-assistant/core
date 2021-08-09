@@ -38,6 +38,7 @@ from .const import (
     CHAR_NAME,
     CHAR_ON,
     CHAR_SATURATION,
+    CONF_DISABLE_COLOR_TEMP_RGB,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
@@ -61,7 +62,7 @@ class Light(HomeAccessory):
 
         self.chars_primary = []
         self.chars_secondary = []
-        disable_color_temp_rgb = False
+        disable_color_temp_rgb = self.config.get(CONF_DISABLE_COLOR_TEMP_RGB)
 
         state = self.hass.states.get(self.entity_id)
         attributes = state.attributes
