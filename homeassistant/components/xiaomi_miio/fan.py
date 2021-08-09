@@ -1138,6 +1138,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         self._speed_list = OPERATION_MODES_AIRFRESH
         self._speed_count = 4
         self._preset_modes = PRESET_MODES_AIRFRESH
+        self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
         )
