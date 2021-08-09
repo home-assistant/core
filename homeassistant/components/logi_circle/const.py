@@ -20,37 +20,37 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="battery_level",
         name="Battery",
         unit_of_measurement=PERCENTAGE,
-        icon="battery-50",
+        icon="mdi:battery-50",
     ),
     SensorEntityDescription(
         key="last_activity_time",
         name="Last Activity",
         unit_of_measurement=None,
-        icon="history",
+        icon="mdi:history",
     ),
     SensorEntityDescription(
         key="recording",
         name="Recording Mode",
         unit_of_measurement=None,
-        icon="eye",
+        icon="mdi:eye",
     ),
     SensorEntityDescription(
         key="signal_strength_category",
         name="WiFi Signal Category",
         unit_of_measurement=None,
-        icon="wifi",
+        icon="mdi:wifi",
     ),
     SensorEntityDescription(
         key="signal_strength_percentage",
         name="WiFi Signal Strength",
         unit_of_measurement=PERCENTAGE,
-        icon="wifi",
+        icon="mdi:wifi",
     ),
     SensorEntityDescription(
         key="streaming",
         name="Streaming Mode",
         unit_of_measurement=None,
-        icon="camera",
+        icon="mdi:camera",
     ),
 )
 

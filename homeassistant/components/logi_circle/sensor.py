@@ -51,7 +51,6 @@ class LogiSensor(SensorEntity):
         self.entity_description = description
         self._camera = camera
         self._attr_unique_id = f"{self._camera.mac_address}-{description.key}"
-        self._icon = f"mdi:{description.icon}"
         self._attr_name = f"{self._camera.name} {description.name}"
         self._activity: dict[Any, Any] = {}
         self._state = None
@@ -101,7 +100,7 @@ class LogiSensor(SensorEntity):
             return "mdi:eye" if self._state == STATE_ON else "mdi:eye-off"
         if sensor_type == "streaming_mode" and self._state is not None:
             return "mdi:camera" if self._state == STATE_ON else "mdi:camera-off"
-        return self._icon
+        return self.entity_description.icon
 
     async def async_update(self):
         """Get the latest data and updates the state."""
