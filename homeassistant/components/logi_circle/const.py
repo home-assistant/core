@@ -25,19 +25,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="last_activity_time",
         name="Last Activity",
-        unit_of_measurement=None,
         icon="mdi:history",
     ),
     SensorEntityDescription(
         key="recording",
         name="Recording Mode",
-        unit_of_measurement=None,
         icon="mdi:eye",
     ),
     SensorEntityDescription(
         key="signal_strength_category",
         name="WiFi Signal Category",
-        unit_of_measurement=None,
         icon="mdi:wifi",
     ),
     SensorEntityDescription(
@@ -49,7 +46,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="streaming",
         name="Streaming Mode",
-        unit_of_measurement=None,
         icon="mdi:camera",
     ),
 )
