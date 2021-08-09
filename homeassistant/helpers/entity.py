@@ -165,13 +165,13 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 class DeviceInfo(TypedDict, total=False):
     """Entity device information for device registry."""
 
-    name: str
+    name: str | None
     connections: set[tuple[str, str]]
     identifiers: set[tuple[str, str]]
-    manufacturer: str
-    model: str
-    suggested_area: str
-    sw_version: str
+    manufacturer: str | None
+    model: str | None
+    suggested_area: str | None
+    sw_version: str | None
     via_device: tuple[str, str]
     entry_type: str | None
     default_name: str
