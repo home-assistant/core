@@ -1,7 +1,6 @@
 """Support for RFXtrx binary sensors."""
 from __future__ import annotations
 
-from dataclasses import replace
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -15,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_DEVICE_CLASS,
     CONF_DEVICES,
     STATE_ON,
 )
@@ -110,12 +108,10 @@ async def async_setup_entry(
 
     discovery_info = config_entry.data
 
-    def get_sensor_description(type_string: str, device_class: str | None = None):
+    def get_sensor_description(type_string: str):
         description = SENSOR_TYPES_DICT.get(type_string)
         if description is None:
             description = BinarySensorEntityDescription(key=type_string)
-        if device_class:
-            description = replace(description, device_class=device_class)
         return description
 
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
@@ -140,9 +136,7 @@ async def async_setup_entry(
         device = RfxtrxBinarySensor(
             event.device,
             device_id,
-            get_sensor_description(
-                event.device.type_string, entity_info.get(CONF_DEVICE_CLASS)
-            ),
+            get_sensor_description(event.device.type_string),
             entity_info.get(CONF_OFF_DELAY),
             entity_info.get(CONF_DATA_BITS),
             entity_info.get(CONF_COMMAND_ON),
