@@ -65,6 +65,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
+    CONF_LAST_RESET,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_MSG_WAIT,
@@ -264,6 +265,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
+            vol.Optional(CONF_LAST_RESET): cv.datetime,
         }
     ),
 )
