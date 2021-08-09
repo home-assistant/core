@@ -34,10 +34,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     monitored_conditions = entry.data.get(CONF_SENSORS).get(CONF_MONITORED_CONDITIONS)
     entities = [
         LogiSensor(device, time_zone, description)
-        for device in devices
         for description in SENSOR_TYPES
         if description.key in monitored_conditions
-        and device.supports_feature(description.key)
+        for device in devices
+        if device.supports_feature(description.key)
     ]
 
     async_add_entities(entities, True)
