@@ -5,8 +5,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.arlo import DATA_ARLO, sensor as arlo
+from homeassistant.components.arlo.sensor import SENSOR_TYPES
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -20,7 +22,11 @@ def _get_named_tuple(input_dict):
 def _get_sensor(name="Last", sensor_type="last_capture", data=None):
     if data is None:
         data = {}
-    return arlo.ArloSensor(name, data, sensor_type)
+    sensor_entry = next(
+        sensor_entry for sensor_entry in SENSOR_TYPES if sensor_entry.key == sensor_type
+    )
+    sensor_entry.name = name
+    return arlo.ArloSensor(data, sensor_entry)
 
 
 @pytest.fixture()
@@ -156,14 +162,14 @@ def test_sensor_state_default(default_sensor):
     assert default_sensor.state is None
 
 
-def test_sensor_icon_battery(battery_sensor):
-    """Test the battery icon."""
-    assert battery_sensor.icon == "mdi:battery-50"
+def test_sensor_device_class__battery(battery_sensor):
+    """Test the battery device_class."""
+    assert battery_sensor.device_class == DEVICE_CLASS_BATTERY
 
 
-def test_sensor_icon(temperature_sensor):
-    """Test the icon property."""
-    assert temperature_sensor.icon == "mdi:thermometer"
+def test_sensor_device_class(temperature_sensor):
+    """Test the device_class property."""
+    assert temperature_sensor.device_class == DEVICE_CLASS_TEMPERATURE
 
 
 def test_unit_of_measure(default_sensor, battery_sensor):

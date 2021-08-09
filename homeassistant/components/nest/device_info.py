@@ -40,7 +40,7 @@ class NestDeviceInfo:
         )
 
     @property
-    def device_name(self) -> str:
+    def device_name(self) -> str | None:
         """Return the name of the physical device that includes the sensor."""
         if InfoTrait.NAME in self._device.traits:
             trait: InfoTrait = self._device.traits[InfoTrait.NAME]
@@ -56,11 +56,9 @@ class NestDeviceInfo:
         return self.device_model
 
     @property
-    def device_model(self) -> str:
+    def device_model(self) -> str | None:
         """Return device model information."""
         # The API intentionally returns minimal information about specific
         # devices, instead relying on traits, but we can infer a generic model
         # name based on the type
-        if self._device.type in DEVICE_TYPE_MAP:
-            return DEVICE_TYPE_MAP[self._device.type]
-        return "Unknown"
+        return DEVICE_TYPE_MAP.get(self._device.type)

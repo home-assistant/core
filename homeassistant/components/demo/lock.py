@@ -97,3 +97,4 @@ class DemoLock(LockEntity):
         """Flag supported features."""
         if self._openable:
             return SUPPORT_OPEN
+        return 0
