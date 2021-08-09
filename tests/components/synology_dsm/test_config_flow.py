@@ -257,7 +257,7 @@ async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
 
 async def test_reauth(hass: HomeAssistant, service: MagicMock):
     """Test reauthentication."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: HOST,
@@ -265,7 +265,8 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
             CONF_PASSWORD: f"{PASSWORD}_invalid",
         },
         unique_id=SERIAL,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -274,7 +275,11 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={
+                "source": SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
             data={
                 CONF_HOST: HOST,
                 CONF_USERNAME: USERNAME,

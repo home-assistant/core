@@ -60,8 +60,8 @@ def _discovery_schema_with_defaults(discovery_info: DiscoveryInfoType) -> vol.Sc
 def _reauth_schema() -> vol.Schema:
     return vol.Schema(
         {
-            vol.Required(CONF_USERNAME, default=""): str,
-            vol.Required(CONF_PASSWORD, default=""): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
         }
     )
 
@@ -128,6 +128,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id = "link"
             data_schema = _discovery_schema_with_defaults(user_input)
             description_placeholders = self.discovered_conf
+        elif self.reauth_conf:
+            step_id = "reauth_confirm"
+            data_schema = _reauth_schema()
         else:
             step_id = "user"
             data_schema = _user_schema_with_defaults(user_input)
@@ -150,6 +153,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.discovered_conf:
             user_input.update(self.discovered_conf)
+
+        if self.reauth_conf:
+            user_input = {**self.reauth_conf, **user_input}
 
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT)
@@ -273,14 +279,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", data_schema=_reauth_schema()
             )
 
-        self.reauth_conf.update(
-            {
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-            }
-        )
-        user_input.update(self.reauth_conf)
-        return await self.async_step_user(user_input)
+        self.reauth_conf = {**self.reauth_conf, **user_input}
+
+        return await self.async_step_user(self.reauth_conf)
 
     async def async_step_link(self, user_input: dict[str, Any]) -> FlowResult:
         """Link a config entry from discovery."""
