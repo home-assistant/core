@@ -64,10 +64,29 @@ def process_turn_on_params(
 
     if not supported_features & SUPPORT_TONES:
         params.pop(ATTR_TONE, None)
-    elif (tone := params.get(ATTR_TONE)) is not None and (
-        not siren.available_tones or tone not in siren.available_tones
-    ):
-        raise ValueError(f"Invalid tone received for entity {siren.entity_id}: {tone}")
+    elif (tone := params.get(ATTR_TONE)) is not None:
+        # Raise an exception if the specified tone isn't available
+        is_tone_dict_value = bool(
+            isinstance(siren.available_tones, dict)
+            and tone in siren.available_tones.values()
+        )
+        if (
+            not siren.available_tones
+            or tone not in siren.available_tones
+            and not is_tone_dict_value
+        ):
+            raise ValueError(
+                f"Invalid tone specified for entity {siren.entity_id}: {tone}, "
+                "check the available_tones attribute for valid tones to pass in"
+            )
+
+        # If available tones is a dict, and the tone provided is a dict value, we need
+        # to transform it to the corresponding dict key before returning
+        if is_tone_dict_value:
+            assert isinstance(siren.available_tones, dict)
+            params[ATTR_TONE] = next(
+                key for key, value in siren.available_tones.items() if value == tone
+            )
 
     if not supported_features & SUPPORT_DURATION:
         params.pop(ATTR_DURATION, None)
@@ -131,7 +150,7 @@ class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
 
     entity_description: SirenEntityDescription
-    _attr_available_tones: list[int | str] | None = None
+    _attr_available_tones: list[int | str] | dict[int, str] | None = None
 
     @final
     @property
@@ -145,7 +164,7 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def available_tones(self) -> list[int | str] | None:
+    def available_tones(self) -> list[int | str] | dict[int, str] | None:
         """
         Return a list of available tones.
 
