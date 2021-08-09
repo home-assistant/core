@@ -1,8 +1,10 @@
 """Support for monitoring a Smappee energy sensor."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
@@ -31,7 +33,7 @@ TREND_SENSORS = {
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_today",
-        None,
+        ENERGY_WATT_HOUR,
         False,  # cloud only
     ],
     "power_current_hour": [
@@ -39,7 +41,7 @@ TREND_SENSORS = {
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_current_hour",
-        None,
+        ENERGY_WATT_HOUR,
         False,  # cloud only
     ],
     "power_last_5_minutes": [
@@ -47,7 +49,7 @@ TREND_SENSORS = {
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_last_5_minutes",
-        None,
+        ENERGY_WATT_HOUR,
         False,  # cloud only
     ],
     "alwayson_today": [
@@ -55,7 +57,7 @@ TREND_SENSORS = {
         "mdi:sleep",
         ENERGY_WATT_HOUR,
         "alwayson_today",
-        None,
+        ENERGY_WATT_HOUR,
         False,  # cloud only
     ],
 }
@@ -82,7 +84,7 @@ SOLAR_SENSORS = {
         "mdi:white-balance-sunny",
         ENERGY_WATT_HOUR,
         "solar_today",
-        None,
+        ENERGY_WATT_HOUR,
         False,  # cloud only
     ],
     "solar_current_hour": [
@@ -90,7 +92,7 @@ SOLAR_SENSORS = {
         "mdi:white-balance-sunny",
         ENERGY_WATT_HOUR,
         "solar_current_hour",
-        None,
+        ENERGY_WATT_HOUR,
         False,  # cloud only
     ],
 }
@@ -100,7 +102,7 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_a",
-        None,
+        DEVICE_CLASS_VOLTAGE,
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "phase_voltages_b": [
@@ -108,7 +110,7 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_b",
-        None,
+        DEVICE_CLASS_VOLTAGE,
         ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "phase_voltages_c": [
@@ -116,7 +118,7 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_c",
-        None,
+        DEVICE_CLASS_VOLTAGE,
         ["THREE_STAR"],
     ],
     "line_voltages_a": [
@@ -124,7 +126,7 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_a",
-        None,
+        DEVICE_CLASS_VOLTAGE,
         ["ONE", "TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_b": [
@@ -132,7 +134,7 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_b",
-        None,
+        DEVICE_CLASS_VOLTAGE,
         ["TWO", "THREE_STAR", "THREE_DELTA"],
     ],
     "line_voltages_c": [
@@ -140,7 +142,7 @@ VOLTAGE_SENSORS = {
         "mdi:flash",
         ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_c",
-        None,
+        DEVICE_CLASS_VOLTAGE,
         ["THREE_STAR", "THREE_DELTA"],
     ],
 }
@@ -246,6 +248,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
+        # Add today_energy_kwh sensors for switches
+        for actuator_id, actuator in service_location.actuators.items():
+            if actuator.type == "SWITCH":
+                entities.append(
+                    SmappeeSensor(
+                        smappee_base=smappee_base,
+                        service_location=service_location,
+                        sensor="switch",
+                        attributes=[
+                            f"{actuator.name} - energy today",
+                            "mdi:power-plug",
+                            ENERGY_KILO_WATT_HOUR,
+                            actuator_id,
+                            ENERGY_KILO_WATT_HOUR,
+                            False,  # cloud only
+                        ],
+                    )
+                )
+
     async_add_entities(entities, True)
 
 
@@ -268,7 +289,7 @@ class SmappeeSensor(SensorEntity):
     @property
     def name(self):
         """Return the name for this sensor."""
-        if self._sensor in ("sensor", "load"):
+        if self._sensor in ("sensor", "load", "switch"):
             return (
                 f"{self._service_location.service_location_name} - "
                 f"{self._sensor.title()} - {self._name}"
@@ -292,6 +313,11 @@ class SmappeeSensor(SensorEntity):
         return self._device_class
 
     @property
+    def state_class(self):
+        """Return the state class of this device."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
@@ -301,7 +327,7 @@ class SmappeeSensor(SensorEntity):
         self,
     ):
         """Return the unique ID for this sensor."""
-        if self._sensor in ("load", "sensor"):
+        if self._sensor in ("load", "sensor", "switch"):
             return (
                 f"{self._service_location.device_serial_number}-"
                 f"{self._service_location.service_location_id}-"
@@ -379,3 +405,9 @@ class SmappeeSensor(SensorEntity):
             for channel in sensor.channels:
                 if channel.get("channel") == int(channel_id):
                     self._state = channel.get("value_today")
+        elif self._sensor == "switch":
+            cons = self._service_location.actuators.get(
+                self._sensor_id
+            ).consumption_today
+            if cons is not None:
+                self._state = round(cons / 1000.0, 2)
