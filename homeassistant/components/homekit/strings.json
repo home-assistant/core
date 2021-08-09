@@ -31,6 +31,7 @@
             },
             "advanced": {
                 "data": {
+                    "disable_color_temp_rgb": "Disable Color Tempature support for RGB bulbs that support both",
                     "auto_start": "Autostart (disable if you are calling the homekit.start service manually)"
                 },
                 "description": "These settings only need to be adjusted if HomeKit is not functional.",

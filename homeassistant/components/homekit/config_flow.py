@@ -37,12 +37,14 @@ from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_AUTO_START,
+    CONF_COLOR_TEMP_RGB,
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
     CONF_VIDEO_CODEC,
     DEFAULT_AUTO_START,
+    DEFAULT_COLOR_TEMP_RGB,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_HOMEKIT_MODE,
     DOMAIN,
@@ -316,6 +318,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hk_options[CONF_AUTO_START] = self.hk_options.get(
                 CONF_AUTO_START, DEFAULT_AUTO_START
             )
+            self.hk_options[CONF_COLOR_TEMP_RGB] = self.hk_options.get(
+                CONF_COLOR_TEMP_RGB, DEFAULT_COLOR_TEMP_RGB
+            )
 
             for key in (CONF_DOMAINS, CONF_ENTITIES):
                 if key in self.hk_options:
@@ -323,18 +328,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return self.async_create_entry(title="", data=self.hk_options)
 
+        schema = {
+            vol.Optional(
+                CONF_AUTO_START,
+                default=self.hk_options.get(CONF_AUTO_START, DEFAULT_AUTO_START),
+            ): bool
+        }
+        if self.hk_options[CONF_FILTER][CONF_INCLUDE_DOMAINS]:
+            schema[
+                vol.Optional(
+                    CONF_COLOR_TEMP_RGB,
+                    default=self.hk_options.get(
+                        CONF_COLOR_TEMP_RGB, DEFAULT_COLOR_TEMP_RGB
+                    ),
+                )
+            ] = bool
+
         return self.async_show_form(
             step_id="advanced",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_AUTO_START,
-                        default=self.hk_options.get(
-                            CONF_AUTO_START, DEFAULT_AUTO_START
-                        ),
-                    ): bool
-                }
-            ),
+            data_schema=vol.Schema(schema),
         )
 
     async def async_step_cameras(self, user_input=None):
