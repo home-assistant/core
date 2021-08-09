@@ -573,7 +573,7 @@ homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yale_smart_alarm/* @gjohansson-ST
 homeassistant/components/yamaha_musiccast/* @vigonotion @micha91
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
-homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn
+homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn @starkillerOG
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yi/* @bachya
 homeassistant/components/zeroconf/* @bdraco
