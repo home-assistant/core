@@ -115,6 +115,7 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema(
         vol.Optional(CONF_OFFSET): cv.string,
         vol.Optional(CONF_SEARCH): cv.string,
         vol.Optional(CONF_TRACK): cv.boolean,
+        vol.Optional("max_results"): vol.All(cv.deprecated),  # Now unused
     }
 )
 

@@ -126,6 +126,7 @@ class GoogleCalendarData:
             return None, None
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params["calendarId"] = self.calendar_id
+        params["maxResults"] = 100  # Page size
 
         if self.search:
             params["q"] = self.search
