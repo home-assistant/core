@@ -68,7 +68,7 @@ from .const import (
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
     CONF_AUTO_START,
-    CONF_DISABLE_COLOR_TEMP_RGB,
+    CONF_COLOR_TEMP_RGB,
     CONF_ENTITY_CONFIG,
     CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
@@ -179,10 +179,10 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
 
-# Only CONF_DISABLE_COLOR_TEMP_RGB supported for now
+# Only CONF_COLOR_TEMP_RGB supported for now
 # but this will be used to simplify configure camera audio and
 # codecs from the UI in the future
-ENTRY_CONFIG_OPTIONS = {CONF_DISABLE_COLOR_TEMP_RGB}
+ENTRY_CONFIG_OPTIONS = {CONF_COLOR_TEMP_RGB}
 
 
 def _async_get_entries_by_name(current_entries):
@@ -282,7 +282,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
-    entry_options = {k: v for k, v in entry.options() if k in ENTRY_CONFIG_OPTIONS}
+    entry_config = {k: v for k, v in entry.options() if k in ENTRY_CONFIG_OPTIONS}
 
     homekit = HomeKit(
         hass,
@@ -296,7 +296,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         advertise_ip,
         entry.entry_id,
         entry.title,
-        entry_options,
+        entry_config,
     )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
