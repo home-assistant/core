@@ -445,7 +445,7 @@ async def test_x_forwarded_host_with_empty_header(aiohttp_client, caplog):
 
 
 async def test_x_forwarded_cloud(aiohttp_client, caplog):
-    """Test that we get a HTTP 400 bad request with empty host value."""
+    """Test that cloud requests are not processed."""
     app = web.Application()
     app.router.add_get("/", mock_handler)
     async_setup_forwarded(app, True, [ip_network("127.0.0.1")])
