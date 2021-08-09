@@ -8,6 +8,7 @@ from homeassistant.components.arlo import DATA_ARLO, sensor as arlo
 from homeassistant.components.arlo.sensor import SENSOR_TYPES
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -161,14 +162,14 @@ def test_sensor_state_default(default_sensor):
     assert default_sensor.state is None
 
 
-def test_sensor_icon_battery(battery_sensor):
-    """Test the battery icon."""
-    assert battery_sensor.icon == "mdi:battery-50"
+def test_sensor_device_class__battery(battery_sensor):
+    """Test the battery device_class."""
+    assert battery_sensor.device_class == DEVICE_CLASS_BATTERY
 
 
-def test_sensor_icon(temperature_sensor):
-    """Test the icon property."""
-    assert temperature_sensor.icon == "mdi:thermometer"
+def test_sensor_device_class(temperature_sensor):
+    """Test the device_class property."""
+    assert temperature_sensor.device_class == DEVICE_CLASS_TEMPERATURE
 
 
 def test_unit_of_measure(default_sensor, battery_sensor):
