@@ -1,4 +1,7 @@
 """Constants in Logi Circle component."""
+from __future__ import annotations
+
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import PERCENTAGE
 
 DOMAIN = "logi_circle"
@@ -12,15 +15,44 @@ DEFAULT_CACHEDB = ".logi_cache.pickle"
 LED_MODE_KEY = "LED"
 RECORDING_MODE_KEY = "RECORDING_MODE"
 
-# Sensor types: Name, unit of measure, icon per sensor key.
-LOGI_SENSORS = {
-    "battery_level": ["Battery", PERCENTAGE, "battery-50"],
-    "last_activity_time": ["Last Activity", None, "history"],
-    "recording": ["Recording Mode", None, "eye"],
-    "signal_strength_category": ["WiFi Signal Category", None, "wifi"],
-    "signal_strength_percentage": ["WiFi Signal Strength", PERCENTAGE, "wifi"],
-    "streaming": ["Streaming Mode", None, "camera"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="battery_level",
+        name="Battery",
+        unit_of_measurement=PERCENTAGE,
+        icon="battery-50",
+    ),
+    SensorEntityDescription(
+        key="last_activity_time",
+        name="Last Activity",
+        unit_of_measurement=None,
+        icon="history",
+    ),
+    SensorEntityDescription(
+        key="recording",
+        name="Recording Mode",
+        unit_of_measurement=None,
+        icon="eye",
+    ),
+    SensorEntityDescription(
+        key="signal_strength_category",
+        name="WiFi Signal Category",
+        unit_of_measurement=None,
+        icon="wifi",
+    ),
+    SensorEntityDescription(
+        key="signal_strength_percentage",
+        name="WiFi Signal Strength",
+        unit_of_measurement=PERCENTAGE,
+        icon="wifi",
+    ),
+    SensorEntityDescription(
+        key="streaming",
+        name="Streaming Mode",
+        unit_of_measurement=None,
+        icon="camera",
+    ),
+)
 
 SIGNAL_LOGI_CIRCLE_RECONFIGURE = "logi_circle_reconfigure"
 SIGNAL_LOGI_CIRCLE_SNAPSHOT = "logi_circle_snapshot"
