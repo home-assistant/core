@@ -431,7 +431,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         self._attr_device_info = {
             "identifiers": {(DOMAIN, system.system_id)},
             "manufacturer": "SimpliSafe",
-            "model": system.version,
+            "model": str(system.version),
             "name": name,
             "via_device": (DOMAIN, system.serial),
         }
