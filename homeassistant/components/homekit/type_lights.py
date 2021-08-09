@@ -261,10 +261,7 @@ class Light(HomeAccessory):
 
         # Handle Color
         if self.color_supported:
-            if (
-                not self.color_and_temp_supported
-                and ATTR_COLOR_TEMP in new_state.attributes
-            ):
+            if not self.color_and_temp_supported and ATTR_COLOR_TEMP in attributes:
                 hue, saturation = color_temperature_to_hs(
                     color_temperature_mired_to_kelvin(
                         new_state.attributes[ATTR_COLOR_TEMP]
