@@ -119,7 +119,6 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Average Gas Usage",
         ATTR_SECTION: "gas_usage",
         ATTR_MEASUREMENT: "average",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_GAS,
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_CM3,
         ATTR_ICON: "mdi:gas-cylinder",
     },
