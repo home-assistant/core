@@ -142,7 +142,15 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     zc_args: dict = {}
 
     adapters = await network.async_get_adapters(hass)
-    if _async_use_default_interface(adapters):
+
+    ipv6 = True
+    if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
+        ipv6 = False
+        zc_args["ip_version"] = IPVersion.V4Only
+    else:
+        zc_args["ip_version"] = IPVersion.All
+
+    if not ipv6 and _async_use_default_interface(adapters):
         zc_args["interfaces"] = InterfaceChoice.Default
     else:
         interfaces = zc_args["interfaces"] = []
@@ -157,13 +165,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 )
             if adapter["ipv6"] and adapter["index"] not in interfaces:
                 interfaces.append(adapter["index"])
-
-    ipv6 = True
-    if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
-        ipv6 = False
-        zc_args["ip_version"] = IPVersion.V4Only
-    else:
-        zc_args["ip_version"] = IPVersion.All
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
