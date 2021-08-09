@@ -173,7 +173,9 @@ class HlsPlaylistView(StreamView):
         for i, segment in enumerate(segments[:-1], 3 - len(segments)):
             playlist.append(
                 segment.render_hls(
-                    last_stream_id=last_stream_id, render_parts=i >= 0, add_hint=False
+                    last_stream_id=last_stream_id,
+                    render_parts=i >= 0 and track.stream_settings.ll_hls,
+                    add_hint=False,
                 )
             )
             last_stream_id = segment.stream_id
