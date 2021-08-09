@@ -186,7 +186,7 @@ class Light(HomeAccessory):
                 )
                 events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
-            if self.is_color_supported and (
+            if self.color_supported and (
                 is_primary is True
                 or (CHAR_HUE in char_values and CHAR_SATURATION in char_values)
             ):
@@ -235,7 +235,7 @@ class Light(HomeAccessory):
                 self.char_on_primary.set_value(char_on_value)
 
         # Handle Brightness
-        if self.is_brightness_supported:
+        if self.brightness_supported:
             brightness = attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, (int, float)):
                 brightness = round(brightness / 255 * 100, 0)
