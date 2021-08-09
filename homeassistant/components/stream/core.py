@@ -150,6 +150,12 @@ class Segment:
         if not self.hls_playlist_template:
             # This is a placeholder where the rendered parts will be inserted
             self.hls_playlist_template.append("{}")
+        if not self.hls_playlist_parts:
+            self.hls_playlist_parts.append(
+                "#EXT-X-PROGRAM-DATE-TIME:"
+                + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                + "Z"
+            )
         if render_parts:
             for http_range_start, part in itertools.islice(
                 self.parts_by_byterange.items(),
@@ -162,24 +168,20 @@ class Segment:
                     f'@{http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
                 )
         if self.complete:
-            # Remake the playlist template with the remaining segment metadata
-            self.hls_playlist_template = [
-                # Squeeze the placeholder on the same line as #EXT-X-PROGRAM-DATE-TIME
-                # just to keep tidy when there are no parts. The playlist parts will contain
-                # a trailing newline.
-                "{}"
-                + "#EXT-X-PROGRAM-DATE-TIME:"
-                + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                + "Z",
-                f"#EXTINF:{self.duration:.3f},",
-                f"./segment/{self.sequence}.m4s",
-            ]
+            # Reconstruct the playlist_template. The placeholder now goes on the same line
+            # as the first element to avoid an extra newline when the template has no parts
+            # (non LL-HLS). The parts themselves will include a trailing newline.
+            self.hls_playlist_parts.append("")
+            self.hls_playlist_template = []
             # Logically EXT-X-DISCONTINUITY would make sense above the parts, but Apple's
             # media stream validator seems to only want it before the segment
             if last_stream_id != self.stream_id:
-                self.hls_playlist_template.insert(1, "#EXT-X-DISCONTINUITY")
-            # Append another line to parts because we don't include a newline before #EXT-X-PROGRAM-DATE-TIME
-            self.hls_playlist_parts.append("")
+                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
+            # Add the remaining segment metadata
+            self.hls_playlist_template.append(
+                f"#EXTINF:{self.duration:.3f},\n./segment/{self.sequence}.m4s",
+            )
+            self.hls_playlist_template[0] = "{}" + self.hls_playlist_template[0]
 
         # Store intermediate playlist data in member variables for reuse
         self.hls_playlist_template = ["\n".join(self.hls_playlist_template)]

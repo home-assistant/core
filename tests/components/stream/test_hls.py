@@ -20,7 +20,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import (
-    FAKE_TIME,
     DefaultSegment as Segment,
     generate_h264_video,
 )
@@ -64,15 +63,13 @@ def hls_stream(hass, hass_client):
 
 def make_segment(segment, discontinuity=False):
     """Create a playlist response for a segment."""
-    response = [
-        "#EXT-X-PROGRAM-DATE-TIME:"
-        + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-        + "Z",
-        f"#EXTINF:{SEGMENT_DURATION:.3f},",
-        f"./segment/{segment}.m4s",
-    ]
-    if discontinuity:
-        response.insert(1, "#EXT-X-DISCONTINUITY")
+    response = ["#EXT-X-DISCONTINUITY"] if discontinuity else []
+    response.extend(
+        [
+            f"#EXTINF:{SEGMENT_DURATION:.3f},",
+            f"./segment/{segment}.m4s",
+        ]
+    )
     return "\n".join(response)
 
 
