@@ -433,8 +433,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
 
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
+    hass.data.setdefault(DATA_KEY, {}) 
 
     name = config_entry.title
     model = config_entry.data[CONF_MODEL]
