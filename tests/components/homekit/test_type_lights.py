@@ -1,10 +1,15 @@
 """Test different accessory types: Lights."""
 
+from datetime import timedelta
+
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
 from homeassistant.components.homekit.const import ATTR_VALUE
-from homeassistant.components.homekit.type_lights import Light
+from homeassistant.components.homekit.type_lights import (
+    CHANGE_COALESCE_TIME_WINDOW,
+    Light,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -24,8 +29,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service
+
+
+async def _wait_for_light_coalesce(hass):
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
+    )
+    await hass.async_block_till_done()
 
 
 async def test_light_basic(hass, hk_driver, events):
@@ -73,7 +86,7 @@ async def test_light_basic(hass, hk_driver, events):
     )
 
     acc.char_on.client_update_value(1)
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
@@ -90,7 +103,7 @@ async def test_light_basic(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
@@ -144,7 +157,7 @@ async def test_light_brightness(hass, hk_driver, events, supported_color_modes):
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on[0]
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
@@ -166,7 +179,7 @@ async def test_light_brightness(hass, hk_driver, events, supported_color_modes):
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on[1]
     assert call_turn_on[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[1].data[ATTR_BRIGHTNESS_PCT] == 40
@@ -188,7 +201,7 @@ async def test_light_brightness(hass, hk_driver, events, supported_color_modes):
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 3
@@ -255,7 +268,7 @@ async def test_light_color_temperature(hass, hk_driver, events):
         "mock_addr",
     )
     acc.char_color_temp.client_update_value(250)
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
@@ -345,7 +358,7 @@ async def test_light_color_temperature_and_rgb_color(
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on[0]
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
@@ -370,7 +383,7 @@ async def test_light_color_temperature_and_rgb_color(
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on[1]
     assert call_turn_on[1].data[ATTR_HS_COLOR] == (30, 50)
 
@@ -389,7 +402,7 @@ async def test_light_color_temperature_and_rgb_color(
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on[2]
     assert call_turn_on[2].data[ATTR_HS_COLOR] == (30, 20)
 
@@ -450,7 +463,7 @@ async def test_light_rgb_color(hass, hk_driver, events, supported_color_modes):
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_HS_COLOR] == (145, 75)
@@ -554,7 +567,7 @@ async def test_light_set_brightness_and_color(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on[0]
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
@@ -623,7 +636,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_block_till_done()
+    await _wait_for_light_coalesce(hass)
     assert call_turn_on[0]
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
