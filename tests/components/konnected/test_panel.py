@@ -1,5 +1,6 @@
 """Test Konnected setup process."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -7,7 +8,6 @@ from homeassistant.components.konnected import config_flow, panel
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

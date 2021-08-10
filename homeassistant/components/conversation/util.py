@@ -24,11 +24,11 @@ def create_matcher(utterance):
 
         # Group part
         if group_match is not None:
-            pattern.append(r"(?P<{}>[\w ]+?)\s*".format(group_match.groups()[0]))
+            pattern.append(fr"(?P<{group_match.groups()[0]}>[\w ]+?)\s*")
 
         # Optional part
         elif optional_match is not None:
-            pattern.append(r"(?:{} *)?".format(optional_match.groups()[0]))
+            pattern.append(fr"(?:{optional_match.groups()[0]} *)?")
 
     pattern.append("$")
     return re.compile("".join(pattern), re.I)

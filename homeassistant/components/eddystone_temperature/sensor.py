@@ -10,16 +10,16 @@ import logging
 from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ def get_from_conf(config, config_key, length):
     return string
 
 
-class EddystoneTemp(Entity):
+class EddystoneTemp(SensorEntity):
     """Representation of a temperature sensor."""
 
     def __init__(self, name, namespace, instance):
@@ -117,6 +117,11 @@ class EddystoneTemp(Entity):
     def state(self):
         """Return the state of the device."""
         return self.temperature
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def unit_of_measurement(self):
@@ -171,15 +176,18 @@ class Monitor:
         )
 
         for dev in self.devices:
-            if dev.namespace == namespace and dev.instance == instance:
-                if dev.temperature != temperature:
-                    dev.temperature = temperature
-                    dev.schedule_update_ha_state()
+            if (
+                dev.namespace == namespace
+                and dev.instance == instance
+                and dev.temperature != temperature
+            ):
+                dev.temperature = temperature
+                dev.schedule_update_ha_state()
 
     def stop(self):
         """Signal runner to stop and join thread."""
         if self.scanning:
-            _LOGGER.debug("Stopping...")
+            _LOGGER.debug("Stopping")
             self.scanner.stop()
             _LOGGER.debug("Stopped")
             self.scanning = False

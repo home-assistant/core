@@ -1,10 +1,11 @@
 """Test the Tradfri config flow."""
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tradfri import config_flow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -22,7 +23,7 @@ async def test_user_connection_successful(hass, mock_auth, mock_entry_setup):
     mock_auth.side_effect = lambda hass, host, code: {"host": host, "gateway_id": "bla"}
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "user"}
+        "tradfri", context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -44,7 +45,7 @@ async def test_user_connection_timeout(hass, mock_auth, mock_entry_setup):
     mock_auth.side_effect = config_flow.AuthError("timeout")
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "user"}
+        "tradfri", context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -62,7 +63,7 @@ async def test_user_connection_bad_key(hass, mock_auth, mock_entry_setup):
     mock_auth.side_effect = config_flow.AuthError("invalid_security_code")
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "user"}
+        "tradfri", context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -81,7 +82,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
@@ -111,7 +112,7 @@ async def test_import_connection(hass, mock_auth, mock_entry_setup):
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={"host": "123.123.123.123", "import_groups": True},
     )
 
@@ -142,7 +143,7 @@ async def test_import_connection_no_groups(hass, mock_auth, mock_entry_setup):
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={"host": "123.123.123.123", "import_groups": False},
     )
 
@@ -173,7 +174,7 @@ async def test_import_connection_legacy(hass, mock_gateway_info, mock_entry_setu
 
     result = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={"host": "123.123.123.123", "key": "mock-key", "import_groups": True},
     )
 
@@ -203,7 +204,7 @@ async def test_import_connection_legacy_no_groups(
 
     result = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={"host": "123.123.123.123", "key": "mock-key", "import_groups": False},
     )
 
@@ -229,7 +230,7 @@ async def test_discovery_duplicate_aborted(hass):
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"host": "new-host", "properties": {"id": "homekit-id"}},
     )
 
@@ -244,7 +245,9 @@ async def test_import_duplicate_aborted(hass):
     MockConfigEntry(domain="tradfri", data={"host": "some-host"}).add_to_hass(hass)
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "import"}, data={"host": "some-host"}
+        "tradfri",
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"host": "some-host"},
     )
 
     assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -255,7 +258,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
     """Test a duplicate discovery in progress is ignored."""
     result = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
@@ -263,7 +266,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
 
     result2 = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
@@ -280,7 +283,7 @@ async def test_discovery_updates_unique_id(hass):
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"host": "some-host", "properties": {"id": "homekit-id"}},
     )
 

@@ -1,4 +1,4 @@
-"""The tests the cover command line platform."""
+"""The tests for the Template cover platform."""
 import pytest
 
 from homeassistant import setup
@@ -15,9 +15,11 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
 )
 
@@ -32,7 +34,7 @@ def calls_fixture(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_template_state_text(hass, calls):
+async def test_template_state_text(hass, calls, caplog):
     """Test the state text of a template."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -62,17 +64,146 @@ async def test_template_state_text(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    hass.states.async_set("cover.test_state", STATE_OPEN)
     await hass.async_block_till_done()
-
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPEN
 
-    state = hass.states.async_set("cover.test_state", STATE_CLOSED)
+    hass.states.async_set("cover.test_state", STATE_CLOSED)
     await hass.async_block_till_done()
-
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
+
+    hass.states.async_set("cover.test_state", STATE_OPENING)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPENING
+
+    hass.states.async_set("cover.test_state", STATE_CLOSING)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSING
+
+    # Unknown state sets position to None - "closing" takes precedence
+    state = hass.states.async_set("cover.test_state", "dog")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSING
+    assert "Received invalid cover is_on state: dog" in caplog.text
+
+    # Set state to open
+    hass.states.async_set("cover.test_state", STATE_OPEN)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+
+    # Unknown state sets position to None -> Open
+    state = hass.states.async_set("cover.test_state", "cat")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert "Received invalid cover is_on state: cat" in caplog.text
+
+    # Set state to closed
+    hass.states.async_set("cover.test_state", STATE_CLOSED)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSED
+
+    # Unknown state sets position to None -> Open
+    state = hass.states.async_set("cover.test_state", "bear")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert "Received invalid cover is_on state: bear" in caplog.text
+
+
+async def test_template_state_text_combined(hass, calls, caplog):
+    """Test the state text of a template which combines position and value templates."""
+    with assert_setup_component(1, "cover"):
+        assert await setup.async_setup_component(
+            hass,
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "position_template": "{{ states.cover.test.attributes.position }}",
+                            "value_template": "{{ states.cover.test_state.state }}",
+                            "open_cover": {
+                                "service": "cover.open_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "close_cover": {
+                                "service": "cover.close_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Test default state
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+
+    # Change to "open" should be ignored
+    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+
+    # Change to "closed" should be ignored
+    state = hass.states.async_set("cover.test_state", STATE_CLOSED)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+
+    # Change to "opening" should be accepted
+    state = hass.states.async_set("cover.test_state", STATE_OPENING)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPENING
+
+    # Change to "closing" should be accepted
+    state = hass.states.async_set("cover.test_state", STATE_CLOSING)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSING
+
+    # Set position to 0=closed
+    hass.states.async_set("cover.test", STATE_CLOSED, attributes={"position": 0})
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSING
+    assert state.attributes["current_position"] == 0
+
+    # Clear "closing" state, STATE_OPEN will be ignored and state derived from position
+    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSED
+
+    # Set position to 10
+    hass.states.async_set("cover.test", STATE_CLOSED, attributes={"position": 10})
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert state.attributes["current_position"] == 10
+
+    # Unknown state should be ignored
+    state = hass.states.async_set("cover.test_state", "dog")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert state.attributes["current_position"] == 10
+    assert "Received invalid cover is_on state: dog" in caplog.text
 
 
 async def test_template_state_boolean(hass, calls):
@@ -234,43 +365,6 @@ async def test_template_out_of_bounds(hass, calls):
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") is None
     assert state.attributes.get("current_position") is None
-
-
-async def test_template_mutex(hass, calls):
-    """Test that only value or position template can be used."""
-    with assert_setup_component(0, "cover"):
-        assert await setup.async_setup_component(
-            hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "template",
-                    "covers": {
-                        "test_template_cover": {
-                            "value_template": "{{ 1 == 1 }}",
-                            "position_template": "{{ 42 }}",
-                            "open_cover": {
-                                "service": "cover.open_cover",
-                                "entity_id": "cover.test_state",
-                            },
-                            "close_cover": {
-                                "service": "cover.close_cover",
-                                "entity_id": "cover.test_state",
-                            },
-                            "icon_template": "{% if states.cover.test_state.state %}"
-                            "mdi:check"
-                            "{% endif %}",
-                        }
-                    },
-                }
-            },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert hass.states.async_all() == []
 
 
 async def test_template_open_or_position(hass, caplog):

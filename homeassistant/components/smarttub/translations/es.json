@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de SmartTub necesita volver a autenticar tu cuenta",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "email": "Correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Introduzca su direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a de SmartTub para iniciar sesi\u00f3n",
+                "title": "Inicio de sesi\u00f3n"
+            }
+        }
+    }
+}

@@ -1,39 +1,44 @@
 """Test SMHI component setup process."""
-from homeassistant.components import smhi
+from smhi.smhi_lib import APIURL_TEMPLATE
 
-from .common import AsyncMock
+from homeassistant.components.smhi.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
-from tests.async_mock import Mock
+from . import ENTITY_ID, TEST_CONFIG
 
-TEST_CONFIG = {
-    "config": {
-        "name": "0123456789ABCDEF",
-        "longitude": "62.0022",
-        "latitude": "17.0022",
-    }
-}
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup_always_return_true() -> None:
-    """Test async_setup always returns True."""
-    hass = Mock()
-    # Returns true with empty config
-    assert await smhi.async_setup(hass, {}) is True
+async def test_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+) -> None:
+    """Test setup entry."""
+    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
+    aioclient_mock.get(uri, text=api_response)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
+    entry.add_to_hass(hass)
 
-    # Returns true with a config provided
-    assert await smhi.async_setup(hass, TEST_CONFIG) is True
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-
-async def test_forward_async_setup_entry() -> None:
-    """Test that it will forward setup entry."""
-    hass = Mock()
-
-    assert await smhi.async_setup_entry(hass, {}) is True
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    state = hass.states.get(ENTITY_ID)
+    assert state
 
 
-async def test_forward_async_unload_entry() -> None:
-    """Test that it will forward unload entry."""
-    hass = AsyncMock()
-    assert await smhi.async_unload_entry(hass, {}) is True
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 1
+async def test_remove_entry(hass: HomeAssistant) -> None:
+    """Test remove entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert not state

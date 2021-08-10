@@ -4,7 +4,7 @@
             "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
             "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
-            "reauth_successful": "La riautenticazione ha avuto successo",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "token_request_timeout": "Timeout per l'ottenimento del token",
             "unknown": "Errore imprevisto"
         },

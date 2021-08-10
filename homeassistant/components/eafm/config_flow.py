@@ -5,7 +5,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# pylint: disable=unused-import
 from .const import DOMAIN
 
 
@@ -13,7 +12,6 @@ class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UK Environment Agency flood monitoring config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Handle a UK Floods config flow."""

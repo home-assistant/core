@@ -1,10 +1,11 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
+from datetime import datetime
 import logging
 
 import hdate
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
@@ -30,41 +31,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class JewishCalendarSensor(Entity):
+class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(self, data, sensor, sensor_info):
         """Initialize the Jewish calendar sensor."""
-        self._location = data["location"]
         self._type = sensor
-        self._name = f"{data['name']} {sensor_info[0]}"
-        self._icon = sensor_info[1]
+        self._prefix = data["prefix"]
+        self._attr_name = f"{data['name']} {sensor_info[0]}"
+        self._attr_unique_id = f"{self._prefix}_{self._type}"
+        self._attr_icon = sensor_info[1]
+        self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
         self._state = None
-        self._prefix = data["prefix"]
         self._holiday_attrs = {}
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Generate a unique id."""
-        return f"{self._prefix}_{self._type}"
-
-    @property
-    def icon(self):
-        """Icon to display in the front end."""
-        return self._icon
 
     @property
     def state(self):
         """Return the state of the sensor."""
+        if isinstance(self._state, datetime):
+            return self._state.isoformat()
         return self._state
 
     async def async_update(self):
@@ -111,7 +100,7 @@ class JewishCalendarSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._type != "holiday":
             return {}
@@ -142,18 +131,17 @@ class JewishCalendarSensor(Entity):
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     @property
     def state(self):
         """Return the state of the sensor."""
-        return dt_util.as_utc(self._state) if self._state is not None else None
+        if self._state is None:
+            return None
+        return dt_util.as_utc(self._state).isoformat()
 
     @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 

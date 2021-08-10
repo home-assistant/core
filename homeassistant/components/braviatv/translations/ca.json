@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_host": "Nom de l'amfitri\u00f3 o l'adre\u00e7a IP inv\u00e0lids",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids",
             "unsupported_model": "Aquest model de televisor no \u00e9s compatible."
         },
         "step": {

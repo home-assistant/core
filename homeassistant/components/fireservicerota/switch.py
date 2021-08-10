@@ -3,18 +3,16 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 
-# pylint: disable=relative-beyond-top-level
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota switch based on a config entry."""
     client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
@@ -74,7 +72,7 @@ class ResponseSwitch(SwitchEntity):
         return self._client.on_duty
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return available attributes for switch."""
         attr = {}
         if not self._state_attributes:
@@ -97,11 +95,10 @@ class ResponseSwitch(SwitchEntity):
             if key in data
         }
 
-        _LOGGER.debug("Set attributes of entity 'Response Switch' to '%s'", attr)
         return attr
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Send Acknowlegde response status."""
+        """Send Acknowledge response status."""
         await self.async_set_response(True)
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -128,12 +125,9 @@ class ResponseSwitch(SwitchEntity):
                 self.client_update,
             )
         )
-        self.async_on_remove(self._coordinator.async_add_listener(self.on_duty_update))
-
-    @callback
-    def on_duty_update(self):
-        """Trigger on a on duty update."""
-        self.async_write_ha_state()
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @callback
     def client_update(self) -> None:

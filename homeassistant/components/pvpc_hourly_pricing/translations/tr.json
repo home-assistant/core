@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Sens\u00f6r Ad\u0131"
+                }
+            }
+        }
+    }
+}

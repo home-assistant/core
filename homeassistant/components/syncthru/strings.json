@@ -8,11 +8,11 @@
       "syncthru_not_supported": "Device does not support SyncThru",
       "unknown_state": "Printer state unknown, verify URL and network connectivity"
     },
-    "flow_title": "Samsung SyncThru Printer: {name}",
+    "flow_title": "{name}",
     "step": {
       "confirm": {
         "data": {
-          "name": "[%key:component::syncthru::config::step::user::data::name%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "url": "[%key:component::syncthru::config::step::user::data::url%]"
         }
       },

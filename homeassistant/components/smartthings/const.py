@@ -31,7 +31,7 @@ STORAGE_VERSION = 1
 
 # Ordered 'specific to least-specific platform' in order for capabilities
 # to be drawn-down and represented by the most appropriate platform.
-SUPPORTED_PLATFORMS = [
+PLATFORMS = [
     "climate",
     "fan",
     "light",

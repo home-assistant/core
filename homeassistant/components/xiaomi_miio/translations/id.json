@@ -1,0 +1,87 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "no_device_selected": "Tidak ada perangkat yang dipilih, pilih satu perangkat.",
+            "unknown_device": "Model perangkat tidak diketahui, tidak dapat menyiapkan perangkat menggunakan alur konfigurasi."
+        },
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Negara server cloud",
+                    "cloud_password": "Kata sandi cloud",
+                    "cloud_username": "Nama pengguna cloud",
+                    "manual": "Konfigurasi secara manual (tidak disarankan)"
+                },
+                "description": "Masuk ke cloud Xiaomi Miio, lihat https://www.openhab.org/addons/bindings/miio/#country-servers untuk menemukan server cloud yang digunakan.",
+                "title": "Hubungkan ke Perangkat Xiaomi Miio atau Xiaomi Gateway"
+            },
+            "connect": {
+                "data": {
+                    "model": "Model perangkat"
+                },
+                "description": "Pilih model perangkat secara manual dari model yang didukung.",
+                "title": "Hubungkan ke Perangkat Xiaomi Miio atau Xiaomi Gateway"
+            },
+            "device": {
+                "data": {
+                    "host": "Alamat IP",
+                    "model": "Model perangkat (Opsional)",
+                    "name": "Nama perangkat",
+                    "token": "Token API"
+                },
+                "description": "Anda akan membutuhkan Token API 32 karakter, lihat https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token untuk mendapatkan petunjuknya. Perhatikan bahwa Token API ini berbeda dari kunci yang digunakan oleh integrasi Xiaomi Aqara.",
+                "title": "Hubungkan ke Perangkat Xiaomi Miio atau Xiaomi Gateway"
+            },
+            "gateway": {
+                "data": {
+                    "host": "Alamat IP",
+                    "name": "Nama Gateway",
+                    "token": "Token API"
+                },
+                "description": "Anda akan membutuhkan Token API 32 karakter, lihat https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token untuk mendapatkan petunjuknya. Perhatikan bahwa Token API ini berbeda dari kunci yang digunakan oleh integrasi Xiaomi Aqara.",
+                "title": "Hubungkan ke Xiaomi Gateway"
+            },
+            "manual": {
+                "data": {
+                    "host": "Alamat IP",
+                    "token": "Token API"
+                },
+                "title": "Hubungkan ke Perangkat Xiaomi Miio atau Xiaomi Gateway"
+            },
+            "reauth_confirm": {
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Perangkat Miio"
+                },
+                "description": "Pilih perangkat Xiaomi Miio untuk disiapkan.",
+                "title": "Hubungkan ke Perangkat Xiaomi Miio atau Xiaomi Gateway"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Hubungkan ke Xiaomi Gateway"
+                },
+                "description": "Pilih perangkat mana yang ingin disambungkan.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Gunakan cloud untuk mendapatkan subperangkat yang tersambung"
+                },
+                "description": "Tentukan pengaturan opsional",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

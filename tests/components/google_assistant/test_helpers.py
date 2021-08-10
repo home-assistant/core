@@ -1,10 +1,11 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
+from unittest.mock import Mock, call, patch
 
 import pytest
 
 from homeassistant.components.google_assistant import helpers
-from homeassistant.components.google_assistant.const import (  # noqa: F401
+from homeassistant.components.google_assistant.const import (
     EVENT_COMMAND_RECEIVED,
     NOT_EXPOSE_LOCAL,
 )
@@ -15,7 +16,6 @@ from homeassistant.util import dt
 
 from . import MockConfig
 
-from tests.async_mock import Mock, call, patch
 from tests.common import (
     async_capture_events,
     async_fire_time_changed,
@@ -223,9 +223,7 @@ async def test_report_state_all(agents):
     data = {}
     with patch.object(config, "async_report_state") as mock:
         await config.async_report_state_all(data)
-        assert sorted(mock.mock_calls) == sorted(
-            [call(data, agent) for agent in agents]
-        )
+        assert sorted(mock.mock_calls) == sorted(call(data, agent) for agent in agents)
 
 
 @pytest.mark.parametrize(
@@ -241,7 +239,7 @@ async def test_sync_entities_all(agents, result):
         side_effect=lambda agent_user_id: agents[agent_user_id],
     ) as mock:
         res = await config.async_sync_entities_all()
-        assert sorted(mock.mock_calls) == sorted([call(agent) for agent in agents])
+        assert sorted(mock.mock_calls) == sorted(call(agent) for agent in agents)
         assert res == result
 
 

@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.auth import indieauth
+from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN
@@ -13,6 +14,7 @@ from homeassistant.core import callback
 from .const import (
     DEFAULT_AREAS,
     DOMAIN,
+    STEP_ANALYTICS,
     STEP_CORE_CONFIG,
     STEP_INTEGRATION,
     STEP_USER,
@@ -26,6 +28,7 @@ async def async_setup(hass, data, store):
     hass.http.register_view(UserOnboardingView(data, store))
     hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
+    hass.http.register_view(AnalyticsOnboardingView(data, store))
 
 
 class OnboardingView(HomeAssistantView):
@@ -132,7 +135,9 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            auth_code = hass.components.auth.create_auth_code(data["client_id"], user)
+            auth_code = hass.components.auth.create_auth_code(
+                data["client_id"], credentials
+            )
             return self.json({"auth_code": auth_code})
 
 
@@ -183,7 +188,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
     async def post(self, request, data):
         """Handle token creation."""
         hass = request.app["hass"]
-        user = request["hass_user"]
+        refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
 
         async with self._lock:
             if self._async_is_done():
@@ -201,9 +206,39 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                     "invalid client id or redirect uri", HTTP_BAD_REQUEST
                 )
 
+            refresh_token = await hass.auth.async_get_refresh_token(refresh_token_id)
+            if refresh_token is None or refresh_token.credential is None:
+                return self.json_message(
+                    "Credentials for user not available", HTTP_FORBIDDEN
+                )
+
             # Return authorization code so we can redirect user and log them in
-            auth_code = hass.components.auth.create_auth_code(data["client_id"], user)
+            auth_code = hass.components.auth.create_auth_code(
+                data["client_id"], refresh_token.credential
+            )
             return self.json({"auth_code": auth_code})
+
+
+class AnalyticsOnboardingView(_BaseOnboardingView):
+    """View to finish analytics onboarding step."""
+
+    url = "/api/onboarding/analytics"
+    name = "api:onboarding:analytics"
+    step = STEP_ANALYTICS
+
+    async def post(self, request):
+        """Handle finishing analytics step."""
+        hass = request.app["hass"]
+
+        async with self._lock:
+            if self._async_is_done():
+                return self.json_message(
+                    "Analytics config step already done", HTTP_FORBIDDEN
+                )
+
+            await self._async_mark_done(hass)
+
+            return self.json({})
 
 
 @callback

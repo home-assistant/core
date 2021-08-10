@@ -1,6 +1,7 @@
 """The tests for the Google Pub/Sub component."""
 from dataclasses import dataclass
 from datetime import datetime
+import unittest.mock as mock
 
 import pytest
 
@@ -9,8 +10,6 @@ from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
 
@@ -83,7 +82,7 @@ async def test_minimal_config(hass, mock_client):
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.PublisherClient.from_service_account_json.call_count == 1
     assert (
         mock_client.PublisherClient.from_service_account_json.call_args[0][0] == "path"
@@ -110,7 +109,7 @@ async def test_full_config(hass, mock_client):
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.PublisherClient.from_service_account_json.call_count == 1
     assert (
         mock_client.PublisherClient.from_service_account_json.call_args[0][0] == "path"

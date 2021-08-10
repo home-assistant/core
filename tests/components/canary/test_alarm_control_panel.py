@@ -1,4 +1,6 @@
 """The tests for the Canary alarm_control_panel platform."""
+from unittest.mock import PropertyMock, patch
+
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -18,7 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_device, mock_location, mock_mode
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import mock_registry
 
 

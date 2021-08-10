@@ -84,7 +84,7 @@ async def async_setup(hass, config):
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
-        async_setup_platform(p_type, p_config)
+        asyncio.create_task(async_setup_platform(p_type, p_config))
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
 
@@ -254,8 +254,7 @@ class MailboxMediaView(MailboxView):
                 try:
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:
-                    error_msg = "Error getting media: %s" % (err)
-                    _LOGGER.error(error_msg)
+                    _LOGGER.error("Error getting media: %s", err)
                     return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
             if stream:
                 return web.Response(body=stream, content_type=mailbox.media_type)

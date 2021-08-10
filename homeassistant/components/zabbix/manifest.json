@@ -3,5 +3,6 @@
   "name": "Zabbix",
   "documentation": "https://www.home-assistant.io/integrations/zabbix",
   "requirements": ["py-zabbix==1.1.7"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

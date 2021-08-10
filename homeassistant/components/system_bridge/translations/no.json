@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "description": "Angi API-n\u00f8kkelen du angav i konfigurasjonen for {name} ."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "description": "Vennligst skriv inn tilkoblingsdetaljene dine."
+            }
+        }
+    },
+    "title": "System Bridge"
+}

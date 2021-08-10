@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "yxc_control_url_missing": "La URL de control no se proporciona en la descripci\u00f3n del ssdp."
+        },
+        "error": {
+            "no_musiccast_device": "Este dispositivo no parece ser un dispositivo MusicCast."
+        },
+        "flow_title": "MusicCast: {name}",
+        "step": {
+            "user": {
+                "description": "Configura MusicCast para integrarse con Home Assistant."
+            }
+        }
+    }
+}

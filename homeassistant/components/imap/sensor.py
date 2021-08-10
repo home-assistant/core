@@ -6,7 +6,7 @@ from aioimaplib import IMAP4_SSL, AioImapException
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([sensor], True)
 
 
-class ImapSensor(Entity):
+class ImapSensor(SensorEntity):
     """Representation of an IMAP sensor."""
 
     def __init__(self, name, user, password, server, port, charset, folder, search):

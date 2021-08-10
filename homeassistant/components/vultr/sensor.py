@@ -3,10 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, DATA_GIGABYTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import (
     ATTR_CURRENT_BANDWIDTH_USED,
@@ -58,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class VultrSensor(Entity):
+class VultrSensor(SensorEntity):
     """Representation of a Vultr subscription sensor."""
 
     def __init__(self, vultr, subscription, condition, name):

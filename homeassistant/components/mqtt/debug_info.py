@@ -1,21 +1,20 @@
 """Helper to handle a set of topics to subscribe to."""
 from collections import deque
 from functools import wraps
-import logging
-from typing import Any
+from typing import Any, Callable
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 from .models import MessageCallbackType
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_MQTT_DEBUG_INFO = "mqtt_debug_info"
 STORED_MESSAGES = 10
 
 
-def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType:
+def log_messages(
+    hass: HomeAssistant, entity_id: str
+) -> Callable[[MessageCallbackType], MessageCallbackType]:
     """Wrap an MQTT message callback to support message logging."""
 
     def _log_message(msg):
@@ -27,7 +26,7 @@ def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType
         if msg not in messages:
             messages.append(msg)
 
-    def _decorator(msg_callback: MessageCallbackType):
+    def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
         @wraps(msg_callback)
         def wrapper(msg: Any) -> None:
             """Log message."""
@@ -162,7 +161,7 @@ async def info_for_device(hass, device_id):
         )
 
     for trigger in mqtt_debug_info["triggers"].values():
-        if trigger["device_id"] != device_id:
+        if trigger["device_id"] != device_id or trigger["discovery_data"] is None:
             continue
 
         discovery_data = {

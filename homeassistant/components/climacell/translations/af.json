@@ -1,0 +1,10 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update ClimaCell opties"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

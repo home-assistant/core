@@ -1,12 +1,12 @@
 """Fixtures for cloud tests."""
+from unittest.mock import patch
+
 import jwt
 import pytest
 
 from homeassistant.components.cloud import const, prefs
 
 from . import mock_cloud, mock_cloud_prefs
-
-from tests.async_mock import patch
 
 
 @pytest.fixture(autouse=True)
@@ -43,7 +43,20 @@ def mock_cloud_login(hass, mock_cloud_setup):
     hass.data[const.DOMAIN].id_token = jwt.encode(
         {
             "email": "hello@home-assistant.io",
-            "custom:sub-exp": "2018-01-03",
+            "custom:sub-exp": "2300-01-03",
+            "cognito:username": "abcdefghjkl",
+        },
+        "test",
+    )
+
+
+@pytest.fixture
+def mock_expired_cloud_login(hass, mock_cloud_setup):
+    """Mock cloud is logged in."""
+    hass.data[const.DOMAIN].id_token = jwt.encode(
+        {
+            "email": "hello@home-assistant.io",
+            "custom:sub-exp": "2018-01-01",
             "cognito:username": "abcdefghjkl",
         },
         "test",

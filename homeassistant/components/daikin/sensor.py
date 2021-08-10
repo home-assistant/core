@@ -1,4 +1,5 @@
 """Support for Daikin AC sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -6,10 +7,10 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
+    ATTR_COMPRESSOR_FREQUENCY,
     ATTR_COOL_ENERGY,
     ATTR_HEAT_ENERGY,
     ATTR_HUMIDITY,
@@ -18,6 +19,7 @@ from .const import (
     ATTR_TARGET_HUMIDITY,
     ATTR_TOTAL_POWER,
     SENSOR_TYPE_ENERGY,
+    SENSOR_TYPE_FREQUENCY,
     SENSOR_TYPE_HUMIDITY,
     SENSOR_TYPE_POWER,
     SENSOR_TYPE_TEMPERATURE,
@@ -46,10 +48,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if daikin_api.device.support_humidity:
         sensors.append(ATTR_HUMIDITY)
         sensors.append(ATTR_TARGET_HUMIDITY)
+    if daikin_api.device.support_compressor_frequency:
+        sensors.append(ATTR_COMPRESSOR_FREQUENCY)
     async_add_entities([DaikinSensor.factory(daikin_api, sensor) for sensor in sensors])
 
 
-class DaikinSensor(Entity):
+class DaikinSensor(SensorEntity):
     """Representation of a Sensor."""
 
     @staticmethod
@@ -60,6 +64,7 @@ class DaikinSensor(Entity):
             SENSOR_TYPE_HUMIDITY: DaikinClimateSensor,
             SENSOR_TYPE_POWER: DaikinPowerSensor,
             SENSOR_TYPE_ENERGY: DaikinPowerSensor,
+            SENSOR_TYPE_FREQUENCY: DaikinClimateSensor,
         }[SENSOR_TYPES[monitored_state][CONF_TYPE]]
         return cls(api, monitored_state)
 
@@ -125,6 +130,10 @@ class DaikinClimateSensor(DaikinSensor):
             return self._api.device.humidity
         if self._device_attribute == ATTR_TARGET_HUMIDITY:
             return self._api.device.target_humidity
+
+        if self._device_attribute == ATTR_COMPRESSOR_FREQUENCY:
+            return self._api.device.compressor_frequency
+
         return None
 
 
@@ -135,9 +144,9 @@ class DaikinPowerSensor(DaikinSensor):
     def state(self):
         """Return the state of the sensor."""
         if self._device_attribute == ATTR_TOTAL_POWER:
-            return round(self._api.device.current_total_power_consumption, 3)
+            return round(self._api.device.current_total_power_consumption, 2)
         if self._device_attribute == ATTR_COOL_ENERGY:
-            return round(self._api.device.last_hour_cool_energy_consumption, 3)
+            return round(self._api.device.last_hour_cool_energy_consumption, 2)
         if self._device_attribute == ATTR_HEAT_ENERGY:
-            return round(self._api.device.last_hour_heat_energy_consumption, 3)
+            return round(self._api.device.last_hour_heat_energy_consumption, 2)
         return None

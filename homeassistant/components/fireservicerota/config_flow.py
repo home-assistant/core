@@ -5,7 +5,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 
-# pylint: disable=relative-beyond-top-level
 from .const import DOMAIN, URL_LIST
 
 DATA_SCHEMA = vol.Schema(
@@ -21,7 +20,6 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a FireServiceRota config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize config flow."""
@@ -57,14 +55,14 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._username)
             self._abort_if_unique_id_configured()
 
-        try:
-            self.api = FireServiceRota(
-                base_url=self._base_url,
-                username=self._username,
-                password=self._password,
-            )
-            token_info = await self.hass.async_add_executor_job(self.api.request_tokens)
+        self.api = FireServiceRota(
+            base_url=self._base_url,
+            username=self._username,
+            password=self._password,
+        )
 
+        try:
+            token_info = await self.hass.async_add_executor_job(self.api.request_tokens)
         except InvalidAuthError:
             self.api = None
             return self.async_show_form(
@@ -83,11 +81,10 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if step_id == "user":
             return self.async_create_entry(title=self._username, data=data)
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == self.unique_id:
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+        entry = await self.async_set_unique_id(self.unique_id)
+        self.hass.config_entries.async_update_entry(entry, data=data)
+        await self.hass.config_entries.async_reload(entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
 
     def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
         """Show the setup form to the user."""

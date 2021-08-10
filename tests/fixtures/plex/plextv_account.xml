@@ -1,0 +1,15 @@
+<user email="myplexusername@email.com" id="12345" uuid="1234567890" mailing_list_status="active" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=11111" username="User 1" title="User 1" cloudSyncDevice="" locale="" authenticationToken="faketoken" authToken="faketoken" scrobbleTypes="" restricted="0" home="1" guest="0" queueEmail="queue+1234567890@save.plex.tv" queueUid="" hasPassword="true" homeSize="2" maxHomeSize="15" secure="1" certificateVersion="2">
+  <subscription active="1" status="Active" plan="lifetime">
+    <feature id="companions_sonos"/>
+  </subscription>
+  <roles>
+    <role id="plexpass"/>
+  </roles>
+  <entitlements all="1"/>
+  <profile_settings default_audio_language="en" default_subtitle_language="en" auto_select_subtitle="1" auto_select_audio="1" default_subtitle_accessibility="0" default_subtitle_forced="0"/>
+  <services/>
+  <username>testuser</username>
+  <email>testuser@email.com</email>
+  <joined-at type="datetime">2000-01-01 12:34:56 UTC</joined-at>
+  <authentication-token>faketoken</authentication-token>
+</user>

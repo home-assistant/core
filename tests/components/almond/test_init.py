@@ -1,5 +1,6 @@
 """Tests for Almond set up."""
 from time import time
+from unittest.mock import patch
 
 import pytest
 
@@ -10,7 +11,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -38,7 +38,7 @@ async def test_set_up_oauth_remote_url(hass, aioclient_mock):
     ):
         assert await async_setup_component(hass, "almond", {})
 
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
     hass.config.components.add("cloud")
     with patch("homeassistant.components.almond.ALMOND_SETUP_DELAY", 0), patch(
@@ -71,7 +71,7 @@ async def test_set_up_oauth_no_external_url(hass, aioclient_mock):
     ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert len(mock_create_device.mock_calls) == 0
 
 
@@ -90,7 +90,7 @@ async def test_set_up_hassio(hass, aioclient_mock):
     with patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert len(mock_create_device.mock_calls) == 0
 
 
@@ -112,5 +112,5 @@ async def test_set_up_local(hass, aioclient_mock):
     with patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert len(mock_create_device.mock_calls) == 1

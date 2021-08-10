@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4",
+            "unknown_entry": "\uae30\uc874 \ud56d\ubaa9\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "invalid_code": "Hive\uc5d0 \ub85c\uadf8\uc778\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. 2\ub2e8\uacc4 \uc778\uc99d \ucf54\ub4dc\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "invalid_password": "Hive\uc5d0 \ub85c\uadf8\uc778\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ube44\ubc00\ubc88\ud638\uac00 \uc62c\ubc14\ub974\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "invalid_username": "Hive\uc5d0 \ub85c\uadf8\uc778\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \uc774\uba54\uc77c \uc8fc\uc18c\ub97c \uc778\uc2dd\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "no_internet_available": "Hive\uc5d0 \uc5f0\uacb0\ud558\ub824\uba74 \uc778\ud130\ub137 \uc5f0\uacb0\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2\ub2e8\uacc4 \uc778\uc99d \ucf54\ub4dc"
+                },
+                "description": "Hive \uc778\uc99d \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.\n\n\ub2e4\ub978 \ucf54\ub4dc\ub97c \uc694\uccad\ud558\ub824\uba74 \ucf54\ub4dc 0000\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "Hive 2\ub2e8\uacc4 \uc778\uc99d."
+            },
+            "reauth": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "Hive \ub85c\uadf8\uc778 \uc815\ubcf4\ub97c \ub2e4\uc2dc \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "Hive \ub85c\uadf8\uc778"
+            },
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "Hive \ub85c\uadf8\uc778 \uc815\ubcf4 \ubc0f \uad6c\uc131\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "Hive \ub85c\uadf8\uc778"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
+                },
+                "description": "\ub370\uc774\ud130\ub97c \ub354 \uc790\uc8fc \ud3f4\ub9c1\ud558\ub824\uba74 \uac80\uc0c9 \uac04\uaca9\uc744 \uc5c5\ub370\uc774\ud2b8\ud574\uc8fc\uc138\uc694.",
+                "title": "Hive \uc635\uc158"
+            }
+        }
+    }
+}

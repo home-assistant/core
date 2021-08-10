@@ -21,7 +21,8 @@
                 "data": {
                     "host": "IP Adress",
                     "password": "Smile ID",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Smile Benotzernumm"
                 },
                 "title": "Mam Smile verbannen"
             }

@@ -1,4 +1,6 @@
 """Test the Yeelight binary sensor."""
+from unittest.mock import patch
+
 from homeassistant.components.yeelight import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component
@@ -6,15 +8,13 @@ from homeassistant.setup import async_setup_component
 
 from . import MODULE, NAME, PROPERTIES, YAML_CONFIGURATION, _mocked_bulb
 
-from tests.async_mock import patch
-
 ENTITY_BINARY_SENSOR = f"binary_sensor.{NAME}_nightlight"
 
 
 async def test_nightlight(hass: HomeAssistant):
     """Test nightlight sensor."""
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), patch(
         f"{MODULE}.config_flow.yeelight.Bulb", return_value=mocked_bulb
     ):
         await async_setup_component(hass, DOMAIN, YAML_CONFIGURATION)

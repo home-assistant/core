@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_host": "Nome host o indirizzo IP non valido",
+            "pwd_and_ssh": "Fornire solo la password o il file della chiave SSH",
+            "pwd_or_ssh": "Si prega di fornire la password o il file della chiave SSH",
+            "ssh_not_file": "File chiave SSH non trovato",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "mode": "Modalit\u00e0",
+                    "name": "Nome",
+                    "password": "Password",
+                    "port": "Porta",
+                    "protocol": "Protocollo di comunicazione da utilizzare",
+                    "ssh_key": "Percorso del file della chiave SSH (invece della password)",
+                    "username": "Nome utente"
+                },
+                "description": "Imposta il parametro richiesto per collegarti al tuo router",
+                "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Secondi di attesa prima di considerare un dispositivo lontano",
+                    "dnsmasq": "La posizione nel router dei file dnsmasq.leases",
+                    "interface": "L'interfaccia da cui si desidera ottenere statistiche (ad esempio eth0, eth1, ecc.)",
+                    "require_ip": "I dispositivi devono avere un IP (per la modalit\u00e0 punto di accesso)",
+                    "track_unknown": "Tieni traccia dei dispositivi sconosciuti / non denominati"
+                },
+                "title": "Opzioni AsusWRT"
+            }
+        }
+    }
+}

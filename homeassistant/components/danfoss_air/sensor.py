@@ -3,6 +3,7 @@ import logging
 
 from pydanfossair.commands import ReadCommand
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -10,7 +11,6 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DANFOSS_AIR_DOMAIN
 
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class DanfossAir(Entity):
+class DanfossAir(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, data, name, sensor_unit, sensor_type, device_class):

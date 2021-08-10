@@ -9,7 +9,7 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "project_error": "No s'ha pogut obtenir la informaci\u00f3 del projecte."
         },
-        "flow_title": "Azure DevOps: {project_url}",
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
                 "data": {

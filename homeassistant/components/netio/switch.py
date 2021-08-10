@@ -97,12 +97,12 @@ class NetioApiView(HomeAssistantView):
 
         for i in range(1, 5):
             out = "output%d" % i
-            states.append(data.get("%s_state" % out) == STATE_ON)
-            consumptions.append(float(data.get("%s_consumption" % out, 0)))
+            states.append(data.get(f"{out}_state") == STATE_ON)
+            consumptions.append(float(data.get(f"{out}_consumption", 0)))
             cumulated_consumptions.append(
-                float(data.get("%s_cumulatedConsumption" % out, 0)) / 1000
+                float(data.get(f"{out}_cumulatedConsumption", 0)) / 1000
             )
-            start_dates.append(data.get("%s_consumptionStart" % out, ""))
+            start_dates.append(data.get(f"{out}_consumptionStart", ""))
 
         _LOGGER.debug(
             "%s: %s, %s, %s since %s",
@@ -169,7 +169,7 @@ class NetioSwitch(SwitchEntity):
         self.netio.update()
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return optional state attributes."""
         return {
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,

@@ -1,7 +1,5 @@
 """Support for MyQ gateways."""
 from pymyq.const import (
-    DEVICE_FAMILY as MYQ_DEVICE_FAMILY,
-    DEVICE_FAMILY_GATEWAY as MYQ_DEVICE_FAMILY_GATEWAY,
     DEVICE_STATE as MYQ_DEVICE_STATE,
     DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
     KNOWN_MODELS,
@@ -25,25 +23,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
-    for device in myq.devices.values():
-        if device.device_json[MYQ_DEVICE_FAMILY] == MYQ_DEVICE_FAMILY_GATEWAY:
-            entities.append(MyQBinarySensorEntity(coordinator, device))
+    for device in myq.gateways.values():
+        entities.append(MyQBinarySensorEntity(coordinator, device))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class MyQBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     """Representation of a MyQ gateway."""
 
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
         super().__init__(coordinator)
         self._device = device
-
-    @property
-    def device_class(self):
-        """We track connectivity for gateways."""
-        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def name(self):

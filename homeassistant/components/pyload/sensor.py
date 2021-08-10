@@ -6,7 +6,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class PyLoadSensor(Entity):
+class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
     def __init__(self, api, sensor_type, client_name):

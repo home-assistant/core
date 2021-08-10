@@ -29,7 +29,7 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
         self._refresh(device)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_MODEL: self._device.device_info.model_number}
 

@@ -1,5 +1,6 @@
 """The tests for the uk_transport platform."""
 import re
+from unittest.mock import patch
 
 import requests_mock
 
@@ -18,7 +19,6 @@ from homeassistant.components.uk_transport.sensor import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
-from tests.async_mock import patch
 from tests.common import load_fixture
 
 BUS_ATCOCODE = "340000368SHE"
@@ -53,11 +53,11 @@ async def test_bus(hass):
 
     bus_state = hass.states.get("sensor.next_bus_to_wantage")
     assert None is not bus_state
-    assert f"Next bus to {BUS_DIRECTION}" == bus_state.name
-    assert BUS_ATCOCODE == bus_state.attributes[ATTR_ATCOCODE]
-    assert "Harwell Campus" == bus_state.attributes[ATTR_LOCALITY]
-    assert "Bus Station" == bus_state.attributes[ATTR_STOP_NAME]
-    assert 2 == len(bus_state.attributes.get(ATTR_NEXT_BUSES))
+    assert bus_state.name == f"Next bus to {BUS_DIRECTION}"
+    assert bus_state.attributes[ATTR_ATCOCODE] == BUS_ATCOCODE
+    assert bus_state.attributes[ATTR_LOCALITY] == "Harwell Campus"
+    assert bus_state.attributes[ATTR_STOP_NAME] == "Bus Station"
+    assert len(bus_state.attributes.get(ATTR_NEXT_BUSES)) == 2
 
     direction_re = re.compile(BUS_DIRECTION)
     for bus in bus_state.attributes.get(ATTR_NEXT_BUSES):
@@ -77,13 +77,13 @@ async def test_train(hass):
 
     train_state = hass.states.get("sensor.next_train_to_WAT")
     assert None is not train_state
-    assert f"Next train to {TRAIN_DESTINATION_NAME}" == train_state.name
-    assert TRAIN_STATION_CODE == train_state.attributes[ATTR_STATION_CODE]
-    assert TRAIN_DESTINATION_NAME == train_state.attributes[ATTR_CALLING_AT]
-    assert 25 == len(train_state.attributes.get(ATTR_NEXT_TRAINS))
+    assert train_state.name == f"Next train to {TRAIN_DESTINATION_NAME}"
+    assert train_state.attributes[ATTR_STATION_CODE] == TRAIN_STATION_CODE
+    assert train_state.attributes[ATTR_CALLING_AT] == TRAIN_DESTINATION_NAME
+    assert len(train_state.attributes.get(ATTR_NEXT_TRAINS)) == 25
 
     assert (
-        "London Waterloo"
-        == train_state.attributes[ATTR_NEXT_TRAINS][0]["destination_name"]
+        train_state.attributes[ATTR_NEXT_TRAINS][0]["destination_name"]
+        == "London Waterloo"
     )
-    assert "06:13" == train_state.attributes[ATTR_NEXT_TRAINS][0]["estimated"]
+    assert train_state.attributes[ATTR_NEXT_TRAINS][0]["estimated"] == "06:13"

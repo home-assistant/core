@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -110,23 +111,31 @@ def has_all_unique_names(value):
 
 SENSOR_TYPES = {
     # Type, Unit, Icon, post
-    "bed_temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer", "_bed_"],
+    "bed_temperature": [
+        "temperature",
+        TEMP_CELSIUS,
+        None,
+        "_bed_",
+        DEVICE_CLASS_TEMPERATURE,
+    ],
     "extruder_temperature": [
         "temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         "_extruder_",
+        DEVICE_CLASS_TEMPERATURE,
     ],
     "chamber_temperature": [
         "temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         "_chamber_",
+        DEVICE_CLASS_TEMPERATURE,
     ],
-    "current_state": ["state", None, "mdi:printer-3d", ""],
-    "current_job": ["progress", PERCENTAGE, "mdi:file-percent", "_current_job"],
-    "job_end": ["progress", None, "mdi:clock-end", "_job_end"],
-    "job_start": ["progress", None, "mdi:clock-start", "_job_start"],
+    "current_state": ["state", None, "mdi:printer-3d", "", None],
+    "current_job": ["progress", PERCENTAGE, "mdi:file-percent", "_current_job", None],
+    "job_end": ["progress", None, "mdi:clock-end", "_job_end", None],
+    "job_start": ["progress", None, "mdi:clock-start", "_job_start", None],
 }
 
 SENSOR_SCHEMA = vol.Schema(
@@ -167,7 +176,7 @@ def setup(hass, config):
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
 
-        url = "http://{}".format(repetier[CONF_HOST])
+        url = f"http://{repetier[CONF_HOST]}"
         port = repetier[CONF_PORT]
         api_key = repetier[CONF_API_KEY]
 

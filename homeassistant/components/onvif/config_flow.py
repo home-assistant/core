@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
+from __future__ import annotations
+
 from pprint import pformat
-from typing import List
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -21,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,
@@ -36,7 +36,7 @@ from .device import get_device
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 
-def wsdiscovery() -> List[Service]:
+def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
     discovery = WSDiscovery(ttl=4)
     discovery.start()
@@ -49,7 +49,7 @@ def wsdiscovery() -> List[Service]:
 
 async def async_discovery(hass) -> bool:
     """Return if there are devices that can be discovered."""
-    LOGGER.debug("Starting ONVIF discovery...")
+    LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
 
     devices = []
@@ -76,7 +76,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a ONVIF config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -92,10 +91,15 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle user flow."""
-        if user_input is not None:
-            return await self.async_step_device()
+        if user_input:
+            if user_input["auto"]:
+                return await self.async_step_device()
+            return await self.async_step_configure()
 
-        return self.async_show_form(step_id="user")
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
+        )
 
     async def async_step_device(self, user_input=None):
         """Handle WS-Discovery.
@@ -106,7 +110,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
 
             if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
-                return await self.async_step_manual_input()
+                return await self.async_step_configure()
 
             for device in self.devices:
                 name = f"{device[CONF_NAME]} ({device[CONF_HOST]})"
@@ -117,7 +121,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: device[CONF_HOST],
                         CONF_PORT: device[CONF_PORT],
                     }
-                    return await self.async_step_auth()
+                    return await self.async_step_configure()
 
         discovery = await async_discovery(self.hass)
         for device in discovery:
@@ -143,50 +147,41 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(names)}),
             )
 
-        return await self.async_step_manual_input()
+        return await self.async_step_configure()
 
-    async def async_step_manual_input(self, user_input=None):
-        """Manual configuration."""
+    async def async_step_configure(self, user_input=None):
+        """Device configuration."""
+        errors = {}
         if user_input:
             self.onvif_config = user_input
-            return await self.async_step_auth()
+            try:
+                return await self.async_setup_profiles()
+            except Fault:
+                errors["base"] = "cannot_connect"
 
-        return self.async_show_form(
-            step_id="manual_input",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME): str,
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                }
-            ),
-        )
-
-    async def async_step_auth(self, user_input=None):
-        """Username and Password configuration for ONVIF device."""
-        if user_input:
-            self.onvif_config[CONF_USERNAME] = user_input[CONF_USERNAME]
-            self.onvif_config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-            return await self.async_step_profiles()
+        def conf(name, default=None):
+            return self.onvif_config.get(name, default)
 
         # Username and Password are optional and default empty
         # due to some cameras not allowing you to change ONVIF user settings.
         # See https://github.com/home-assistant/core/issues/39182
         # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
-            step_id="auth",
+            step_id="configure",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_USERNAME, default=""): str,
-                    vol.Optional(CONF_PASSWORD, default=""): str,
+                    vol.Required(CONF_NAME, default=conf(CONF_NAME)): str,
+                    vol.Required(CONF_HOST, default=conf(CONF_HOST)): str,
+                    vol.Required(CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)): int,
+                    vol.Optional(CONF_USERNAME, default=conf(CONF_USERNAME, "")): str,
+                    vol.Optional(CONF_PASSWORD, default=conf(CONF_PASSWORD, "")): str,
                 }
             ),
+            errors=errors,
         )
 
-    async def async_step_profiles(self, user_input=None):
+    async def async_setup_profiles(self):
         """Fetch ONVIF device profiles."""
-        errors = {}
-
         LOGGER.debug(
             "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
         )
@@ -207,9 +202,12 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 try:
                     network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                    for interface in network_interfaces:
-                        if interface.Enabled:
-                            self.device_id = interface.Info.HwAddress
+                    interface = next(
+                        filter(lambda interface: interface.Enabled, network_interfaces),
+                        None,
+                    )
+                    if interface:
+                        self.device_id = interface.Info.HwAddress
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise fault
@@ -249,8 +247,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not h264:
                 return self.async_abort(reason="no_h264")
 
-            await device.close()
-
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
             return self.async_create_entry(title=title, data=self.onvif_config)
 
@@ -260,19 +256,14 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.onvif_config[CONF_NAME],
                 err,
             )
-            await device.close()
             return self.async_abort(reason="onvif_error")
 
-        except Fault:
-            errors["base"] = "cannot_connect"
-
-        await device.close()
-        return self.async_show_form(step_id="auth", errors=errors)
+        finally:
+            await device.close()
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        self.onvif_config = user_input
-        return await self.async_step_profiles()
+        return await self.async_step_configure(user_input)
 
 
 class OnvifOptionsFlowHandler(config_entries.OptionsFlow):

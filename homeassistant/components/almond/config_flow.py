@@ -69,8 +69,6 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
         Ok to override if you want to fetch extra info or even add another step.
         """
-        # pylint: disable=invalid-name
-        self.CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
         data["type"] = TYPE_OAUTH2
         data["host"] = self.host
         return self.async_create_entry(title=self.flow_impl.name, data=data)
@@ -86,8 +84,6 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
                 "Aborting import of Almond because we're unable to connect"
             )
             return self.async_abort(reason="cannot_connect")
-
-        self.CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         return self.async_create_entry(
             title="Configuration.yaml",

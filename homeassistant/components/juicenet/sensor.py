@@ -1,25 +1,40 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
-    ELECTRICAL_CURRENT_AMPERE,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    VOLT,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
 
 SENSOR_TYPES = {
-    "status": ["Charging Status", None],
-    "temperature": ["Temperature", TEMP_CELSIUS],
-    "voltage": ["Voltage", VOLT],
-    "amps": ["Amps", ELECTRICAL_CURRENT_AMPERE],
-    "watts": ["Watts", POWER_WATT],
-    "charge_time": ["Charge time", TIME_SECONDS],
-    "energy_added": ["Energy added", ENERGY_WATT_HOUR],
+    "status": ["Charging Status", None, None, None],
+    "temperature": [
+        "Temperature",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "voltage": ["Voltage", ELECTRIC_POTENTIAL_VOLT, DEVICE_CLASS_VOLTAGE, None],
+    "amps": [
+        "Amps",
+        ELECTRIC_CURRENT_AMPERE,
+        DEVICE_CLASS_CURRENT,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "watts": ["Watts", POWER_WATT, DEVICE_CLASS_POWER, STATE_CLASS_MEASUREMENT],
+    "charge_time": ["Charge time", TIME_SECONDS, None, None],
+    "energy_added": ["Energy added", ENERGY_WATT_HOUR, DEVICE_CLASS_ENERGY, None],
 }
 
 
@@ -36,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class JuiceNetSensorDevice(JuiceNetDevice, Entity):
+class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
     """Implementation of a JuiceNet sensor."""
 
     def __init__(self, device, sensor_type, coordinator):
@@ -44,6 +59,8 @@ class JuiceNetSensorDevice(JuiceNetDevice, Entity):
         super().__init__(device, sensor_type, coordinator)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
+        self._attr_state_class = SENSOR_TYPES[sensor_type][3]
 
     @property
     def name(self):

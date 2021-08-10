@@ -9,6 +9,11 @@
             "unknown": "Erro inesperado"
         },
         "step": {
+            "device": {
+                "data": {
+                    "device_name": "Dispositivo"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Palavra-passe",

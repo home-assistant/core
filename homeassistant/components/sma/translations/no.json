@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "cannot_retrieve_device_info": "Koblet til, men kan ikke hente enhetsinformasjonen",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "group": "Gruppe",
+                    "host": "Vert",
+                    "password": "Passord",
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "description": "Skriv inn SMA-enhetsinformasjonen din.",
+                "title": "Sett opp SMA Solar"
+            }
+        }
+    }
+}

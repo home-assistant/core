@@ -3,5 +3,6 @@
   "name": "ELV PCA",
   "documentation": "https://www.home-assistant.io/integrations/pca",
   "codeowners": ["@majuss"],
-  "requirements": ["pypca==0.0.7"]
+  "requirements": ["pypca==0.0.7"],
+  "iot_class": "local_polling"
 }

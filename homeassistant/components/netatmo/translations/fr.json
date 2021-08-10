@@ -15,6 +15,28 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "absent",
+            "hg": "garde-gel",
+            "schedule": "horaire"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} a d\u00e9tect\u00e9 une alarme",
+            "animal": "{entity_name} a d\u00e9tect\u00e9 un animal",
+            "cancel_set_point": "{entity_name} a repris son programme",
+            "human": "{entity_name} a d\u00e9tect\u00e9 une personne",
+            "movement": "{entity_name} a d\u00e9tect\u00e9 un mouvement",
+            "outdoor": "{entity_name} a d\u00e9tect\u00e9 un \u00e9v\u00e9nement ext\u00e9rieur",
+            "person": "{entity_name} a d\u00e9tect\u00e9 une personne",
+            "person_away": "{entity_name} a d\u00e9tect\u00e9 qu\u2019une personne est partie",
+            "set_point": "Temp\u00e9rature cible {entity_name} d\u00e9finie manuellement",
+            "therm_mode": "{entity_name} est pass\u00e9 \u00e0 \"{subtype}\"",
+            "turned_off": "{entity_name} d\u00e9sactiv\u00e9",
+            "turned_on": "{entity_name} activ\u00e9",
+            "vehicle": "{entity_name} a d\u00e9tect\u00e9 un v\u00e9hicule"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

@@ -14,20 +14,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
-    def async_add_scene(scenes):
+    def async_add_scene(scenes=gateway.api.scenes.values()):
         """Add scene from deCONZ."""
         entities = [DeconzScene(scene, gateway) for scene in scenes]
 
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_SCENE), async_add_scene
         )
     )
 
-    async_add_scene(gateway.api.scenes.values())
+    async_add_scene()
 
 
 class DeconzScene(Scene):
@@ -37,6 +37,8 @@ class DeconzScene(Scene):
         """Set up a scene."""
         self._scene = scene
         self.gateway = gateway
+
+        self._attr_name = scene.full_name
 
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
@@ -50,8 +52,3 @@ class DeconzScene(Scene):
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self._scene.async_set_state({})
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene.full_name

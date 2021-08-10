@@ -1,20 +1,24 @@
 toggle:
-  description: Toggles an input boolean.
-  fields:
-    entity_id:
-      description: Entity id of the input boolean to toggle.
-      example: input_boolean.notify_alerts
+  name: Toggle
+  description: Toggle an input boolean
+  target:
+    entity:
+      domain: input_boolean
+
 turn_off:
-  description: Turns off an input boolean
-  fields:
-    entity_id:
-      description: Entity id of the input boolean to turn off.
-      example: input_boolean.notify_alerts
+  name: Turn off
+  description: Turn off an input boolean
+  target:
+    entity:
+      domain: input_boolean
+
 turn_on:
-  description: Turns on an input boolean.
-  fields:
-    entity_id:
-      description: Entity id of the input boolean to turn on.
-      example: input_boolean.notify_alerts
+  name: Turn on
+  description: Turn on an input boolean
+  target:
+    entity:
+      domain: input_boolean
+
 reload:
-  description: Reload the input_boolean configuration.
+  name: Reload
+  description: Reload the input_boolean configuration

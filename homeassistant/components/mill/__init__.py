@@ -1,22 +1,33 @@
 """The mill component."""
+from mill import Mill
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-async def async_setup(hass, config):
-    """Set up the Mill platform."""
-    return True
+from .const import DOMAIN
+
+PLATFORMS = ["climate", "sensor"]
 
 
 async def async_setup_entry(hass, entry):
     """Set up the Mill heater."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "climate")
+    mill_data_connection = Mill(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        websession=async_get_clientsession(hass),
     )
+    if not await mill_data_connection.connect():
+        raise ConfigEntryNotReady
+
+    await mill_data_connection.find_all_heaters()
+
+    hass.data[DOMAIN] = mill_data_connection
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(
-        config_entry, "climate"
-    )
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

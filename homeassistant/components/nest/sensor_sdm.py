@@ -1,12 +1,13 @@
 """Support for Google Nest SDM sensors."""
+from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
 from google_nest_sdm.exceptions import GoogleNestException
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -14,13 +15,13 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_NEST_UPDATE
-from .device_info import DeviceInfo
+from .const import DATA_SUBSCRIBER, DOMAIN
+from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,18 +35,18 @@ DEVICE_TYPE_MAP = {
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
 
-    subscriber = hass.data[DOMAIN][entry.entry_id]
+    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     try:
         device_manager = await subscriber.async_get_device_manager()
     except GoogleNestException as err:
         _LOGGER.warning("Failed to get devices: %s", err)
         raise PlatformNotReady from err
 
-    entities = []
+    entities: list[SensorEntity] = []
     for device in device_manager.devices.values():
         if TemperatureTrait.NAME in device.traits:
             entities.append(TemperatureSensor(device))
@@ -54,13 +55,13 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class SensorBase(Entity):
+class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
-    def __init__(self, device: Device):
+    def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
         self._device = device
-        self._device_info = DeviceInfo(device)
+        self._device_info = NestDeviceInfo(device)
 
     @property
     def should_poll(self) -> bool:
@@ -68,27 +69,20 @@ class SensorBase(Entity):
         return False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-{self.device_class}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return self._device_info.device_info
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
-        # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
-        # here to re-fresh the signals from _device.  Unregister this callback
-        # when the entity is removed.
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_NEST_UPDATE,
-                self.async_write_ha_state,
-            )
+            self._device.add_update_listener(self.async_write_ha_state)
         )
 
 
@@ -96,23 +90,23 @@ class TemperatureSensor(SensorBase):
     """Representation of a Temperature Sensor."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._device_info.device_name} Temperature"
 
     @property
-    def state(self):
+    def state(self) -> float:
         """Return the state of the sensor."""
-        trait = self._device.traits[TemperatureTrait.NAME]
+        trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
         return trait.ambient_temperature_celsius
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device."""
         return DEVICE_CLASS_TEMPERATURE
 
@@ -121,28 +115,28 @@ class HumiditySensor(SensorBase):
     """Representation of a Humidity Sensor."""
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API returns the identifier under the name field.
         return f"{self._device.name}-humidity"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._device_info.device_name} Humidity"
 
     @property
-    def state(self):
+    def state(self) -> float:
         """Return the state of the sensor."""
-        trait = self._device.traits[HumidityTrait.NAME]
+        trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
         return trait.ambient_humidity_percent
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return PERCENTAGE
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device."""
         return DEVICE_CLASS_HUMIDITY

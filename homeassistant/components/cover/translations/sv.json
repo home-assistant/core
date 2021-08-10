@@ -1,5 +1,9 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "St\u00e4ng {entity_name}",
+            "open": "\u00d6ppna {entity_name}"
+        },
         "condition_type": {
             "is_closed": "{entity_name} \u00e4r st\u00e4ngd",
             "is_closing": "{entity_name} st\u00e4ngs",

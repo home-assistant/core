@@ -9,5 +9,10 @@
                 "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Przycisk Wemo zosta\u0142 wci\u015bni\u0119ty przez 2 sekundy"
+        }
     }
 }

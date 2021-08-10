@@ -2,7 +2,7 @@
 import datetime
 import re
 
-from env_canada import ECData  # pylint: disable=import-error
+from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -28,7 +28,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 
 CONF_FORECAST = "forecast"
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
@@ -184,23 +184,35 @@ def get_forecast(ec_data, forecast_type):
 
     if forecast_type == "daily":
         half_days = ec_data.daily_forecasts
+
+        today = {
+            ATTR_FORECAST_TIME: dt.now().isoformat(),
+            ATTR_FORECAST_CONDITION: icon_code_to_condition(
+                int(half_days[0]["icon_code"])
+            ),
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
+                half_days[0]["precip_probability"]
+            ),
+        }
+
         if half_days[0]["temperature_class"] == "high":
-            forecast_array.append(
+            today.update(
                 {
-                    ATTR_FORECAST_TIME: dt.now().isoformat(),
                     ATTR_FORECAST_TEMP: int(half_days[0]["temperature"]),
                     ATTR_FORECAST_TEMP_LOW: int(half_days[1]["temperature"]),
-                    ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(half_days[0]["icon_code"])
-                    ),
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
-                        half_days[0]["precip_probability"]
-                    ),
                 }
             )
             half_days = half_days[2:]
         else:
+            today.update(
+                {
+                    ATTR_FORECAST_TEMP: None,
+                    ATTR_FORECAST_TEMP_LOW: int(half_days[0]["temperature"]),
+                }
+            )
             half_days = half_days[1:]
+
+        forecast_array.append(today)
 
         for day, high, low in zip(range(1, 6), range(0, 9, 2), range(1, 10, 2)):
             forecast_array.append(
@@ -220,19 +232,20 @@ def get_forecast(ec_data, forecast_type):
             )
 
     elif forecast_type == "hourly":
-        hours = ec_data.hourly_forecasts
-        for hour in range(0, 24):
+        for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: dt.as_local(
-                        datetime.datetime.strptime(hours[hour]["period"], "%Y%m%d%H%M")
-                    ).isoformat(),
-                    ATTR_FORECAST_TEMP: int(hours[hour]["temperature"]),
+                    ATTR_FORECAST_TIME: datetime.datetime.strptime(
+                        hour["period"], "%Y%m%d%H%M%S"
+                    )
+                    .replace(tzinfo=dt.UTC)
+                    .isoformat(),
+                    ATTR_FORECAST_TEMP: int(hour["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(hours[hour]["icon_code"])
+                        int(hour["icon_code"])
                     ),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
-                        hours[hour]["precip_probability"]
+                        hour["precip_probability"]
                     ),
                 }
             )

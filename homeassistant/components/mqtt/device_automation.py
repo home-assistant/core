@@ -1,16 +1,13 @@
 """Provides device automations for MQTT."""
-import logging
+import functools
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import ATTR_DISCOVERY_HASH, device_trigger
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
-
-_LOGGER = logging.getLogger(__name__)
+from . import device_trigger
+from .. import mqtt
+from .mixins import async_setup_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
 AUTOMATION_TYPES = [AUTOMATION_TYPE_TRIGGER]
@@ -32,20 +29,14 @@ async def async_setup_entry(hass, config_entry):
             return
         await device_trigger.async_device_removed(hass, event.data["device_id"])
 
-    async def async_discover(discovery_payload):
-        """Discover and add an MQTT device automation."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA(discovery_payload)
-            if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:
-                await device_trigger.async_setup_trigger(
-                    hass, config, config_entry, discovery_data
-                )
-        except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format("device_automation", "mqtt"), async_discover
-    )
+    setup = functools.partial(_async_setup_automation, hass, config_entry=config_entry)
+    await async_setup_entry_helper(hass, "device_automation", setup, PLATFORM_SCHEMA)
     hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed)
+
+
+async def _async_setup_automation(hass, config, config_entry, discovery_data):
+    """Set up an MQTT device automation."""
+    if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:
+        await device_trigger.async_setup_trigger(
+            hass, config, config_entry, discovery_data
+        )

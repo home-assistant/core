@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u8d26\u53f7\u5df2\u88ab\u914d\u7f6e",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_api_key": "\u65e0\u6548\u7684 API \u5bc6\u94a5",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u94a5"
+                }
+            }
+        }
+    }
+}

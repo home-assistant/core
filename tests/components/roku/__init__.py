@@ -8,14 +8,16 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.const import CONF_HOST
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-HOST = "192.168.1.160"
 NAME = "Roku 3"
+NAME_ROKUTV = '58" Onn Roku TV'
+
+HOST = "192.168.1.160"
 SSDP_LOCATION = "http://192.168.1.160/"
 UPNP_FRIENDLY_NAME = "My Roku 3"
 UPNP_SERIAL = "1GU48T017973"
@@ -24,6 +26,16 @@ MOCK_SSDP_DISCOVERY_INFO = {
     ATTR_SSDP_LOCATION: SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME: UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL: UPNP_SERIAL,
+}
+
+HOMEKIT_HOST = "192.168.1.161"
+
+MOCK_HOMEKIT_DISCOVERY_INFO = {
+    CONF_NAME: "onn._hap._tcp.local.",
+    CONF_HOST: HOMEKIT_HOST,
+    "properties": {
+        CONF_ID: "2d:97:da:ee:dc:99",
+    },
 }
 
 
@@ -150,7 +162,7 @@ def mock_connection_server_error(
 
 
 async def setup_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     device: str = "roku3",
     app: str = "roku",

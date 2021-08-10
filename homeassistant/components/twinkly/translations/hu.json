@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "A Twinkly eszk\u00f6z gazdag\u00e9pe (vagy IP-c\u00edme)"
+                },
+                "description": "\u00c1ll\u00edtsa be a Twinkly led-karakterl\u00e1nc\u00e1t",
+                "title": "Twinkly"
+            }
+        }
+    }
+}

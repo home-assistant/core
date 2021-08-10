@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OpenexchangeratesSensor(rest, name, quote)], True)
 
 
-class OpenexchangeratesSensor(Entity):
+class OpenexchangeratesSensor(SensorEntity):
     """Representation of an Open Exchange Rates sensor."""
 
     def __init__(self, rest, name, quote):
@@ -79,7 +78,7 @@ class OpenexchangeratesSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other attributes of the sensor."""
         attr = self.rest.data
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION

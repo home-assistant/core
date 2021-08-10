@@ -3,6 +3,7 @@
 import logging
 
 from motionblinds import BlindType
+import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -15,9 +16,19 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
+from .const import (
+    ATTR_ABSOLUTE_POSITION,
+    ATTR_AVAILABLE,
+    ATTR_WIDTH,
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_GATEWAY,
+    MANUFACTURER,
+    SERVICE_SET_ABSOLUTE_POSITION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +56,12 @@ TILT_DEVICE_MAP = {
 
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: DEVICE_CLASS_SHADE,
+}
+
+
+SET_ABSOLUTE_POSITION_SCHEMA = {
+    vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
+    vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
 
 
@@ -84,11 +101,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     "Bottom",
                 )
             )
+            entities.append(
+                MotionTDBUDevice(
+                    coordinator,
+                    blind,
+                    TDBU_DEVICE_MAP[blind.type],
+                    config_entry,
+                    "Combined",
+                )
+            )
 
         else:
             _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
 
     async_add_entities(entities)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_ABSOLUTE_POSITION,
+        SET_ABSOLUTE_POSITION_SCHEMA,
+        SERVICE_SET_ABSOLUTE_POSITION,
+    )
 
 
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
@@ -99,31 +132,29 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         super().__init__(coordinator)
 
         self._blind = blind
-        self._device_class = device_class
         self._config_entry = config_entry
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return self._blind.mac
-
-    @property
-    def device_info(self):
-        """Return the device info of the blind."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._blind.mac)},
+        self._attr_device_class = device_class
+        self._attr_name = f"{blind.blind_type}-{blind.mac[12:]}"
+        self._attr_unique_id = blind.mac
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, blind.mac)},
             "manufacturer": MANUFACTURER,
-            "name": f"{self._blind.blind_type}-{self._blind.mac[12:]}",
-            "model": self._blind.blind_type,
-            "via_device": (DOMAIN, self._config_entry.unique_id),
+            "name": f"{blind.blind_type}-{blind.mac[12:]}",
+            "model": blind.blind_type,
+            "via_device": (DOMAIN, config_entry.unique_id),
         }
 
-        return device_info
-
     @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.blind_type}-{self._blind.mac[12:]}"
+    def available(self):
+        """Return True if entity is available."""
+        if self.coordinator.data is None:
+            return False
+
+        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
+            return False
+
+        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
     def current_cover_position(self):
@@ -137,14 +168,19 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         return 100 - self._blind.position
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
     def is_closed(self):
         """Return if the cover is closed or not."""
         return self._blind.position == 100
+
+    async def async_added_to_hass(self):
+        """Subscribe to multicast pushes and register signal handler."""
+        self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        self._blind.Remove_callback(self.unique_id)
+        await super().async_will_remove_from_hass()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -157,6 +193,11 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
+        self._blind.Set_position(100 - position)
+
+    def set_absolute_position(self, **kwargs):
+        """Move the cover to a specific absolute position (see TDBU)."""
+        position = kwargs[ATTR_ABSOLUTE_POSITION]
         self._blind.Set_position(100 - position)
 
     def stop_cover(self, **kwargs):
@@ -204,19 +245,11 @@ class MotionTDBUDevice(MotionPositionDevice):
         super().__init__(coordinator, blind, device_class, config_entry)
         self._motor = motor
         self._motor_key = motor[0]
+        self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"
+        self._attr_unique_id = f"{blind.mac}-{motor}"
 
-        if self._motor not in ["Bottom", "Top"]:
+        if self._motor not in ["Bottom", "Top", "Combined"]:
             _LOGGER.error("Unknown motor '%s'", self._motor)
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return f"{self._blind.mac}-{self._motor}"
-
-    @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.blind_type}-{self._motor}-{self._blind.mac[12:]}"
 
     @property
     def current_cover_position(self):
@@ -225,10 +258,10 @@ class MotionTDBUDevice(MotionPositionDevice):
 
         None is unknown, 0 is open, 100 is closed.
         """
-        if self._blind.position is None:
+        if self._blind.scaled_position is None:
             return None
 
-        return 100 - self._blind.position[self._motor_key]
+        return 100 - self._blind.scaled_position[self._motor_key]
 
     @property
     def is_closed(self):
@@ -236,7 +269,22 @@ class MotionTDBUDevice(MotionPositionDevice):
         if self._blind.position is None:
             return None
 
+        if self._motor == "Combined":
+            return self._blind.width == 100
+
         return self._blind.position[self._motor_key] == 100
+
+    @property
+    def extra_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if self._blind.position is not None:
+            attributes[ATTR_ABSOLUTE_POSITION] = (
+                100 - self._blind.position[self._motor_key]
+            )
+        if self._blind.width is not None:
+            attributes[ATTR_WIDTH] = self._blind.width
+        return attributes
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -247,9 +295,18 @@ class MotionTDBUDevice(MotionPositionDevice):
         self._blind.Close(motor=self._motor_key)
 
     def set_cover_position(self, **kwargs):
-        """Move the cover to a specific position."""
+        """Move the cover to a specific scaled position."""
         position = kwargs[ATTR_POSITION]
-        self._blind.Set_position(100 - position, motor=self._motor_key)
+        self._blind.Set_scaled_position(100 - position, motor=self._motor_key)
+
+    def set_absolute_position(self, **kwargs):
+        """Move the cover to a specific absolute position."""
+        position = kwargs[ATTR_ABSOLUTE_POSITION]
+        target_width = kwargs.get(ATTR_WIDTH, None)
+
+        self._blind.Set_position(
+            100 - position, motor=self._motor_key, width=target_width
+        )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""

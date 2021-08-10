@@ -12,8 +12,7 @@
                     "network_key": "\u7f51\u7edc\u5bc6\u94a5\uff08\u7559\u7a7a\u5c06\u81ea\u52a8\u751f\u6210\uff09",
                     "usb_path": "USB \u8def\u5f84"
                 },
-                "description": "\u6709\u5173\u914d\u7f6e\u7684\u4fe1\u606f\uff0c\u8bf7\u53c2\u9605 https://www.home-assistant.io/docs/z-wave/installation/",
-                "title": "\u8bbe\u7f6e Z-Wave"
+                "description": "\u6709\u5173\u914d\u7f6e\u7684\u4fe1\u606f\uff0c\u8bf7\u53c2\u9605 https://www.home-assistant.io/docs/z-wave/installation/"
             }
         }
     },

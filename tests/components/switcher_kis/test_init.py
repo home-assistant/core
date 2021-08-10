@@ -1,171 +1,111 @@
 """Test cases for the switcher_kis component."""
-
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Generator
+from unittest.mock import patch
 
-from pytest import raises
+import pytest
 
-from homeassistant.components.switcher_kis import (
-    CONF_AUTO_OFF,
+from homeassistant import config_entries
+from homeassistant.components.switcher_kis.const import (
     DATA_DEVICE,
     DOMAIN,
-    SERVICE_SET_AUTO_OFF_NAME,
-    SERVICE_SET_AUTO_OFF_SCHEMA,
-    SIGNAL_SWITCHER_DEVICE_UPDATE,
+    MAX_UPDATE_INTERVAL_SEC,
 )
-from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import Context, callback
-from homeassistant.exceptions import Unauthorized, UnknownUser
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt, slugify
 
-from .consts import (
-    DUMMY_AUTO_OFF_SET,
-    DUMMY_DEVICE_ID,
-    DUMMY_DEVICE_NAME,
-    DUMMY_DEVICE_STATE,
-    DUMMY_ELECTRIC_CURRENT,
-    DUMMY_IP_ADDRESS,
-    DUMMY_MAC_ADDRESS,
-    DUMMY_PHONE_ID,
-    DUMMY_POWER_CONSUMPTION,
-    DUMMY_REMAINING_TIME,
-    MANDATORY_CONFIGURATION,
-    SWITCH_ENTITY_ID,
-)
+from . import init_integration
+from .consts import DUMMY_SWITCHER_DEVICES, YAML_CONFIG
 
-from tests.common import async_fire_time_changed, async_mock_service
-
-if TYPE_CHECKING:
-    from aioswitcher.devices import SwitcherV2Device
-
-    from tests.common import MockUser
+from tests.common import async_fire_time_changed
 
 
-async def test_failed_config(
-    hass: HomeAssistantType, mock_failed_bridge: Generator[None, Any, None]
-) -> None:
-    """Test failed configuration."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION) is False
-
-
-async def test_minimal_config(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
-) -> None:
-    """Test setup with configuration minimal entries."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
-
-
-async def test_discovery_data_bucket(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
-) -> None:
-    """Test the event send with the updated device."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
-
+@pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
+async def test_async_setup_yaml_config(hass, mock_bridge) -> None:
+    """Test setup started by configuration from YAML."""
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
 
-    device = hass.data[DOMAIN].get(DATA_DEVICE)
-    assert device.device_id == DUMMY_DEVICE_ID
-    assert device.ip_addr == DUMMY_IP_ADDRESS
-    assert device.mac_addr == DUMMY_MAC_ADDRESS
-    assert device.name == DUMMY_DEVICE_NAME
-    assert device.state == DUMMY_DEVICE_STATE
-    assert device.remaining_time == DUMMY_REMAINING_TIME
-    assert device.auto_off_set == DUMMY_AUTO_OFF_SET
-    assert device.power_consumption == DUMMY_POWER_CONSUMPTION
-    assert device.electric_current == DUMMY_ELECTRIC_CURRENT
-    assert device.phone_id == DUMMY_PHONE_ID
+    assert mock_bridge.is_running is True
+    assert len(hass.data[DOMAIN]) == 2
+    assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
 
 
-async def test_set_auto_off_service(
-    hass: HomeAssistantType,
-    mock_bridge: Generator[None, Any, None],
-    mock_api: Generator[None, Any, None],
-    hass_owner_user: "MockUser",
-    hass_read_only_user: "MockUser",
-) -> None:
-    """Test the set_auto_off service."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
-
+@pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
+async def test_async_setup_user_config_flow(hass, mock_bridge) -> None:
+    """Test setup started by user config flow."""
+    with patch("homeassistant.components.switcher_kis.utils.asyncio.sleep"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_AUTO_OFF_NAME)
+    assert mock_bridge.is_running is True
+    assert len(hass.data[DOMAIN]) == 2
+    assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUTO_OFF_NAME,
-        {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-        blocking=True,
-        context=Context(user_id=hass_owner_user.id),
+
+async def test_update_fail(hass, mock_bridge, caplog):
+    """Test entities state unavailable when updates fail.."""
+    await init_integration(hass)
+    assert mock_bridge
+
+    mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
+    await hass.async_block_till_done()
+
+    assert mock_bridge.is_running is True
+    assert len(hass.data[DOMAIN]) == 2
+    assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
+
+    async_fire_time_changed(
+        hass, dt.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1)
     )
+    await hass.async_block_till_done()
 
-    with raises(Unauthorized) as unauthorized_read_only_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-            blocking=True,
-            context=Context(user_id=hass_read_only_user.id),
+    for device in DUMMY_SWITCHER_DEVICES:
+        assert (
+            f"Device {device.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+            in caplog.text
         )
 
-    assert unauthorized_read_only_exc.type is Unauthorized
+        entity_id = f"switch.{slugify(device.name)}"
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNAVAILABLE
 
-    with raises(Unauthorized) as unauthorized_wrong_entity_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {
-                CONF_ENTITY_ID: "light.not_related_entity",
-                CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET,
-            },
-            blocking=True,
-            context=Context(user_id=hass_owner_user.id),
-        )
+        entity_id = f"sensor.{slugify(device.name)}_power_consumption"
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNAVAILABLE
 
-    assert unauthorized_wrong_entity_exc.type is Unauthorized
-
-    with raises(UnknownUser) as unknown_user_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-            blocking=True,
-            context=Context(user_id="not_real_user"),
-        )
-
-    assert unknown_user_exc.type is UnknownUser
-
-    service_calls = async_mock_service(
-        hass, DOMAIN, SERVICE_SET_AUTO_OFF_NAME, SERVICE_SET_AUTO_OFF_SCHEMA
+    mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass, dt.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 1)
     )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUTO_OFF_NAME,
-        {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-    )
+    for device in DUMMY_SWITCHER_DEVICES:
+        entity_id = f"switch.{slugify(device.name)}"
+        state = hass.states.get(entity_id)
+        assert state.state != STATE_UNAVAILABLE
 
+        entity_id = f"sensor.{slugify(device.name)}_power_consumption"
+        state = hass.states.get(entity_id)
+        assert state.state != STATE_UNAVAILABLE
+
+
+async def test_entry_unload(hass, mock_bridge):
+    """Test entry unload."""
+    entry = await init_integration(hass)
+    assert mock_bridge
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_bridge.is_running is True
+    assert len(hass.data[DOMAIN]) == 2
+
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(service_calls) == 1
-    assert str(service_calls[0].data[CONF_AUTO_OFF]) == DUMMY_AUTO_OFF_SET.lstrip("0")
-
-
-async def test_signal_dispatcher(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
-) -> None:
-    """Test signal dispatcher dispatching device updates every 4 seconds."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
-
-    await hass.async_block_till_done()
-
-    @callback
-    def verify_update_data(device: "SwitcherV2Device") -> None:
-        """Use as callback for signal dispatcher."""
-        pass
-
-    async_dispatcher_connect(hass, SIGNAL_SWITCHER_DEVICE_UPDATE, verify_update_data)
-
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_bridge.is_running is False
+    assert len(hass.data[DOMAIN]) == 0

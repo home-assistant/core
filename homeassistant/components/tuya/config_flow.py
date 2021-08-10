@@ -2,7 +2,12 @@
 import logging
 
 from tuyaha import TuyaApi
-from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
+from tuyaha.tuyaapi import (
+    TuyaAPIException,
+    TuyaAPIRateLimitException,
+    TuyaNetException,
+    TuyaServerException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-# pylint:disable=unused-import
 from .const import (
     CONF_BRIGHTNESS_RANGE_MODE,
     CONF_COUNTRYCODE,
@@ -30,8 +34,10 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
+    CONF_SET_TEMP_DIVIDED,
     CONF_SUPPORT_COLOR,
     CONF_TEMP_DIVIDER,
+    CONF_TEMP_STEP_OVERRIDE,
     CONF_TUYA_MAX_COLTEMP,
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
@@ -61,6 +67,7 @@ ERROR_DEV_NOT_FOUND = "dev_not_found"
 
 RESULT_AUTH_FAILED = "invalid_auth"
 RESULT_CONN_ERROR = "cannot_connect"
+RESULT_SINGLE_INSTANCE = "single_instance_allowed"
 RESULT_SUCCESS = "success"
 
 RESULT_LOG_MESSAGE = {
@@ -75,15 +82,13 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a tuya config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._country_code = None
         self._password = None
         self._platform = None
         self._username = None
-        self._is_import = False
 
     def _save_entry(self):
         return self.async_create_entry(
@@ -103,22 +108,17 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             tuya.init(
                 self._username, self._password, self._country_code, self._platform
             )
-        except (TuyaNetException, TuyaServerException):
+        except (TuyaAPIRateLimitException, TuyaNetException, TuyaServerException):
             return RESULT_CONN_ERROR
         except TuyaAPIException:
             return RESULT_AUTH_FAILED
 
         return RESULT_SUCCESS
 
-    async def async_step_import(self, user_input=None):
-        """Handle configuration by yaml file."""
-        self._is_import = True
-        return await self.async_step_user(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
 
         errors = {}
 
@@ -133,12 +133,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._save_entry()
-            if result != RESULT_AUTH_FAILED or self._is_import:
-                if self._is_import:
-                    _LOGGER.error(
-                        "Error importing from configuration.yaml: %s",
-                        RESULT_LOG_MESSAGE.get(result, "Generic Error"),
-                    )
+            if result != RESULT_AUTH_FAILED:
                 return self.async_abort(reason=result)
             errors["base"] = result
 
@@ -156,7 +151,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Tuya."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._conf_devs_id = None
@@ -249,6 +244,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
+
+        if self.config_entry.state is not config_entries.ConfigEntryState.LOADED:
+            _LOGGER.error("Tuya integration not yet loaded")
+            return self.async_abort(reason=RESULT_CONN_ERROR)
+
         if user_input is not None:
             dev_ids = user_input.get(CONF_LIST_DEVICES)
             if dev_ids:
@@ -313,11 +313,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def _get_device_schema(self, device_type, curr_conf, device):
         """Return option schema for device."""
+        if device_type != device.device_type():
+            return None
+        schema = None
         if device_type == "light":
-            return self._get_light_schema(curr_conf, device)
-        if device_type == "climate":
-            return self._get_climate_schema(curr_conf, device)
-        return None
+            schema = self._get_light_schema(curr_conf, device)
+        elif device_type == "climate":
+            schema = self._get_climate_schema(curr_conf, device)
+        return schema
 
     @staticmethod
     def _get_light_schema(curr_conf, device):
@@ -364,6 +367,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Create option schema for climate device."""
         unit = device.temperature_unit()
         def_unit = TEMP_FAHRENHEIT if unit == "FAHRENHEIT" else TEMP_CELSIUS
+        supported_steps = device.supported_temperature_steps()
+        default_step = device.target_temperature_step()
 
         config_schema = vol.Schema(
             {
@@ -379,6 +384,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CURR_TEMP_DIVIDER,
                     default=curr_conf.get(CONF_CURR_TEMP_DIVIDER, 0),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
+                vol.Optional(
+                    CONF_SET_TEMP_DIVIDED,
+                    default=curr_conf.get(CONF_SET_TEMP_DIVIDED, True),
+                ): bool,
+                vol.Optional(
+                    CONF_TEMP_STEP_OVERRIDE,
+                    default=curr_conf.get(CONF_TEMP_STEP_OVERRIDE, default_step),
+                ): vol.In(supported_steps),
                 vol.Optional(
                     CONF_MIN_TEMP,
                     default=curr_conf.get(CONF_MIN_TEMP, 0),

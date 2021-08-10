@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts is al geconfigureerd",
-            "unknown": "Onbekende fout opgetreden."
+            "already_configured": "Service is al geconfigureerd",
+            "unknown": "Onverwachte fout"
         },
         "error": {
             "invalid_2fa": "Ongeldige twee-factor-authenticatie, probeer het opnieuw.",
@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Autorisatiecode (vereist voor handmatige authenticatie)",
-                    "email": "E-mailadres",
+                    "email": "E-mail",
                     "password": "Wachtwoord"
                 },
                 "description": "Leeg",

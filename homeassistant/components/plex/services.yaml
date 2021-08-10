@@ -1,26 +1,21 @@
-play_on_sonos:
-  description: Play music hosted on a Plex server on a linked Sonos speaker.
-  fields:
-    entity_id:
-      description: Entity ID of a media_player from the Sonos integration.
-      example: "media_player.sonos_living_room"
-    media_content_id:
-      description: The ID of the content to play. See https://www.home-assistant.io/integrations/plex/#music for details.
-      example: >-
-          '{ "library_name": "Music", "artist_name": "Stevie Wonder" }'
-    media_content_type:
-      description: The type of content to play. Must be "music".
-      example: "music"
-
 refresh_library:
+  name: Refresh library
   description: Refresh a Plex library to scan for new and updated media.
   fields:
     server_name:
+      name: Server name
       description: Name of a Plex server if multiple Plex servers configured.
       example: "My Plex Server"
+      selector:
+        text:
     library_name:
+      name: Library name
       description: Name of the Plex library to refresh.
+      required: true
       example: "TV Shows"
+      selector:
+        text:
 
 scan_for_clients:
+  name: Scan for clients
   description: Scan for available clients from the Plex server(s), local network, and plex.tv.

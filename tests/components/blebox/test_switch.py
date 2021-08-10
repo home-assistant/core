@@ -1,6 +1,6 @@
 """Blebox switch tests."""
-
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import (
     async_setup_entities,
@@ -21,8 +22,6 @@ from .conftest import (
     mock_only_feature,
     setup_product_mock,
 )
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 
 @pytest.fixture(name="switchbox")
@@ -59,7 +58,7 @@ async def test_switchbox_init(switchbox, hass, config):
 
     assert state.state == STATE_OFF
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My switch box"
@@ -205,7 +204,7 @@ async def test_switchbox_d_init(switchbox_d, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_SWITCH
     assert state.state == STATE_OFF  # NOTE: should instead be STATE_UNKNOWN?
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My relays"
@@ -222,7 +221,7 @@ async def test_switchbox_d_init(switchbox_d, hass, config):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_SWITCH
     assert state.state == STATE_OFF  # NOTE: should instead be STATE_UNKNOWN?
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My relays"

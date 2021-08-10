@@ -6,11 +6,10 @@ from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SwissPublicTransportSensor(opendata, start, destination, name)])
 
 
-class SwissPublicTransportSensor(Entity):
+class SwissPublicTransportSensor(SensorEntity):
     """Implementation of an Swiss public transport sensor."""
 
     def __init__(self, opendata, start, destination, name):
@@ -94,7 +93,7 @@ class SwissPublicTransportSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._opendata is None:
             return

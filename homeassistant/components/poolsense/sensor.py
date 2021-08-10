@@ -1,21 +1,22 @@
 """Sensor platform for the PoolSense sensor."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import PoolSenseEntity
 from .const import ATTRIBUTION, DOMAIN
 
 SENSORS = {
     "Chlorine": {
-        "unit": "mV",
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
         "icon": "mdi:pool",
         "name": "Chlorine",
         "device_class": None,
@@ -40,13 +41,13 @@ SENSORS = {
         "device_class": DEVICE_CLASS_TIMESTAMP,
     },
     "Chlorine High": {
-        "unit": "mV",
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
         "icon": "mdi:pool",
         "name": "Chlorine High",
         "device_class": None,
     },
     "Chlorine Low": {
-        "unit": "mV",
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
         "icon": "mdi:pool",
         "name": "Chlorine Low",
         "device_class": None,
@@ -79,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors_list, False)
 
 
-class PoolSenseSensor(PoolSenseEntity, Entity):
+class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     """Sensor representing poolsense data."""
 
     @property
@@ -108,6 +109,6 @@ class PoolSenseSensor(PoolSenseEntity, Entity):
         return SENSORS[self.info_type]["unit"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}

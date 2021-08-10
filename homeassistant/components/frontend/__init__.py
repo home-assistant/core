@@ -1,10 +1,14 @@
 """Handle the frontend for Home Assistant."""
+from __future__ import annotations
+
+from collections.abc import Iterator
+from functools import lru_cache
 import json
 import logging
 import mimetypes
 import os
 import pathlib
-from typing import Any, Dict, Optional, Set, Tuple
+from typing import Any, TypedDict, cast
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -13,17 +17,17 @@ from yarl import URL
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
-from homeassistant.core import callback
+from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 
 from .storage import async_setup_frontend_storage
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 # Fix mimetypes for borked Windows machines
 # https://github.com/home-assistant/frontend/issues/3336
@@ -33,6 +37,9 @@ mimetypes.add_type("application/javascript", ".js")
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
+CONF_THEMES_MODES = "modes"
+CONF_THEMES_LIGHT = "light"
+CONF_THEMES_DARK = "dark"
 CONF_EXTRA_HTML_URL = "extra_html_url"
 CONF_EXTRA_HTML_URL_ES5 = "extra_html_url_es5"
 CONF_EXTRA_MODULE_URL = "extra_module_url"
@@ -43,30 +50,6 @@ EVENT_PANELS_UPDATED = "panels_updated"
 
 DEFAULT_THEME_COLOR = "#03A9F4"
 
-MANIFEST_JSON = {
-    "background_color": "#FFFFFF",
-    "description": "Home automation platform that puts local control and privacy first.",
-    "dir": "ltr",
-    "display": "standalone",
-    "icons": [
-        {
-            "src": f"/static/icons/favicon-{size}x{size}.png",
-            "sizes": f"{size}x{size}",
-            "type": "image/png",
-            "purpose": "maskable any",
-        }
-        for size in (192, 384, 512, 1024)
-    ],
-    "lang": "en-US",
-    "name": "Home Assistant",
-    "short_name": "Assistant",
-    "start_url": "/?homescreen=1",
-    "theme_color": DEFAULT_THEME_COLOR,
-    "prefer_related_applications": True,
-    "related_applications": [
-        {"platform": "play", "id": "io.homeassistant.companion.android"}
-    ],
-}
 
 DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
@@ -87,14 +70,39 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
+EXTENDED_THEME_SCHEMA = vol.Schema(
+    {
+        # Theme variables that apply to all modes
+        cv.string: cv.string,
+        # Mode specific theme variables
+        vol.Optional(CONF_THEMES_MODES): vol.Schema(
+            {
+                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
+                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+            }
+        ),
+    }
+)
+
+THEME_SCHEMA = vol.Schema(
+    {
+        cv.string: (
+            vol.Any(
+                # Legacy theme scheme
+                {cv.string: cv.string},
+                # New extended schema with mode support
+                EXTENDED_THEME_SCHEMA,
+            )
+        )
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Optional(CONF_THEMES): vol.Schema(
-                    {cv.string: {cv.string: cv.string}}
-                ),
+                vol.Optional(CONF_THEMES): THEME_SCHEMA,
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -113,39 +121,120 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
-CONF_MODE = "mode"
+
+
+class Manifest:
+    """Manage the manifest.json contents."""
+
+    def __init__(self, data: dict) -> None:
+        """Init the manifest manager."""
+        self.manifest = data
+        self._serialize()
+
+    def __getitem__(self, key: str) -> Any:
+        """Return an item in the manifest."""
+        return self.manifest[key]
+
+    @property
+    def json(self) -> str:
+        """Return the serialized manifest."""
+        return self._serialized
+
+    def _serialize(self) -> None:
+        self._serialized = json.dumps(self.manifest, sort_keys=True)
+
+    def update_key(self, key: str, val: str) -> None:
+        """Add a keyval to the manifest.json."""
+        self.manifest[key] = val
+        self._serialize()
+
+
+MANIFEST_JSON = Manifest(
+    {
+        "background_color": "#FFFFFF",
+        "description": "Home automation platform that puts local control and privacy first.",
+        "dir": "ltr",
+        "display": "standalone",
+        "icons": [
+            {
+                "src": f"/static/icons/favicon-{size}x{size}.png",
+                "sizes": f"{size}x{size}",
+                "type": "image/png",
+                "purpose": "maskable any",
+            }
+            for size in (192, 384, 512, 1024)
+        ],
+        "screenshots": [
+            {
+                "src": "/static/images/screenshots/screenshot-1.png",
+                "sizes": "413x792",
+                "type": "image/png",
+            }
+        ],
+        "lang": "en-US",
+        "name": "Home Assistant",
+        "short_name": "Assistant",
+        "start_url": "/?homescreen=1",
+        "theme_color": DEFAULT_THEME_COLOR,
+        "prefer_related_applications": True,
+        "related_applications": [
+            {"platform": "play", "id": "io.homeassistant.companion.android"}
+        ],
+    }
+)
+
+
+class UrlManager:
+    """Manage urls to be used on the frontend.
+
+    This is abstracted into a class because
+    some integrations add a remove these directly
+    on hass.data
+    """
+
+    def __init__(self, urls: list[str]) -> None:
+        """Init the url manager."""
+        self.urls = frozenset(urls)
+
+    def add(self, url: str) -> None:
+        """Add a url to the set."""
+        self.urls = frozenset([*self.urls, url])
+
+    def remove(self, url: str) -> None:
+        """Remove a url from the set."""
+        self.urls = self.urls - {url}
 
 
 class Panel:
     """Abstract class for panels."""
 
     # Name of the webcomponent
-    component_name: Optional[str] = None
+    component_name: str
 
     # Icon to show in the sidebar
-    sidebar_icon: Optional[str] = None
+    sidebar_icon: str | None = None
 
     # Title to show in the sidebar
-    sidebar_title: Optional[str] = None
+    sidebar_title: str | None = None
 
     # Url to show the panel in the frontend
-    frontend_url_path: Optional[str] = None
+    frontend_url_path: str | None = None
 
     # Config to pass to the webcomponent
-    config: Optional[Dict[str, Any]] = None
+    config: dict[str, Any] | None = None
 
     # If the panel should only be visible to admins
     require_admin = False
 
     def __init__(
         self,
-        component_name,
-        sidebar_title,
-        sidebar_icon,
-        frontend_url_path,
-        config,
-        require_admin,
-    ):
+        component_name: str,
+        sidebar_title: str | None,
+        sidebar_icon: str | None,
+        frontend_url_path: str | None,
+        config: dict[str, Any] | None,
+        require_admin: bool,
+    ) -> None:
         """Initialize a built-in panel."""
         self.component_name = component_name
         self.sidebar_title = sidebar_title
@@ -155,7 +244,7 @@ class Panel:
         self.require_admin = require_admin
 
     @callback
-    def to_response(self):
+    def to_response(self) -> PanelRespons:
         """Panel as dictionary."""
         return {
             "component_name": self.component_name,
@@ -170,16 +259,16 @@ class Panel:
 @bind_hass
 @callback
 def async_register_built_in_panel(
-    hass,
-    component_name,
-    sidebar_title=None,
-    sidebar_icon=None,
-    frontend_url_path=None,
-    config=None,
-    require_admin=False,
+    hass: HomeAssistant,
+    component_name: str,
+    sidebar_title: str | None = None,
+    sidebar_icon: str | None = None,
+    frontend_url_path: str | None = None,
+    config: dict[str, Any] | None = None,
+    require_admin: bool = False,
     *,
-    update=False,
-):
+    update: bool = False,
+) -> None:
     """Register a built-in panel."""
     panel = Panel(
         component_name,
@@ -202,7 +291,7 @@ def async_register_built_in_panel(
 
 @bind_hass
 @callback
-def async_remove_panel(hass, frontend_url_path):
+def async_remove_panel(hass: HomeAssistant, frontend_url_path: str) -> None:
     """Remove a built-in panel."""
     panel = hass.data.get(DATA_PANELS, {}).pop(frontend_url_path, None)
 
@@ -212,21 +301,18 @@ def async_remove_panel(hass, frontend_url_path):
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
-def add_extra_js_url(hass, url, es5=False):
+def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
     """Register extra js or module url to load."""
     key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
-    url_set = hass.data.get(key)
-    if url_set is None:
-        url_set = hass.data[key] = set()
-    url_set.add(url)
+    hass.data[key].add(url)
 
 
-def add_manifest_json_key(key, val):
+def add_manifest_json_key(key: str, val: Any) -> None:
     """Add a keyval to the manifest.json."""
-    MANIFEST_JSON[key] = val
+    MANIFEST_JSON.update_key(key, val)
 
 
-def _frontend_root(dev_repo_path):
+def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
@@ -234,17 +320,17 @@ def _frontend_root(dev_repo_path):
     # pylint: disable=import-outside-toplevel
     import hass_frontend
 
-    return hass_frontend.where()
+    return cast(pathlib.Path, hass_frontend.where())
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
     hass.components.websocket_api.async_register_command(websocket_get_panels)
     hass.components.websocket_api.async_register_command(websocket_get_themes)
     hass.components.websocket_api.async_register_command(websocket_get_translations)
     hass.components.websocket_api.async_register_command(websocket_get_version)
-    hass.http.register_view(ManifestJSONView)
+    hass.http.register_view(ManifestJSONView())
 
     conf = config.get(DOMAIN, {})
 
@@ -262,10 +348,10 @@ async def async_setup(hass, config):
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
-        ("onboarding.html", True),
-        ("static", True),
-        ("frontend_latest", True),
-        ("frontend_es5", True),
+        ("onboarding.html", not is_dev),
+        ("static", not is_dev),
+        ("frontend_latest", not is_dev),
+        ("frontend_es5", not is_dev),
     ):
         hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 
@@ -303,24 +389,17 @@ async def async_setup(hass, config):
         sidebar_icon="hass:hammer",
     )
 
-    if DATA_EXTRA_MODULE_URL not in hass.data:
-        hass.data[DATA_EXTRA_MODULE_URL] = set()
-
-    for url in conf.get(CONF_EXTRA_MODULE_URL, []):
-        add_extra_js_url(hass, url)
-
-    if DATA_EXTRA_JS_URL_ES5 not in hass.data:
-        hass.data[DATA_EXTRA_JS_URL_ES5] = set()
-
-    for url in conf.get(CONF_EXTRA_JS_URL_ES5, []):
-        add_extra_js_url(hass, url, True)
+    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(conf.get(CONF_EXTRA_MODULE_URL, []))
+    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager(conf.get(CONF_EXTRA_JS_URL_ES5, []))
 
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-async def _async_setup_themes(hass, themes):
+async def _async_setup_themes(
+    hass: HomeAssistant, themes: dict[str, Any] | None
+) -> None:
     """Set up themes data and services."""
     hass.data[DATA_THEMES] = themes or {}
 
@@ -341,20 +420,24 @@ async def _async_setup_themes(hass, themes):
         hass.data[DATA_DEFAULT_DARK_THEME] = dark_theme_name
 
     @callback
-    def update_theme_and_fire_event():
+    def update_theme_and_fire_event() -> None:
         """Update theme_color in manifest."""
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
-        MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
         if name != DEFAULT_THEME:
-            MANIFEST_JSON["theme_color"] = themes[name].get(
-                "app-header-background-color",
-                themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
+            MANIFEST_JSON.update_key(
+                "theme_color",
+                themes[name].get(
+                    "app-header-background-color",
+                    themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
+                ),
             )
+        else:
+            MANIFEST_JSON.update_key("theme_color", DEFAULT_THEME_COLOR)
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
     @callback
-    def set_theme(call):
+    def set_theme(call: ServiceCall) -> None:
         """Set backend-preferred theme."""
         name = call.data[CONF_NAME]
         mode = call.data.get("mode", "light")
@@ -386,7 +469,7 @@ async def _async_setup_themes(hass, themes):
         )
         update_theme_and_fire_event()
 
-    async def reload_themes(_):
+    async def reload_themes(_: ServiceCall) -> None:
         """Reload themes."""
         config = await async_hass_config_yaml(hass)
         new_themes = config[DOMAIN].get(CONF_THEMES, {})
@@ -418,15 +501,21 @@ async def _async_setup_themes(hass, themes):
     )
 
 
+@callback
+@lru_cache(maxsize=1)
+def _async_render_index_cached(template: jinja2.Template, **kwargs: Any) -> str:
+    return template.render(**kwargs)
+
+
 class IndexView(web_urldispatcher.AbstractResource):
     """Serve the frontend."""
 
-    def __init__(self, repo_path, hass):
+    def __init__(self, repo_path: str | None, hass: HomeAssistant) -> None:
         """Initialize the frontend view."""
         super().__init__(name="frontend:index")
         self.repo_path = repo_path
         self.hass = hass
-        self._template_cache = None
+        self._template_cache: jinja2.Template | None = None
 
     @property
     def canonical(self) -> str:
@@ -434,7 +523,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         return "/"
 
     @property
-    def _route(self):
+    def _route(self) -> web_urldispatcher.ResourceRoute:
         """Return the index route."""
         return web_urldispatcher.ResourceRoute("GET", self.get, self)
 
@@ -444,7 +533,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def resolve(
         self, request: web.Request
-    ) -> Tuple[Optional[web_urldispatcher.UrlMappingMatchInfo], Set[str]]:
+    ) -> tuple[web_urldispatcher.UrlMappingMatchInfo | None, set[str]]:
         """Resolve resource.
 
         Return (UrlMappingMatchInfo, allowed_methods) pair.
@@ -466,7 +555,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         Required for subapplications support.
         """
 
-    def get_info(self):
+    def get_info(self) -> dict[str, list[str]]:  # type: ignore[override]
         """Return a dict with additional info useful for introspection."""
         return {"panels": list(self.hass.data[DATA_PANELS])}
 
@@ -476,11 +565,13 @@ class IndexView(web_urldispatcher.AbstractResource):
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
 
-    def get_template(self):
+    def get_template(self) -> jinja2.Template:
         """Get template."""
         tpl = self._template_cache
         if tpl is None:
-            with open(str(_frontend_root(self.repo_path) / "index.html")) as file:
+            with (_frontend_root(self.repo_path) / "index.html").open(
+                encoding="utf8"
+            ) as file:
                 tpl = jinja2.Template(file.read())
 
             # Cache template if not running from repository
@@ -496,16 +587,16 @@ class IndexView(web_urldispatcher.AbstractResource):
         if not hass.components.onboarding.async_is_onboarded():
             return web.Response(status=302, headers={"location": "/onboarding.html"})
 
-        template = self._template_cache
-
-        if template is None:
-            template = await hass.async_add_executor_job(self.get_template)
+        template = self._template_cache or await hass.async_add_executor_job(
+            self.get_template
+        )
 
         return web.Response(
-            text=template.render(
+            text=_async_render_index_cached(
+                template,
                 theme_color=MANIFEST_JSON["theme_color"],
-                extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
-                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
+                extra_modules=hass.data[DATA_EXTRA_MODULE_URL].urls,
+                extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5].urls,
             ),
             content_type="text/html",
         )
@@ -514,7 +605,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Return length of resource."""
         return 1
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[web_urldispatcher.ResourceRoute]:
         """Iterate over routes."""
         return iter([self._route])
 
@@ -527,15 +618,18 @@ class ManifestJSONView(HomeAssistantView):
     name = "manifestjson"
 
     @callback
-    def get(self, request):  # pylint: disable=no-self-use
+    def get(self, request: web.Request) -> web.Response:  # pylint: disable=no-self-use
         """Return the manifest.json."""
-        msg = json.dumps(MANIFEST_JSON, sort_keys=True)
-        return web.Response(text=msg, content_type="application/manifest+json")
+        return web.Response(
+            text=MANIFEST_JSON.json, content_type="application/manifest+json"
+        )
 
 
 @callback
 @websocket_api.websocket_command({"type": "get_panels"})
-def websocket_get_panels(hass, connection, msg):
+def websocket_get_panels(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
     """Handle get panels command."""
     user_is_admin = connection.user.is_admin
     panels = {
@@ -549,7 +643,9 @@ def websocket_get_panels(hass, connection, msg):
 
 @callback
 @websocket_api.websocket_command({"type": "frontend/get_themes"})
-def websocket_get_themes(hass, connection, msg):
+def websocket_get_themes(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
     """Handle get themes command."""
     if hass.config.safe_mode:
         connection.send_message(
@@ -590,7 +686,9 @@ def websocket_get_themes(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_get_translations(hass, connection, msg):
+async def websocket_get_translations(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
     """Handle get translations command."""
     resources = await async_get_translations(
         hass,
@@ -606,7 +704,9 @@ async def websocket_get_translations(hass, connection, msg):
 
 @websocket_api.websocket_command({"type": "frontend/get_version"})
 @websocket_api.async_response
-async def websocket_get_version(hass, connection, msg):
+async def websocket_get_version(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
     """Handle get version command."""
     integration = await async_get_integration(hass, "frontend")
 
@@ -620,3 +720,14 @@ async def websocket_get_version(hass, connection, msg):
         connection.send_error(msg["id"], "unknown_version", "Version not found")
     else:
         connection.send_result(msg["id"], {"version": frontend})
+
+
+class PanelRespons(TypedDict):
+    """Represent the panel response type."""
+
+    component_name: str
+    icon: str | None
+    title: str | None
+    config: dict[str, Any] | None
+    url_path: str | None
+    require_admin: bool

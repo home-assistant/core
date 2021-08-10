@@ -1,7 +1,9 @@
 """Smart energy channels module for Zigbee Home Automation."""
-from typing import Union
+from __future__ import annotations
 
-import zigpy.zcl.clusters.smartenergy as smartenergy
+from collections.abc import Coroutine
+
+from zigpy.zcl.clusters import smartenergy
 
 from homeassistant.const import (
     POWER_WATT,
@@ -89,22 +91,20 @@ class Metering(ZigbeeChannel):
     @property
     def divisor(self) -> int:
         """Return divisor for the value."""
-        return self.cluster.get("divisor")
+        return self.cluster.get("divisor") or 1
 
     @property
     def multiplier(self) -> int:
         """Return multiplier for the value."""
-        return self.cluster.get("multiplier")
+        return self.cluster.get("multiplier") or 1
 
-    async def async_configure(self) -> None:
+    def async_configure_channel_specific(self) -> Coroutine:
         """Configure channel."""
-        await self.fetch_config(False)
-        await super().async_configure()
+        return self.fetch_config(False)
 
-    async def async_initialize(self, from_cache: bool) -> None:
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
-        await self.fetch_config(True)
-        await super().async_initialize(from_cache)
+        return self.fetch_config(True)
 
     @callback
     def attribute_updated(self, attrid: int, value: int) -> None:
@@ -141,7 +141,7 @@ class Metering(ZigbeeChannel):
         else:
             self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
 
-    def formatter_function(self, value: int) -> Union[int, float]:
+    def formatter_function(self, value: int) -> int | float:
         """Return formatted value for display."""
         value = value * self.multiplier / self.divisor
         if self.unit_of_measurement == POWER_WATT:

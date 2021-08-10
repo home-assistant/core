@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key",
+                    "description": "Re-authenticate with your Ambee account."
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Name"
+                },
+                "description": "Set up Ambee to integrate with Home Assistant."
+            }
+        }
+    }
+}

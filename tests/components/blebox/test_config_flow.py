@@ -1,5 +1,7 @@
 """Test Home Assistant config flow for BleBox devices."""
 
+from unittest.mock import DEFAULT, AsyncMock, PropertyMock, patch
+
 import blebox_uniapi
 import pytest
 
@@ -8,8 +10,6 @@ from homeassistant.components.blebox import config_flow
 from homeassistant.setup import async_setup_component
 
 from .conftest import mock_config, mock_only_feature, setup_product_mock
-
-from tests.async_mock import DEFAULT, AsyncMock, PropertyMock, patch
 
 
 def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
@@ -173,7 +173,7 @@ async def test_async_setup_entry(hass, valid_feature_mock):
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == [config]
-    assert config.state == config_entries.ENTRY_STATE_LOADED
+    assert config.state is config_entries.ConfigEntryState.LOADED
 
 
 async def test_async_remove_entry(hass, valid_feature_mock):
@@ -189,4 +189,4 @@ async def test_async_remove_entry(hass, valid_feature_mock):
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
-    assert config.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert config.state is config_entries.ConfigEntryState.NOT_LOADED

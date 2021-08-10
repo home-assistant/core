@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_pin": "\u00c9rv\u00e9nytelen PIN",
+            "pairing_failure": "Nem lehet p\u00e1ros\u00edtani: {error_id}",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN-k\u00f3d"
+                },
+                "description": "\u00cdrd be a t\u00e9v\u00e9n megjelen\u0151 PIN-k\u00f3dot",
+                "title": "P\u00e1ros\u00edt\u00e1s"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API Verzi\u00f3",
+                    "host": "Hoszt"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Az eszk\u00f6znek be kell lennie kapcsolva"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Adat\u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1s haszn\u00e1lat\u00e1nak enged\u00e9lyez\u00e9se."
+                }
+            }
+        }
+    }
+}

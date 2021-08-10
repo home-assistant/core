@@ -1,12 +1,8 @@
 """Support for Blink system camera."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.camera import Camera
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 
@@ -15,23 +11,18 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 
-SERVICE_TRIGGER_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up a Blink Camera."""
     data = hass.data[DOMAIN][config.entry_id]
-    entities = []
-    for name, camera in data.cameras.items():
-        entities.append(BlinkCamera(data, name, camera))
+    entities = [
+        BlinkCamera(data, name, camera) for name, camera in data.cameras.items()
+    ]
 
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
-
-    platform.async_register_entity_service(
-        SERVICE_TRIGGER, SERVICE_TRIGGER_SCHEMA, "trigger_camera"
-    )
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
 
 
 class BlinkCamera(Camera):
@@ -41,26 +32,13 @@ class BlinkCamera(Camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._name = f"{DOMAIN} {name}"
+        self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
-        self._unique_id = f"{camera.serial}-camera"
-        self.response = None
-        self.current_image = None
-        self.last_image = None
-        _LOGGER.debug("Initialized blink camera %s", self._name)
+        self._attr_unique_id = f"{camera.serial}-camera"
+        _LOGGER.debug("Initialized blink camera %s", self.name)
 
     @property
-    def name(self):
-        """Return the camera name."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique camera id."""
-        return self._unique_id
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera attributes."""
         return self._camera.attributes
 

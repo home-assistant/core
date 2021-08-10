@@ -7,11 +7,10 @@ from ns_api import RequestParametersError
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +93,7 @@ def valid_stations(stations, given_stations):
     return True
 
 
-class NSDepartureSensor(Entity):
+class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
     def __init__(self, nsapi, name, departure, heading, via, time):
@@ -124,7 +123,7 @@ class NSDepartureSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._trips:
             return

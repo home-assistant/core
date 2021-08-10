@@ -48,7 +48,7 @@ async def test_turn_on(hass):
     assert len(turn_on_calls) == 1
     call = turn_on_calls[-1]
 
-    assert DOMAIN == call.domain
+    assert call.domain == DOMAIN
 
 
 async def test_turn_off(hass):

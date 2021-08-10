@@ -1,13 +1,16 @@
 """Constants for the Vilfo Router integration."""
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+)
 
 DOMAIN = "vilfo"
 
 ATTR_API_DATA_FIELD = "api_data_field"
 ATTR_API_DATA_FIELD_LOAD = "load"
 ATTR_API_DATA_FIELD_BOOT_TIME = "boot_time"
-ATTR_DEVICE_CLASS = "device_class"
-ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_LOAD = "load"
 ATTR_UNIT = "unit"
