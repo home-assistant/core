@@ -469,17 +469,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         }
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         if entity_ids:
-            entities = [
+            filtered_entities = [
                 entity
                 for entity in hass.data[DATA_KEY].values()
                 if entity.entity_id in entity_ids
             ]
         else:
-            entities = hass.data[DATA_KEY].values()
+            filtered_entities = hass.data[DATA_KEY].values()
 
         update_tasks = []
 
-        for entity in entities:
+        for entity in filtered_entities:
             entity_method = getattr(entity, method["method"], None)
             if not entity_method:
                 continue
