@@ -35,8 +35,8 @@ async def test_version_source(hass, source, target_source, name):
         "sensor": {"platform": "version", "source": source, "image": "qemux86-64"}
     }
 
-    with patch("pyhaversion.version.HaVersion.get_version"), patch(
-        "pyhaversion.version.HaVersion.version", MOCK_VERSION
+    with patch("homeassistant.components.version.sensor.HaVersion.get_version"), patch(
+        "homeassistant.components.version.sensor.HaVersion.version", MOCK_VERSION
     ):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
@@ -52,7 +52,7 @@ async def test_version_fetch_exception(hass, caplog):
     """Test fetch exception thrown during updates."""
     config = {"sensor": {"platform": "version"}}
     with patch(
-        "pyhaversion.version.HaVersion.get_version",
+        "homeassistant.components.version.sensor.HaVersion.get_version",
         side_effect=pyhaversionexceptions.HaVersionFetchException(
             "Fetch exception from pyhaversion"
         ),
@@ -66,7 +66,7 @@ async def test_version_parse_exception(hass, caplog):
     """Test parse exception thrown during updates."""
     config = {"sensor": {"platform": "version"}}
     with patch(
-        "pyhaversion.version.HaVersion.get_version",
+        "homeassistant.components.version.sensor.HaVersion.get_version",
         side_effect=pyhaversionexceptions.HaVersionParseException,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -78,8 +78,8 @@ async def test_update(hass):
     """Test updates."""
     config = {"sensor": {"platform": "version"}}
 
-    with patch("pyhaversion.version.HaVersion.get_version"), patch(
-        "pyhaversion.version.HaVersion.version", MOCK_VERSION
+    with patch("homeassistant.components.version.sensor.HaVersion.get_version"), patch(
+        "homeassistant.components.version.sensor.HaVersion.version", MOCK_VERSION
     ):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
@@ -88,8 +88,8 @@ async def test_update(hass):
     assert state
     assert state.state == MOCK_VERSION
 
-    with patch("pyhaversion.version.HaVersion.get_version"), patch(
-        "pyhaversion.version.HaVersion.version", "1234"
+    with patch("homeassistant.components.version.sensor.HaVersion.get_version"), patch(
+        "homeassistant.components.version.sensor.HaVersion.version", "1234"
     ):
 
         async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=5))
