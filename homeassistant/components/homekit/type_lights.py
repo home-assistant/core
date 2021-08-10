@@ -2,7 +2,7 @@
 import logging
 
 from pyhap.const import CATEGORY_LIGHTBULB
-from pyhap.light_util import mireds_to_hue_sat
+from .light_util import mireds_to_hue_sat
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
