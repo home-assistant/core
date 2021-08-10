@@ -32,7 +32,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         unit_of_measurement=TEMP_CELSIUS,
-        icon="mdi:thermometer",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -40,14 +39,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="voltage",
         name="Voltage",
         unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
         device_class=DEVICE_CLASS_VOLTAGE,
     ),
     SensorEntityDescription(
         key="amps",
         name="Amps",
         unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        icon="mdi:flash",
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -55,7 +52,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="watts",
         name="Watts",
         unit_of_measurement=POWER_WATT,
-        icon="mdi:flash",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -69,7 +65,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="energy_added",
         name="Energy added",
         unit_of_measurement=ENERGY_WATT_HOUR,
-        icon="mdi:flash",
         device_class=DEVICE_CLASS_ENERGY,
     ),
 )
@@ -117,22 +112,4 @@ class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
     @property
     def state(self):
         """Return the state."""
-        state = None
-        sensor_type = self.entity_description.key
-        if sensor_type == "status":
-            state = self.device.status
-        elif sensor_type == "temperature":
-            state = self.device.temperature
-        elif sensor_type == "voltage":
-            state = self.device.voltage
-        elif sensor_type == "amps":
-            state = self.device.amps
-        elif sensor_type == "watts":
-            state = self.device.watts
-        elif sensor_type == "charge_time":
-            state = self.device.charge_time
-        elif sensor_type == "energy_added":
-            state = self.device.energy_added
-        else:
-            state = "Unknown"
-        return state
+        return getattr(self.device, self.entity_description.key, None)
