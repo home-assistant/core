@@ -509,7 +509,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
-        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
+        super().__init__(name, device, entry, unique_id, coordinator)
 
         self._available = False
         self._available_attributes = {}
