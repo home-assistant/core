@@ -11,6 +11,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_MAX_MIREDS,
+    ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
@@ -563,6 +565,26 @@ async def test_light_set_brightness_and_color(hass, hk_driver, events):
         events[-1].data[ATTR_VALUE]
         == f"Set state to 1, brightness at 20{PERCENTAGE}, set color at (145, 75)"
     )
+
+
+async def test_light_min_max_mireds(hass, hk_driver, events):
+    """Test mireds are forced to ints."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_BRIGHTNESS: 255,
+            ATTR_MAX_MIREDS: 500.5,
+            ATTR_MIN_MIREDS: 100.5,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    acc.char_color_temperature.properties["maxValue"] == 500
+    acc.char_color_temperature.properties["minValue"] == 100
 
 
 async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):

@@ -1,5 +1,6 @@
 """Class to hold all light accessories."""
 import logging
+import math
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
@@ -115,8 +116,8 @@ class Light(HomeAccessory):
                 )
 
         if self.is_color_temp_supported:
-            min_mireds = attributes.get(ATTR_MIN_MIREDS, 153)
-            max_mireds = attributes.get(ATTR_MAX_MIREDS, 500)
+            min_mireds = math.floor(attributes.get(ATTR_MIN_MIREDS, 153))
+            max_mireds = math.ceil(attributes.get(ATTR_MAX_MIREDS, 500))
             serv_light = serv_light_secondary or serv_light_primary
             self.char_color_temperature = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
