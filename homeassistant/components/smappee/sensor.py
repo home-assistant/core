@@ -337,8 +337,6 @@ class SmappeeSensor(SensorEntity):
             datetime_now = datetime_now.replace(minute=int(datetime_now.minute / 5) * 5)
             return datetime_now
 
-        return None
-
     @property
     def unique_id(
         self,
