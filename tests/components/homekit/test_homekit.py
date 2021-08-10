@@ -178,6 +178,7 @@ async def test_setup_min(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
     # Test auto start enabled
@@ -214,6 +215,7 @@ async def test_setup_auto_start_disabled(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
     # Test auto_start disabled
@@ -1250,6 +1252,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
     # Test auto start enabled
@@ -1518,6 +1521,7 @@ async def test_reload(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
     yaml_path = os.path.join(
         _get_fixtures_base_path(),
@@ -1556,6 +1560,7 @@ async def test_reload(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
 

@@ -224,6 +224,7 @@ class HomeAccessory(Accessory):
         config,
         *args,
         category=CATEGORY_OTHER,
+        device_id=None,
         **kwargs,
     ):
         """Initialize a Accessory object."""
@@ -231,7 +232,12 @@ class HomeAccessory(Accessory):
             driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
         )
         self.config = config or {}
-        domain = split_entity_id(entity_id)[0].replace("_", " ")
+        if device_id:
+            self.device_id = device_id
+            domain = None
+        else:
+            self.device_id = None
+            domain = split_entity_id(entity_id)[0].replace("_", " ")
 
         if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
@@ -260,6 +266,10 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self._subscriptions = []
+
+        if device_id:
+            return
+
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
