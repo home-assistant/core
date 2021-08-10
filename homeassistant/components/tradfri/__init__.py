@@ -106,7 +106,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    tradfri_data: dict[str, list[Any] | None] = {}
+    tradfri_data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
     listeners = tradfri_data[LISTENERS] = []
 
