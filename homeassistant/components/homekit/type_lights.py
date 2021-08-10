@@ -82,7 +82,7 @@ class Light(HomeAccessory):
         if self.color_temp_supported:
             min_mireds = attributes.get(ATTR_MIN_MIREDS, 153)
             max_mireds = attributes.get(ATTR_MAX_MIREDS, 500)
-            self.char_color_temperature = serv_light.configure_char(
+            self.char_color_temp = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
                 value=min_mireds,
                 properties={PROP_MIN_VALUE: min_mireds, PROP_MAX_VALUE: max_mireds},
@@ -140,8 +140,7 @@ class Light(HomeAccessory):
         # Handle State
         state = new_state.state
         attributes = new_state.attributes
-        char_on_value = int(state == STATE_ON)
-        self.char_on.set_value(char_on_value)
+        self.char_on.set_value(int(state == STATE_ON))
 
         # Handle Brightness
         if self.brightness_supported:
@@ -164,10 +163,9 @@ class Light(HomeAccessory):
 
         # Handle color temperature
         if self.color_temp_supported:
-            color_temperature = attributes.get(ATTR_COLOR_TEMP)
-            if isinstance(color_temperature, (int, float)):
-                color_temperature = round(color_temperature, 0)
-                self.char_color_temperature.set_value(color_temperature)
+            color_temp = attributes.get(ATTR_COLOR_TEMP)
+            if isinstance(color_temp, (int, float)):
+                self.char_color_temp.set_value(round(color_temp, 0))
 
         # Handle Color
         if self.color_supported:
@@ -178,7 +176,5 @@ class Light(HomeAccessory):
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
-                hue = round(hue, 0)
-                saturation = round(saturation, 0)
-                self.char_hue.set_value(hue)
-                self.char_saturation.set_value(saturation)
+                self.char_hue.set_value(round(hue, 0))
+                self.char_saturation.set_value(round(saturation, 0))
