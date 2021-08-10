@@ -8,7 +8,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
-from homeassistant.util.dt import start_of_local_day
+from homeassistant.util.dt import start_of_local_day, utcnow
 
 from .const import DOMAIN
 
@@ -329,9 +329,13 @@ class SmappeeSensor(SensorEntity):
         if self._sensor in ("power_today", "solar_today", "alwayson_today", "switch"):
             return start_of_local_day()
         elif self._sensor in ("power_current_hour", "solar_current_hour"):
-            pass
+            datetime_now = utcnow()
+            datetime_now = datetime_now.replace(minute=0)
+            return datetime_now
         elif self._sensor in ("power_last_5_minutes"):
-            pass
+            datetime_now = utcnow()
+            datetime_now = datetime_now.replace(minute=int(datetime_now.minute / 5) * 5)
+            return datetime_now
 
         return None
 
