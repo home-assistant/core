@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import math
 
 import voluptuous as vol
 import yeelight
@@ -576,6 +577,13 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_brightness(self, brightness, duration) -> None:
         """Set bulb brightness."""
         if brightness:
+            if math.floor(self.brightness) == math.floor(brightness):
+                _LOGGER.debug("brightness already set to: %s", brightness)
+                # Already set, and since we get pushed updates
+                # we avoid setting it again to ensure we do not
+                # hit the rate limit
+                return
+
             _LOGGER.debug("Setting brightness: %s", brightness)
             await self._bulb.async_set_brightness(
                 brightness / 255 * 100, duration=duration, light_type=self.light_type
@@ -585,6 +593,13 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_hs(self, hs_color, duration) -> None:
         """Set bulb's color."""
         if hs_color and COLOR_MODE_HS in self.supported_color_modes:
+            if self.color_mode == COLOR_MODE_HS and self.hs_color == hs_color:
+                _LOGGER.debug("HS already set to: %s", hs_color)
+                # Already set, and since we get pushed updates
+                # we avoid setting it again to ensure we do not
+                # hit the rate limit
+                return
+
             _LOGGER.debug("Setting HS: %s", hs_color)
             await self._bulb.async_set_hsv(
                 hs_color[0], hs_color[1], duration=duration, light_type=self.light_type
@@ -594,9 +609,16 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_rgb(self, rgb, duration) -> None:
         """Set bulb's color."""
         if rgb and COLOR_MODE_RGB in self.supported_color_modes:
+            if self.color_mode == COLOR_MODE_RGB and self.rgb_color == rgb:
+                _LOGGER.debug("RGB already set to: %s", rgb)
+                # Already set, and since we get pushed updates
+                # we avoid setting it again to ensure we do not
+                # hit the rate limit
+                return
+
             _LOGGER.debug("Setting RGB: %s", rgb)
             await self._bulb.async_set_rgb(
-                rgb[0], rgb[1], rgb[2], duration=duration, light_type=self.light_type
+                *rgb, duration=duration, light_type=self.light_type
             )
 
     @_async_cmd
@@ -604,7 +626,16 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb's color temperature."""
         if colortemp and COLOR_MODE_COLOR_TEMP in self.supported_color_modes:
             temp_in_k = mired_to_kelvin(colortemp)
-            _LOGGER.debug("Setting color temp: %s K", temp_in_k)
+
+            if (
+                self.color_mode == COLOR_MODE_COLOR_TEMP
+                and self.color_temp == colortemp
+            ):
+                _LOGGER.debug("Color temp already set to: %s", temp_in_k)
+                # Already set, and since we get pushed updates
+                # we avoid setting it again to ensure we do not
+                # hit the rate limit
+                return
 
             await self._bulb.async_set_color_temp(
                 temp_in_k, duration=duration, light_type=self.light_type
