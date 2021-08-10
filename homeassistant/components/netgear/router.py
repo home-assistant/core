@@ -1,6 +1,7 @@
 """Represent the Netgear router and its devices."""
 import logging
 from datetime import timedelta
+from homeassistant.util import dt as dt_util
 from typing import Dict
 
 from pynetgear import Netgear
@@ -18,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DEFAULT_METHOD_VERSION, DOMAIN
+from .const import DEFAULT_CONSIDER_HOME, DEFAULT_METHOD_VERSION, DOMAIN
 from .errors import CannotLoginException
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -56,6 +57,7 @@ class NetgearRouter:
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
         self._method_version = DEFAULT_METHOD_VERSION
+        self._consider_home = DEFAULT_CONSIDER_HOME
 
         self._api: Netgear = None
         self._attrs = {}
@@ -102,9 +104,7 @@ class NetgearRouter:
         """Update Netgear devices."""
         new_device = False
         ntg_devices: Dict[str, any] = await self.async_get_attached_devices()
-
-        for device in self.devices.values():
-            device["active"] = False
+        now = dt_util.utcnow()
 
         for ntg_device in ntg_devices:
             device_mac = ntg_device.mac
@@ -116,7 +116,13 @@ class NetgearRouter:
                 new_device = True
 
             self.devices[device_mac] = ntg_device._asdict()
-            self.devices[device_mac]["active"] = True
+            self.devices[device_mac]["last_seen"] = now
+
+        for device in self.devices.values():
+            if now - device["last_seen"] <= self._consider_home:
+                device["active"] = True
+            else:
+                device["active"] = False
 
         async_dispatcher_send(self.hass, self.signal_device_update)
 

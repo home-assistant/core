@@ -1,9 +1,13 @@
 """Netgear component constants."""
+from datetime import timedelta
+
+
 DOMAIN = "netgear"
 
 PLATFORMS = ["device_tracker"]
 
 DEFAULT_METHOD_VERSION = 1
+DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 
 # Icons
 DEVICE_ICONS = {
