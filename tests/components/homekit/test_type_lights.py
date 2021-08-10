@@ -264,7 +264,8 @@ async def test_light_color_temperature(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes", [["ct", "hs"], ["ct", "rgb"], ["ct", "xy"]]
+    "supported_color_modes",
+    [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
 )
 async def test_light_color_temperature_and_rgb_color(
     hass, hk_driver, events, supported_color_modes
@@ -283,15 +284,17 @@ async def test_light_color_temperature_and_rgb_color(
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 2, None)
-    assert acc.char_hue.value == 260
-    assert acc.char_saturation.value == 90
+    assert acc.char_color_temp.value == 190
+    assert acc.char_hue.value == 27
+    assert acc.char_saturation.value == 16
 
-    assert not hasattr(acc, "char_color_temperature")
+    assert hasattr(acc, "char_color_temp")
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: 224})
     await hass.async_block_till_done()
     await acc.run()
     await hass.async_block_till_done()
+    assert acc.char_color_temp.value == 224
     assert acc.char_hue.value == 27
     assert acc.char_saturation.value == 27
 
@@ -299,6 +302,7 @@ async def test_light_color_temperature_and_rgb_color(
     await hass.async_block_till_done()
     await acc.run()
     await hass.async_block_till_done()
+    assert acc.char_color_temp.value == 352
     assert acc.char_hue.value == 28
     assert acc.char_saturation.value == 61
 
