@@ -16,12 +16,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     mill_data_connection = hass.data[DOMAIN]
 
-    entities = []
-    for heater in mill_data_connection.heaters.values():
-        for sensor_type in (CONSUMPTION_TODAY, CONSUMPTION_YEAR):
-            entities.append(
-                MillHeaterEnergySensor(heater, mill_data_connection, sensor_type)
-            )
+    entities = [
+        MillHeaterEnergySensor(heater, mill_data_connection, sensor_type)
+        for sensor_type in (CONSUMPTION_TODAY, CONSUMPTION_YEAR)
+        for heater in mill_data_connection.heaters.values()
+    ]
     async_add_entities(entities)
 
 
