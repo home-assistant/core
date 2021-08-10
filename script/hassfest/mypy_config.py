@@ -42,7 +42,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.enphase_envoy.*",
     "homeassistant.components.entur_public_transport.*",
     "homeassistant.components.evohome.*",
-    "homeassistant.components.filter.*",
     "homeassistant.components.fireservicerota.*",
     "homeassistant.components.firmata.*",
     "homeassistant.components.flo.*",
