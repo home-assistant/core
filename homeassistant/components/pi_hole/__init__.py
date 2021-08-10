@@ -161,7 +161,7 @@ def _async_platforms(entry: ConfigEntry) -> list[str]:
 class PiHoleEntity(CoordinatorEntity):
     """Representation of a Pi-hole entity."""
 
-    _attr_icon: str | None = "mdi:pi-hole"
+    _attr_icon: str = "mdi:pi-hole"
 
     def __init__(
         self,

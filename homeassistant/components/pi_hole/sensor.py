@@ -5,7 +5,7 @@ from typing import Any
 
 from hole import Hole
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -19,6 +19,7 @@ from .const import (
     DATA_KEY_COORDINATOR,
     DOMAIN as PIHOLE_DOMAIN,
     SENSOR_TYPES,
+    PiHoleSensorEntityDescription,
 )
 
 
@@ -44,13 +45,15 @@ async def async_setup_entry(
 class PiHoleSensor(PiHoleEntity, SensorEntity):
     """Representation of a Pi-hole sensor."""
 
+    entity_description: PiHoleSensorEntityDescription
+
     def __init__(
         self,
         api: Hole,
         coordinator: DataUpdateCoordinator,
         name: str,
         server_unique_id: str,
-        description: SensorEntityDescription,
+        description: PiHoleSensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole sensor."""
         super().__init__(api, coordinator, name, server_unique_id)
