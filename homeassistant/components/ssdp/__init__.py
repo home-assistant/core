@@ -270,7 +270,7 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL
         )
 
-        # Trigger a manual broadcast-search.
+        # Trigger a manual broadcast-search. Normal search is automatically done.
         for listener in self._ssdp_listeners:
             try:
                 IPv4Address(listener.source_ip)
