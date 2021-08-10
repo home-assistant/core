@@ -104,12 +104,21 @@ class NetgearDeviceEntity(ScannerEntity):
         """Initialize a Netgear device."""
         self._router = router
         self._device = device
-        self._name = device["name"]
+        self._name = get_device_name(device)
         self._mac = device["mac"]
         self._manufacturer = device["device_model"]
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
         self._active = True
         self._attrs = {}
+
+
+    def get_device_name(self, device):
+        """Return the name of the given device or the MAC if we don't know."""
+        name = device.name
+        if not name or name == "--":
+            name = self._mac
+
+        return name
 
     @callback
     def update_device(self) -> None:
