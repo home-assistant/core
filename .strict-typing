@@ -55,7 +55,6 @@ homeassistant.components.image_processing.*
 homeassistant.components.integration.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
-homeassistant.components.launch_library.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
