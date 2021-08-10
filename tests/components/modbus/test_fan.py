@@ -10,6 +10,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_FANS,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -73,6 +74,7 @@ ENTITY_ID = f"{FAN_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
+                    CONF_LAZY_ERROR: 10,
                     CONF_VERIFY: {
                         CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                         CONF_ADDRESS: 1235,

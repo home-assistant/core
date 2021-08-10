@@ -64,10 +64,15 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
             self._slave, self._address, self._count, self._input_type
         )
         if result is None:
+            if self._lazy_errors:
+                self._lazy_errors = self._lazy_errors - 1
+                return
+            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
         self._attr_native_value = self.unpack_structure_result(result.registers)
+        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         self.async_write_ha_state()
