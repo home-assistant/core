@@ -51,12 +51,20 @@ class RestData:
                 self._hass, verify_ssl=self._verify_ssl
             )
 
+        rendered_headers = None
+        if self._headers:
+            rendered_headers = {}
+            for header_name, template_header in self._headers.items():
+                value = template_header.async_render()
+                if value is not None:
+                    rendered_headers[header_name] = value
+
         _LOGGER.debug("Updating from %s", self._resource)
         try:
             response = await self._async_client.request(
                 self._method,
                 self._resource,
-                headers=self._headers,
+                headers=rendered_headers,
                 params=self._params,
                 auth=self._auth,
                 data=self._request_data,

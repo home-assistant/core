@@ -218,6 +218,33 @@ async def test_setup_get(hass):
 
 
 @respx.mock
+async def test_setup_get_template_headers(hass):
+    """Test setup with valid configuration."""
+    respx.get("http://localhost").respond(status_code=200, json={})
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {
+                    "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
+                },
+            }
+        },
+    )
+    await async_setup_component(hass, "homeassistant", {})
+
+    assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
+
+
+@respx.mock
 async def test_setup_get_digest_auth(hass):
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})

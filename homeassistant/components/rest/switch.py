@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_STATE_RESOURCE): cv.url,
-        vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+        vol.Optional(CONF_HEADERS): {cv.string: cv.template},
         vol.Optional(CONF_PARAMS): {cv.string: cv.string},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
@@ -90,6 +90,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         body_on.hass = hass
     if body_off is not None:
         body_off.hass = hass
+    if headers is not None:
+        for template_header in headers.values():
+            template_header.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
     try:
@@ -204,12 +207,20 @@ class RestSwitch(SwitchEntity):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
+        rendered_headers = None
+        if self._headers:
+            rendered_headers = {}
+            for header_name, template_header in self._headers.items():
+                value = template_header.async_render()
+                if value is not None:
+                    rendered_headers[header_name] = value
+
         with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
                 data=bytes(body, "utf-8"),
-                headers=self._headers,
+                headers=rendered_headers,
                 params=self._params,
             )
             return req
@@ -227,11 +238,19 @@ class RestSwitch(SwitchEntity):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
+        rendered_headers = None
+        if self._headers:
+            rendered_headers = {}
+            for header_name, template_header in self._headers.items():
+                value = template_header.async_render()
+                if value is not None:
+                    rendered_headers[header_name] = value
+
         with async_timeout.timeout(self._timeout):
             req = await websession.get(
                 self._state_resource,
                 auth=self._auth,
-                headers=self._headers,
+                headers=rendered_headers,
                 params=self._params,
             )
             text = await req.text()

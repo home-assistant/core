@@ -161,6 +161,10 @@ def create_rest_data_from_config(hass, config):
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
 
+    if headers is not None:
+        for template_header in headers.values():
+            template_header.hass = hass
+
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = httpx.DigestAuth(username, password)
