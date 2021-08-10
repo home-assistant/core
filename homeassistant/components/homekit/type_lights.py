@@ -112,7 +112,6 @@ class Light(HomeAccessory):
         self._event_timer = async_call_later(
             self.hass, CHANGE_COALESCE_TIME_WINDOW, self._send_events
         )
-        return
 
     def _send_events(self, *_):
         """Process all changes at once."""
