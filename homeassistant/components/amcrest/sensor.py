@@ -22,14 +22,19 @@ SENSOR_PTZ_PRESET = "ptz_preset"
 SENSOR_SDCARD = "sdcard"
 
 
-SENSORS: dict[str, SensorEntityDescription] = {
-    SENSOR_PTZ_PRESET: SensorEntityDescription(
-        key=SENSOR_PTZ_PRESET, name="PTZ Preset", icon="mdi:camera-iris"
+SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_PTZ_PRESET,
+        name="PTZ Preset",
+        icon="mdi:camera-iris",
     ),
-    SENSOR_SDCARD: SensorEntityDescription(
-        key=SENSOR_SDCARD, name="SD Used", unit_of_measurement=PERCENTAGE, icon="mdi:sd"
+    SensorEntityDescription(
+        key=SENSOR_SDCARD,
+        name="SD Used",
+        unit_of_measurement=PERCENTAGE,
+        icon="mdi:sd",
     ),
-}
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -70,11 +75,11 @@ class AmcrestSensor(SensorEntity):
         """Get the latest data and updates the state."""
         if not self.available:
             return
-        _LOGGER.debug("Updating %s sensor", self.entity_description.name)
+        _LOGGER.debug("Updating %s sensor", self.entity_description.key)
 
         try:
             if self.entity_description.key == SENSOR_PTZ_PRESET:
-                self._attr_state = self._api.ptz_presets_count
+                self._attr_is_on = self._api.ptz_presets_count
 
             elif self.entity_description.key == SENSOR_SDCARD:
                 storage = self._api.storage_all
@@ -95,9 +100,9 @@ class AmcrestSensor(SensorEntity):
                         "Used"
                     ] = f"{storage['used'][0]} {storage['used'][1]}"
                 try:
-                    self._attr_state = f"{storage['used_percent']:.2f}"
+                    self._attr_is_on = f"{storage['used_percent']:.2f}"
                 except ValueError:
-                    self._attr_state = storage["used_percent"]
+                    self._attr_is_on = storage["used_percent"]
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
