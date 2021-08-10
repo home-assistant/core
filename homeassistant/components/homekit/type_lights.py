@@ -62,10 +62,6 @@ class Light(HomeAccessory):
         color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
-        self.color_and_temp_supported = (
-            self.color_supported and self.color_temp_supported
-        )
-
         self.brightness_supported = brightness_supported(color_modes)
 
         if self.brightness_supported:
