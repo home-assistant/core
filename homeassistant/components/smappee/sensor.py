@@ -8,6 +8,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.util.dt import start_of_local_day
 
 from .const import DOMAIN
 
@@ -321,6 +322,18 @@ class SmappeeSensor(SensorEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset, if any."""
+        if self._sensor in ("power_today", "solar_today", "alwayson_today", "switch"):
+            return start_of_local_day()
+        elif self._sensor in ("power_current_hour", "solar_current_hour"):
+            pass
+        elif self._sensor in ("power_last_5_minutes"):
+            pass
+
+        return None
 
     @property
     def unique_id(
