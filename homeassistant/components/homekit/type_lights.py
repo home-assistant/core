@@ -127,7 +127,7 @@ class Light(HomeAccessory):
             params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
             events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
-        if CHAR_HUE in char_values and CHAR_SATURATION in char_values:
+        elif CHAR_HUE in char_values and CHAR_SATURATION in char_values:
             color = params[ATTR_HS_COLOR] = (
                 char_values[CHAR_HUE],
                 char_values[CHAR_SATURATION],

@@ -283,7 +283,9 @@ async def test_light_color_temperature_and_rgb_color(
         },
     )
     await hass.async_block_till_done()
-    acc = Light(hass, hk_driver, "Light", entity_id, 2, None)
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
     assert acc.char_color_temp.value == 190
     assert acc.char_hue.value == 27
     assert acc.char_saturation.value == 16
@@ -305,6 +307,64 @@ async def test_light_color_temperature_and_rgb_color(
     assert acc.char_color_temp.value == 352
     assert acc.char_hue.value == 28
     assert acc.char_saturation.value == 61
+
+    char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
+    char_brightness_iid = acc.char_brightness.to_HAP()[HAP_REPR_IID]
+    char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
+    char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1},
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_brightness_iid,
+                    HAP_REPR_VALUE: 20,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 250,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_hue_iid,
+                    HAP_REPR_VALUE: 50,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_saturation_iid,
+                    HAP_REPR_VALUE: 50,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert call_turn_on[0]
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
+    assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
+
+    assert len(events) == 1
+    assert (
+        events[-1].data[ATTR_VALUE]
+        == f"Set state to 1, brightness at 20{PERCENTAGE}, color temperature at 250"
+    )
+
+    # Set from HASS
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_HS_COLOR: (100, 100)})
+    await hass.async_block_till_done()
+    await acc.run()
+    await hass.async_block_till_done()
+    assert acc.char_color_temp.value == 250
+    assert acc.char_hue.value == 100
+    assert acc.char_saturation.value == 100
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
