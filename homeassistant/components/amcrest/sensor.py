@@ -59,10 +59,11 @@ class AmcrestSensor(SensorEntity):
     def __init__(self, name, device, description):
         """Initialize a sensor for Amcrest camera."""
         # make copy do not change original dict
-        self.entity_description = copy(description)
+        self.entity_description = copy.copy(description)
         self.entity_description.name = f"{name} {self.entity_description.name}"
         self._signal_name = name
         self._api = device.api
+        self._state = None
         self._attr_extra_state_attributes = {}
         self._unsub_dispatcher = None
 
