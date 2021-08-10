@@ -27,7 +27,7 @@ from .common import (
 from tests.common import async_fire_time_changed
 
 
-async def test_config_import(hass: HomeAssistant):
+async def test_config_import(hass: HomeAssistant) -> None:
     """Test importing YAML configuration."""
     config = {
         "binary_sensor": {
