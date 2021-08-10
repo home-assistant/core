@@ -2,17 +2,16 @@
 import logging
 
 from pyhap.const import CATEGORY_LIGHTBULB
+from pyhap.light_util import mireds_to_hue_sat
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
     DOMAIN,
     brightness_supported,
     color_supported,
@@ -25,21 +24,14 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin,
-    color_temperature_to_hs,
-)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
     CHAR_HUE,
-    CHAR_NAME,
     CHAR_ON,
     CHAR_SATURATION,
-    CONF_COLOR_TEMP_RGB,
-    DEFAULT_COLOR_TEMP_RGB,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
@@ -61,75 +53,35 @@ class Light(HomeAccessory):
         """Initialize a new Light accessory object."""
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
 
-        self.chars_primary = []
-        self.chars_secondary = []
-        color_temp_rgb = self.config.get(CONF_COLOR_TEMP_RGB)
-        if color_temp_rgb is None:
-            color_temp_rgb = DEFAULT_COLOR_TEMP_RGB
-
+        self.chars = []
         state = self.hass.states.get(self.entity_id)
         attributes = state.attributes
         color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
-        self.color_and_temp_supported = (
-            self.color_supported and self.color_temp_supported
-        )
-
-        if self.color_and_temp_supported and not color_temp_rgb:
-            self.color_temp_supported = False
-            self.color_and_temp_supported = False
-
         self.brightness_supported = brightness_supported(color_modes)
 
         if self.brightness_supported:
-            self.chars_primary.append(CHAR_BRIGHTNESS)
+            self.chars.append(CHAR_BRIGHTNESS)
 
         if self.color_supported:
-            self.chars_primary.extend([CHAR_HUE, CHAR_SATURATION])
+            self.chars.extend([CHAR_HUE, CHAR_SATURATION])
 
         if self.color_temp_supported:
-            if self.color_and_temp_supported:
-                self.chars_primary.append(CHAR_NAME)
-                self.chars_secondary.extend([CHAR_NAME, CHAR_COLOR_TEMPERATURE])
-                if self.brightness_supported:
-                    self.chars_secondary.append(CHAR_BRIGHTNESS)
-            else:
-                self.chars_primary.append(CHAR_COLOR_TEMPERATURE)
+            self.chars.append(CHAR_COLOR_TEMPERATURE)
 
-        serv_light_primary = self.add_preload_service(
-            SERV_LIGHTBULB, self.chars_primary
-        )
-        serv_light_secondary = None
-        self.char_on_primary = serv_light_primary.configure_char(CHAR_ON, value=0)
-
-        if self.color_and_temp_supported:
-            serv_light_secondary = self.add_preload_service(
-                SERV_LIGHTBULB, self.chars_secondary
-            )
-            serv_light_primary.add_linked_service(serv_light_secondary)
-            serv_light_primary.configure_char(CHAR_NAME, value="RGB")
-            self.char_on_secondary = serv_light_secondary.configure_char(
-                CHAR_ON, value=0
-            )
-            serv_light_secondary.configure_char(CHAR_NAME, value="Temperature")
+        serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
+        self.char_on = serv_light.configure_char(CHAR_ON, value=0)
 
         if self.brightness_supported:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
             # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
-            self.char_brightness_primary = serv_light_primary.configure_char(
-                CHAR_BRIGHTNESS, value=100
-            )
-            if self.chars_secondary:
-                self.char_brightness_secondary = serv_light_secondary.configure_char(
-                    CHAR_BRIGHTNESS, value=100
-                )
+            self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if self.color_temp_supported:
             min_mireds = attributes.get(ATTR_MIN_MIREDS, 153)
             max_mireds = attributes.get(ATTR_MAX_MIREDS, 500)
-            serv_light = serv_light_secondary or serv_light_primary
             self.char_color_temperature = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
                 value=min_mireds,
@@ -137,76 +89,48 @@ class Light(HomeAccessory):
             )
 
         if self.color_supported:
-            self.char_hue = serv_light_primary.configure_char(CHAR_HUE, value=0)
-            self.char_saturation = serv_light_primary.configure_char(
-                CHAR_SATURATION, value=75
-            )
+            self.char_hue = serv_light.configure_char(CHAR_HUE, value=0)
+            self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
         self.async_update_state(state)
-        self.setter_callback = self._set_chars
-        self.serv_primary = serv_light_primary
-        self.serv_secondary = serv_light_secondary
+        serv_light.setter_callback = self._set_chars
 
-    def _set_chars(self, service_values):
-        _LOGGER.debug("Light _set_chars: %s", service_values)
+    def _set_chars(self, char_values):
+        _LOGGER.debug("Light _set_chars: %s", char_values)
         events = []
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
 
-        for chars in service_values.values():
-            char_values = {char.display_name: value for char, value in chars.items()}
-            if CHAR_ON in char_values:
-                if not char_values[CHAR_ON]:
-                    service = SERVICE_TURN_OFF
-                events.append(f"Set state to {char_values[CHAR_ON]}")
+        if CHAR_ON in char_values:
+            if not char_values[CHAR_ON]:
+                service = SERVICE_TURN_OFF
+            events.append(f"Set state to {char_values[CHAR_ON]}")
 
-            if CHAR_BRIGHTNESS in char_values:
-                if char_values[CHAR_BRIGHTNESS] == 0:
-                    events[-1] = "Set state to 0"
-                    service = SERVICE_TURN_OFF
-                else:
-                    params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
-                events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
+        if CHAR_BRIGHTNESS in char_values:
+            if char_values[CHAR_BRIGHTNESS] == 0:
+                events[-1] = "Set state to 0"
+                service = SERVICE_TURN_OFF
+            else:
+                params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
+            events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
 
-            if service == SERVICE_TURN_OFF:
-                self.async_call_service(
-                    DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}, ", ".join(events)
-                )
-                return
-
-            if CHAR_COLOR_TEMPERATURE in char_values:
-                params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
-                events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
-
-            if CHAR_HUE in char_values and CHAR_SATURATION in char_values:
-                params[ATTR_HS_COLOR] = (
-                    char_values[CHAR_HUE],
-                    char_values[CHAR_SATURATION],
-                )
-                _LOGGER.debug(
-                    "%s: Set hs_color to %s", self.entity_id, params[ATTR_HS_COLOR]
-                )
-                events.append(f"set color at {params[ATTR_HS_COLOR]}")
-
-        if self.color_and_temp_supported:
-            modifed_rgb = self.serv_primary in service_values
-            modifed_temp = self.serv_secondary in service_values
-            color_temp_mode = (
-                self.hass.states.get(self.entity_id).attributes.get(ATTR_COLOR_MODE)
-                == COLOR_MODE_COLOR_TEMP
+        if service == SERVICE_TURN_OFF:
+            self.async_call_service(
+                DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}, ", ".join(events)
             )
-            if modifed_rgb and modifed_temp:
-                params.pop(ATTR_HS_COLOR, None)
-                params.pop(ATTR_COLOR_TEMP, None)
-            elif modifed_rgb and color_temp_mode and ATTR_HS_COLOR not in params:
-                params[ATTR_HS_COLOR] = (
-                    self.char_hue.value,
-                    self.char_saturation.value,
-                )
-                events.append(f"set color at {params[ATTR_HS_COLOR]}")
-            elif modifed_temp and not color_temp_mode and ATTR_COLOR_TEMP not in params:
-                params[ATTR_COLOR_TEMP] = self.char_color_temperature.value
-                events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
+            return
+
+        if CHAR_COLOR_TEMPERATURE in char_values:
+            params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
+            events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
+
+        if CHAR_HUE in char_values and CHAR_SATURATION in char_values:
+            color = params[ATTR_HS_COLOR] = (
+                char_values[CHAR_HUE],
+                char_values[CHAR_SATURATION],
+            )
+            _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, color)
+            events.append(f"set color at {color}")
 
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
@@ -217,16 +141,7 @@ class Light(HomeAccessory):
         state = new_state.state
         attributes = new_state.attributes
         char_on_value = int(state == STATE_ON)
-
-        if self.color_and_temp_supported:
-            color_mode = attributes.get(ATTR_COLOR_MODE)
-            color_temp_mode = color_mode == COLOR_MODE_COLOR_TEMP
-            primary_on_value = char_on_value if not color_temp_mode else 0
-            secondary_on_value = char_on_value if color_temp_mode else 0
-            self.char_on_primary.set_value(primary_on_value)
-            self.char_on_secondary.set_value(secondary_on_value)
-        else:
-            self.char_on_primary.set_value(char_on_value)
+        self.char_on.set_value(char_on_value)
 
         # Handle Brightness
         if self.brightness_supported:
@@ -245,9 +160,7 @@ class Light(HomeAccessory):
                 # order to avoid this incorrect behavior.
                 if brightness == 0 and state == STATE_ON:
                     brightness = 1
-                self.char_brightness_primary.set_value(brightness)
-                if self.color_and_temp_supported:
-                    self.char_brightness_secondary.set_value(brightness)
+                self.char_brightness.set_value(brightness)
 
         # Handle color temperature
         if self.color_temp_supported:
@@ -259,10 +172,8 @@ class Light(HomeAccessory):
         # Handle Color
         if self.color_supported:
             if not self.color_and_temp_supported and ATTR_COLOR_TEMP in attributes:
-                hue, saturation = color_temperature_to_hs(
-                    color_temperature_mired_to_kelvin(
-                        new_state.attributes[ATTR_COLOR_TEMP]
-                    )
+                hue, saturation = mireds_to_hue_sat(
+                    new_state.attributes[ATTR_COLOR_TEMP]
                 )
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))

@@ -38,7 +38,6 @@ from .const import (
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
-    CONF_COLOR_TEMP_RGB,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -61,7 +60,6 @@ from .const import (
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
-    DEFAULT_COLOR_TEMP_RGB,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
@@ -196,11 +194,6 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 )
 
 
-LIGHT_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(CONF_COLOR_TEMP_RGB, default=DEFAULT_COLOR_TEMP_RGB): cv.boolean}
-)
-
-
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
     10: " ",  # nl
@@ -273,9 +266,6 @@ def validate_entity_config(values):
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
-
-        elif domain == "light":
-            config = LIGHT_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)

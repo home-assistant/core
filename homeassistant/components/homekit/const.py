@@ -46,7 +46,6 @@ CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
 CONF_LINKED_OBSTRUCTION_SENSOR = "linked_obstruction_sensor"
-CONF_COLOR_TEMP_RGB = "color_temp_rgb"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
@@ -79,7 +78,6 @@ DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
 DEFAULT_STREAM_COUNT = 3
-DEFAULT_COLOR_TEMP_RGB = True
 
 # #### Features ####
 FEATURE_ON_OFF = "on_off"
