@@ -102,7 +102,9 @@ async def test_form_api_error(hass: HomeAssistant, caplog: LogCaptureFixture) ->
     assert "test error from API." in caplog.text
 
 
-async def test_flow_import(hass):
+async def test_flow_import(
+    hass: HomeAssistant,
+) -> None:
     """Test an import flow."""
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
@@ -160,7 +162,9 @@ async def test_flow_import(hass):
         assert result["reason"] == "unknown"
 
 
-async def test_user_unique_id_already_exists(hass):
+async def test_user_unique_id_already_exists(
+    hass: HomeAssistant,
+) -> None:
     """Test creating an entry where the unique_id already exists."""
     entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     entry.add_to_hass(hass)
@@ -189,7 +193,9 @@ async def test_user_unique_id_already_exists(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_reauthentication(hass):
+async def test_reauthentication(
+    hass: HomeAssistant,
+) -> None:
     """Test Uptime Robot reauthentication."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
@@ -226,7 +232,9 @@ async def test_reauthentication(hass):
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_reauthentication_failure(hass):
+async def test_reauthentication_failure(
+    hass: HomeAssistant,
+) -> None:
     """Test Uptime Robot reauthentication failure."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
@@ -264,7 +272,9 @@ async def test_reauthentication_failure(hass):
     assert result2["errors"]["base"] == "unknown"
 
 
-async def test_reauthentication_failure_no_existing_entry(hass):
+async def test_reauthentication_failure_no_existing_entry(
+    hass: HomeAssistant,
+) -> None:
     """Test Uptime Robot reauthentication with no existing entry."""
     old_entry = MockConfigEntry(
         **{**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA, "unique_id": None}
@@ -303,7 +313,9 @@ async def test_reauthentication_failure_no_existing_entry(hass):
     assert result2["reason"] == "reauth_failed_existing"
 
 
-async def test_reauthentication_failure_account_not_matching(hass):
+async def test_reauthentication_failure_account_not_matching(
+    hass: HomeAssistant,
+) -> None:
     """Test Uptime Robot reauthentication failure when using another account."""
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)

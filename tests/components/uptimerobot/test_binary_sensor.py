@@ -52,7 +52,7 @@ async def test_config_import(hass: HomeAssistant) -> None:
     assert config_entry.source == "import"
 
 
-async def test_presentation(hass: HomeAssistant):
+async def test_presentation(hass: HomeAssistant) -> None:
     """Test the presenstation of Uptime Robot binary_sensors."""
     await setup_uptimerobot_integration(hass)
 
@@ -64,7 +64,7 @@ async def test_presentation(hass: HomeAssistant):
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
 
-async def test_unaviable_on_update_failure(hass: HomeAssistant):
+async def test_unaviable_on_update_failure(hass: HomeAssistant) -> None:
     """Test entity unaviable on update failure."""
     await setup_uptimerobot_integration(hass)
 
