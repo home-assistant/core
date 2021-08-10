@@ -457,6 +457,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     else:
         return
 
+    hass.data[DATA_KEY][unique_id] = entity
+
     entities.append(entity)
 
     async def async_service_handler(service):
