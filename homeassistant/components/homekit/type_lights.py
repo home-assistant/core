@@ -161,13 +161,8 @@ class Light(HomeAccessory):
                     brightness = 1
                 self.char_brightness.set_value(brightness)
 
-        # Handle color temperature
-        if self.color_temp_supported:
-            color_temp = attributes.get(ATTR_COLOR_TEMP)
-            if isinstance(color_temp, (int, float)):
-                self.char_color_temp.set_value(round(color_temp, 0))
-
-        # Handle Color
+        # Handle Color - color must always be set before color temperature
+        # or the iOS UI will not display it correctly.
         if self.color_supported:
             if ATTR_COLOR_TEMP in attributes:
                 hue, saturation = mireds_to_hue_sat(
@@ -178,3 +173,9 @@ class Light(HomeAccessory):
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 self.char_hue.set_value(round(hue, 0))
                 self.char_saturation.set_value(round(saturation, 0))
+
+        # Handle color temperature
+        if self.color_temp_supported:
+            color_temp = attributes.get(ATTR_COLOR_TEMP)
+            if isinstance(color_temp, (int, float)):
+                self.char_color_temp.set_value(round(color_temp, 0))
