@@ -95,7 +95,7 @@ class SmartMeterTexasData:
         self.account = account
         websession = aiohttp_client.async_get_clientsession(hass)
         self.client = Client(websession, account)
-        self.meters = []
+        self.meters: list = []
 
     async def setup(self):
         """Fetch all of the user's meters."""
