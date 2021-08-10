@@ -462,6 +462,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     assert mocked_bulb.async_set_color_temp.mock_calls == []
     assert mocked_bulb.async_set_brightness.mock_calls == []
 
+    mocked_bulb.last_properties["color_mode"] = 1
     rgb = int(PROPERTIES["rgb"])
     blue = rgb & 0xFF
     green = (rgb >> 8) & 0xFF
@@ -477,6 +478,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     assert mocked_bulb.async_set_rgb.mock_calls == []
     assert mocked_bulb.async_set_color_temp.mock_calls == []
     assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.async_set_rgb.reset_mock()
 
     await hass.services.async_call(
         "light",
@@ -500,10 +502,28 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
     assert mocked_bulb.async_set_rgb.mock_calls == []
+    # Should call for the color mode change
+    assert mocked_bulb.async_set_color_temp.mock_calls == [
+        call(4000, duration=350, light_type=ANY)
+    ]
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.async_set_color_temp.reset_mock()
+
+    mocked_bulb.last_properties["color_mode"] = 2
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP: 250},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
     assert mocked_bulb.async_set_color_temp.mock_calls == []
     assert mocked_bulb.async_set_brightness.mock_calls == []
 
-    # This last change should generate a call
+    mocked_bulb.last_properties["color_mode"] = 3
+    # This last change should generate a call even though
+    # the color mode is the same since the HSV has changed
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,

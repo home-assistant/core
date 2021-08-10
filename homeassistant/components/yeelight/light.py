@@ -593,7 +593,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_hs(self, hs_color, duration) -> None:
         """Set bulb's color."""
         if hs_color and COLOR_MODE_HS in self.supported_color_modes:
-            if self.hs_color == hs_color:
+            if self.color_mode == COLOR_MODE_HS and self.hs_color == hs_color:
                 _LOGGER.debug("HS already set to: %s", hs_color)
                 # Already set, and since we get pushed updates
                 # we avoid setting it again to ensure we do not
@@ -609,7 +609,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_rgb(self, rgb, duration) -> None:
         """Set bulb's color."""
         if rgb and COLOR_MODE_RGB in self.supported_color_modes:
-            if self.rgb_color == rgb:
+            if self.color_mode == COLOR_MODE_RGB and self.rgb_color == rgb:
                 _LOGGER.debug("RGB already set to: %s", rgb)
                 # Already set, and since we get pushed updates
                 # we avoid setting it again to ensure we do not
@@ -627,7 +627,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if colortemp and COLOR_MODE_COLOR_TEMP in self.supported_color_modes:
             temp_in_k = mired_to_kelvin(colortemp)
 
-            if self.color_temp == colortemp:
+            if (
+                self.color_mode == COLOR_MODE_COLOR_TEMP
+                and self.color_temp == colortemp
+            ):
                 _LOGGER.debug("Color temp already set to: %s", temp_in_k)
                 # Already set, and since we get pushed updates
                 # we avoid setting it again to ensure we do not
