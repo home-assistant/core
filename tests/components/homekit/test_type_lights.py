@@ -376,6 +376,25 @@ async def test_light_color_temperature_and_rgb_color(
 
     assert events[-1].data[ATTR_VALUE] == "set color at (30, 50)"
 
+    # Only set Saturation
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_saturation_iid,
+                    HAP_REPR_VALUE: 20,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert call_turn_on[2]
+    assert call_turn_on[2].data[ATTR_HS_COLOR] == (30, 20)
+
+    assert events[-1].data[ATTR_VALUE] == "set color at (30, 20)"
+
     # Set from HASS
     hass.states.async_set(entity_id, STATE_ON, {ATTR_HS_COLOR: (100, 100)})
     await hass.async_block_till_done()
