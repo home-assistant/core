@@ -496,13 +496,15 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
+    async def async_unseen(
+        self, callback_timestamp: datetime.datetime | None = None
+    ) -> None:
         """Make this player unavailable when it was not seen recently."""
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
 
-        if now:
+        if callback_timestamp:
             # Called by a _seen_timer timeout, check mDNS one more time
             # This should not be checked in an "active" unseen scenario
             hostname = uid_to_short_hostname(self.soco.uid)
