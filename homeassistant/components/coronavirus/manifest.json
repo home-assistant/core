@@ -1,0 +1,9 @@
+{
+  "domain": "coronavirus",
+  "name": "Coronavirus (COVID-19)",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/coronavirus",
+  "requirements": ["coronavirus==1.1.1"],
+  "codeowners": ["@home-assistant/core"],
+  "iot_class": "cloud_polling"
+}

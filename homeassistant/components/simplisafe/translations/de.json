@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "identifier_exists": "Konto bereits registriert",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "still_awaiting_mfa": "Immernoch warten auf MFA-E-Mail-Klick",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "mfa": {
+                "description": "Pr\u00fcfe deine E-Mail auf einen Link von SimpliSafe. Kehre nach der Verifizierung des Links hierher zur\u00fcck, um die Installation der Integration abzuschlie\u00dfen.",
+                "title": "SimpliSafe Multi-Faktor-Authentifizierung"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Dein Zugriffstoken ist abgelaufen oder wurde widerrufen. Gib dein Passwort ein, um dein Konto erneut zu verkn\u00fcpfen.",
+                "title": "Integration erneut authentifizieren"
+            },
+            "user": {
+                "data": {
+                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",
+                    "password": "Passwort",
+                    "username": "E-Mail"
+                },
+                "title": "Gib deine Informationen ein"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)"
+                },
+                "title": "Konfiguriere SimpliSafe"
+            }
+        }
+    }
+}

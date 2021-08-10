@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine",
+                    "name": "Nome"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "Soglia (%)"
+                }
+            }
+        }
+    },
+    "title": "Sensore NOAA Aurora"
+}

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "link": {
+                "description": "Vil du konfigurere {name} ({host})?",
+                "title": "Koble til PowerView-huben"
+            },
+            "user": {
+                "data": {
+                    "host": "IP adresse"
+                },
+                "title": "Koble til PowerView-huben"
+            }
+        }
+    }
+}

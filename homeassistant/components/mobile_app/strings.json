@@ -1,14 +1,18 @@
 {
+  "title": "Mobile App",
   "config": {
-    "title": "Mobile App",
     "step": {
       "confirm": {
-        "title": "Mobile App",
         "description": "Do you want to set up the Mobile App component?"
       }
     },
     "abort": {
       "install_app": "Open the mobile app to set up the integration with Home Assistant. See [the docs]({apps_url}) for a list of compatible apps."
+    }
+  },
+  "device_automation": {
+    "action_type": {
+      "notify": "Send a notification"
     }
   }
 }

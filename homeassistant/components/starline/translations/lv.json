@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Kods no att\u0113la"
+                }
+            }
+        }
+    }
+}

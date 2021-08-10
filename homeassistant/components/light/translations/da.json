@@ -1,0 +1,26 @@
+{
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "Formindsk lysstyrken p\u00e5 {entity_name}",
+            "brightness_increase": "For\u00f8g lysstyrken p\u00e5 {entity_name}",
+            "toggle": "Skift {entity_name}",
+            "turn_off": "Sluk {entity_name}",
+            "turn_on": "T\u00e6nd for {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} er fra",
+            "is_on": "{entity_name} er til"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} slukkede",
+            "turned_on": "{entity_name} t\u00e6ndte"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Slukket",
+            "on": "T\u00e6ndt"
+        }
+    },
+    "title": "Lys"
+}

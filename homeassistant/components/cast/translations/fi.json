@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Vain yksi Google Cast -m\u00e4\u00e4ritys on tarpeen."
+        },
+        "step": {
+            "confirm": {
+                "description": "Haluatko m\u00e4\u00e4ritt\u00e4\u00e4 Google Castin?"
+            }
+        }
+    }
+}

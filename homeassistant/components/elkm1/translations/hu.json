@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Az ElkM1 ezzel a c\u00edmmel m\u00e1r konfigur\u00e1lva van",
+            "already_configured": "Az ezzel az el\u0151taggal rendelkez\u0151 ElkM1 m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Az IP-c\u00edm vagy tartom\u00e1ny vagy soros port, ha soros kapcsolaton kereszt\u00fcl csatlakozik.",
+                    "password": "Jelsz\u00f3",
+                    "prefix": "Egyedi el\u0151tag (hagyja \u00fcresen, ha csak egy ElkM1 van).",
+                    "protocol": "Protokoll",
+                    "temperature_unit": "Az ElkM1 h\u0151m\u00e9rs\u00e9kleti egys\u00e9g haszn\u00e1lja.",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "A c\u00edmsornak a \u201ebiztons\u00e1gos\u201d \u00e9s a \u201enem biztons\u00e1gos\u201d \u201ec\u00edm [: port]\u201d form\u00e1tum\u00fanak kell lennie. P\u00e9lda: '192.168.1.1'. A port opcion\u00e1lis, \u00e9s alap\u00e9rtelmez\u00e9s szerint 2101 \u201enem biztons\u00e1gos\u201d \u00e9s 2601 \u201ebiztons\u00e1gos\u201d. A soros protokollhoz a c\u00edmnek 'tty [: baud]' form\u00e1tum\u00fanak kell lennie. P\u00e9lda: '/dev/ttyS1'. A baud opcion\u00e1lis, \u00e9s alap\u00e9rtelmez\u00e9s szerint 115200.",
+                "title": "Csatlakoz\u00e1s az Elk-M1 vez\u00e9rl\u0151h\u00f6z"
+            }
+        }
+    }
+}

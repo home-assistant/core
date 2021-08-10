@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Pils\u0113ta jau ir konfigur\u0113ta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "city": "Pils\u0113ta"
+                }
+            }
+        }
+    }
+}

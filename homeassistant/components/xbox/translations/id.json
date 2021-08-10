@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            }
+        }
+    }
+}

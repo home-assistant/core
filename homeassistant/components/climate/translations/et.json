@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Kliimaseadme {entity_name} re\u017eiimi muutmine",
+            "set_preset_mode": "Olemi {entity_name} eelseadistuse muutmine"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} on seatud kindlale kliimaseadme re\u017eiimile",
+            "is_preset_mode": "{entity_name} on seatud kindlale eelseadistatud re\u017eiimile"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} m\u00f5\u00f5detud niiskus muutus",
+            "current_temperature_changed": "{entity_name} m\u00f5\u00f5detud temperatuur muutus",
+            "hvac_mode_changed": "{entity_name} kliimasedame re\u017eiim on muudetud"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "Automaatne",
+            "cool": "Jahuta",
+            "dry": "Kuiv",
+            "fan_only": "Ainult ventilaator",
+            "heat": "Soojenda",
+            "heat_cool": "K\u00fcta/jahuta",
+            "off": "V\u00e4ljas"
+        }
+    },
+    "title": "Kliimaseade"
+}

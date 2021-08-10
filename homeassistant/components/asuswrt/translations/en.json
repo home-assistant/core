@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
+            "pwd_and_ssh": "Only provide password or SSH key file",
+            "pwd_or_ssh": "Please provide password or SSH key file",
+            "ssh_not_file": "SSH key file not found",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "mode": "Mode",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "protocol": "Communication protocol to use",
+                    "ssh_key": "Path to your SSH key file (instead of password)",
+                    "username": "Username"
+                },
+                "description": "Set required parameter to connect to your router",
+                "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Seconds to wait before considering a device away",
+                    "dnsmasq": "The location in the router of the dnsmasq.leases files",
+                    "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
+                    "require_ip": "Devices must have IP (for access point mode)",
+                    "track_unknown": "Track unknown / unamed devices"
+                },
+                "title": "AsusWRT Options"
+            }
+        }
+    }
+}

@@ -1,8 +1,7 @@
 {
   "domain": "clicksend_tts",
-  "name": "Clicksend tts",
-  "documentation": "https://www.home-assistant.io/components/clicksend_tts",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "ClickSend TTS",
+  "documentation": "https://www.home-assistant.io/integrations/clicksend_tts",
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

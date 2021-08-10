@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-avain",
+                    "app_key": "Sovellusavain"
+                }
+            }
+        }
+    }
+}

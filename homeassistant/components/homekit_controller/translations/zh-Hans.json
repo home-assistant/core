@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "\u65e0\u6cd5\u6dfb\u52a0\u914d\u5bf9\uff0c\u56e0\u4e3a\u65e0\u6cd5\u518d\u627e\u5230\u8bbe\u5907\u3002",
+            "already_configured": "\u914d\u4ef6\u5df2\u901a\u8fc7\u6b64\u63a7\u5236\u5668\u914d\u7f6e\u5b8c\u6210\u3002",
+            "already_in_progress": "\u6b64\u8bbe\u5907\u7684\u914d\u7f6e\u6d41\u7a0b\u5df2\u5728\u8fdb\u884c\u4e2d\u3002",
+            "already_paired": "\u6b64\u914d\u4ef6\u5df2\u4e0e\u53e6\u4e00\u53f0\u8bbe\u5907\u914d\u5bf9\u3002\u8bf7\u91cd\u7f6e\u914d\u4ef6\uff0c\u7136\u540e\u91cd\u8bd5\u3002",
+            "ignored_model": "HomeKit \u5bf9\u6b64\u8bbe\u5907\u7684\u652f\u6301\u5df2\u88ab\u963b\u6b62\uff0c\u56e0\u4e3a\u6709\u529f\u80fd\u66f4\u5b8c\u6574\u7684\u539f\u751f\u96c6\u6210\u53ef\u4ee5\u4f7f\u7528\u3002",
+            "invalid_config_entry": "\u6b64\u8bbe\u5907\u5df2\u51c6\u5907\u597d\u914d\u5bf9\uff0c\u4f46\u662f Home Assistant \u4e2d\u5b58\u5728\u4e0e\u4e4b\u51b2\u7a81\u7684\u914d\u7f6e\uff0c\u5fc5\u987b\u5148\u5c06\u5176\u5220\u9664\u3002",
+            "invalid_properties": "\u8bbe\u5907\u901a\u544a\u7684\u5c5e\u6027\u65e0\u6548\u3002",
+            "no_devices": "\u6ca1\u6709\u627e\u5230\u672a\u914d\u5bf9\u7684\u8bbe\u5907"
+        },
+        "error": {
+            "authentication_error": "HomeKit \u4ee3\u7801\u4e0d\u6b63\u786e\u3002\u8bf7\u68c0\u67e5\u540e\u91cd\u8bd5\u3002",
+            "insecure_setup_code": "\u8bf7\u6c42\u7684\u8bbe\u7f6e\u4ee3\u7801\u7531\u4e8e\u8fc7\u4e8e\u7b80\u5355\u800c\u4e0d\u5b89\u5168\u3002\u6b64\u914d\u4ef6\u4e0d\u7b26\u5408\u57fa\u672c\u5b89\u5168\u8981\u6c42\u3002",
+            "max_peers_error": "\u8bbe\u5907\u62d2\u7edd\u914d\u5bf9\uff0c\u56e0\u4e3a\u5b83\u6ca1\u6709\u7a7a\u95f2\u7684\u914d\u5bf9\u5b58\u50a8\u7a7a\u95f4\u3002",
+            "pairing_failed": "\u5c1d\u8bd5\u4e0e\u6b64\u8bbe\u5907\u914d\u5bf9\u65f6\u53d1\u751f\u672a\u5904\u7406\u7684\u9519\u8bef\u3002\u8fd9\u53ef\u80fd\u662f\u6682\u65f6\u6027\u6545\u969c\uff0c\u4e5f\u53ef\u80fd\u662f\u60a8\u7684\u8bbe\u5907\u76ee\u524d\u4e0d\u88ab\u652f\u6301\u3002",
+            "unable_to_pair": "\u65e0\u6cd5\u914d\u5bf9\uff0c\u8bf7\u518d\u8bd5\u4e00\u6b21\u3002",
+            "unknown_error": "\u8bbe\u5907\u62a5\u544a\u4e86\u672a\u77e5\u9519\u8bef\u3002\u914d\u5bf9\u5931\u8d25\u3002"
+        },
+        "flow_title": "HomeKit \u914d\u4ef6: {name}",
+        "step": {
+            "busy_error": {
+                "description": "\u4e2d\u6b62\u6240\u6709\u63a7\u5236\u5668\u4e0a\u7684\u914d\u5bf9\uff0c\u6216\u5c1d\u8bd5\u5148\u91cd\u542f\u8bbe\u5907\uff0c\u7136\u540e\u7ee7\u7eed\u914d\u5bf9\u3002",
+                "title": "\u8bbe\u5907\u5df2\u4e0e\u53e6\u4e00\u4e2a\u63a7\u5236\u5668\u914d\u5bf9"
+            },
+            "max_tries_error": {
+                "description": "\u8bbe\u5907\u5df2\u6536\u5230\u591a\u4e8e 100 \u6b21\u5931\u8d25\u7684\u8eab\u4efd\u9a8c\u8bc1\u5c1d\u8bd5\u3002\u8bf7\u5c1d\u8bd5\u91cd\u65b0\u542f\u52a8\u8bbe\u5907\uff0c\u7136\u540e\u7ee7\u7eed\u914d\u5bf9\u3002",
+                "title": "\u8d85\u8fc7\u6700\u5927\u8eab\u4efd\u9a8c\u8bc1\u5c1d\u8bd5\u6b21\u6570"
+            },
+            "pair": {
+                "data": {
+                    "allow_insecure_setup_codes": "\u5141\u8bb8\u4f7f\u7528\u4e0d\u5b89\u5168\u7684\u8bbe\u7f6e\u4ee3\u7801\u914d\u5bf9\u3002",
+                    "pairing_code": "\u914d\u5bf9\u4ee3\u7801"
+                },
+                "description": "\u8f93\u5165\u60a8\u7684 HomeKit \u914d\u5bf9\u4ee3\u7801\uff08\u683c\u5f0f\u4e3a XXX-XX-XXX\uff09\u4ee5\u4f7f\u7528\u6b64\u914d\u4ef6",
+                "title": "\u4e0e HomeKit \u914d\u4ef6\u914d\u5bf9"
+            },
+            "protocol_error": {
+                "description": "\u8bbe\u5907\u53ef\u80fd\u672a\u5904\u4e8e\u914d\u5bf9\u6a21\u5f0f\uff0c\u53ef\u80fd\u9700\u8981\u6309\u4e0b\u7269\u7406\u6216\u865a\u62df\u6309\u94ae\u3002\u8bf7\u786e\u4fdd\u8bbe\u5907\u5904\u4e8e\u914d\u5bf9\u6a21\u5f0f\uff0c\u6216\u5c1d\u8bd5\u91cd\u65b0\u542f\u52a8\u8bbe\u5907\uff0c\u7136\u540e\u7ee7\u7eed\u914d\u5bf9\u3002",
+                "title": "\u4e0e\u914d\u4ef6\u901a\u4fe1\u65f6\u51fa\u9519"
+            },
+            "user": {
+                "data": {
+                    "device": "\u8bbe\u5907"
+                },
+                "description": "\u9009\u62e9\u60a8\u8981\u914d\u5bf9\u7684\u8bbe\u5907",
+                "title": "\u4e0e HomeKit \u914d\u4ef6\u914d\u5bf9"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "\u6309\u94ae 1",
+            "button10": "\u6309\u94ae 10",
+            "button2": "\u6309\u94ae 2",
+            "button3": "\u6309\u94ae 3",
+            "button4": "\u6309\u94ae 4",
+            "button5": "\u6309\u94ae 5",
+            "button6": "\u6309\u94ae 6",
+            "button7": "\u6309\u94ae 7",
+            "button8": "\u6309\u94ae 8",
+            "button9": "\u6309\u94ae 9",
+            "doorbell": "\u95e8\u94c3"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" \u53cc\u51fb",
+            "long_press": "\"{subtype}\" \u957f\u6309",
+            "single_press": "\"{subtype}\" \u6309\u4e0b"
+        }
+    },
+    "title": "HomeKit \u63a7\u5236\u5668"
+}

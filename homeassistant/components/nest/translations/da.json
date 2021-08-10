@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout ved generering af autoriseret url."
+        },
+        "error": {
+            "internal_error": "Intern fejl ved validering af kode",
+            "timeout": "Timeout ved validering af kode",
+            "unknown": "Ukendt fejl ved validering af kode"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Udbyder"
+                },
+                "description": "V\u00e6lg hvilken godkendelsesudbyder du vil godkende med Nest.",
+                "title": "Godkendelsesudbyder"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN-kode"
+                },
+                "description": "For at forbinde din Nest-konto, [godkend din konto]({url}). \n\nEfter godkendelse skal du kopiere pin koden nedenfor.",
+                "title": "Forbind Nest-konto"
+            }
+        }
+    }
+}

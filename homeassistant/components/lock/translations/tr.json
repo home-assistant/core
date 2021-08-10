@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "locked": "{entity_name} kilitlendi",
+            "unlocked": "{entity_name} kilidi a\u00e7\u0131ld\u0131"
+        }
+    },
+    "state": {
+        "_": {
+            "locked": "Kilitli",
+            "unlocked": "Kilitli de\u011fil"
+        }
+    },
+    "title": "Kilit"
+}

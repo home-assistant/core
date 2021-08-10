@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "\u00d6ffne die mobile App, um die Integration mit Home Assistant einzurichten. Eine Liste der kompatiblen Apps gibt es hier [the docs] ({apps_url})."
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du die Mobile App-Komponente einrichten?"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Sende eine Benachrichtigung"
+        }
+    },
+    "title": "Mobile App"
+}

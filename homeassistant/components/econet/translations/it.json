@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Password"
+                },
+                "title": "Imposta account Rheem EcoNet"
+            }
+        }
+    }
+}

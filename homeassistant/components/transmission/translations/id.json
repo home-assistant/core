@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "name_exists": "Nama sudah ada"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Siapkan Klien Transmission"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Batas",
+                    "order": "Urutan",
+                    "scan_interval": "Frekuensi pembaruan"
+                },
+                "title": "Konfigurasikan opsi untuk Transmission"
+            }
+        }
+    }
+}

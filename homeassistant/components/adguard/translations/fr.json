@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9",
+            "existing_instance_updated": "La configuration existante a \u00e9t\u00e9 mise \u00e0 jour."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 AdGuard Home fourni par le module compl\u00e9mentaire Hass.io: {addon} ?",
+                "title": "AdGuard Home via le module compl\u00e9mentaire Hass.io"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "ssl": "AdGuard Home utilise un certificat SSL",
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "AdGuard Home utilise un certificat appropri\u00e9"
+                },
+                "description": "Configurez votre instance AdGuard Home pour permettre la surveillance et le contr\u00f4le."
+            }
+        }
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave \u5df2\u914d\u7f6e\u5b8c\u6210"
+        },
+        "error": {
+            "option_error": "Z-Wave \u9a8c\u8bc1\u5931\u8d25\u3002 USB \u68d2\u7684\u8def\u5f84\u662f\u5426\u6b63\u786e\uff1f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "\u7f51\u7edc\u5bc6\u94a5\uff08\u7559\u7a7a\u5c06\u81ea\u52a8\u751f\u6210\uff09",
+                    "usb_path": "USB \u8def\u5f84"
+                },
+                "description": "\u6709\u5173\u914d\u7f6e\u7684\u4fe1\u606f\uff0c\u8bf7\u53c2\u9605 https://www.home-assistant.io/docs/z-wave/installation/"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "\u65ad\u5f00",
+            "initializing": "\u521d\u59cb\u5316",
+            "ready": "\u5c31\u7eea",
+            "sleeping": "\u4f11\u7720"
+        },
+        "query_stage": {
+            "dead": "\u65ad\u5f00 ({query_stage})",
+            "initializing": "\u521d\u59cb\u5316 ({query_stage})"
+        }
+    }
+}

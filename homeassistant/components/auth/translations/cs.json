@@ -1,0 +1,34 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "\u017d\u00e1dn\u00e9 oznamovac\u00ed slu\u017eby nejsou k dispozici."
+            },
+            "error": {
+                "invalid_code": "Neplatn\u00fd k\u00f3d, zkuste to znovu."
+            },
+            "step": {
+                "init": {
+                    "description": "Vyberte pros\u00edm jednu z oznamovac\u00edch slu\u017eeb:",
+                    "title": "Nastavte jednor\u00e1zov\u00e9 heslo dodan\u00e9 komponentou notify"
+                },
+                "setup": {
+                    "description": "Jednor\u00e1zov\u00e9 heslo bylo odesl\u00e1no prost\u0159ednictv\u00edm **notify.{notify_service}**. Zadejte jej n\u00ed\u017ee:",
+                    "title": "Ov\u011b\u0159en\u00ed nastaven\u00ed"
+                }
+            }
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Neplatn\u00fd k\u00f3d, zkuste to znovu. Pokud se tato chyba opakuje, ujist\u011bte se, \u017ee hodiny syst\u00e9mu Home Assistant jsou spr\u00e1vn\u011b nastaveny."
+            },
+            "step": {
+                "init": {
+                    "description": "Chcete-li aktivovat dvoufaktorovou autentizaci pomoc\u00ed jednor\u00e1zov\u00fdch hesel zalo\u017een\u00fdch na \u010dase, na\u010dt\u011bte k\u00f3d QR pomoc\u00ed va\u0161\u00ed autentiza\u010dn\u00ed aplikace. Pokud ji nem\u00e1te, doporu\u010dujeme bu\u010f [Google Authenticator](https://support.google.com/accounts/answer/1066447) nebo [Authy](https://authy.com/). \n\n{qr_code} \n \nPo skenov\u00e1n\u00ed k\u00f3du zadejte \u0161estcifern\u00fd k\u00f3d z aplikace a ov\u011b\u0159te nastaven\u00ed. Pokud m\u00e1te probl\u00e9my se skenov\u00e1n\u00edm k\u00f3du QR, prove\u010fte ru\u010dn\u00ed nastaven\u00ed s k\u00f3dem **`{code}`**.",
+                    "title": "Nastavte dvoufaktorovou ov\u011b\u0159ov\u00e1n\u00ed pomoc\u00ed TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

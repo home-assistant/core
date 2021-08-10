@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavit inteligentn\u00ed za\u0159\u00edzen\u00ed TP-Link?"
+            }
+        }
+    }
+}

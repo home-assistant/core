@@ -1,0 +1,104 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "P\u0159emost\u011bn\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "no_bridges": "\u017d\u00e1dn\u00e9 deCONZ p\u0159emost\u011bn\u00ed nebyly nalezeny",
+            "no_hardware_available": "K deCONZ nen\u00ed p\u0159ipojeno \u017e\u00e1dn\u00e9 r\u00e1diov\u00e9 za\u0159\u00edzen\u00ed",
+            "not_deconz_bridge": "Nejedn\u00e1 se o deCONZ p\u0159emost\u011bn\u00ed",
+            "updated_instance": "Instance deCONZ aktualizov\u00e1na s nov\u00fdm hostitelem"
+        },
+        "error": {
+            "no_key": "Nelze z\u00edskat kl\u00ed\u010d API"
+        },
+        "flow_title": "Br\u00e1na deCONZ ZigBee ({host})",
+        "step": {
+            "hassio_confirm": {
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed dopl\u0148ku {addon}?",
+                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm Home Assistant dopl\u0148ku"
+            },
+            "link": {
+                "description": "Odemkn\u011bte br\u00e1nu deCONZ pro registraci v Home Assistant.\n\n 1. P\u0159ejd\u011bte na Nastaven\u00ed deCONZ - > Br\u00e1na - > Pokro\u010dil\u00e9\n 2. Stiskn\u011bte tla\u010d\u00edtko \"Ov\u011b\u0159it aplikaci\"",
+                "title": "Propojit s deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Vyberte objevenou br\u00e1nu deCONZ"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Ob\u011b tla\u010d\u00edtka",
+            "bottom_buttons": "Spodn\u00ed tla\u010d\u00edtka",
+            "button_1": "Prvn\u00ed tla\u010d\u00edtko",
+            "button_2": "Druh\u00e9 tla\u010d\u00edtko",
+            "button_3": "T\u0159et\u00ed tla\u010d\u00edtko",
+            "button_4": "\u010ctvrt\u00e9 tla\u010d\u00edtko",
+            "button_5": "P\u00e1t\u00e9 tla\u010d\u00edtko",
+            "button_6": "\u0160est\u00e9 tla\u010d\u00edtko",
+            "button_7": "Sedm\u00e9 tla\u010d\u00edtko",
+            "button_8": "Osm\u00e9 tla\u010d\u00edtko",
+            "close": "Zav\u0159\u00edt",
+            "dim_down": "Sn\u00ed\u017eit ztlumen\u00ed",
+            "dim_up": "Zv\u00fd\u0161it ztlumen\u00ed",
+            "left": "Vlevo",
+            "open": "Otev\u0159eno",
+            "right": "Vpravo",
+            "side_1": "Strana 1",
+            "side_2": "Strana 2",
+            "side_3": "Strana 3",
+            "side_4": "Strana 4",
+            "side_5": "Strana 5",
+            "side_6": "Strana 6",
+            "top_buttons": "Horn\u00ed tla\u010d\u00edtka",
+            "turn_off": "Vypnout",
+            "turn_on": "Zapnout"
+        },
+        "trigger_type": {
+            "remote_awakened": "Za\u0159\u00edzen\u00ed probuzeno",
+            "remote_button_double_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto dvakr\u00e1t",
+            "remote_button_long_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto dlouze",
+            "remote_button_long_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" po dlouh\u00e9m stisku",
+            "remote_button_quadruple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "remote_button_quintuple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto p\u011btkr\u00e1t",
+            "remote_button_rotation_stopped": "Oto\u010den\u00ed tla\u010d\u00edtka \"{subtype}\" bylo zastaveno",
+            "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
+            "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_triple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto t\u0159ikr\u00e1t",
+            "remote_double_tap": "Dvakr\u00e1t poklep\u00e1no na za\u0159\u00edzen\u00ed \"{subtype}\"",
+            "remote_double_tap_any_side": "Za\u0159\u00edzen\u00ed bylo poklep\u00e1no 2x na libovolnou stranu",
+            "remote_flip_180_degrees": "Za\u0159\u00edzen\u00ed p\u0159evr\u00e1ceno o 180 stup\u0148\u016f",
+            "remote_flip_90_degrees": "Za\u0159\u00edzen\u00ed p\u0159evr\u00e1ceno o 90 stup\u0148\u016f",
+            "remote_gyro_activated": "Za\u0159\u00edzen\u00ed se zat\u0159\u00e1slo",
+            "remote_rotate_from_side_1": "Za\u0159\u00edzen\u00ed oto\u010deno ze \"strany 1\" na \"{subtype}\"",
+            "remote_rotate_from_side_2": "Za\u0159\u00edzen\u00ed oto\u010deno ze \"strany 2\" na \"{subtype}\"",
+            "remote_rotate_from_side_3": "Za\u0159\u00edzen\u00ed oto\u010deno ze \"strany 3\" na \"{subtype}\"",
+            "remote_rotate_from_side_4": "Za\u0159\u00edzen\u00ed oto\u010deno ze \"strany 4\" na \"{subtype}\"",
+            "remote_rotate_from_side_5": "Za\u0159\u00edzen\u00ed oto\u010deno ze \"strany 5\" na \"{subtype}\"",
+            "remote_rotate_from_side_6": "Za\u0159\u00edzen\u00ed oto\u010deno ze \"strany 6\" na \"{subtype}\"",
+            "remote_turned_clockwise": "Za\u0159\u00edzen\u00ed oto\u010deno ve sm\u011bru hodinov\u00fdch ru\u010di\u010dek",
+            "remote_turned_counter_clockwise": "Za\u0159\u00edzen\u00ed oto\u010deno proti sm\u011bru hodinov\u00fdch ru\u010di\u010dek"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Povolit senzory deCONZ CLIP",
+                    "allow_deconz_groups": "Povolit skupiny sv\u011btel deCONZ",
+                    "allow_new_devices": "Povolit automatick\u00e9 p\u0159id\u00e1v\u00e1n\u00ed nov\u00fdch za\u0159\u00edzen\u00ed"
+                },
+                "description": "Nastavte viditelnost typ\u016f za\u0159\u00edzen\u00ed deCONZ",
+                "title": "Mo\u017enosti deCONZ"
+            }
+        }
+    }
+}

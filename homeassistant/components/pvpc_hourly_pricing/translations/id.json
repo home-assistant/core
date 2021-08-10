@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nama Sensor",
+                    "tariff": "Tarif kontrak (1, 2, atau 3 periode)"
+                },
+                "description": "Sensor ini menggunakan API resmi untuk mendapatkan [harga listrik per jam (PVPC)](https://www.esios.ree.es/es/pvpc) di Spanyol.\nUntuk penjelasan yang lebih tepat, kunjungi [dokumen integrasi](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).\n\nPilih tarif kontrak berdasarkan jumlah periode penagihan per hari:\n- 1 periode: normal\n- 2 periode: diskriminasi (tarif per malam)\n- 3 periode: mobil listrik (tarif per malam 3 periode)",
+                "title": "Pemilihan tarif"
+            }
+        }
+    }
+}

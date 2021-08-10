@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "title": "Introdueix el nom d'usuari i contrasenya"
+            }
+        }
+    }
+}

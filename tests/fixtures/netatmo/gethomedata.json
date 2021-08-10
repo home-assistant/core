@@ -1,0 +1,318 @@
+{
+    "body": {
+        "homes": [
+            {
+                "id": "91763b24c43d3e344f424e8b",
+                "name": "MYHOME",
+                "persons": [
+                    {
+                        "id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+                        "last_seen": 1557071156,
+                        "out_of_sight": true,
+                        "face": {
+                            "id": "d74fad765b9100ef480720a9",
+                            "version": 1,
+                            "key": "a4a95c24b808a89f8d1730fb69ecdf2bb8b72039d2c69928b029d67fc40cb2d7",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/d74fad765b9100ef480720a9a4a95c24b808a89f8d1730fb69ecdf2bb8b72039d2c69928b029d67fc40cb2d7"
+                        },
+                        "pseudo": "John Doe"
+                    },
+                    {
+                        "id": "91827375-7e04-5298-83ae-a0cb8372dff2",
+                        "last_seen": 1560600726,
+                        "out_of_sight": true,
+                        "face": {
+                            "id": "d74fad765b9100ef480720a9",
+                            "version": 3,
+                            "key": "a4a95c24b808a89f8d1730039d2c69928b029d67fc40cb2d7fb69ecdf2bb8b72",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/d74fad765b9100ef480720a9a4a95c24b808a89f8d1730039d2c69928b029d67fc40cb2d7fb69ecdf2bb8b72"
+                        },
+                        "pseudo": "Jane Doe"
+                    },
+                    {
+                        "id": "91827376-7e04-5298-83af-a0cb8372dff3",
+                        "last_seen": 1560626666,
+                        "out_of_sight": false,
+                        "face": {
+                            "id": "d74fad765b9100ef480720a9",
+                            "version": 1,
+                            "key": "a4a95c2d1730fb69ecdf2bb8b72039d2c69928b029d67fc40cb2d74b808a89f8",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/d74fad765b9100ef480720a9a4a95c2d1730fb69ecdf2bb8b72039d2c69928b029d67fc40cb2d74b808a89f8"
+                        },
+                        "pseudo": "Richard Doe"
+                    },
+                    {
+                        "id": "91827376-7e04-5298-83af-a0cb8372dff4",
+                        "last_seen": 1560621666,
+                        "out_of_sight": true,
+                        "face": {
+                            "id": "d0ef44fad765b980720710a9",
+                            "version": 1,
+                            "key": "ab029da89f84a95c2d1730fb67fc40cb2d74b80869ecdf2bb8b72039d2c69928",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/d0ef44fad765b980720710a9ab029da89f84a95c2d1730fb67fc40cb2d74b80869ecdf2bb8b72039d2c69928"
+                        }
+                    }
+                ],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin"
+                },
+                "cameras": [
+                    {
+                        "id": "12:34:56:00:f1:62",
+                        "type": "NACamera",
+                        "status": "on",
+                        "vpn_url": "https://prodvpn-eu-2.netatmo.net/restricted/10.255.248.91/6d278460699e56180d47ab47169efb31/MpEylTU2MDYzNjRVD-LJxUnIndumKzLboeAwMDqTTg,,",
+                        "is_local": true,
+                        "sd_status": "on",
+                        "alim_status": "on",
+                        "name": "Hall",
+                        "modules": [
+                            {
+                                "id": "12:34:56:00:f2:f1",
+                                "type": "NIS",
+                                "battery_percent": 84,
+                                "rf": 68,
+                                "status": "no_news",
+                                "monitoring": "on",
+                                "alim_source": "battery",
+                                "tamper_detection_enabled": true,
+                                "name": "Welcome's Siren"
+                            }
+                        ],
+                        "use_pin_code": false,
+                        "last_setup": 1544828430
+                    },
+                    {
+                        "id": "12:34:56:00:a5:a4",
+                        "type": "NOC",
+                        "status": "on",
+                        "vpn_url": "https://prodvpn-eu-2.netatmo.net/restricted/10.255.248.91/6d278460699e56180d47ab47169efb31/MpEylTU2MDYzNjRVD-LJxUnIndumKzLboeAwMDqTTw,,",
+                        "is_local": false,
+                        "sd_status": "on",
+                        "alim_status": "on",
+                        "name": "Garden",
+                        "last_setup": 1563737661,
+                        "light_mode_status": "auto"
+                    }
+                ],
+                "smokedetectors": [
+                    {
+                        "id": "12:34:56:00:8b:a2",
+                        "type": "NSD",
+                        "last_setup": 1567261859,
+                        "name": "Hall"
+                    },
+                    {
+                        "id": "12:34:56:00:8b:ac",
+                        "type": "NSD",
+                        "last_setup": 1567262759,
+                        "name": "Kitchen"
+                    }
+                ],
+                "events": [
+                    {
+                        "id": "a1b2c3d4e5f6abcdef123456",
+                        "type": "person",
+                        "time": 1560604700,
+                        "camera_id": "12:34:56:00:f1:62",
+                        "device_id": "12:34:56:00:f1:62",
+                        "person_id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+                        "video_status": "deleted",
+                        "is_arrival": false,
+                        "message": "<b>John Doe</b> gesehen"
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef123457",
+                        "type": "person_away",
+                        "time": 1560602400,
+                        "camera_id": "12:34:56:00:f1:62",
+                        "device_id": "12:34:56:00:f1:62",
+                        "person_id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+                        "message": "<b>John Doe</b> hat das Haus verlassen",
+                        "sub_message": "John Doe gilt als abwesend, da das mit diesem Profil verbundene Telefon den Bereich des Hauses verlassen hat."
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef123458",
+                        "type": "person",
+                        "time": 1560601200,
+                        "camera_id": "12:34:56:00:f1:62",
+                        "device_id": "12:34:56:00:f1:62",
+                        "person_id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+                        "video_status": "deleted",
+                        "is_arrival": false,
+                        "message": "<b>John Doe</b> gesehen"
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef123459",
+                        "type": "person",
+                        "time": 1560600100,
+                        "camera_id": "12:34:56:00:f1:62",
+                        "device_id": "12:34:56:00:f1:62",
+                        "person_id": "91827375-7e04-5298-83ae-a0cb8372dff2",
+                        "snapshot": {
+                            "id": "d74fad765b9100ef480720a9",
+                            "version": 1,
+                            "key": "a4a95c24b808a89f8d1730039d2c69928b029d67fc40cb2d7fb69ecdf2bb8b72",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/d74fad765b9100ef480720a9a4a95c24b808a89f8d1730039d2c69928b029d67fc40cb2d7fb69ecdf2bb8b72"
+                        },
+                        "video_id": "12345678-36bc-4b9a-9762-5194e707ed51",
+                        "video_status": "available",
+                        "is_arrival": false,
+                        "message": "<b>Jane Doe</b> gesehen"
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef12345a",
+                        "type": "person",
+                        "time": 1560603600,
+                        "camera_id": "12:34:56:00:f1:62",
+                        "device_id": "12:34:56:00:f1:62",
+                        "person_id": "91827375-7e04-5298-83ae-a0cb8372dff3",
+                        "snapshot": {
+                            "id": "532dde8d17554c022ab071b8",
+                            "version": 1,
+                            "key": "9fbe490fffacf45b8416241946541b031a004a09b6747feb6c38c3ccbc456b28",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/532dde8d17554c022ab071b89fbe490fffacf45b8416241946541b031a004a09b6747feb6c38c3ccbc456b28"
+                        },
+                        "video_id": "12345678-1234-46cb-ad8f-23d893874099",
+                        "video_status": "available",
+                        "is_arrival": false,
+                        "message": "<b>Bewegung</b> erkannt"
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef12345b",
+                        "type": "movement",
+                        "time": 1560506200,
+                        "camera_id": "12:34:56:00:f1:62",
+                        "device_id": "12:34:56:00:f1:62",
+                        "category": "human",
+                        "snapshot": {
+                            "id": "532dde8d17554c022ab071b9",
+                            "version": 1,
+                            "key": "8fbe490fffacf45b8416241946541b031a004a09b6747feb6c38c3ccbc456b28",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/532dde8d17554c022ab071b98fbe490fffacf45b8416241946541b031a004a09b6747feb6c38c3ccbc456b28"
+                        },
+                        "vignette": {
+                            "id": "5dc021b5dea854bd2321707a",
+                            "version": 1,
+                            "key": "58c5a05bd6bd908f6bf368865ef7355231c44215f8eb7ae458c919b2c67b4944",
+                            "url": "https://netatmocameraimage.blob.core.windows.net/production/5dc021b5dea854bd2321707a58c5a05bd6bd908f6bf368865ef7355231c44215f8eb7ae458c919b2c67b4944"
+                        },
+                        "video_id": "12345678-1234-46cb-ad8f-23d89387409a",
+                        "video_status": "available",
+                        "message": "<b>Bewegung</b> erkannt"
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef12345c",
+                        "type": "sound_test",
+                        "time": 1560506210,
+                        "camera_id": "12:34:56:00:8b:a2",
+                        "device_id": "12:34:56:00:8b:a2",
+                        "sub_type": 0,
+                        "message": "Hall: Alarmton erfolgreich getestet"
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef12345d",
+                        "type": "wifi_status",
+                        "time": 1560506220,
+                        "camera_id": "12:34:56:00:8b:a2",
+                        "device_id": "12:34:56:00:8b:a2",
+                        "sub_type": 1,
+                        "message": "Hall:WLAN-Verbindung erfolgreich hergestellt"
+                    },
+                    {
+                        "id": "a1b2c3d4e5f6abcdef12345e",
+                        "type": "outdoor",
+                        "time": 1560643100,
+                        "camera_id": "12:34:56:00:a5:a4",
+                        "device_id": "12:34:56:00:a5:a4",
+                        "video_id": "string",
+                        "video_status": "available",
+                        "event_list": [
+                            {
+                                "type": "string",
+                                "time": 1560643100,
+                                "offset": 0,
+                                "id": "c81bcf7b-2cfg-4ac9-8455-487ed00c0000",
+                                "message": "Animal détecté",
+                                "snapshot": {
+                                    "id": "5715e16849c75xxxx00000000xxxxx",
+                                    "version": 1,
+                                    "key": "7ac578d05030d0e170643a787ee0a29663dxxx00000xxxxx00000",
+                                    "url": "https://netatmocameraimage.blob.core.windows.net/production/1aa"
+                                },
+                                "vignette": {
+                                    "id": "5715e16849c75xxxx00000000xxxxx",
+                                    "version": 1,
+                                    "key": "7ac578d05030d0e170643a787ee0a29663dxxx00000xxxxx00000",
+                                    "url": "https://netatmocameraimage.blob.core.windows.net/production/1aa00000"
+                                }
+                            },
+                            {
+                                "type": "string",
+                                "time": 1560506222,
+                                "offset": 0,
+                                "id": "c81bcf7b-2cfg-4ac9-8455-487ed00c0000",
+                                "message": "Animal détecté",
+                                "snapshot": {
+                                    "filename": "vod\/af74631d-8311-42dc-825b-82e3abeaab09\/events\/c53b-aze7a.jpg"
+                                },
+                                "vignette": {
+                                    "filename": "vod\/af74631d-8311-42dc-825b-82e3abeaab09\/events\/c5.jpg"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "91763b24c43d3e344f424e8c",
+                "persons": [],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin"
+                },
+                "cameras": [
+                    {
+                        "id": "12:34:56:00:a5:a5",
+                        "type": "NOC",
+                        "status": "on",
+                        "vpn_url": "https://prodvpn-eu-2.netatmo.net/restricted/10.255.248.91/6d278460699e56180d47ab47169efb31/MpEylTU2MDYzNjRVD-LJxUnIndumKzLboeAwMDqTTz,,",
+                        "is_local": true,
+                        "sd_status": "on",
+                        "alim_status": "on",
+                        "name": "Street",
+                        "last_setup": 1563737561,
+                        "light_mode_status": "auto"
+                    }
+                ],
+                "smokedetectors": []
+            },
+            {
+                "id": "91763b24c43d3e344f424e8d",
+                "persons": [],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin"
+                },
+                "cameras": [],
+                "smokedetectors": []
+            }
+        ],
+        "user": {
+            "reg_locale": "de-DE",
+            "lang": "de-DE",
+            "country": "DE",
+            "mail": "john@doe.com"
+        },
+        "global_info": {
+            "show_tags": true
+        }
+    },
+    "status": "ok",
+    "time_exec": 0.03621506690979,
+    "time_server": 1560626960
+}

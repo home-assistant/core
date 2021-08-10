@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alla l\u00e4nkade servrar har redan konfigurerats",
+            "already_configured": "Denna Plex-server \u00e4r redan konfigurerad",
+            "already_in_progress": "Plex konfigureras",
+            "token_request_timeout": "Timeout att erh\u00e5lla token",
+            "unknown": "Misslyckades av ok\u00e4nd anledning"
+        },
+        "error": {
+            "faulty_credentials": "Auktoriseringen misslyckades",
+            "no_servers": "Inga servrar l\u00e4nkade till konto",
+            "not_found": "Plex-server hittades inte"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "port": "Port"
+                }
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "V\u00e4lj flera servrar tillg\u00e4ngliga, v\u00e4lj en:",
+                "title": "V\u00e4lj Plex-server"
+            },
+            "user": {
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Inst\u00e4llningsmetod"
+                },
+                "title": "Plex Media Server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_plex_web_clients": "Ignorera Plex Web-klienter",
+                    "use_episode_art": "Anv\u00e4nd avsnittsbild"
+                },
+                "description": "Alternativ f\u00f6r Plex-mediaspelare"
+            }
+        }
+    }
+}

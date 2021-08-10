@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "idle": "\u30a2\u30a4\u30c9\u30eb",
+            "off": "\u30aa\u30d5",
+            "on": "\u30aa\u30f3",
+            "paused": "\u4e00\u6642\u505c\u6b62",
+            "playing": "\u518d\u751f\u4e2d"
+        }
+    },
+    "title": "\u30e1\u30c7\u30a3\u30a2\u30d7\u30ec\u30fc\u30e4\u30fc"
+}

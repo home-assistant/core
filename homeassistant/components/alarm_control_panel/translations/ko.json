@@ -1,0 +1,40 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "{entity_name}\uc744(\ub97c) \uc678\ucd9c\uacbd\ube44\ub85c \uc124\uc815\ud558\uae30",
+            "arm_home": "{entity_name}\uc744(\ub97c) \uc7ac\uc2e4\uacbd\ube44\ub85c \uc124\uc815\ud558\uae30",
+            "arm_night": "{entity_name}\uc744(\ub97c) \uc57c\uac04\uacbd\ube44\ub85c \uc124\uc815\ud558\uae30",
+            "disarm": "{entity_name}\uc744(\ub97c) \uacbd\ube44\ud574\uc81c\ub85c \uc124\uc815\ud558\uae30",
+            "trigger": "{entity_name}\uc744(\ub97c) \ud2b8\ub9ac\uac70\ud558\uae30"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name}\uc774(\uac00) \uc678\ucd9c \uacbd\ube44\ubaa8\ub4dc \uc0c1\ud0dc\uc774\uba74",
+            "is_armed_home": "{entity_name}\uc774(\uac00) \uc7ac\uc2e4 \uacbd\ube44\ubaa8\ub4dc \uc0c1\ud0dc\uc774\uba74",
+            "is_armed_night": "{entity_name}\uc774(\uac00) \uc57c\uac04 \uacbd\ube44\ubaa8\ub4dc \uc0c1\ud0dc\uc774\uba74",
+            "is_disarmed": "{entity_name}\uc774(\uac00) \ud574\uc81c \uc0c1\ud0dc\uc774\uba74",
+            "is_triggered": "{entity_name}\uc774(\uac00) \ud2b8\ub9ac\uac70 \ub418\uc5c8\uc73c\uba74"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name}\uc774(\uac00) \uc678\ucd9c \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub418\uc5c8\uc744 \ub54c",
+            "armed_home": "{entity_name}\uc774(\uac00) \uc7ac\uc2e4 \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub418\uc5c8\uc744 \ub54c",
+            "armed_night": "{entity_name}\uc774(\uac00) \uc57c\uac04 \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub418\uc5c8\uc744 \ub54c",
+            "disarmed": "{entity_name}\uc774(\uac00) \ud574\uc81c\ub418\uc5c8\uc744 \ub54c",
+            "triggered": "{entity_name}\uc774(\uac00) \ud2b8\ub9ac\uac70\ub418\uc5c8\uc744 \ub54c"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "\uacbd\ube44 \uc911",
+            "armed_away": "\uacbd\ube44 \uc911(\uc678\ucd9c)",
+            "armed_custom_bypass": "\uacbd\ube44 \uc911 (\uc0ac\uc6a9\uc790 \uc6b0\ud68c)",
+            "armed_home": "\uacbd\ube44 \uc911(\uc7ac\uc2e4)",
+            "armed_night": "\uacbd\ube44 \uc911(\uc57c\uac04)",
+            "arming": "\uacbd\ube44 \uc911",
+            "disarmed": "\ud574\uc81c\ub428",
+            "disarming": "\ud574\uc81c\uc911",
+            "pending": "\ubcf4\ub958\uc911",
+            "triggered": "\uc791\ub3d9\ub428"
+        }
+    },
+    "title": "\uc54c\ub78c\uc81c\uc5b4\ud310"
+}

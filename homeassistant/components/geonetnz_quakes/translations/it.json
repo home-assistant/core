@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "Intensit\u00e0 in Scala Mercalli Modificata",
+                    "radius": "Raggio"
+                },
+                "title": "Inserisci i tuoi dettagli del filtro."
+            }
+        }
+    }
+}

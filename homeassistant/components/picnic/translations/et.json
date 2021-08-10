@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "T\u00f5rge \u00fchendamisel",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Riigi kood",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "title": ""
+}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ass scho konfigur\u00e9iert",
+            "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
+            "unknown": "Onerwaarte Feeler",
+            "unknown_authorize_url_generation": "Onbekannte Feeler beim erstellen vun der Authorisatiouns URL."
+        },
+        "error": {
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "auth": {
+                "description": "Fir den TelldusLive Kont ze verbannen:\n1. Klickt op de Link \u00ebnnen\n2. Verbannt iech mat TelldusLive\n3. Autoris\u00e9iert **{app_name}** (klickt **Yes**)\n4. Kommt heihinner zer\u00e9ck a klickt **Ofsch\u00e9cken**\n\n[Tellduslive Kont verbannen]({auth_url})",
+                "title": "Mat TelldusLive authentifiz\u00e9ieren"
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat"
+                },
+                "description": "Eidel",
+                "title": "Endpoint auswielen"
+            }
+        }
+    }
+}

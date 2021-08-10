@@ -1,63 +1,67 @@
 """The tests for the Command line Binary sensor platform."""
-import unittest
+from __future__ import annotations
 
-from homeassistant.const import (STATE_ON, STATE_OFF)
-from homeassistant.components.command_line import binary_sensor as command_line
-from homeassistant.helpers import template
+from typing import Any
 
-from tests.common import get_test_home_assistant
+from homeassistant import setup
+from homeassistant.components.binary_sensor import DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
-class TestCommandSensorBinarySensor(unittest.TestCase):
-    """Test the Command line Binary sensor."""
+async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
+    """Set up a test command line binary_sensor entity."""
+    assert await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"platform": "command_line", "name": "Test", **config_dict}},
+    )
+    await hass.async_block_till_done()
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+async def test_setup(hass: HomeAssistant) -> None:
+    """Test sensor setup."""
+    await setup_test_entity(
+        hass,
+        {
+            "command": "echo 1",
+            "payload_on": "1",
+            "payload_off": "0",
+        },
+    )
 
-    def test_setup(self):
-        """Test sensor setup."""
-        config = {'name': 'Test',
-                  'command': 'echo 1',
-                  'payload_on': '1',
-                  'payload_off': '0',
-                  'command_timeout': 15
-                  }
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+    assert entity_state.name == "Test"
 
-        devices = []
 
-        def add_dev_callback(devs, update):
-            """Add callback to add devices."""
-            for dev in devs:
-                devices.append(dev)
+async def test_template(hass: HomeAssistant) -> None:
+    """Test setting the state with a template."""
 
-        command_line.setup_platform(self.hass, config, add_dev_callback)
+    await setup_test_entity(
+        hass,
+        {
+            "command": "echo 10",
+            "payload_on": "1.0",
+            "payload_off": "0",
+            "value_template": "{{ value | multiply(0.1) }}",
+        },
+    )
 
-        assert 1 == len(devices)
-        entity = devices[0]
-        entity.update()
-        assert 'Test' == entity.name
-        assert STATE_ON == entity.state
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state.state == STATE_ON
 
-    def test_template(self):
-        """Test setting the state with a template."""
-        data = command_line.CommandSensorData(self.hass, 'echo 10', 15)
 
-        entity = command_line.CommandBinarySensor(
-            self.hass, data, 'test', None, '1.0', '0',
-            template.Template('{{ value | multiply(0.1) }}', self.hass))
-        entity.update()
-        assert STATE_ON == entity.state
-
-    def test_sensor_off(self):
-        """Test setting the state with a template."""
-        data = command_line.CommandSensorData(self.hass, 'echo 0', 15)
-
-        entity = command_line.CommandBinarySensor(
-            self.hass, data, 'test', None, '1', '0', None)
-        entity.update()
-        assert STATE_OFF == entity.state
+async def test_sensor_off(hass: HomeAssistant) -> None:
+    """Test setting the state with a template."""
+    await setup_test_entity(
+        hass,
+        {
+            "command": "echo 0",
+            "payload_on": "1",
+            "payload_off": "0",
+        },
+    )
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state.state == STATE_OFF

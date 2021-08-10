@@ -1,44 +1,39 @@
 """Support for ESPHome switches."""
-import logging
-from typing import TYPE_CHECKING, Optional
+from __future__ import annotations
 
-from homeassistant.components.switch import SwitchDevice
+from typing import Any
+
+from aioesphomeapi import SwitchInfo, SwitchState
+
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, platform_async_setup_entry, esphome_state_property
-
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import SwitchInfo, SwitchState  # noqa
-
-_LOGGER = logging.getLogger(__name__)
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 
-async def async_setup_entry(hass: HomeAssistantType,
-                            entry: ConfigEntry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up ESPHome switches based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import SwitchInfo, SwitchState  # noqa
-
     await platform_async_setup_entry(
-        hass, entry, async_add_entities,
-        component_key='switch',
-        info_type=SwitchInfo, entity_type=EsphomeSwitch,
-        state_type=SwitchState
+        hass,
+        entry,
+        async_add_entities,
+        component_key="switch",
+        info_type=SwitchInfo,
+        entity_type=EsphomeSwitch,
+        state_type=SwitchState,
     )
 
 
-class EsphomeSwitch(EsphomeEntity, SwitchDevice):
+# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+# pylint: disable=invalid-overridden-method
+
+
+class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
-
-    @property
-    def _static_info(self) -> 'SwitchInfo':
-        return super()._static_info
-
-    @property
-    def _state(self) -> Optional['SwitchState']:
-        return super()._state
 
     @property
     def icon(self) -> str:
@@ -51,14 +46,14 @@ class EsphomeSwitch(EsphomeEntity, SwitchDevice):
         return self._static_info.assumed_state
 
     @esphome_state_property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:  # type: ignore[override]
         """Return true if the switch is on."""
         return self._state.state
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._client.switch_command(self._static_info.key, True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._client.switch_command(self._static_info.key, False)

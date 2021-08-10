@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "TelldusLive est d\u00e9j\u00e0 configur\u00e9",
+            "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
+            "unknown": "Une erreur inconnue s'est produite",
+            "unknown_authorize_url_generation": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation."
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide"
+        },
+        "step": {
+            "auth": {
+                "description": "Pour lier votre compte TelldusLive: \n 1. Cliquez sur le lien ci-dessous \n 2. Connectez-vous \u00e0 Telldus Live \n 3. Autorisez ** {app_name} ** (cliquez sur ** Oui **). \n 4. Revenez ici et cliquez sur ** ENVOYER **. \n\n [Lien compte TelldusLive] ( {auth_url} )",
+                "title": "S\u2019authentifier sur TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP"
+                },
+                "description": "Vide",
+                "title": "Choisissez le point de terminaison."
+            }
+        }
+    }
+}

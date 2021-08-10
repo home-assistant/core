@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Id de aplicaci\u00f3n o secreto incorrectos",
+            "error_auth_mfa": "C\u00f3digo incorrecto",
+            "error_auth_user": "Nombre de usuario o contrase\u00f1a incorrectos"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "ID de la aplicaci\u00f3n",
+                    "app_secret": "Secreto"
+                },
+                "description": "ID de la aplicaci\u00f3n y c\u00f3digo secreto de <a href=\"https://my.starline.ru/developer\" target=\"_blank\">la cuenta de desarrollador de StarLine</a>",
+                "title": "Credenciales de la aplicaci\u00f3n"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "C\u00f3digo de la imagen"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "C\u00f3digo SMS"
+                },
+                "description": "Introduce el c\u00f3digo enviado al tel\u00e9fono {phone_number}",
+                "title": "Autorizaci\u00f3n de dos factores"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "description": "Correo electr\u00f3nico y contrase\u00f1a de la cuenta StarLine",
+                "title": "Credenciales de usuario"
+            }
+        }
+    }
+}

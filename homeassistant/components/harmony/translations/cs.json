@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "link": {
+                "description": "Chcete nastavit {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostitel"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "V\u00fdchoz\u00ed aktivita, kter\u00e1 se m\u00e1 prov\u00e9st, kdy\u017e nen\u00ed nic zad\u00e1no.",
+                    "delay_secs": "P\u0159est\u00e1vka mezi odesl\u00e1n\u00edm p\u0159\u00edkaz\u016f."
+                }
+            }
+        }
+    }
+}

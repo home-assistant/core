@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Onjuiste applicatie-ID of geheim",
+            "error_auth_mfa": "Ongeldige code",
+            "error_auth_user": "Ongeldige gebruikersnaam of wachtwoord"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "Toepassings-ID",
+                    "app_secret": "Geheime code"
+                },
+                "description": "Applicatie-ID en geheime code van [StarLine-ontwikkelaarsaccount] (https://my.starline.ru/developer)",
+                "title": "Inloggegevens van de applicatie"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Code van afbeelding"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS code"
+                },
+                "description": "Voer de code in die wordt verzonden naar telefoon {phone_number}",
+                "title": "Tweestapsverificatie"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "StarLine-account e-mailadres en wachtwoord",
+                "title": "Gebruikersgegevens"
+            }
+        }
+    }
+}

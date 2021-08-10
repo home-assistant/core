@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "device_unsupported": "Az eszk\u00f6z nem t\u00e1mogatott."
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a Nettigo Air Monitor-ot a {host} c\u00edmen?"
+            },
+            "user": {
+                "data": {
+                    "host": "Gazdag\u00e9p"
+                },
+                "description": "\u00c1ll\u00edtsa be a Nettigo Air Monitor integr\u00e1ci\u00f3j\u00e1t."
+            }
+        }
+    }
+}

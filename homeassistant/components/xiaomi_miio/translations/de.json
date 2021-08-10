@@ -1,0 +1,98 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "incomplete_info": "Unvollst\u00e4ndige Informationen zur Einrichtung des Ger\u00e4ts, kein Host oder Token geliefert.",
+            "not_xiaomi_miio": "Ger\u00e4t wird (noch) nicht von Xiaomi Miio unterst\u00fctzt.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "cloud_credentials_incomplete": "Cloud-Anmeldeinformationen unvollst\u00e4ndig, bitte Benutzernamen, Passwort und Land eingeben",
+            "cloud_login_error": "Konnte sich nicht bei Xioami Miio Cloud anmelden, \u00fcberpr\u00fcfe die Anmeldedaten.",
+            "cloud_no_devices": "Keine Ger\u00e4te in diesem Xiaomi Miio Cloud-Konto gefunden.",
+            "no_device_selected": "Kein Ger\u00e4t ausgew\u00e4hlt, bitte w\u00e4hle ein Ger\u00e4t aus.",
+            "unknown_device": "Das Ger\u00e4temodell ist nicht bekannt und das Ger\u00e4t kann nicht mithilfe des Assistenten eingerichtet werden."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Land des Cloud-Servers",
+                    "cloud_password": "Cloud-Passwort",
+                    "cloud_username": "Cloud-Benutzername",
+                    "manual": "Manuell konfigurieren (nicht empfohlen)"
+                },
+                "description": "Melde dich bei der Xiaomi Miio Cloud an, siehe https://www.openhab.org/addons/bindings/miio/#country-servers f\u00fcr den zu verwendenden Cloud-Server.",
+                "title": "Verbinden mit einem Xiaomi Miio Ger\u00e4t oder Xiaomi Gateway"
+            },
+            "connect": {
+                "data": {
+                    "model": "Ger\u00e4temodell"
+                },
+                "description": "W\u00e4hle das Ger\u00e4temodell manuell aus den unterst\u00fctzten Modellen aus.",
+                "title": "Verbinden mit einem Xiaomi Miio Ger\u00e4t oder Xiaomi Gateway"
+            },
+            "device": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "model": "Ger\u00e4temodell (optional)",
+                    "name": "Name des Ger\u00e4ts",
+                    "token": "API-Token"
+                },
+                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token, siehe https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00fcr eine Anleitung. Dieser unterscheidet sich vom API-Token, den die Xiaomi Aqara-Integration nutzt.",
+                "title": "Herstellen einer Verbindung mit einem Xiaomi Miio-Ger\u00e4t oder Xiaomi Gateway"
+            },
+            "gateway": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "name": "Name des Gateways",
+                    "token": "API-Token"
+                },
+                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token. Anweisungen findest du unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token. Bitte beachte, dass sich dieser API-Token von dem Schl\u00fcssel unterscheidet, der von der Xiaomi Aqara Integration verwendet wird.",
+                "title": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
+            },
+            "manual": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "token": "API-Token"
+                },
+                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token, siehe https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00fcr Anweisungen. Bitte beachte, dass sich dieser API-Token von dem Schl\u00fcssel unterscheidet, der von der Xiaomi Aqara-Integration verwendet wird.",
+                "title": "Verbinden mit einem Xiaomi Miio Ger\u00e4t oder Xiaomi Gateway"
+            },
+            "reauth_confirm": {
+                "description": "Die Xiaomi Miio-Integration muss dein Konto neu authentifizieren, um die Token zu aktualisieren oder fehlende Cloud-Anmeldedaten hinzuzuf\u00fcgen.",
+                "title": "Integration erneut authentifizieren"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Miio-Ger\u00e4t"
+                },
+                "description": "W\u00e4hle das einzurichtende Xiaomi Miio-Ger\u00e4t aus.",
+                "title": "Verbinden mit einem Xiaomi Miio Ger\u00e4t oder Xiaomi Gateway"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
+                },
+                "description": "W\u00e4hle aus, mit welchem Ger\u00e4t du eine Verbindung herstellen m\u00f6chtest.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Cloud-Anmeldeinformationen unvollst\u00e4ndig, bitte Benutzernamen, Passwort und Land eingeben"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Cloud verwenden, um verbundene Subdevices zu erhalten"
+                },
+                "description": "Optionale Einstellungen angeben",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

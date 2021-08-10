@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Ingrese la clave API obtenida de https://home.freedompro.eu",
+                "title": "Clave de API Freedompro"
+            }
+        }
+    }
+}

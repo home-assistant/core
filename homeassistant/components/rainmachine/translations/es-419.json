@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este controlador RainMachine ya est\u00e1 configurado."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nombre de host o direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto"
+                },
+                "title": "Completa tu informaci\u00f3n"
+            }
+        }
+    }
+}

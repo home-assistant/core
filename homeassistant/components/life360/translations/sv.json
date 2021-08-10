@@ -1,0 +1,20 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "F\u00f6r att st\u00e4lla in avancerade alternativ, se [Life360 documentation]({docs_url})."
+        },
+        "error": {
+            "invalid_username": "Ogiltigt anv\u00e4ndarnmn"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "F\u00f6r att st\u00e4lla in avancerade alternativ, se [Life360 documentation]({docs_url}).\nDu kanske vill g\u00f6ra det innan du l\u00e4gger till konton.",
+                "title": "Life360 kontoinformation"
+            }
+        }
+    }
+}

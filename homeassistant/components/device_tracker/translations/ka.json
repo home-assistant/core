@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "enters": "{entity_name} \u10e8\u10d4\u10d3\u10d8\u10e1 \u10d6\u10dd\u10dc\u10d0\u10e8\u10d8",
+            "leaves": "{entity_name} \u10e2\u10dd\u10d5\u10d4\u10d1\u10e1 \u10d6\u10dd\u10dc\u10d0\u10e1"
+        }
+    }
+}

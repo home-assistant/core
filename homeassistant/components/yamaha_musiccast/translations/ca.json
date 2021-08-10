@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "yxc_control_url_missing": "No s'ha proporcionat l'URL de control en la descripci\u00f3 ssdp."
+        },
+        "error": {
+            "no_musiccast_device": "Aquest dispositiu sembla no ser un dispositiu MusicCast."
+        },
+        "flow_title": "MusicCast: {name}",
+        "step": {
+            "confirm": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Configura MusicCast per a integrar-lo amb Home Assistant."
+            }
+        }
+    }
+}

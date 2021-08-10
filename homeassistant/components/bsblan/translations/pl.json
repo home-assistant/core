@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "passkey": "Ci\u0105g klucza dost\u0119pu",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Konfiguracja urz\u0105dzenia BSB-LAN w celu integracji z Home Assistantem.",
+                "title": "Po\u0142\u0105czenie z urz\u0105dzeniem BSB-Lan"
+            }
+        }
+    }
+}

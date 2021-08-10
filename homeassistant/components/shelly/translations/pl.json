@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "unsupported_firmware": "Urz\u0105dzenie u\u017cywa nieobs\u0142ugiwanej wersji firmware"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nUrz\u0105dzenia zasilane bateryjnie, z ustawionym has\u0142em, nale\u017cy wybudzi\u0107 przed konfiguracj\u0105.\nUrz\u0105dzenia zasilane bateryjnie, bez ustawionego has\u0142a, zostan\u0105 dodane, gdy si\u0119 wybudz\u0105. Mo\u017cesz r\u0119cznie wybudzi\u0107 urz\u0105dzenie przyciskiem na obudowie lub poczeka\u0107 na aktualizacj\u0119 danych z urz\u0105dzenia."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Przed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na obudowie."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "przycisk",
+            "button1": "pierwszy",
+            "button2": "drugi",
+            "button3": "trzeci"
+        },
+        "trigger_type": {
+            "double": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
+            "long": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "long_single": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty, a nast\u0119pnie pojedynczo naci\u015bni\u0119ty",
+            "single": "przycisk \"{subtype}\" zostanie pojedynczo naci\u015bni\u0119ty",
+            "single_long": "przycisk \"{subtype}\" pojedynczo naci\u015bni\u0119ty, a nast\u0119pnie d\u0142ugo naci\u015bni\u0119ty",
+            "triple": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    }
+}

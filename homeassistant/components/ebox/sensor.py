@@ -2,68 +2,141 @@
 Support for EBox.
 
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ebox/
 """
-import logging
-from datetime import timedelta
+from __future__ import annotations
 
+from datetime import timedelta
+import logging
+
+from pyebox import EboxClient
+from pyebox.client import PyEboxError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
-    CONF_NAME, CONF_MONITORED_VARIABLES)
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DATA_GIGABITS,
+    PERCENTAGE,
+    TIME_DAYS,
+)
 from homeassistant.exceptions import PlatformNotReady
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-GIGABITS = 'Gb'  # type: str
-PRICE = 'CAD'  # type: str
-DAYS = 'days'  # type: str
-PERCENT = '%'  # type: str
+PRICE = "CAD"
 
-DEFAULT_NAME = 'EBox'
+DEFAULT_NAME = "EBox"
 
 REQUESTS_TIMEOUT = 15
 SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-SENSOR_TYPES = {
-    'usage': ['Usage', PERCENT, 'mdi:percent'],
-    'balance': ['Balance', PRICE, 'mdi:square-inc-cash'],
-    'limit': ['Data limit', GIGABITS, 'mdi:download'],
-    'days_left': ['Days left', DAYS, 'mdi:calendar-today'],
-    'before_offpeak_download':
-        ['Download before offpeak', GIGABITS, 'mdi:download'],
-    'before_offpeak_upload':
-        ['Upload before offpeak', GIGABITS, 'mdi:upload'],
-    'before_offpeak_total':
-        ['Total before offpeak', GIGABITS, 'mdi:download'],
-    'offpeak_download': ['Offpeak download', GIGABITS, 'mdi:download'],
-    'offpeak_upload': ['Offpeak Upload', GIGABITS, 'mdi:upload'],
-    'offpeak_total': ['Offpeak Total', GIGABITS, 'mdi:download'],
-    'download': ['Download', GIGABITS, 'mdi:download'],
-    'upload': ['Upload', GIGABITS, 'mdi:upload'],
-    'total': ['Total', GIGABITS, 'mdi:download'],
-}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="usage",
+        name="Usage",
+        unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+    ),
+    SensorEntityDescription(
+        key="balance",
+        name="Balance",
+        unit_of_measurement=PRICE,
+        icon="mdi:cash-usd",
+    ),
+    SensorEntityDescription(
+        key="limit",
+        name="Data limit",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="days_left",
+        name="Days left",
+        unit_of_measurement=TIME_DAYS,
+        icon="mdi:calendar-today",
+    ),
+    SensorEntityDescription(
+        key="before_offpeak_download",
+        name="Download before offpeak",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="before_offpeak_upload",
+        name="Upload before offpeak",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:upload",
+    ),
+    SensorEntityDescription(
+        key="before_offpeak_total",
+        name="Total before offpeak",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="offpeak_download",
+        name="Offpeak download",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="offpeak_upload",
+        name="Offpeak Upload",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:upload",
+    ),
+    SensorEntityDescription(
+        key="offpeak_total",
+        name="Offpeak Total",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="download",
+        name="Download",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="upload",
+        name="Upload",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:upload",
+    ),
+    SensorEntityDescription(
+        key="total",
+        name="Total",
+        unit_of_measurement=DATA_GIGABITS,
+        icon="mdi:download",
+    ),
+)
+
+SENSOR_TYPE_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPE_KEYS)]
+        ),
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the EBox sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -73,58 +146,42 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     name = config.get(CONF_NAME)
 
-    from pyebox.client import PyEboxError
     try:
         await ebox_data.async_update()
     except PyEboxError as exp:
         _LOGGER.error("Failed login: %s", exp)
-        raise PlatformNotReady
+        raise PlatformNotReady from exp
 
-    sensors = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        sensors.append(EBoxSensor(ebox_data, variable, name))
+    sensors = [
+        EBoxSensor(ebox_data, description, name)
+        for description in SENSOR_TYPES
+        if description.key in config[CONF_MONITORED_VARIABLES]
+    ]
 
     async_add_entities(sensors, True)
 
 
-class EBoxSensor(Entity):
+class EBoxSensor(SensorEntity):
     """Implementation of a EBox sensor."""
 
-    def __init__(self, ebox_data, sensor_type, name):
+    def __init__(
+        self,
+        ebox_data,
+        description: SensorEntityDescription,
+        name,
+    ):
         """Initialize the sensor."""
-        self.client_name = name
-        self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        self.entity_description = description
+        self._attr_name = f"{name} {description.name}"
         self.ebox_data = ebox_data
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
 
     async def async_update(self):
         """Get the latest data from EBox and update the state."""
         await self.ebox_data.async_update()
-        if self.type in self.ebox_data.data:
-            self._state = round(self.ebox_data.data[self.type], 2)
+        if self.entity_description.key in self.ebox_data.data:
+            self._attr_state = round(
+                self.ebox_data.data[self.entity_description.key], 2
+            )
 
 
 class EBoxData:
@@ -132,15 +189,12 @@ class EBoxData:
 
     def __init__(self, username, password, httpsession):
         """Initialize the data object."""
-        from pyebox import EboxClient
-        self.client = EboxClient(username, password,
-                                 REQUESTS_TIMEOUT, httpsession)
+        self.client = EboxClient(username, password, REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from Ebox."""
-        from pyebox.client import PyEboxError
         try:
             await self.client.fetch_data()
         except PyEboxError as exp:

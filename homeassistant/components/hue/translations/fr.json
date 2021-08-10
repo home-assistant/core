@@ -1,0 +1,67 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tous les ponts Philips Hue sont d\u00e9j\u00e0 configur\u00e9s",
+            "already_configured": "Ce pont est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "Le flux de configuration pour le pont est d\u00e9j\u00e0 en cours.",
+            "cannot_connect": "Connexion au pont impossible",
+            "discover_timeout": "D\u00e9tection de ponts Philips Hue impossible",
+            "no_bridges": "Aucun pont Philips Hue n'a \u00e9t\u00e9 d\u00e9couvert",
+            "not_hue_bridge": "Pas de pont Hue",
+            "unknown": "Une erreur inconnue s'est produite"
+        },
+        "error": {
+            "linking": "Erreur inattendue",
+            "register_failed": "\u00c9chec d'enregistrement. Veuillez r\u00e9essayer."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "title": "Choisissez le pont Philips Hue"
+            },
+            "link": {
+                "description": "Appuyez sur le bouton du pont pour lier Philips Hue avec Home Assistant. \n\n ![Emplacement du bouton sur le pont](/static/images/config_philips_hue.jpg)",
+                "title": "Hub de liaison"
+            },
+            "manual": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "title": "Configurer manuellement un pont Hue"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Premier bouton",
+            "button_2": "Deuxi\u00e8me bouton",
+            "button_3": "Troisi\u00e8me bouton",
+            "button_4": "Quatri\u00e8me bouton",
+            "dim_down": "Assombrir",
+            "dim_up": "\u00c9claircir",
+            "double_buttons_1_3": "Premier et troisi\u00e8me boutons",
+            "double_buttons_2_4": "Deuxi\u00e8me et quatri\u00e8me boutons",
+            "turn_off": "\u00c9teindre",
+            "turn_on": "Allumer"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
+            "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
+            "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
+            "remote_double_button_long_press": "Les deux \"{sous-type}\" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s apr\u00e8s un appui long",
+            "remote_double_button_short_press": "Les deux \" {subtype} \" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Autoriser les groupes Hue",
+                    "allow_unreachable": "Autoriser les ampoules inaccessibles \u00e0 signaler correctement leur \u00e9tat"
+                }
+            }
+        }
+    }
+}

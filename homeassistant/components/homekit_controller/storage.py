@@ -1,11 +1,11 @@
 """Helpers for HomeKit data stored in HA storage."""
 
-from homeassistant.helpers.storage import Store
 from homeassistant.core import callback
+from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 
-ENTITY_MAP_STORAGE_KEY = '{}-entity-map'.format(DOMAIN)
+ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
 ENTITY_MAP_SAVE_DELAY = 10
 
@@ -29,11 +29,7 @@ class EntityMapStorage:
     def __init__(self, hass):
         """Create a new entity map store."""
         self.hass = hass
-        self.store = Store(
-            hass,
-            ENTITY_MAP_STORAGE_VERSION,
-            ENTITY_MAP_STORAGE_KEY
-        )
+        self.store = Store(hass, ENTITY_MAP_STORAGE_VERSION, ENTITY_MAP_STORAGE_KEY)
         self.storage_data = {}
 
     async def async_initialize(self):
@@ -43,22 +39,21 @@ class EntityMapStorage:
             # There is no cached data about HomeKit devices yet
             return
 
-        self.storage_data = raw_storage.get('pairings', {})
+        self.storage_data = raw_storage.get("pairings", {})
 
     def get_map(self, homekit_id):
         """Get a pairing cache item."""
         return self.storage_data.get(homekit_id)
 
+    @callback
     def async_create_or_update_map(self, homekit_id, config_num, accessories):
         """Create a new pairing cache."""
-        data = {
-            'config_num': config_num,
-            'accessories': accessories,
-        }
+        data = {"config_num": config_num, "accessories": accessories}
         self.storage_data[homekit_id] = data
         self._async_schedule_save()
         return data
 
+    @callback
     def async_delete_map(self, homekit_id):
         """Delete pairing cache."""
         if homekit_id not in self.storage_data:
@@ -75,6 +70,4 @@ class EntityMapStorage:
     @callback
     def _data_to_save(self):
         """Return data of entity map to store in a file."""
-        return {
-            'pairings': self.storage_data,
-        }
+        return {"pairings": self.storage_data}

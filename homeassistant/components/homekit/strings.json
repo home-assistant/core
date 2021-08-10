@@ -1,0 +1,58 @@
+{
+    "options": {
+        "step": {
+            "yaml": {
+                "title": "Adjust HomeKit Options",
+                "description": "This entry is controlled via YAML"
+            },
+            "init": {
+                "data": {
+                    "mode": "[%key:common::config_flow::data::mode%]",
+                    "include_domains": "[%key:component::homekit::config::step::user::data::include_domains%]"
+                },
+                "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
+                "title": "Select domains to be included."
+            },
+            "include_exclude": {
+                "data": {
+                    "mode": "[%key:common::config_flow::data::mode%]",
+                    "entities": "Entities"
+                },
+                "description": "Choose the entities to be included. In accessory mode, only a single entity is included. In bridge include mode, all entities in the domain will be included unless specific entities are selected. In bridge exclude mode, all entities in the domain will be included except for the excluded entities. For best performance, a separate HomeKit accessory will be created for each tv media player, activity based remote, lock, and camera.",
+                "title": "Select entities to be included"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Cameras that support native H.264 streams"
+                },
+                "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single board computers.",
+                "title": "Select camera video codec."
+            },
+            "advanced": {
+                "data": {
+                    "auto_start": "Autostart (disable if you are calling the homekit.start service manually)"
+                },
+                "description": "These settings only need to be adjusted if HomeKit is not functional.",
+                "title": "Advanced Configuration"
+            }
+        }
+    },
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "include_domains": "Domains to include"
+                },
+                "description": "Choose the domains to be included. All supported entities in the domain will be included. A separate HomeKit instance in accessory mode will be created for each tv media player, activity based remote, lock, and camera.",
+                "title": "Select domains to be included"
+            },
+            "pairing": {
+                "title": "Pair HomeKit",
+                "description": "To complete pairing following the instructions in \u201cNotifications\u201d under \u201cHomeKit Pairing\u201d."
+            }
+        },
+        "abort": {
+            "port_name_in_use": "An accessory or bridge with the same name or port is already configured."
+        }
+    }
+}

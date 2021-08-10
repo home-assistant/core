@@ -1,138 +1,194 @@
 """Support for SimpliSafe alarm control panels."""
-import logging
-import re
+from __future__ import annotations
 
-import homeassistant.components.alarm_control_panel as alarm
+from simplipy.errors import SimplipyError
+from simplipy.system import SystemStates
+from simplipy.system.v2 import SystemV2
+from simplipy.system.v3 import SystemV3
+
+from homeassistant.components.alarm_control_panel import (
+    FORMAT_NUMBER,
+    FORMAT_TEXT,
+    AlarmControlPanelEntity,
+)
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+    CONF_CODE,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
+from . import SimpliSafe, SimpliSafeEntity
+from .const import (
+    ATTR_ALARM_DURATION,
+    ATTR_ALARM_VOLUME,
+    ATTR_CHIME_VOLUME,
+    ATTR_ENTRY_DELAY_AWAY,
+    ATTR_ENTRY_DELAY_HOME,
+    ATTR_EXIT_DELAY_AWAY,
+    ATTR_EXIT_DELAY_HOME,
+    ATTR_LIGHT,
+    ATTR_VOICE_PROMPT_VOLUME,
+    DATA_CLIENT,
+    DOMAIN,
+    LOGGER,
+    VOLUME_STRING_MAP,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_ALARM_ACTIVE = 'alarm_active'
-ATTR_TEMPERATURE = 'temperature'
-
-
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Set up a SimpliSafe alarm control panel based on existing config."""
-    pass
+ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
+ATTR_GSM_STRENGTH = "gsm_strength"
+ATTR_PIN_NAME = "pin_name"
+ATTR_RF_JAMMING = "rf_jamming"
+ATTR_WALL_POWER_LEVEL = "wall_power_level"
+ATTR_WIFI_STRENGTH = "wifi_strength"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a SimpliSafe alarm control panel based on a config entry."""
-    systems = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-    async_add_entities([
-        SimpliSafeAlarm(system, entry.data.get(CONF_CODE))
-        for system in systems
-    ], True)
+    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    async_add_entities(
+        [SimpliSafeAlarm(simplisafe, system) for system in simplisafe.systems.values()],
+        True,
+    )
 
 
-class SimpliSafeAlarm(alarm.AlarmControlPanel):
+class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, system, code):
+    def __init__(self, simplisafe: SimpliSafe, system: SystemV2 | SystemV3) -> None:
         """Initialize the SimpliSafe alarm."""
-        self._async_unsub_dispatcher_connect = None
-        self._attrs = {}
-        self._code = code
-        self._system = system
-        self._state = None
+        super().__init__(simplisafe, system, "Alarm Control Panel")
 
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return self._system.system_id
+        if code := self._simplisafe.config_entry.options.get(CONF_CODE):
+            if code.isdigit():
+                self._attr_code_format = FORMAT_NUMBER
+            else:
+                self._attr_code_format = FORMAT_TEXT
+        self._attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+        self._last_event = None
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._system.address
-
-    @property
-    def code_format(self):
-        """Return one or more digits/characters."""
-        if not self._code:
-            return None
-        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    def _validate_code(self, code, state):
-        """Validate given code."""
-        check = self._code is None or code == self._code
-        if not check:
-            _LOGGER.warning("Wrong code entered for %s", state)
-        return check
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    async def async_alarm_disarm(self, code=None):
-        """Send disarm command."""
-        if not self._validate_code(code, 'disarming'):
-            return
-
-        await self._system.set_off()
-
-    async def async_alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        if not self._validate_code(code, 'arming home'):
-            return
-
-        await self._system.set_home()
-
-    async def async_alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        if not self._validate_code(code, 'arming away'):
-            return
-
-        await self._system.set_away()
-
-    async def async_update(self):
-        """Update alarm status."""
-        from simplipy.system import SystemStates
-
-        self._attrs[ATTR_ALARM_ACTIVE] = self._system.alarm_going_off
-        if self._system.temperature:
-            self._attrs[ATTR_TEMPERATURE] = self._system.temperature
-
-        if self._system.state == SystemStates.error:
-            return
-
-        if self._system.state == SystemStates.off:
-            self._state = STATE_ALARM_DISARMED
-        elif self._system.state in (SystemStates.home,
-                                    SystemStates.home_count):
-            self._state = STATE_ALARM_ARMED_HOME
-        elif self._system.state in (SystemStates.away, SystemStates.away_count,
-                                    SystemStates.exit_delay):
-            self._state = STATE_ALARM_ARMED_AWAY
+        if system.alarm_going_off:
+            self._attr_state = STATE_ALARM_TRIGGERED
+        elif system.state == SystemStates.away:
+            self._attr_state = STATE_ALARM_ARMED_AWAY
+        elif system.state in (
+            SystemStates.away_count,
+            SystemStates.exit_delay,
+            SystemStates.home_count,
+        ):
+            self._attr_state = STATE_ALARM_ARMING
+        elif system.state == SystemStates.home:
+            self._attr_state = STATE_ALARM_ARMED_HOME
+        elif system.state == SystemStates.off:
+            self._attr_state = STATE_ALARM_DISARMED
         else:
-            self._state = None
+            self._attr_state = None
+
+    @callback
+    def _is_code_valid(self, code: str | None, state: str) -> bool:
+        """Validate that a code matches the required one."""
+        if not self._simplisafe.config_entry.options.get(CONF_CODE):
+            return True
+
+        if not code or code != self._simplisafe.config_entry.options[CONF_CODE]:
+            LOGGER.warning(
+                "Incorrect alarm code entered (target state: %s): %s", state, code
+            )
+            return False
+
+        return True
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command."""
+        if not self._is_code_valid(code, STATE_ALARM_DISARMED):
+            return
+
+        try:
+            await self._system.set_off()
+        except SimplipyError as err:
+            LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
+            return
+
+        self._attr_state = STATE_ALARM_DISARMED
+        self.async_write_ha_state()
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
+        if not self._is_code_valid(code, STATE_ALARM_ARMED_HOME):
+            return
+
+        try:
+            await self._system.set_home()
+        except SimplipyError as err:
+            LOGGER.error(
+                'Error while arming "%s" (home): %s', self._system.system_id, err
+            )
+            return
+
+        self._attr_state = STATE_ALARM_ARMED_HOME
+        self.async_write_ha_state()
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Send arm away command."""
+        if not self._is_code_valid(code, STATE_ALARM_ARMED_AWAY):
+            return
+
+        try:
+            await self._system.set_away()
+        except SimplipyError as err:
+            LOGGER.error(
+                'Error while arming "%s" (away): %s', self._system.system_id, err
+            )
+            return
+
+        self._attr_state = STATE_ALARM_ARMING
+        self.async_write_ha_state()
+
+    @callback
+    def async_update_from_rest_api(self) -> None:
+        """Update the entity with the provided REST API data."""
+        if isinstance(self._system, SystemV3):
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_ALARM_DURATION: self._system.alarm_duration,
+                    ATTR_ALARM_VOLUME: VOLUME_STRING_MAP[self._system.alarm_volume],
+                    ATTR_BATTERY_BACKUP_POWER_LEVEL: self._system.battery_backup_power_level,
+                    ATTR_CHIME_VOLUME: VOLUME_STRING_MAP[self._system.chime_volume],
+                    ATTR_ENTRY_DELAY_AWAY: self._system.entry_delay_away,
+                    ATTR_ENTRY_DELAY_HOME: self._system.entry_delay_home,
+                    ATTR_EXIT_DELAY_AWAY: self._system.exit_delay_away,
+                    ATTR_EXIT_DELAY_HOME: self._system.exit_delay_home,
+                    ATTR_GSM_STRENGTH: self._system.gsm_strength,
+                    ATTR_LIGHT: self._system.light,
+                    ATTR_RF_JAMMING: self._system.rf_jamming,
+                    ATTR_VOICE_PROMPT_VOLUME: VOLUME_STRING_MAP[
+                        self._system.voice_prompt_volume
+                    ],
+                    ATTR_WALL_POWER_LEVEL: self._system.wall_power_level,
+                    ATTR_WIFI_STRENGTH: self._system.wifi_strength,
+                }
+            )
+
+        if self._system.state == SystemStates.alarm:
+            self._attr_state = STATE_ALARM_TRIGGERED
+        elif self._system.state == SystemStates.away:
+            self._attr_state = STATE_ALARM_ARMED_AWAY
+        elif self._system.state in (SystemStates.away_count, SystemStates.exit_delay):
+            self._attr_state = STATE_ALARM_ARMING
+        elif self._system.state == SystemStates.home:
+            self._attr_state = STATE_ALARM_ARMED_HOME
+        elif self._system.state == SystemStates.off:
+            self._attr_state = STATE_ALARM_DISARMED
+        else:
+            self._attr_state = None

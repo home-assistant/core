@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "urz\u0105dzenie {entity_name} jest w domu",
+            "is_not_home": "urz\u0105dzenie {entity_name} jest poza domem"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} wejdzie do strefy",
+            "leaves": "{entity_name} opu\u015bci stref\u0119"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "w domu",
+            "not_home": "poza domem"
+        }
+    },
+    "title": "\u015aledzenie urz\u0105dze\u0144"
+}

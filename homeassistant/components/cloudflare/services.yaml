@@ -1,0 +1,3 @@
+update_records:
+  name: Update records
+  description: Manually trigger update to Cloudflare records

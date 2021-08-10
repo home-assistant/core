@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Richte die Dune HD-Integration ein. Wenn du Probleme mit der Konfiguration hast, gehe zu: https://www.home-assistant.io/integrations/dunehd \n\nStelle sicher, dass dein Player eingeschaltet ist.",
+                "title": "Dune HD"
+            }
+        }
+    }
+}

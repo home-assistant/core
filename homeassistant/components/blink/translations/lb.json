@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_access_token": "Ong\u00ebltege Acc\u00e8s Jeton",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2-Faktor Code"
+                },
+                "description": "G\u00ebff de PIN un dee per E-Mail versch\u00e9ckt gouf",
+                "title": "2-Faktor-Authentifikatioun"
+            },
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "Mam Blink Kont verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Scan Intervall (sekonnen)"
+                },
+                "description": "Blink Integratioun ariichten",
+                "title": "Blink Optiounen"
+            }
+        }
+    }
+}

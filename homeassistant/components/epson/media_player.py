@@ -1,110 +1,151 @@
 """Support for Epson projector."""
 import logging
 
+from epson_projector.const import (
+    BACK,
+    BUSY,
+    CMODE,
+    CMODE_LIST,
+    CMODE_LIST_SET,
+    DEFAULT_SOURCES,
+    EPSON_CODES,
+    FAST,
+    INV_SOURCES,
+    MUTE,
+    PAUSE,
+    PLAY,
+    POWER,
+    SOURCE,
+    SOURCE_LIST,
+    STATE_UNAVAILABLE as EPSON_STATE_UNAVAILABLE,
+    TURN_OFF,
+    TURN_ON,
+    VOL_DOWN,
+    VOL_UP,
+    VOLUME,
+)
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, STATE_OFF,
-    STATE_ON)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP,
+)
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
+
+from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CMODE = 'cmode'
+SUPPORT_EPSON = (
+    SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PREVIOUS_TRACK
+)
 
-DATA_EPSON = 'epson'
-DEFAULT_NAME = 'EPSON Projector'
-
-SERVICE_SELECT_CMODE = 'epson_select_cmode'
-SUPPORT_CMODE = 33001
-
-SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE |\
-            SUPPORT_CMODE | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
-            SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=80): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=80): cv.port,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Set up the Epson media player platform."""
-    from epson_projector.const import (CMODE_LIST_SET)
-
-    if DATA_EPSON not in hass.data:
-        hass.data[DATA_EPSON] = []
-
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
-
-    epson = EpsonProjector(async_get_clientsession(
-        hass, verify_ssl=False), name, host, port, ssl)
-
-    hass.data[DATA_EPSON].append(epson)
-    async_add_entities([epson], update_before_add=True)
-
-    async def async_service_handler(service):
-        """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            devices = [device for device in hass.data[DATA_EPSON]
-                       if device.entity_id in entity_ids]
-        else:
-            devices = hass.data[DATA_EPSON]
-        for device in devices:
-            if service.service == SERVICE_SELECT_CMODE:
-                cmode = service.data.get(ATTR_CMODE)
-                await device.select_cmode(cmode)
-            device.async_schedule_update_ha_state(True)
-
-    epson_schema = MEDIA_PLAYER_SCHEMA.extend({
-        vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))
-    })
-    hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_CMODE, async_service_handler,
-        schema=epson_schema)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Epson projector from a config entry."""
+    entry_id = config_entry.entry_id
+    unique_id = config_entry.unique_id
+    projector = hass.data[DOMAIN][entry_id]
+    projector_entity = EpsonProjectorMediaPlayer(
+        projector=projector,
+        name=config_entry.title,
+        unique_id=unique_id,
+        entry=config_entry,
+    )
+    async_add_entities([projector_entity], True)
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SELECT_CMODE,
+        {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
+        SERVICE_SELECT_CMODE,
+    )
 
 
-class EpsonProjector(MediaPlayerDevice):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Epson projector."""
+    _LOGGER.warning(
+        "Loading Espon projector via platform setup is deprecated; "
+        "Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
-    def __init__(self, websession, name, host, port, encryption):
+    def __init__(self, projector, name, unique_id, entry):
         """Initialize entity to control Epson projector."""
-        import epson_projector as epson
-        from epson_projector.const import DEFAULT_SOURCES
-
+        self._projector = projector
+        self._entry = entry
         self._name = name
-        self._projector = epson.Projector(
-            host, websession=websession, port=port)
+        self._available = False
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
         self._source = None
         self._volume = None
         self._state = None
+        self._unique_id = unique_id
+
+    async def set_unique_id(self):
+        """Set unique id for projector config entry."""
+        _LOGGER.debug("Setting unique_id for projector")
+        if self._unique_id:
+            return False
+        uid = await self._projector.get_serial_number()
+        if uid:
+            self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
+            registry = async_get_entity_registry(self.hass)
+            old_entity_id = registry.async_get_entity_id(
+                "media_player", DOMAIN, self._entry.entry_id
+            )
+            if old_entity_id is not None:
+                registry.async_update_entity(old_entity_id, new_unique_id=uid)
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._entry.entry_id)
+            )
+            return True
 
     async def async_update(self):
         """Update state of device."""
-        from epson_projector.const import (
-            EPSON_CODES, POWER, CMODE, CMODE_LIST, SOURCE, VOLUME, BUSY,
-            SOURCE_LIST)
-        is_turned_on = await self._projector.get_property(POWER)
-        _LOGGER.debug("Project turn on/off status: %s", is_turned_on)
-        if is_turned_on and is_turned_on == EPSON_CODES[POWER]:
+        power_state = await self._projector.get_power()
+        _LOGGER.debug("Projector status: %s", power_state)
+        if not power_state or power_state == EPSON_STATE_UNAVAILABLE:
+            self._available = False
+            return
+        self._available = True
+        if power_state == EPSON_CODES[POWER]:
             self._state = STATE_ON
+            if await self.set_unique_id():
+                return
+            self._source_list = list(DEFAULT_SOURCES.values())
             cmode = await self._projector.get_property(CMODE)
             self._cmode = CMODE_LIST.get(cmode, self._cmode)
             source = await self._projector.get_property(SOURCE)
@@ -112,10 +153,23 @@ class EpsonProjector(MediaPlayerDevice):
             volume = await self._projector.get_property(VOLUME)
             if volume:
                 self._volume = volume
-        elif is_turned_on == BUSY:
+        elif power_state == BUSY:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
+
+    @property
+    def device_info(self):
+        """Get attributes about the device."""
+        if not self._unique_id:
+            return None
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "manufacturer": "Epson",
+            "name": "Epson projector",
+            "model": "Epson",
+            "via_hub": (DOMAIN, self._unique_id),
+        }
 
     @property
     def name(self):
@@ -123,9 +177,19 @@ class EpsonProjector(MediaPlayerDevice):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._unique_id
+
+    @property
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def available(self):
+        """Return if projector is available."""
+        return self._available
 
     @property
     def supported_features(self):
@@ -134,13 +198,11 @@ class EpsonProjector(MediaPlayerDevice):
 
     async def async_turn_on(self):
         """Turn on epson."""
-        from epson_projector.const import TURN_ON
         if self._state == STATE_OFF:
             await self._projector.send_command(TURN_ON)
 
     async def async_turn_off(self):
         """Turn off epson."""
-        from epson_projector.const import TURN_OFF
         if self._state == STATE_ON:
             await self._projector.send_command(TURN_OFF)
 
@@ -161,54 +223,44 @@ class EpsonProjector(MediaPlayerDevice):
 
     async def select_cmode(self, cmode):
         """Set color mode in Epson."""
-        from epson_projector.const import (CMODE_LIST_SET)
         await self._projector.send_command(CMODE_LIST_SET[cmode])
 
     async def async_select_source(self, source):
         """Select input source."""
-        from epson_projector.const import INV_SOURCES
         selected_source = INV_SOURCES[source]
         await self._projector.send_command(selected_source)
 
     async def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) sound."""
-        from epson_projector.const import MUTE
         await self._projector.send_command(MUTE)
 
     async def async_volume_up(self):
         """Increase volume."""
-        from epson_projector.const import VOL_UP
         await self._projector.send_command(VOL_UP)
 
     async def async_volume_down(self):
         """Decrease volume."""
-        from epson_projector.const import VOL_DOWN
         await self._projector.send_command(VOL_DOWN)
 
     async def async_media_play(self):
         """Play media via Epson."""
-        from epson_projector.const import PLAY
         await self._projector.send_command(PLAY)
 
     async def async_media_pause(self):
         """Pause media via Epson."""
-        from epson_projector.const import PAUSE
         await self._projector.send_command(PAUSE)
 
     async def async_media_next_track(self):
         """Skip to next."""
-        from epson_projector.const import FAST
         await self._projector.send_command(FAST)
 
     async def async_media_previous_track(self):
         """Skip to previous."""
-        from epson_projector.const import BACK
         await self._projector.send_command(BACK)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
-        if self._cmode is not None:
-            attributes[ATTR_CMODE] = self._cmode
-        return attributes
+        if self._cmode is None:
+            return {}
+        return {ATTR_CMODE: self._cmode}

@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "no_uuid": "La inst\u00e0ncia de Kodi no t\u00e9 un identificador \u00fanic. Probablement, aix\u00f2 es deu a una versi\u00f3 antiga de Kodi (17.x o inferior). Pots configurar la integraci\u00f3 manualment o actualitzar Kodi a una versi\u00f3 m\u00e9s recent.",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix el teu nom d'usuari i contrasenya de Kodi. Els pots trobar a Sistema/Configuraci\u00f3/Xarxa/Serveis."
+            },
+            "discovery_confirm": {
+                "description": "Vols afegir Kodi (`{name}`) a Home Assistant?",
+                "title": "Kodi descobert"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port",
+                    "ssl": "Utilitza un certificat SSL"
+                },
+                "description": "Informaci\u00f3 de connexi\u00f3 de Kodi. Assegura't d'activar \"Permet el control de Kodi via HTTP\" a Sistema/Configuraci\u00f3/Xarxa/Serveis."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "Port del WebSocket (a Kodi pot anomenar-se TCP). Per connectar-se a trav\u00e9s de WebSocket has d'activar \"Permet que programes... controlin Kodi\" a Sistema/Configuraci\u00f3/Xarxa/Serveis. Si el WebSocket no est\u00e0 activat, elimina el port i deixa-ho buit."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "S'ha sol\u00b7licitat la desactivaci\u00f3 de {entity_name}",
+            "turn_on": "S'ha sol\u00b7licitat l'activaci\u00f3 de {entity_name}"
+        }
+    }
+}

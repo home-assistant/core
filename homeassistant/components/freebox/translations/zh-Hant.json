@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "register_failed": "\u8a3b\u518a\u5931\u6557\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "link": {
+                "description": "\u6309\u4e0b\u50b3\u9001 \"Submit\"\u3001\u63a5\u8457\u6309\u4e0b\u8def\u7531\u5668\u4e0a\u7684\u53f3\u7bad\u982d\u4ee5\u5c07 Freebox \u8a3b\u518a\u81f3 Home Assistant\u3002\n\n![Location of button on the router](/static/images/config_freebox.png)",
+                "title": "\u9023\u7d50 Freebox \u8def\u7531\u5668"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "Freebox"
+            }
+        }
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "uzbr\u00f3j (poza domem) {entity_name}",
+            "arm_home": "uzbr\u00f3j (w domu) {entity_name}",
+            "arm_night": "uzbr\u00f3j (noc) {entity_name}",
+            "arm_vacation": "uzbr\u00f3j (tryb wakacyjny) {entity_name}",
+            "disarm": "rozbr\u00f3j {entity_name}",
+            "trigger": "wyzw\u00f3l {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "alarm {entity_name} jest uzbrojony (poza domem)",
+            "is_armed_home": "alarm {entity_name} jest uzbrojony (w domu)",
+            "is_armed_night": "alarm {entity_name} jest uzbrojony (noc)",
+            "is_armed_vacation": "alarm {entity_name} jest uzbrojony (tryb wakacyjny)",
+            "is_disarmed": "alarm {entity_name} jest rozbrojony",
+            "is_triggered": "alarm {entity_name} jest wyzwolony"
+        },
+        "trigger_type": {
+            "armed_away": "alarm {entity_name} zostanie uzbrojony (poza domem)",
+            "armed_home": "alarm {entity_name} zostanie uzbrojony (w domu)",
+            "armed_night": "alarm {entity_name} zostanie uzbrojony (noc)",
+            "armed_vacation": "alarm {entity_name} zostanie uzbrojony (tryb wakacyjny)",
+            "disarmed": "alarm {entity_name} zostanie rozbrojony",
+            "triggered": "alarm {entity_name} zostanie wyzwolony"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "uzbrojony",
+            "armed_away": "uzbrojony (poza domem)",
+            "armed_custom_bypass": "uzbrojony (cz\u0119\u015bciowo)",
+            "armed_home": "uzbrojony (w domu)",
+            "armed_night": "uzbrojony (noc)",
+            "armed_vacation": "uzbrojony (tryb wakacyjny)",
+            "arming": "uzbrajanie",
+            "disarmed": "rozbrojony",
+            "disarming": "rozbrajanie",
+            "pending": "oczekuje",
+            "triggered": "wyzwolony"
+        }
+    },
+    "title": "Panel kontrolny alarmu"
+}

@@ -1,0 +1,8 @@
+#!/usr/bin/execlineb -S1
+# ==============================================================================
+# Take down the S6 supervision tree when Home Assistant fails
+# ==============================================================================
+if { s6-test ${1} -ne 100 }
+if { s6-test ${1} -ne 256 }
+
+s6-svscanctl -t /var/run/s6/services

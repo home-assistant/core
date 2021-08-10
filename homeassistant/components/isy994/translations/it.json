@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_host": "La voce host non era nel formato URL completo, ad esempio http://192.168.10.100:80",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Password",
+                    "tls": "La versione TLS del controllore ISY.",
+                    "username": "Nome utente"
+                },
+                "description": "La voce host deve essere nel formato URL completo, ad esempio, http://192.168.10.100:80",
+                "title": "Connettersi a ISY994"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Ignora Stringa",
+                    "restore_light_state": "Ripristina Luminosit\u00e0 Luce",
+                    "sensor_string": "Stringa Nodo Sensore",
+                    "variable_sensor_string": "Stringa Variabile Sensore"
+                },
+                "description": "Impostare le opzioni per l'integrazione ISY: \n \u2022 Stringa Nodo Sensore: qualsiasi dispositivo o cartella che contiene \"Stringa Nodo Sensore\" nel nome verr\u00e0 trattato come un sensore o un sensore binario. \n \u2022 Ignora Stringa: qualsiasi dispositivo con \"Ignora Stringa\" nel nome verr\u00e0 ignorato. \n \u2022 Stringa Variabile Sensore: qualsiasi variabile che contiene \"Stringa Variabile Sensore\" verr\u00e0 aggiunta come sensore. \n \u2022 Ripristina Luminosit\u00e0 Luce: se abilitato, verr\u00e0 ripristinata la luminosit\u00e0 precedente  quando si accende una luce al posto del livello incorporato nel dispositivo.",
+                "title": "Opzioni ISY994"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY Connesso",
+            "host_reachable": "Host raggiungibile",
+            "last_heartbeat": "Tempo dell'ultimo battito cardiaco",
+            "websocket_status": "Stato socket evento"
+        }
+    }
+}

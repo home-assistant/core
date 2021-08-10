@@ -1,35 +1,36 @@
 """Support for displaying details about a Gitter.im chat room."""
 import logging
 
+from gitterpy.client import GitterClient
+from gitterpy.errors import GitterRoomError, GitterTokenError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MENTION = 'mention'
-ATTR_ROOM = 'room'
-ATTR_USERNAME = 'username'
+ATTR_MENTION = "mention"
+ATTR_ROOM = "room"
+ATTR_USERNAME = "username"
 
-DEFAULT_NAME = 'Gitter messages'
-DEFAULT_ROOM = 'home-assistant/home-assistant'
+DEFAULT_NAME = "Gitter messages"
+DEFAULT_ROOM = "home-assistant/home-assistant"
 
-ICON = 'mdi:message-settings-variant'
+ICON = "mdi:message-cog"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ROOM, default=DEFAULT_ROOM): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ROOM, default=DEFAULT_ROOM): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gitter sensor."""
-    from gitterpy.client import GitterClient
-    from gitterpy.errors import GitterTokenError
 
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
@@ -37,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     gitter = GitterClient(api_key)
     try:
-        username = gitter.auth.get_my_id['name']
+        username = gitter.auth.get_my_id["name"]
     except GitterTokenError:
         _LOGGER.error("Token is not valid")
         return
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([GitterSensor(gitter, room, name, username)], True)
 
 
-class GitterSensor(Entity):
+class GitterSensor(SensorEntity):
     """Representation of a Gitter sensor."""
 
     def __init__(self, data, room, name, username):
@@ -56,7 +57,7 @@ class GitterSensor(Entity):
         self._username = username
         self._state = None
         self._mention = 0
-        self._unit_of_measurement = 'Msg'
+        self._unit_of_measurement = "Msg"
 
     @property
     def name(self):
@@ -74,7 +75,7 @@ class GitterSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_USERNAME: self._username,
@@ -89,7 +90,6 @@ class GitterSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        from gitterpy.errors import GitterRoomError
 
         try:
             data = self._data.user.unread_items(self._room)
@@ -97,8 +97,8 @@ class GitterSensor(Entity):
             _LOGGER.error(error)
             return
 
-        if 'error' not in data.keys():
-            self._mention = len(data['mention'])
-            self._state = len(data['chat'])
+        if "error" not in data:
+            self._mention = len(data["mention"])
+            self._state = len(data["chat"])
         else:
             _LOGGER.error("Not joined: %s", self._room)

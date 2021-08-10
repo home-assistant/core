@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O site de controle j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas",
+            "service_unavailable": "Servi\u00e7o indispon\u00edvel",
+            "unknown_client_mac": "Nenhum cliente dispon\u00edvel nesse endere\u00e7o MAC"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "site": "ID do site",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Controlador usando certificado apropriado"
+                },
+                "title": "Configurar o Controlador UniFi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Clientes com acesso controlado \u00e0 rede"
+                },
+                "description": "Configurar controles do cliente \n\nCrie comutadores para os n\u00fameros de s\u00e9rie para os quais deseja controlar o acesso \u00e0 rede.",
+                "title": "UniFi op\u00e7\u00f5es de 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tempo em segundos desde a \u00faltima vez que foi visto at\u00e9 ser considerado afastado",
+                    "track_clients": "Rastrear clientes da rede",
+                    "track_devices": "Rastrear dispositivos de rede (dispositivos Ubiquiti)",
+                    "track_wired_clients": "Incluir clientes de rede com fio"
+                }
+            },
+            "init": {
+                "data": {
+                    "one": "um",
+                    "other": "uns"
+                }
+            },
+            "simple_options": {
+                "description": "Configurar integra\u00e7\u00e3o UniFi"
+            }
+        }
+    }
+}

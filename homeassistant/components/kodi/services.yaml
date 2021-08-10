@@ -1,0 +1,51 @@
+# Describes the format for available Kodi services
+
+add_to_playlist:
+  name: Add to playlist
+  description: Add music to the default playlist (i.e. playlistid=0).
+  target:
+    entity:
+      integration: kodi
+      domain: media_player
+  fields:
+    media_type:
+      name: Media type
+      description: Media type identifier. It must be one of SONG or ALBUM.
+      required: true
+      example: ALBUM
+      selector:
+        text:
+    media_id:
+      name: Media ID
+      description: Unique Id of the media entry to add (`songid` or albumid`). If not defined, `media_name` and `artist_name` are needed to search the Kodi music library.
+      example: 123456
+      selector:
+        text:
+    media_name:
+      name: Media Name
+      description: Optional media name for filtering media. Can be 'ALL' when `media_type` is 'ALBUM' and `artist_name` is specified, to add all songs from one artist.
+      example: "Highway to Hell"
+      selector:
+        text:
+    artist_name:
+      name: Artist name
+      description: Optional artist name for filtering media.
+      example: "AC/DC"
+      selector:
+        text:
+
+call_method:
+  name: Call method
+  description: "Call a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`."
+  target:
+    entity:
+      integration: kodi
+      domain: media_player
+  fields:
+    method:
+      name: Method
+      description: Name of the Kodi JSONRPC API method to be called.
+      required: true
+      example: "VideoLibrary.GetRecentlyAddedEpisodes"
+      selector:
+        text:

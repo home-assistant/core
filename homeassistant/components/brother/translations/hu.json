@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "unsupported_model": "Ez a nyomtat\u00f3modell nem t\u00e1mogatott."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "snmp_error": "Az SNMP szerver ki van kapcsolva, vagy a nyomtat\u00f3 nem t\u00e1mogatott.",
+            "wrong_host": "\u00c9rv\u00e9nytelen \u00e1llom\u00e1sn\u00e9v vagy IP-c\u00edm."
+        },
+        "flow_title": "Brother nyomtat\u00f3: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "type": "A nyomtat\u00f3 t\u00edpusa"
+                },
+                "description": "A Brother nyomtat\u00f3 integr\u00e1ci\u00f3j\u00e1nak be\u00e1ll\u00edt\u00e1sa. Ha probl\u00e9m\u00e1id vannak a konfigur\u00e1ci\u00f3val, l\u00e1togass el a k\u00f6vetkez\u0151 oldalra: https://www.home-assistant.io/integrations/brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "A nyomtat\u00f3 t\u00edpusa"
+                },
+                "description": "Hozz\u00e1 akarja adni a {model} Brother nyomtat\u00f3t, amelynek sorsz\u00e1ma: {serial_number} `, a Home Assistant-hoz?",
+                "title": "Felfedezett Brother nyomtat\u00f3"
+            }
+        }
+    }
+}

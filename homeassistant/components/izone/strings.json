@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up iZone?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  }
+}

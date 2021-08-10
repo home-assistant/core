@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "addr_in_use": "Serverpoort al in gebruik.",
+            "start_server_failed": "Start server is mislukt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Poort"
+                },
+                "title": "TCP-server instellen voor WIFFI-apparaten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Time-out (minuten)"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "not_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Codice della stazione"
+                },
+                "description": "Immettere il codice della stazione Meteoclimatic (ad esempio ESCAT4300000043206B)",
+                "title": "Meteoclimatic"
+            }
+        }
+    }
+}

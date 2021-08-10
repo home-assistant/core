@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontot har redan konfigurerats",
+            "no_device": "Ingen av dina enheter har \"Hitta min iPhone\" aktiverat"
+        },
+        "error": {
+            "send_verification_code": "Det gick inte att skicka verifieringskod",
+            "validate_verification_code": "Det gick inte att verifiera verifieringskoden, v\u00e4lj en betrodd enhet och starta verifieringen igen"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Betrodd enhet"
+                },
+                "description": "V\u00e4lj din betrodda enhet",
+                "title": "Betrodd iCloud-enhet"
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Email"
+                },
+                "description": "Ange dina autentiseringsuppgifter",
+                "title": "iCloud-autentiseringsuppgifter"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Verifieringskod"
+                },
+                "description": "V\u00e4nligen ange verifieringskoden som du just f\u00e5tt fr\u00e5n iCloud",
+                "title": "iCloud-verifieringskod"
+            }
+        }
+    }
+}

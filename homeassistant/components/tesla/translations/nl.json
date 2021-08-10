@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "already_configured": "Account is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mfa": "MFA Code (optioneel)",
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
+                },
+                "description": "Vul alstublieft uw gegevens in.",
+                "title": "Tesla - Configuratie"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Forceer auto's wakker bij het opstarten",
+                    "scan_interval": "Seconden tussen scans"
+                }
+            }
+        }
+    }
+}

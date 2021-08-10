@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "error": {
+            "invalid_key": "Ugyldig API-n\u00f8kkel",
+            "no_devices": "Ingen enheter funnet i kontoen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "app_key": "Applikasjonsn\u00f8kkel"
+                },
+                "title": "Fyll ut informasjonen din"
+            }
+        }
+    }
+}

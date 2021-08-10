@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Une seule configuration de Google Cast est n\u00e9cessaire."
+        },
+        "error": {
+            "invalid_known_hosts": "Les h\u00f4tes connus doivent \u00eatre une liste d'h\u00f4tes s\u00e9par\u00e9s par des virgules."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Liste facultative des h\u00f4tes connus si la d\u00e9couverte mDNS ne fonctionne pas."
+                },
+                "description": "Veuillez saisir la configuration de Google Cast.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "Voulez-vous configurer Google Cast?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Les h\u00f4tes connus doivent \u00eatre une liste d'h\u00f4tes s\u00e9par\u00e9s par des virgules."
+        },
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "Ignorer CEC",
+                    "uuid": "UUID autoris\u00e9s"
+                },
+                "description": "UUID autoris\u00e9s: liste s\u00e9par\u00e9e par des virgules des UUID des appareils Cast \u00e0 ajouter \u00e0 Home Assistant. \u00c0 utiliser uniquement si vous ne souhaitez pas ajouter tous les appareils de diffusion disponibles.\n Ignorer CEC - Une liste de Chromecast s\u00e9par\u00e9s par des virgules qui doivent ignorer les donn\u00e9es CEC pour d\u00e9terminer l'entr\u00e9e active. Ce sera transmis \u00e0 pychromecast.IGNORE_CEC.",
+                "title": "Configuration avanc\u00e9e de Google Cast"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "H\u00f4tes connus"
+                },
+                "description": "H\u00f4tes connus - Une liste de noms d'h\u00f4te ou d'adresses IP s\u00e9par\u00e9s par des virgules des p\u00e9riph\u00e9riques de diffusion, \u00e0 utiliser si la d\u00e9couverte mDNS ne fonctionne pas.",
+                "title": "Configuration de Google Cast"
+            }
+        }
+    }
+}

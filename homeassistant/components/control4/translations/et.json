@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP aadress",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisesta oma Control4 konto andmed ja kohaliku kontrolleri IP-aadress."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekundeid v\u00e4rskenduste vahel"
+                }
+            }
+        }
+    }
+}

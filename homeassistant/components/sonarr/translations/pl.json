@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "reauth_confirm": {
+                "description": "Integracja Sonarr musi by\u0107 r\u0119cznie ponownie uwierzytelniona za pomoc\u0105 API Sonarr pod adresem: {host}",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "base_path": "\u015acie\u017cka do API",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
+                    "ssl": "Certyfikat SSL",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Liczba nadchodz\u0105cych dni do wy\u015bwietlenia",
+                    "wanted_max_items": "Maksymalna liczba wy\u015bwietlanych element\u00f3w"
+                }
+            }
+        }
+    }
+}

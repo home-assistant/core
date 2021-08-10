@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sign-in with Blink account",
+        "data": {
+            "username": "[%key:common::config_flow::data::username%]",
+            "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "2fa": {
+        "title": "Two-factor authentication",
+        "data": { "2fa": "Two-factor code" },
+        "description": "Enter the PIN sent to your email"
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "simple_options": {
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        },
+        "title": "Blink options",
+        "description": "Configure Blink integration"
+      }
+    }
+  }     
+}

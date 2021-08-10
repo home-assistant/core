@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "pwd_and_ssh": "Csak jelsz\u00f3 vagy SSH kulcsf\u00e1jlt adjon meg",
+            "pwd_or_ssh": "K\u00e9rj\u00fck, adja meg a jelsz\u00f3t vagy az SSH kulcsf\u00e1jlt",
+            "ssh_not_file": "Az SSH kulcsf\u00e1jl nem tal\u00e1lhat\u00f3",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "mode": "M\u00f3d",
+                    "name": "N\u00e9v",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "protocol": "Haszn\u00e1lhat\u00f3 kommunik\u00e1ci\u00f3s protokoll",
+                    "ssh_key": "Az SSH kulcsf\u00e1jl el\u00e9r\u00e9si \u00fatja (jelsz\u00f3 helyett)",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "\u00c1ll\u00edtsa be a sz\u00fcks\u00e9ges param\u00e9tert az \u00fatv\u00e1laszt\u00f3hoz val\u00f3 csatlakoz\u00e1shoz",
+                "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "V\u00e1rakoz\u00e1si m\u00e1sodpercek, miel\u0151tt egy eszk\u00f6zt lecsatlakoztat",
+                    "dnsmasq": "A dnsmasq.leasing f\u00e1jlok helye az \u00fatv\u00e1laszt\u00f3n",
+                    "interface": "Az a fel\u00fclet, amelyr\u0151l statisztik\u00e1kat szeretne kapni (pl. eth0, eth1 stb.)",
+                    "require_ip": "Az eszk\u00f6z\u00f6knek IP-vel kell rendelkezni\u00fck (hozz\u00e1f\u00e9r\u00e9si pont m\u00f3dhoz)",
+                    "track_unknown": "Az ismeretlen / n\u00e9v n\u00e9lk\u00fcli eszk\u00f6z\u00f6k nyomon k\u00f6vet\u00e9se"
+                },
+                "title": "AsusWRT Be\u00e1ll\u00edt\u00e1sok"
+            }
+        }
+    }
+}

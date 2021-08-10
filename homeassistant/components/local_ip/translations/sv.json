@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Endast en konfiguration av lokal IP \u00e4r till\u00e5ten."
+        },
+        "step": {
+            "user": {
+                "title": "Lokal IP-adress"
+            }
+        }
+    },
+    "title": "Lokal IP-adress"
+}

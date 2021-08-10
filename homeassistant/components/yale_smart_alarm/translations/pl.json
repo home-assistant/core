@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Identyfikator obszaru",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Identyfikator obszaru",
+                    "name": "[%key::common::config_flow::data::name%]",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    }
+}

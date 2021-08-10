@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} \u00e8 inattivo",
+            "is_off": "{entity_name} \u00e8 spento",
+            "is_on": "{entity_name} \u00e8 acceso",
+            "is_paused": "{entity_name} \u00e8 in pausa",
+            "is_playing": "{entity_name} \u00e8 in esecuzione"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} diventa inattivo",
+            "paused": "{entity_name} \u00e8 in pausa",
+            "playing": "{entity_name} inizia l'esecuzione",
+            "turned_off": "{entity_name} disattivato",
+            "turned_on": "{entity_name} attivato"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Inattivo",
+            "off": "Spento",
+            "on": "Acceso",
+            "paused": "In pausa",
+            "playing": "In riproduzione",
+            "standby": "In attesa"
+        }
+    },
+    "title": "Lettore multimediale"
+}

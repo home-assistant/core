@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "cannot_retrieve_device_info": "Erfolgreich verbunden, aber Ger\u00e4teinformationen k\u00f6nnen nicht abgerufen werden",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "group": "Gruppe",
+                    "host": "Host",
+                    "password": "Passwort",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "description": "Gib deine SMA-Ger\u00e4teinformationen ein.",
+                "title": "Richte SMA Solar ein"
+            }
+        }
+    }
+}

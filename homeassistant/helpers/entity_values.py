@@ -1,25 +1,32 @@
 """A class to hold entity values."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import fnmatch
 import re
-from typing import Any, Dict, Optional, Pattern  # noqa: F401
+from typing import Any
 
 from homeassistant.core import split_entity_id
+
+# mypy: disallow-any-generics
 
 
 class EntityValues:
     """Class to store entity id based values."""
 
-    def __init__(self, exact: Optional[Dict] = None,
-                 domain: Optional[Dict] = None,
-                 glob: Optional[Dict] = None) -> None:
+    def __init__(
+        self,
+        exact: dict[str, dict[str, str]] | None = None,
+        domain: dict[str, dict[str, str]] | None = None,
+        glob: dict[str, dict[str, str]] | None = None,
+    ) -> None:
         """Initialize an EntityConfigDict."""
-        self._cache = {}  # type: Dict[str, Dict]
+        self._cache: dict[str, dict[str, str]] = {}
         self._exact = exact
         self._domain = domain
 
         if glob is None:
-            compiled = None  # type: Optional[Dict[Pattern[str], Any]]
+            compiled: dict[re.Pattern[str], Any] | None = None
         else:
             compiled = OrderedDict()
             for key, value in glob.items():
@@ -27,7 +34,7 @@ class EntityValues:
 
         self._glob = compiled
 
-    def get(self, entity_id: str) -> Dict:
+    def get(self, entity_id: str) -> dict[str, str]:
         """Get config for an entity id."""
         if entity_id in self._cache:
             return self._cache[entity_id]

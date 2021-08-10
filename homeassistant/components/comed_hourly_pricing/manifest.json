@@ -1,8 +1,7 @@
 {
   "domain": "comed_hourly_pricing",
-  "name": "Comed hourly pricing",
-  "documentation": "https://www.home-assistant.io/components/comed_hourly_pricing",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "ComEd Hourly Pricing",
+  "documentation": "https://www.home-assistant.io/integrations/comed_hourly_pricing",
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

@@ -1,0 +1,4 @@
+light:
+  - platform: mqtt
+    name: reload
+    command_topic: "test/set"

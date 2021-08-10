@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "V\u00e6rten er allerede konfigureret."
+        },
+        "error": {
+            "cannot_connect": "Det lykkedes ikke at oprette forbindelse til serveren. Kontroller v\u00e6rten og porten, og pr\u00f8v igen. S\u00f8rg ogs\u00e5 for, at du k\u00f8rer mindst Minecraft version 1.7 p\u00e5 din server.",
+            "invalid_ip": "IP-adressen er ugyldig (MAC-adressen kunne ikke bestemmes). Ret den, og pr\u00f8v igen.",
+            "invalid_port": "Porten skal v\u00e6re i intervallet fra 1024 til 65535. Ret den, og pr\u00f8v igen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "name": "Navn"
+                },
+                "description": "Konfigurer din Minecraft-server-instans for at tillade overv\u00e5gning.",
+                "title": "Forbind din Minecraft-server"
+            }
+        }
+    }
+}

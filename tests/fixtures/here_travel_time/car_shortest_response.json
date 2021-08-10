@@ -1,0 +1,231 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2019-07-21T21:05:28Z",
+            "mapVersion": "8.30.98.154",
+            "moduleVersion": "7.2.201928-4478",
+            "interfaceVersion": "2.6.64",
+            "availableMapVersion": [
+                "8.30.98.154"
+            ]
+        },
+        "route": [
+            {
+                "waypoint": [
+                    {
+                        "linkId": "-1128310200",
+                        "mappedPosition": {
+                            "latitude": 38.9026523,
+                            "longitude": -77.048338
+                        },
+                        "originalPosition": {
+                            "latitude": 38.9029809,
+                            "longitude": -77.048338
+                        },
+                        "type": "stopOver",
+                        "spot": 0.3538462,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "K St NW",
+                        "label": "K St NW",
+                        "shapeIndex": 0,
+                        "source": "user"
+                    },
+                    {
+                        "linkId": "-18459081",
+                        "mappedPosition": {
+                            "latitude": 39.0422511,
+                            "longitude": -77.1193526
+                        },
+                        "originalPosition": {
+                            "latitude": 39.042158,
+                            "longitude": -77.119116
+                        },
+                        "type": "stopOver",
+                        "spot": 0.7253521,
+                        "sideOfStreet": "left",
+                        "mappedRoadName": "Commonwealth Dr",
+                        "label": "Commonwealth Dr",
+                        "shapeIndex": 162,
+                        "source": "user"
+                    }
+                ],
+                "mode": {
+                    "type": "shortest",
+                    "transportModes": [
+                        "car"
+                    ],
+                    "trafficMode": "enabled",
+                    "feature": []
+                },
+                "leg": [
+                    {
+                        "start": {
+                            "linkId": "-1128310200",
+                            "mappedPosition": {
+                                "latitude": 38.9026523,
+                                "longitude": -77.048338
+                            },
+                            "originalPosition": {
+                                "latitude": 38.9029809,
+                                "longitude": -77.048338
+                            },
+                            "type": "stopOver",
+                            "spot": 0.3538462,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "K St NW",
+                            "label": "K St NW",
+                            "shapeIndex": 0,
+                            "source": "user"
+                        },
+                        "end": {
+                            "linkId": "-18459081",
+                            "mappedPosition": {
+                                "latitude": 39.0422511,
+                                "longitude": -77.1193526
+                            },
+                            "originalPosition": {
+                                "latitude": 39.042158,
+                                "longitude": -77.119116
+                            },
+                            "type": "stopOver",
+                            "spot": 0.7253521,
+                            "sideOfStreet": "left",
+                            "mappedRoadName": "Commonwealth Dr",
+                            "label": "Commonwealth Dr",
+                            "shapeIndex": 162,
+                            "source": "user"
+                        },
+                        "length": 18388,
+                        "travelTime": 2493,
+                        "maneuver": [
+                            {
+                                "position": {
+                                    "latitude": 38.9026523,
+                                    "longitude": -77.048338
+                                },
+                                "instruction": "Head <span class=\"heading\">west</span> on <span class=\"street\">K St NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">79 m</span>.</span>",
+                                "travelTime": 22,
+                                "length": 79,
+                                "id": "M1",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9026523,
+                                    "longitude": -77.048825
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">22nd St NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">141 m</span>.</span>",
+                                "travelTime": 79,
+                                "length": 141,
+                                "id": "M2",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9039075,
+                                    "longitude": -77.048825
+                                },
+                                "instruction": "Keep <span class=\"direction\">left</span> onto <span class=\"next-street\">22nd St NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">841 m</span>.</span>",
+                                "travelTime": 256,
+                                "length": 841,
+                                "id": "M3",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9114928,
+                                    "longitude": -77.0487821
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Massachusetts Ave NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">145 m</span>.</span>",
+                                "travelTime": 22,
+                                "length": 145,
+                                "id": "M4",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9120293,
+                                    "longitude": -77.0502949
+                                },
+                                "instruction": "Take the <span class=\"exit\">1st exit</span> from Massachusetts Ave NW roundabout onto <span class=\"next-street\">Massachusetts Ave NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">2.8 km</span>.</span>",
+                                "travelTime": 301,
+                                "length": 2773,
+                                "id": "M5",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9286053,
+                                    "longitude": -77.073158
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">Wisconsin Ave NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">3.8 km</span>.</span>",
+                                "travelTime": 610,
+                                "length": 3801,
+                                "id": "M6",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9607918,
+                                    "longitude": -77.0857322
+                                },
+                                "instruction": "Continue on <span class=\"next-street\">Wisconsin Ave</span> <span class=\"number\">(MD-355)</span>. <span class=\"distance-description\">Go for <span class=\"length\">9.7 km</span>.</span>",
+                                "travelTime": 1013,
+                                "length": 9686,
+                                "id": "M7",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 39.0447664,
+                                    "longitude": -77.1116638
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Nicholson Ln</span>. <span class=\"distance-description\">Go for <span class=\"length\">559 m</span>.</span>",
+                                "travelTime": 111,
+                                "length": 559,
+                                "id": "M8",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 39.0448952,
+                                    "longitude": -77.1179724
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Commonwealth Dr</span>. <span class=\"distance-description\">Go for <span class=\"length\">341 m</span>.</span>",
+                                "travelTime": 75,
+                                "length": 341,
+                                "id": "M9",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 39.0422511,
+                                    "longitude": -77.1193526
+                                },
+                                "instruction": "Arrive at <span class=\"street\">Commonwealth Dr</span>. Your destination is on the left.",
+                                "travelTime": 4,
+                                "length": 22,
+                                "id": "M10",
+                                "_type": "PrivateTransportManeuverType"
+                            }
+                        ]
+                    }
+                ],
+                "summary": {
+                    "distance": 18388,
+                    "trafficTime": 2427,
+                    "baseTime": 2150,
+                    "flags": [
+                        "noThroughRoad",
+                        "builtUpArea",
+                        "park"
+                    ],
+                    "text": "The trip takes <span class=\"length\">18.4 km</span> and <span class=\"time\">40 mins</span>.",
+                    "travelTime": 2427,
+                    "_type": "RouteSummaryType"
+                }
+            }
+        ],
+        "language": "en-us"
+    }
+}

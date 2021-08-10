@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ph_offset": "Desplazamiento del pH (positivo o negativo)",
+                    "polling_interval": "Intervalo de sondeo (en segundos)"
+                }
+            }
+        }
+    }
+}

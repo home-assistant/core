@@ -1,0 +1,11 @@
+{
+  "domain": "tasmota",
+  "name": "Tasmota",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tasmota",
+  "requirements": ["hatasmota==0.2.20"],
+  "dependencies": ["mqtt"],
+  "mqtt": ["tasmota/discovery/#"],
+  "codeowners": ["@emontnemery"],
+  "iot_class": "local_push"
+}

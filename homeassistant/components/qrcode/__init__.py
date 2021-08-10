@@ -1,1 +1,1 @@
-"""The qrcode component."""
+"""The QR code component."""

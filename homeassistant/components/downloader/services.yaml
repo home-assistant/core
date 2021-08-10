@@ -1,0 +1,29 @@
+download_file:
+  name: Download file
+  description: Download a file to the download location.
+  fields:
+    url:
+      name: URL
+      description: The URL of the file to download.
+      required: true
+      example: "http://example.org/myfile"
+      selector:
+        text:
+    subdir:
+      name: Subdirectory
+      description: Download into subdirectory.
+      example: "download_dir"
+      selector:
+        text:
+    filename:
+      name: Filename
+      description: Determine the filename.
+      example: "my_file_name"
+      selector:
+        text:
+    overwrite:
+      name: Overwrite
+      description: Whether to overwrite the file or not.
+      default: false
+      selector:
+        boolean:

@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "backoff": "Het apparaat accepteert op dit moment geen koppelingsverzoeken (u heeft mogelijk te vaak een ongeldige pincode ingevoerd), probeer het later opnieuw.",
+            "device_did_not_pair": "Er is geen poging gedaan om het koppelingsproces te voltooien vanaf het apparaat.",
+            "invalid_config": "De configuratie voor dit apparaat is onvolledig. Probeer het opnieuw toe te voegen.",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "invalid_auth": "Ongeldige authenticatie",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "no_usable_service": "Er is een apparaat gevonden, maar er kon geen manier worden gevonden om er verbinding mee te maken. Als u dit bericht blijft zien, probeert u het IP-adres in te voeren of uw Apple TV opnieuw op te starten.",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "U staat op het punt om de Apple TV met de naam `{name}` toe te voegen aan Home Assistant.\n\n**Om het proces te voltooien, moet u mogelijk meerdere PIN-codes invoeren.**\n\nLet op: u kunt uw Apple TV *niet* uitschakelen met deze integratie. Alleen de mediaspeler in Home Assistant wordt uitgeschakeld!",
+                "title": "Bevestig het toevoegen van Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "Koppeling is vereist voor de `{protocol}` service. Voer de PIN {pin} in op uw Apple TV om verder te gaan.",
+                "title": "Koppelen"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN-code"
+                },
+                "description": "Koppelen is vereist voor het `{protocol}` protocol. Voer de PIN-code in die op het scherm wordt getoond. Beginnende nullen moeten worden weggelaten, d.w.z. voer 123 in als de getoonde code 0123 is.",
+                "title": "Koppelen"
+            },
+            "reconfigure": {
+                "description": "Deze Apple TV ondervindt verbindingsproblemen en moet opnieuw worden geconfigureerd.",
+                "title": "Apparaat herconfiguratie"
+            },
+            "service_problem": {
+                "description": "Er is een probleem opgetreden tijdens het koppelen van protocol `{protocol}`. Dit wordt genegeerd.",
+                "title": "Dienst toevoegen mislukt"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Apparaat"
+                },
+                "description": "Begin met het invoeren van de apparaatnaam (bijv. Keuken of Slaapkamer) of het IP-adres van de Apple TV die u wilt toevoegen. Als er automatisch apparaten in uw netwerk zijn gevonden, worden deze hieronder weergegeven.\n\nAls u het apparaat niet kunt zien of problemen ondervindt, probeer dan het IP-adres van het apparaat in te voeren.\n\n{devices}",
+                "title": "Stel een nieuwe Apple TV in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Schakel het apparaat niet in wanneer u Home Assistant start"
+                },
+                "description": "Algemene apparaatinstellingen configureren"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

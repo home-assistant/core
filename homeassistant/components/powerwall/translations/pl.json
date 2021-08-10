@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d",
+            "wrong_version": "Powerwall u\u017cywa wersji oprogramowania, kt\u00f3ra nie jest obs\u0142ugiwana. Rozwa\u017c uaktualnienie lub zg\u0142oszenie tego problemu, aby mo\u017cna go by\u0142o rozwi\u0105za\u0107."
+        },
+        "flow_title": "{ip_address}",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adres IP",
+                    "password": "Has\u0142o"
+                },
+                "description": "Has\u0142o to zazwyczaj 5 ostatnich znak\u00f3w numeru seryjnego Backup Gateway i mo\u017cna je znale\u017a\u0107 w aplikacji Tesla; lub ostatnie 5 znak\u00f3w has\u0142a na wewn\u0119trznej stronie drzwiczek Backup Gateway 2.",
+                "title": "Po\u0142\u0105czenie z Powerwall"
+            }
+        }
+    }
+}

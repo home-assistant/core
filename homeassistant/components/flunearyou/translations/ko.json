@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4"
+                },
+                "description": "\uc0ac\uc6a9\uc790 \uae30\ubc18 \ub370\uc774\ud130 \ubc0f CDC \ubcf4\uace0\uc11c\uc5d0\uc11c \uc88c\ud45c\ub97c \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4.",
+                "title": "Flu Near You \uad6c\uc131\ud558\uae30"
+            }
+        }
+    }
+}

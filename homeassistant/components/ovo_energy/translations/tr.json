@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "flow_title": "OVO Enerji: {username}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u015eifre"
+                },
+                "description": "OVO Energy i\u00e7in kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu. L\u00fctfen mevcut kimlik bilgilerinizi girin.",
+                "title": "Yeniden kimlik do\u011frulama"
+            },
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    }
+}

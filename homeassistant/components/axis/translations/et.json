@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "link_local_address": "Kohtv\u00f5rgu linke ei toetata",
+            "not_axis_device": "Avastatud seade pole Axise seade"
+        },
+        "error": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Seadista Axis'e seade"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Vali kasutatav vooprofiil"
+                },
+                "title": "Axis'e seadme videovoo valikud"
+            }
+        }
+    }
+}

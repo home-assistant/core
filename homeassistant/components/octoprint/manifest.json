@@ -1,8 +1,8 @@
 {
   "domain": "octoprint",
-  "name": "Octoprint",
-  "documentation": "https://www.home-assistant.io/components/octoprint",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "OctoPrint",
+  "documentation": "https://www.home-assistant.io/integrations/octoprint",
+  "after_dependencies": ["discovery"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

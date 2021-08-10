@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "no_home": "Ingen hjemmekoordinater er angitt i Home Assistant-konfigurasjonen"
+        },
+        "error": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevasjon",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn"
+                },
+                "description": "",
+                "title": "Plassering"
+            }
+        }
+    }
+}

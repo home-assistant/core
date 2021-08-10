@@ -1,8 +1,7 @@
 {
   "domain": "supervisord",
   "name": "Supervisord",
-  "documentation": "https://www.home-assistant.io/components/supervisord",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/supervisord",
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

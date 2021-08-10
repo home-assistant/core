@@ -1,0 +1,8 @@
+{
+  "domain": "fronius",
+  "name": "Fronius",
+  "documentation": "https://www.home-assistant.io/integrations/fronius",
+  "requirements": ["pyfronius==0.5.3"],
+  "codeowners": ["@nielstron"],
+  "iot_class": "local_polling"
+}

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Un seul appareil Atag peut \u00eatre ajout\u00e9 \u00e0 Home Assistant"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unauthorized": "Pairage refus\u00e9, v\u00e9rifiez la demande d'authentification de l'appareil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "port": "Port"
+                },
+                "title": "Se connecter \u00e0 l'appareil"
+            }
+        }
+    }
+}

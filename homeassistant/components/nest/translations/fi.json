@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Tarjoaja"
+                },
+                "title": "Todentamisen tarjoaja"
+            },
+            "link": {
+                "data": {
+                    "code": "Pin-koodi"
+                },
+                "title": "Linkit\u00e4 Nest-tili"
+            }
+        }
+    }
+}

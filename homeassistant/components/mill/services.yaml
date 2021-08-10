@@ -1,0 +1,35 @@
+set_room_temperature:
+  name: Set room temperature
+  description: Set Mill room temperatures.
+  fields:
+    room_name:
+      name: Room name
+      description: Name of room to change.
+      required: true
+      example: "kitchen"
+      selector:
+        text:
+    away_temp:
+      name: Away temperature
+      description: Away temp.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '°'
+    comfort_temp:
+      name: Comfort temperature
+      description: Comfort temp.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '°'
+    sleep_temp:
+      name: Sleep temperature
+      description: Sleep temp.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '°'

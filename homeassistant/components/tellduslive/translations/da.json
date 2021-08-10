@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout ved generering af autoriseret url.",
+            "unknown": "Ukendt fejl opstod"
+        },
+        "step": {
+            "auth": {
+                "description": "For at forbinde din TelldusLive-konto:\n 1. Klik p\u00e5 linket herunder\n 2. Log p\u00e5 Telldus Live\n 3. Tillad **{app_name}** (klik **Ja**). \n 4. Vend tilbage hertil og klik **SUBMIT**.\n\n [Forbind TelldusLive konto]({auth_url})",
+                "title": "Godkendelse mod TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e6rt"
+                },
+                "description": "Tom",
+                "title": "V\u00e6lg slutpunkt."
+            }
+        }
+    }
+}

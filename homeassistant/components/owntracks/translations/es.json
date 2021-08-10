@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "create_entry": {
+            "default": "\n\nEn Android, abre [la aplicaci\u00f3n OwnTracks]({android_url}), ve a preferencias -> conexi\u00f3n. Cambia los siguientes ajustes:\n - Modo: HTTP privado\n - Host: {webhook_url}\n - Identificaci\u00f3n:\n   - Nombre de usuario: <Your name>\n   - ID de dispositivo: <Your device name>\n\nEn iOS, abre [la aplicaci\u00f3n OwnTracks] ({ios_url}), pulsa el icono (i) en la parte superior izquierda -> configuraci\u00f3n. Cambia los siguientes ajustes:\n - Modo: HTTP\n - URL: {webhook_url}\n - Activar la autenticaci\u00f3n\n - UserID: <Your name>\n\n{secret}\n\nConsulta [la documentaci\u00f3n]({docs_url}) para obtener m\u00e1s informaci\u00f3n."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfEst\u00e1s seguro de que quieres configurar OwnTracks?",
+                "title": "Configurar OwnTracks"
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flan\u0131lamad\u0131, l\u00fctfen tekrar deneyin, ana g\u00fc\u00e7 ve ethernet kablolar\u0131n\u0131n ba\u011flant\u0131s\u0131n\u0131 kesip yeniden ba\u011flamak yard\u0131mc\u0131 olabilir"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u0130p Adresi"
+                }
+            }
+        }
+    }
+}

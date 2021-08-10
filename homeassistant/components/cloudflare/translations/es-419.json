@@ -1,0 +1,27 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "description": "Vuelva a autenticarse con su cuenta de Cloudflare."
+                }
+            },
+            "records": {
+                "data": {
+                    "records": "Registros"
+                },
+                "title": "Elegir los registros que desea actualizar"
+            },
+            "user": {
+                "description": "Esta integraci\u00f3n requiere un token de API creado con Zone: Zone: Read y Zone: DNS: Edit permisos para todas las zonas de su cuenta.",
+                "title": "Conectarse a Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zona"
+                },
+                "title": "Elija la zona para actualizar"
+            }
+        }
+    }
+}

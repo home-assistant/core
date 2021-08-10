@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "invalid_known_hosts": "Els amfitrions coneguts han de ser una llista d'amfitrions separats per comes."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Amfitrions coneguts"
+                },
+                "description": "Amfitrions coneguts - Llista, separada per comes, dels noms d'amfitri\u00f3 o adreces IP dels dispositius Cast. Utilitza-ho si el descobriment mDNS no funciona.",
+                "title": "Configuraci\u00f3 de Google Cast"
+            },
+            "confirm": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Els amfitrions coneguts han de ser una llista d'amfitrions separats per comes."
+        },
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "Ignora CEC",
+                    "uuid": "UUID permesos"
+                },
+                "description": "UUIDs permesos - Llista, separada per comes, dels UUIDs dels dispositius Cast a afegir a Home Assistant. Utilitza-ho si no vols afegir tots els dispositius Cast disponibles.\nIgnora CEC - Llista, separada per comes, dels Chromecasts que han d'ignorar les dades CEC al determinar l'entrada activa. S'enviar\u00e0 a pychromecast.IGNORE_CEC.",
+                "title": "Configuraci\u00f3 avan\u00e7ada de Google Cast"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Amfitrions coneguts"
+                },
+                "description": "Amfitrions coneguts - Llista, separada per comes, dels noms d'amfitri\u00f3 o adreces IP dels dispositius Cast. Utilitza-ho si el descobriment mDNS no funciona.",
+                "title": "Configuraci\u00f3 de Google Cast"
+            }
+        }
+    }
+}

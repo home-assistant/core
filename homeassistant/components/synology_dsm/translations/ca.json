@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "missing_data": "Falten dades: torna-ho a provar m\u00e9s tard o prova una altra configuraci\u00f3 diferent",
+            "otp_failed": "L'autenticaci\u00f3 en dos passos ha fallat, torna-ho a provar amb un nou codi",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Codi"
+                },
+                "title": "Synology DSM: autenticaci\u00f3 en dos passos"
+            },
+            "link": {
+                "data": {
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "ssl": "Utilitza un certificat SSL",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "description": "Vols configurar {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "reauth": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Motiu: {details}",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3 Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "ssl": "Utilitza un certificat SSL",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuts entre escanejos",
+                    "timeout": "Temps d'espera (segons)"
+                }
+            }
+        }
+    }
+}

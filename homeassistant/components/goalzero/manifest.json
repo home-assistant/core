@@ -1,0 +1,12 @@
+{
+  "domain": "goalzero",
+  "name": "Goal Zero Yeti",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/goalzero",
+  "requirements": ["goalzero==0.1.7"],
+  "dhcp": [
+    {"hostname": "yeti*"}
+  ],
+  "codeowners": ["@tkdrob"],
+  "iot_class": "local_polling"
+}

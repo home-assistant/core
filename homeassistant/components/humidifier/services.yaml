@@ -1,0 +1,52 @@
+# Describes the format for available humidifier services
+
+set_mode:
+  name: Set mode
+  description: Set mode for humidifier device.
+  target:
+    entity:
+      domain: humidifier
+  fields:
+    mode:
+      description: New mode
+      required: true
+      example: 'away'
+      selector:
+        text:
+
+set_humidity:
+  name: Set humidity
+  description: Set target humidity of humidifier device.
+  target:
+    entity:
+      domain: humidifier
+  fields:
+    humidity:
+      description: New target humidity for humidifier device.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+turn_on:
+  name: Turn on
+  description: Turn humidifier device on.
+  target:
+    entity:
+      domain: humidifier
+
+turn_off:
+  name: Turn off
+  description: Turn humidifier device off.
+  target:
+    entity:
+      domain: humidifier
+
+toggle:
+  name: Toggle
+  description: Toggles a humidifier device.
+  target:
+    entity:
+      domain: humidifier

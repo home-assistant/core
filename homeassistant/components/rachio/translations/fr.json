@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API"
+                },
+                "description": "Vous aurez besoin de la cl\u00e9 API de https://app.rach.io/. S\u00e9lectionnez \"Param\u00e8tres du compte, puis cliquez sur \"GET API KEY \".",
+                "title": "Connectez-vous \u00e0 votre appareil Rachio"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Le temps, en minutes, n\u00e9cessaire pour allumer une station lorsque l'interrupteur est activ\u00e9."
+                }
+            }
+        }
+    }
+}

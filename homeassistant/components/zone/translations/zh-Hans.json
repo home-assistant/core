@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "\u8be5\u540d\u79f0\u5df2\u5b58\u5728"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "\u56fe\u6807",
+                    "latitude": "\u7eac\u5ea6",
+                    "longitude": "\u7ecf\u5ea6",
+                    "name": "\u540d\u79f0",
+                    "passive": "\u88ab\u52a8",
+                    "radius": "\u534a\u5f84"
+                },
+                "title": "\u5b9a\u4e49\u533a\u57df\u53c2\u6570"
+            }
+        },
+        "title": "\u533a\u57df"
+    }
+}

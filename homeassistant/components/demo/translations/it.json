@@ -1,0 +1,27 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "one": "Pi\u00f9",
+                    "other": "Altri"
+                }
+            },
+            "options_1": {
+                "data": {
+                    "bool": "Valore booleano facoltativo",
+                    "constant": "Costante",
+                    "int": "Input numerico"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Selezione multipla",
+                    "select": "Selezionare un'opzione",
+                    "string": "Valore stringa"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

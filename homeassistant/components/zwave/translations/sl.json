@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Z-Wave je \u017ee konfiguriran"
+        },
+        "error": {
+            "option_error": "Potrjevanje Z-Wave ni uspelo. Ali je pot do USB klju\u010da pravilna?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "Omre\u017eni klju\u010d (pustite prazno za samodejno generiranje)",
+                    "usb_path": "USB Pot"
+                },
+                "description": "Za informacije o konfiguracijskih spremenljivka si oglejte https://www.home-assistant.io/docs/z-wave/installation/"
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Mrtva",
+            "initializing": "Inicializacija",
+            "ready": "Pripravljen",
+            "sleeping": "Spi"
+        },
+        "query_stage": {
+            "dead": "Mrtva",
+            "initializing": "Inicializacija"
+        }
+    }
+}

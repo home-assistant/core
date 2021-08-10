@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "\u05e9\u05e0\u05d4 \u05de\u05e6\u05d1 HVAC \u05d1-{entity_name}",
+            "set_preset_mode": "\u05e9\u05e0\u05d4 \u05d4\u05d2\u05d3\u05e8\u05d4 \u05e7\u05d1\u05d5\u05e2\u05d4 \u05de\u05e8\u05d0\u05e9 \u05d1-{entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} \u05de\u05d5\u05d2\u05d3\u05e8 \u05dc\u05de\u05e6\u05d1 HVAC \u05e1\u05e4\u05e6\u05d9\u05e4\u05d9",
+            "is_preset_mode": "{entity_name} \u05de\u05d5\u05d2\u05d3\u05e8 \u05dc\u05de\u05e6\u05d1 \u05e1\u05e4\u05e6\u05d9\u05e4\u05d9 \u05d4\u05de\u05d5\u05d2\u05d3\u05e8 \u05de\u05e8\u05d0\u05e9"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "\u05d4\u05dc\u05d7\u05d5\u05ea \u05d4\u05e0\u05de\u05d3\u05d3\u05ea {entity_name} \u05d4\u05e9\u05ea\u05e0\u05ea\u05d4",
+            "current_temperature_changed": "\u05d4\u05d8\u05de\u05e4\u05e8\u05d8\u05d5\u05e8\u05d4 \u05d4\u05e0\u05de\u05d3\u05d3\u05ea \u05e9\u05dc {entity_name} \u05d4\u05e9\u05ea\u05e0\u05ea\u05d4",
+            "hvac_mode_changed": "{entity_name} \u05de\u05de\u05e6\u05d1 HVAC \u05d4\u05e9\u05ea\u05e0\u05d4"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "\u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9",
+            "cool": "\u05e7\u05d9\u05e8\u05d5\u05e8",
+            "dry": "\u05d9\u05d1\u05e9",
+            "fan_only": "\u05de\u05d0\u05d5\u05d5\u05e8\u05e8 \u05d1\u05dc\u05d1\u05d3",
+            "heat": "\u05d7\u05d9\u05de\u05d5\u05dd",
+            "heat_cool": "\u05d7\u05d9\u05de\u05d5\u05dd/\u05e7\u05d9\u05e8\u05d5\u05e8",
+            "off": "\u05db\u05d1\u05d5\u05d9"
+        }
+    },
+    "title": "\u05d0\u05e7\u05dc\u05d9\u05dd"
+}

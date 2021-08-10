@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "error": {
+            "invalid_zip_code": "Postcode is ongeldig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Postcode"
+                },
+                "description": "Vul uw Amerikaanse of Canadese postcode in.",
+                "title": "IQVIA"
+            }
+        }
+    }
+}

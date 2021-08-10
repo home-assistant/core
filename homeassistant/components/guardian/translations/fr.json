@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce p\u00e9riph\u00e9rique Guardian a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9.",
+            "already_in_progress": "La configuration de l'appareil Guardian est d\u00e9j\u00e0 en cours.",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Voulez-vous configurer cet appareil Guardian\u00a0?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Adresse IP",
+                    "port": "Port"
+                },
+                "description": "Configurez un appareil Elexa Guardian local."
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous configurer cet appareil Guardian?"
+            }
+        }
+    }
+}

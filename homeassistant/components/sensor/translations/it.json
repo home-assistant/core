@@ -1,0 +1,43 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Livello della batteria attuale di {entity_name}",
+            "is_carbon_dioxide": "Livello di concentrazione di anidride carbonica attuale in {entity_name}",
+            "is_carbon_monoxide": "Livello attuale di concentrazione di monossido di carbonio in {entity_name}",
+            "is_current": "Corrente attuale di {entity_name}",
+            "is_energy": "Energia attuale di {entity_name}",
+            "is_humidity": "Umidit\u00e0 attuale di {entity_name}",
+            "is_illuminance": "Illuminazione attuale di {entity_name}",
+            "is_power": "Alimentazione attuale di {entity_name}",
+            "is_power_factor": "Fattore di potenza attuale di {entity_name}",
+            "is_pressure": "Pressione attuale di {entity_name}",
+            "is_signal_strength": "Potenza del segnale attuale di {entity_name}",
+            "is_temperature": "Temperatura attuale di {entity_name}",
+            "is_value": "Valore attuale di {entity_name}",
+            "is_voltage": "Tensione attuale di {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "variazioni del livello di batteria di {entity_name} ",
+            "carbon_dioxide": "Variazioni della concentrazione di anidride carbonica di {entity_name}",
+            "carbon_monoxide": "Variazioni nella concentrazione di monossido di carbonio di {entity_name}",
+            "current": "variazioni di corrente di {entity_name}",
+            "energy": "variazioni di energia di {entity_name}",
+            "humidity": "variazioni di umidit\u00e0 di {entity_name} ",
+            "illuminance": "variazioni dell'illuminazione di {entity_name}",
+            "power": "variazioni di alimentazione di {entity_name}",
+            "power_factor": "variazioni del fattore di potenza di {entity_name}",
+            "pressure": "variazioni della pressione di {entity_name}",
+            "signal_strength": "variazioni della potenza del segnale di {entity_name}",
+            "temperature": "variazioni di temperatura di {entity_name}",
+            "value": "{entity_name} valori cambiati",
+            "voltage": "variazioni di tensione di {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Spento",
+            "on": "Acceso"
+        }
+    },
+    "title": "Sensore"
+}

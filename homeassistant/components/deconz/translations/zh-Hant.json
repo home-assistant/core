@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "no_bridges": "\u672a\u641c\u5c0b\u5230 deCONZ Bridfe",
+            "no_hardware_available": "deCONZ \u6c92\u6709\u4efb\u4f55\u7121\u7dda\u96fb\u88dd\u7f6e\u9023\u7dda",
+            "not_deconz_bridge": "\u975e deCONZ Bridge \u88dd\u7f6e",
+            "updated_instance": "\u4f7f\u7528\u65b0\u4e3b\u6a5f\u7aef\u4f4d\u5740\u66f4\u65b0 deCONZ \u88dd\u7f6e"
+        },
+        "error": {
+            "no_key": "\u7121\u6cd5\u53d6\u5f97 API key"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "hassio_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 deCONZ \u9598\u9053\u5668\u3002\u9644\u52a0\u5143\u4ef6\u70ba\uff1a{addon} \uff1f",
+                "title": "\u4f7f\u7528 Home Assistant \u9644\u52a0\u5143\u4ef6 deCONZ Zigbee \u9598\u9053\u5668"
+            },
+            "link": {
+                "description": "\u89e3\u9664 deCONZ \u9598\u9053\u5668\u9396\u5b9a\uff0c\u4ee5\u65bc Home Assistant \u9032\u884c\u8a3b\u518a\u3002\n\n1. \u9032\u5165 deCONZ \u7cfb\u7d71\u8a2d\u5b9a -> \u9598\u9053\u5668 -> \u9032\u968e\u8a2d\u5b9a\n2. \u6309\u4e0b\u300c\u8a8d\u8b49\u7a0b\u5f0f\uff08Authenticate app\uff09\u300d\u6309\u9215",
+                "title": "\u9023\u7d50\u81f3 deCONZ"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "\u9078\u64c7\u6240\u63a2\u7d22\u5230\u7684 deCONZ \u9598\u9053\u5668"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "\u5169\u500b\u6309\u9215",
+            "bottom_buttons": "\u4e0b\u65b9\u6309\u9215",
+            "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
+            "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
+            "button_5": "\u7b2c\u4e94\u500b\u6309\u9215",
+            "button_6": "\u7b2c\u516d\u500b\u6309\u9215",
+            "button_7": "\u7b2c\u4e03\u500b\u6309\u9215",
+            "button_8": "\u7b2c\u516b\u500b\u6309\u9215",
+            "close": "\u95dc\u9589",
+            "dim_down": "\u8abf\u6697",
+            "dim_up": "\u8abf\u4eae",
+            "left": "\u5de6",
+            "open": "\u958b\u555f",
+            "right": "\u53f3",
+            "side_1": "\u7b2c 1 \u9762",
+            "side_2": "\u7b2c 2 \u9762",
+            "side_3": "\u7b2c 3 \u9762",
+            "side_4": "\u7b2c 4 \u9762",
+            "side_5": "\u7b2c 5 \u9762",
+            "side_6": "\u7b2c 6 \u9762",
+            "top_buttons": "\u4e0a\u65b9\u6309\u9215",
+            "turn_off": "\u95dc\u9589",
+            "turn_on": "\u958b\u555f"
+        },
+        "trigger_type": {
+            "remote_awakened": "\u88dd\u7f6e\u5df2\u559a\u9192",
+            "remote_button_double_press": "\"{subtype}\" \u6309\u9215\u96d9\u64ca",
+            "remote_button_long_press": "\"{subtype}\" \u6309\u9215\u6301\u7e8c\u6309\u4e0b",
+            "remote_button_long_release": "\u9577\u6309\u5f8c\u91cb\u653e \"{subtype}\" \u6309\u9215",
+            "remote_button_quadruple_press": "\"{subtype}\" \u6309\u9215\u56db\u9023\u9ede\u64ca",
+            "remote_button_quintuple_press": "\"{subtype}\" \u6309\u9215\u4e94\u9023\u9ede\u64ca",
+            "remote_button_rotated": "\u65cb\u8f49 \"{subtype}\" \u6309\u9215",
+            "remote_button_rotated_fast": "\u5feb\u901f\u65cb\u8f49 \"{subtype}\" \u6309\u9215",
+            "remote_button_rotation_stopped": "\u65cb\u8f49 \"{subtype}\" \u6309\u9215\u5df2\u505c\u6b62",
+            "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
+            "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
+            "remote_button_triple_press": "\"{subtype}\" \u6309\u9215\u4e09\u9023\u9ede\u64ca",
+            "remote_double_tap": "\u88dd\u7f6e \"{subtype}\" \u96d9\u6572",
+            "remote_double_tap_any_side": "\u88dd\u7f6e\u4efb\u4e00\u9762\u96d9\u9ede\u9078",
+            "remote_falling": "\u88dd\u7f6e\u81ea\u7531\u843d\u4e0b",
+            "remote_flip_180_degrees": "\u88dd\u7f6e\u65cb\u8f49 180 \u5ea6",
+            "remote_flip_90_degrees": "\u88dd\u7f6e\u65cb\u8f49 90 \u5ea6",
+            "remote_gyro_activated": "\u88dd\u7f6e\u6416\u6643",
+            "remote_moved": "\u88dd\u7f6e\u79fb\u52d5\u81f3 \"{subtype}\" \u671d\u4e0a",
+            "remote_moved_any_side": "\u88dd\u7f6e\u4efb\u4e00\u9762\u671d\u4e0a",
+            "remote_rotate_from_side_1": "\u88dd\u7f6e\u7531\u300c\u7b2c 1 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_2": "\u88dd\u7f6e\u7531\u300c\u7b2c 2 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_3": "\u88dd\u7f6e\u7531\u300c\u7b2c 3 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_4": "\u88dd\u7f6e\u7531\u300c\u7b2c 4 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_5": "\u88dd\u7f6e\u7531\u300c\u7b2c 5 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_6": "\u88dd\u7f6e\u7531\u300c\u7b2c 6 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_turned_clockwise": "\u88dd\u7f6e\u9806\u6642\u91dd\u65cb\u8f49",
+            "remote_turned_counter_clockwise": "\u88dd\u7f6e\u9006\u6642\u91dd\u65cb\u8f49"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "\u5141\u8a31 deCONZ CLIP \u611f\u61c9\u5668",
+                    "allow_deconz_groups": "\u5141\u8a31 deCONZ \u71c8\u5149\u7fa4\u7d44",
+                    "allow_new_devices": "\u5141\u8a31\u81ea\u52d5\u5316\u65b0\u589e\u88dd\u7f6e"
+                },
+                "description": "\u8a2d\u5b9a deCONZ \u53ef\u8996\u88dd\u7f6e\u985e\u578b",
+                "title": "deCONZ \u9078\u9805"
+            }
+        }
+    }
+}

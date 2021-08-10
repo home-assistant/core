@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
+            "unknown_authorize_url_generation": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL adresy."
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "step": {
+            "auth": {
+                "title": "Ov\u011b\u0159it pomoc\u00ed TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostitel"
+                },
+                "title": "Vyberte koncov\u00fd bod."
+            }
+        }
+    }
+}

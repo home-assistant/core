@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_units": "Es wurden keine HVAC-Ger\u00e4te im CoolMasterNet-Host gefunden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Unterst\u00fctzt K\u00fchl-Modus",
+                    "dry": "Unterst\u00fctzt Trockenmodus",
+                    "fan_only": "Unterst\u00fctzt Fan-Only-Modus",
+                    "heat": "Unterst\u00fctzt Heiz-Modus",
+                    "heat_cool": "Unterst\u00fctzung automatische Heiz-/K\u00fchlmodus",
+                    "host": "Host",
+                    "off": "Kann ausgeschaltet werden"
+                },
+                "title": "Richte deine CoolMasterNet-Verbindungsdaten ein."
+            }
+        }
+    }
+}

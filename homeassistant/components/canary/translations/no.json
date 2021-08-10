@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Koble til Canary"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumenter sendt til ffmpeg for kameraer",
+                    "timeout": "Be om tidsavbrudd (sekunder)"
+                }
+            }
+        }
+    }
+}

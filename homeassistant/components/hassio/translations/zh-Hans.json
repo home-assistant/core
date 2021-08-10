@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "board": "\u677f\u5b50",
+            "disk_total": "\u78c1\u76d8\u5927\u5c0f",
+            "disk_used": "\u78c1\u76d8\u5df2\u7528",
+            "docker_version": "Docker \u7248\u672c",
+            "healthy": "\u5065\u5eb7",
+            "host_os": "\u5bbf\u4e3b\u64cd\u4f5c\u7cfb\u7edf",
+            "installed_addons": "\u5df2\u5b89\u88c5\u7684\u52a0\u8f7d\u9879",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor \u7248\u672c",
+            "supported": "\u53d7\u652f\u6301",
+            "update_channel": "\u66f4\u65b0\u901a\u9053",
+            "version_api": "API \u7248\u672c"
+        }
+    }
+}

@@ -1,8 +1,8 @@
 {
   "domain": "marytts",
-  "name": "Marytts",
-  "documentation": "https://www.home-assistant.io/components/marytts",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "MaryTTS",
+  "documentation": "https://www.home-assistant.io/integrations/marytts",
+  "requirements": ["speak2mary==1.4.0"],
+  "codeowners": [],
+  "iot_class": "local_push"
 }

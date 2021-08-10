@@ -1,10 +1,9 @@
 {
   "domain": "lcn",
-  "name": "Lcn",
-  "documentation": "https://www.home-assistant.io/components/lcn",
-  "requirements": [
-    "pypck==0.5.9"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "name": "LCN",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/lcn",
+  "requirements": ["pypck==0.7.10"],
+  "codeowners": ["@alengwenus"],
+  "iot_class": "local_push"
 }

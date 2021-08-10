@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "station": "N\u00famero de s\u00e8rie de l'estaci\u00f3",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    },
+    "title": "Wallbox"
+}

@@ -1,0 +1,28 @@
+lock_n_go:
+  name: Lock 'n' go
+  description: "Nuki Lock 'n' Go"
+  target:
+    entity:
+      integration: nuki
+      domain: lock
+  fields:
+    unlatch:
+      name: Unlatch
+      description: Whether to unlatch the lock.
+      default: false
+      selector:
+        boolean:
+set_continuous_mode:
+  name: Set Continuous Mode
+  description: "Enable or disable Continuous Mode on Nuki Opener"
+  target:
+    entity:
+      integration: nuki
+      domain: lock
+  fields:
+    enable:
+      name: Enable
+      description: Whether to enable or disable the feature
+      default: false
+      selector:
+        boolean:

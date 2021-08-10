@@ -3,7 +3,10 @@ import logging
 
 from homeassistant.components import light, tellduslive
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
@@ -11,18 +14,9 @@ from .entry import TelldusLiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up TelldusLive.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up tellduslive sensors dynamically."""
+
     async def async_discover_light(device_id):
         """Discover and add a discovered sensor."""
         client = hass.data[tellduslive.DOMAIN]
@@ -30,13 +24,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(light.DOMAIN,
-                                                 tellduslive.DOMAIN),
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, tellduslive.DOMAIN),
         async_discover_light,
     )
 
 
-class TelldusLiveLight(TelldusLiveEntity, Light):
+class TelldusLiveLight(TelldusLiveEntity, LightEntity):
     """Representation of a Tellstick Net light."""
 
     def __init__(self, client, device_id):
@@ -69,9 +62,10 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
         if brightness == 0:
             fallback_brightness = 100
-            _LOGGER.info("Setting brightness to %d%%, because it was 0",
-                         fallback_brightness)
-            brightness = int(fallback_brightness*255/100)
+            _LOGGER.info(
+                "Setting brightness to %d%%, because it was 0", fallback_brightness
+            )
+            brightness = int(fallback_brightness * 255 / 100)
         self.device.dim(level=brightness)
         self.changed()
 

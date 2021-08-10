@@ -1,0 +1,299 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2019-07-19T07:38:39Z",
+            "mapVersion": "8.30.98.154",
+            "moduleVersion": "7.2.201928-4446",
+            "interfaceVersion": "2.6.64",
+            "availableMapVersion": [
+                "8.30.98.154"
+            ]
+        },
+        "route": [
+            {
+                "waypoint": [
+                    {
+                        "linkId": "+732182239",
+                        "mappedPosition": {
+                            "latitude": 38.9,
+                            "longitude": -77.0488358
+                        },
+                        "originalPosition": {
+                            "latitude": 38.9,
+                            "longitude": -77.0483301
+                        },
+                        "type": "stopOver",
+                        "spot": 0.4946237,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "22nd St NW",
+                        "label": "22nd St NW",
+                        "shapeIndex": 0,
+                        "source": "user"
+                    },
+                    {
+                        "linkId": "+942865877",
+                        "mappedPosition": {
+                            "latitude": 38.9999735,
+                            "longitude": -77.100141
+                        },
+                        "originalPosition": {
+                            "latitude": 38.9999999,
+                            "longitude": -77.1000001
+                        },
+                        "type": "stopOver",
+                        "spot": 1,
+                        "sideOfStreet": "left",
+                        "mappedRoadName": "Service Rd S",
+                        "label": "Service Rd S",
+                        "shapeIndex": 279,
+                        "source": "user"
+                    }
+                ],
+                "mode": {
+                    "type": "fastest",
+                    "transportModes": [
+                        "car"
+                    ],
+                    "trafficMode": "enabled",
+                    "feature": []
+                },
+                "leg": [
+                    {
+                        "start": {
+                            "linkId": "+732182239",
+                            "mappedPosition": {
+                                "latitude": 38.9,
+                                "longitude": -77.0488358
+                            },
+                            "originalPosition": {
+                                "latitude": 38.9,
+                                "longitude": -77.0483301
+                            },
+                            "type": "stopOver",
+                            "spot": 0.4946237,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "22nd St NW",
+                            "label": "22nd St NW",
+                            "shapeIndex": 0,
+                            "source": "user"
+                        },
+                        "end": {
+                            "linkId": "+942865877",
+                            "mappedPosition": {
+                                "latitude": 38.9999735,
+                                "longitude": -77.100141
+                            },
+                            "originalPosition": {
+                                "latitude": 38.9999999,
+                                "longitude": -77.1000001
+                            },
+                            "type": "stopOver",
+                            "spot": 1,
+                            "sideOfStreet": "left",
+                            "mappedRoadName": "Service Rd S",
+                            "label": "Service Rd S",
+                            "shapeIndex": 279,
+                            "source": "user"
+                        },
+                        "length": 23903,
+                        "travelTime": 1884,
+                        "maneuver": [
+                            {
+                                "position": {
+                                    "latitude": 38.9,
+                                    "longitude": -77.0488358
+                                },
+                                "instruction": "Head toward <span class=\"toward_street\">I St NW</span> on <span class=\"street\">22nd St NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">279 m</span>.</span>",
+                                "travelTime": 95,
+                                "length": 279,
+                                "id": "M1",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9021051,
+                                    "longitude": -77.048825
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> toward <span class=\"sign\">Pennsylvania Ave NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">71 m</span>.</span>",
+                                "travelTime": 21,
+                                "length": 71,
+                                "id": "M2",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.902545,
+                                    "longitude": -77.0494151
+                                },
+                                "instruction": "Take the <span class=\"exit\">3rd exit</span> from Washington Cir NW roundabout onto <span class=\"next-street\">K St NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">352 m</span>.</span>",
+                                "travelTime": 90,
+                                "length": 352,
+                                "id": "M3",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9026523,
+                                    "longitude": -77.0529449
+                                },
+                                "instruction": "Keep <span class=\"direction\">left</span> onto <span class=\"next-street\">K St NW</span> <span class=\"number\">(US-29)</span>. <span class=\"distance-description\">Go for <span class=\"length\">201 m</span>.</span>",
+                                "travelTime": 30,
+                                "length": 201,
+                                "id": "M4",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9025235,
+                                    "longitude": -77.0552516
+                                },
+                                "instruction": "Keep <span class=\"direction\">right</span> onto <span class=\"next-street\">Whitehurst Fwy</span> <span class=\"number\">(US-29)</span>. <span class=\"distance-description\">Go for <span class=\"length\">1.4 km</span>.</span>",
+                                "travelTime": 131,
+                                "length": 1381,
+                                "id": "M5",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9050448,
+                                    "longitude": -77.0701969
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">M St NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">784 m</span>.</span>",
+                                "travelTime": 78,
+                                "length": 784,
+                                "id": "M6",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9060318,
+                                    "longitude": -77.0790696
+                                },
+                                "instruction": "Turn <span class=\"direction\">slightly left</span> onto <span class=\"next-street\">Canal Rd NW</span>. <span class=\"distance-description\">Go for <span class=\"length\">4.2 km</span>.</span>",
+                                "travelTime": 277,
+                                "length": 4230,
+                                "id": "M7",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9303219,
+                                    "longitude": -77.1117926
+                                },
+                                "instruction": "Continue on <span class=\"next-street\">Clara Barton Pkwy</span>. <span class=\"distance-description\">Go for <span class=\"length\">844 m</span>.</span>",
+                                "travelTime": 55,
+                                "length": 844,
+                                "id": "M8",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9368558,
+                                    "longitude": -77.1166742
+                                },
+                                "instruction": "Continue on <span class=\"next-street\">Clara Barton Pkwy</span>. <span class=\"distance-description\">Go for <span class=\"length\">4.7 km</span>.</span>",
+                                "travelTime": 298,
+                                "length": 4652,
+                                "id": "M9",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9706838,
+                                    "longitude": -77.1461463
+                                },
+                                "instruction": "Keep <span class=\"direction\">right</span> onto <span class=\"next-street\">Cabin John Pkwy N</span> toward <span class=\"sign\"><span lang=\"en\">I-495 N</span></span>. <span class=\"distance-description\">Go for <span class=\"length\">2.1 km</span>.</span>",
+                                "travelTime": 91,
+                                "length": 2069,
+                                "id": "M10",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9858222,
+                                    "longitude": -77.1571326
+                                },
+                                "instruction": "Take <span class=\"direction\">left</span> ramp onto <span class=\"number\">I-495 N</span> <span class=\"next-street\">(Capital Beltway)</span>. <span class=\"distance-description\">Go for <span class=\"length\">5.5 km</span>.</span>",
+                                "travelTime": 238,
+                                "length": 5538,
+                                "id": "M11",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 39.0153587,
+                                    "longitude": -77.1221781
+                                },
+                                "instruction": "Take exit <span class=\"exit\">36</span> toward <span class=\"sign\"><span lang=\"en\">Bethesda</span></span> onto <span class=\"number\">MD-187 S</span> <span class=\"next-street\">(Old Georgetown Rd)</span>. <span class=\"distance-description\">Go for <span class=\"length\">2.4 km</span>.</span>",
+                                "travelTime": 211,
+                                "length": 2365,
+                                "id": "M12",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9981818,
+                                    "longitude": -77.1093571
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Lincoln Dr</span>. <span class=\"distance-description\">Go for <span class=\"length\">506 m</span>.</span>",
+                                "travelTime": 127,
+                                "length": 506,
+                                "id": "M13",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9987397,
+                                    "longitude": -77.1037138
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">Service Rd W</span>. <span class=\"distance-description\">Go for <span class=\"length\">121 m</span>.</span>",
+                                "travelTime": 36,
+                                "length": 121,
+                                "id": "M14",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9976454,
+                                    "longitude": -77.1036172
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Service Rd S</span>. <span class=\"distance-description\">Go for <span class=\"length\">510 m</span>.</span>",
+                                "travelTime": 106,
+                                "length": 510,
+                                "id": "M15",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 38.9999735,
+                                    "longitude": -77.100141
+                                },
+                                "instruction": "Arrive at <span class=\"street\">Service Rd S</span>. Your destination is on the left.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M16",
+                                "_type": "PrivateTransportManeuverType"
+                            }
+                        ]
+                    }
+                ],
+                "summary": {
+                    "distance": 23903,
+                    "trafficTime": 1861,
+                    "baseTime": 1803,
+                    "flags": [
+                        "noThroughRoad",
+                        "motorway",
+                        "builtUpArea",
+                        "park",
+                        "privateRoad"
+                    ],
+                    "text": "The trip takes <span class=\"length\">23.9 km</span> and <span class=\"time\">31 mins</span>.",
+                    "travelTime": 1861,
+                    "_type": "RouteSummaryType"
+                }
+            }
+        ],
+        "language": "en-us"
+    }
+}

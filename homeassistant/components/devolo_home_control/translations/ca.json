@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "reauth_failed": "Utilitza el mateix usuari de mydevolo que abans."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mydevolo_url": "URL de mydevolo",
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic / ID de devolo"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic / ID de devolo"
+                }
+            }
+        }
+    }
+}

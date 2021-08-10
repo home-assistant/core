@@ -1,140 +1,173 @@
 """Support for Generic Modbus Thermostats."""
+from __future__ import annotations
+
 import logging
 import struct
+from typing import Any
 
-import voluptuous as vol
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_STRUCTURE,
+    CONF_TEMPERATURE_UNIT,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE
-import homeassistant.helpers.config_validation as cv
+from . import get_hub
+from .base_platform import BaseStructPlatform
+from .const import (
+    ATTR_TEMPERATURE,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_REGISTERS,
+    CONF_CLIMATES,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    CONF_STEP,
+    CONF_TARGET_TEMP,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT64,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT64,
+)
+from .modbus import ModbusHub
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
-
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TARGET_TEMP = 'target_temp_register'
-CONF_CURRENT_TEMP = 'current_temp_register'
-CONF_DATA_TYPE = 'data_type'
-CONF_COUNT = 'data_count'
-CONF_PRECISION = 'precision'
 
-DATA_TYPE_INT = 'int'
-DATA_TYPE_UINT = 'uint'
-DATA_TYPE_FLOAT = 'float'
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: DiscoveryInfoType | None = None,
+):
+    """Read configuration and create Modbus climate."""
+    if discovery_info is None:
+        return
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_SLAVE): cv.positive_int,
-    vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-    vol.Optional(CONF_COUNT, default=2): cv.positive_int,
-    vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT):
-        vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]),
-    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-    vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
-})
+    entities = []
+    for entity in discovery_info[CONF_CLIMATES]:
+        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
+        entities.append(ModbusThermostat(hub, entity))
+
+    async_add_entities(entities)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Modbus Thermostat Platform."""
-    name = config.get(CONF_NAME)
-    modbus_slave = config.get(CONF_SLAVE)
-    target_temp_register = config.get(CONF_TARGET_TEMP)
-    current_temp_register = config.get(CONF_CURRENT_TEMP)
-    data_type = config.get(CONF_DATA_TYPE)
-    count = config.get(CONF_COUNT)
-    precision = config.get(CONF_PRECISION)
-    hub_name = config.get(CONF_HUB)
-    hub = hass.data[MODBUS_DOMAIN][hub_name]
-
-    add_entities([ModbusThermostat(
-        hub, name, modbus_slave, target_temp_register, current_temp_register,
-        data_type, count, precision)], True)
-
-
-class ModbusThermostat(ClimateDevice):
+class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
-    def __init__(self, hub, name, modbus_slave, target_temp_register,
-                 current_temp_register, data_type, count, precision):
-        """Initialize the unit."""
-        self._hub = hub
-        self._name = name
-        self._slave = modbus_slave
-        self._target_temperature_register = target_temp_register
-        self._current_temperature_register = current_temp_register
-        self._target_temperature = None
-        self._current_temperature = None
-        self._data_type = data_type
-        self._count = int(count)
-        self._precision = precision
-        self._structure = '>f'
+    def __init__(
+        self,
+        hub: ModbusHub,
+        config: dict[str, Any],
+    ) -> None:
+        """Initialize the modbus thermostat."""
+        super().__init__(hub, config)
+        self._target_temperature_register = config[CONF_TARGET_TEMP]
+        self._unit = config[CONF_TEMPERATURE_UNIT]
+        self._structure = config[CONF_STRUCTURE]
 
-        data_types = {
-            DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
-            DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
-            DATA_TYPE_FLOAT: {1: 'e', 2: 'f', 4: 'd'},
-        }
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_hvac_mode = HVAC_MODE_AUTO
+        self._attr_hvac_modes = [HVAC_MODE_AUTO]
+        self._attr_current_temperature = None
+        self._attr_target_temperature = None
+        self._attr_temperature_unit = (
+            TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
+        )
+        self._attr_precision = (
+            PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
+        )
+        self._attr_min_temp = config[CONF_MIN_TEMP]
+        self._attr_max_temp = config[CONF_MAX_TEMP]
+        self._attr_target_temperature_step = config[CONF_TARGET_TEMP]
+        self._attr_target_temperature_step = config[CONF_STEP]
 
-        self._structure = '>{}'.format(
-            data_types[self._data_type][self._count])
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await self.async_base_added_to_hass()
+        state = await self.async_get_last_state()
+        if state and state.attributes.get(ATTR_TEMPERATURE):
+            self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        # Home Assistant expects this method.
+        # We'll keep it here to avoid getting exceptions.
 
-    def update(self):
-        """Update Target & Current Temperature."""
-        self._target_temperature = self.read_register(
-            self._target_temperature_register)
-        self._current_temperature = self.read_register(
-            self._current_temperature_register)
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature."""
-        return self._target_temperature
-
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        if target_temperature is None:
+        if ATTR_TEMPERATURE not in kwargs:
             return
-        byte_string = struct.pack(self._structure, target_temperature)
-        register_value = struct.unpack('>h', byte_string[0:2])[0]
+        target_temperature = (
+            float(kwargs.get(ATTR_TEMPERATURE)) - self._offset
+        ) / self._scale
+        if self._data_type in (
+            DATA_TYPE_INT16,
+            DATA_TYPE_INT32,
+            DATA_TYPE_INT64,
+            DATA_TYPE_UINT16,
+            DATA_TYPE_UINT32,
+            DATA_TYPE_UINT64,
+        ):
+            target_temperature = int(target_temperature)
+        as_bytes = struct.pack(self._structure, target_temperature)
+        raw_regs = [
+            int.from_bytes(as_bytes[i : i + 2], "big")
+            for i in range(0, len(as_bytes), 2)
+        ]
+        registers = self._swap_registers(raw_regs)
+        result = await self._hub.async_pymodbus_call(
+            self._slave,
+            self._target_temperature_register,
+            registers,
+            CALL_TYPE_WRITE_REGISTERS,
+        )
+        self._attr_available = result is not None
+        await self.async_update()
 
-        try:
-            self.write_register(
-                self._target_temperature_register, register_value)
-        except AttributeError as ex:
-            _LOGGER.error(ex)
+    async def async_update(self, now=None):
+        """Update Target & Current Temperature."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
 
-    def read_register(self, register):
-        """Read holding register using the Modbus hub slave."""
-        try:
-            result = self._hub.read_holding_registers(
-                self._slave, register, self._count)
-        except AttributeError as ex:
-            _LOGGER.error(ex)
-        byte_string = b''.join(
-            [x.to_bytes(2, byteorder='big') for x in result.registers])
-        val = struct.unpack(self._structure, byte_string)[0]
-        register_value = format(val, '.{}f'.format(self._precision))
-        return register_value
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
+        self._attr_target_temperature = await self._async_read_register(
+            CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
+        )
+        self._attr_current_temperature = await self._async_read_register(
+            self._input_type, self._address
+        )
+        self._call_active = False
+        self.async_write_ha_state()
 
-    def write_register(self, register, value):
-        """Write register using the Modbus hub slave."""
-        self._hub.write_registers(self._slave, register, [value, 0])
+    async def _async_read_register(self, register_type, register) -> float | None:
+        """Read register using the Modbus hub slave."""
+        result = await self._hub.async_pymodbus_call(
+            self._slave, register, self._count, register_type
+        )
+        if result is None:
+            self._attr_available = False
+            return -1
+
+        self._value = self.unpack_structure_result(result.registers)
+        self._attr_available = True
+
+        if self._value is None:
+            return None
+        return float(self._value)

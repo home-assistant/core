@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n.",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rlek, k\u00f6vesd a dokument\u00e1ci\u00f3t.",
+            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "unknown_authorize_url_generation": "Ismeretlen hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u00e9si link gener\u00e1l\u00e1sa sor\u00e1n."
+        },
+        "create_entry": {
+            "default": "Sikeres hiteles\u00edt\u00e9s"
+        },
+        "error": {
+            "internal_error": "Bels\u0151 hiba t\u00f6rt\u00e9nt a k\u00f3d valid\u00e1l\u00e1s\u00e1n\u00e1l",
+            "invalid_pin": "\u00c9rv\u00e9nytelen PIN-k\u00f3d",
+            "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a k\u00f3d \u00e9rv\u00e9nyes\u00edt\u00e9se sor\u00e1n.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Szolg\u00e1ltat\u00f3"
+                },
+                "description": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert",
+                "title": "Hiteles\u00edt\u00e9si Szolg\u00e1ltat\u00f3"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN-k\u00f3d"
+                },
+                "description": "A Nest-fi\u00f3k \u00f6sszekapcsol\u00e1s\u00e1hoz [enged\u00e9lyezze fi\u00f3kj\u00e1t]({url}). \n\nAz enged\u00e9lyez\u00e9s ut\u00e1n m\u00e1solja be az PIN k\u00f3dot.",
+                "title": "Nest fi\u00f3k \u00f6sszekapcsol\u00e1sa"
+            },
+            "pick_implementation": {
+                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+            },
+            "reauth_confirm": {
+                "description": "A Nest integr\u00e1ci\u00f3nak \u00fajra kell hiteles\u00edtenie a fi\u00f3kodat",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Mozg\u00e1s \u00e9szlelve",
+            "camera_person": "Szem\u00e9ly \u00e9szlelve",
+            "camera_sound": "Hang \u00e9szlelve",
+            "doorbell_chime": "Cseng\u0151 megnyomva"
+        }
+    }
+}

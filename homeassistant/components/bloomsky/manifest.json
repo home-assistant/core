@@ -1,8 +1,7 @@
 {
   "domain": "bloomsky",
-  "name": "Bloomsky",
-  "documentation": "https://www.home-assistant.io/components/bloomsky",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "BloomSky",
+  "documentation": "https://www.home-assistant.io/integrations/bloomsky",
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

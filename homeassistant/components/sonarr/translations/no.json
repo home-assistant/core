@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "reauth_confirm": {
+                "description": "Sonarr-integrasjonen m\u00e5 autentiseres p\u00e5 nytt med Sonarr API vert p\u00e5: {host}",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "base_path": "Bane til API",
+                    "host": "Vert",
+                    "port": "Port",
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Antall kommende dager som skal vises",
+                    "wanted_max_items": "Maks antall \u00f8nskede elementer som skal vises"
+                }
+            }
+        }
+    }
+}

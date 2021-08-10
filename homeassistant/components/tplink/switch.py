@@ -1,136 +1,97 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
-import logging
-import time
+from __future__ import annotations
 
-from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH, SwitchDevice)
-from homeassistant.const import ATTR_VOLTAGE
+from typing import Any
+
+from pyHS100 import SmartPlug
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ALIAS, CONF_DEVICE_ID, CONF_MAC, CONF_STATE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
-
-PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
-ATTR_CURRENT_A = 'current_a'
-
-
-async def async_setup_platform(hass, config, add_entities,
-                               discovery_info=None):
-    """Set up the platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning('Loading as a platform is no longer supported, '
-                    'convert to use the tplink component.')
+from .const import (
+    CONF_MODEL,
+    CONF_SW_VERSION,
+    CONF_SWITCH,
+    COORDINATORS,
+    DOMAIN as TPLINK_DOMAIN,
+)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[TPLINK_DOMAIN][CONF_SWITCH]:
-        devs.append(SmartPlugSwitch(dev))
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up switches."""
+    entities: list[SmartPlugSwitch] = []
+    coordinators: list[SmartPlugDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
+        COORDINATORS
+    ]
+    switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
+    for switch in switches:
+        coordinator = coordinators[switch.context or switch.mac]
+        entities.append(SmartPlugSwitch(switch, coordinator))
 
-    async_add_entities(devs, True)
-
-    return True
+    async_add_entities(entities)
 
 
-class SmartPlugSwitch(SwitchDevice):
+class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug):
+    def __init__(
+        self, smartplug: SmartPlug, coordinator: DataUpdateCoordinator
+    ) -> None:
         """Initialize the switch."""
+        super().__init__(coordinator)
         self.smartplug = smartplug
-        self._sysinfo = None
-        self._state = None
-        self._available = False
-        # Set up emeter cache
-        self._emeter_params = {}
 
     @property
-    def unique_id(self):
+    def data(self) -> dict[str, Any]:
+        """Return data from DataUpdateCoordinator."""
+        return self.coordinator.data
+
+    @property
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return self._sysinfo["mac"]
+        return self.data[CONF_DEVICE_ID]
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the Smart Plug."""
-        return self._sysinfo["alias"]
+        return self.data[CONF_ALIAS]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return {
-            "name": self.name,
-            "model": self._sysinfo["model"],
-            "manufacturer": 'TP-Link',
-            "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._sysinfo["mac"])
-            },
-            "sw_version": self._sysinfo["sw_ver"],
+            "name": self.data[CONF_ALIAS],
+            "model": self.data[CONF_MODEL],
+            "manufacturer": "TP-Link",
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.data[CONF_MAC])},
+            "sw_version": self.data[CONF_SW_VERSION],
         }
 
     @property
-    def available(self) -> bool:
-        """Return if switch is available."""
-        return self._available
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return self._state
+        return self.data[CONF_STATE]
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.smartplug.turn_on()
+        await self.hass.async_add_executor_job(self.smartplug.turn_on)
+        await self.coordinator.async_refresh()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self.smartplug.turn_off()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._emeter_params
-
-    def update(self):
-        """Update the TP-Link switch's state."""
-        from pyHS100 import SmartDeviceException
-        try:
-            if not self._sysinfo:
-                self._sysinfo = self.smartplug.sys_info
-
-            self._state = self.smartplug.state == \
-                self.smartplug.SWITCH_STATE_ON
-
-            if self.smartplug.has_emeter:
-                emeter_readings = self.smartplug.get_emeter_realtime()
-
-                self._emeter_params[ATTR_CURRENT_POWER_W] \
-                    = "{:.2f}".format(emeter_readings["power"])
-                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] \
-                    = "{:.3f}".format(emeter_readings["total"])
-                self._emeter_params[ATTR_VOLTAGE] \
-                    = "{:.1f}".format(emeter_readings["voltage"])
-                self._emeter_params[ATTR_CURRENT_A] \
-                    = "{:.2f}".format(emeter_readings["current"])
-
-                emeter_statics = self.smartplug.get_emeter_daily()
-                try:
-                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            emeter_statics[int(time.strftime("%e"))])
-                except KeyError:
-                    # Device returned no daily history
-                    pass
-
-            self._available = True
-
-        except (SmartDeviceException, OSError) as ex:
-            if self._available:
-                _LOGGER.warning("Could not read state for %s: %s",
-                                self.smartplug.host, ex)
-            self._available = False
+        await self.hass.async_add_executor_job(self.smartplug.turn_off)
+        await self.coordinator.async_refresh()

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API-token"
+                },
+                "description": "U hebt het API-token nodig van https://home.juice.net/Manage.",
+                "title": "Maak verbinding met JuiceNet"
+            }
+        }
+    }
+}

@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "unknown_authorize_url_generation": "Kesalahan tidak dikenal ketika menghasilkan URL otorisasi."
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "error": {
+            "internal_error": "Kesalahan internal saat memvalidasi kode",
+            "invalid_pin": "Invalid Kode PIN",
+            "timeout": "Tenggang waktu memvalidasi kode telah habis.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Penyedia"
+                },
+                "description": "Pilih Metode Autentikasi",
+                "title": "Penyedia Autentikasi"
+            },
+            "link": {
+                "data": {
+                    "code": "Kode PIN"
+                },
+                "description": "Untuk menautkan akun Nest Anda, [otorisasi akun Anda]({url}).\n\nSetelah otorisasi, salin dan tempel kode PIN yang disediakan di bawah ini.",
+                "title": "Tautkan Akun Nest"
+            },
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            },
+            "reauth_confirm": {
+                "description": "Integrasi Nest perlu mengautentikasi ulang akun Anda",
+                "title": "Autentikasi Ulang Integrasi"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Gerakan terdeteksi",
+            "camera_person": "Orang terdeteksi",
+            "camera_sound": "Suara terdeteksi",
+            "doorbell_chime": "Bel pintu ditekan"
+        }
+    }
+}

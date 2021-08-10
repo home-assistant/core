@@ -1,0 +1,36 @@
+set_aircleaner_mode:
+  name: Set air cleaner mode
+  description: "The air cleaner mode."
+  target:
+    entity:
+      integration: nexia
+      domain: climate
+  fields:
+    aircleaner_mode:
+      name: Air cleaner mode
+      description: 'The air cleaner mode to set.'
+      required: true
+      selector:
+        select:
+          options:
+            - 'allergy'
+            - 'auto'
+            - 'quick'
+
+set_humidify_setpoint:
+  name: Set humidify set point
+  description: "The humidification set point."
+  target:
+    entity:
+      integration: nexia
+      domain: climate
+  fields:
+    humidity:
+      name: Humidify
+      description: "The humidification setpoint."
+      required: true
+      selector:
+        number:
+          min: 35
+          max: 65
+          unit_of_measurement: '%'

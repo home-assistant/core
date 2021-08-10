@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
+            "unknown_authorize_url_generation": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
+        },
+        "error": {
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "auth": {
+                "description": "\u6b32\u9023\u7d50 TelldusLive \u5e33\u865f\uff1a\n 1. \u9ede\u9078\u4e0b\u65b9\u9023\u7d50\n 2. \u767b\u5165\u81f3 Telldus Live\n 3. \u5c0d **{app_name}** \u9032\u884c\u6388\u6b0a\uff08\u9ede\u9078 **Yes**\uff09\u3002\n 4. \u56de\u5230\u672c\u9801\u9762\u4e26\u9ede\u9078 **\u50b3\u9001**\u3002\n\n [Link TelldusLive account]({auth_url})",
+                "title": "TelldusLive \u8a8d\u8b49"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u7a7a\u767d",
+                "title": "\u9078\u64c7\u7aef\u9ede\u3002"
+            }
+        }
+    }
+}

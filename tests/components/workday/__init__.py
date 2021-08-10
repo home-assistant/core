@@ -1,1 +1,1 @@
-"""Tests the HASS workday binary sensor."""
+"""Tests the Home Assistant workday binary sensor."""

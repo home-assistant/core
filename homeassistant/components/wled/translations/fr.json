@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cet appareil WLED est d\u00e9j\u00e0 configur\u00e9.",
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "flow_title": "WLED: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP"
+                },
+                "description": "Configurez votre WLED pour l'int\u00e9grer \u00e0 Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter le dispositif WLED nomm\u00e9 `{name}` \u00e0 Home Assistant?",
+                "title": "Dispositif WLED d\u00e9couvert"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Garder la lumi\u00e8re principale, m\u00eame avec 1 segment LED."
+                }
+            }
+        }
+    }
+}

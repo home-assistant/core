@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Emailadresse"
+                },
+                "title": "Indtast brugernavn og adgangskode"
+            }
+        }
+    }
+}

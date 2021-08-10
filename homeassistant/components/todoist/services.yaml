@@ -1,0 +1,95 @@
+new_task:
+  name: New task
+  description: Create a new task and add it to a project.
+  fields:
+    content:
+      name: Content
+      description: The name of the task.
+      required: true
+      example: Pick up the mail.
+      selector:
+        text:
+    project:
+      name: Project
+      description: The name of the project this task should belong to.
+      example: Errands
+      default: Inbox
+      selector:
+        text:
+    labels:
+      name: Labels
+      description: Any labels that you want to apply to this task, separated by a comma.
+      example: Chores,Delivieries
+      selector:
+        text:
+    priority:
+      name: Priority
+      description: The priority of this task, from 1 (normal) to 4 (urgent).
+      selector:
+        number:
+          min: 1
+          max: 4
+    due_date_string:
+      name: Dure date string
+      description: The day this task is due, in natural language.
+      example: Tomorrow
+      selector:
+        text:
+    due_date_lang:
+      name: Due data language
+      description: The language of due_date_string.
+      selector:
+        select:
+          options:
+            - 'da'
+            - 'de'
+            - 'en'
+            - 'es'
+            - 'fr'
+            - 'it'
+            - 'ja'
+            - 'ko'
+            - 'nl'
+            - 'pl'
+            - 'pt'
+            - 'ru'
+            - 'sv'
+            - 'zh'
+    due_date:
+      name: Due date
+      description: The time this task is due, in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS, in UTC timezone.
+      example: "2019-10-22"
+      selector:
+        text:
+    reminder_date_string:
+      name: Reminder date string
+      description: When should user be reminded of this task, in natural language.
+      example: Tomorrow
+      selector:
+        text:
+    reminder_date_lang:
+      name: Reminder data language
+      description: The language of reminder_date_string.
+      selector:
+        select:
+          options:
+            - 'da'
+            - 'de'
+            - 'en'
+            - 'es'
+            - 'fr'
+            - 'it'
+            - 'ja'
+            - 'ko'
+            - 'nl'
+            - 'pl'
+            - 'pt'
+            - 'ru'
+            - 'sv'
+            - 'zh'
+    reminder_date:
+      name: Reminder date
+      description: When should user be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone.
+      example: "2019-10-22T10:30:00"
+      selector:
+        text:

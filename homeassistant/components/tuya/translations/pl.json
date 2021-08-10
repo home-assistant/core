@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "flow_title": "Konfiguracja integracji Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Kod kraju twojego konta (np. 1 dla USA lub 86 dla Chin)",
+                    "password": "Has\u0142o",
+                    "platform": "Aplikacja, w kt\u00f3rej zarejestrowane jest Twoje konto",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
+                "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "error": {
+            "dev_multi_type": "Wybrane urz\u0105dzenia do skonfigurowania musz\u0105 by\u0107 tego samego typu",
+            "dev_not_config": "Typ urz\u0105dzenia nie jest konfigurowalny",
+            "dev_not_found": "Nie znaleziono urz\u0105dzenia"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Zakres jasno\u015bci u\u017cywany przez urz\u0105dzenie",
+                    "curr_temp_divider": "Dzielnik aktualnej warto\u015bci temperatury (0 = u\u017cyj warto\u015bci domy\u015blnej)",
+                    "max_kelvin": "Maksymalna obs\u0142ugiwana temperatura barwy w kelwinach",
+                    "max_temp": "Maksymalna temperatura docelowa (u\u017cyj min i max = 0 dla warto\u015bci domy\u015blnej)",
+                    "min_kelvin": "Minimalna obs\u0142ugiwana temperatura barwy w kelwinach",
+                    "min_temp": "Minimalna temperatura docelowa (u\u017cyj min i max = 0 dla warto\u015bci domy\u015blnej)",
+                    "set_temp_divided": "U\u017cyj podzielonej warto\u015bci temperatury dla polecenia ustawienia temperatury",
+                    "support_color": "Wymu\u015b obs\u0142ug\u0119 kolor\u00f3w",
+                    "temp_divider": "Dzielnik warto\u015bci temperatury (0 = u\u017cyj warto\u015bci domy\u015blnej)",
+                    "temp_step_override": "Krok docelowej temperatury",
+                    "tuya_max_coltemp": "Maksymalna temperatura barwy raportowana przez urz\u0105dzenie",
+                    "unit_of_measurement": "Jednostka temperatury u\u017cywana przez urz\u0105dzenie"
+                },
+                "description": "Skonfiguruj opcje, aby dostosowa\u0107 wy\u015bwietlane informacje dla urz\u0105dzenia {device_type} `{device_name}'",
+                "title": "Konfiguracja urz\u0105dzenia Tuya"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania nowych urz\u0105dze\u0144 (w sekundach)",
+                    "list_devices": "Wybierz urz\u0105dzenia do skonfigurowania lub pozostaw puste, aby zapisa\u0107 konfiguracj\u0119",
+                    "query_device": "Wybierz urz\u0105dzenie, kt\u00f3re b\u0119dzie u\u017cywa\u0107 metody odpytywania w celu szybszej aktualizacji statusu",
+                    "query_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania odpytywanego urz\u0105dzenia w sekundach"
+                },
+                "description": "Nie ustawiaj zbyt niskich warto\u015bci skanowania, bo zako\u0144cz\u0105 si\u0119 niepowodzeniem, generuj\u0105c komunikat o b\u0142\u0119dzie w logu",
+                "title": "Konfiguracja opcji Tuya"
+            }
+        }
+    }
+}

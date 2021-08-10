@@ -1,0 +1,17 @@
+<MediaContainer size="1">
+<Video ratingKey="203216" guid="plex://episode/6083464579af59002d1e35bc" type="episode" title="The Price Is Right" titleSort="Price Is Right" summary="" index="105" year="2021" addedAt="1619538677" genuineMediaAnalysis="1" grandparentThumb="https://metadata-static.plex.tv/5/gracenote/55af94d4c6e3139f2cd925cd6436d514.jpg" grandparentTitle="The Price Is Right" key="/livetv/sessions/live_tv_1" live="1" parentIndex="49">
+<Media id="382631" width="1920" height="1080" aspectRatio="1.78" audioChannels="6" audioCodec="ac3" videoCodec="mpeg2video" videoResolution="1080" container="mpegts" origin="livetv" protocol="hls" uuid="live_tv_1">
+<Part id="383069" container="mpegts" deepAnalysisVersion="4" protocol="hls">
+<Stream id="770097" streamType="1" codec="mpeg2video" index="0" closedCaptions="1" frameRate="29.970" height="1080" level="4" pixelAspectRatio="1:1" profile="main" scanType="interlaced" width="1920" displayTitle="1080i (MPEG2VIDEO)" extendedDisplayTitle="1080i (MPEG2VIDEO)">
+</Stream>
+<Stream id="770098" streamType="2" selected="1" codec="ac3" index="1" channels="6" bitrate="384" audioChannelLayout="5.1(side)" requiredBandwidths="384,384,384,384,384,384,384,384" samplingRate="48000" displayTitle="Unknown (AC3 5.1)" extendedDisplayTitle="Unknown (AC3 5.1)">
+</Stream>
+<Stream id="770099" streamType="2" codec="ac3" index="2" channels="2" bitrate="192" audioChannelLayout="stereo" requiredBandwidths="192,192,192,192,192,192,192,192" samplingRate="48000" displayTitle="Unknown (AC3 Stereo)" extendedDisplayTitle="Unknown (AC3 Stereo)">
+</Stream>
+<Stream id="770100" streamType="3" codec="eia_608" index="3" embeddedInVideo="1" displayTitle="Unknown (Closed Captions)" extendedDisplayTitle="Unknown (Closed Captions)">
+</Stream>
+</Part>
+<TranscodeSession key="/transcode/sessions/a3d01c51-5480-4474-a0bb-b7a19c96eff0" throttled="0" complete="0" progress="-1" size="-22" speed="0.69999998807907104" duration="7200000" context="static" sourceVideoCodec="" sourceAudioCodec="" videoDecision="copy" audioDecision="copy" protocol="hls" container="mpegts" videoCodec="*" audioCodec="*" audioChannels="2" transcodeHwRequested="1" transcodeHwFullPipeline="0" timeStamp="1619538677.7417972" maxOffsetAvailable="314.764633" minOffsetAvailable="0" />
+</Media>
+</Video>
+</MediaContainer>

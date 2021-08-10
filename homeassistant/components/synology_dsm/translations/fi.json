@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "otp_failed": "Kaksivaiheinen todennus ep\u00e4onnistui, yrit\u00e4 uudelleen uudella salasanalla."
+        },
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Koodi"
+                }
+            },
+            "reauth": {
+                "description": "Syy: {details}"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minuutit skannausten v\u00e4lill\u00e4"
+                }
+            }
+        }
+    }
+}

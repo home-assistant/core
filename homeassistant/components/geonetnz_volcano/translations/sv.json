@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radie"
+                },
+                "title": "Fyll i dina filterdetaljer."
+            }
+        }
+    }
+}

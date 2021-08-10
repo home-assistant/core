@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Nimi on juba olemas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "mode": "Re\u017eiim",
+                    "name": "Nimi"
+                },
+                "description": "",
+                "title": "Asukoht"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API l\u00f5pp-punkt on k\u00e4ttesaadav"
+        }
+    }
+}

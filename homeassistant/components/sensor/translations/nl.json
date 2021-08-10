@@ -1,0 +1,43 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Huidige batterijniveau {entity_name}",
+            "is_carbon_dioxide": "Huidig niveau {entity_name} kooldioxideconcentratie",
+            "is_carbon_monoxide": "Huidig niveau {entity_name} koolmonoxideconcentratie",
+            "is_current": "Huidige {entity_name} stroom",
+            "is_energy": "Huidige {entity_name} energie",
+            "is_humidity": "Huidige {entity_name} vochtigheidsgraad",
+            "is_illuminance": "Huidige {entity_name} verlichtingssterkte",
+            "is_power": "Huidige {entity_name}\nvermogen",
+            "is_power_factor": "Huidige {entity_name} vermogensfactor",
+            "is_pressure": "Huidige {entity_name} druk",
+            "is_signal_strength": "Huidige {entity_name} signaalsterkte",
+            "is_temperature": "Huidige {entity_name} temperatuur",
+            "is_value": "Huidige {entity_name} waarde",
+            "is_voltage": "Huidige {entity_name} spanning"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} batterijniveau gewijzigd",
+            "carbon_dioxide": "{entity_name} kooldioxideconcentratie gewijzigd",
+            "carbon_monoxide": "{entity_name} koolmonoxideconcentratie gewijzigd",
+            "current": "{entity_name} huidige wijzigingen",
+            "energy": "{entity_name} energieveranderingen",
+            "humidity": "{entity_name} vochtigheidsgraad gewijzigd",
+            "illuminance": "{entity_name} verlichtingssterkte gewijzigd",
+            "power": "{entity_name} vermogen gewijzigd",
+            "power_factor": "{entity_name} power factor verandert",
+            "pressure": "{entity_name} druk gewijzigd",
+            "signal_strength": "{entity_name} signaalsterkte gewijzigd",
+            "temperature": "{entity_name} temperatuur gewijzigd",
+            "value": "{entity_name} waarde gewijzigd",
+            "voltage": "{entity_name} voltage verandert"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Uit",
+            "on": "Aan"
+        }
+    },
+    "title": "Sensor"
+}

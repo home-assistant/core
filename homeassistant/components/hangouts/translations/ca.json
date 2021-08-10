@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "invalid_2fa": "La verificaci\u00f3 en dos passos no \u00e9s v\u00e0lida, torna-ho a provar.",
+            "invalid_2fa_method": "M\u00e8tode 2FA inv\u00e0lid (verifica-ho al m\u00f2bil).",
+            "invalid_login": "L'inici de sessi\u00f3 no \u00e9s v\u00e0lid, torna-ho a provar."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "PIN 2FA"
+                },
+                "description": "Buit",
+                "title": "Verificaci\u00f3 en dos passos"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "Codi d'autoritzaci\u00f3 (necessari per a l'autenticaci\u00f3 manual)",
+                    "email": "Correu electr\u00f2nic",
+                    "password": "Contrasenya"
+                },
+                "description": "Buit",
+                "title": "Inici de sessi\u00f3 de Google Hangouts"
+            }
+        }
+    }
+}

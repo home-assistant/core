@@ -1,0 +1,11 @@
+update:
+  name: Update
+  description: Update all entities with fresh data from Toon
+  fields:
+    display:
+      name: Display
+      description: Toon display to update.
+      advanced: true
+      example: eneco-001-123456
+      selector:
+        text:

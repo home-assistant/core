@@ -1,0 +1,357 @@
+{
+    "nodeId": 54,
+    "index": 0,
+    "installerIcon": 6400,
+    "userIcon": 6400,
+    "status": 4,
+    "ready": true,
+    "deviceClass": {
+        "basic": {"key": 4, "label":"Routing Slave"},
+        "generic": {"key": 17, "label":"Routing Slave"},
+        "specific": {"key": 0, "label":"Unused"},
+        "mandatorySupportedCCs": [],
+        "mandatoryControlCCs": []
+    },
+    "isListening": false,
+    "isFrequentListening": true,
+    "isRouting": true,
+    "maxBaudRate": 40000,
+    "isSecure": false,
+    "version": 4,
+    "isBeaming": true,
+    "manufacturerId": 647,
+    "productId": 13,
+    "productType": 3,
+    "firmwareVersion": "1.65",
+    "zwavePlusVersion": 1,
+    "nodeType": 0,
+    "roleType": 7,
+    "deviceConfig": {
+        "manufacturerId": 647,
+        "manufacturer": "HAB Home Intelligence, LLC",
+        "label": "IB2.0",
+        "description": "Window Blind Controller",
+        "devices": [
+            {
+                "productType": "0x0003",
+                "productId": "0x000d"
+            }
+        ],
+        "firmwareVersion": {
+            "min": "0.0",
+            "max": "255.255"
+        },
+        "paramInformation": {
+            "_map": {}
+        }
+    },
+    "label": "IB2.0",
+    "neighbors": [
+        1,
+        2,
+        3,
+        7,
+        8,
+        11,
+        15,
+        18,
+        19,
+        22,
+        26,
+        27,
+        44,
+        52
+    ],
+    "interviewAttempts": 1,
+    "interviewStage": 7,
+    "endpoints": [
+        {
+            "nodeId": 54,
+            "index": 0,
+            "installerIcon": 6400,
+            "userIcon": 6400
+        }
+    ],
+    "commandClasses": [],
+    "values": [
+        {
+            "endpoint": 0,
+            "commandClass": 37,
+            "commandClassName": "Binary Switch",
+            "property": "currentValue",
+            "propertyName": "currentValue",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": false,
+                "label": "Current value"
+            },
+            "value": true
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 37,
+            "commandClassName": "Binary Switch",
+            "property": "targetValue",
+            "propertyName": "targetValue",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": true,
+                "label": "Target value"
+            },
+            "value": true
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 37,
+            "commandClassName": "Binary Switch",
+            "property": "duration",
+            "propertyName": "duration",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "duration",
+                "readable": true,
+                "writeable": true,
+                "label": "Transition duration"
+            },
+            "value": {
+                "value": 0,
+                "unit": "seconds"
+            }
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "targetValue",
+            "propertyName": "targetValue",
+            "ccVersion": 4,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 99,
+                "label": "Target value"
+            },
+            "value": 99
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "duration",
+            "propertyName": "duration",
+            "ccVersion": 4,
+            "metadata": {
+                "type": "duration",
+                "readable": true,
+                "writeable": true,
+                "label": "Transition duration"
+            },
+            "value": {
+                "value": 0,
+                "unit": "seconds"
+            }
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "currentValue",
+            "propertyName": "currentValue",
+            "ccVersion": 4,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 99,
+                "label": "Current value"
+            },
+            "value": 30
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "Up",
+            "propertyName": "Up",
+            "ccVersion": 4,
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": true,
+                "label": "Perform a level change (Up)",
+                "ccSpecific": {
+                    "switchType": 2
+                }
+            }
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "Down",
+            "propertyName": "Down",
+            "ccVersion": 4,
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": true,
+                "label": "Perform a level change (Down)",
+                "ccSpecific": {
+                    "switchType": 2
+                }
+            }
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 114,
+            "commandClassName": "Manufacturer Specific",
+            "property": "manufacturerId",
+            "propertyName": "manufacturerId",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Manufacturer ID"
+            },
+            "value": 647
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 114,
+            "commandClassName": "Manufacturer Specific",
+            "property": "productType",
+            "propertyName": "productType",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Product type"
+            },
+            "value": 3
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 114,
+            "commandClassName": "Manufacturer Specific",
+            "property": "productId",
+            "propertyName": "productId",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Product ID"
+            },
+            "value": 13
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 128,
+            "commandClassName": "Battery",
+            "property": "level",
+            "propertyName": "level",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 100,
+                "unit": "%",
+                "label": "Battery level"
+            },
+            "value": 100
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 128,
+            "commandClassName": "Battery",
+            "property": "isLow",
+            "propertyName": "isLow",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": false,
+                "label": "Low battery level"
+            },
+            "value": false
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 134,
+            "commandClassName": "Version",
+            "property": "libraryType",
+            "propertyName": "libraryType",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Library type"
+            },
+            "value": 3
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 134,
+            "commandClassName": "Version",
+            "property": "protocolVersion",
+            "propertyName": "protocolVersion",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave protocol version"
+            },
+            "value": "4.33"
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 134,
+            "commandClassName": "Version",
+            "property": "firmwareVersions",
+            "propertyName": "firmwareVersions",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave chip firmware versions"
+            },
+            "value": [
+                "1.65"
+            ]
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 134,
+            "commandClassName": "Version",
+            "property": "hardwareVersion",
+            "propertyName": "hardwareVersion",
+            "ccVersion": 2,
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave chip hardware version"
+            }
+        }
+    ]
+}

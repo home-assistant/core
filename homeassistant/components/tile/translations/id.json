@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "title": "Konfigurasi Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Tampilkan Tile yang tidak aktif"
+                },
+                "title": "Konfigurasi Tile"
+            }
+        }
+    }
+}

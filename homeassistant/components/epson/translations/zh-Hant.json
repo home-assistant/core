@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "powered_off": "\u6295\u5f71\u6a5f\u662f\u5426\u70ba\u95dc\u9589\u72c0\u614b\uff1f\u5fc5\u9808\u958b\u555f\u6295\u5f71\u6a5f\u624d\u80fd\u9032\u884c\u521d\u59cb\u8a2d\u5b9a\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31"
+                }
+            }
+        }
+    }
+}

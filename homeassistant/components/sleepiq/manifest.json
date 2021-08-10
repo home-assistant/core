@@ -1,10 +1,8 @@
 {
   "domain": "sleepiq",
-  "name": "Sleepiq",
-  "documentation": "https://www.home-assistant.io/components/sleepiq",
-  "requirements": [
-    "sleepyq==0.6"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "name": "SleepIQ",
+  "documentation": "https://www.home-assistant.io/integrations/sleepiq",
+  "requirements": ["sleepyq==0.8.1"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

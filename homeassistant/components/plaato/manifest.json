@@ -1,0 +1,11 @@
+{
+  "domain": "plaato",
+  "name": "Plaato",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/plaato",
+  "dependencies": ["webhook"],
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@JohNan"],
+  "requirements": ["pyplaato==0.0.15"],
+  "iot_class": "cloud_push"
+}

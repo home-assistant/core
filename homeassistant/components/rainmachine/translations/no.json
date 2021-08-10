@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "flow_title": "{ip}",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Vertsnavn eller IP-adresse",
+                    "password": "Passord",
+                    "port": "Port"
+                },
+                "title": "Fyll ut informasjonen din"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Standard sonekj\u00f8ringstid (i sekunder)"
+                },
+                "title": "Konfigurer RainMachine"
+            }
+        }
+    }
+}

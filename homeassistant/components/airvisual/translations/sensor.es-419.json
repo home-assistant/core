@@ -1,0 +1,20 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "co": "Mon\u00f3xido de carbono",
+            "n2": "Dioxido de nitrogeno",
+            "o3": "Ozono",
+            "p1": "PM10",
+            "p2": "PM2.5",
+            "s2": "Di\u00f3xido de azufre"
+        },
+        "airvisual__pollutant_level": {
+            "good": "Bueno",
+            "hazardous": "Peligroso",
+            "moderate": "Moderado",
+            "unhealthy": "Insalubre",
+            "unhealthy_sensitive": "Insalubre para grupos sensibles",
+            "very_unhealthy": "Muy insalubre"
+        }
+    }
+}

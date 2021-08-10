@@ -1,0 +1,9 @@
+codecov:
+  branch: dev
+coverage:
+  status:
+    project:
+      default:
+        target: 90
+        threshold: 0.09
+comment: false

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a LIFX\uff1f"
+            }
+        }
+    }
+}

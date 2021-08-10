@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "no_stations": "Keng H\u00e9ichwaasser Iwwerwaachungs Statioun fonnt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Statioun"
+                },
+                "description": "Statioun auswielen d\u00e9i iwwerwaacht soll ginn",
+                "title": "H\u00e9ichwaasser Iwwerwaachungs Statioun suiv\u00e9ieren"
+            }
+        }
+    }
+}

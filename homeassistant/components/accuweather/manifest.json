@@ -1,0 +1,10 @@
+{
+  "domain": "accuweather",
+  "name": "AccuWeather",
+  "documentation": "https://www.home-assistant.io/integrations/accuweather/",
+  "requirements": ["accuweather==0.2.0"],
+  "codeowners": ["@bieniu"],
+  "config_flow": true,
+  "quality_scale": "platinum",
+  "iot_class": "cloud_polling"
+}

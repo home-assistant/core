@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4",
+            "no_devices_found": "\u05dc\u05d0 \u05e0\u05de\u05e6\u05d0\u05d5 \u05de\u05db\u05e9\u05d9\u05e8\u05d9\u05dd \u05d1\u05e8\u05e9\u05ea"
+        },
+        "error": {
+            "many": "",
+            "one": "\u05e8\u05d9\u05e7",
+            "other": "\u05e8\u05d9\u05e7\u05d9\u05dd",
+            "two": "\u05e8\u05d9\u05e7\u05d9\u05dd"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "init": {
+                "many": "\u05e8\u05d9\u05e7\u05d9\u05dd",
+                "one": "\u05e8\u05d9\u05e7",
+                "other": "\u05e8\u05d9\u05e7\u05d9\u05dd",
+                "two": "\u05e8\u05d9\u05e7\u05d9\u05dd"
+            },
+            "user": {
+                "data": {
+                    "unique_id": "\u05d4\u05ea\u05e7\u05df",
+                    "usn": "\u05de\u05db\u05e9\u05d9\u05e8"
+                }
+            }
+        }
+    }
+}

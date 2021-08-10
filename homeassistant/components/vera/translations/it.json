@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Impossibile connettersi al controller con l'URL {base_url}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "ID dispositivo Vera da escludere da Home Assistant.",
+                    "lights": "Gli ID dei dispositivi switch Vera da trattare come luci in Home Assistant.",
+                    "vera_controller_url": "URL del controller"
+                },
+                "description": "Fornisci un URL controller Vera di seguito. Dovrebbe assomigliare a questo: http://192.168.1.161:3480.",
+                "title": "Configurazione controller Vera"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "ID dispositivo Vera da escludere da Home Assistant.",
+                    "lights": "Gli ID dei dispositivi switch Vera da trattare come luci in Home Assistant."
+                },
+                "description": "Consultare la documentazione di vera per i dettagli sui parametri opzionali: https://www.home-assistant.io/integrations/vera/. Nota: qualsiasi modifica qui effettuata necessita del riavvio del server di Home Assistant. Per cancellare i valori, inserire uno spazio.",
+                "title": "Opzioni controller Vera"
+            }
+        }
+    }
+}

@@ -1,12 +1,12 @@
 {
   "domain": "rmvtransport",
-  "name": "Rmvtransport",
-  "documentation": "https://www.home-assistant.io/components/rmvtransport",
+  "name": "RMV",
+  "documentation": "https://www.home-assistant.io/integrations/rmvtransport",
   "requirements": [
-    "PyRMVtransport==0.1.3"
+    "PyRMVtransport==0.3.2"
   ],
-  "dependencies": [],
   "codeowners": [
     "@cgtobi"
-  ]
+  ],
+  "iot_class": "cloud_polling"
 }

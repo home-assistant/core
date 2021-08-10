@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "reauth_validate": {
+                "description": "G\u00ebff Passwuert an fir {username}."
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Login Method"
+                }
+            },
+            "validation": {
+                "data": {
+                    "code": "Verifikatiouns Code"
+                },
+                "description": "Pr\u00e9ift w.e.g. \u00c4re {login_method} ({username}) a gitt de Verifikatiounscode hei dr\u00ebnner an",
+                "title": "2-Faktor-Authentifikatioun"
+            }
+        }
+    }
+}

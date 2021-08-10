@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "Salas\u00f5na"
+                },
+                "title": "\u00dchendu oma Sense Energy Monitor'iga"
+            }
+        }
+    }
+}

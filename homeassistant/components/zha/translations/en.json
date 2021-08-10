@@ -1,0 +1,107 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radio Type"
+                },
+                "description": "Pick a type of your Zigbee radio",
+                "title": "Radio Type"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "port speed",
+                    "flow_control": "data flow control",
+                    "path": "Serial device path"
+                },
+                "description": "Enter port specific settings",
+                "title": "Settings"
+            },
+            "user": {
+                "data": {
+                    "path": "Serial Device Path"
+                },
+                "description": "Select serial port for Zigbee radio",
+                "title": "ZHA"
+            }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code required for arming actions",
+            "alarm_failed_tries": "The number of consecutive failed code entries to trigger an alarm",
+            "alarm_master_code": "Master code for the alarm control panel(s)",
+            "title": "Alarm Control Panel Options"
+        },
+        "zha_options": {
+            "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)",
+            "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
+            "default_light_transition": "Default light transition time (seconds)",
+            "enable_identify_on_join": "Enable identify effect when devices join the network",
+            "title": "Global Options"
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Warn"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Both buttons",
+            "button_1": "First button",
+            "button_2": "Second button",
+            "button_3": "Third button",
+            "button_4": "Fourth button",
+            "button_5": "Fifth button",
+            "button_6": "Sixth button",
+            "close": "Close",
+            "dim_down": "Dim down",
+            "dim_up": "Dim up",
+            "face_1": "with face 1 activated",
+            "face_2": "with face 2 activated",
+            "face_3": "with face 3 activated",
+            "face_4": "with face 4 activated",
+            "face_5": "with face 5 activated",
+            "face_6": "with face 6 activated",
+            "face_any": "With any/specified face(s) activated",
+            "left": "Left",
+            "open": "Open",
+            "right": "Right",
+            "turn_off": "Turn off",
+            "turn_on": "Turn on"
+        },
+        "trigger_type": {
+            "device_dropped": "Device dropped",
+            "device_flipped": "Device flipped \"{subtype}\"",
+            "device_knocked": "Device knocked \"{subtype}\"",
+            "device_offline": "Device offline",
+            "device_rotated": "Device rotated \"{subtype}\"",
+            "device_shaken": "Device shaken",
+            "device_slid": "Device slid \"{subtype}\"",
+            "device_tilted": "Device tilted",
+            "remote_button_alt_double_press": "\"{subtype}\" button double clicked (Alternate mode)",
+            "remote_button_alt_long_press": "\"{subtype}\" button continuously pressed (Alternate mode)",
+            "remote_button_alt_long_release": "\"{subtype}\" button released after long press (Alternate mode)",
+            "remote_button_alt_quadruple_press": "\"{subtype}\" button quadruple clicked (Alternate mode)",
+            "remote_button_alt_quintuple_press": "\"{subtype}\" button quintuple clicked (Alternate mode)",
+            "remote_button_alt_short_press": "\"{subtype}\" button pressed (Alternate mode)",
+            "remote_button_alt_short_release": "\"{subtype}\" button released (Alternate mode)",
+            "remote_button_alt_triple_press": "\"{subtype}\" button triple clicked (Alternate mode)",
+            "remote_button_double_press": "\"{subtype}\" button double clicked",
+            "remote_button_long_press": "\"{subtype}\" button continuously pressed",
+            "remote_button_long_release": "\"{subtype}\" button released after long press",
+            "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
+            "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
+            "remote_button_short_press": "\"{subtype}\" button pressed",
+            "remote_button_short_release": "\"{subtype}\" button released",
+            "remote_button_triple_press": "\"{subtype}\" button triple clicked"
+        }
+    }
+}

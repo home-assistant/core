@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "not_lutron_device": "Bulunan cihaz bir Lutron cihaz\u0131 de\u011fil"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "flow_title": "Lutron Cas\u00e9ta {name} ( {host} )",
+        "step": {
+            "link": {
+                "description": "{name} ( {host} ) ile e\u015fle\u015ftirmek i\u00e7in, bu formu g\u00f6nderdikten sonra k\u00f6pr\u00fcn\u00fcn arkas\u0131ndaki siyah d\u00fc\u011fmeye bas\u0131n.",
+                "title": "K\u00f6pr\u00fc ile e\u015fle\u015ftirin"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                },
+                "description": "Cihaz\u0131n ip adresini girin.",
+                "title": "K\u00f6pr\u00fcye otomatik olarak ba\u011flan\u0131n"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u0130lk d\u00fc\u011fme",
+            "button_2": "\u0130kinci d\u00fc\u011fme",
+            "button_3": "\u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fme",
+            "button_4": "D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fme",
+            "close_1": "Kapat 1",
+            "close_2": "Kapat 2",
+            "close_3": "Kapat 3",
+            "close_4": "Kapat 4",
+            "close_all": "Hepsini kapat",
+            "group_1_button_1": "Birinci Grup ilk d\u00fc\u011fme",
+            "group_1_button_2": "Birinci Grup ikinci d\u00fc\u011fme",
+            "group_2_button_1": "\u0130kinci Grup birinci d\u00fc\u011fme",
+            "group_2_button_2": "\u0130kinci Grup ikinci d\u00fc\u011fme",
+            "lower": "Alt",
+            "lower_1": "Alt 1",
+            "lower_2": "Alt 2",
+            "lower_3": "Alt 3",
+            "lower_4": "Alt 4",
+            "lower_all": "Hepsini indir",
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k",
+            "open_1": "A\u00e7 1",
+            "open_2": "A\u00e7 2",
+            "open_3": "A\u00e7 3",
+            "open_4": "A\u00e7\u0131k 4",
+            "open_all": "Hepsini a\u00e7",
+            "raise": "Y\u00fckseltmek",
+            "raise_1": "Y\u00fckselt 1",
+            "raise_2": "Y\u00fckselt 2",
+            "raise_3": "Y\u00fckselt 3",
+            "raise_4": "Y\u00fckselt 4",
+            "raise_all": "Hepsini Y\u00fckseltin",
+            "stop": "Durak (favori)",
+            "stop_1": "Durak 1",
+            "stop_2": "Durdur 2",
+            "stop_3": "Durdur 3",
+            "stop_4": "Durdur 4",
+            "stop_all": "Hepsini durdur"
+        },
+        "trigger_type": {
+            "press": "\" {subtype} \" bas\u0131ld\u0131",
+            "release": "\" {subtype} \" yay\u0131nland\u0131"
+        }
+    }
+}

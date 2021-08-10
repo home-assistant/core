@@ -1,0 +1,9 @@
+{
+    "state": {
+        "_": {
+            "off": "Disattivo",
+            "on": "Attivo"
+        }
+    },
+    "title": "Calendario"
+}

@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Nenhum servi\u00e7o de notifica\u00e7\u00e3o dispon\u00edvel."
+            },
+            "error": {
+                "invalid_code": "C\u00f3digo inv\u00e1lido, por favor tente novamente."
+            },
+            "step": {
+                "init": {
+                    "description": "Por favor, selecione um dos servi\u00e7os de notifica\u00e7\u00e3o:",
+                    "title": "Configurar a senha de uso \u00fanico entregue pelo componente de notifica\u00e7\u00e3o"
+                },
+                "setup": {
+                    "description": "A senha de uso \u00fanico foi enviada via ** notify. {notify_service} **. Por favor, insira abaixo:",
+                    "title": "Verificar a configura\u00e7\u00e3o"
+                }
+            },
+            "title": "Notificar a senha de uso \u00fanico"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "C\u00f3digo inv\u00e1lido, por favor tente novamente. Se voc\u00ea obtiver este erro de forma consistente, certifique-se de que o rel\u00f3gio do sistema Home Assistant esteja correto."
+            },
+            "step": {
+                "init": {
+                    "description": "Para ativar a autentica\u00e7\u00e3o de dois fatores usando senhas de uso \u00fanico com base em tempo, digitalize o c\u00f3digo QR com seu aplicativo de autentica\u00e7\u00e3o. Se voc\u00ea n\u00e3o tiver um, recomendamos o [Google Authenticator] (https://support.google.com/accounts/answer/1066447) ou [Authy] (https://authy.com/). \n\n {qr_code} \n \n Depois de digitalizar o c\u00f3digo, insira o c\u00f3digo de seis d\u00edgitos do aplicativo para verificar a configura\u00e7\u00e3o. Se voc\u00ea tiver problemas para escanear o c\u00f3digo QR, fa\u00e7a uma configura\u00e7\u00e3o manual com o c\u00f3digo ** ` {code} ` **.",
+                    "title": "Configure a autentica\u00e7\u00e3o de dois fatores usando o TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

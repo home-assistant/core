@@ -1,0 +1,33 @@
+{
+  "config": {
+    "flow_title": "{device}",
+    "step": {
+      "user": {
+        "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authorization.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "confirm": {
+        "description": "Do you want to set up {device}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
+      },
+      "reauth_confirm": {
+        "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds."
+      }      
+    },
+    "error": {
+      "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]"
+    },
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
+      "id_missing": "This Samsung device doesn't have a SerialNumber.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_supported": "This Samsung device is currently not supported.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

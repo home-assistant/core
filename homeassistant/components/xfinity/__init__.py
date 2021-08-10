@@ -1,1 +1,0 @@
-"""The xfinity component."""

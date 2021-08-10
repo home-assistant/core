@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "kamereon_no_account": "Kamereon-Konto kann nicht gefunden werden."
+        },
+        "error": {
+            "invalid_credentials": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon-Kontonummer"
+                },
+                "title": "Kamereon-Kontonummer ausw\u00e4hlen"
+            },
+            "user": {
+                "data": {
+                    "locale": "Gebietsschema",
+                    "password": "Passwort",
+                    "username": "E-Mail"
+                },
+                "title": "Renault-Anmeldeinformationen festlegen"
+            }
+        }
+    }
+}

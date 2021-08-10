@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "not_lutron_device": "El dispositiu descobert no \u00e9s un dispositiu Lutron"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "No s'ha pogut configurar l'enlla\u00e7 (amfitri\u00f3: {host}) importat de configuration.yaml.",
+                "title": "No s'ha pogut importar la configuraci\u00f3 de l'enlla\u00e7 de Cas\u00e9ta."
+            },
+            "link": {
+                "description": "Per a vincular amb {name} ({host}), despr\u00e9s d'enviar aquest formulari, prem el bot\u00f3 negre de la part posterior de l'enlla\u00e7.",
+                "title": "Vinculaci\u00f3 amb enlla\u00e7"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Introdueix l'adre\u00e7a IP del dispositiu.",
+                "title": "Connexi\u00f3 autom\u00e0tica amb l'enlla\u00e7"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primer bot\u00f3",
+            "button_2": "Segon bot\u00f3",
+            "button_3": "Tercer bot\u00f3",
+            "button_4": "Quart bot\u00f3",
+            "close_1": "Tanca 1",
+            "close_2": "Tanca 2",
+            "close_3": "Tanca 3",
+            "close_4": "Tanca 4",
+            "close_all": "Tanca-ho tot",
+            "group_1_button_1": "Primer bot\u00f3 del primer grup",
+            "group_1_button_2": "Segon bot\u00f3 del primer grup",
+            "group_2_button_1": "Primer bot\u00f3 del segon grup",
+            "group_2_button_2": "Segon bot\u00f3 del segon grup",
+            "lower": "Baixa",
+            "lower_1": "Baixa 1",
+            "lower_2": "Baixa 2",
+            "lower_3": "Baixa 3",
+            "lower_4": "Baixa 4",
+            "lower_all": "Baixa-ho tot",
+            "off": "OFF",
+            "on": "ON",
+            "open_1": "Obre 1",
+            "open_2": "Obre 2",
+            "open_3": "Obre 3",
+            "open_4": "Obre 4",
+            "open_all": "Obre-ho tot",
+            "raise": "Puja",
+            "raise_1": "Puja 1",
+            "raise_2": "Puja 2",
+            "raise_3": "Puja 3",
+            "raise_4": "Puja 4",
+            "raise_all": "Puja-ho tot",
+            "stop": "Atura (preferit)",
+            "stop_1": "Atura 1",
+            "stop_2": "Atura 2",
+            "stop_3": "Atura 3",
+            "stop_4": "Atura 4",
+            "stop_all": "Atura-ho tot"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" premut",
+            "release": "\"{subtype}\" alliberat"
+        }
+    }
+}

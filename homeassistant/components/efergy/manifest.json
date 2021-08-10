@@ -1,8 +1,7 @@
 {
   "domain": "efergy",
   "name": "Efergy",
-  "documentation": "https://www.home-assistant.io/components/efergy",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/efergy",
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

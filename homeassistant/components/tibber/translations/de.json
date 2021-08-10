@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
+            "timeout": "Zeit\u00fcberschreitung beim Verbinden mit Tibber"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Zugangstoken"
+                },
+                "description": "Gib dein Zugangsk\u00fcrzel von https://developer.tibber.com/settings/accesstoken ein.",
+                "title": "Tibber"
+            }
+        }
+    }
+}

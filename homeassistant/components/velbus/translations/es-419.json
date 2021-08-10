@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "El nombre de esta conexi\u00f3n velbus",
+                    "port": "Cadena de conexi\u00f3n"
+                },
+                "title": "Definir el tipo de conexi\u00f3n velbus"
+            }
+        }
+    }
+}

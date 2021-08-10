@@ -1,0 +1,57 @@
+effect:
+  name: Set effect
+  description: Control the effect settings of WLED.
+  target:
+    entity:
+      integration: wled
+      domain: light
+  fields:
+    effect:
+      name: Effect
+      description: Name or ID of the WLED light effect.
+      example: "Rainbow"
+      selector:
+        text:
+    intensity:
+      name: Effect intensity
+      description: Intensity of the effect. Number between 0 and 255.
+      selector:
+        number:
+          min: 0
+          max: 255
+    palette:
+      name: Color palette
+      description: Name or ID of the WLED light palette.
+      example: "Tiamat"
+      selector:
+        text:
+    speed:
+      name: Effect speed
+      description: Speed of the effect.
+      selector:
+        number:
+          min: 0
+          max: 255
+    reverse:
+      name: Reverse effect
+      description: Reverse the effect. Either true to reverse or false otherwise.
+      default: false
+      selector:
+        boolean:
+
+preset:
+  name: Set preset (deprecated)
+  description: Set a preset for the WLED device.
+  target:
+    entity:
+      integration: wled
+      domain: light
+  fields:
+    preset:
+      name: Preset ID
+      description: ID of the WLED preset
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box

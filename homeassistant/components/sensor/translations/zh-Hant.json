@@ -1,0 +1,43 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "\u76ee\u524d{entity_name}\u96fb\u91cf",
+            "is_carbon_dioxide": "\u76ee\u524d {entity_name} \u4e8c\u6c27\u5316\u78b3\u6fc3\u5ea6\u72c0\u614b",
+            "is_carbon_monoxide": "\u76ee\u524d {entity_name} \u4e00\u6c27\u5316\u78b3\u6fc3\u5ea6\u72c0\u614b",
+            "is_current": "\u76ee\u524d{entity_name}\u96fb\u6d41",
+            "is_energy": "\u76ee\u524d{entity_name}\u96fb\u529b",
+            "is_humidity": "\u76ee\u524d{entity_name}\u6fd5\u5ea6",
+            "is_illuminance": "\u76ee\u524d{entity_name}\u7167\u5ea6",
+            "is_power": "\u76ee\u524d{entity_name}\u96fb\u529b",
+            "is_power_factor": "\u76ee\u524d{entity_name}\u529f\u7387\u56e0\u6578",
+            "is_pressure": "\u76ee\u524d{entity_name}\u58d3\u529b",
+            "is_signal_strength": "\u76ee\u524d{entity_name}\u8a0a\u865f\u5f37\u5ea6",
+            "is_temperature": "\u76ee\u524d{entity_name}\u6eab\u5ea6",
+            "is_value": "\u76ee\u524d{entity_name}\u503c",
+            "is_voltage": "\u76ee\u524d{entity_name}\u96fb\u58d3"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name}\u96fb\u91cf\u8b8a\u66f4",
+            "carbon_dioxide": "{entity_name} \u4e8c\u6c27\u5316\u78b3\u6fc3\u5ea6\u8b8a\u5316",
+            "carbon_monoxide": "{entity_name} \u4e00\u6c27\u5316\u78b3\u6fc3\u5ea6\u8b8a\u5316",
+            "current": "\u76ee\u524d{entity_name}\u96fb\u6d41\u8b8a\u66f4",
+            "energy": "\u76ee\u524d{entity_name}\u96fb\u529b\u8b8a\u66f4",
+            "humidity": "{entity_name}\u6fd5\u5ea6\u8b8a\u66f4",
+            "illuminance": "{entity_name}\u7167\u5ea6\u8b8a\u66f4",
+            "power": "{entity_name}\u96fb\u529b\u8b8a\u66f4",
+            "power_factor": "\u76ee\u524d{entity_name}\u529f\u7387\u56e0\u6578\u8b8a\u66f4",
+            "pressure": "{entity_name}\u58d3\u529b\u8b8a\u66f4",
+            "signal_strength": "{entity_name}\u8a0a\u865f\u5f37\u5ea6\u8b8a\u66f4",
+            "temperature": "{entity_name}\u6eab\u5ea6\u8b8a\u66f4",
+            "value": "{entity_name}\u503c\u8b8a\u66f4",
+            "voltage": "\u76ee\u524d{entity_name}\u96fb\u58d3\u8b8a\u66f4"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u5553"
+        }
+    },
+    "title": "\u50b3\u611f\u5668"
+}

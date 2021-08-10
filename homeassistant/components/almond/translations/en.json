@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Failed to connect",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to Almond provided by the add-on: {addon}?",
+                "title": "Almond via Home Assistant add-on"
+            },
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            }
+        }
+    }
+}

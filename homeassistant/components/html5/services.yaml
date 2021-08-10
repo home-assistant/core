@@ -1,0 +1,16 @@
+dismiss:
+  name: Dismiss
+  description: Dismiss a html5 notification.
+  fields:
+    target:
+      name: Target
+      description: An array of targets.
+      example: ["my_phone", "my_tablet"]
+      selector:
+        object:
+    data:
+      name: Data
+      description: Extended information of notification. Supports tag.
+      example: '{ "tag": "tagname" }'
+      selector:
+        object:

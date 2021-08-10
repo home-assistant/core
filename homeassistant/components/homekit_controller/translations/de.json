@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Die Kopplung kann nicht durchgef\u00fchrt werden, da das Ger\u00e4t nicht mehr gefunden werden kann.",
+            "already_configured": "Das Zubeh\u00f6r ist mit diesem Controller bereits konfiguriert.",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "already_paired": "Dieses Zubeh\u00f6r ist bereits mit einem anderen Ger\u00e4t gekoppelt. Setze das Zubeh\u00f6r zur\u00fcck und versuche es erneut.",
+            "ignored_model": "Die Unterst\u00fctzung von HomeKit f\u00fcr dieses Modell ist blockiert, da eine vollst\u00e4ndige native Integration verf\u00fcgbar ist.",
+            "invalid_config_entry": "Dieses Ger\u00e4t wird als bereit zum Koppeln angezeigt, es gibt jedoch bereits einen widerspr\u00fcchlichen Konfigurationseintrag in Home Assistant, der zuerst entfernt werden muss.",
+            "invalid_properties": "Ung\u00fcltige Eigenschaften vom Ger\u00e4t gemeldet.",
+            "no_devices": "Keine ungekoppelten Ger\u00e4te gefunden"
+        },
+        "error": {
+            "authentication_error": "Ung\u00fcltiger HomeKit Code, \u00fcberpr\u00fcfe bitte den Code und versuche es erneut.",
+            "insecure_setup_code": "Der angeforderte Setup-Code ist unsicher, da er zu trivial ist. Dieses Zubeh\u00f6r erf\u00fcllt nicht die grundlegenden Sicherheitsanforderungen.",
+            "max_peers_error": "Das Ger\u00e4t weigerte sich, die Kopplung durchzuf\u00fchren, da es keinen freien Kopplungs-Speicher hat.",
+            "pairing_failed": "Beim Versuch dieses Ger\u00e4t zu koppeln ist ein Fehler aufgetreten. Dies kann ein vor\u00fcbergehender Fehler sein oder das Ger\u00e4t wird derzeit m\u00f6glicherweise nicht unterst\u00fctzt.",
+            "unable_to_pair": "Koppeln fehltgeschlagen, bitte versuche es erneut",
+            "unknown_error": "Das Ger\u00e4t meldete einen unbekannten Fehler. Die Kopplung ist fehlgeschlagen."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "busy_error": {
+                "description": "Breche das Pairing auf allen Controllern ab oder versuche, das Ger\u00e4t neu zu starten, und fahre dann fort, das Pairing fortzusetzen.",
+                "title": "Das Ger\u00e4t wird bereits mit einem anderen Controller gekoppelt"
+            },
+            "max_tries_error": {
+                "description": "Das Ger\u00e4t hat mehr als 100 erfolglose Authentifizierungsversuche erhalten. Versuche, das Ger\u00e4t neu zu starten, und fahre dann fort, die Kopplung fortzusetzen.",
+                "title": "Maximale Authentifizierungsversuche \u00fcberschritten"
+            },
+            "pair": {
+                "data": {
+                    "allow_insecure_setup_codes": "Pairing mit unsicheren Setup-Codes zulassen.",
+                    "pairing_code": "Kopplungscode"
+                },
+                "description": "HomeKit Controller kommuniziert mit {name} \u00fcber das lokale Netzwerk mit einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. Gib deinen HomeKit-Kopplungscode (im Format XXX-XX-XXX) ein, um dieses Zubeh\u00f6r zu verwenden. Dieser Code befindet sich in der Regel auf dem Ger\u00e4t selbst oder in der Verpackung.",
+                "title": "Mit HomeKit Zubeh\u00f6r koppeln"
+            },
+            "protocol_error": {
+                "description": "Das Ger\u00e4t befindet sich m\u00f6glicherweise nicht im Pairing-Modus und erfordert einen physischen oder virtuellen Tastendruck. Stelle sicher, dass sich das Ger\u00e4t im Pairing-Modus befindet, oder versuche, das Ger\u00e4t neu zu starten und fahre dann das Pairing fort.",
+                "title": "Fehler bei der Kommunikation mit dem Zubeh\u00f6r"
+            },
+            "user": {
+                "data": {
+                    "device": "Ger\u00e4t"
+                },
+                "description": "HomeKit Controller kommuniziert \u00fcber das lokale Netzwerk mit einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. W\u00e4hle das Ger\u00e4t aus, mit dem du die Kopplung herstellen m\u00f6chtest",
+                "title": "Ger\u00e4teauswahl"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Knopf 1",
+            "button10": "Knopf 10",
+            "button2": "Knopf 2",
+            "button3": "Knopf 3",
+            "button4": "Knopf 4",
+            "button5": "Knopf 5",
+            "button6": "Knopf 6",
+            "button7": "Knopf 7",
+            "button8": "Knopf 8",
+            "button9": "Knopf 9",
+            "doorbell": "T\u00fcrklingel"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" zweimal gedr\u00fcckt",
+            "long_press": "\"{subtype}\" gedr\u00fcckt und gehalten",
+            "single_press": "\"{subtype}\" gedr\u00fcckt"
+        }
+    },
+    "title": "HomeKit-Controller"
+}

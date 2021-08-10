@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "invalid_known_hosts": "\u5df2\u77e5\u4e3b\u6a5f\u5fc5\u9808\u4ee5\u9017\u865f\u5206\u4e3b\u6a5f\u5217\u8868\u3002"
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "\u5df2\u77e5\u4e3b\u6a5f"
+                },
+                "description": "\u5df2\u77e5\u4e3b\u6a5f - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31 hostnames \u6216 IP \u4f4d\u5740\u3001\u5047\u5982 mDNS \u63a2\u7d22\u5931\u6548\u7684\u72c0\u6cc1\u3002",
+                "title": "Google Cast \u8a2d\u5b9a"
+            },
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "\u5df2\u77e5\u4e3b\u6a5f\u5fc5\u9808\u4ee5\u9017\u865f\u5206\u4e3b\u6a5f\u5217\u8868\u3002"
+        },
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "\u5ffd\u7565 CEC",
+                    "uuid": "\u5df2\u5141\u8a31 UUID"
+                },
+                "description": "\u5df2\u5141\u8a31 UUID - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e UUID \u5217\u8868\u4ee5\u65b0\u589e\u81f3 Home Assistant\u3002\u50c5\u65bc\u4e0d\u60f3\u5c07\u5168\u90e8 Cast \u88dd\u7f6e\u65b0\u589e\u6642\u4f7f\u7528\u3002\n\u5ffd\u7565 CEC - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e\u5217\u8868\u3001\u5ffd\u7565\u5176 CEC \u63a7\u5236\u4ee5\u907f\u514d\u555f\u52d5\u8f38\u5165\u4f86\u6e90\u3002\u8cc7\u6599\u5c07\u6703\u50b3\u905e\u81f3 pychromecast.IGNORE_CEC\u3002",
+                "title": "Google Cast \u9032\u968e\u8a2d\u5b9a"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "\u5df2\u77e5\u4e3b\u6a5f"
+                },
+                "description": "\u5df2\u77e5\u4e3b\u6a5f - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31 hostnames \u6216 IP \u4f4d\u5740\u3001\u5047\u5982 mDNS \u63a2\u7d22\u5931\u6548\u7684\u72c0\u6cc1\u3002",
+                "title": "Google Cast \u8a2d\u5b9a"
+            }
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cette unit\u00e9 centrale Home Control est d\u00e9j\u00e0 utilis\u00e9e.",
+            "reauth_successful": "R\u00e9-authentification r\u00e9ussie"
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "reauth_failed": "Veuillez utiliser le m\u00eame utilisateur mydevolo que pr\u00e9c\u00e9demment."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mydevolo_url": "URL mydevolo",
+                    "password": "Mot de passe",
+                    "username": "Adresse e-mail / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Mot de passe",
+                    "username": "[%key:common::config_flow::d ata::email%] / devolo ID"
+                }
+            }
+        }
+    }
+}

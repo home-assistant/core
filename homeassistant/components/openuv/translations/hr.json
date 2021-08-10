@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevacija",
+                    "latitude": "Zemljopisna \u0161irina",
+                    "longitude": "Zemljopisna du\u017eina"
+                }
+            }
+        }
+    }
+}

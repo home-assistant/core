@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} est\u00e1 inactivo",
+            "is_off": "{entity_name} est\u00e1 apagado",
+            "is_on": "{entity_name} est\u00e1 activado",
+            "is_paused": "{entity_name} est\u00e1 en pausa",
+            "is_playing": "{entity_name} est\u00e1 reproduciendo"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} est\u00e1 inactivo",
+            "paused": "{entity_name} est\u00e1 en pausa",
+            "playing": "{entity_name} comienza a reproducirse",
+            "turned_off": "{entity_name} desactivado",
+            "turned_on": "{entity_name} activado"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Inactivo",
+            "off": "Apagado",
+            "on": "Encendido",
+            "paused": "En pausa",
+            "playing": "Reproduciendo",
+            "standby": "Apagado"
+        }
+    },
+    "title": "Reproductor multimedia"
+}

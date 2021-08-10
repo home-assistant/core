@@ -1,0 +1,10 @@
+{
+  "domain": "forked_daapd",
+  "name": "forked-daapd",
+  "documentation": "https://www.home-assistant.io/integrations/forked_daapd",
+  "codeowners": ["@uvjustin"],
+  "requirements": ["pyforked-daapd==0.1.11", "pylibrespot-java==0.1.0"],
+  "config_flow": true,
+  "zeroconf": ["_daap._tcp.local."],
+  "iot_class": "local_push"
+}

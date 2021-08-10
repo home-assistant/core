@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Vsi mostovi Philips Hue so \u017ee konfigurirani",
+            "already_configured": "Most je \u017ee konfiguriran",
+            "already_in_progress": "Konfiguracijski tok za most je \u017ee v teku.",
+            "cannot_connect": "Ni mogo\u010de vzpostaviti povezave z mostom",
+            "discover_timeout": "Ni bilo mogo\u010de odkriti Hue mostov",
+            "no_bridges": "Ni odkritih mostov Philips Hue",
+            "not_hue_bridge": "Ni Hue most",
+            "unknown": "Pri\u0161lo je do neznane napake"
+        },
+        "error": {
+            "linking": "Pri\u0161lo je do neznane napake pri povezavi.",
+            "register_failed": "Registracija ni uspela, poskusite znova"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Izberite Hue most"
+            },
+            "link": {
+                "description": "Pritisnite gumb na mostu, da registrirate Philips Hue s Home Assistantom. \n\n![Polo\u017eaj gumba na mostu](/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Prvi gumb",
+            "button_2": "Drugi gumb",
+            "button_3": "Tretji gumb",
+            "button_4": "\u010cetrti gumb",
+            "dim_down": "Zatemnite",
+            "dim_up": "pove\u010dajte mo\u010d",
+            "double_buttons_1_3": "Prvi in tretji gumb",
+            "double_buttons_2_4": "Drugi in \u010detrti gumb",
+            "turn_off": "Ugasni",
+            "turn_on": "Pri\u017egi"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" gumb spro\u0161\u010den po dolgem pritisku",
+            "remote_button_short_press": "Pritisnjen \"{subtype}\" gumb",
+            "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
+            "remote_double_button_long_press": "Po dolgem pritisku sta obe \" {subtype} \" spro\u0161\u010deni",
+            "remote_double_button_short_press": "Spro\u0161\u010dena oba \"{podvrsta}\""
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Dovoli skupine Hue"
+                }
+            }
+        }
+    }
+}

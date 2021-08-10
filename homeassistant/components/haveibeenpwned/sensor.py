@@ -6,10 +6,15 @@ from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_EMAIL, ATTR_ATTRIBUTION
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_EMAIL,
+    HTTP_NOT_FOUND,
+    HTTP_OK,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -25,17 +30,21 @@ HA_USER_AGENT = "Home Assistant HaveIBeenPwned Sensor Component"
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-URL = 'https://haveibeenpwned.com/api/v2/breachedaccount/'
+URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_API_KEY): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HaveIBeenPwned sensor."""
     emails = config.get(CONF_EMAIL)
-    data = HaveIBeenPwnedData(emails)
+    api_key = config[CONF_API_KEY]
+    data = HaveIBeenPwnedData(emails, api_key)
 
     devices = []
     for email in emails:
@@ -44,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class HaveIBeenPwnedSensor(Entity):
+class HaveIBeenPwnedSensor(SensorEntity):
     """Implementation of a HaveIBeenPwned sensor."""
 
     def __init__(self, data, email):
@@ -57,7 +66,7 @@ class HaveIBeenPwnedSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Breaches {}".format(self._email)
+        return f"Breaches {self._email}"
 
     @property
     def unit_of_measurement(self):
@@ -70,18 +79,18 @@ class HaveIBeenPwnedSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the sensor."""
         val = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if self._email not in self._data.data:
             return val
 
         for idx, value in enumerate(self._data.data[self._email]):
-            tmpname = "breach {}".format(idx+1)
-            tmpvalue = "{} {}".format(
-                value["Title"],
-                dt_util.as_local(dt_util.parse_datetime(
-                    value["AddedDate"])).strftime(DATE_STR_FORMAT))
+            tmpname = f"breach {idx + 1}"
+            datetime_local = dt_util.as_local(
+                dt_util.parse_datetime(value["AddedDate"])
+            )
+            tmpvalue = f"{value['Title']} {datetime_local.strftime(DATE_STR_FORMAT)}"
             val[tmpname] = tmpvalue
 
         return val
@@ -103,8 +112,10 @@ class HaveIBeenPwnedSensor(Entity):
         # normal using update
         if self._email not in self._data.data:
             track_point_in_time(
-                self.hass, self.update_nothrottle,
-                dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES)
+                self.hass,
+                self.update_nothrottle,
+                dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES,
+            )
             return
 
         self._state = len(self._data.data[self._email])
@@ -121,13 +132,14 @@ class HaveIBeenPwnedSensor(Entity):
 class HaveIBeenPwnedData:
     """Class for handling the data retrieval."""
 
-    def __init__(self, emails):
+    def __init__(self, emails, api_key):
         """Initialize the data object."""
         self._email_count = len(emails)
         self._current_index = 0
         self.data = {}
         self._email = emails[0]
         self._emails = emails
+        self._api_key = api_key
 
     def set_next_email(self):
         """Set the next email to be looked up."""
@@ -142,28 +154,25 @@ class HaveIBeenPwnedData:
     def update(self, **kwargs):
         """Get the latest data for current email from REST service."""
         try:
-            url = "{}{}".format(URL, self._email)
-
+            url = f"{URL}{self._email}?truncateResponse=false"
+            header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
-
-            req = requests.get(
-                url, headers={USER_AGENT: HA_USER_AGENT}, allow_redirects=True,
-                timeout=5)
+            req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
 
         except requests.exceptions.RequestException:
             _LOGGER.error("Failed fetching data for %s", self._email)
             return
 
-        if req.status_code == 200:
-            self.data[self._email] = sorted(req.json(),
-                                            key=lambda k: k["AddedDate"],
-                                            reverse=True)
+        if req.status_code == HTTP_OK:
+            self.data[self._email] = sorted(
+                req.json(), key=lambda k: k["AddedDate"], reverse=True
+            )
 
             # Only goto next email if we had data so that
             # the forced updates try this current email again
             self.set_next_email()
 
-        elif req.status_code == 404:
+        elif req.status_code == HTTP_NOT_FOUND:
             self.data[self._email] = []
 
             # only goto next email if we had data so that
@@ -171,6 +180,8 @@ class HaveIBeenPwnedData:
             self.set_next_email()
 
         else:
-            _LOGGER.error("Failed fetching data for %s"
-                          "(HTTP Status_code = %d)", self._email,
-                          req.status_code)
+            _LOGGER.error(
+                "Failed fetching data for %s (HTTP Status_code = %d)",
+                self._email,
+                req.status_code,
+            )

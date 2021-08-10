@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nu exist\u0103 dispozitive LIFX g\u0103site \u00een re\u021bea.",
+            "single_instance_allowed": "Doar o singur\u0103 configura\u021bie de LIFX este posibil\u0103."
+        },
+        "step": {
+            "confirm": {
+                "description": "Dori\u021bi s\u0103 configura\u021bi LIFX?"
+            }
+        }
+    }
+}

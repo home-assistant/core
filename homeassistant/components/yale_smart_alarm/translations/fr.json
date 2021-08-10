@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Authentification incorrecte"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "ID de la zone",
+                    "name": "Nom",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "ID de la zone",
+                    "name": "Nom",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

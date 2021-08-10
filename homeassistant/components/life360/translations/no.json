@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "create_entry": {
+            "default": "For \u00e5 angi avanserte alternativer, se [Life360 dokumentasjon]({docs_url})."
+        },
+        "error": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_username": "Ugyldig brukernavn",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "For \u00e5 angi avanserte alternativer, se [Life360 dokumentasjon]({docs_url}). \nDet kan hende du vil gj\u00f8re det f\u00f8r du legger til kontoer.",
+                "title": "Life360 Kontoinformasjon"
+            }
+        }
+    }
+}

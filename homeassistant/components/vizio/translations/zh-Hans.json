@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "pair_tv": {
+                "title": "\u5b8c\u6210\u914d\u5bf9\u8fc7\u7a0b"
+            },
+            "pairing_complete": {
+                "title": "\u914d\u5bf9\u5b8c\u6210"
+            }
+        }
+    }
+}

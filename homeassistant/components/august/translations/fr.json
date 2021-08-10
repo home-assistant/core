@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Saisissez le mot de passe de {username} .",
+                "title": "R\u00e9authentifier un compte August"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "M\u00e9thode de connexion",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Si la m\u00e9thode de connexion est \u00abemail\u00bb, le nom d'utilisateur est l'adresse e-mail. Si la m\u00e9thode de connexion est \u00abt\u00e9l\u00e9phone\u00bb, le nom d'utilisateur est le num\u00e9ro de t\u00e9l\u00e9phone au format \u00ab+ NNNNNNNNN\u00bb.",
+                "title": "Cr\u00e9er un compte August"
+            },
+            "validation": {
+                "data": {
+                    "code": "Code de v\u00e9rification"
+                },
+                "description": "Veuillez v\u00e9rifier votre {login_method} ( {username} ) et entrez le code de v\u00e9rification ci-dessous",
+                "title": "Authentification \u00e0 deux facteurs"
+            }
+        }
+    }
+}

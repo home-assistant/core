@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_host": "Nome host o indirizzo IP non valido",
+            "not_supported": "Dispositivo non supportato",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_host": "Nome host o indirizzo IP non valido",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name} ({model} presso {host})",
+        "step": {
+            "auth": {
+                "title": "Eseguire l'autenticazione al dispositivo"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nome"
+                },
+                "title": "Scegliere un nome per il dispositivo"
+            },
+            "reset": {
+                "description": "{name} ( {model} su {host} ) \u00e8 bloccato. \u00c8 necessario sbloccare il dispositivo per autenticarsi e completare la configurazione. Istruzioni:\n 1. Apri l'app Broadlink.\n 2. Fare clic sul dispositivo.\n 3. Fare clic su \"...\" in alto a destra.\n 4. Scorri fino in fondo alla pagina.\n 5. Disabilitare il blocco.",
+                "title": "Sbloccare il dispositivo"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "S\u00ec, fallo."
+                },
+                "description": "{name} ({model} su {host}) \u00e8 bloccato. Ci\u00f2 pu\u00f2 causare problemi di autenticazione in Home Assistant. Vorresti sbloccarlo?",
+                "title": "Sblocca il dispositivo (opzionale)"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "timeout": "Tempo scaduto"
+                },
+                "title": "Connettiti al dispositivo"
+            }
+        }
+    }
+}

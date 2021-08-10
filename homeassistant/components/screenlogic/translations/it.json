@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "Indirizzo IP",
+                    "port": "Porta"
+                },
+                "description": "Inserisci le informazioni del tuo gateway ScreenLogic.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Gateway"
+                },
+                "description": "Sono stati individuati i gateway ScreenLogic seguenti. Selezionarne uno da configurare oppure scegliere di configurare manualmente un gateway ScreenLogic.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Secondi tra le scansioni"
+                },
+                "description": "Specifica le impostazioni per {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

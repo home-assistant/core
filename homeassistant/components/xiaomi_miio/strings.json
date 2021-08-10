@@ -1,0 +1,71 @@
+{
+  "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "incomplete_info": "Incomplete information to setup device, no host or token supplied.",
+      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown_device": "The device model is not known, not able to setup the device using config flow.",
+      "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
+      "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
+      "cloud_login_error": "Could not login to Xioami Miio Cloud, check the credentials."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "reauth_confirm": {
+        "description": "The Xiaomi Miio integration needs to re-authenticate your account in order to update the tokens or add missing cloud credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "cloud": {
+        "data": {
+          "cloud_username": "Cloud username",
+          "cloud_password": "Cloud password",
+          "cloud_country": "Cloud server country",
+          "manual": "Configure manually (not recommended)"
+        },
+        "description": "Log in to the Xiaomi Miio cloud, see https://www.openhab.org/addons/bindings/miio/#country-servers for the cloud server to use.",
+        "title": "Connect to a Xiaomi Miio Device or Xiaomi Gateway"
+      },
+      "select": {
+        "data": {
+          "select_device": "Miio device"
+        },
+        "description": "Select the Xiaomi Miio device to setup.",
+        "title": "Connect to a Xiaomi Miio Device or Xiaomi Gateway"
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "description": "You will need the 32 character [%key:common::config_flow::data::api_token%], see https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instructions. Please note, that this [%key:common::config_flow::data::api_token%] is different from the key used by the Xiaomi Aqara integration.",
+        "title": "Connect to a Xiaomi Miio Device or Xiaomi Gateway"
+      },
+      "connect": {
+        "data": {
+          "model": "Device model"
+        },
+        "description": "Manually select the device model from the supported models.",
+        "title": "Connect to a Xiaomi Miio Device or Xiaomi Gateway"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country"
+    },
+    "step": {
+      "init": {
+        "title": "Xiaomi Miio",
+        "description": "Specify optional settings",
+        "data": {
+          "cloud_subdevices": "Use cloud to get connected subdevices"
+        }
+      }
+    }
+  }
+}

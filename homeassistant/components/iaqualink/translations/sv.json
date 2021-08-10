@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn / E-postadress"
+                },
+                "description": "V\u00e4nligen ange anv\u00e4ndarnamn och l\u00f6senord f\u00f6r ditt iAqualink-konto.",
+                "title": "Anslut till iAqualink"
+            }
+        }
+    }
+}

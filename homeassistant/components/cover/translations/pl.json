@@ -1,0 +1,39 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "zamknij {entity_name}",
+            "close_tilt": "zamknij pochylenie {entity_name}",
+            "open": "otw\u00f3rz {entity_name}",
+            "open_tilt": "otw\u00f3rz {entity_name} do pochylenia",
+            "set_position": "ustaw pozycj\u0119 {entity_name}",
+            "set_tilt_position": "ustaw pochylenie {entity_name}",
+            "stop": "zatrzymaj {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} jest zamkni\u0119ta",
+            "is_closing": "{entity_name} si\u0119 zamyka",
+            "is_open": "{entity_name} jest otwarta",
+            "is_opening": "{entity_name} si\u0119 otwiera",
+            "is_position": "pozycja {entity_name} to",
+            "is_tilt_position": "pochylenie {entity_name} to"
+        },
+        "trigger_type": {
+            "closed": "nast\u0105pi zamkni\u0119cie {entity_name}",
+            "closing": "{entity_name} si\u0119 zamyka",
+            "opened": "nast\u0105pi otwarcie {entity_name}",
+            "opening": "{entity_name} si\u0119 otwiera",
+            "position": "zmieni si\u0119 pozycja {entity_name}",
+            "tilt_position": "zmieni si\u0119 pochylenie {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "zamkni\u0119ta",
+            "closing": "zamykanie",
+            "open": "otwarta",
+            "opening": "otwieranie",
+            "stopped": "zatrzymanie"
+        }
+    },
+    "title": "Roleta"
+}

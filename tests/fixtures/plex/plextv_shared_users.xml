@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer friendlyName="myPlex" identifier="com.plexapp.plugins.myplex" machineIdentifier="85a28b6ea2b35c1a10cbdd967b74117a45e8694f" totalSize="3" size="3">
+<User id="1000" title="User 1000" username="User 1000" email="user_1000@email.com" recommendationsPlaylistId="" thumb="https://plex.tv/users/0000000000000000/avatar?c=1467656888" protected="0" home="0" allowTuners="0" allowSync="0" allowCameraUpload="0" allowChannels="0" allowSubtitleAdmin="0" filterAll="" filterMovies="" filterMusic="" filterPhotos="" filterTelevision="" restricted="0">
+  <Server id="7654321" serverId="000001" machineIdentifier="unique_id_123" name="plex" lastSeenAt="1614072646" numLibraries="4" allLibraries="0" owned="1" pending="0"/>
+</User>
+<User id="1001" title="User 1001" username="User 1001" email="user_1001@email.com" recommendationsPlaylistId="" thumb="https://plex.tv/users/0000000000000001/avatar?c=1599008193" protected="0" home="0" allowTuners="0" allowSync="0" allowCameraUpload="0" allowChannels="0" allowSubtitleAdmin="0" filterAll="" filterMovies="" filterMusic="" filterPhotos="" filterTelevision="" restricted="0">
+  <Server id="1234567" serverId="000001" machineIdentifier="unique_id_123" name="plex" lastSeenAt="1614072646" numLibraries="5" allLibraries="0" owned="1" pending="0"/>
+</User>
+</MediaContainer>

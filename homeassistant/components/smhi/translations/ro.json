@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Numele exist\u0103 deja",
+            "wrong_location": "Loca\u021bia numai \u00een Suedia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Longitudine",
+                    "name": "Nume"
+                },
+                "title": "Loca\u021bie \u00een Suedia"
+            }
+        }
+    }
+}

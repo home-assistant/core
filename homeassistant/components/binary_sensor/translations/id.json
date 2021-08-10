@@ -1,0 +1,191 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "Baterai {entity_name} hampir habis",
+            "is_cold": "{entity_name} dingin",
+            "is_connected": "{entity_name} terhubung",
+            "is_gas": "{entity_name} mendeteksi gas",
+            "is_hot": "{entity_name} panas",
+            "is_light": "{entity_name} mendeteksi cahaya",
+            "is_locked": "{entity_name} terkunci",
+            "is_moist": "{entity_name} lembab",
+            "is_motion": "{entity_name} mendeteksi gerakan",
+            "is_moving": "{entity_name} bergerak",
+            "is_no_gas": "{entity_name} tidak mendeteksi gas",
+            "is_no_light": "{entity_name} tidak mendeteksi cahaya",
+            "is_no_motion": "{entity_name} tidak mendeteksi gerakan",
+            "is_no_problem": "{entity_name} tidak mendeteksi masalah",
+            "is_no_smoke": "{entity_name} tidak mendeteksi asap",
+            "is_no_sound": "{entity_name} tidak mendeteksi suara",
+            "is_no_vibration": "{entity_name} tidak mendeteksi getaran",
+            "is_not_bat_low": "Baterai {entity_name} normal",
+            "is_not_cold": "{entity_name} tidak dingin",
+            "is_not_connected": "{entity_name} terputus",
+            "is_not_hot": "{entity_name} tidak panas",
+            "is_not_locked": "{entity_name} tidak terkunci",
+            "is_not_moist": "{entity_name} kering",
+            "is_not_moving": "{entity_name} tidak bergerak",
+            "is_not_occupied": "{entity_name} tidak ditempati",
+            "is_not_open": "{entity_name} tertutup",
+            "is_not_plugged_in": "{entity_name} dicabut",
+            "is_not_powered": "{entity_name} tidak ditenagai",
+            "is_not_present": "{entity_name} tidak ada",
+            "is_not_unsafe": "{entity_name} aman",
+            "is_occupied": "{entity_name} ditempati",
+            "is_off": "{entity_name} mati",
+            "is_on": "{entity_name} nyala",
+            "is_open": "{entity_name} terbuka",
+            "is_plugged_in": "{entity_name} dicolokkan",
+            "is_powered": "{entity_name} ditenagai",
+            "is_present": "{entity_name} ada",
+            "is_problem": "{entity_name} mendeteksi masalah",
+            "is_smoke": "{entity_name} mendeteksi asap",
+            "is_sound": "{entity_name} mendeteksi suara",
+            "is_unsafe": "{entity_name} tidak aman",
+            "is_vibration": "{entity_name} mendeteksi getaran"
+        },
+        "trigger_type": {
+            "bat_low": "Baterai {entity_name} hampir habis",
+            "cold": "{entity_name} menjadi dingin",
+            "connected": "{entity_name} terhubung",
+            "gas": "{entity_name} mulai mendeteksi gas",
+            "hot": "{entity_name} menjadi panas",
+            "light": "{entity_name} mulai mendeteksi cahaya",
+            "locked": "{entity_name} terkunci",
+            "moist": "{entity_name} menjadi lembab",
+            "motion": "{entity_name} mulai mendeteksi gerakan",
+            "moving": "{entity_name} mulai bergerak",
+            "no_gas": "{entity_name} berhenti mendeteksi gas",
+            "no_light": "{entity_name} berhenti mendeteksi cahaya",
+            "no_motion": "{entity_name} berhenti mendeteksi gerakan",
+            "no_problem": "{entity_name} berhenti mendeteksi masalah",
+            "no_smoke": "{entity_name} berhenti mendeteksi asap",
+            "no_sound": "{entity_name} berhenti mendeteksi suara",
+            "no_vibration": "{entity_name} berhenti mendeteksi getaran",
+            "not_bat_low": "Baterai {entity_name} normal",
+            "not_cold": "{entity_name} menjadi tidak dingin",
+            "not_connected": "{entity_name} terputus",
+            "not_hot": "{entity_name} menjadi tidak panas",
+            "not_locked": "{entity_name} tidak terkunci",
+            "not_moist": "{entity_name} menjadi kering",
+            "not_moving": "{entity_name} berhenti bergerak",
+            "not_occupied": "{entity_name} menjadi tidak ditempati",
+            "not_opened": "{entity_name} tertutup",
+            "not_plugged_in": "{entity_name} dicabut",
+            "not_powered": "{entity_name} tidak ditenagai",
+            "not_present": "{entity_name} tidak ada",
+            "not_unsafe": "{entity_name} menjadi aman",
+            "occupied": "{entity_name} menjadi ditempati",
+            "opened": "{entity_name} terbuka",
+            "plugged_in": "{entity_name} dicolokkan",
+            "powered": "{entity_name} ditenagai",
+            "present": "{entity_name} ada",
+            "problem": "{entity_name} mulai mendeteksi masalah",
+            "smoke": "{entity_name} mulai mendeteksi asap",
+            "sound": "{entity_name} mulai mendeteksi suara",
+            "turned_off": "{entity_name} dimatikan",
+            "turned_on": "{entity_name} dinyalakan",
+            "unsafe": "{entity_name} menjadi tidak aman",
+            "vibration": "{entity_name} mulai mendeteksi getaran"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Mati",
+            "on": "Nyala"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Rendah"
+        },
+        "battery_charging": {
+            "off": "Tidak mengisi daya",
+            "on": "Mengisi daya"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Dingin"
+        },
+        "connectivity": {
+            "off": "Terputus",
+            "on": "Terhubung"
+        },
+        "door": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        },
+        "garage_door": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        },
+        "gas": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Panas"
+        },
+        "light": {
+            "off": "Tidak ada cahaya",
+            "on": "Cahaya terdeteksi"
+        },
+        "lock": {
+            "off": "Terkunci",
+            "on": "Terbuka"
+        },
+        "moisture": {
+            "off": "Kering",
+            "on": "Basah"
+        },
+        "motion": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "moving": {
+            "off": "Tidak bergerak",
+            "on": "Bergerak"
+        },
+        "occupancy": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "opening": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        },
+        "plug": {
+            "off": "Dicabut",
+            "on": "Dicolokkan"
+        },
+        "presence": {
+            "off": "Keluar",
+            "on": "Di Rumah"
+        },
+        "problem": {
+            "off": "Oke",
+            "on": "Bermasalah"
+        },
+        "safety": {
+            "off": "Aman",
+            "on": "Tidak aman"
+        },
+        "smoke": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "sound": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "vibration": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
+        },
+        "window": {
+            "off": "Tertutup",
+            "on": "Terbuka"
+        }
+    },
+    "title": "Sensor biner"
+}

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant no est\u00e1 configurado correctamente para recibir actualizaciones de SmartThings. La URL del webhook no es v\u00e1lida: \n > {webhook_url} \n\nActualice su configuraci\u00f3n seg\u00fan las [instrucciones] ({component_url}), reinicie Home Assistant e intente nuevamente.",
+            "no_available_locations": "No hay ubicaciones SmartThings disponibles para configurar en Home Assistant."
+        },
+        "error": {
+            "app_setup_error": "No se puede configurar el SmartApp.  Por favor, int\u00e9ntelo de nuevo.",
+            "token_forbidden": "El token no tiene los \u00e1mbitos de OAuth necesarios.",
+            "token_invalid_format": "El token debe estar en formato UID/GUID",
+            "token_unauthorized": "El token no es v\u00e1lido o ya no est\u00e1 autorizado.",
+            "webhook_error": "SmartThings no pudo validar el endpoint configurado en `base_url`. Por favor, revise los requisitos de los componentes."
+        },
+        "step": {
+            "authorize": {
+                "title": "Autorizar Home Assistant"
+            },
+            "pat": {
+                "description": "Ingrese un SmartThings [Token de acceso personal] ({token_url}) que se ha creado seg\u00fan las [instrucciones] ({component_url}). Esto se usar\u00e1 para crear la integraci\u00f3n de Home Assistant dentro de su cuenta SmartThings.",
+                "title": "Ingresar token de acceso personal"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Ubicaci\u00f3n"
+                },
+                "description": "Seleccione la ubicaci\u00f3n de SmartThings que desea agregar a Home Assistant. Luego, abriremos una nueva ventana y le pediremos que inicie sesi\u00f3n y autorice la instalaci\u00f3n de la integraci\u00f3n de Home Assistant en la ubicaci\u00f3n seleccionada.",
+                "title": "Seleccionar ubicaci\u00f3n"
+            },
+            "user": {
+                "description": "SmartThings se configurar\u00e1 para enviar actualizaciones push a Home Assistant en: \n > {webhook_url} \n\nSi esto no es correcto, actualice su configuraci\u00f3n, reinicie Home Assistant e intente nuevamente.",
+                "title": "Ingresar token de acceso personal"
+            }
+        }
+    }
+}

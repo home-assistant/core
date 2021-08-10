@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u9a8c\u8bc1\u65e0\u6548",
+            "name_exists": "\u540d\u79f0\u5df2\u5b58\u5728"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a",
+                    "name": "\u540d\u79f0",
+                    "password": "\u5bc6\u7801",
+                    "port": "\u7aef\u53e3",
+                    "username": "\u7528\u6237\u540d",
+                    "verify_ssl": "\u4f7f\u7528 SSL"
+                },
+                "title": "\u8bbe\u7f6e Mikrotik \u8def\u7531\u5668"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "\u542f\u7528 ARP Ping",
+                    "force_dhcp": "\u4f7f\u7528 DHCP \u5f3a\u5236\u626b\u63cf"
+                }
+            }
+        }
+    }
+}

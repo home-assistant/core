@@ -1,0 +1,8 @@
+{
+  "domain": "vicare",
+  "name": "Viessmann ViCare",
+  "documentation": "https://www.home-assistant.io/integrations/vicare",
+  "codeowners": ["@oischinger"],
+  "requirements": ["PyViCare==1.0.0"],
+  "iot_class": "cloud_polling"
+}

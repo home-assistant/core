@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_url": "URL tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Kata Sandi Admin",
+                    "admin_username": "Nama Pengguna Admin",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

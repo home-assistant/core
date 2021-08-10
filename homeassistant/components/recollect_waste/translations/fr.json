@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 "
+        },
+        "error": {
+            "invalid_place_or_service_id": "ID de lieu ou de service non valide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Identifiant de lieu",
+                    "service_id": "ID de service"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Utilisez des noms conviviaux pour les types de ramassage (si possible)"
+                },
+                "title": "Configurer Recollect Waste"
+            }
+        }
+    }
+}

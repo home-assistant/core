@@ -1,0 +1,276 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2019-09-21T15:17:31Z",
+            "mapVersion": "8.30.100.154",
+            "moduleVersion": "7.2.201937-5251",
+            "interfaceVersion": "2.6.70",
+            "availableMapVersion": [
+                "8.30.100.154"
+            ]
+        },
+        "route": [
+            {
+                "waypoint": [
+                    {
+                        "linkId": "+565790671",
+                        "mappedPosition": {
+                            "latitude": 50.0378591,
+                            "longitude": 14.3924721
+                        },
+                        "originalPosition": {
+                            "latitude": 50.0377513,
+                            "longitude": 14.3923344
+                        },
+                        "type": "stopOver",
+                        "spot": 0.3,
+                        "sideOfStreet": "left",
+                        "mappedRoadName": "V Bokách III",
+                        "label": "V Bokách III",
+                        "shapeIndex": 0,
+                        "source": "user"
+                    },
+                    {
+                        "linkId": "+748931502",
+                        "mappedPosition": {
+                            "latitude": 50.0798786,
+                            "longitude": 14.4260037
+                        },
+                        "originalPosition": {
+                            "latitude": 50.0799383,
+                            "longitude": 14.4258216
+                        },
+                        "type": "stopOver",
+                        "spot": 1.0,
+                        "sideOfStreet": "left",
+                        "mappedRoadName": "Štěpánská",
+                        "label": "Štěpánská",
+                        "shapeIndex": 116,
+                        "source": "user"
+                    }
+                ],
+                "mode": {
+                    "type": "shortest",
+                    "transportModes": [
+                        "publicTransportTimeTable"
+                    ],
+                    "trafficMode": "enabled",
+                    "feature": []
+                },
+                "leg": [
+                    {
+                        "start": {
+                            "linkId": "+565790671",
+                            "mappedPosition": {
+                                "latitude": 50.0378591,
+                                "longitude": 14.3924721
+                            },
+                            "originalPosition": {
+                                "latitude": 50.0377513,
+                                "longitude": 14.3923344
+                            },
+                            "type": "stopOver",
+                            "spot": 0.3,
+                            "sideOfStreet": "left",
+                            "mappedRoadName": "V Bokách III",
+                            "label": "V Bokách III",
+                            "shapeIndex": 0,
+                            "source": "user"
+                        },
+                        "end": {
+                            "linkId": "+748931502",
+                            "mappedPosition": {
+                                "latitude": 50.0798786,
+                                "longitude": 14.4260037
+                            },
+                            "originalPosition": {
+                                "latitude": 50.0799383,
+                                "longitude": 14.4258216
+                            },
+                            "type": "stopOver",
+                            "spot": 1.0,
+                            "sideOfStreet": "left",
+                            "mappedRoadName": "Štěpánská",
+                            "label": "Štěpánská",
+                            "shapeIndex": 116,
+                            "source": "user"
+                        },
+                        "length": 7835,
+                        "travelTime": 2413,
+                        "maneuver": [
+                            {
+                                "position": {
+                                    "latitude": 50.0378591,
+                                    "longitude": 14.3924721
+                                },
+                                "instruction": "Head <span class=\"heading\">northwest</span> on <span class=\"street\">Kosořská</span>. <span class=\"distance-description\">Go for <span class=\"length\">28 m</span>.</span>",
+                                "travelTime": 32,
+                                "length": 28,
+                                "id": "M1",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0380039,
+                                    "longitude": 14.3921542
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Kosořská</span>. <span class=\"distance-description\">Go for <span class=\"length\">24 m</span>.</span>",
+                                "travelTime": 24,
+                                "length": 24,
+                                "id": "M2",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0380039,
+                                    "longitude": 14.3918109
+                                },
+                                "instruction": "Take the street on the <span class=\"direction\">left</span>, <span class=\"next-street\">Slivenecká</span>. <span class=\"distance-description\">Go for <span class=\"length\">343 m</span>.</span>",
+                                "travelTime": 354,
+                                "length": 343,
+                                "id": "M3",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0376499,
+                                    "longitude": 14.3871975
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Slivenecká</span>. <span class=\"distance-description\">Go for <span class=\"length\">64 m</span>.</span>",
+                                "travelTime": 72,
+                                "length": 64,
+                                "id": "M4",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0373602,
+                                    "longitude": 14.3879807
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">Slivenecká</span>. <span class=\"distance-description\">Go for <span class=\"length\">91 m</span>.</span>",
+                                "travelTime": 95,
+                                "length": 91,
+                                "id": "M5",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0365448,
+                                    "longitude": 14.3878305
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">K Barrandovu</span>. <span class=\"distance-description\">Go for <span class=\"length\">124 m</span>.</span>",
+                                "travelTime": 126,
+                                "length": 124,
+                                "id": "M6",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0363168,
+                                    "longitude": 14.3894618
+                                },
+                                "instruction": "Go to the <span class=\"company\">Tram</span> station <span class=\"station\">Geologicka</span> and take the <span class=\"transit\">rail</span> <span class=\"line\">5</span> toward <span class=\"destination\">Ústřední dílny DP</span>. <span class=\"distance-description\">Follow for <span class=\"stops\">13 stations</span>.</span>",
+                                "travelTime": 1440,
+                                "length": 6911,
+                                "id": "M7",
+                                "stopName": "Geologicka",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0800508,
+                                    "longitude": 14.423403
+                                },
+                                "instruction": "Get off at <span class=\"station\">Vodickova</span>.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M8",
+                                "stopName": "Vodickova",
+                                "nextRoadName": "Vodičkova",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0800508,
+                                    "longitude": 14.423403
+                                },
+                                "instruction": "Head <span class=\"heading\">northeast</span> on <span class=\"street\">Vodičkova</span>. <span class=\"distance-description\">Go for <span class=\"length\">65 m</span>.</span>",
+                                "travelTime": 74,
+                                "length": 65,
+                                "id": "M9",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0804901,
+                                    "longitude": 14.4239759
+                                },
+                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">V Jámě</span>. <span class=\"distance-description\">Go for <span class=\"length\">163 m</span>.</span>",
+                                "travelTime": 174,
+                                "length": 163,
+                                "id": "M10",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0796962,
+                                    "longitude": 14.4258857
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Štěpánská</span>. <span class=\"distance-description\">Go for <span class=\"length\">22 m</span>.</span>",
+                                "travelTime": 22,
+                                "length": 22,
+                                "id": "M11",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 50.0798786,
+                                    "longitude": 14.4260037
+                                },
+                                "instruction": "Arrive at <span class=\"street\">Štěpánská</span>. Your destination is on the left.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M12",
+                                "_type": "PrivateTransportManeuverType"
+                            }
+                        ]
+                    }
+                ],
+                "publicTransportLine": [
+                    {
+                        "lineName": "5",
+                        "lineForeground": "#F5ADCE",
+                        "lineBackground": "#F5ADCE",
+                        "companyName": "HERE Technologies",
+                        "destination": "Ústřední dílny DP",
+                        "type": "railLight",
+                        "id": "L1"
+                    }
+                ],
+                "summary": {
+                    "distance": 7835,
+                    "baseTime": 2413,
+                    "flags": [
+                        "noThroughRoad",
+                        "builtUpArea"
+                    ],
+                    "text": "The trip takes <span class=\"length\">7.8 km</span> and <span class=\"time\">40 mins</span>.",
+                    "travelTime": 2413,
+                    "departure": "2019-09-21T17:16:17+02:00",
+                    "timetableExpiration": "2019-09-21T00:00:00Z",
+                    "_type": "PublicTransportRouteSummaryType"
+                }
+            }
+        ],
+        "language": "en-us",
+        "sourceAttribution": {
+            "attribution": "With the support of <span class=\"company\"><a href=\"https://transit.api.here.com/r?appId=Mt1bOYh3m9uxE7r3wuUx&u=https://wego.here.com\">HERE Technologies</a></span>. All information is provided without warranty of any kind.",
+            "supplier": [
+                {
+                    "title": "HERE Technologies",
+                    "href": "https://transit.api.here.com/r?appId=Mt1bOYh3m9uxE7r3wuUx&u=https://wego.here.com"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "uzakta",
+            "hg": "donma korumas\u0131",
+            "schedule": "Zamanlama"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} bir alarm alg\u0131lad\u0131",
+            "animal": "{entity_name} bir hayvan tespit etti",
+            "cancel_set_point": "{entity_name} zamanlamas\u0131na devam etti",
+            "human": "{entity_name} bir insan alg\u0131lad\u0131",
+            "movement": "{entity_name} hareket alg\u0131lad\u0131",
+            "turned_off": "{entity_name} kapat\u0131ld\u0131",
+            "turned_on": "{entity_name} a\u00e7\u0131ld\u0131"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Alan\u0131n ad\u0131",
+                    "lat_ne": "Enlem Kuzey-Do\u011fu k\u00f6\u015fesi",
+                    "lat_sw": "Enlem G\u00fcney-Bat\u0131 k\u00f6\u015fesi",
+                    "lon_ne": "Boylam Kuzey-Do\u011fu k\u00f6\u015fesi",
+                    "lon_sw": "Boylam G\u00fcney-Bat\u0131 k\u00f6\u015fesi",
+                    "mode": "Hesaplama",
+                    "show_on_map": "Haritada g\u00f6ster"
+                },
+                "description": "Bir alan i\u00e7in genel hava durumu sens\u00f6r\u00fc yap\u0131land\u0131r\u0131n.",
+                "title": "Netatmo genel hava durumu sens\u00f6r\u00fc"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Alan ad\u0131",
+                    "weather_areas": "Hava alanlar\u0131"
+                },
+                "description": "Genel hava durumu sens\u00f6rlerini yap\u0131land\u0131r\u0131n.",
+                "title": "Netatmo genel hava durumu sens\u00f6r\u00fc"
+            }
+        }
+    }
+}

@@ -1,0 +1,18 @@
+assume_state:
+  name: Assume state
+  description: Set Sensibo device to external state.
+  fields:
+    entity_id:
+      name: Entity
+      description: Name(s) of entities to change.
+      selector:
+        entity:
+          integration: sensibo
+          domain: climate
+    state:
+      name: State
+      description: State to set.
+      required: true
+      example: "idle"
+      selector:
+        text:

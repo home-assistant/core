@@ -1,12 +1,9 @@
 {
   "domain": "conversation",
   "name": "Conversation",
-  "documentation": "https://www.home-assistant.io/components/conversation",
-  "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/conversation",
+  "dependencies": ["http"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal",
+  "iot_class": "local_push"
 }

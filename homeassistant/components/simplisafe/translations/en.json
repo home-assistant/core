@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This SimpliSafe account is already in use.",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "identifier_exists": "Account already registered",
+            "invalid_auth": "Invalid authentication",
+            "still_awaiting_mfa": "Still awaiting MFA email click",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "mfa": {
+                "description": "Check your email for a link from SimpliSafe. After verifying the link, return here to complete the installation of the integration.",
+                "title": "SimpliSafe Multi-Factor Authentication"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "code": "Code (used in Home Assistant UI)",
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Fill in your information."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (used in Home Assistant UI)"
+                },
+                "title": "Configure SimpliSafe"
+            }
+        }
+    }
+}

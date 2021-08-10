@@ -1,0 +1,105 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Fallo en la obtenci\u00f3n de la informaci\u00f3n de descubrimiento del complemento Z-Wave JS.",
+            "addon_info_failed": "No se pudo obtener la informaci\u00f3n del complemento Z-Wave JS.",
+            "addon_install_failed": "No se ha podido instalar el complemento Z-Wave JS.",
+            "addon_set_config_failed": "Fallo en la configuraci\u00f3n de Z-Wave JS.",
+            "addon_start_failed": "No se ha podido iniciar el complemento Z-Wave JS.",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "cannot_connect": "No se pudo conectar"
+        },
+        "error": {
+            "addon_start_failed": "No se pudo iniciar el complemento Z-Wave JS. Comprueba la configuraci\u00f3n.",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_ws_url": "URL de websocket no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "progress": {
+            "install_addon": "Espera mientras termina la instalaci\u00f3n del complemento Z-Wave JS. Puede tardar varios minutos.",
+            "start_addon": "Espere mientras se completa el inicio del complemento Z-Wave JS. Esto puede tardar unos segundos."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Clave de red",
+                    "usb_path": "Ruta del dispositivo USB"
+                },
+                "title": "Introduzca la configuraci\u00f3n del complemento Z-Wave JS"
+            },
+            "hassio_confirm": {
+                "title": "Configurar la integraci\u00f3n de Z-Wave JS con el complemento Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "La instalaci\u00f3n del complemento Z-Wave JS ha comenzado"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Usar el complemento Z-Wave JS Supervisor"
+                },
+                "description": "\u00bfQuieres utilizar el complemento Z-Wave JS Supervisor?",
+                "title": "Selecciona el m\u00e9todo de conexi\u00f3n"
+            },
+            "start_addon": {
+                "title": "Se est\u00e1 iniciando el complemento Z-Wave JS."
+            }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Valor del par\u00e1metro de configuraci\u00f3n {subtype}",
+            "node_status": "Estado del nodo",
+            "value": "Valor actual de un valor Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Envi\u00f3 una notificaci\u00f3n de control de entrada",
+            "event.notification.notification": "Envi\u00f3 una notificaci\u00f3n",
+            "event.value_notification.basic": "Evento CC b\u00e1sico en {subtype}",
+            "event.value_notification.central_scene": "Acci\u00f3n de escena central en {subtype}",
+            "event.value_notification.scene_activation": "Activaci\u00f3n de escena en {subtype}",
+            "state.node_status": "El estado del nodo ha cambiado"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Fallo en la obtenci\u00f3n de la informaci\u00f3n de descubrimiento del complemento Z-Wave JS.",
+            "addon_info_failed": "Fallo en la obtenci\u00f3n de la informaci\u00f3n del complemento Z-Wave JS.",
+            "addon_install_failed": "No se ha podido instalar el complemento Z-Wave JS.",
+            "addon_set_config_failed": "Fallo en la configuraci\u00f3n de Z-Wave JS.",
+            "addon_start_failed": "No se ha podido iniciar el complemento Z-Wave JS.",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "different_device": "El dispositivo USB conectado no es el mismo que el configurado anteriormente para esta entrada de configuraci\u00f3n. Por favor, cree una nueva entrada de configuraci\u00f3n para el nuevo dispositivo."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_ws_url": "URL de websocket no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "progress": {
+            "install_addon": "Por favor, espere mientras termina la instalaci\u00f3n del complemento Z-Wave JS. Esto puede tardar varios minutos.",
+            "start_addon": "Por favor, espere mientras se completa el inicio del complemento Z-Wave JS. Esto puede tardar algunos segundos."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emular el hardware",
+                    "log_level": "Nivel de registro",
+                    "network_key": "Clave de red",
+                    "usb_path": "Ruta del dispositivo USB"
+                },
+                "title": "Introduzca la configuraci\u00f3n del complemento Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "La instalaci\u00f3n del complemento Z-Wave JS ha comenzado"
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

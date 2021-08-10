@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce t\u00e9l\u00e9viseur Samsung est d\u00e9j\u00e0 configur\u00e9.",
+            "already_in_progress": "La configuration du t\u00e9l\u00e9viseur Samsung est d\u00e9j\u00e0 en cours.",
+            "auth_missing": "Home Assistant n'est pas autoris\u00e9 \u00e0 se connecter \u00e0 ce t\u00e9l\u00e9viseur Samsung. Veuillez v\u00e9rifier les param\u00e8tres de votre t\u00e9l\u00e9viseur pour autoriser Home Assistant.",
+            "cannot_connect": "\u00c9chec de connexion",
+            "id_missing": "Cet appareil Samsung n'a pas de num\u00e9ro de s\u00e9rie.",
+            "not_supported": "Ce t\u00e9l\u00e9viseur Samsung n'est actuellement pas pris en charge.",
+            "reauth_successful": "R\u00e9-authentification r\u00e9ussie",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "auth_missing": "Home Assistant n'est pas autoris\u00e9 \u00e0 se connecter \u00e0 ce t\u00e9l\u00e9viseur Samsung. V\u00e9rifiez les param\u00e8tres du Gestionnaire de p\u00e9riph\u00e9riques externes de votre t\u00e9l\u00e9viseur pour autoriser Home Assistant."
+        },
+        "flow_title": "Samsung TV: {model}",
+        "step": {
+            "confirm": {
+                "description": "Voulez vous installer la TV {model} Samsung? Si vous n'avez jamais connect\u00e9 Home Assistant avant, vous devriez voir une fen\u00eatre contextuelle sur votre t\u00e9l\u00e9viseur demandant une authentification. Les configurations manuelles de ce t\u00e9l\u00e9viseur seront \u00e9cras\u00e9es.",
+                "title": "TV Samsung"
+            },
+            "reauth_confirm": {
+                "description": "Apr\u00e8s avoir soumis, acceptez la fen\u00eatre contextuelle sur {device} demandant l'autorisation dans les 30 secondes."
+            },
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "name": "Nom"
+                },
+                "description": "Entrez les informations relatives \u00e0 votre t\u00e9l\u00e9viseur Samsung. Si vous n'avez jamais connect\u00e9 Home Assistant avant, vous devriez voir une fen\u00eatre contextuelle sur votre t\u00e9l\u00e9viseur demandant une authentification."
+            }
+        }
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Niveau de la batterie de {entity_name}",
+            "is_carbon_dioxide": "Niveau actuel de concentration de dioxyde de carbone {entity_name}",
+            "is_carbon_monoxide": "Niveau actuel de concentration de monoxyde de carbone {entity_name}",
+            "is_current": "Courant actuel pour {entity_name}",
+            "is_energy": "\u00c9nergie actuelle pour {entity_name}",
+            "is_humidity": "Humidit\u00e9 de {entity_name}",
+            "is_illuminance": "\u00c9clairement de {entity_name}",
+            "is_power": "Puissance de {entity_name}",
+            "is_power_factor": "Facteur de puissance actuel pour {entity_name}",
+            "is_pressure": "Pression de {entity_name}",
+            "is_signal_strength": "Force du signal de {entity_name}",
+            "is_temperature": "Temp\u00e9rature de {entity_name}",
+            "is_value": "La valeur actuelle de {entity_name}",
+            "is_voltage": "Tension actuelle pour {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} modification du niveau de batterie",
+            "carbon_dioxide": "{entity_name} changements de concentration de dioxyde de carbone",
+            "carbon_monoxide": "{entity_name} changements de concentration de monoxyde de carbone",
+            "current": "{entity_name} changement de courant",
+            "energy": "{entity_name} changement d'\u00e9nergie",
+            "humidity": "{entity_name} modification de l'humidit\u00e9",
+            "illuminance": "{entity_name} modification de l'\u00e9clairement",
+            "power": "{entity_name} modification de la puissance",
+            "power_factor": "{entity_name} changement de facteur de puissance",
+            "pressure": "{entity_name} modification de la pression",
+            "signal_strength": "{entity_name} modification de la force du signal",
+            "temperature": "{entity_name} modification de temp\u00e9rature",
+            "value": "Changements de valeur de {entity_name}",
+            "voltage": "{entity_name} changement de tension"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Inactif",
+            "on": "Actif"
+        }
+    },
+    "title": "Capteur"
+}

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "La contrasenya de {username} ja no \u00e9s v\u00e0lida.",
+                "title": "Torna a autenticar el compte Flume"
+            },
+            "user": {
+                "data": {
+                    "client_id": "ID de client",
+                    "client_secret": "Secret de client",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Per poder accedir a l'API personal de Flume, has de sol\u00b7licitar un 'ID de client' i un 'secret de client' anant a https://portal.flumetech.com/settings#token",
+                "title": "Connexi\u00f3 amb Flume"
+            }
+        }
+    }
+}

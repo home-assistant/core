@@ -1,0 +1,98 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "incomplete_info": "Informazioni incomplete per configurare il dispositivo, nessun host o token fornito.",
+            "not_xiaomi_miio": "Il dispositivo non \u00e8 (ancora) supportato da Xiaomi Miio.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "cloud_credentials_incomplete": "Credenziali cloud incomplete, inserisci nome utente, password e paese",
+            "cloud_login_error": "Impossibile accedere a Xioami Miio Cloud, controlla le credenziali.",
+            "cloud_no_devices": "Nessun dispositivo trovato in questo account cloud Xiaomi Miio.",
+            "no_device_selected": "Nessun dispositivo selezionato, selezionare un dispositivo.",
+            "unknown_device": "Il modello del dispositivo non \u00e8 noto, non \u00e8 possibile configurare il dispositivo utilizzando il flusso di configurazione."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Paese del server cloud",
+                    "cloud_password": "Password cloud",
+                    "cloud_username": "Nome utente cloud",
+                    "manual": "Configura manualmente (non consigliato)"
+                },
+                "description": "Accedi al cloud Xiaomi Miio, vedi https://www.openhab.org/addons/bindings/miio/#country-servers per utilizzare il server cloud.",
+                "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
+            },
+            "connect": {
+                "data": {
+                    "model": "Modello del dispositivo"
+                },
+                "description": "Seleziona manualmente il modello del dispositivo tra i modelli supportati.",
+                "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
+            },
+            "device": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "model": "Modello del dispositivo (opzionale)",
+                    "name": "Nome del dispositivo",
+                    "token": "Token API"
+                },
+                "description": "Avrai bisogno dei 32 caratteri della Token API, vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per istruzioni. Tieni presente che questa Token API \u00e8 diversa dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
+                "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
+            },
+            "gateway": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "name": "Nome del Gateway",
+                    "token": "Token API"
+                },
+                "description": "E' necessaria la Token API di 32 caratteri, vedere https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per le istruzioni. Notare che questa Token API \u00e8 differente dalla chiave usata dall'integrazione di Xiaomi Aqara.",
+                "title": "Connessione a un Xiaomi Gateway "
+            },
+            "manual": {
+                "data": {
+                    "host": "Indirizzo IP",
+                    "token": "Token API"
+                },
+                "description": "Avrai bisogno dei 32 caratteri del Token API, vedi https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token per istruzioni. Tieni presente che questo Token API \u00e8 diverso dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
+                "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
+            },
+            "reauth_confirm": {
+                "description": "L'integrazione di Xiaomi Miio deve riautenticare il tuo account per aggiornare i token o aggiungere credenziali cloud mancanti.",
+                "title": "Autenticare nuovamente l'integrazione"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Dispositivo Miio"
+                },
+                "description": "Seleziona il dispositivo Xiaomi Miio da configurare.",
+                "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Connettiti a un Xiaomi Gateway"
+                },
+                "description": "Selezionare a quale dispositivo si desidera collegare.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Credenziali cloud incomplete, inserisci nome utente, password e paese"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Usa il cloud per connettere i sottodispositivi"
+                },
+                "description": "Specificare le impostazioni opzionali",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

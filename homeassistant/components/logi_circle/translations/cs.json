@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "external_setup": "Logi Circle \u00fasp\u011b\u0161n\u011b nastaveno jin\u00fdm zp\u016fsobem.",
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
+        },
+        "error": {
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "follow_link": "Postupujte podle odkazu a prove\u010fte ov\u011b\u0159en\u00ed p\u0159ed stisknut\u00edm tla\u010d\u00edtka Odeslat.",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "step": {
+            "auth": {
+                "description": "Postupujte podle n\u00ed\u017ee uveden\u00e9ho odkazu a **P\u0159ijm\u011bte** p\u0159\u00edstup k \u00fa\u010dtu Logi Circle, pot\u00e9 se vra\u0165te zp\u011bt a stiskn\u011bte n\u00ed\u017ee **Odeslat**. \n\n[Odkaz]({authorization_url})",
+                "title": "Ov\u011b\u0159en\u00ed pomoc\u00ed Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Poskytovatel"
+                },
+                "title": "Poskytovatel ov\u011b\u0159en\u00ed"
+            }
+        }
+    }
+}

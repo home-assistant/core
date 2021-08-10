@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} ist unt\u00e4tig",
+            "is_off": "{entity_name} ist ausgeschaltet",
+            "is_on": "{entity_name} ist eingeschaltet",
+            "is_paused": "{entity_name} ist pausiert",
+            "is_playing": "{entity_name} spielt"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} wird inaktiv",
+            "paused": "{entity_name} ist angehalten",
+            "playing": "{entity_name} beginnt zu spielen",
+            "turned_off": "{entity_name} ausgeschaltet",
+            "turned_on": "{entity_name} eingeschaltet"
+        }
+    },
+    "state": {
+        "_": {
+            "idle": "Unt\u00e4tig",
+            "off": "Aus",
+            "on": "An",
+            "paused": "Pausiert",
+            "playing": "Spielt",
+            "standby": "Standby"
+        }
+    },
+    "title": "Mediaplayer"
+}

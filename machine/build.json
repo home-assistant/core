@@ -1,0 +1,16 @@
+{
+    "image": "homeassistant/{machine}-homeassistant",
+    "shadow_repository": "ghcr.io/home-assistant",
+    "build_from": {
+        "aarch64": "ghcr.io/home-assistant/aarch64-homeassistant:",
+        "armv7": "ghcr.io/home-assistant/armv7-homeassistant:",
+        "armhf": "ghcr.io/home-assistant/armhf-homeassistant:",
+        "amd64": "ghcr.io/home-assistant/amd64-homeassistant:",
+        "i386": "ghcr.io/home-assistant/i386-homeassistant:"
+    },
+    "labels": {
+        "io.hass.type": "core",
+        "org.opencontainers.image.source": "https://github.com/home-assistant/core"
+    },
+    "version_tag": true
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "dsmr_reader",
+  "name": "DSMR Reader",
+  "documentation": "https://www.home-assistant.io/integrations/dsmr_reader",
+  "dependencies": ["mqtt"],
+  "codeowners": ["@depl0y"],
+  "iot_class": "cloud_polling"
+}

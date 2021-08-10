@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_api_key": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "requests_exceeded": "Accuweather API\uc5d0 \ud5c8\uc6a9\ub41c \uc694\uccad \uc218\uac00 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uae30\ub2e4\ub9ac\uac70\ub098 API \ud0a4\ub97c \ubcc0\uacbd\ud574\uc57c \ud569\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \ud0a4",
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4",
+                    "name": "\uc774\ub984"
+                },
+                "description": "\uad6c\uc131\uc5d0 \ub300\ud55c \ub3c4\uc6c0\uc774 \ud544\uc694\ud55c \uacbd\uc6b0 \ub2e4\uc74c\uc744 \ucc38\uc870\ud574\uc8fc\uc138\uc694: https://www.home-assistant.io/integrations/accuweather/\n\n\uc77c\ubd80 \uc13c\uc11c\ub294 \uae30\ubcf8\uc801\uc73c\ub85c \ud65c\uc131\ud654\ub418\uc5b4 \uc788\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uad6c\uc131 \ud6c4 \uad6c\uc131\uc694\uc18c \ub808\uc9c0\uc2a4\ud2b8\ub9ac\uc5d0\uc11c \ud65c\uc131\ud654\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\uc77c\uae30\uc608\ubcf4\ub294 \uae30\ubcf8\uc801\uc73c\ub85c \ud65c\uc131\ud654\ub418\uc5b4 \uc788\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc635\uc158\uc5d0\uc11c \ud65c\uc131\ud654\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+                "title": "AccuWeather"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "\ub0a0\uc528 \uc608\ubcf4"
+                },
+                "description": "\ubb34\ub8cc \ubc84\uc804\uc758 AccuWeather API \ud0a4\ub85c \uc77c\uae30\uc608\ubcf4\ub97c \ud65c\uc131\ud654\ud55c \uacbd\uc6b0 \uc81c\ud55c\uc0ac\ud56d\uc73c\ub85c \uc778\ud574 \uc5c5\ub370\uc774\ud2b8\ub294 40 \ubd84\uc774 \uc544\ub2cc 80 \ubd84\ub9c8\ub2e4 \uc218\ud589\ub429\ub2c8\ub2e4.",
+                "title": "AccuWeather \uc635\uc158"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "AccuWeather \uc11c\ubc84 \uc5f0\uacb0",
+            "remaining_requests": "\ub0a8\uc740 \ud5c8\uc6a9 \uc694\uccad \ud69f\uc218"
+        }
+    }
+}

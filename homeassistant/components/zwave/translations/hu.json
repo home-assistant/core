@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "option_error": "A Z-Wave \u00e9rv\u00e9nyes\u00edt\u00e9s sikertelen. Az USB-meghajt\u00f3 el\u00e9r\u00e9si \u00fatj\u00e1t helyesen adtad meg?"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "network_key": "H\u00e1l\u00f3zati kulcs (hagyja \u00fcresen az automatikus gener\u00e1l\u00e1shoz)",
+                    "usb_path": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
+                },
+                "description": "A konfigur\u00e1ci\u00f3s v\u00e1ltoz\u00f3kr\u00f3l az inform\u00e1ci\u00f3kat l\u00e1sd a https://www.home-assistant.io/docs/z-wave/installation/ oldalon."
+            }
+        }
+    },
+    "state": {
+        "_": {
+            "dead": "Halott",
+            "initializing": "Inicializ\u00e1l\u00e1s",
+            "ready": "K\u00e9sz",
+            "sleeping": "Alv\u00e1s"
+        },
+        "query_stage": {
+            "dead": "Halott",
+            "initializing": "Inicializ\u00e1l\u00e1s"
+        }
+    }
+}

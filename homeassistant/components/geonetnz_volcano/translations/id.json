@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radius"
+                },
+                "title": "Isi detail filter Anda."
+            }
+        }
+    }
+}

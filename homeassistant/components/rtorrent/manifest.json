@@ -1,8 +1,7 @@
 {
   "domain": "rtorrent",
-  "name": "Rtorrent",
-  "documentation": "https://www.home-assistant.io/components/rtorrent",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "rTorrent",
+  "documentation": "https://www.home-assistant.io/integrations/rtorrent",
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

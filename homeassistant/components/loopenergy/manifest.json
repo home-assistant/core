@@ -1,10 +1,8 @@
 {
   "domain": "loopenergy",
-  "name": "Loopenergy",
-  "documentation": "https://www.home-assistant.io/components/loopenergy",
-  "requirements": [
-    "pyloopenergy==0.1.2"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "name": "Loop Energy",
+  "documentation": "https://www.home-assistant.io/integrations/loopenergy",
+  "requirements": ["pyloopenergy==0.2.1"],
+  "codeowners": ["@pavoni"],
+  "iot_class": "cloud_push"
 }

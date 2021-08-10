@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e",
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u65e0\u6548\u9a8c\u8bc1",
+            "no_uuid": "Kodi \u5b9e\u4f8b\u6ca1\u6709\u552f\u4e00\u7684 ID\u3002\u8fd9\u5f88\u53ef\u80fd\u662f\u7531\u4e8e\u65e7\u7684 Kodi \u7248\u672c\uff0817.x \u6216\u66f4\u4f4e\u7248\u672c\uff09\u9020\u6210\u3002\u60a8\u53ef\u4ee5\u624b\u52a8\u914d\u7f6e\u96c6\u6210\u6216\u5347\u7ea7\u5230\u66f4\u65b0\u7684 Kodi \u7248\u672c\u3002",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u9a8c\u8bc1\u65e0\u6548",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "description": "\u8bf7\u8f93\u5165\u60a8\u7684 Kodi \u7528\u6237\u540d\u548c\u5bc6\u7801\u3002\u8fd9\u4e9b\u53ef\u4ee5\u5728\u201c\u7cfb\u7edf/\u8bbe\u7f6e/\u7f51\u7edc/\u670d\u52a1\u201d\u4e2d\u627e\u5230\u3002"
+            },
+            "discovery_confirm": {
+                "description": "\u60a8\u662f\u5426\u60f3\u8981\u5c06 Kodi (`{name}`) \u6dfb\u52a0\u5230 Home Assistant?",
+                "title": "\u5df2\u53d1\u73b0 Kodi"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a\u5730\u5740",
+                    "port": "\u7aef\u53e3",
+                    "ssl": "\u4f7f\u7528 SSL \u9a8c\u8bc1"
+                },
+                "description": "Kodi \u8fde\u63a5\u4fe1\u606f\u3002\n\u8bf7\u786e\u4fdd\u5728\u8bbe\u7f6e\uff1a\u201c\u7cfb\u7edf/\u8bbe\u7f6e/\u7f51\u7edc/\u670d\u52a1\u201d\u4e2d\u542f\u7528\u201c\u5141\u8bb8\u901a\u8fc7 HTTP \u63a7\u5236 Kodi\u201d\u3002"
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "\u7aef\u53e3"
+                },
+                "description": "WebSocket \u7aef\u53e3(\u5728 Kodi \u4e2d\u6709\u65f6\u79f0\u4e3a TCP \u7aef\u53e3)\u3002\u4e3a\u901a\u8fc7 WebSocket \u8fdb\u884c\u8fde\u63a5\uff0c\u60a8\u9700\u8981\u5728\"\u7cfb\u7edf/\u8bbe\u7f6e/\u7f51\u7edc/\u670d\u52a1\"\u4e2d\u542f\u7528\u201c\u5141\u8bb8\u7a0b\u5e8f...\u63a7\u5236 Kodi\u201d\u3002\u5982\u679c\u672a\u542f\u7528 WebSocket\uff0c\u8bf7\u79fb\u9664\u7aef\u53e3\u5e76\u7559\u7a7a\u3002"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "[entity_name} \u88ab\u8981\u6c42\u5173\u95ed",
+            "turn_on": "[entity_name} \u88ab\u8981\u6c42\u6253\u5f00"
+        }
+    }
+}

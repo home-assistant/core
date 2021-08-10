@@ -1,0 +1,27 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "one": "eins",
+                    "other": "andere"
+                }
+            },
+            "options_1": {
+                "data": {
+                    "bool": "Optionaler Boolescher Wert",
+                    "constant": "Konstante",
+                    "int": "Numerische Eingabe"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Mehrfachauswahl",
+                    "select": "W\u00e4hle eine Option",
+                    "string": "String-Wert"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

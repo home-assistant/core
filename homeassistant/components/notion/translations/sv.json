@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Det h\u00e4r anv\u00e4ndarnamnet anv\u00e4nds redan."
+        },
+        "error": {
+            "no_devices": "Inga enheter hittades p\u00e5 kontot"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn/E-Postadress"
+                },
+                "title": "Fyll i dina uppgifter"
+            }
+        }
+    }
+}

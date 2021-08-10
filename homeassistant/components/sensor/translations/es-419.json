@@ -1,0 +1,20 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "battery_level": "{entity_name} cambios de nivel de bater\u00eda",
+            "humidity": "{entity_name} cambios de humedad",
+            "illuminance": "{entity_name} cambios de iluminancia",
+            "pressure": "{entity_name} cambios de presi\u00f3n",
+            "signal_strength": "{entity_name} cambios en la intensidad de la se\u00f1al",
+            "temperature": "{entity_name} cambios de temperatura",
+            "value": "{entity_name} cambios de valor"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "",
+            "on": ""
+        }
+    },
+    "title": "Sensor"
+}

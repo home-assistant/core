@@ -1,0 +1,33 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Larma {entity_name} borta",
+            "arm_home": "Larma {entity_name} hemma",
+            "arm_night": "Larma {entity_name} natt",
+            "disarm": "Avlarma {entity_name}",
+            "trigger": "Utl\u00f6sare {entity_name}"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} larmad borta",
+            "armed_home": "{entity_name} larmad hemma",
+            "armed_night": "{entity_name} larmad natt",
+            "disarmed": "{entity_name} bortkopplad",
+            "triggered": "{entity_name} utl\u00f6st"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Larmat",
+            "armed_away": "Larmat",
+            "armed_custom_bypass": "Larm f\u00f6rbikopplat",
+            "armed_home": "Hemmalarmat",
+            "armed_night": "Nattlarmat",
+            "arming": "Tillkopplar",
+            "disarmed": "Avlarmat",
+            "disarming": "Fr\u00e5nkopplar",
+            "pending": "V\u00e4ntande",
+            "triggered": "Utl\u00f6st"
+        }
+    },
+    "title": "Larmkontrollpanel"
+}

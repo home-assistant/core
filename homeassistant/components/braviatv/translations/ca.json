@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "no_ip_control": "El control IP del teu televisor est\u00e0 desactivat o aquest no \u00e9s compatible."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids",
+            "unsupported_model": "Aquest model de televisor no \u00e9s compatible."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "Codi PIN"
+                },
+                "description": "Introdueix el codi PIN que es mostra a la pantalla del televisor.\n\nSi no es mostra el codi, has d'eliminar Home Assistant del teu televisor. V\u00e9s a Configuraci\u00f3 > Xarxa > Configuraci\u00f3 de dispositiu remot > Elimina dispositiu remot.",
+                "title": "Autoritzaci\u00f3 del televisor Sony Bravia"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Configura la integraci\u00f3 de televisor Sony Bravia. Si tens problemes durant la configuraci\u00f3, v\u00e9s a: https://www.home-assistant.io/integrations/braviatv\n\nAssegura't que el televisor estigui engegat.",
+                "title": "Televisor Sony Bravia"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Llista de fonts ignorades"
+                },
+                "title": "Opcions del televisor Sony Bravia"
+            }
+        }
+    }
+}

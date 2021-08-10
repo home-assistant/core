@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta TV Panasonic Viera j\u00e1 est\u00e1 configurada."
+        },
+        "step": {
+            "user": {
+                "description": "Digite o endere\u00e7o IP da sua TV Panasonic Viera",
+                "title": "Configure sua TV"
+            }
+        }
+    }
+}

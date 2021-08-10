@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El powerwall ya est\u00e1 configurado",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, por favor int\u00e9ntelo de nuevo",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado",
+            "wrong_version": "Tu powerwall utiliza una versi\u00f3n de software que no es compatible. Considera actualizar o informar de este problema para que pueda resolverse."
+        },
+        "flow_title": "Powerwall de Tesla ({ip_address})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "La contrase\u00f1a suele ser los \u00faltimos 5 caracteres del n\u00famero de serie del Backup Gateway y se puede encontrar en la aplicaci\u00f3n Telsa; o los \u00faltimos 5 caracteres de la contrase\u00f1a que se encuentran dentro de la puerta del Backup Gateway 2.",
+                "title": "Conectarse al powerwall"
+            }
+        }
+    }
+}

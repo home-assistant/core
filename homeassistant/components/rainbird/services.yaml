@@ -1,0 +1,34 @@
+start_irrigation:
+  name: Start irrigation
+  description: Start the irrigation
+  fields:
+    entity_id:
+      name: Entity
+      description: Name of a single irrigation to turn on
+      required: true
+      selector:
+        entity:
+          integration: rainbird
+          domain: switch
+    duration:
+      name: Duration
+      description: Duration for this sprinkler to be turned on
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: "minutes"
+set_rain_delay:
+  name: Set rain delay
+  description: Set how long automatic irrigation is turned off.
+  fields:
+    duration:
+      name: Duration
+      description: Duration for this system to be turned off.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 14
+          unit_of_measurement: "days"

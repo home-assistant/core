@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "reauth_confirm": {
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Kata Sandi"
+                },
+                "description": "Masukkan alamat email dan kata sandi SmartTub Anda untuk masuk",
+                "title": "Masuk"
+            }
+        }
+    }
+}

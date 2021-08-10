@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le Powerwall est d\u00e9j\u00e0 configur\u00e9",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue",
+            "wrong_version": "Votre Powerwall utilise une version logicielle qui n'est pas prise en charge. Veuillez envisager de mettre \u00e0 niveau ou de signaler ce probl\u00e8me afin qu'il puisse \u00eatre r\u00e9solu."
+        },
+        "flow_title": "Tesla Powerwall ( {ip_address} )",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adresse IP",
+                    "password": "Mot de passe"
+                },
+                "description": "Le mot de passe est g\u00e9n\u00e9ralement les 5 derniers caract\u00e8res du num\u00e9ro de s\u00e9rie de Backup Gateway et peut \u00eatre trouv\u00e9 dans l\u2019application Tesla ou les 5 derniers caract\u00e8res du mot de passe trouv\u00e9 \u00e0 l\u2019int\u00e9rieur de la porte pour la passerelle de Backup Gateway 2.",
+                "title": "Connectez-vous au Powerwall"
+            }
+        }
+    }
+}

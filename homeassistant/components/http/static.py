@@ -1,22 +1,26 @@
 """Static file handling for HTTP component."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Final
 
 from aiohttp import hdrs
-from aiohttp.web import FileResponse
-from aiohttp.web_exceptions import HTTPNotFound, HTTPForbidden
+from aiohttp.web import FileResponse, Request, StreamResponse
+from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 
-CACHE_TIME = 31 * 86400  # = 1 month
-CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
+CACHE_TIME: Final = 31 * 86400  # = 1 month
+CACHE_HEADERS: Final[Mapping[str, str]] = {
+    hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"
+}
 
 
-# https://github.com/PyCQA/astroid/issues/633
-# pylint: disable=duplicate-bases
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
-    async def _handle(self, request):
-        rel_url = request.match_info['filename']
+    async def _handle(self, request: Request) -> StreamResponse:
+        rel_url = request.match_info["filename"]
         try:
             filename = Path(rel_url)
             if filename.anchor:
@@ -40,5 +44,8 @@ class CachingStaticResource(StaticResource):
             return await super()._handle(request)
         if filepath.is_file():
             return FileResponse(
-                filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS)
+                filepath,
+                chunk_size=self._chunk_size,
+                headers=CACHE_HEADERS,
+            )
         raise HTTPNotFound

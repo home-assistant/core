@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "no_stations": "Ingen flomoverv\u00e5kningsstasjoner funnet."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Stasjon"
+                },
+                "description": "Velg stasjonen du vil overv\u00e5ke",
+                "title": "Spor en flomoverv\u00e5kningsstasjon"
+            }
+        }
+    }
+}

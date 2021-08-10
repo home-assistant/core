@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Ja hi ha un enlla\u00e7 o accessori configurat amb aquest nom o port."
+        },
+        "step": {
+            "pairing": {
+                "description": "Per completar la vinculaci\u00f3, segueix les instruccions a \"Configuraci\u00f3 de l'enlla\u00e7 HomeKit\" sota \"Notificacions\".",
+                "title": "Vinculaci\u00f3 HomeKit"
+            },
+            "user": {
+                "data": {
+                    "include_domains": "Dominis a incloure"
+                },
+                "description": "Selecciona els dominis a incloure. S'inclouran totes les entitats del domini compatibles. Es crear\u00e0 una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV, control remot basat per activitat i c\u00e0mera.",
+                "title": "Selecciona els dominis a incloure"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Inici autom\u00e0tic (desactiva-ho si crides el servei homekit.start manualment)"
+                },
+                "description": "Aquests par\u00e0metres nom\u00e9s s'han d'ajustar si HomeKit no \u00e9s funcional.",
+                "title": "Configuraci\u00f3 avan\u00e7ada"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "C\u00e0meres que admeten fluxos H.264 natius"
+                },
+                "description": "Comprova les c\u00e0meres que suporten fluxos nadius H.264. Si alguna c\u00e0mera not proporciona una sortida H.264, el sistema transcodificar\u00e0 el v\u00eddeo a H.264 per a HomeKit. La transcodificaci\u00f3 necessita una CPU potent i probablement no funcioni en ordinadors petits (SBC).",
+                "title": "Selecci\u00f3 del c\u00f2dec de v\u00eddeo de c\u00e0mera"
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entitats",
+                    "mode": "Mode"
+                },
+                "description": "Tria les entitats a incloure. En mode accessori, nom\u00e9s s'inclou una sola entitat. En mode enlla\u00e7 inclusiu, s'inclouran totes les entitats del domini tret de que se'n seleccionin algunes en concret. En mode enlla\u00e7 excusiu, s'inclouran totes les entitats del domini excepte les entitats excloses. Per obtenir el millor rendiment, es crea una inst\u00e0ncia HomeKit per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
+                "title": "Selecciona les entitats a incloure"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Dominis a incloure",
+                    "mode": "Mode"
+                },
+                "description": "HomeKit es pot configurar per exposar un enlla\u00e7 o un sol accessori. En mode accessori, nom\u00e9s es pot utilitzar una entitat. El mode accessori \u00e9s necessari perqu\u00e8 els reproductors multim\u00e8dia amb classe de dispositiu TV funcionin correctament. Les entitats a \"Dominis a incloure\" s'inclouran a HomeKit. A la seg\u00fcent pantalla podr\u00e0s seleccionar quines entitats vols incloure o excloure d'aquesta llista.",
+                "title": "Selecciona els dominis a incloure."
+            },
+            "yaml": {
+                "description": "Aquesta entrada es controla en YAML",
+                "title": "Ajusta les opcions de HomeKit"
+            }
+        }
+    }
+}

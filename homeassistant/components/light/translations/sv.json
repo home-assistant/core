@@ -1,0 +1,26 @@
+{
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "Minska ljusstyrkan f\u00f6r {entity_name}",
+            "brightness_increase": "\u00d6ka ljusstyrkan f\u00f6r {entity_name}",
+            "toggle": "V\u00e4xla {entity_name}",
+            "turn_off": "St\u00e4ng av {entity_name}",
+            "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u00e4r avst\u00e4ngd",
+            "is_on": "{entity_name} \u00e4r p\u00e5"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} avst\u00e4ngd",
+            "turned_on": "{entity_name} slogs p\u00e5"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
+    "title": "Lampor"
+}

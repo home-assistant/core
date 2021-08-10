@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant is niet correct geconfigureerd om updates van SmartThings te ontvangen. De webhook-URL is ongeldig: \n > {webhook_url} \n\n Werk uw configuratie bij volgens de [instructies] ( {component_url} ), start de Home Assistant opnieuw op en probeer het opnieuw.",
+            "no_available_locations": "Er zijn geen beschikbare SmartThings-locaties om in te stellen in Home Assistant."
+        },
+        "error": {
+            "app_setup_error": "Instellen van SmartApp mislukt. Probeer het opnieuw.",
+            "token_forbidden": "Het token heeft niet de vereiste OAuth-scopes.",
+            "token_invalid_format": "Het token moet de UID/GUID-indeling hebben",
+            "token_unauthorized": "Het token is ongeldig of niet langer geautoriseerd.",
+            "webhook_error": "SmartThings kan de webhook URL niet valideren. Zorg ervoor dat de webhook URL bereikbaar is vanaf het internet en probeer het opnieuw."
+        },
+        "step": {
+            "authorize": {
+                "title": "Machtig Home Assistant"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Toegangstoken"
+                },
+                "description": "Voer een SmartThings [Personal Access Token] ( {token_url} ) in dat is gemaakt volgens de [instructies] ( {component_url} ). Dit wordt gebruikt om de Home Assistant-integratie te cre\u00ebren binnen uw SmartThings-account.",
+                "title": "Persoonlijk toegangstoken invoeren"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Locatie"
+                },
+                "description": "Selecteer de SmartThings-locatie die u aan de Home Assistant wilt toevoegen. We zullen dan een nieuw venster openen en u vragen om in te loggen en de installatie van de Home Assistant-integratie op de geselecteerde locatie te autoriseren.",
+                "title": "Locatie selecteren"
+            },
+            "user": {
+                "description": "SmartThings zal worden geconfigureerd om push updates te sturen naar Home Assistant op:\n> {webhook_url}\n\nAls dit niet correct is, werk dan uw configuratie bij, start Home Assistant opnieuw op en probeer het opnieuw.",
+                "title": "Bevestig Callback URL"
+            }
+        }
+    }
+}

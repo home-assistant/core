@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met Almond die wordt aangeboden door de add-on {addon} ?",
+                "title": "Almond via Home Assistant add-on"
+            },
+            "pick_implementation": {
+                "title": "Kies een authenticatie methode"
+            }
+        }
+    }
+}

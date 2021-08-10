@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfiguracija premosnice je ve\u0107 u tijeku."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "invalid_known_hosts": "Host yang diketahui harus berupa daftar host yang dipisahkan koma."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi."
+                },
+                "description": "Masukkan konfigurasi Google Cast.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "Ingin memulai penyiapan?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Host yang diketahui harus berupa daftar host yang dipisahkan koma."
+        },
+        "step": {
+            "advanced_options": {
+                "title": "Konfigurasi Google Cast tingkat lanjut"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Host yang dikenal"
+                },
+                "title": "Konfigurasi Google Cast"
+            }
+        }
+    }
+}

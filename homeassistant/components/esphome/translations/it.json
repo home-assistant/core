@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso"
+        },
+        "error": {
+            "connection_error": "Impossibile connettersi ad ESP. Assicurati che il tuo file YAML contenga una riga \"api:\".",
+            "invalid_auth": "Autenticazione non valida",
+            "resolve_error": "Impossibile risolvere l'indirizzo dell'ESP. Se questo errore persiste, impostare un indirizzo IP statico: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Inserisci la password per {name} che hai impostato nella tua configurazione."
+            },
+            "discovery_confirm": {
+                "description": "Vuoi aggiungere il nodo ESPHome `{name}` a Home Assistant?",
+                "title": "Trovato nodo ESPHome"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "description": "Inserisci le impostazioni di connessione del tuo nodo [ESPHome](https://esphomelib.com/)."
+            }
+        }
+    }
+}

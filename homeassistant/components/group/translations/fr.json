@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Ferm\u00e9",
+            "home": "Pr\u00e9sent",
+            "locked": "Verrouill\u00e9",
+            "not_home": "Absent",
+            "off": "Inactif",
+            "ok": "OK",
+            "on": "Actif",
+            "open": "Ouvert",
+            "problem": "Probl\u00e8me",
+            "unlocked": "D\u00e9verrouill\u00e9"
+        }
+    },
+    "title": "Groupe"
+}

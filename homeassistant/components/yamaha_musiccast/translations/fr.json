@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "yxc_control_url_missing": "L'URL de contr\u00f4le n'est pas donn\u00e9e dans la description ssdp."
+        },
+        "error": {
+            "no_musiccast_device": "Cet appareil ne semble pas \u00eatre un appareil MusicCast."
+        },
+        "flow_title": "MusicCast: {name}",
+        "step": {
+            "confirm": {
+                "description": "Voulez-vous commencer la configuration\u00a0?"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "Configurer MusicCast pour l'int\u00e9grer \u00e0 Home Assistant."
+            }
+        }
+    }
+}

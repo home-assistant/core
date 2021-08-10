@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Sett opp WLED til \u00e5 integreres med Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du legge til WLED med navnet ' {name} ' i Home Assistant?",
+                "title": "Oppdaget WLED-enhet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Behold hovedlys, selv med 1 LED-segment."
+                }
+            }
+        }
+    }
+}

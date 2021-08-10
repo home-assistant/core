@@ -1,0 +1,26 @@
+{
+    "title": "NOAA Aurora Sensor",
+    "config": {
+      "step": {
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "longitude": "[%key:common::config_flow::data::longitude%]",
+            "latitude": "[%key:common::config_flow::data::latitude%]"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "data": {
+            "threshold": "Threshold (%)"
+          }
+        }
+      }
+    }
+  }

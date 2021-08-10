@@ -1,0 +1,4 @@
+reload:
+  name: Reload
+  description: Reload all template entities.
+

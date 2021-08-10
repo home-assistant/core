@@ -1,0 +1,85 @@
+{
+    "state": {
+        "_": {
+            "off": "Af",
+            "on": "Aan"
+        },
+        "battery": {
+            "off": "Normaal",
+            "on": "Laag"
+        },
+        "cold": {
+            "off": "Normaal",
+            "on": "Koud"
+        },
+        "connectivity": {
+            "off": "Ontkoppel",
+            "on": "Gekoppel"
+        },
+        "door": {
+            "off": "Toe",
+            "on": "Oop"
+        },
+        "garage_door": {
+            "off": "Toe",
+            "on": "Oop"
+        },
+        "gas": {
+            "off": "Ongemerk",
+            "on": "Bespeur"
+        },
+        "heat": {
+            "off": "Normaal",
+            "on": "Warm"
+        },
+        "lock": {
+            "off": "Gesluit",
+            "on": "Oopgesluit"
+        },
+        "moisture": {
+            "off": "Droog",
+            "on": "Nat"
+        },
+        "motion": {
+            "off": "Ongemerk",
+            "on": "Bespeur"
+        },
+        "occupancy": {
+            "off": "Ongemerk",
+            "on": "Bespeur"
+        },
+        "opening": {
+            "off": "Toe",
+            "on": "Oop"
+        },
+        "presence": {
+            "off": "Elders",
+            "on": "Tuis"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Probleem"
+        },
+        "safety": {
+            "off": "Veilige",
+            "on": "Onveilige"
+        },
+        "smoke": {
+            "off": "Ongemerk",
+            "on": "Bespeur"
+        },
+        "sound": {
+            "off": "Ongemerk",
+            "on": "Bespeur"
+        },
+        "vibration": {
+            "off": "Ongemerk",
+            "on": "Bespeur"
+        },
+        "window": {
+            "off": "Toe",
+            "on": "Oop"
+        }
+    },
+    "title": "Bin\u00eare sensor"
+}

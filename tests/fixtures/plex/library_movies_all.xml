@@ -1,0 +1,51 @@
+<MediaContainer allowSync="1" art="/:/resources/movie-fanart.jpg" identifier="com.plexapp.plugins.library" librarySectionID="1" librarySectionTitle="Movies" librarySectionUUID="805308ec-5019-43d4-a449-75d2b9e42f93" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1603922053" nocache="1" size="5" sortAsc="1" thumb="/:/resources/movie.png" title="Movies" title1="All Movies" viewGroup="movie" viewMode="131122"><Video addedAt="1377829261" art="/library/metadata/1/art/1590245989" audienceRating="9.5" audienceRatingImage="rottentomatoes://image.rating.upright" chapterSource="agent" contentRating="R" duration="9000000" guid="com.plexapp.agents.imdb://tt0123456?lang=en" key="/library/metadata/1" lastViewedAt="1505969509" librarySectionID="1" librarySectionKey="/library/sections/1" librarySectionTitle="Movies" originallyAvailableAt="2000-01-01" primaryExtraKey="/library/metadata/195540" rating="9.0" ratingImage="rottentomatoes://image.rating.certified" ratingKey="1" studio="Studio Entertainment" summary="Some elaborate summary." tagline="Witty saying." thumb="/library/metadata/1/thumb/1590245989" title="Movie 1" type="movie" updatedAt="1590245989" viewCount="1" year="2000">
+<Genre count="119" filter="genre=25578" id="25578" tag="Sci-Fi" />
+<Genre count="197" filter="genre=87" id="87" tag="Action" />
+<Director count="4" filter="director=100" id="100" tag="Famous Director" />
+<Writer count="2" filter="writer=50000" id="50000" tag="A Writer" />
+<Producer count="3" filter="producer=2000" id="2000" tag="Dr. Producer" />
+<Country count="452" filter="country=1105" id="1105" tag="USA" />
+<Role count="25" filter="actor=1" id="1" role="Character 1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
+<Role count="2" filter="actor=2" id="2" role="Character 2" tag="Actor 2" thumb="http://4.3.2.1/t/p/original/2.jpg" />
+<Role filter="actor=3" id="3" role="Character 3" tag="Actor 3" thumb="http://4.3.2.1/t/p/original/3.jpg" />
+</Video><Video addedAt="1377829261" art="/library/metadata/2/art/1590245989" audienceRating="9.5" audienceRatingImage="rottentomatoes://image.rating.upright" chapterSource="agent" contentRating="R" duration="9000000" guid="com.plexapp.agents.imdb://tt0123456?lang=en" key="/library/metadata/2" lastViewedAt="1505969509" librarySectionID="1" librarySectionKey="/library/sections/1" librarySectionTitle="Movies" originallyAvailableAt="2000-01-01" primaryExtraKey="/library/metadata/195540" rating="9.0" ratingImage="rottentomatoes://image.rating.certified" ratingKey="2" studio="Studio Entertainment" summary="Some elaborate summary." tagline="Witty saying." thumb="/library/metadata/2/thumb/1590245989" title="Movie 2" type="movie" updatedAt="1590245989" viewCount="1" year="2000">
+<Genre count="119" filter="genre=25578" id="25578" tag="Sci-Fi" />
+<Genre count="197" filter="genre=87" id="87" tag="Action" />
+<Director count="4" filter="director=100" id="100" tag="Famous Director" />
+<Writer count="2" filter="writer=50000" id="50000" tag="A Writer" />
+<Producer count="3" filter="producer=2000" id="2000" tag="Dr. Producer" />
+<Country count="452" filter="country=1105" id="1105" tag="USA" />
+<Role count="25" filter="actor=1" id="1" role="Character 1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
+<Role count="2" filter="actor=2" id="2" role="Character 2" tag="Actor 2" thumb="http://4.3.2.1/t/p/original/2.jpg" />
+<Role filter="actor=3" id="3" role="Character 3" tag="Actor 3" thumb="http://4.3.2.1/t/p/original/3.jpg" />
+</Video><Video addedAt="1377829261" art="/library/metadata/3/art/1590245989" audienceRating="9.5" audienceRatingImage="rottentomatoes://image.rating.upright" chapterSource="agent" contentRating="R" duration="9000000" guid="com.plexapp.agents.imdb://tt0123456?lang=en" key="/library/metadata/3" lastViewedAt="1505969509" librarySectionID="1" librarySectionKey="/library/sections/1" librarySectionTitle="Movies" originallyAvailableAt="2000-01-01" primaryExtraKey="/library/metadata/195540" rating="9.0" ratingImage="rottentomatoes://image.rating.certified" ratingKey="3" studio="Studio Entertainment" summary="Some elaborate summary." tagline="Witty saying." thumb="/library/metadata/3/thumb/1590245989" title="Movie 3" type="movie" updatedAt="1590245989" viewCount="1" year="2000">
+<Genre count="119" filter="genre=25578" id="25578" tag="Sci-Fi" />
+<Genre count="197" filter="genre=87" id="87" tag="Action" />
+<Director count="4" filter="director=100" id="100" tag="Famous Director" />
+<Writer count="2" filter="writer=50000" id="50000" tag="A Writer" />
+<Producer count="3" filter="producer=2000" id="2000" tag="Dr. Producer" />
+<Country count="452" filter="country=1105" id="1105" tag="USA" />
+<Role count="25" filter="actor=1" id="1" role="Character 1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
+<Role count="2" filter="actor=2" id="2" role="Character 2" tag="Actor 2" thumb="http://4.3.2.1/t/p/original/2.jpg" />
+<Role filter="actor=3" id="3" role="Character 3" tag="Actor 3" thumb="http://4.3.2.1/t/p/original/3.jpg" />
+</Video><Video addedAt="1377829261" art="/library/metadata/4/art/1590245989" audienceRating="9.5" audienceRatingImage="rottentomatoes://image.rating.upright" chapterSource="agent" contentRating="R" duration="9000000" guid="com.plexapp.agents.imdb://tt0123456?lang=en" key="/library/metadata/4" lastViewedAt="1505969509" librarySectionID="1" librarySectionKey="/library/sections/1" librarySectionTitle="Movies" originallyAvailableAt="2000-01-01" primaryExtraKey="/library/metadata/195540" rating="9.0" ratingImage="rottentomatoes://image.rating.certified" ratingKey="4" studio="Studio Entertainment" summary="Some elaborate summary." tagline="Witty saying." thumb="/library/metadata/4/thumb/1590245989" title="Movie 4" type="movie" updatedAt="1590245989" viewCount="1" year="2000">
+<Genre count="119" filter="genre=25578" id="25578" tag="Sci-Fi" />
+<Genre count="197" filter="genre=87" id="87" tag="Action" />
+<Director count="4" filter="director=100" id="100" tag="Famous Director" />
+<Writer count="2" filter="writer=50000" id="50000" tag="A Writer" />
+<Producer count="3" filter="producer=2000" id="2000" tag="Dr. Producer" />
+<Country count="452" filter="country=1105" id="1105" tag="USA" />
+<Role count="25" filter="actor=1" id="1" role="Character 1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
+<Role count="2" filter="actor=2" id="2" role="Character 2" tag="Actor 2" thumb="http://4.3.2.1/t/p/original/2.jpg" />
+<Role filter="actor=3" id="3" role="Character 3" tag="Actor 3" thumb="http://4.3.2.1/t/p/original/3.jpg" />
+</Video><Video addedAt="1377829261" art="/library/metadata/5/art/1590245989" audienceRating="9.5" audienceRatingImage="rottentomatoes://image.rating.upright" chapterSource="agent" contentRating="R" duration="9000000" guid="com.plexapp.agents.imdb://tt0123456?lang=en" key="/library/metadata/5" lastViewedAt="1505969509" librarySectionID="1" librarySectionKey="/library/sections/1" librarySectionTitle="Movies" originallyAvailableAt="2000-01-01" primaryExtraKey="/library/metadata/195540" rating="9.0" ratingImage="rottentomatoes://image.rating.certified" ratingKey="5" studio="Studio Entertainment" summary="Some elaborate summary." tagline="Witty saying." thumb="/library/metadata/5/thumb/1590245989" title="Movie 5" type="movie" updatedAt="1590245989" viewCount="1" year="2000">
+<Genre count="119" filter="genre=25578" id="25578" tag="Sci-Fi" />
+<Genre count="197" filter="genre=87" id="87" tag="Action" />
+<Director count="4" filter="director=100" id="100" tag="Famous Director" />
+<Writer count="2" filter="writer=50000" id="50000" tag="A Writer" />
+<Producer count="3" filter="producer=2000" id="2000" tag="Dr. Producer" />
+<Country count="452" filter="country=1105" id="1105" tag="USA" />
+<Role count="25" filter="actor=1" id="1" role="Character 1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
+<Role count="2" filter="actor=2" id="2" role="Character 2" tag="Actor 2" thumb="http://4.3.2.1/t/p/original/2.jpg" />
+<Role filter="actor=3" id="3" role="Character 3" tag="Actor 3" thumb="http://4.3.2.1/t/p/original/3.jpg" />
+</Video></MediaContainer>

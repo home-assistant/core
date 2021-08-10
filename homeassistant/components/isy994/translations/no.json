@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_host": "Vertsoppf\u00f8ringen var ikke i fullstendig URL-format, for eksempel http://192.168.10.100:80",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Passord",
+                    "tls": "TLS-versjonen av ISY-kontrolleren.",
+                    "username": "Brukernavn"
+                },
+                "description": "Vertsoppf\u00f8ringen m\u00e5 v\u00e6re i fullstendig URL-format, for eksempel http://192.168.10.100:80",
+                "title": "Koble til ISY994"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Ignorer streng",
+                    "restore_light_state": "Gjenopprett lysstyrke",
+                    "sensor_string": "Node sensor streng",
+                    "variable_sensor_string": "Variabel sensorstreng"
+                },
+                "description": "Angi alternativene for ISY-integrering: \n \u2022 Nodesensorstreng: Alle enheter eller mapper som inneholder NodeSensor String i navnet, behandles som en sensor eller bin\u00e6r sensor. \n \u2022 Ignorer streng: Alle enheter med 'Ignorer streng' i navnet ignoreres. \n \u2022 Variabel sensorstreng: Alle variabler som inneholder \"Variabel sensorstreng\" vil bli lagt til som en sensor. \n \u2022 Gjenopprett lyslysstyrke: Hvis den er aktivert, gjenopprettes den forrige lysstyrken n\u00e5r du sl\u00e5r p\u00e5 et lys i stedet for enhetens innebygde p\u00e5-niv\u00e5.",
+                "title": "ISY994 Alternativer"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY tilkoblet",
+            "host_reachable": "Verten kan n\u00e5s",
+            "last_heartbeat": "Tidspunkt for siste hjerteslag",
+            "websocket_status": "Event Socket Status"
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "no_devices": "Nenhum dispositivo encontrado na conta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio/ende\u00e7o de e-mail"
+                },
+                "title": "Preencha suas informa\u00e7\u00f5es"
+            }
+        }
+    }
+}

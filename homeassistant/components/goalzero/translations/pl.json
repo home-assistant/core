@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "confirm_discovery": {
+                "description": "Zaleca si\u0119 rezerwacj\u0119 DHCP w ustawieniach routera. Je\u015bli tego nie ustawisz, urz\u0105dzenie mo\u017ce sta\u0107 si\u0119 niedost\u0119pne, do czasu a\u017c Home Assistant wykryje nowy adres IP. Post\u0119puj wg instrukcji obs\u0142ugi routera.",
+                "title": "Goal Zero Yeti"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa"
+                },
+                "description": "Najpierw musisz pobra\u0107 aplikacj\u0119 Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\nPost\u0119puj zgodnie z instrukcjami, aby pod\u0142\u0105czy\u0107 Yeti do sieci Wi-Fi. Zaleca si\u0119 rezerwacj\u0119 DHCP w ustawieniach routera. Je\u015bli tego nie ustawisz, urz\u0105dzenie mo\u017ce sta\u0107 si\u0119 niedost\u0119pne, do czasu a\u017c Home Assistant wykryje nowy adres IP. Post\u0119puj wg instrukcji obs\u0142ugi routera.",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

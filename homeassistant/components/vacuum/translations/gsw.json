@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "Putze",
+            "error": "F\u00e4hler",
+            "off": "Us",
+            "on": "I",
+            "paused": "Pause"
+        }
+    },
+    "title": "Stoubsuger"
+}

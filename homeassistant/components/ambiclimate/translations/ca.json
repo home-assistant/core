@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "S'ha produ\u00eft un error desconegut al generat un token d'acc\u00e9s.",
+            "already_configured": "El compte ja ha estat configurat",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3."
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa"
+        },
+        "error": {
+            "follow_link": "V\u00e9s a l'enlla\u00e7 i autentica't abans de pr\u00e9mer Envia",
+            "no_token": "No autenticat amb Ambi Climate"
+        },
+        "step": {
+            "auth": {
+                "description": "V\u00e9s a l'[enlla\u00e7]({authorization_url}) i **Permet** l'acc\u00e9s al teu compte de Ambiclimate, despr\u00e9s torna i prem **Envia** a sota.\n(Assegura't que l'enlla\u00e7 de retorn \u00e9s el seg\u00fcent {cb_url})",
+                "title": "Autenticaci\u00f3 amb Ambi Climate"
+            }
+        }
+    }
+}

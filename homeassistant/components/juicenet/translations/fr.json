@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce compte JuiceNet est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Jeton d'API JuiceNet"
+                },
+                "description": "Vous aurez besoin du jeton API de https://home.juice.net/Manage.",
+                "title": "Se connecter \u00e0 JuiceNet"
+            }
+        }
+    }
+}

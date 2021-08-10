@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Zm\u011bnit re\u017eim HVAC na {entity_name}",
+            "set_preset_mode": "Zm\u011bnit p\u0159ednastaven\u00fd re\u017eim na {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} je nastaveno na ur\u010dit\u00fd re\u017eim HVAC",
+            "is_preset_mode": "{entity_name} je nastaveno na p\u0159ednastaven\u00fd re\u017eim"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "M\u011b\u0159en\u00e1 vlhkost na {entity_name} zm\u011bn\u011bna",
+            "current_temperature_changed": "M\u011b\u0159en\u00e1 teplota na {entity_name} zm\u011bn\u011bna",
+            "hvac_mode_changed": "Re\u017eim HVAC na {entity_name} zm\u011bn\u011bn"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Chlazen\u00ed",
+            "dry": "Vysou\u0161en\u00ed",
+            "fan_only": "Pouze ventil\u00e1tor",
+            "heat": "Topen\u00ed",
+            "heat_cool": "Topen\u00ed/Chlazen\u00ed",
+            "off": "Vypnuto"
+        }
+    },
+    "title": "Klima"
+}

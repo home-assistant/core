@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Total Connect",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "locations": {
+        "title": "Location Usercodes",
+        "description": "Enter the usercode for this user at location {location_id}",
+        "data": {
+          "usercode": "Usercode"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Total Connect needs to re-authenticate your account"
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "usercode": "Usercode not valid for this user at this location"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the HVV API",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "station": {
+        "title": "Enter Station/Address",
+        "data": {
+          "station": "Station/Address"
+        }
+      },
+      "station_select": {
+        "title": "Select Station/Address",
+        "data": {
+          "station": "Station/Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_results": "No results. Try with a different station/address"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "Change options for this departure sensor",
+        "data": {
+          "filter": "Select lines",
+          "offset": "Offset (minutes)",
+          "real_time": "Use real time data"
+        }
+      }
+    }
+  }
+}

@@ -1,1 +1,0 @@
-"""The coinmarketcap component."""

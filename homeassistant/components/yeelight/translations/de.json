@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "{model} {host}",
+        "step": {
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du {model} ({host}) einrichten?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Ger\u00e4te"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Wenn du den Host leer l\u00e4sst, wird die Erkennung verwendet, um Ger\u00e4te zu finden."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Modell (optional)",
+                    "nightlight_switch": "Nachtlichtschalter verwenden",
+                    "save_on_change": "Status bei \u00c4nderung speichern",
+                    "transition": "\u00dcbergangszeit (ms)",
+                    "use_music_mode": "Musik-Modus aktivieren"
+                },
+                "description": "Wenn du das Modell leer l\u00e4sst, wird es automatisch erkannt."
+            }
+        }
+    }
+}

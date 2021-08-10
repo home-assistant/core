@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Wijzig de HVAC-modus op {entity_name}",
+            "set_preset_mode": "Wijzig voorinstelling op {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} is ingesteld op een specifieke HVAC-modus",
+            "is_preset_mode": "{entity_name} is ingesteld op een specifieke vooraf ingestelde modus"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} gemeten vochtigheid veranderd",
+            "current_temperature_changed": "{entity_name} gemeten temperatuur veranderd",
+            "hvac_mode_changed": "{entity_name} HVAC-modus gewijzigd"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Koelen",
+            "dry": "Droog",
+            "fan_only": "Alleen ventilatie",
+            "heat": "Verwarmen",
+            "heat_cool": "Verwarmen/Koelen",
+            "off": "Uit"
+        }
+    },
+    "title": "Klimaat"
+}

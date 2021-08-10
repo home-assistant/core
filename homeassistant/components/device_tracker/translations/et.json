@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} on kodus",
+            "is_not_home": "{entity_name} on eemal"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} siseneb tsooni",
+            "leaves": "{entity_name} lahkub tsoonist"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Kodus",
+            "not_home": "Eemal"
+        }
+    },
+    "title": "Seadme tr\u00e4kker"
+}

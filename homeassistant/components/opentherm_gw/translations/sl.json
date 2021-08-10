@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Prehod je \u017ee konfiguriran",
+            "id_exists": "ID prehoda \u017ee obstaja"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Pot ali URL",
+                    "id": "ID",
+                    "name": "Ime"
+                },
+                "title": "OpenTherm Prehod"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Temperatura nadstropja"
+                },
+                "description": "Mo\u017enosti za prehod OpenTherm"
+            }
+        }
+    }
+}

@@ -1,10 +1,10 @@
 {
   "domain": "sabnzbd",
-  "name": "Sabnzbd",
-  "documentation": "https://www.home-assistant.io/components/sabnzbd",
-  "requirements": [
-    "pysabnzbd==1.1.0"
-  ],
+  "name": "SABnzbd",
+  "documentation": "https://www.home-assistant.io/integrations/sabnzbd",
+  "requirements": ["pysabnzbd==1.1.0"],
   "dependencies": ["configurator"],
-  "codeowners": []
+  "after_dependencies": ["discovery"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

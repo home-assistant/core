@@ -1,0 +1,67 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Es sind bereits alle Philips Hue Bridges konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "discover_timeout": "Es k\u00f6nnen keine Hue Bridges erkannt werden",
+            "no_bridges": "Keine Philips Hue Bridges erkannt",
+            "not_hue_bridge": "Keine Philips Hue Bridge entdeckt",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "linking": "Unerwarteter Fehler",
+            "register_failed": "Registrieren fehlgeschlagen, bitte versuche es erneut"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "W\u00e4hle eine Hue Bridge"
+            },
+            "link": {
+                "description": "Dr\u00fccke den Knopf auf der Bridge, um Philips Hue mit Home Assistant zu verkn\u00fcpfen.\n\n![Position des Buttons auf der Bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Hub verbinden"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Manuelles Konfigurieren einer Hue Bridge"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Erste Taste",
+            "button_2": "Zweite Taste",
+            "button_3": "Dritte Taste",
+            "button_4": "Vierte Taste",
+            "dim_down": "Dimmer runter",
+            "dim_up": "Dimmer hoch",
+            "double_buttons_1_3": "Erste und dritte Taste",
+            "double_buttons_2_4": "Zweite und vierte Taste",
+            "turn_off": "Ausschalten",
+            "turn_on": "Einschalten"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen",
+            "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
+            "remote_button_short_release": "\"{subtype}\" Taste losgelassen",
+            "remote_double_button_long_press": "Beide \"{subtype}\" nach langem Dr\u00fccken losgelassen",
+            "remote_double_button_short_press": "Beide \"{subtype}\" losgelassen"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Hue-Gruppen erlauben",
+                    "allow_unreachable": "Erlaube nicht erreichbaren Gl\u00fchlampen, ihren Zustand korrekt zu melden"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Tableau de bord",
+            "disk_total": "Taille total du disque",
+            "disk_used": "Taille du disque utilis\u00e9",
+            "docker_version": "Version de Docker",
+            "healthy": "Sain",
+            "host_os": "Syst\u00e8me d'exploitation h\u00f4te",
+            "installed_addons": "Modules compl\u00e9mentaires install\u00e9s",
+            "supervisor_api": "API du Supervisor",
+            "supervisor_version": "Version du Supervisor",
+            "supported": "Prise en charge",
+            "update_channel": "Mise \u00e0 jour",
+            "version_api": "Version API"
+        }
+    }
+}

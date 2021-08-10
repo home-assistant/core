@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "IP para anunciar",
+                    "advertise_port": "Puerto para anunciar",
+                    "host_ip": "IP del host",
+                    "listen_port": "Puerto de escucha",
+                    "name": "Nombre",
+                    "upnp_bind_multicast": "Enlazar multicast (verdadero/falso)"
+                },
+                "title": "Definir la configuraci\u00f3n del servidor"
+            }
+        }
+    },
+    "title": "Roku emulado"
+}

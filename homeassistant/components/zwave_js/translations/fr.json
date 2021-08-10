@@ -1,0 +1,120 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Impossible d'obtenir les informations de d\u00e9couverte du module compl\u00e9mentaire Z-Wave JS.",
+            "addon_info_failed": "Impossible d'obtenir les informations sur le module compl\u00e9mentaire Z-Wave JS.",
+            "addon_install_failed": "\u00c9chec de l'installation du module compl\u00e9mentaire Z-Wave JS.",
+            "addon_set_config_failed": "\u00c9chec de la d\u00e9finition de la configuration Z-Wave JS.",
+            "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS.",
+            "already_configured": "Le p\u00e9riph\u00e9rique est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "cannot_connect": "\u00c9chec de la connexion "
+        },
+        "error": {
+            "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. V\u00e9rifiez la configuration.",
+            "cannot_connect": "Erreur de connection",
+            "invalid_ws_url": "URL websocket invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "progress": {
+            "install_addon": "Veuillez patienter pendant l'installation du module compl\u00e9mentaire Z-Wave JS. Cela peut prendre plusieurs minutes.",
+            "start_addon": "Veuillez patienter pendant le d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. Cela peut prendre quelques secondes."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Cl\u00e9 r\u00e9seau",
+                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
+                },
+                "title": "Entrez la configuration du module compl\u00e9mentaire Z-Wave JS"
+            },
+            "hassio_confirm": {
+                "title": "Configurer l'int\u00e9gration Z-Wave JS avec le module compl\u00e9mentaire Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "L'installation du module compl\u00e9mentaire Z-Wave JS a d\u00e9marr\u00e9"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Utiliser le module compl\u00e9mentaire Z-Wave JS du Supervisor"
+                },
+                "description": "Voulez-vous utiliser le module compl\u00e9mentaire Z-Wave JS du Supervisor?",
+                "title": "S\u00e9lectionner la m\u00e9thode de connexion"
+            },
+            "start_addon": {
+                "title": "Le module compl\u00e9mentaire Z-Wave JS est d\u00e9marr\u00e9."
+            }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Valeur du param\u00e8tre de configuration {subtype}",
+            "node_status": "\u00c9tat du n\u0153ud",
+            "value": "Valeur actuelle d'une valeur Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Envoi d'une notification de contr\u00f4le d'entr\u00e9e",
+            "event.notification.notification": "Envoyer une notification",
+            "event.value_notification.basic": "\u00c9v\u00e9nement CC de base sur {subtype}",
+            "event.value_notification.central_scene": "Action de la sc\u00e8ne centrale sur {subtype}",
+            "event.value_notification.scene_activation": "Activation de la sc\u00e8ne sur {sous-type}",
+            "state.node_status": "Changement de statut du noeud"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "\u00c9chec de l'obtention des informations de d\u00e9couverte du module compl\u00e9mentaire Z-Wave JS.",
+            "addon_info_failed": "\u00c9chec de l'obtention des informations sur le module compl\u00e9mentaire Z-Wave JS.",
+            "addon_install_failed": "\u00c9chec de l'installation du module compl\u00e9mentaire Z-Wave JS.",
+            "addon_set_config_failed": "\u00c9chec de la d\u00e9finition de la configuration Z-Wave JS.",
+            "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS.",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "different_device": "Le p\u00e9riph\u00e9rique USB connect\u00e9 n'est pas le m\u00eame que pr\u00e9c\u00e9demment configur\u00e9 pour cette entr\u00e9e de configuration. Veuillez plut\u00f4t cr\u00e9er une nouvelle entr\u00e9e de configuration pour le nouveau p\u00e9riph\u00e9rique."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_ws_url": "URL websocket invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "progress": {
+            "install_addon": "Veuillez patienter pendant que l'installation du module compl\u00e9mentaire Z-Wave JS se termine. Cela peut prendre plusieurs minutes.",
+            "start_addon": "Veuillez patienter pendant que le d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS se termine. Cela peut prendre quelques secondes."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "\u00c9muler le mat\u00e9riel",
+                    "log_level": "Niveau du journal",
+                    "network_key": "Cl\u00e9 r\u00e9seau",
+                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
+                },
+                "title": "Entrer dans la configuration du module compl\u00e9mentaire Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "L'installation du module compl\u00e9mentaire Z-Wave JS a commenc\u00e9"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Utiliser le module compl\u00e9mentaire Z-Wave JS Supervisor"
+                },
+                "description": "Voulez-vous utiliser le module compl\u00e9mentaire Z-Wave JS Supervisor\u00a0?",
+                "title": "S\u00e9lectionner la m\u00e9thode de connexion"
+            },
+            "start_addon": {
+                "title": "Le module compl\u00e9mentaire Z-Wave JS d\u00e9marre."
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

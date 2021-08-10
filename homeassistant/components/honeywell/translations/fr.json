@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Authentification incorrecte"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Veuillez saisir les informations d'identification utilis\u00e9es pour vous connecter \u00e0 mytotalconnectcomfort.com.",
+                "title": "Honeywell Total Connect Comfort (\u00c9tats-Unis)"
+            }
+        }
+    }
+}

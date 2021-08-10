@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Token API"
+                },
+                "description": "Necesitar\u00e1s el Token API de https://home.juice.net/Manage.",
+                "title": "Conectar a JuiceNet"
+            }
+        }
+    }
+}

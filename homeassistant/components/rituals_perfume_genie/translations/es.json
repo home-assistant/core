@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "email",
+                    "password": "Contrase\u00f1a"
+                },
+                "title": "Con\u00e9ctese a su cuenta de Rituals"
+            }
+        }
+    }
+}

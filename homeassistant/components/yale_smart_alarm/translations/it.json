@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "ID area",
+                    "name": "Nome",
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "ID area",
+                    "name": "Nome",
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    }
+}

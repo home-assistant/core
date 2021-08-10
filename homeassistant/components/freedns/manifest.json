@@ -1,8 +1,7 @@
 {
   "domain": "freedns",
-  "name": "Freedns",
-  "documentation": "https://www.home-assistant.io/components/freedns",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "name": "FreeDNS",
+  "documentation": "https://www.home-assistant.io/integrations/freedns",
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

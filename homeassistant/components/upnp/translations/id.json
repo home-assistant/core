@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "incomplete_discovery": "Proses penemuan tidak selesai",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Ingin menyiapkan perangkat UPnP/IGD ini?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Interval pembaruan (dalam detik, minimal 30)",
+                    "unique_id": "Perangkat",
+                    "usn": "Perangkat"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval pembaruan (dalam detik, minimal 30)"
+                }
+            }
+        }
+    }
+}

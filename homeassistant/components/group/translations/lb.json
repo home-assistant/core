@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "closed": "Zou",
+            "locked": "Gespaart",
+            "off": "Aus",
+            "ok": "OK",
+            "on": "Un",
+            "open": "Op",
+            "problem": "Problem",
+            "unlocked": "Net gespaart"
+        }
+    },
+    "title": "Grupp"
+}

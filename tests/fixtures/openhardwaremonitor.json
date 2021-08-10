@@ -91,9 +91,9 @@
                                     "id": 12,
                                     "Text": "CPU Core #2",
                                     "Children": [],
-                                    "Min": "29.0 °C",
-                                    "Value": "30.0 °C",
-                                    "Max": "61.0 °C",
+                                    "Min": "29,0 °C",
+                                    "Value": "30,0 °C",
+                                    "Max": "61,0 °C",
                                     "ImageURL": "images/transparent.png"
                                 },
                                 {

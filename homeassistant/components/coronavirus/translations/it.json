@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Nazione"
+                },
+                "title": "Scegliere una Nazione da monitorare"
+            }
+        }
+    }
+}
