@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
@@ -45,6 +46,8 @@ _LOGGER = logging.getLogger(__name__)
 
 RGB_COLOR = "rgb_color"
 
+CHANGE_COALESCE_TIME_WINDOW = 0.01
+
 
 @TYPES.register("Light")
 class Light(HomeAccessory):
@@ -58,6 +61,9 @@ class Light(HomeAccessory):
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
 
         self.chars = []
+        self._event_timer = None
+        self._pending_events = {}
+
         state = self.hass.states.get(self.entity_id)
         attributes = state.attributes
         color_modes = attributes.get(ATTR_SUPPORTED_COLOR_MODES)
@@ -101,6 +107,19 @@ class Light(HomeAccessory):
 
     def _set_chars(self, char_values):
         _LOGGER.debug("Light _set_chars: %s", char_values)
+        self._pending_events.update(char_values)
+        if self._event_timer:
+            self._event_timer()
+        self._event_timer = async_call_later(
+            self.hass, CHANGE_COALESCE_TIME_WINDOW, self._send_events
+        )
+        return
+
+    def _send_events(self, *_):
+        """Process all changes at once."""
+        _LOGGER.debug("Coalesced _set_chars: %s", self._pending_events)
+        char_values = self._pending_events
+        self._pending_events = {}
         events = []
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
