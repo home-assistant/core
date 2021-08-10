@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To get an API key, sign up at [Tomorrow.io](https://app.tomorrow.io/signup).",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "upgrade_needed": {
+        "description": "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) we will migrate your existing [%key:component::climacell::title%] config entry to the new [%key:component::tomorrowio::title%] integration after you finish this config flow. Unfortunately, **the V3 API is now deprecated** and you will need to get a new V4 API key from [Tomorrow.io](https://app.tomorrow.io/development/keys) before we can complete the migration. Once you have obtained a new API key, enter it on the next screen and hit submit so it can be verified. Your old [%key:component::climacell::title%] config entry will then be automatically removed and replaced by a [%key:component::tomorrowio::title%] one. Once you have entered a new V4 API key, there is nothing more you need to do since the new integration is a drop in replacement and your existing entities will be migrated over. Just note that the location of the integration card on the [Integrations Configuration](/config/integrations) page will change since the integration name will have changed."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "rate_limited": "Currently rate limited, please try again later."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update [%key:component::tomorrowio::title%] Options",
+        "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+        "data": {
+          "timestep": "Min. Between NowCast Forecasts"
+        }
+      }
+    }
+  }
+}

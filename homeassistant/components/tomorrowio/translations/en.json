@@ -1,0 +1,36 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "rate_limited": "Currently rate limited, please try again later.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "upgrade_needed": {
+                "description": "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) we will migrate your existing ClimaCell config entry to the new Tomorrow.io integration after you finish this config flow. Unfortunately, **the V3 API is now deprecated** and you will need to get a new V4 API key from [Tomorrow.io](https://app.tomorrow.io/development/keys) before we can complete the migration. Once you have obtained a new API key, enter it on the next screen and hit submit so it can be verified. Your old ClimaCell config entry will then be automatically removed and replaced by a Tomorrow.io one."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Name"
+                },
+                "description": "To get an API key, sign up at [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. Between NowCast Forecasts"
+                },
+                "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+                "title": "Update Tomorrow.io Options"
+            }
+        }
+    },
+    "title": "Tomorrow.io"
+}

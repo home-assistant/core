@@ -521,6 +521,7 @@ homeassistant/components/tile/* @bachya
 homeassistant/components/time_date/* @fabaff
 homeassistant/components/tmb/* @alemuro
 homeassistant/components/todoist/* @boralyl
+homeassistant/components/tomorrowio/* @raman325
 homeassistant/components/toon/* @frenck
 homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey

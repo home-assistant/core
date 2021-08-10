@@ -16,8 +16,9 @@ from pyclimacell.exceptions import (
 )
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.tomorrowio import DOMAIN as TOMORROW_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_VERSION,
@@ -110,6 +111,19 @@ def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> tim
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
+    await hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            TOMORROW_DOMAIN,
+            context={"source": SOURCE_IMPORT, "old_config_entry_id": entry.entry_id},
+            data=entry.data,
+        )
+    )
+    # Eventually we will remove the code that sets up the platforms and force users to
+    # migrate. This will only impact users still on the V3 API because we can't
+    # automatically migrate them, but for V4 users, we can skip the platform setup.
+    if entry.data[CONF_API_VERSION] == 4:
+        return True
+
     hass.data.setdefault(DOMAIN, {})
 
     params = {}
