@@ -108,8 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # host, identity, key, allow_tradfri_groups
     tradfri_data: dict[str, list[Any] | None] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
-    listeners = []
-    tradfri_data[LISTENERS] = []
+    listeners = tradfri_data[LISTENERS] = []
 
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
