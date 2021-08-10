@@ -100,7 +100,6 @@ class VelbusLight(VelbusEntity, LightEntity):
         else:
             attr, *args = (
                 "set_dimmer_state",
-                self._channel,
                 0,
                 kwargs.get(ATTR_TRANSITION, 0),
             )

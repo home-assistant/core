@@ -6,5 +6,5 @@
   "config_flow": true,
   "codeowners": ["@Cereal2nd", "@brefra"],
   "iot_class": "local_push",
-  "quality_scale": "platinum"
+  "quality_scale": "gold"
 }

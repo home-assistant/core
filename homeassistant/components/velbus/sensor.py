@@ -1,5 +1,5 @@
 """Support for Velbus sensors."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
 
 from . import VelbusEntity
@@ -46,7 +46,7 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         """Return the device class of the sensor."""
         if self._is_counter:
             return DEVICE_CLASS_POWER
-        elif self._channel.is_counter_channel():
+        if self._channel.is_counter_channel():
             return DEVICE_CLASS_ENERGY
         return None
 
@@ -70,3 +70,8 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         if self._is_counter:
             return "mdi:counter"
         return None
+
+    @property
+    def state_class(self):
+        """Return the state class of this device."""
+        return STATE_CLASS_MEASUREMENT
