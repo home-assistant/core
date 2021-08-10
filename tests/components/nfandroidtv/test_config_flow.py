@@ -138,6 +138,25 @@ async def test_flow_import_missing_optional(hass):
     assert result["data"] == {CONF_HOST: HOST, CONF_NAME: f"{DEFAULT_NAME} {HOST}"}
 
 
+async def test_dhcp_discovery_already_configured(hass):
+    """Test discovery on already configured device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONF_CONFIG_FLOW,
+        unique_id="1.1.1.1",
+    )
+
+    entry.add_to_hass(hass)
+
+    mocked_tv = await _create_mocked_tv()
+    with _patch_config_flow_tv(mocked_tv), _patch_setup():
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_FIRE_TV,
+        )
+
+
 async def test_dhcp_discovery_fire_tv(hass):
     """Test we can process the Fire TV discovery from dhcp."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -148,7 +167,7 @@ async def test_dhcp_discovery_fire_tv(hass):
             context={"source": config_entries.SOURCE_DHCP},
             data=CONF_DHCP_FLOW_FIRE_TV,
         )
-        assert result["type"] == "form"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -158,7 +177,7 @@ async def test_dhcp_discovery_fire_tv(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
             CONF_HOST: "1.1.1.1",
-            CONF_NAME: "Fire TV",
+            CONF_NAME: "Fire TV 1.1.1.1",
         }
 
         result = await hass.config_entries.flow.async_init(
@@ -180,7 +199,7 @@ async def test_dhcp_discovery_android_tv(hass):
             context={"source": config_entries.SOURCE_DHCP},
             data=CONF_DHCP_FLOW_ANDROID_TV,
         )
-        assert result["type"] == "form"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -190,7 +209,7 @@ async def test_dhcp_discovery_android_tv(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
             CONF_HOST: "1.1.1.1",
-            CONF_NAME: "Android TV",
+            CONF_NAME: "Android TV 1.1.1.1",
         }
 
         result = await hass.config_entries.flow.async_init(
@@ -212,8 +231,7 @@ async def test_dhcp_discovery_failed(hass):
             context={"source": config_entries.SOURCE_DHCP},
             data=CONF_DHCP_FLOW_FIRE_TV,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "cannot_connect"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     with _patch_config_flow_tv(mocked_tv) as tvmock:
         tvmock.side_effect = Exception
@@ -223,4 +241,4 @@ async def test_dhcp_discovery_failed(hass):
             data=CONF_DHCP_FLOW_FIRE_TV,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "unknown"
+        assert result["reason"] == "already_in_progress"

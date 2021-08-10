@@ -3,14 +3,14 @@
     "step": {
       "confirm_discovery_fire_tv": {
         "title": "Notifications for Fire TV",
-        "description": "This integration requires the Notifications for Android TV app.\n\nhttps://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
+        "description": "First, Home Assistant cannot currently distinguish Fire TVs from other Amazon devices. Select ignore if this is not a TV.\n\nThis integration requires the Notifications for Android TV app.\n\nhttps://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "confirm_discovery_android_tv": {
         "title": "Notifications for Android TV",
-        "description": "This integration requires the Notifications for Android TV app.\n\nhttps://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
+        "description": "First, Home Assistant cannot currently distinguish some Android TVs from other Android devices. Select ignore if this is not a TV.\n\nThis integration requires the Notifications for Android TV app.\n\nhttps://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable until Home Assistant finds the new IP address.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]"
         }

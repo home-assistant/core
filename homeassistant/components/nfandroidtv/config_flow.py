@@ -36,7 +36,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == self.ip_address:
                 self.hass.config_entries.async_update_entry(entry, unique_id=mac)
                 return self.async_abort(reason="already_configured")
-        if "amazon-f" in discovery_info[HOSTNAME]:
+        if "amazon-" in discovery_info[HOSTNAME]:
             return await self.async_step_confirm_discovery_fire_tv()
         return await self.async_step_confirm_discovery_android_tv()
 
@@ -76,40 +76,60 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Allow the user to confirm adding the Fire TV device."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(
-                title=FIRE_TV_NAME,
-                data={CONF_HOST: self.ip_address, CONF_NAME: user_input[CONF_NAME]},
-            )
+            error = await self._async_try_connect(self.ip_address)
+            if error is None:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={CONF_HOST: self.ip_address, CONF_NAME: user_input[CONF_NAME]},
+                )
+            errors["base"] = error
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="confirm_discovery_fire_tv",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=FIRE_TV_NAME): str,
+                    vol.Optional(
+                        CONF_NAME,
+                        default=user_input.get(
+                            CONF_NAME, f"{FIRE_TV_NAME} {self.ip_address}"
+                        ),
+                    ): str,
                 }
             ),
-            description_placeholders={CONF_HOST: self.ip_address},
+            errors=errors,
         )
 
     async def async_step_confirm_discovery_android_tv(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Allow the user to confirm adding the Android TV device."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(
-                title=ANDROID_TV_NAME,
-                data={CONF_HOST: self.ip_address, CONF_NAME: user_input[CONF_NAME]},
-            )
+            error = await self._async_try_connect(self.ip_address)
+            if error is None:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={CONF_HOST: self.ip_address, CONF_NAME: user_input[CONF_NAME]},
+                )
+            errors["base"] = error
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="confirm_discovery_android_tv",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=ANDROID_TV_NAME): str,
+                    vol.Optional(
+                        CONF_NAME,
+                        default=user_input.get(
+                            CONF_NAME, f"{ANDROID_TV_NAME} {self.ip_address}"
+                        ),
+                    ): str,
                 }
             ),
-            description_placeholders={CONF_HOST: self.ip_address},
+            errors=errors,
         )
 
     async def async_step_import(self, import_config):
@@ -130,7 +150,6 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(Notifications, host)
         except ConnectError:
-            _LOGGER.error("Error connecting to device at %s", host)
             return "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
