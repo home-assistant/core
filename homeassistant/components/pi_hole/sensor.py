@@ -61,7 +61,6 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
 
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
-        self._attr_icon = description.icon  # Necessary to overwrite inherited value
 
     @property
     def state(self) -> Any:
