@@ -109,16 +109,11 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
-        self._state = None
+        self._is_on = None
         self._attr_device_class = BINARY_SENSORS[sensor_type][SENSOR_DEVICE_CLASS]
         self._event_code = BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
         self._unsub_dispatcher = []
         self._attr_should_poll = self._sensor_type in BINARY_POLLED_SENSORS
-
-    @property
-    def is_on(self):
-        """Return if entity is on."""
-        return self._state
 
     @property
     def available(self):
@@ -143,7 +138,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
             # accordingly.
             with suppress(AmcrestError):
                 self._api.current_time  # pylint: disable=pointless-statement
-        self._state = self._api.available
+        self._is_on = self._api.available
 
     def _update_others(self):
         if not self.available:
@@ -151,7 +146,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         _LOGGER.debug(_UPDATE_MSG, self._attr_name)
 
         try:
-            self._state = "channels" in self._api.event_channels_happened(
+            self._is_on = "channels" in self._api.event_channels_happened(
                 self._event_code
             )
         except AmcrestError as error:
@@ -161,7 +156,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         """Update state."""
         if self._sensor_type == BINARY_SENSOR_ONLINE:
             _LOGGER.debug(_UPDATE_MSG, self._attr_name)
-            self._state = self._api.available
+            self._is_on = self._api.available
             self.async_write_ha_state()
             return
         self.async_schedule_update_ha_state(True)
@@ -170,7 +165,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
     def async_event_received(self, start):
         """Update state from received event."""
         _LOGGER.debug(_UPDATE_MSG, self._attr_name)
-        self._state = start
+        self._is_on = start
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):

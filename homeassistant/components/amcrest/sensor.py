@@ -79,7 +79,7 @@ class AmcrestSensor(SensorEntity):
 
         try:
             if self.entity_description.key == SENSOR_PTZ_PRESET:
-                self._attr_is_on = self._api.ptz_presets_count
+                self._state = self._api.ptz_presets_count
 
             elif self.entity_description.key == SENSOR_SDCARD:
                 storage = self._api.storage_all
@@ -100,9 +100,9 @@ class AmcrestSensor(SensorEntity):
                         "Used"
                     ] = f"{storage['used'][0]} {storage['used'][1]}"
                 try:
-                    self._attr_is_on = f"{storage['used_percent']:.2f}"
+                    self._state = f"{storage['used_percent']:.2f}"
                 except ValueError:
-                    self._attr_is_on = storage["used_percent"]
+                    self._state = storage["used_percent"]
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
