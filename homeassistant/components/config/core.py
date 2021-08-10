@@ -44,8 +44,8 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("unit_system"): cv.unit_system,
         vol.Optional("location_name"): str,
         vol.Optional("time_zone"): cv.time_zone,
-        vol.Optional("external_url"): vol.Any(cv.url, None),
-        vol.Optional("internal_url"): vol.Any(cv.url, None),
+        vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
+        vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("currency"): cv.currency,
     }
 )

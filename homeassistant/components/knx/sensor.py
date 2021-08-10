@@ -63,6 +63,7 @@ class KNXSensor(KnxEntity, SensorEntity):
         self._attr_force_update = self._device.always_callback
         self._attr_unique_id = str(self._device.sensor_value.group_address_state)
         self._attr_unit_of_measurement = self._device.unit_of_measurement()
+        self._attr_state_class = config.get(SensorSchema.CONF_STATE_CLASS)
 
     @property
     def state(self) -> StateType:

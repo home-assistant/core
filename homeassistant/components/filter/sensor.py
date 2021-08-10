@@ -405,7 +405,7 @@ class Filter:
         :param entity: used for debugging only
         """
         if isinstance(window_size, int):
-            self.states = deque(maxlen=window_size)
+            self.states: deque = deque(maxlen=window_size)
             self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
         else:
             self.states = deque(maxlen=0)
@@ -476,7 +476,7 @@ class RangeFilter(Filter, SensorEntity):
         super().__init__(FILTER_NAME_RANGE, precision=precision, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
@@ -522,7 +522,7 @@ class OutlierFilter(Filter, SensorEntity):
         """
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
         self._store_raw = True
 
     def _filter_state(self, new_state):

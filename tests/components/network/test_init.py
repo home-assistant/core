@@ -21,15 +21,19 @@ def _generate_mock_adapters():
     mock_lo0 = Mock(spec=ifaddr.Adapter)
     mock_lo0.nice_name = "lo0"
     mock_lo0.ips = [ifaddr.IP("127.0.0.1", 8, "lo0")]
+    mock_lo0.index = 0
     mock_eth0 = Mock(spec=ifaddr.Adapter)
     mock_eth0.nice_name = "eth0"
     mock_eth0.ips = [ifaddr.IP(("2001:db8::", 1, 1), 8, "eth0")]
+    mock_eth0.index = 1
     mock_eth1 = Mock(spec=ifaddr.Adapter)
     mock_eth1.nice_name = "eth1"
     mock_eth1.ips = [ifaddr.IP("192.168.1.5", 23, "eth1")]
+    mock_eth1.index = 2
     mock_vtun0 = Mock(spec=ifaddr.Adapter)
     mock_vtun0.nice_name = "vtun0"
     mock_vtun0.ips = [ifaddr.IP("169.254.3.2", 16, "vtun0")]
+    mock_vtun0.index = 3
     return [mock_eth0, mock_lo0, mock_eth1, mock_vtun0]
 
 
@@ -51,6 +55,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
     assert network_obj.adapters == [
         {
             "auto": False,
+            "index": 1,
             "default": False,
             "enabled": False,
             "ipv4": [],
@@ -65,6 +70,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
             "name": "eth0",
         },
         {
+            "index": 0,
             "auto": False,
             "default": False,
             "enabled": False,
@@ -73,6 +79,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
             "name": "lo0",
         },
         {
+            "index": 2,
             "auto": True,
             "default": True,
             "enabled": True,
@@ -81,6 +88,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
             "name": "eth1",
         },
         {
+            "index": 3,
             "auto": False,
             "default": False,
             "enabled": False,
@@ -107,6 +115,7 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
     assert network_obj.configured_adapters == []
     assert network_obj.adapters == [
         {
+            "index": 1,
             "auto": True,
             "default": False,
             "enabled": True,
@@ -122,6 +131,7 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
             "name": "eth0",
         },
         {
+            "index": 0,
             "auto": False,
             "default": True,
             "enabled": False,
@@ -130,6 +140,7 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
             "name": "lo0",
         },
         {
+            "index": 2,
             "auto": True,
             "default": False,
             "enabled": True,
@@ -138,6 +149,7 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
             "name": "eth1",
         },
         {
+            "index": 3,
             "auto": False,
             "default": False,
             "enabled": False,
@@ -165,6 +177,7 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
     assert network_obj.adapters == [
         {
             "auto": True,
+            "index": 1,
             "default": False,
             "enabled": True,
             "ipv4": [],
@@ -180,6 +193,7 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
         },
         {
             "auto": False,
+            "index": 0,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "127.0.0.1", "network_prefix": 8}],
@@ -188,6 +202,7 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
         },
         {
             "auto": True,
+            "index": 2,
             "default": False,
             "enabled": True,
             "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
@@ -196,6 +211,7 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
         },
         {
             "auto": False,
+            "index": 3,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],
@@ -222,6 +238,7 @@ async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
     assert network_obj.adapters == [
         {
             "auto": True,
+            "index": 1,
             "default": False,
             "enabled": True,
             "ipv4": [],
@@ -237,6 +254,7 @@ async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
         },
         {
             "auto": False,
+            "index": 0,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "127.0.0.1", "network_prefix": 8}],
@@ -245,6 +263,7 @@ async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
         },
         {
             "auto": True,
+            "index": 2,
             "default": False,
             "enabled": True,
             "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
@@ -253,6 +272,7 @@ async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
         },
         {
             "auto": False,
+            "index": 3,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],
@@ -285,6 +305,7 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
     assert network_obj.adapters == [
         {
             "auto": False,
+            "index": 1,
             "default": False,
             "enabled": True,
             "ipv4": [],
@@ -300,6 +321,7 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
         },
         {
             "auto": False,
+            "index": 0,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "127.0.0.1", "network_prefix": 8}],
@@ -308,6 +330,7 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
         },
         {
             "auto": True,
+            "index": 2,
             "default": True,
             "enabled": True,
             "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
@@ -316,6 +339,7 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
         },
         {
             "auto": False,
+            "index": 3,
             "default": False,
             "enabled": True,
             "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],
@@ -356,6 +380,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
     assert response["result"][ATTR_ADAPTERS] == [
         {
             "auto": False,
+            "index": 1,
             "default": False,
             "enabled": True,
             "ipv4": [],
@@ -371,6 +396,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
         },
         {
             "auto": False,
+            "index": 0,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "127.0.0.1", "network_prefix": 8}],
@@ -379,6 +405,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
         },
         {
             "auto": True,
+            "index": 2,
             "default": True,
             "enabled": True,
             "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
@@ -387,6 +414,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
         },
         {
             "auto": False,
+            "index": 3,
             "default": False,
             "enabled": True,
             "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],
@@ -407,6 +435,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
     assert response["result"][ATTR_ADAPTERS] == [
         {
             "auto": False,
+            "index": 1,
             "default": False,
             "enabled": False,
             "ipv4": [],
@@ -422,6 +451,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
         },
         {
             "auto": False,
+            "index": 0,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "127.0.0.1", "network_prefix": 8}],
@@ -430,6 +460,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
         },
         {
             "auto": True,
+            "index": 2,
             "default": True,
             "enabled": True,
             "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
@@ -438,6 +469,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
         },
         {
             "auto": False,
+            "index": 3,
             "default": False,
             "enabled": False,
             "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],

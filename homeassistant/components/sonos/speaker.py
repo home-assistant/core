@@ -496,9 +496,7 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(
-        self, now: datetime.datetime | None = None, will_reconnect: bool = False
-    ) -> None:
+    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         if self._seen_timer:
             self._seen_timer()
@@ -527,9 +525,8 @@ class SonosSpeaker:
 
         await self.async_unsubscribe()
 
-        if not will_reconnect:
-            self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-            self.async_write_entity_states()
+        self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
+        self.async_write_entity_states()
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
@@ -538,8 +535,24 @@ class SonosSpeaker:
             self.zone_name,
             soco,
         )
-        await self.async_unseen(will_reconnect=True)
-        await self.async_seen(soco)
+        await self.async_unsubscribe()
+        self.soco = soco
+        await self.async_subscribe()
+        if self._seen_timer:
+            self._seen_timer()
+        self._seen_timer = self.hass.helpers.event.async_call_later(
+            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+        )
+        if not self._poll_timer:
+            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+                partial(
+                    async_dispatcher_send,
+                    self.hass,
+                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                ),
+                SCAN_INTERVAL,
+            )
+        self.async_write_entity_states()
 
     #
     # Battery management
@@ -654,7 +667,11 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
-            if group == [self.soco.uid] and self.sonos_group == [self]:
+            if (
+                group == [self.soco.uid]
+                and self.sonos_group == [self]
+                and self.sonos_group_entities
+            ):
                 # Skip updating existing single speakers in polling mode
                 return
 

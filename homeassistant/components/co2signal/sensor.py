@@ -118,7 +118,8 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            super().available and self._description.key in self.coordinator.data["data"]
+            super().available
+            and self.coordinator.data["data"].get(self._description.key) is not None
         )
 
     @property
