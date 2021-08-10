@@ -3,15 +3,20 @@
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
         "flow_title": "BSB-Lan: {name}",
         "step": {
             "user": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
                     "passkey": "\ud328\uc2a4\ud0a4 \ubb38\uc790\uc5f4",
-                    "port": "\ud3ec\ud2b8"
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
-                "description": "Home Assistant \uc5d0 BSB-Lan \uae30\uae30 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4.",
+                "description": "Home Assistant\uc5d0 BSB-Lan \uae30\uae30 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4.",
                 "title": "BSB-Lan \uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\uae30"
             }
         }

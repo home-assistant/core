@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "description": "Masukkan informasi Anda.",
+                "title": "Tesla - Konfigurasi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Paksa mobil bangun saat dinyalakan",
+                    "scan_interval": "Interval pemindaian dalam detik"
+                }
+            }
+        }
+    }
+}

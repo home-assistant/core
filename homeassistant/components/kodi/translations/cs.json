@@ -36,7 +36,8 @@
             "ws_port": {
                 "data": {
                     "ws_port": "Port"
-                }
+                },
+                "description": "Port WebSocket (n\u011bkdy se v Kodi naz\u00fdv\u00e1 port TCP). Abyste se mohli p\u0159ipojit p\u0159es WebSocket, mus\u00edte povolit \"Povolit programy ... ovl\u00e1dat Kodi\" v Syst\u00e9m / Nastaven\u00ed / S\u00ed\u0165 / Slu\u017eby. Pokud WebSocket nen\u00ed povolen, odeberte port a nechte pr\u00e1zdn\u00e9."
             }
         }
     },

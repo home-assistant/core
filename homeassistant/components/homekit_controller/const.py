@@ -1,4 +1,6 @@
 """Constants for the homekit_controller component."""
+from aiohomekit.model.characteristics import CharacteristicsTypes
+
 DOMAIN = "homekit_controller"
 
 KNOWN_DEVICES = f"{DOMAIN}-devices"
@@ -39,4 +41,17 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "television": "media_player",
     "valve": "switch",
     "camera-rtp-stream-management": "camera",
+}
+
+CHARACTERISTIC_PLATFORMS = {
+    CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: "sensor",
+    CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: "sensor",
+    CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: "number",
+    CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
+    CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
+    CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
+    CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): "sensor",
+    CharacteristicsTypes.get_uuid(
+        CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
+    ): "sensor",
 }

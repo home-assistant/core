@@ -4,11 +4,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +46,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class TimeDateSensor(Entity):
+class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
     def __init__(self, hass, option_type):

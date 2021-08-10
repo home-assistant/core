@@ -1,16 +1,16 @@
 """Http views to control the config manager."""
+from __future__ import annotations
+
 import aiohttp.web_exceptions
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -30,31 +30,12 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
+    hass.components.websocket_api.async_register_command(config_entry_disable)
     hass.components.websocket_api.async_register_command(config_entry_update)
     hass.components.websocket_api.async_register_command(config_entries_progress)
-    hass.components.websocket_api.async_register_command(system_options_list)
-    hass.components.websocket_api.async_register_command(system_options_update)
     hass.components.websocket_api.async_register_command(ignore_config_flow)
 
     return True
-
-
-def _prepare_json(result):
-    """Convert result for JSON."""
-    if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
-        return result
-
-    data = result.copy()
-
-    schema = data["data_schema"]
-    if schema is None:
-        data["data_schema"] = []
-    else:
-        data["data_schema"] = voluptuous_serialize.convert(
-            schema, custom_serializer=cv.custom_serializer
-        )
-
-    return data
 
 
 class ConfigManagerEntryIndexView(HomeAssistantView):
@@ -116,6 +97,17 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
         return self.json({"require_restart": not result})
 
 
+def _prepare_config_flow_result_json(result, prepare_result_json):
+    """Convert result to JSON."""
+    if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        return prepare_result_json(result)
+
+    data = result.copy()
+    data["result"] = entry_json(result["result"])
+    data.pop("data")
+    return data
+
+
 class ConfigManagerFlowIndexView(FlowManagerIndexView):
     """View to create config flows."""
 
@@ -137,13 +129,7 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
 
     def _prepare_result_json(self, result):
         """Convert result to JSON."""
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            return super()._prepare_result_json(result)
-
-        data = result.copy()
-        data["result"] = data["result"].entry_id
-        data.pop("data")
-        return data
+        return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
 class ConfigManagerFlowResourceView(FlowManagerResourceView):
@@ -170,13 +156,7 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
 
     def _prepare_result_json(self, result):
         """Convert result to JSON."""
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            return super()._prepare_result_json(result)
-
-        data = result.copy()
-        data["result"] = data["result"].entry_id
-        data.pop("data")
-        return data
+        return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
 class ConfigManagerAvailableFlowView(HomeAssistantView):
@@ -251,74 +231,107 @@ def config_entries_progress(hass, connection, msg):
     )
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {"type": "config_entries/system_options/list", "entry_id": str}
-)
-async def system_options_list(hass, connection, msg):
-    """List all system options for a config entry."""
-    entry_id = msg["entry_id"]
-    entry = hass.config_entries.async_get_entry(entry_id)
+def send_entry_not_found(
+    connection: websocket_api.ActiveConnection, msg_id: int
+) -> None:
+    """Send Config entry not found error."""
+    connection.send_error(
+        msg_id, websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+    )
 
-    if entry:
-        connection.send_result(msg["id"], entry.system_options.as_dict())
+
+def get_entry(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    entry_id: str,
+    msg_id: int,
+) -> config_entries.ConfigEntry | None:
+    """Get entry, send error message if it doesn't exist."""
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None:
+        send_entry_not_found(connection, msg_id)
+    return entry
 
 
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        "type": "config_entries/system_options/update",
+        "type": "config_entries/update",
         "entry_id": str,
-        vol.Optional("disable_new_entities"): bool,
+        vol.Optional("title"): str,
+        vol.Optional("pref_disable_new_entities"): bool,
+        vol.Optional("pref_disable_polling"): bool,
     }
-)
-async def system_options_update(hass, connection, msg):
-    """Update config entry system options."""
-    changes = dict(msg)
-    changes.pop("id")
-    changes.pop("type")
-    entry_id = changes.pop("entry_id")
-    entry = hass.config_entries.async_get_entry(entry_id)
-
-    if entry is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-        )
-        return
-
-    hass.config_entries.async_update_entry(entry, system_options=changes)
-    connection.send_result(msg["id"], entry.system_options.as_dict())
-
-
-@websocket_api.require_admin
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {"type": "config_entries/update", "entry_id": str, vol.Optional("title"): str}
 )
 async def config_entry_update(hass, connection, msg):
     """Update config entry."""
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    entry_id = changes.pop("entry_id")
+    changes.pop("entry_id")
 
-    entry = hass.config_entries.async_get_entry(entry_id)
-
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
     if entry is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-        )
         return
 
+    old_disable_polling = entry.pref_disable_polling
+
     hass.config_entries.async_update_entry(entry, **changes)
-    connection.send_result(msg["id"], entry_json(entry))
+
+    result = {
+        "config_entry": entry_json(entry),
+        "require_restart": False,
+    }
+
+    if (
+        old_disable_polling != entry.pref_disable_polling
+        and entry.state is config_entries.ConfigEntryState.LOADED
+    ):
+        if not await hass.config_entries.async_reload(entry.entry_id):
+            result["require_restart"] = (
+                entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+            )
+
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
 @websocket_api.async_response
-@websocket_api.websocket_command({"type": "config_entries/ignore_flow", "flow_id": str})
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/disable",
+        "entry_id": str,
+        # We only allow setting disabled_by user via API.
+        "disabled_by": vol.Any(config_entries.DISABLED_USER, None),
+    }
+)
+async def config_entry_disable(hass, connection, msg):
+    """Disable config entry."""
+    disabled_by = msg["disabled_by"]
+
+    result = False
+    try:
+        result = await hass.config_entries.async_set_disabled_by(
+            msg["entry_id"], disabled_by
+        )
+    except config_entries.OperationNotAllowed:
+        # Failed to unload the config entry
+        pass
+    except config_entries.UnknownEntry:
+        send_entry_not_found(connection, msg["id"])
+        return
+
+    result = {"require_restart": not result}
+
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {"type": "config_entries/ignore_flow", "flow_id": str, "title": str}
+)
 async def ignore_config_flow(hass, connection, msg):
     """Ignore a config flow."""
     flow = next(
@@ -331,9 +344,7 @@ async def ignore_config_flow(hass, connection, msg):
     )
 
     if flow is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-        )
+        send_entry_not_found(connection, msg["id"])
         return
 
     if "unique_id" not in flow["context"]:
@@ -345,7 +356,7 @@ async def ignore_config_flow(hass, connection, msg):
     await hass.config_entries.flow.async_init(
         flow["handler"],
         context={"source": config_entries.SOURCE_IGNORE},
-        data={"unique_id": flow["context"]["unique_id"]},
+        data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])
 
@@ -355,7 +366,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
     supports_options = (
-        # Guard in case handler is no longer registered (custom compnoent etc)
+        # Guard in case handler is no longer registered (custom component etc)
         handler is not None
         # pylint: disable=comparison-with-callable
         and handler.async_get_options_flow
@@ -366,8 +377,11 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "domain": entry.domain,
         "title": entry.title,
         "source": entry.source,
-        "state": entry.state,
-        "connection_class": entry.connection_class,
+        "state": entry.state.value,
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
+        "pref_disable_new_entities": entry.pref_disable_new_entities,
+        "pref_disable_polling": entry.pref_disable_polling,
+        "disabled_by": entry.disabled_by,
+        "reason": entry.reason,
     }

@@ -1,0 +1,392 @@
+[
+    {
+        "aid": 1,
+        "services": [
+            {
+                "characteristics": [
+                    {
+                        "format": "string",
+                        "iid": 2,
+                        "maxLen": 64,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "Koogeek-P1-A00AA0"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 3,
+                        "maxLen": 64,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000020-0000-1000-8000-0026BB765291",
+                        "value": "Koogeek"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 4,
+                        "maxLen": 64,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000021-0000-1000-8000-0026BB765291",
+                        "value": "P1EU"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 5,
+                        "maxLen": 64,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000030-0000-1000-8000-0026BB765291",
+                        "value": "EUCP03190xxxxx48"
+                    },
+                    {
+                        "format": "bool",
+                        "iid": 6,
+                        "perms": [
+                            "pw"
+                        ],
+                        "type": "00000014-0000-1000-8000-0026BB765291"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 37,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000052-0000-1000-8000-0026BB765291",
+                        "value": "2.3.7"
+                    }
+                ],
+                "iid": 1,
+                "stype": "accessory-information",
+                "type": "0000003E-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "ev": false,
+                        "format": "bool",
+                        "iid": 8,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "type": "00000025-0000-1000-8000-0026BB765291",
+                        "value": false
+                    },
+                    {
+                        "ev": false,
+                        "format": "bool",
+                        "iid": 9,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "00000026-0000-1000-8000-0026BB765291",
+                        "value": true
+                    },
+                    {
+                        "format": "string",
+                        "iid": 10,
+                        "maxLen": 64,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000023-0000-1000-8000-0026BB765291",
+                        "value": "outlet"
+                    }
+                ],
+                "iid": 7,
+                "primary": true,
+                "stype": "outlet",
+                "type": "00000047-0000-1000-8000-0026BB765291"
+            },
+            {
+                "characteristics": [
+                    {
+                        "description": "TIMER_SETTINGS",
+                        "format": "tlv8",
+                        "iid": 12,
+                        "perms": [
+                            "pr",
+                            "pw"
+                        ],
+                        "type": "4AAAF942-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                    }
+                ],
+                "iid": 11,
+                "stype": "Unknown Service: 4AAAF940-0DEC-11E5-B939-0800200C9A66",
+                "type": "4AAAF940-0DEC-11E5-B939-0800200C9A66"
+            },
+            {
+                "characteristics": [
+                    {
+                        "description": "FW Upgrade supported types",
+                        "format": "string",
+                        "iid": 14,
+                        "perms": [
+                            "pr",
+                            "hd"
+                        ],
+                        "type": "151909D2-3802-11E4-916C-0800200C9A66",
+                        "value": "url,data"
+                    },
+                    {
+                        "description": "FW Upgrade URL",
+                        "format": "string",
+                        "iid": 15,
+                        "maxLen": 256,
+                        "perms": [
+                            "pw",
+                            "hd"
+                        ],
+                        "type": "151909D1-3802-11E4-916C-0800200C9A66"
+                    },
+                    {
+                        "description": "FW Upgrade Status",
+                        "ev": false,
+                        "format": "int",
+                        "iid": 16,
+                        "perms": [
+                            "pr",
+                            "ev",
+                            "hd"
+                        ],
+                        "type": "151909D6-3802-11E4-916C-0800200C9A66",
+                        "value": 0
+                    },
+                    {
+                        "description": "FW Upgrade Data",
+                        "format": "data",
+                        "iid": 17,
+                        "perms": [
+                            "pw",
+                            "hd"
+                        ],
+                        "type": "151909D7-3802-11E4-916C-0800200C9A66"
+                    }
+                ],
+                "hidden": true,
+                "iid": 13,
+                "stype": "Unknown Service: 151909D0-3802-11E4-916C-0800200C9A66",
+                "type": "151909D0-3802-11E4-916C-0800200C9A66"
+            },
+            {
+                "characteristics": [
+                    {
+                        "description": "Timezone",
+                        "format": "int",
+                        "iid": 19,
+                        "perms": [
+                            "pr",
+                            "pw"
+                        ],
+                        "type": "151909D5-3802-11E4-916C-0800200C9A66",
+                        "value": 0
+                    },
+                    {
+                        "description": "Time value since Epoch",
+                        "format": "int",
+                        "iid": 20,
+                        "perms": [
+                            "pr",
+                            "pw"
+                        ],
+                        "type": "151909D4-3802-11E4-916C-0800200C9A66",
+                        "value": 1570358601
+                    }
+                ],
+                "iid": 18,
+                "stype": "Unknown Service: 151909D3-3802-11E4-916C-0800200C9A66",
+                "type": "151909D3-3802-11E4-916C-0800200C9A66"
+            },
+            {
+                "characteristics": [
+                    {
+                        "description": "1 REALTIME_ENERGY",
+                        "ev": false,
+                        "format": "float",
+                        "iid": 22,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "4AAAF931-0DEC-11E5-B939-0800200C9A66",
+                        "value": 5
+                    },
+                    {
+                        "description": "2 CURRENT_HOUR_DATA",
+                        "ev": false,
+                        "format": "float",
+                        "iid": 23,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "4AAAF932-0DEC-11E5-B939-0800200C9A66",
+                        "value": 0
+                    },
+                    {
+                        "description": "3 HOUR_DATA_TODAY",
+                        "format": "tlv8",
+                        "iid": 24,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF933-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "4 HOUR_DATA_YESTERDAY",
+                        "format": "tlv8",
+                        "iid": 25,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF934-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "5 HOUR_DATA_2_DAYS_BEFORE",
+                        "format": "tlv8",
+                        "iid": 26,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF935-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "6 HOUR_DATA_3_DAYS_BEFORE",
+                        "format": "tlv8",
+                        "iid": 27,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF936-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "7 HOUR_DATA_4_DAYS_BEFORE",
+                        "format": "tlv8",
+                        "iid": 28,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF937-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "8 HOUR_DATA_5_DAYS_BEFORE",
+                        "format": "tlv8",
+                        "iid": 29,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF938-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "9 HOUR_DATA_6_DAYS_BEFORE",
+                        "format": "tlv8",
+                        "iid": 30,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF939-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "10 HOUR_DATA_7_DAYS_BEFORE",
+                        "format": "tlv8",
+                        "iid": 31,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF93A-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "11 DAY_DATA_THIS_MONTH",
+                        "format": "tlv8",
+                        "iid": 32,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF93B-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AHwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                    },
+                    {
+                        "description": "12 DAY_DATA_LAST_MONTH",
+                        "format": "tlv8",
+                        "iid": 33,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF93C-0DEC-11E5-B939-0800200C9A66",
+                        "value": "AHwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                    },
+                    {
+                        "description": "13 MONTH_DATA_THIS_YEAR",
+                        "format": "tlv8",
+                        "iid": 34,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF93D-0DEC-11E5-B939-0800200C9A66",
+                        "value": "ADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "14 MONTH_DATA_LAST_YEAR",
+                        "format": "tlv8",
+                        "iid": 35,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "4AAAF93E-0DEC-11E5-B939-0800200C9A66",
+                        "value": "ADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                    },
+                    {
+                        "description": "15 RUNNING_TIME",
+                        "ev": false,
+                        "format": "int",
+                        "iid": 36,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "4AAAF93F-0DEC-11E5-B939-0800200C9A66",
+                        "value": 0
+                    }
+                ],
+                "iid": 21,
+                "stype": "Unknown Service: 4AAAF930-0DEC-11E5-B939-0800200C9A66",
+                "type": "4AAAF930-0DEC-11E5-B939-0800200C9A66"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "string",
+                        "iid": 39,
+                        "maxLen": 64,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "00000037-0000-1000-8000-0026BB765291",
+                        "value": "1.1.0"
+                    }
+                ],
+                "iid": 38,
+                "stype": "service",
+                "type": "000000A2-0000-1000-8000-0026BB765291"
+            }
+        ]
+    }
+]

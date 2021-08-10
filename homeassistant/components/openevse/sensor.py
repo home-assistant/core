@@ -5,27 +5,27 @@ import openevsewifi
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
+    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "status": ["Charging Status", None],
-    "charge_time": ["Charge Time Elapsed", TIME_MINUTES],
-    "ambient_temp": ["Ambient Temperature", TEMP_CELSIUS],
-    "ir_temp": ["IR Temperature", TEMP_CELSIUS],
-    "rtc_temp": ["RTC Temperature", TEMP_CELSIUS],
-    "usage_session": ["Usage this Session", ENERGY_KILO_WATT_HOUR],
-    "usage_total": ["Total Usage", ENERGY_KILO_WATT_HOUR],
+    "status": ["Charging Status", None, None],
+    "charge_time": ["Charge Time Elapsed", TIME_MINUTES, None],
+    "ambient_temp": ["Ambient Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "ir_temp": ["IR Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "rtc_temp": ["RTC Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "usage_session": ["Usage this Session", ENERGY_KILO_WATT_HOUR, None],
+    "usage_total": ["Total Usage", ENERGY_KILO_WATT_HOUR, None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class OpenEVSESensor(Entity):
+class OpenEVSESensor(SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
     def __init__(self, sensor_type, charger):
@@ -62,6 +62,7 @@ class OpenEVSESensor(Entity):
         self._state = None
         self.charger = charger
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):

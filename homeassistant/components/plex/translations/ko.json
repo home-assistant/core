@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "\uc774\ubbf8 \uad6c\uc131\ub41c \ubaa8\ub4e0 \uc5f0\uacb0\ub41c \uc11c\ubc84",
             "already_configured": "\uc774 Plex \uc11c\ubc84\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "already_in_progress": "Plex \ub97c \uad6c\uc131 \uc911\uc785\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4",
             "token_request_timeout": "\ud1a0\ud070 \ud68d\ub4dd \uc2dc\uac04\uc774 \ucd08\uacfc\ud588\uc2b5\ub2c8\ub2e4",
-            "unknown": "\uc54c \uc218 \uc5c6\ub294 \uc774\uc720\ub85c \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4"
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
             "faulty_credentials": "\uc778\uc99d\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4. \ud1a0\ud070\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694",
@@ -20,9 +21,9 @@
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
                     "port": "\ud3ec\ud2b8",
-                    "ssl": "SSL \uc0ac\uc6a9",
+                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
                     "token": "\ud1a0\ud070 (\uc120\ud0dd \uc0ac\ud56d)",
-                    "verify_ssl": "SSL \uc778\uc99d\uc11c \uac80\uc99d"
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 },
                 "title": "Plex \uc9c1\uc811 \uad6c\uc131\ud558\uae30"
             },
@@ -34,7 +35,7 @@
                 "title": "Plex \uc11c\ubc84 \uc120\ud0dd\ud558\uae30"
             },
             "user": {
-                "description": "Plex \uc11c\ubc84\ub97c \uc5f0\uacb0\ud558\ub824\uba74 [plex.tv](https://plex.tv) \ub85c \uacc4\uc18d \uc9c4\ud589\ud574\uc8fc\uc138\uc694.",
+                "description": "Plex \uc11c\ubc84\ub97c \uc5f0\uacb0\ud558\ub824\uba74 [plex.tv](https://plex.tv)\ub85c \uacc4\uc18d \uc9c4\ud589\ud574\uc8fc\uc138\uc694.",
                 "title": "Plex \ubbf8\ub514\uc5b4 \uc11c\ubc84"
             },
             "user_advanced": {

@@ -1,10 +1,11 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Quakes Feeds."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
+import logging
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 
 from .const import DOMAIN, FEED
@@ -34,7 +35,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Sensor setup done")
 
 
-class GeonetnzQuakesSensor(Entity):
+class GeonetnzQuakesSensor(SensorEntity):
     """This is a status sensor for the GeoNet NZ Quakes integration."""
 
     def __init__(self, config_entry_id, config_unique_id, config_title, manager):
@@ -115,7 +116,7 @@ class GeonetnzQuakesSensor(Entity):
         return self._config_unique_id
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return f"GeoNet NZ Quakes ({self._config_title})"
 
@@ -130,7 +131,7 @@ class GeonetnzQuakesSensor(Entity):
         return DEFAULT_UNIT_OF_MEASUREMENT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

@@ -41,7 +41,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         name: str,
         icon_on: str,
         icon_off: str,
-    ):
+    ) -> None:
         """Initialize the switch."""
         super().__init__(account, device, key, name)
         self._icon_on = icon_on
@@ -53,7 +53,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         return super().available and self._device.online
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the switch."""
         if self._key == "ign":
             return self._account.engine_attrs(self._device)

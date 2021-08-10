@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "\uc2a4\uc704\uce58 \ubc29\uc2dd \ubcc0\uacbd (\uc0c1\uc2dc\ud3d0\ub85c(NC)\ub85c \uc0ac\uc6a9)"
+                }
+            }
+        }
+    }
+}

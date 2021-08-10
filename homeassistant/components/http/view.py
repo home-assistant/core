@@ -1,8 +1,11 @@
 """Support for views."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable, Callable
 import json
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
@@ -11,6 +14,7 @@ from aiohttp.web_exceptions import (
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
+from aiohttp.web_urldispatcher import AbstractRoute
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -26,8 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantView:
     """Base view for all views."""
 
-    url: Optional[str] = None
-    extra_urls: List[str] = []
+    url: str | None = None
+    extra_urls: list[str] = []
     # Views inheriting from this class can override this
     requires_auth = True
     cors_allowed = False
@@ -45,7 +49,7 @@ class HomeAssistantView:
     def json(
         result: Any,
         status_code: int = HTTP_OK,
-        headers: Optional[LooseHeaders] = None,
+        headers: LooseHeaders | None = None,
     ) -> web.Response:
         """Return a JSON response."""
         try:
@@ -66,8 +70,8 @@ class HomeAssistantView:
         self,
         message: str,
         status_code: int = HTTP_OK,
-        message_code: Optional[str] = None,
-        headers: Optional[LooseHeaders] = None,
+        message_code: str | None = None,
+        headers: LooseHeaders | None = None,
     ) -> web.Response:
         """Return a JSON message response."""
         data = {"message": message}
@@ -79,7 +83,7 @@ class HomeAssistantView:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
         urls = [self.url] + self.extra_urls
-        routes = []
+        routes: list[AbstractRoute] = []
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
             handler = getattr(self, method, None)
@@ -99,7 +103,9 @@ class HomeAssistantView:
             app["allow_cors"](route)
 
 
-def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Callable:
+def request_handler_factory(
+    view: HomeAssistantView, handler: Callable
+) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     assert asyncio.iscoroutinefunction(handler) or is_callback(
         handler

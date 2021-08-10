@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Bir BleBox cihaz\u0131 zaten {address} yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r.",
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u0130p Adresi",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

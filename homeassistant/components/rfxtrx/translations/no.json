@@ -25,7 +25,7 @@
                 "data": {
                     "device": "USB enhetsbane"
                 },
-                "title": "Sti"
+                "title": "Bane"
             },
             "user": {
                 "data": {
@@ -64,7 +64,8 @@
                     "off_delay": "Av forsinkelse",
                     "off_delay_enabled": "Aktiver av forsinkelse",
                     "replace_device": "Velg enheten du vil erstatte",
-                    "signal_repetitions": "Antall signalrepetisjoner"
+                    "signal_repetitions": "Antall signalrepetisjoner",
+                    "venetian_blind_mode": "Persiennemodus"
                 },
                 "title": "Konfigurer enhetsalternativer"
             }

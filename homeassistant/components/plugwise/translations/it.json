@@ -8,7 +8,7 @@
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

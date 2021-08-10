@@ -1,10 +1,10 @@
 """Light conftest."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant.components.light import Profiles
-
-from tests.async_mock import AsyncMock, patch
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +20,6 @@ def mock_light_profiles():
 
     with patch(
         "homeassistant.components.light.Profiles",
-        SCHEMA=Profiles.SCHEMA,
         side_effect=mock_profiles_class,
     ):
         yield data

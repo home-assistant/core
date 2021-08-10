@@ -1,0 +1,18 @@
+set_hold_time:
+  name: Set Hold Time
+  description: "Sets the time to hold until"
+  target:
+    device:
+      integration: lyric
+    entity:
+      integration: lyric
+      domain: climate
+  fields:
+    time_period:
+      name: Time Period
+      description: Time to hold until
+      default: "01:00:00"
+      example: "01:00:00"
+      required: true
+      selector:
+        text:

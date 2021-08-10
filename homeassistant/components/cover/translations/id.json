@@ -1,9 +1,36 @@
 {
+    "device_automation": {
+        "action_type": {
+            "close": "Tutup {entity_name}",
+            "close_tilt": "Tutup miring {entity_name}",
+            "open": "Buka {entity_name}",
+            "open_tilt": "Buka miring {entity_name}",
+            "set_position": "Tetapkan posisi {entity_name}",
+            "set_tilt_position": "Setel posisi miring {entity_name}",
+            "stop": "Hentikan {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} tertutup",
+            "is_closing": "{entity_name} menutup",
+            "is_open": "{entity_name} terbuka",
+            "is_opening": "{entity_name} membuka",
+            "is_position": "Posisi {entity_name} saat ini adalah",
+            "is_tilt_position": "Posisi miring {entity_name} saat ini adalah"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} tertutup",
+            "closing": "{entity_name} menutup",
+            "opened": "{entity_name} terbuka",
+            "opening": "{entity_name} membuka",
+            "position": "Perubahan posisi {entity_name}",
+            "tilt_position": "Perubahan posisi kemiringan {entity_name}"
+        }
+    },
     "state": {
         "_": {
             "closed": "Tertutup",
             "closing": "Menutup",
-            "open": "Buka",
+            "open": "Terbuka",
             "opening": "Membuka",
             "stopped": "Terhenti"
         }

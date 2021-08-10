@@ -4,7 +4,7 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -17,7 +17,6 @@ from homeassistant.const import (
     LENGTH_METERS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance, location as util_location
 
 CONF_ALTITUDE = "altitude"
@@ -87,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class OpenSkySensor(Entity):
+class OpenSkySensor(SensorEntity):
     """Open Sky Network Sensor."""
 
     def __init__(self, hass, name, latitude, longitude, radius, altitude):
@@ -117,14 +116,20 @@ class OpenSkySensor(Entity):
         for flight in flights:
             if flight in metadata:
                 altitude = metadata[flight].get(ATTR_ALTITUDE)
+                longitude = metadata[flight].get(ATTR_LONGITUDE)
+                latitude = metadata[flight].get(ATTR_LATITUDE)
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
+                longitude = None
+                latitude = None
 
             data = {
                 ATTR_CALLSIGN: flight,
                 ATTR_ALTITUDE: altitude,
                 ATTR_SENSOR: self._name,
+                ATTR_LONGITUDE: longitude,
+                ATTR_LATITUDE: latitude,
             }
             self._hass.bus.fire(event, data)
 
@@ -168,7 +173,7 @@ class OpenSkySensor(Entity):
         self._previously_tracked = currently_tracked
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: OPENSKY_ATTRIBUTION}
 

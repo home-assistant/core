@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "webhook_not_internet_accessible": "Instans Home Assistant Anda harus dapat diakses dari internet untuk menerima pesan webhook."
+        },
+        "create_entry": {
+            "default": "Untuk mengirim event ke Home Assistant, Anda harus menggunakan tindakan \"Make a web request\" dari [applet IFTTT Webhook]({applet_url}).\n\nIsi info berikut:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nBaca [dokumentasi]({docs_url}) tentang cara mengonfigurasi otomasi untuk menangani data masuk."
+        },
+        "step": {
+            "user": {
+                "description": "Yakin ingin menyiapkan IFTTT?",
+                "title": "Siapkan Applet IFTTT Webhook"
+            }
+        }
+    }
+}

@@ -10,11 +10,13 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
     CONF_DEVICES,
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
+    CONF_REPEAT,
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TYPE,
@@ -31,13 +33,11 @@ from .const import (
     CONF_BLINK,
     CONF_DEFAULT_OPTIONS,
     CONF_DHT_SENSORS,
-    CONF_DISCOVERY,
     CONF_DS18B20_SENSORS,
     CONF_INVERSE,
     CONF_MOMENTARY,
     CONF_PAUSE,
     CONF_POLL_INTERVAL,
-    CONF_REPEAT,
     DOMAIN,
     ENDPOINT_ROOT,
     STATE_LOW,
@@ -376,7 +376,7 @@ class AlarmPanel:
             self.async_desired_settings_payload()
             != self.async_current_settings_payload()
         ):
-            _LOGGER.info("pushing settings to device %s", self.device_id)
+            _LOGGER.info("Pushing settings to device %s", self.device_id)
             await self.client.put_settings(**self.async_desired_settings_payload())
 
 

@@ -2,10 +2,12 @@
 
 Such systems include evohome, Round Thermostat, and others.
 """
+from __future__ import annotations
+
 from datetime import datetime as dt, timedelta
 import logging
 import re
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import aiohttp.client_exceptions
 import evohomeasync
@@ -21,7 +23,7 @@ from homeassistant.const import (
     HTTP_TOO_MANY_REQUESTS,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -31,7 +33,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import verify_domain_control
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
@@ -114,7 +116,7 @@ def convert_until(status_dict: dict, until_key: str) -> None:
         status_dict[until_key] = dt_util.as_local(dt_utc_naive).isoformat()
 
 
-def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     """Recursively convert a dict's keys to snake_case."""
 
     def convert_key(key: str) -> str:
@@ -173,12 +175,12 @@ def _handle_exception(err) -> bool:
             raise  # we don't expect/handle any other Exceptions
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell TCC system."""
 
-    async def load_auth_tokens(store) -> Tuple[Dict, Optional[Dict]]:
+    async def load_auth_tokens(store) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
-        tokens = dict(app_storage if app_storage else {})
+        tokens = dict(app_storage or {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
             # any tokens won't be valid, and store might be be corrupt
@@ -262,7 +264,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 @callback
-def setup_service_functions(hass: HomeAssistantType, broker):
+def setup_service_functions(hass: HomeAssistant, broker):
     """Set up the service handlers for the system/zone operating modes.
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,
@@ -404,10 +406,12 @@ class EvoBroker:
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
-        app_storage = {CONF_USERNAME: self.client.username}
-        app_storage[REFRESH_TOKEN] = self.client.refresh_token
-        app_storage[ACCESS_TOKEN] = self.client.access_token
-        app_storage[ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
+        app_storage = {
+            CONF_USERNAME: self.client.username,
+            REFRESH_TOKEN: self.client.refresh_token,
+            ACCESS_TOKEN: self.client.access_token,
+            ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
+        }
 
         if self.client_v1 and self.client_v1.user_data:
             app_storage[USER_DATA] = {
@@ -435,7 +439,7 @@ class EvoBroker:
     async def _update_v1_api_temps(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
-        def get_session_id(client_v1) -> Optional[str]:
+        def get_session_id(client_v1) -> str | None:
             user_data = client_v1.user_data if client_v1 else None
             return user_data.get("sessionId") if user_data else None
 
@@ -520,14 +524,14 @@ class EvoDevice(Entity):
         self._supported_features = None
         self._device_state_attrs = {}
 
-    async def async_refresh(self, payload: Optional[dict] = None) -> None:
+    async def async_refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
             return
         if payload["unique_id"] != self._unique_id:
             return
-        if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
+        if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
@@ -546,7 +550,7 @@ class EvoDevice(Entity):
         return False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
 
@@ -556,7 +560,7 @@ class EvoDevice(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the evohome-specific state attributes."""
         status = self._device_state_attrs
         if "systemModeStatus" in status:
@@ -606,7 +610,7 @@ class EvoChild(EvoDevice):
         self._setpoints = {}
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
         if (
             self._evo_broker.temps
@@ -618,7 +622,7 @@ class EvoChild(EvoDevice):
             return self._evo_device.temperatureStatus["temperature"]
 
     @property
-    def setpoints(self) -> Dict[str, Any]:
+    def setpoints(self) -> dict[str, Any]:
         """Return the current/next setpoints from the schedule.
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
@@ -649,10 +653,10 @@ class EvoChild(EvoDevice):
             this_sp_day = -1 if sp_idx == -1 else 0
             next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
-            for key, offset, idx in [
+            for key, offset, idx in (
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-            ]:
+            ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]

@@ -1,6 +1,7 @@
 """Unit system helper class and methods."""
+from __future__ import annotations
+
 from numbers import Number
-from typing import Optional
 
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -31,15 +32,17 @@ from homeassistant.util import (
     volume as volume_util,
 )
 
+# mypy: disallow-any-generics
+
 LENGTH_UNITS = distance_util.VALID_UNITS
 
-MASS_UNITS = [MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS]
+MASS_UNITS: tuple[str, ...] = (MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS)
 
 PRESSURE_UNITS = pressure_util.VALID_UNITS
 
 VOLUME_UNITS = volume_util.VALID_UNITS
 
-TEMPERATURE_UNITS = [TEMP_FAHRENHEIT, TEMP_CELSIUS]
+TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
 
 
 def is_valid_unit(unit: str, unit_type: str) -> bool:
@@ -75,13 +78,13 @@ class UnitSystem:
         """Initialize the unit system object."""
         errors: str = ", ".join(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
-            for unit, unit_type in [
+            for unit, unit_type in (
                 (temperature, TEMPERATURE),
                 (length, LENGTH),
                 (volume, VOLUME),
                 (mass, MASS),
                 (pressure, PRESSURE),
-            ]
+            )
             if not is_valid_unit(unit, unit_type)
         )
 
@@ -107,7 +110,7 @@ class UnitSystem:
 
         return temperature_util.convert(temperature, from_unit, self.temperature_unit)
 
-    def length(self, length: Optional[float], from_unit: str) -> float:
+    def length(self, length: float | None, from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError(f"{length!s} is not a numeric value.")
@@ -117,7 +120,7 @@ class UnitSystem:
             length, from_unit, self.length_unit
         )
 
-    def pressure(self, pressure: Optional[float], from_unit: str) -> float:
+    def pressure(self, pressure: float | None, from_unit: str) -> float:
         """Convert the given pressure to this unit system."""
         if not isinstance(pressure, Number):
             raise TypeError(f"{pressure!s} is not a numeric value.")
@@ -127,7 +130,7 @@ class UnitSystem:
             pressure, from_unit, self.pressure_unit
         )
 
-    def volume(self, volume: Optional[float], from_unit: str) -> float:
+    def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
         if not isinstance(volume, Number):
             raise TypeError(f"{volume!s} is not a numeric value.")
@@ -135,7 +138,7 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""
         return {
             LENGTH: self.length_unit,

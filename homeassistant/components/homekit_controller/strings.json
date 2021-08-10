@@ -1,7 +1,7 @@
 {
   "title": "HomeKit Controller",
   "config": {
-    "flow_title": "{name} via HomeKit Accessory Protocol",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Device selection",
@@ -14,7 +14,8 @@
         "title": "Pair with a device via HomeKit Accessory Protocol",
         "description": "HomeKit Controller communicates with {name} over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
         "data": {
-          "pairing_code": "Pairing Code"
+          "pairing_code": "Pairing Code",
+          "allow_insecure_setup_codes": "Allow pairing with insecure setup codes."
         }
       },
       "protocol_error": {
@@ -31,6 +32,7 @@
       }
     },
     "error": {
+      "insecure_setup_code": "The requested setup code is insecure because of its trivial nature. This accessory fails to meet basic security requirements.",
       "unable_to_pair": "Unable to pair, please try again.",
       "unknown_error": "Device reported an unknown error. Pairing failed.",
       "authentication_error": "Incorrect HomeKit code. Please check it and try again.",

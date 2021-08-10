@@ -1,13 +1,14 @@
 """Support for Minut Point sensors."""
 import logging
 
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_HPA,
+    SOUND_PRESSURE_WEIGHTED_DBA,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -24,7 +25,7 @@ SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: (None, 1, TEMP_CELSIUS),
     DEVICE_CLASS_PRESSURE: (None, 0, PRESSURE_HPA),
     DEVICE_CLASS_HUMIDITY: (None, 1, PERCENTAGE),
-    DEVICE_CLASS_SOUND: ("mdi:ear-hearing", 1, "dBa"),
+    DEVICE_CLASS_SOUND: ("mdi:ear-hearing", 1, SOUND_PRESSURE_WEIGHTED_DBA),
 }
 
 
@@ -47,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MinutPointSensor(MinutPointEntity):
+class MinutPointSensor(MinutPointEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):

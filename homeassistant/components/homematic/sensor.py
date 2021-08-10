@@ -1,12 +1,15 @@
 """Support for HomeMatic sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_MILLIMETERS,
@@ -16,7 +19,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    VOLT,
     VOLUME_CUBIC_METERS,
 )
 
@@ -46,11 +48,13 @@ HM_UNIT_HA_CAST = {
     "ACTUAL_TEMPERATURE": TEMP_CELSIUS,
     "BRIGHTNESS": "#",
     "POWER": POWER_WATT,
-    "CURRENT": "mA",
-    "VOLTAGE": VOLT,
+    "CURRENT": ELECTRIC_CURRENT_MILLIAMPERE,
+    "VOLTAGE": ELECTRIC_POTENTIAL_VOLT,
     "ENERGY_COUNTER": ENERGY_WATT_HOUR,
     "GAS_POWER": VOLUME_CUBIC_METERS,
     "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
+    "IEC_POWER": POWER_WATT,
+    "IEC_ENERGY_COUNTER": ENERGY_WATT_HOUR,
     "LUX": LIGHT_LUX,
     "ILLUMINATION": LIGHT_LUX,
     "CURRENT_ILLUMINATION": LIGHT_LUX,
@@ -66,6 +70,8 @@ HM_UNIT_HA_CAST = {
     "FREQUENCY": FREQUENCY_HERTZ,
     "VALUE": "#",
     "VALVE_STATE": PERCENTAGE,
+    "CARRIER_SENSE_LEVEL": PERCENTAGE,
+    "DUTY_CYCLE_LEVEL": PERCENTAGE,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {
@@ -97,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMSensor(HMDevice):
+class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
 
     @property

@@ -18,7 +18,7 @@ from homeassistant.util import dt as dt_util
 from . import ATTRIBUTION, DOMAIN
 from .entity import RingEntityMixin
 
-FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
+FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class RingCam(RingEntityMixin, Camera):
         return self._device.id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

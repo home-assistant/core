@@ -3,5 +3,15 @@
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimum Z\u00e4it zw\u00ebschen Entit\u00e9it's Aktualis\u00e9ierungen [s]"
+                },
+                "title": "DSMR Optiounen"
+            }
+        }
     }
 }

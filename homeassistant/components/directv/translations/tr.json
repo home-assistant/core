@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "ssdp_confirm": {
+                "description": "{name} kurmak istiyor musunuz?"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                }
+            }
+        }
+    }
+}

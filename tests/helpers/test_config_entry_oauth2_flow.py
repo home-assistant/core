@@ -2,14 +2,15 @@
 import asyncio
 import logging
 import time
+from unittest.mock import patch
 
+import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
@@ -98,9 +99,10 @@ def test_inherit_enforces_domain_set():
             """Return logger."""
             return logging.getLogger(__name__)
 
-    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
-        with pytest.raises(TypeError):
-            TestFlowHandler()
+    with patch.dict(
+        config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}
+    ), pytest.raises(TypeError):
+        TestFlowHandler()
 
 
 async def test_abort_if_no_implementation(hass, flow_handler):
@@ -112,7 +114,9 @@ async def test_abort_if_no_implementation(hass, flow_handler):
     assert result["reason"] == "missing_configuration"
 
 
-async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
+async def test_abort_if_authorization_timeout(
+    hass, flow_handler, local_impl, current_request_with_host
+):
     """Check timeout generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
 
@@ -128,7 +132,9 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
     assert result["reason"] == "authorize_url_timeout"
 
 
-async def test_abort_if_no_url_available(hass, flow_handler, local_impl):
+async def test_abort_if_no_url_available(
+    hass, flow_handler, local_impl, current_request_with_host
+):
     """Check no_url_available generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
 
@@ -546,3 +552,32 @@ async def test_implementation_provider(hass, local_impl):
     assert await config_entry_oauth2_flow.async_get_implementations(
         hass, mock_domain_with_impl
     ) == {TEST_DOMAIN: local_impl, "cloud": provider_source[mock_domain_with_impl]}
+
+
+async def test_oauth_session_refresh_failure(
+    hass, flow_handler, local_impl, aioclient_mock
+):
+    """Test the OAuth2 session helper when no refresh is needed."""
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(TOKEN_URL, status=400)
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                # Already expired, requires a refresh
+                "expires_in": -500,
+                "expires_at": time.time() - 500,
+                "token_type": "bearer",
+                "random_other_data": "should_stay",
+            },
+        },
+    )
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with pytest.raises(aiohttp.client_exceptions.ClientResponseError):
+        await session.async_request("post", "https://example.com")

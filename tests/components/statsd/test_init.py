@@ -1,5 +1,6 @@
 """The tests for the StatsD feeder."""
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -8,8 +9,6 @@ import homeassistant.components.statsd as statsd
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -40,7 +39,7 @@ async def test_statsd_setup_full(hass):
         assert mock_init.call_args == mock.call(host="host", port=123, prefix="foo")
 
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
 async def test_statsd_setup_defaults(hass):
@@ -111,10 +110,8 @@ async def test_event_listener_attr_details(hass, mock_client):
         handler_method(MagicMock(data={"new_state": state}))
         mock_client.gauge.assert_has_calls(
             [
-                mock.call("%s.state" % state.entity_id, out, statsd.DEFAULT_RATE),
-                mock.call(
-                    "%s.attribute_key" % state.entity_id, 3.2, statsd.DEFAULT_RATE
-                ),
+                mock.call(f"{state.entity_id}.state", out, statsd.DEFAULT_RATE),
+                mock.call(f"{state.entity_id}.attribute_key", 3.2, statsd.DEFAULT_RATE),
             ]
         )
 

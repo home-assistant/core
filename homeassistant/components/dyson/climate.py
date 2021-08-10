@@ -2,6 +2,7 @@
 import logging
 
 from libpurecool.const import (
+    AutoMode,
     FanPower,
     FanSpeed,
     FanState,
@@ -36,13 +37,13 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import DYSON_DEVICES
+from . import DYSON_DEVICES, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FAN = [FAN_FOCUS, FAN_DIFFUSE]
 SUPPORT_FAN_PCOOL = [FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-SUPPORT_HVAG = [HVAC_MODE_COOL, HVAC_MODE_HEAT]
+SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT]
 SUPPORT_HVAC_PCOOL = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
@@ -87,40 +88,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(new_entities)
 
 
-class DysonPureHotCoolLinkEntity(ClimateEntity):
+class DysonClimateEntity(DysonEntity, ClimateEntity):
     """Representation of a Dyson climate fan."""
-
-    def __init__(self, device):
-        """Initialize the fan."""
-        self._device = device
-        self._current_temp = None
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self._device.add_message_listener(self.on_message)
-
-    def on_message(self, message):
-        """Call when new messages received from the climate."""
-        if isinstance(message, DysonPureHotCoolState):
-            _LOGGER.debug(
-                "Message received for climate device %s : %s", self.name, message
-            )
-            self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def name(self):
-        """Return the display name of this climate."""
-        return self._device.name
 
     @property
     def temperature_unit(self):
@@ -130,11 +104,13 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._device.environmental_state:
+        if (
+            self._device.environmental_state
+            and self._device.environmental_state.temperature
+        ):
             temperature_kelvin = self._device.environmental_state.temperature
-            if temperature_kelvin != 0:
-                self._current_temp = float(f"{(temperature_kelvin - 273):.1f}")
-        return self._current_temp
+            return float(f"{temperature_kelvin - 273:.1f}")
+        return None
 
     @property
     def target_temperature(self):
@@ -145,11 +121,48 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if self._device.environmental_state:
-            if self._device.environmental_state.humidity == 0:
-                return None
+        # Humidity equaling to 0 means invalid value so we don't check for None here
+        # https://github.com/home-assistant/core/pull/45172#discussion_r559069756
+        if (
+            self._device.environmental_state
+            and self._device.environmental_state.humidity
+        ):
             return self._device.environmental_state.humidity
         return None
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return 1
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return 37
+
+    def set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        if target_temp is None:
+            _LOGGER.error("Missing target temperature %s", kwargs)
+            return
+        target_temp = int(target_temp)
+        _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
+        # Limit the target temperature into acceptable range.
+        target_temp = min(self.max_temp, target_temp)
+        target_temp = max(self.min_temp, target_temp)
+        self.set_heat_target(HeatTarget.celsius(target_temp))
+
+    def set_heat_target(self, heat_target):
+        """Set heating target temperature."""
+
+
+class DysonPureHotCoolLinkEntity(DysonClimateEntity):
+    """Representation of a Dyson climate fan."""
+
+    def __init__(self, device):
+        """Initialize the fan."""
+        super().__init__(device, DysonPureHotCoolState)
 
     @property
     def hvac_mode(self):
@@ -167,7 +180,7 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
 
         Need to be a subset of HVAC_MODES.
         """
-        return SUPPORT_HVAG
+        return SUPPORT_HVAC
 
     @property
     def hvac_action(self):
@@ -193,18 +206,10 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
         """Return the list of available fan modes."""
         return SUPPORT_FAN
 
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        if target_temp is None:
-            return
-        target_temp = int(target_temp)
-        _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
-        # Limit the target temperature into acceptable range.
-        target_temp = min(self.max_temp, target_temp)
-        target_temp = max(self.min_temp, target_temp)
+    def set_heat_target(self, heat_target):
+        """Set heating target temperature."""
         self._device.set_configuration(
-            heat_target=HeatTarget.celsius(target_temp), heat_mode=HeatMode.HEAT_ON
+            heat_target=heat_target, heat_mode=HeatMode.HEAT_ON
         )
 
     def set_fan_mode(self, fan_mode):
@@ -223,78 +228,13 @@ class DysonPureHotCoolLinkEntity(ClimateEntity):
         elif hvac_mode == HVAC_MODE_COOL:
             self._device.set_configuration(heat_mode=HeatMode.HEAT_OFF)
 
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return 1
 
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return 37
-
-
-class DysonPureHotCoolEntity(ClimateEntity):
+class DysonPureHotCoolEntity(DysonClimateEntity):
     """Representation of a Dyson climate hot+cool fan."""
 
     def __init__(self, device):
         """Initialize the fan."""
-        self._device = device
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self._device.add_message_listener(self.on_message)
-
-    def on_message(self, message):
-        """Call when new messages received from the climate device."""
-        if isinstance(message, DysonPureHotCoolV2State):
-            _LOGGER.debug(
-                "Message received for climate device %s : %s", self.name, message
-            )
-            self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def name(self):
-        """Return the display name of this climate."""
-        return self._device.name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        if self._device.environmental_state.temperature is not None:
-            temperature_kelvin = self._device.environmental_state.temperature
-            if temperature_kelvin != 0:
-                return float("{:.1f}".format(temperature_kelvin - 273))
-        return None
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature."""
-        heat_target = int(self._device.state.heat_target) / 10
-        return int(heat_target - 273)
-
-    @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        if self._device.environmental_state.humidity is not None:
-            if self._device.environmental_state.humidity != 0:
-                return self._device.environmental_state.humidity
-        return None
+        super().__init__(device, DysonPureHotCoolV2State)
 
     @property
     def hvac_mode(self):
@@ -333,7 +273,10 @@ class DysonPureHotCoolEntity(ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        if self._device.state.fan_state == FanState.FAN_OFF.value:
+        if (
+            self._device.state.auto_mode != AutoMode.AUTO_ON.value
+            and self._device.state.fan_state == FanState.FAN_OFF.value
+        ):
             return FAN_OFF
 
         return SPEED_MAP[self._device.state.speed]
@@ -343,18 +286,9 @@ class DysonPureHotCoolEntity(ClimateEntity):
         """Return the list of available fan modes."""
         return SUPPORT_FAN_PCOOL
 
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        if target_temp is None:
-            _LOGGER.error("Missing target temperature %s", kwargs)
-            return
-        target_temp = int(target_temp)
-        _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
-        # Limit the target temperature into acceptable range.
-        target_temp = min(self.max_temp, target_temp)
-        target_temp = max(self.min_temp, target_temp)
-        self._device.set_heat_target(HeatTarget.celsius(target_temp))
+    def set_heat_target(self, heat_target):
+        """Set heating target temperature."""
+        self._device.set_heat_target(heat_target)
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
@@ -368,7 +302,7 @@ class DysonPureHotCoolEntity(ClimateEntity):
         elif fan_mode == FAN_HIGH:
             self._device.set_fan_speed(FanSpeed.FAN_SPEED_10)
         elif fan_mode == FAN_AUTO:
-            self._device.set_fan_speed(FanSpeed.FAN_SPEED_AUTO)
+            self._device.enable_auto_mode()
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -381,13 +315,3 @@ class DysonPureHotCoolEntity(ClimateEntity):
             self._device.enable_heat_mode()
         elif hvac_mode == HVAC_MODE_COOL:
             self._device.disable_heat_mode()
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return 1
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return 37

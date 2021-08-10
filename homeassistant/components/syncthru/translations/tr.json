@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "url": "Web aray\u00fcz\u00fc URL'si"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Ad",
+                    "url": "Web aray\u00fcz\u00fc URL'si"
+                }
+            }
+        }
+    }
+}

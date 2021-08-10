@@ -1,11 +1,13 @@
 """Package to test the get_accessory method."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 import homeassistant.components.climate as climate
 import homeassistant.components.cover as cover
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
     TYPE_FAUCET,
@@ -24,14 +26,14 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import State
-
-from tests.async_mock import Mock, patch
 
 
 def test_not_supported(caplog):
@@ -64,7 +66,7 @@ def test_customize_options(config, name):
     """Test with customized options."""
     mock_type = Mock()
     conf = config.copy()
-    conf[ATTR_INTERGRATION] = "platform_name"
+    conf[ATTR_INTEGRATION] = "platform_name"
     with patch.dict(TYPES, {"Light": mock_type}):
         entity_state = State("light.demo", "on")
         get_accessory(None, None, entity_state, 2, conf)
@@ -124,14 +126,28 @@ def test_types(type_name, entity_id, state, attrs, config):
             "Window",
             "cover.set_position",
             "open",
-            {ATTR_DEVICE_CLASS: "window", ATTR_SUPPORTED_FEATURES: 4},
+            {
+                ATTR_DEVICE_CLASS: "window",
+                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+            },
         ),
-        ("WindowCovering", "cover.set_position", "open", {ATTR_SUPPORTED_FEATURES: 4}),
+        (
+            "WindowCovering",
+            "cover.set_position",
+            "open",
+            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION},
+        ),
+        (
+            "WindowCovering",
+            "cover.tilt",
+            "open",
+            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_TILT_POSITION},
+        ),
         (
             "WindowCoveringBasic",
             "cover.open_window",
             "open",
-            {ATTR_SUPPORTED_FEATURES: 3},
+            {ATTR_SUPPORTED_FEATURES: (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)},
         ),
     ],
 )
@@ -186,9 +202,19 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
         ("BinarySensor", "person.someone", "home", {}),
         ("AirQualitySensor", "sensor.air_quality_pm25", "40", {}),
         ("AirQualitySensor", "sensor.air_quality", "40", {ATTR_DEVICE_CLASS: "pm25"}),
-        ("CarbonMonoxideSensor", "sensor.airmeter", "2", {ATTR_DEVICE_CLASS: "co"}),
+        (
+            "CarbonMonoxideSensor",
+            "sensor.co",
+            "2",
+            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO},
+        ),
         ("CarbonDioxideSensor", "sensor.airmeter_co2", "500", {}),
-        ("CarbonDioxideSensor", "sensor.airmeter", "500", {ATTR_DEVICE_CLASS: "co2"}),
+        (
+            "CarbonDioxideSensor",
+            "sensor.co2",
+            "500",
+            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2},
+        ),
         (
             "HumiditySensor",
             "sensor.humidity",
@@ -257,7 +283,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
     "type_name, entity_id, state, attrs",
     [
         (
-            "DockVacuum",
+            "Vacuum",
             "vacuum.dock_vacuum",
             "docked",
             {
@@ -265,7 +291,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
                 | vacuum.SUPPORT_RETURN_HOME
             },
         ),
-        ("Switch", "vacuum.basic_vacuum", "off", {}),
+        ("Vacuum", "vacuum.basic_vacuum", "off", {}),
     ],
 )
 def test_type_vacuum(type_name, entity_id, state, attrs):

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "step": {
+            "user": {
+                "description": "Ingin memulai penyiapan?"
+            }
+        }
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Installatie"
+                },
+                "description": "Home Assistant heeft meerdere Verisure-installaties gevonden in uw My Pages-account. Selecteer de installatie om toe te voegen aan Home Assistant."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Verifieer opnieuw met uw Verisure My Pages-account.",
+                    "email": "E-mail",
+                    "password": "Wachtwoord"
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Aanmelden met Verisure My Pages-account.",
+                    "email": "E-mail",
+                    "password": "Wachtwoord"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "De standaard pincode komt niet overeen met het vereiste aantal cijfers"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Aantal cijfers in pincode voor vergrendelingen",
+                    "lock_default_code": "Standaard pincode voor vergrendelingen, gebruikt als er geen wordt gegeven"
+                }
+            }
+        }
+    }
+}

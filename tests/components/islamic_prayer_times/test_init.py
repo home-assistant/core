@@ -1,6 +1,7 @@
 """Tests for Islamic Prayer Times init."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from prayer_times_calculator.exceptions import InvalidResponseError
 
@@ -16,7 +17,6 @@ from . import (
     PRAYER_TIMES_TIMESTAMPS,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -52,7 +52,7 @@ async def test_successful_config_entry(hass, legacy_patchable_time):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert entry.state == config_entries.ENTRY_STATE_LOADED
+        assert entry.state is config_entries.ConfigEntryState.LOADED
         assert entry.options == {
             islamic_prayer_times.CONF_CALC_METHOD: islamic_prayer_times.DEFAULT_CALC_METHOD
         }
@@ -74,7 +74,7 @@ async def test_setup_failed(hass, legacy_patchable_time):
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+        assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass, legacy_patchable_time):
@@ -93,7 +93,7 @@ async def test_unload_entry(hass, legacy_patchable_time):
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+        assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
         assert islamic_prayer_times.DOMAIN not in hass.data
 
 
