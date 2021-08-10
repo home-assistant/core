@@ -303,4 +303,4 @@ class Control4AlarmControlPanel(Control4Entity, AlarmControlPanelEntity):
         c4_alarm = self.create_api_object()
         for key in keystrokes:
             await c4_alarm.sendKeyPress(key)
-            await asyncio.sleep(5)
+#            await asyncio.sleep(5)
