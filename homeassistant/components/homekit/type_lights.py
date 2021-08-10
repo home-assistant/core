@@ -166,15 +166,8 @@ class Light(HomeAccessory):
 
         # Handle Color - color must always be set before color temperature
         # or the iOS UI will not display it correctly.
-        if self.color_supported:
-            if ATTR_COLOR_TEMP in attributes:
-                hue, saturation = color_temperature_to_hs(
-                    color_temperature_mired_to_kelvin(
-                        new_state.attributes[ATTR_COLOR_TEMP]
-                    )
-                )
-            else:
-                hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
+        if self.color_supported and ATTR_COLOR_TEMP not in attributes:
+            hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 self.char_hue.set_value(round(hue, 0))
                 self.char_saturation.set_value(round(saturation, 0))
