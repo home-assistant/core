@@ -1,6 +1,11 @@
 """Support for Velbus sensors."""
+from __future__ import annotations
+
+from datetime import datetime
+
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import VelbusEntity
 from .const import DOMAIN
@@ -45,9 +50,9 @@ class VelbusSensor(VelbusEntity, SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         if self._is_counter:
-            return DEVICE_CLASS_POWER
-        if self._channel.is_counter_channel():
             return DEVICE_CLASS_ENERGY
+        if self._channel.is_counter_channel():
+            return DEVICE_CLASS_POWER
         return None
 
     @property
@@ -75,3 +80,10 @@ class VelbusSensor(VelbusEntity, SensorEntity):
     def state_class(self):
         """Return the state class of this device."""
         return STATE_CLASS_MEASUREMENT
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the last reset date of this sensor."""
+        if self._is_counter:
+            return utc_from_timestamp(0)
+        return None
