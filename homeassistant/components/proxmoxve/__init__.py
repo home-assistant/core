@@ -1,4 +1,6 @@
 """Support for Proxmox VE."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -132,8 +134,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     await hass.async_add_executor_job(build_client)
 
-    hass.data[DOMAIN][COORDINATORS] = {}
-    coordinators = hass.data[DOMAIN][COORDINATORS]
+    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+    hass.data[DOMAIN][COORDINATORS] = coordinators
 
     # Create a coordinator for each vm/container
     for host_config in config[DOMAIN]:
