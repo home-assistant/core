@@ -1,0 +1,21 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "description": "You are about to add the Apple TV named `{name}` to Home Assistant.",
+        "title": "Confirm adding Bose SoundTouch"
+      },
+      "user": {
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port"
+        },
+        "description": "Start by entering the device name (e.g. Kitchen or Bedroom) and IP address and port of the Bose SoundTouch you want to add.",
+        "title": "Setup a new Bose SoundTouch"
+      }
+    }
+  },
+  "title": "Bose SoundTouch"
+}

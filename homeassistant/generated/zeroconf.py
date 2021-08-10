@@ -191,6 +191,11 @@ ZEROCONF = {
             "domain": "sonos"
         }
     ],
+    "_soundtouch._tcp.local.": [
+        {
+            "domain": "soundtouch"
+        }
+    ],
     "_spotify-connect._tcp.local.": [
         {
             "domain": "spotify"

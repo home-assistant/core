@@ -94,6 +94,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Load Bose Soundtouch media player based on a config entry."""
+    if DATA_SOUNDTOUCH not in hass.data:
+        hass.data[DATA_SOUNDTOUCH] = []
+
+    name = config_entry.data[CONF_NAME]
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
+    config = {"id": "ha.component.soundtouch", "host": host, "port": port}
+
+    bose_soundtouch_entity = await hass.async_add_executor_job(
+        SoundTouchDevice, name, config
+    )
+    hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
+    async_add_entities([bose_soundtouch_entity])
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bose Soundtouch platform."""
     if DATA_SOUNDTOUCH not in hass.data:
@@ -232,7 +249,7 @@ class SoundTouchDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._status.source == "STANDBY":
+        if self._status is None or self._status.source == "STANDBY":
             return STATE_OFF
 
         return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
