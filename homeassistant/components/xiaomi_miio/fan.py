@@ -430,76 +430,70 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fan from a config entry."""
     entities = []
 
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        if DATA_KEY not in hass.data:
-            hass.data[DATA_KEY] = {}
+    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        return
 
-        name = config_entry.title
-        model = config_entry.data[CONF_MODEL]
-        unique_id = config_entry.unique_id
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
-        if model in MODELS_PURIFIER_MIOT:
-            air_purifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            entity = XiaomiAirPurifierMiot(
-                name,
-                air_purifier,
-                config_entry,
-                unique_id,
-                coordinator,
-            )
-        elif model.startswith("zhimi.airpurifier."):
-            air_purifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            entity = XiaomiAirPurifier(
-                name, air_purifier, config_entry, unique_id, coordinator
-            )
-        elif model.startswith("zhimi.airfresh."):
-            air_fresh = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            entity = XiaomiAirFresh(
-                name, air_fresh, config_entry, unique_id, coordinator
-            )
+    name = config_entry.title
+    model = config_entry.data[CONF_MODEL]
+    unique_id = config_entry.unique_id
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+
+    if model in MODELS_PURIFIER_MIOT:
+        entity = XiaomiAirPurifierMiot(
+            name,
+            device,
+            config_entry,
+            unique_id,
+            coordinator,
+        )
+    elif model.startswith("zhimi.airpurifier."):
+        entity = XiaomiAirPurifier(name, device, config_entry, unique_id, coordinator)
+    elif model.startswith("zhimi.airfresh."):
+        entity = XiaomiAirFresh(name, device, config_entry, unique_id, coordinator)
+    else:
+        return
+
+    entities.append(entity)
+
+    async def async_service_handler(service):
+        """Map services to methods on XiaomiAirPurifier."""
+        method = SERVICE_TO_METHOD[service.service]
+        params = {
+            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+        }
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids:
+            entities = [
+                entity
+                for entity in hass.data[DATA_KEY].values()
+                if entity.entity_id in entity_ids
+            ]
         else:
-            return
+            entities = hass.data[DATA_KEY].values()
 
-        entities.append(entity)
+        update_tasks = []
 
-        async def async_service_handler(service):
-            """Map services to methods on XiaomiAirPurifier."""
-            method = SERVICE_TO_METHOD[service.service]
-            params = {
-                key: value
-                for key, value in service.data.items()
-                if key != ATTR_ENTITY_ID
-            }
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            if entity_ids:
-                entities = [
-                    entity
-                    for entity in hass.data[DATA_KEY].values()
-                    if entity.entity_id in entity_ids
-                ]
-            else:
-                entities = hass.data[DATA_KEY].values()
-
-            update_tasks = []
-
-            for entity in entities:
-                entity_method = getattr(entity, method["method"], None)
-                if not entity_method:
-                    continue
-                await entity_method(**params)
-                update_tasks.append(
-                    hass.async_create_task(entity.async_update_ha_state(True))
-                )
-
-            if update_tasks:
-                await asyncio.wait(update_tasks)
-
-        for air_purifier_service, method in SERVICE_TO_METHOD.items():
-            schema = method.get("schema", AIRPURIFIER_SERVICE_SCHEMA)
-            hass.services.async_register(
-                DOMAIN, air_purifier_service, async_service_handler, schema=schema
+        for entity in entities:
+            entity_method = getattr(entity, method["method"], None)
+            if not entity_method:
+                continue
+            await entity_method(**params)
+            update_tasks.append(
+                hass.async_create_task(entity.async_update_ha_state(True))
             )
+
+        if update_tasks:
+            await asyncio.wait(update_tasks)
+
+    for air_purifier_service, method in SERVICE_TO_METHOD.items():
+        schema = method.get("schema", AIRPURIFIER_SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, air_purifier_service, async_service_handler, schema=schema
+        )
 
     async_add_entities(entities)
 
