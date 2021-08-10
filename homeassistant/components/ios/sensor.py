@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class IOSSensor(SensorEntity):
     """Representation of an iOS sensor."""
 
-    _attr_should_poll = False  # No polling needed
+    _attr_should_poll = False
 
     def __init__(self, device_name, device, description: SensorEntityDescription):
         """Initialize the sensor."""
