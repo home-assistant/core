@@ -139,9 +139,9 @@ PATCH_ADB_DEVICE_TCP = patch(
 PATCH_ANDROIDTV_OPEN = patch(
     "homeassistant.components.androidtv.media_player.open", mock_open()
 )
-PATCH_KEYGEN = patch("homeassistant.components.androidtv.media_player.keygen")
+PATCH_KEYGEN = patch("homeassistant.components.androidtv.keygen")
 PATCH_SIGNER = patch(
-    "homeassistant.components.androidtv.media_player.ADBPythonSync.load_adbkey",
+    "homeassistant.components.androidtv.ADBPythonSync.load_adbkey",
     return_value="signer for testing",
 )
 
@@ -153,6 +153,7 @@ def isfile(filepath):
 
 PATCH_ISFILE = patch("os.path.isfile", isfile)
 PATCH_ACCESS = patch("os.access", return_value=True)
+PATCH_GET_HOST_IP = patch("socket.gethostbyname", return_value="127.0.0.1")
 
 
 def patch_firetv_update(state, current_app, running_apps, hdmi_input):

@@ -33,9 +33,9 @@ from .const import (
 )
 
 APPS_NEW_ID = "NewApp"
+CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
 CONF_APP_NAME = "app_name"
-CONF_APP_DELETE = "app_delete"
 
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_UNKNOWN = "unknown"
@@ -157,10 +157,6 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=self._host,
             data=user_input,
         )
-
-    async def async_step_import(self, user_input=None):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
 
     @staticmethod
     @callback

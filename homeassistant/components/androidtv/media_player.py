@@ -97,22 +97,6 @@ SERVICE_DOWNLOAD = "download"
 SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
-SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_COMMAND): cv.string})
-
-SERVICE_DOWNLOAD_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_PATH): cv.string,
-        vol.Required(ATTR_LOCAL_PATH): cv.string,
-    }
-)
-
-SERVICE_UPLOAD_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_PATH): cv.string,
-        vol.Required(ATTR_LOCAL_PATH): cv.string,
-    }
-)
-
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
     "off": STATE_OFF,
@@ -150,20 +134,26 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_ADB_COMMAND,
-        SERVICE_ADB_COMMAND_SCHEMA,
-        "service_adb_command",
+        {vol.Required(ATTR_COMMAND): cv.string},
+        "adb_command",
     )
     platform.async_register_entity_service(
         SERVICE_LEARN_SENDEVENT, {}, "learn_sendevent"
     )
     platform.async_register_entity_service(
         SERVICE_DOWNLOAD,
-        SERVICE_DOWNLOAD_SCHEMA,
+        {
+            vol.Required(ATTR_DEVICE_PATH): cv.string,
+            vol.Required(ATTR_LOCAL_PATH): cv.string,
+        },
         "service_download",
     )
     platform.async_register_entity_service(
         SERVICE_UPLOAD,
-        SERVICE_UPLOAD_SCHEMA,
+        {
+            vol.Required(ATTR_DEVICE_PATH): cv.string,
+            vol.Required(ATTR_LOCAL_PATH): cv.string,
+        },
         "service_upload",
     )
 
@@ -228,6 +218,7 @@ class ADBDevice(MediaPlayerEntity):
         self.aftv = aftv
         self._entry_id = entry_id
         self._dev_id = unique_id
+        self._dev_props = aftv.device_properties
         self._attr_name = name
         self._attr_unique_id = f"{unique_id}-media_player"
 
@@ -302,7 +293,7 @@ class ADBDevice(MediaPlayerEntity):
 
     def _get_device_info(self, default_model):
         """Get device information."""
-        info = self.aftv.device_properties
+        info = self._dev_props
         model = info.get("model")
         model = f"{model} ({default_model})" if model else default_model
         manufacturer = info.get("manufacturer")
@@ -405,13 +396,13 @@ class ADBDevice(MediaPlayerEntity):
                 await self.aftv.stop_app(self._app_name_to_id.get(source_, source_))
 
     @adb_decorator()
-    async def adb_command(self, cmd):
+    async def adb_command(self, command):
         """Send an ADB command to an Android TV / Fire TV device."""
         if key := KEYS.get(cmd):
             await self.aftv.adb_shell(f"input keyevent {key}")
             return
 
-        if cmd == "GET_PROPERTIES":
+        if command == "GET_PROPERTIES":
             self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = str(
                 await self.aftv.get_properties_dict()
             )
@@ -419,7 +410,7 @@ class ADBDevice(MediaPlayerEntity):
             return
 
         try:
-            response = await self.aftv.adb_shell(cmd)
+            response = await self.aftv.adb_shell(command)
         except UnicodeDecodeError:
             return
 
@@ -445,43 +436,22 @@ class ADBDevice(MediaPlayerEntity):
             _LOGGER.info("%s", msg)
 
     @adb_decorator()
-    async def adb_pull(self, local_path, device_path):
-        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
-        await self.aftv.adb_pull(local_path, device_path)
-
-    @adb_decorator()
-    async def adb_push(self, local_path, device_path):
-        """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
-        await self.aftv.adb_push(local_path, device_path)
-
-    async def service_adb_command(self, command):
-        """Dispatch service calls to target entities."""
-        output = await self.adb_command(command)
-
-        # log the output, if there is any
-        if output:
-            _LOGGER.info(
-                "Output of command '%s' from '%s': %s",
-                command,
-                self.name,
-                output,
-            )
-
     async def service_download(self, device_path, local_path):
         """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
 
-        await self.adb_pull(local_path, device_path)
+        await self.aftv.adb_pull(local_path, device_path)
 
+    @adb_decorator()
     async def service_upload(self, device_path, local_path):
         """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
 
-        await self.adb_push(local_path, device_path)
+        await self.aftv.adb_push(local_path, device_path)
 
 
 class AndroidTVDevice(ADBDevice):
