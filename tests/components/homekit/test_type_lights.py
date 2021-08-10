@@ -72,7 +72,7 @@ async def test_light_basic(hass, hk_driver, events):
         "mock_addr",
     )
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, 1)
+    acc.char_on.client_update_value(1)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
@@ -254,9 +254,7 @@ async def test_light_color_temperature(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_add_executor_job(
-        acc.char_color_temperature.client_update_value, 250
-    )
+    acc.char_color_temperature.client_update_value(250)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
