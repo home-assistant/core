@@ -1093,7 +1093,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the miio device."""
-        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
+        super().__init__(name, device, entry, unique_id, coordinator)
 
         self._device_features = FEATURE_FLAGS_AIRFRESH
         self._available_attributes = AVAILABLE_ATTRIBUTES_AIRFRESH
