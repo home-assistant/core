@@ -42,10 +42,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_CONSUMER_SECRET] = discovergy_instance.consumer_token.secret
         data[CONF_ACCESS_TOKEN] = access_token.token
         data[CONF_ACCESS_TOKEN_SECRET] = access_token.token_secret
-    except discovergyError.InvalidLogin:
-        raise InvalidAuth
-    except discovergyError.HTTPError:
-        raise CannotConnect
+    except discovergyError.InvalidLogin as err:
+        raise InvalidAuth from err
+    except discovergyError.HTTPError as err:
+        raise CannotConnect from err
 
     return {"title": discovergy_instance.email, "data": data}
 

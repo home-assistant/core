@@ -84,6 +84,8 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
+
         self._meter = meter
         self.coordinator = coordinator
 
@@ -125,7 +127,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
                     self.coordinator.data.values[self.entity_description.key]
                     / 10000000000
                 )
-            else:
-                return self.coordinator.data.values[self.entity_description.key] / 1000
+
+            return self.coordinator.data.values[self.entity_description.key] / 1000
 
         return None
