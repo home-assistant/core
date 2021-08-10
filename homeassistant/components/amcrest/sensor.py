@@ -1,6 +1,7 @@
 """Support for Amcrest IP camera sensors."""
 from __future__ import annotations
 
+import copy
 from datetime import timedelta
 import logging
 
@@ -23,10 +24,10 @@ SENSOR_SDCARD = "sdcard"
 
 SENSORS: dict[str, SensorEntityDescription] = {
     SENSOR_PTZ_PRESET: SensorEntityDescription(
-        key="PTZ Preset", icon="mdi:camera-iris"
+        key=SENSOR_PTZ_PRESET, name="PTZ Preset", icon="mdi:camera-iris"
     ),
     SENSOR_SDCARD: SensorEntityDescription(
-        key="SD Used", unit_of_measurement=PERCENTAGE, icon="mdi:sd"
+        key=SENSOR_SDCARD, name="SD Used", unit_of_measurement=PERCENTAGE, icon="mdi:sd"
     ),
 }
 
@@ -40,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     device = hass.data[DATA_AMCREST][DEVICES][name]
     async_add_entities(
         [
-            AmcrestSensor(name, device, sensor_type)
+            AmcrestSensor(name, device, SENSORS[sensor_type])
             for sensor_type in discovery_info[CONF_SENSORS]
         ],
         True,
@@ -50,14 +51,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
 
-    def __init__(self, name, device, sensor_type):
+    def __init__(self, name, device, description):
         """Initialize a sensor for Amcrest camera."""
-        self.entity_description = SENSORS[sensor_type]
-        self.entity_description.name = f"{name} {SENSORS[sensor_type].key}"
+        # make copy do not change original dict
+        self.entity_description = copy(description)
+        self.entity_description.name = f"{name} {self.entity_description.name}"
         self._signal_name = name
         self._api = device.api
-        self._sensor_type = sensor_type
-        self._attr_state = None
         self._attr_extra_state_attributes = {}
         self._unsub_dispatcher = None
 
@@ -73,10 +73,10 @@ class AmcrestSensor(SensorEntity):
         _LOGGER.debug("Updating %s sensor", self.entity_description.name)
 
         try:
-            if self._sensor_type == SENSOR_PTZ_PRESET:
+            if self.entity_description.key == SENSOR_PTZ_PRESET:
                 self._attr_state = self._api.ptz_presets_count
 
-            elif self._sensor_type == SENSOR_SDCARD:
+            elif self.entity_description.key == SENSOR_SDCARD:
                 storage = self._api.storage_all
                 try:
                     self._attr_extra_state_attributes[
