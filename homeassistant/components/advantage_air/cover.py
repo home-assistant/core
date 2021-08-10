@@ -8,7 +8,6 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     CoverEntity,
 )
-from homeassistant.core import callback
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -48,14 +47,17 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_is_closed = self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
-        self._attr_current_cover_position = 0
+    @property
+    def is_closed(self):
+        """Return if vent is fully closed."""
+        return self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
+
+    @property
+    def current_cover_position(self):
+        """Return vents current position as a percentage."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            self._attr_current_cover_position = self._zone["value"]
-        self.async_write_ha_state()
+            return self._zone["value"]
+        return 0
 
     async def async_open_cover(self, **kwargs):
         """Fully open zone vent."""

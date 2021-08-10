@@ -1,6 +1,5 @@
 """Switch platform for Advantage Air integration."""
 
-from homeassistant.core import callback
 from homeassistant.helpers.entity import ToggleEntity
 
 from .const import (
@@ -36,11 +35,10 @@ class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-freshair'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_is_on = self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
-        self.async_write_ha_state()
+    @property
+    def is_on(self):
+        """Return the fresh air status."""
+        return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
 
     async def async_turn_on(self, **kwargs):
         """Turn fresh air on."""

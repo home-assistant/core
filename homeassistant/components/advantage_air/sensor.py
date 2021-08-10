@@ -3,7 +3,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
@@ -57,14 +56,17 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-timeto{action}'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_state = self._ac[self._time_key]
-        self._attr_icon = "mdi:timer-off-outline"
+    @property
+    def state(self):
+        """Return the current value."""
+        return self._ac[self._time_key]
+
+    @property
+    def icon(self):
+        """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
-            self._attr_icon = "mdi:timer-outline"
-        self.async_write_ha_state()
+            return "mdi:timer-outline"
+        return "mdi:timer-off-outline"
 
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
@@ -86,16 +88,19 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_state = 0
+    @property
+    def state(self):
+        """Return the current value of the air vent."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            self._attr_state = self._zone["value"]
-        self._attr_icon = "mdi:fan-off"
+            return self._zone["value"]
+        return 0
+
+    @property
+    def icon(self):
+        """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            self._attr_icon = "mdi:fan"
-        self.async_write_ha_state()
+            return "mdi:fan"
+        return "mdi:fan-off"
 
 
 class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
@@ -112,20 +117,23 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_state = self._zone["rssi"]
-        self._attr_icon = "mdi:wifi-strength-outline"
+    @property
+    def state(self):
+        """Return the current value of the wireless signal."""
+        return self._zone["rssi"]
+
+    @property
+    def icon(self):
+        """Return a representative icon."""
         if self._zone["rssi"] >= 80:
-            self._attr_icon = "mdi:wifi-strength-4"
-        elif self._zone["rssi"] >= 60:
-            self._attr_icon = "mdi:wifi-strength-3"
-        elif self._zone["rssi"] >= 40:
-            self._attr_icon = "mdi:wifi-strength-2"
-        elif self._zone["rssi"] >= 20:
-            self._attr_icon = "mdi:wifi-strength-1"
-        self.async_write_ha_state()
+            return "mdi:wifi-strength-4"
+        if self._zone["rssi"] >= 60:
+            return "mdi:wifi-strength-3"
+        if self._zone["rssi"] >= 40:
+            return "mdi:wifi-strength-2"
+        if self._zone["rssi"] >= 20:
+            return "mdi:wifi-strength-1"
+        return "mdi:wifi-strength-outline"
 
 
 class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
@@ -142,8 +150,7 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
         self._attr_name = f'{self._zone["name"]} Temperature'
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_state = self._zone["measuredTemp"]
-        self.async_write_ha_state()
+    @property
+    def state(self):
+        """Return the current value of the measured temperature."""
+        return self._zone["measuredTemp"]

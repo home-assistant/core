@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
@@ -44,11 +43,10 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-filter'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_is_on = self._ac["filterCleanStatus"]
-        self.async_write_ha_state()
+    @property
+    def is_on(self):
+        """Return if filter needs cleaning."""
+        return self._ac["filterCleanStatus"]
 
 
 class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
@@ -64,11 +62,10 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-motion'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_is_on = self._zone["motion"]
-        self.async_write_ha_state()
+    @property
+    def is_on(self):
+        """Return if motion is detect."""
+        return self._zone["motion"]
 
 
 class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
@@ -84,8 +81,7 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-myzone'
         )
 
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_is_on = self._zone["number"] == self._ac["myZone"]
-        self.async_write_ha_state()
+    @property
+    def is_on(self):
+        """Return if this zone is the myZone."""
+        return self._zone["number"] == self._ac["myZone"]
