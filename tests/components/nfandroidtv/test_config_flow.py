@@ -147,14 +147,18 @@ async def test_dhcp_discovery_already_configured(hass):
     )
 
     entry.add_to_hass(hass)
+    assert entry.unique_id == "1.1.1.1"
 
     mocked_tv = await _create_mocked_tv()
     with _patch_config_flow_tv(mocked_tv), _patch_setup():
-        await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=CONF_DHCP_FLOW_FIRE_TV,
         )
+        assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_dhcp_discovery_fire_tv(hass):
@@ -179,6 +183,7 @@ async def test_dhcp_discovery_fire_tv(hass):
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Fire TV 1.1.1.1",
         }
+        assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -187,6 +192,29 @@ async def test_dhcp_discovery_fire_tv(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_fire_tv_cannot_connect(hass):
+    """Test Fire TV discovery connect error."""
+    await async_setup_component(hass, "persistent_notification", {})
+    mocked_tv = await _create_mocked_tv()
+    with _patch_config_flow_tv(mocked_tv) as tvmock:
+        tvmock.side_effect = ConnectError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_FIRE_TV,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "confirm_discovery_fire_tv"
+        assert result["errors"] == {"base": "check_device"}
 
 
 async def test_dhcp_discovery_android_tv(hass):
@@ -211,6 +239,7 @@ async def test_dhcp_discovery_android_tv(hass):
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Android TV 1.1.1.1",
         }
+        assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -219,6 +248,29 @@ async def test_dhcp_discovery_android_tv(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_android_tv_cannot_connect(hass):
+    """Test Android TV discovery connect error."""
+    await async_setup_component(hass, "persistent_notification", {})
+    mocked_tv = await _create_mocked_tv()
+    with _patch_config_flow_tv(mocked_tv) as tvmock:
+        tvmock.side_effect = ConnectError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=CONF_DHCP_FLOW_ANDROID_TV,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "confirm_discovery_android_tv"
+        assert result["errors"] == {"base": "check_device"}
 
 
 async def test_dhcp_discovery_failed(hass):

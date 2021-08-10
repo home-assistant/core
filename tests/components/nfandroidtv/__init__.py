@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.device_registry import format_mac
 
 HOST = "1.2.3.4"
 NAME = "Android TV / Fire TV"
@@ -20,13 +21,13 @@ CONF_CONFIG_FLOW = {
 
 CONF_DHCP_FLOW_FIRE_TV = {
     IP_ADDRESS: "1.1.1.1",
-    MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+    MAC_ADDRESS: format_mac("AA:BB:CC:DD:EE:FF"),
     HOSTNAME: "amazon-fffffffff",
 }
 
 CONF_DHCP_FLOW_ANDROID_TV = {
     IP_ADDRESS: "1.1.1.1",
-    MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+    MAC_ADDRESS: format_mac("AA:BB:CC:DD:EE:FF"),
     HOSTNAME: "any",
 }
 

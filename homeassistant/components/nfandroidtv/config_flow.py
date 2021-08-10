@@ -30,12 +30,12 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address = discovery_info[IP_ADDRESS]
         mac = format_mac(discovery_info[MAC_ADDRESS])
 
+        existing_entry = await self.async_set_unique_id(self.ip_address)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, unique_id=mac)
+            return self.async_abort(reason="already_configured")
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == self.ip_address:
-                self.hass.config_entries.async_update_entry(entry, unique_id=mac)
-                return self.async_abort(reason="already_configured")
         if "amazon-" in discovery_info[HOSTNAME]:
             return await self.async_step_confirm_discovery_fire_tv()
         return await self.async_step_confirm_discovery_android_tv()
@@ -78,6 +78,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the Fire TV device."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: self.ip_address})
             error = await self._async_try_connect(self.ip_address)
             if error is None:
                 return self.async_create_entry(
@@ -108,6 +109,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the Android TV device."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: self.ip_address})
             error = await self._async_try_connect(self.ip_address)
             if error is None:
                 return self.async_create_entry(
@@ -150,6 +152,8 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(Notifications, host)
         except ConnectError:
+            if self.ip_address:
+                return "check_device"
             return "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
