@@ -12,5 +12,5 @@ mccabe==0.6.1
 pycodestyle==2.7.0
 pydocstyle==6.0.0
 pyflakes==2.3.1
-pyupgrade==2.23.0
+pyupgrade==2.23.3
 yamllint==1.26.1

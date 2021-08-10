@@ -181,7 +181,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
 
     @property
     def state(self):
-        """Get the current value in kW."""
+        """Get the current value in kWh."""
         meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         if self._meter_direction == _METER_DIRECTION_EXPORT:
             return meter.get_energy_exported()
