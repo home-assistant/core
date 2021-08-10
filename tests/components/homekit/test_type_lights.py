@@ -231,30 +231,30 @@ async def test_light_color_temperature(hass, hk_driver, events):
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
-    assert acc.char_color_temperature.value == 190
+    assert acc.char_color_temp.value == 190
 
     await acc.run()
     await hass.async_block_till_done()
-    assert acc.char_color_temperature.value == 190
+    assert acc.char_color_temp.value == 190
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
 
-    char_color_temperature_iid = acc.char_color_temperature.to_HAP()[HAP_REPR_IID]
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
 
     hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {
                     HAP_REPR_AID: acc.aid,
-                    HAP_REPR_IID: char_color_temperature_iid,
+                    HAP_REPR_IID: char_color_temp_iid,
                     HAP_REPR_VALUE: 250,
                 }
             ]
         },
         "mock_addr",
     )
-    acc.char_color_temperature.client_update_value(250)
+    acc.char_color_temp.client_update_value(250)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
@@ -490,7 +490,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
     assert acc.char_brightness.value != 0
     char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
     char_brightness_iid = acc.char_brightness.to_HAP()[HAP_REPR_IID]
-    char_color_temperature_iid = acc.char_color_temperature.to_HAP()[HAP_REPR_IID]
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
 
     await acc.run()
     await hass.async_block_till_done()
@@ -502,7 +502,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: (224.14)})
     await hass.async_block_till_done()
-    assert acc.char_color_temperature.value == 224
+    assert acc.char_color_temp.value == 224
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
@@ -518,7 +518,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
                 },
                 {
                     HAP_REPR_AID: acc.aid,
-                    HAP_REPR_IID: char_color_temperature_iid,
+                    HAP_REPR_IID: char_color_temp_iid,
                     HAP_REPR_VALUE: 250,
                 },
             ]
