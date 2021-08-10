@@ -5,7 +5,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, STATE_UNKNOWN
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.util import dt as dt_util
 
 from .const import CONSUMPTION_TODAY, CONSUMPTION_YEAR, DOMAIN, MANUFACTURER
@@ -16,13 +16,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     mill_data_connection = hass.data[DOMAIN]
 
-    dev = []
+    entities = []
     for heater in mill_data_connection.heaters.values():
         for sensor_type in (CONSUMPTION_TODAY, CONSUMPTION_YEAR):
-            dev.append(
+            entities.append(
                 MillHeaterEnergySensor(heater, mill_data_connection, sensor_type)
             )
-    async_add_entities(dev)
+    async_add_entities(entities)
 
 
 class MillHeaterEnergySensor(SensorEntity):
@@ -71,7 +71,7 @@ class MillHeaterEnergySensor(SensorEntity):
             self._attr_state = _state
             return
 
-        if self.state not in [STATE_UNKNOWN, None] and _state < self.state:
+        if self.state is not None and _state < self.state:
             if self._sensor_type == CONSUMPTION_TODAY:
                 self._attr_last_reset = dt_util.as_utc(
                     dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
