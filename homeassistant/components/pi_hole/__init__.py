@@ -161,6 +161,8 @@ def _async_platforms(entry: ConfigEntry) -> list[str]:
 class PiHoleEntity(CoordinatorEntity):
     """Representation of a Pi-hole entity."""
 
+    _attr_icon: str = "mdi:pi-hole"
+
     def __init__(
         self,
         api: Hole,
@@ -173,11 +175,6 @@ class PiHoleEntity(CoordinatorEntity):
         self.api = api
         self._name = name
         self._server_unique_id = server_unique_id
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:pi-hole"
 
     @property
     def device_info(self) -> DeviceInfo:
