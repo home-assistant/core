@@ -46,10 +46,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     data = await hass.async_add_executor_job(SolarlogData, hass, api, host)
 
     # Create a new sensor for each sensor type.
-    entities = []
-    for description in SENSOR_TYPES:
-        sensor = SolarlogSensor(entry.entry_id, device_name, description, data)
-        entities.append(sensor)
+    entities = [
+        SolarlogSensor(entry.entry_id, device_name, data, description)
+        for description in SENSOR_TYPES
+    ]
     async_add_entities(entities, True)
     return True
 
@@ -66,16 +66,8 @@ class SolarlogSensor(SensorEntity):
         self.entity_description = description
         self.data = data
         self._attr_state = None
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return f"{self.entry_id}_{self.entity_description.key}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.device_name} {self.entity_description.name}"
+        self._attr_name = f"{self.device_name} {self.entity_description.name}"
+        self._attr_unique_id = f"{self.entry_id}_{self.entity_description.key}"
 
     @property
     def device_info(self):
