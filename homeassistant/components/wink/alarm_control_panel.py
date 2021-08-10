@@ -1,4 +1,6 @@
 """Support Wink alarm control panels."""
+import logging
+
 import pywink
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -14,11 +16,17 @@ from homeassistant.const import (
 
 from . import DOMAIN, WinkDevice
 
+_LOGGER = logging.getLogger(__name__)
+
 STATE_ALARM_PRIVACY = "Private"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.12"
+    )
 
     for camera in pywink.get_cameras():
         # get_cameras returns multiple device types.

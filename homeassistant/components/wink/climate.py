@@ -70,6 +70,10 @@ SUPPORT_PRESET_AC = [PRESET_NONE, PRESET_ECO]
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink climate devices."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.12"
+    )
     for climate in pywink.get_thermostats():
         _id = climate.object_id() + climate.name()
         if _id not in hass.data[DOMAIN]["unique_ids"]:

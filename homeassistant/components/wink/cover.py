@@ -1,13 +1,21 @@
 """Support for Wink covers."""
+import logging
+
 import pywink
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from . import DOMAIN, WinkDevice
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink cover platform."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.12"
+    )
 
     for shade in pywink.get_shades():
         _id = shade.object_id() + shade.name()

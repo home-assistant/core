@@ -44,6 +44,10 @@ WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink water heater devices."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.12"
+    )
 
     for water_heater in pywink.get_water_heaters():
         _id = water_heater.object_id() + water_heater.name()

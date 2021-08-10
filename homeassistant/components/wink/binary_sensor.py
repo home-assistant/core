@@ -37,6 +37,10 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink binary sensor platform."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.12"
+    )
 
     for sensor in pywink.get_sensors():
         _id = sensor.object_id() + sensor.name()

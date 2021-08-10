@@ -1,4 +1,6 @@
 """Support for Wink locks."""
+import logging
+
 import pywink
 import voluptuous as vol
 
@@ -13,6 +15,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, WinkDevice
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_VACATION_MODE = "set_lock_vacation_mode"
 SERVICE_SET_ALARM_MODE = "set_lock_alarm_mode"
@@ -67,6 +71,10 @@ ADD_KEY_SCHEMA = vol.Schema(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.12"
+    )
 
     for lock in pywink.get_locks():
         _id = lock.object_id() + lock.name()

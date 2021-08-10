@@ -1,4 +1,6 @@
 """Support for Wink fans."""
+import logging
+
 import pywink
 
 from homeassistant.components.fan import (
@@ -12,6 +14,8 @@ from homeassistant.components.fan import (
 
 from . import DOMAIN, WinkDevice
 
+_LOGGER = logging.getLogger(__name__)
+
 SPEED_AUTO = "auto"
 SPEED_LOWEST = "lowest"
 SUPPORTED_FEATURES = SUPPORT_DIRECTION + SUPPORT_SET_SPEED
@@ -19,6 +23,10 @@ SUPPORTED_FEATURES = SUPPORT_DIRECTION + SUPPORT_SET_SPEED
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and will be removed in "
+        "Home Assistant Core 2021.12"
+    )
 
     for fan in pywink.get_fans():
         if fan.object_id() + fan.name() not in hass.data[DOMAIN]["unique_ids"]:
