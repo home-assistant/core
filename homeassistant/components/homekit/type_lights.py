@@ -2,6 +2,7 @@
 import logging
 
 from pyhap.const import CATEGORY_LIGHTBULB
+from pyhap.light_util import mireds_to_hue_sat
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -23,10 +24,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin,
-    color_temperature_to_hs,
-)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -175,10 +172,8 @@ class Light(HomeAccessory):
         # Handle Color
         if self.color_supported:
             if not self.color_and_temp_supported and ATTR_COLOR_TEMP in attributes:
-                hue, saturation = color_temperature_to_hs(
-                    color_temperature_mired_to_kelvin(
-                        new_state.attributes[ATTR_COLOR_TEMP]
-                    )
+                hue, saturation = mireds_to_hue_sat(
+                    new_state.attributes[ATTR_COLOR_TEMP]
                 )
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
