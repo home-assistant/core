@@ -8,7 +8,10 @@ from locationsharinglib import Service
 from locationsharinglib.locationsharinglibexceptions import InvalidCookies
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    SOURCE_TYPE_GPS,
+)
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -34,8 +37,7 @@ CREDENTIALS_FILE = ".google_maps_location_sharing.cookies"
 
 # the parent "device_tracker" have marked the schemas as legacy, so this
 # need to be refactored as part of a bigger rewrite.
-# ignoring the mypy error to allow mypy to check the rest of the integration.
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(  # type: ignore
+PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
