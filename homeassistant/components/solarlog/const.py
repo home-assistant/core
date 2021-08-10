@@ -32,13 +32,20 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 
 @dataclass
-class SolarLogSensorEntityDescription(SensorEntityDescription):
-    """Sensor entity description for Solarlog."""
+class SolarlogRequiredKeysMixin:
+    """Mixin for required keys."""
 
-    json_key: str | None = None
+    json_key: str
 
 
-SENSOR_TYPES = [
+@dataclass
+class SolarlogSensorEntityDescription(
+    SensorEntityDescription, SolarlogRequiredKeysMixin
+):
+    """Describes Solarlog sensor entity."""
+
+
+SENSOR_TYPES: tuple[SolarlogSensorEntityDescription, ...] = (
     SolarLogSensorEntityDescription(
         key="time",
         json_key="TIME",
@@ -226,4 +233,4 @@ SENSOR_TYPES = [
         icon="mdi:solar-power",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-]
+)
