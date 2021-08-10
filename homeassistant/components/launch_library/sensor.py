@@ -57,17 +57,13 @@ class LaunchLibrarySensor(SensorEntity):
             _LOGGER.error("Error getting data, %s", exception)
             self._attr_available = False
         else:
-            if launches and (
-                next_launch := next((launch for launch in launches), None)
-            ):
+            if next_launch := next((launch for launch in launches), None):
                 self._attr_available = True
                 self._attr_state = next_launch.name
-                self._attr_extra_state_attributes.update(
-                    {
-                        ATTR_LAUNCH_TIME: next_launch.net,
-                        ATTR_AGENCY: next_launch.launch_service_provider.name,
-                        ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
-                        ATTR_STREAM: next_launch.webcast_live,
-                        ATTR_ATTRIBUTION: ATTRIBUTION,
-                    }
-                )
+                self._attr_extra_state_attributes = {
+                    ATTR_LAUNCH_TIME: next_launch.net,
+                    ATTR_AGENCY: next_launch.launch_service_provider.name,
+                    ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
+                    ATTR_STREAM: next_launch.webcast_live,
+                    ATTR_ATTRIBUTION: ATTRIBUTION,
+                }
