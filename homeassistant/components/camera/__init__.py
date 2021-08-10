@@ -605,7 +605,7 @@ class CameraImageView(CameraView):
                 int(width) if width else None,
                 int(height) if height else None,
             )
-        except HomeAssistantError as ex:
+        except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError() from ex
         else:
             return web.Response(body=image.content, content_type=image.content_type)
