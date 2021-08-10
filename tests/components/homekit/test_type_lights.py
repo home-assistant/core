@@ -267,7 +267,6 @@ async def test_light_color_temperature(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    acc.char_color_temp.client_update_value(250)
     await _wait_for_light_coalesce(hass)
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
@@ -408,12 +407,72 @@ async def test_light_color_temperature_and_rgb_color(
 
     assert events[-1].data[ATTR_VALUE] == "set color at (30, 20)"
 
+    # Generate a conflict by setting hue and then color temp
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_hue_iid,
+                    HAP_REPR_VALUE: 80,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 320,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+    assert call_turn_on[3]
+    assert call_turn_on[3].data[ATTR_COLOR_TEMP] == 320
+    assert events[-1].data[ATTR_VALUE] == "color temperature at 320"
+
+    # Generate a conflict by setting color temp then saturation
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 404,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_saturation_iid,
+                    HAP_REPR_VALUE: 35,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+    assert call_turn_on[4]
+    assert call_turn_on[4].data[ATTR_HS_COLOR] == (80, 35)
+    assert events[-1].data[ATTR_VALUE] == "set color at (80, 35)"
+
     # Set from HASS
     hass.states.async_set(entity_id, STATE_ON, {ATTR_HS_COLOR: (100, 100)})
     await hass.async_block_till_done()
     await acc.run()
     await hass.async_block_till_done()
-    assert acc.char_color_temp.value == 250
+    assert acc.char_color_temp.value == 404
     assert acc.char_hue.value == 100
     assert acc.char_saturation.value == 100
 
