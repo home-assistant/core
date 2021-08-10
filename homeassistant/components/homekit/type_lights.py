@@ -23,6 +23,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin,
+    color_temperature_to_hs,
+)
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -35,7 +39,6 @@ from .const import (
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
 )
-from .light_util import mireds_to_hue_sat
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,8 +168,10 @@ class Light(HomeAccessory):
         # or the iOS UI will not display it correctly.
         if self.color_supported:
             if ATTR_COLOR_TEMP in attributes:
-                hue, saturation = mireds_to_hue_sat(
-                    new_state.attributes[ATTR_COLOR_TEMP]
+                hue, saturation = color_temperature_to_hs(
+                    color_temperature_mired_to_kelvin(
+                        new_state.attributes[ATTR_COLOR_TEMP]
+                    )
                 )
             else:
                 hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
