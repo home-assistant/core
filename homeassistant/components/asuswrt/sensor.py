@@ -49,7 +49,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Devices Connected",
         icon="mdi:router-network",
         unit_of_measurement=UNIT_DEVICES,
-        entity_registry_enabled_default=True,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[0],
