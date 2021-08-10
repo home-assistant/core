@@ -1,6 +1,9 @@
 """Support for IKEA Tradfri."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
@@ -70,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         load_json, hass.config.path(CONFIG_FILE)
     )
 
-    for host, info in legacy_hosts.items():
+    for host, info in legacy_hosts.items():  # type: ignore
         if host in configured_hosts:
             continue
 
@@ -103,8 +106,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
-    listeners = tradfri_data[LISTENERS] = []
+    tradfri_data: dict[str, list[Any] | None] = {}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
+    listeners = []
+    tradfri_data[LISTENERS] = []
 
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
