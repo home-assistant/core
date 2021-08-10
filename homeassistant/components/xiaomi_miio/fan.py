@@ -706,7 +706,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
+        super().__init__(name, device, entry, unique_id, coordinator)
 
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
