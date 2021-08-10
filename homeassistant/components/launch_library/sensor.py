@@ -49,8 +49,6 @@ class LaunchLibrarySensor(SensorEntity):
         """Initialize the sensor."""
         self.api = api
         self._attr_name = name
-        self._attr_state = None
-        self._attr_available = False
 
     async def async_update(self) -> None:
         """Get the latest data."""
@@ -63,7 +61,6 @@ class LaunchLibrarySensor(SensorEntity):
             if launches and (
                 next_launch := next((launch for launch in launches), None)
             ):
-                _LOGGER.info("update")
                 self._attr_available = True
                 self._attr_state = next_launch.name
                 self._attr_extra_state_attributes.update(
