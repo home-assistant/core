@@ -128,10 +128,10 @@ class Light(HomeAccessory):
             params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
             events.append(f"color temperature at {params[ATTR_COLOR_TEMP]}")
 
-        elif CHAR_HUE in char_values and CHAR_SATURATION in char_values:
+        elif CHAR_HUE in char_values or CHAR_SATURATION in char_values:
             color = params[ATTR_HS_COLOR] = (
-                char_values[CHAR_HUE],
-                char_values[CHAR_SATURATION],
+                char_values.get(CHAR_HUE, self.char_hue.value),
+                char_values.get(CHAR_SATURATION, self.char_saturation.value),
             )
             _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, color)
             events.append(f"set color at {color}")
