@@ -514,6 +514,8 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._available = False
         self._available_attributes = {}
         self._state = None
+        self._mode = None
+        self._fan_level = None
         self._state_attrs = {ATTR_MODEL: self._model}
         self._device_features = FEATURE_SET_CHILD_LOCK
         self._supported_features = 0
