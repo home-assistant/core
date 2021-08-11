@@ -1,6 +1,6 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config, async_add_entities):
     )
 
 
-class WallboxSensor(CoordinatorEntity, Entity):
+class WallboxSensor(CoordinatorEntity, SensorEntity):
     """Representation of the Wallbox portal."""
 
     def __init__(self, coordinator, idx, ent, config):
