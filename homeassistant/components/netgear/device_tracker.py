@@ -114,7 +114,7 @@ class NetgearDeviceEntity(ScannerEntity):
 
     def get_device_name(self, device):
         """Return the name of the given device or the MAC if we don't know."""
-        name = device.name
+        name = device["name"]
         if not name or name == "--":
             name = self._mac
 
