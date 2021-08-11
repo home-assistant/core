@@ -205,7 +205,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             str(self.alarm.start_time)[0:5],
         )
 
-    async def async_update(self) -> None:
+    async def _async_poll(self) -> None:
         """Call the central alarm polling method."""
         await self.hass.data[DATA_SONOS].alarms[self.household_id].async_poll()
 

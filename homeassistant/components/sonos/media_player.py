@@ -292,7 +292,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return STATE_PLAYING
         return STATE_IDLE
 
-    async def async_update(self) -> None:
+    async def _async_poll(self) -> None:
         """Retrieve latest state by polling."""
         await self.hass.data[DATA_SONOS].favorites[
             self.speaker.household_id

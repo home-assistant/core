@@ -30,10 +30,11 @@ _LOGGER = logging.getLogger(__name__)
 class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
         self.speaker = speaker
-        self._attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
@@ -79,9 +80,13 @@ class SonosEntity(Entity):
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
         try:
-            await self.async_update()  # pylint: disable=no-member
+            await self._async_poll()
         except (OSError, SoCoException) as ex:
             _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
+
+    async def _async_poll(self) -> None:
+        """Poll the specific functionality. Should be implemented by platforms if needed."""
+        return
 
     @property
     def soco(self) -> SoCo:
