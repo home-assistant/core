@@ -85,9 +85,7 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._attr_native_value = (
-                state.state
-            )  # TODO: Not good, this may introduce a bug!
+            self._attr_native_value = state.state
 
         @callback
         def update() -> None:
