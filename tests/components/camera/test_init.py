@@ -20,6 +20,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from .common import EMPTY_8_6_JPEG, mock_turbo_jpeg
+
 from tests.components.camera import common
 
 
@@ -73,6 +75,51 @@ async def test_get_image_from_camera(hass, image_mock_url):
 
     assert mock_camera.called
     assert image.content == b"Test"
+
+
+async def test_get_image_from_camera_with_width_height(hass, image_mock_url):
+    """Grab an image from camera entity with width and height."""
+
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        autospec=True,
+        return_value=b"Test",
+    ) as mock_camera:
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera", width=640, height=480
+        )
+
+    assert mock_camera.called
+    assert image.content == b"Test"
+
+
+async def test_get_image_from_camera_with_width_height_scaled(hass, image_mock_url):
+    """Grab an image from camera entity with width and height and scale it."""
+
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        autospec=True,
+        return_value=b"Valid jpeg",
+    ) as mock_camera:
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera", width=4, height=3
+        )
+
+    assert mock_camera.called
+    assert image.content_type == "image/jpeg"
+    assert image.content == EMPTY_8_6_JPEG
 
 
 async def test_get_stream_source_from_camera(hass, mock_camera):

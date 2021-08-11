@@ -1,4 +1,6 @@
 """This component provides support for Xiaomi Cameras."""
+from __future__ import annotations
+
 import asyncio
 from ftplib import FTP, error_perm
 import logging
@@ -138,7 +140,9 @@ class XiaomiCamera(Camera):
 
         return f"ftp://{self.user}:{self.passwd}@{host}:{self.port}{ftp.pwd()}/{video}"
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
 
         try:

@@ -325,7 +325,9 @@ class EzvizCamera(CoordinatorEntity, Camera):
         """Return the name of this camera."""
         return self._serial
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a frame from the camera stream."""
         ffmpeg = ImageFrame(self._ffmpeg.binary)
 

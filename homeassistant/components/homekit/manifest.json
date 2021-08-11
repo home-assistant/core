@@ -6,8 +6,7 @@
     "HAP-python==4.0.0",
     "fnvhash==0.1.0",
     "PyQRCode==1.2.1",
-    "base36==0.1.1",
-    "PyTurboJPEG==1.5.0"
+    "base36==0.1.1"
   ],
   "dependencies": ["http", "camera", "ffmpeg", "network"],
   "after_dependencies": ["zeroconf"],
