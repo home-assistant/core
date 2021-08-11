@@ -42,7 +42,6 @@ from homeassistant.helpers.typing import ConfigType, StateType
 _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_LAST_RESET: Final = "last_reset"
-ATTR_NATIVE_VALUE: Final = "native_value"
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -149,13 +148,10 @@ class SensorEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
-        attrs: dict[str, Any] = {}
         if last_reset := self.last_reset:
-            attrs[ATTR_LAST_RESET] = last_reset.isoformat()
-        if native_value := self.native_value:
-            attrs[ATTR_NATIVE_VALUE] = native_value
+            return {ATTR_LAST_RESET: last_reset.isoformat()}
 
-        return attrs
+        return None
 
     @property
     def native_value(self) -> StateType:

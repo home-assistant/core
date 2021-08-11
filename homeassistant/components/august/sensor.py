@@ -3,11 +3,7 @@ import logging
 
 from yalexs.activity import ActivityType
 
-from homeassistant.components.sensor import (
-    ATTR_NATIVE_VALUE,
-    DEVICE_CLASS_BATTERY,
-    SensorEntity,
-)
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
 from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import async_get_registry
@@ -187,7 +183,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         if not last_state or last_state.state == STATE_UNAVAILABLE:
             return
 
-        self._attr_native_value = last_state.attributes.get(ATTR_NATIVE_VALUE)
+        self._attr_state = last_state.state
         if ATTR_ENTITY_PICTURE in last_state.attributes:
             self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_state.attributes:
