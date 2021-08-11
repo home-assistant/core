@@ -39,7 +39,7 @@ class SolarlogRequiredKeysMixin:
 
 
 @dataclass
-class SolarlogSensorEntityDescription(
+class SolarLogSensorEntityDescription(
     SensorEntityDescription, SolarlogRequiredKeysMixin
 ):
     """Describes Solarlog sensor entity."""
