@@ -106,7 +106,6 @@ class NetgearDeviceEntity(ScannerEntity):
         self._device = device
         self._mac = device["mac"]
         self._name = self.get_device_name(device)
-        self._manufacturer = device["device_model"]
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
         self._active = True
         self._attrs = {}
@@ -125,6 +124,7 @@ class NetgearDeviceEntity(ScannerEntity):
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
+        self._icon = DEVICE_ICONS.get(self._device["device_type"], "mdi:help-network")
         self._attrs = {
             "link_type": self._device["type"],
             "link_rate": self._device["link_rate"],
@@ -181,7 +181,7 @@ class NetgearDeviceEntity(ScannerEntity):
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "name": self.name,
-            "manufacturer": self._manufacturer,
+            "manufacturer": self._device["device_model"],
         }
 
     @property

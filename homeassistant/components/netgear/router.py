@@ -1,6 +1,6 @@
 """Represent the Netgear router and its devices."""
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 from homeassistant.util import dt as dt_util
 from typing import Dict
 
@@ -19,6 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_METHOD_VERSION, CONF_CONSIDER_HOME, CONF_TRACKED_LIST, DEFAULT_CONSIDER_HOME, DEFAULT_METHOD_VERSION, DOMAIN
 from .errors import CannotLoginException
@@ -64,6 +65,7 @@ class NetgearRouter:
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
         self.hass = hass
+        self.entry_id = entry.entry_id
         self._url = entry.data.get(CONF_URL)
         self._host = entry.data.get(CONF_HOST)
         self._port = entry.data.get(CONF_PORT)
@@ -96,10 +98,29 @@ class NetgearRouter:
             self._url,
         )
 
+        entity_registry = er.async_get(self.hass)
+        entries = er.async_entries_for_config_entry(entity_registry, self.entry_id)
+        for entity_entry in entries:
+            if entity_entry.unique_id in tracked_list:
+                _LOGGER.error(entity_entry)
+                self.devices[entity_entry.unique_id] = {
+                    "name": entity_entry.original_name,
+                    "active": False,
+                    "last_seen": datetime.min,
+                    "device_model": None,
+                    "device_type": None,
+                    "type": None,
+                    "link_rate": None,
+                    "signal": None,
+                    "ip": None,
+                }
+
         await self.async_update_device_trackers()
         self._unsub_dispatcher = async_track_time_interval(
             self.hass, self.async_update_device_trackers, SCAN_INTERVAL
         )
+
+        async_dispatcher_send(self.hass, self.signal_device_new)
 
     async def async_unload(self) -> None:
         """Unload a Netgear router."""
