@@ -760,7 +760,22 @@ async def merge_packages_config(
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
-            merge_list = hasattr(component, "PLATFORM_SCHEMA")
+            try:
+                config_platform: ModuleType | None = integration.get_platform("config")
+                # Test if config platform has a config validator
+                if not hasattr(config_platform, "async_validate_config"):
+                    config_platform = None
+            except ImportError:
+                config_platform = None
+
+            merge_list = False
+
+            # If integration has a custom config validator, it needs to provide a hint.
+            if config_platform is not None:
+                merge_list = config_platform.PACKAGE_MERGE_HINT == "list"  # type: ignore[attr-defined]
+
+            if not merge_list:
+                merge_list = hasattr(component, "PLATFORM_SCHEMA")
 
             if not merge_list and hasattr(component, "CONFIG_SCHEMA"):
                 merge_list = _identify_config_schema(component) == "list"
