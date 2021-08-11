@@ -96,18 +96,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     backend = BACKEND
     _LOGGER.debug("MiTempBt is using %s backend", backend.__name__)
 
-    cache = config.get(CONF_CACHE)
+    cache = config[CONF_CACHE]
     poller = mitemp_bt_poller.MiTempBtPoller(
-        config.get(CONF_MAC),
+        config[CONF_MAC],
         cache_timeout=cache,
-        adapter=config.get(CONF_ADAPTER),
+        adapter=config[CONF_ADAPTER],
         backend=backend,
     )
-    prefix = config.get(CONF_NAME)
-    force_update = config.get(CONF_FORCE_UPDATE)
-    median = config.get(CONF_MEDIAN)
-    poller.ble_timeout = config.get(CONF_TIMEOUT)
-    poller.retries = config.get(CONF_RETRIES)
+    prefix = config[CONF_NAME]
+    force_update = config[CONF_FORCE_UPDATE]
+    median = config[CONF_MEDIAN]
+    poller.ble_timeout = config[CONF_TIMEOUT]
+    poller.retries = config[CONF_RETRIES]
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     entities = [
@@ -129,8 +129,7 @@ class MiTempBtSensor(SensorEntity):
         self.entity_description = description
         self.poller = poller
         self.data: list[Any] = []
-        if prefix:
-            self._attr_name = f"{prefix} {description.name}"
+        self._attr_name = f"{prefix} {description.name}"
         self._attr_force_update = force_update
         # Median is used to filter out outliers. median of 3 will filter
         # single outliers, while  median of 5 will filter double outliers
