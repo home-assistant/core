@@ -1,15 +1,13 @@
 """Support for Netgear routers."""
-import asyncio
 import logging
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_TRACKED_LIST, DOMAIN, PLATFORMS
-from .router import convert_tracked_list, NetgearRouter
+from .router import NetgearRouter, convert_tracked_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +37,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     tracked_list = convert_tracked_list(entry.options.get(CONF_TRACKED_LIST, ""))
 
@@ -58,7 +54,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         for device_entry in devices:
             if dict(device_entry.connections)["mac"] not in tracked_list:
-                device_registry.async_update_device(device_entry.id, remove_config_entry_id=entry.entry_id)
+                device_registry.async_update_device(
+                    device_entry.id, remove_config_entry_id=entry.entry_id
+                )
 
     if unload_ok:
         await hass.data[DOMAIN][entry.unique_id].async_unload()
@@ -68,8 +66,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     return unload_ok
 
-async def update_listener(
-    hass: HomeAssistant, config_entry: ConfigEntry
-):
+
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

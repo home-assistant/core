@@ -1,5 +1,4 @@
 """Config flow to configure the Netgear integration."""
-from typing import Any
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -7,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,9 +15,16 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 
-from .const import CONF_METHOD_VERSION, CONF_CONSIDER_HOME, CONF_TRACKED_LIST, DEFAULT_METHOD_VERSION, DEFAULT_CONSIDER_HOME, DOMAIN  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_CONSIDER_HOME,
+    CONF_METHOD_VERSION,
+    CONF_TRACKED_LIST,
+    DEFAULT_CONSIDER_HOME,
+    DEFAULT_METHOD_VERSION,
+    DOMAIN,
+)
 from .errors import CannotLoginException
 from .router import get_api
 
@@ -53,7 +58,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input = None):
+    async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -61,20 +66,24 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         settings_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_METHOD_VERSION, 
+                    CONF_METHOD_VERSION,
                     default=self.config_entry.options.get(
                         CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION
                     ),
                 ): vol.In([1, 2]),
                 vol.Optional(
-                    CONF_CONSIDER_HOME, 
+                    CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): int,
                 vol.Optional(
-                    CONF_TRACKED_LIST, 
-                    description={"suggested_value": self.config_entry.options.get(CONF_TRACKED_LIST, "")},
+                    CONF_TRACKED_LIST,
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_TRACKED_LIST, ""
+                        )
+                    },
                 ): str,
             }
         )

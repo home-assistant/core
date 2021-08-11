@@ -1,6 +1,5 @@
 """Support for Netgear routers."""
 import logging
-from typing import Dict
 
 import voluptuous as vol
 
@@ -100,7 +99,7 @@ def add_entities(router, async_add_entities, tracked):
 class NetgearDeviceEntity(ScannerEntity):
     """Representation of a device connected to a Netgear router."""
 
-    def __init__(self, router: NetgearRouter, device: Dict[str, any]) -> None:
+    def __init__(self, router: NetgearRouter, device: dict[str, any]) -> None:
         """Initialize a Netgear device."""
         self._router = router
         self._device = device
@@ -109,7 +108,6 @@ class NetgearDeviceEntity(ScannerEntity):
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
         self._active = device["active"]
         self._attrs = {}
-
 
     def get_device_name(self, device):
         """Return the name of the given device or the MAC if we don't know."""
@@ -171,12 +169,12 @@ class NetgearDeviceEntity(ScannerEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def device_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
         return self._attrs
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},

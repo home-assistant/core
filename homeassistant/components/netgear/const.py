@@ -1,7 +1,6 @@
 """Netgear component constants."""
 from datetime import timedelta
 
-
 DOMAIN = "netgear"
 
 PLATFORMS = ["device_tracker"]
