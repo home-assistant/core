@@ -644,7 +644,7 @@ class HomeKit:
         return None
 
     def add_bridge_triggers_accessory(self, device, device_triggers):
-        """Try trigger accessory to th ebridge."""
+        """Add device automation triggers to the bridge."""
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
