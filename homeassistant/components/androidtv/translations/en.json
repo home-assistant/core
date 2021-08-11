@@ -19,7 +19,6 @@
                     "adb_server_port": "Port of the ADB server",
                     "device_class": "The type of device",
                     "host": "Host",
-                    "name": "Name",
                     "port": "Port"
                 },
                 "description": "Set required parameter to connect to your Android TV device",

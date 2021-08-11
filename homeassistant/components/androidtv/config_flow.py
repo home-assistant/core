@@ -6,7 +6,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
@@ -81,7 +81,6 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Optional(CONF_NAME): str,
                     vol.Required(
                         CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS
                     ): vol.In(DEVICE_CLASSES),
@@ -110,7 +109,8 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not aftv:
             return RESULT_CONN_ERROR
 
-        self._unique_id = aftv.device_properties.get("serialno")
+        dev_prop = aftv.device_properties
+        self._unique_id = dev_prop.get("ethmac") or dev_prop.get("wifimac")
         await aftv.adb_close()
         return RESULT_SUCCESS
 
@@ -153,10 +153,9 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(self._unique_id)
         self._abort_if_unique_id_configured()
-        name = user_input.get(CONF_NAME, self._host)
 
         return self.async_create_entry(
-            title=name,
+            title=self._host,
             data=user_input,
         )
 

@@ -6,7 +6,6 @@
         "description": "Set required parameter to connect to your Android TV device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "adb_key": "Path to your ADB key file (leave empy to auto generate)",
           "adb_server_ip": "IP address of the ADB server",
           "adb_server_port": "Port of the ADB server",

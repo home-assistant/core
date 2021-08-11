@@ -38,8 +38,8 @@ from tests.components.androidtv.patchers import (
 )
 
 ADBKEY = "adbkey"
+ETH_MAC = "a1:b1:c1:d1:e1:f1"
 HOST = "127.0.0.1"
-SERIAL_NO = "12345"
 
 # Android TV device with Python ADB implementation
 CONFIG_PYTHON_ADB = {
@@ -70,10 +70,10 @@ PATCH_SETUP_ENTRY = patch(
 class MockConfigDevice:
     """Mock class to emulate Android TV device."""
 
-    def __init__(self, serial_no=SERIAL_NO):
+    def __init__(self, eth_mac=ETH_MAC):
         """Initialize a fake device to test config flow."""
         self.available = True
-        self.device_properties = {"serialno": serial_no}
+        self.device_properties = {"ethmac": eth_mac}
 
     async def adb_close(self):
         """Fake method to close connection."""
@@ -231,7 +231,7 @@ async def test_invalid_serial(hass):
     """Test for invallid serialno."""
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(serial_no=""),
+        return_value=MockConfigDevice(eth_mac=""),
     ), PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -246,7 +246,7 @@ async def test_invalid_serial(hass):
 async def test_abort_if_host_exist(hass):
     """Test we abort if component is already setup."""
     MockConfigEntry(
-        domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=SERIAL_NO
+        domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
     ).add_to_hass(hass)
 
     config_data = CONFIG_ADB_SERVER.copy()
@@ -267,7 +267,7 @@ async def test_abort_if_unique_exist(hass):
     """Test we abort if component is already setup."""
     config_data = CONFIG_ADB_SERVER.copy()
     config_data[CONF_HOST] = "127.0.0.2"
-    MockConfigEntry(domain=DOMAIN, data=config_data, unique_id=SERIAL_NO).add_to_hass(
+    MockConfigEntry(domain=DOMAIN, data=config_data, unique_id=ETH_MAC).add_to_hass(
         hass
     )
 
@@ -319,7 +319,7 @@ async def test_options_flow(hass):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_ADB_SERVER,
-        unique_id=SERIAL_NO,
+        unique_id=ETH_MAC,
         options={CONF_APPS: {"app1": "App1"}},
     )
     config_entry.add_to_hass(hass)

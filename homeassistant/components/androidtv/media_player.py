@@ -172,7 +172,6 @@ async def async_setup_platform(
     # get main data
     config_data = {
         CONF_HOST: host,
-        CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
         CONF_DEVICE_CLASS: config.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
         CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
         CONF_ADB_SERVER_PORT: config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
@@ -220,10 +219,8 @@ async def async_setup_entry(
     """Set up the Android TV entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
-    device_name = entry.data.get(CONF_NAME)
-    if not device_name:
-        device_name = "Android TV " if device_class == DEVICE_ANDROIDTV else "Fire TV "
-        device_name += entry.data[CONF_HOST]
+    device_name = "Android TV " if device_class == DEVICE_ANDROIDTV else "Fire TV "
+    device_name += entry.data[CONF_HOST]
 
     device_args = [
         aftv,
