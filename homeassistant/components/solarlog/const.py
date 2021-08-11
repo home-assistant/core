@@ -179,7 +179,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         key="total_power",
         json_key="totalPOWER",
         name="total power",
-        icon="mdi:power-plug"
+        icon="mdi:power-plug",
         unit_of_measurement="Wp",
     ),
     SolarLogSensorEntityDescription(
