@@ -19,7 +19,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="battery_level",
         name="Battery",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:battery-50",
     ),
     SensorEntityDescription(
@@ -40,7 +40,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="signal_strength_percentage",
         name="WiFi Signal Strength",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:wifi",
     ),
     SensorEntityDescription(
