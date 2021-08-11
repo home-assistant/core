@@ -99,7 +99,6 @@ async def mock_ha(hass):
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
-    yield mock_modbus
 
 
 async def base_test(
