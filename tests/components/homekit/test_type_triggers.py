@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_programmable_switch_button_fires_on_trigger(
-    hass, hk_driver, events, device_reg, entity_reg
+    hass, hk_driver, events, demo_cleanup, device_reg, entity_reg
 ):
     """Test that DeviceTriggerAccessory fires the programmable switch event on trigger."""
     hk_driver.publish = MagicMock()
