@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     hass,
                     logger=_LOGGER,
                     name="Fjäråskupan Updater",
-                    update_interval=timedelta(seconds=60),
+                    update_interval=timedelta(seconds=120),
                     update_method=async_update_data,
                 )
                 coordinator.async_set_updated_data(device.state)
