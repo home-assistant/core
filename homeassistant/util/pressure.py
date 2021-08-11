@@ -5,9 +5,9 @@ from numbers import Number
 
 from homeassistant.const import (
     PRESSURE,
+    PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
-    PRESSURE_BAR,
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
