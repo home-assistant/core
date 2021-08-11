@@ -192,31 +192,6 @@ async def async_setup_entry(  # noqa: C901
 
     async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
-        LOGGER.debug("Processing node %s", node)
-
-        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
-
-        # register (or update) node in device registry
-        device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
-        # We only want to create the defaultdict once, even on reinterviews
-        if device.id not in registered_unique_ids:
-            registered_unique_ids[device.id] = defaultdict(set)
-
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
-
-        # run discovery on all node values and create/update entities
-        for disc_info in async_discover_values(node):
-            await async_handle_discovered_info(
-                hass,
-                ent_reg,
-                entry,
-                client,
-                device,
-                disc_info,
-                registered_unique_ids,
-                platform_setup_tasks,
-                value_updates_disc_info,
-            )
 
         async def async_on_value_update_discover_new_value(
             hass: HomeAssistant,
@@ -224,7 +199,6 @@ async def async_setup_entry(  # noqa: C901
             entry: ConfigEntry,
             client: ZwaveClient,
             device: device_registry.DeviceEntry,
-            _disc_info: ZwaveDiscoveryInfo,
             registered_unique_ids: dict[str, dict[str, set[str]]],
             platform_setup_tasks: dict[str, asyncio.Task],
             value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
@@ -254,7 +228,33 @@ async def async_setup_entry(  # noqa: C901
                 )
 
             listen_to_value_updated_events_if_needed(
-                _disc_info.node, value_updates_disc_info
+                value.node, value_updates_disc_info
+            )
+
+        LOGGER.debug("Processing node %s", node)
+
+        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
+
+        # register (or update) node in device registry
+        device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
+        # We only want to create the defaultdict once, even on reinterviews
+        if device.id not in registered_unique_ids:
+            registered_unique_ids[device.id] = defaultdict(set)
+
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
+
+        # run discovery on all node values and create/update entities
+        for disc_info in async_discover_values(node):
+            await async_handle_discovered_info(
+                hass,
+                ent_reg,
+                entry,
+                client,
+                device,
+                disc_info,
+                registered_unique_ids,
+                platform_setup_tasks,
+                value_updates_disc_info,
             )
 
         # add listener for value update events
@@ -268,7 +268,6 @@ async def async_setup_entry(  # noqa: C901
                         entry,
                         client,
                         device,
-                        disc_info,
                         registered_unique_ids,
                         platform_setup_tasks,
                         value_updates_disc_info,
