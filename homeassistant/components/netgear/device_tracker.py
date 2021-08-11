@@ -104,7 +104,7 @@ class NetgearDeviceEntity(ScannerEntity):
         """Initialize a Netgear device."""
         self._router = router
         self._device = device
-        self._name = get_device_name(device)
+        self._name = self.get_device_name(device)
         self._mac = device["mac"]
         self._manufacturer = device["device_model"]
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
