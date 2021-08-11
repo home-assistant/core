@@ -1,10 +1,12 @@
 """Support for KEBA charging station sensors."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
 )
+from homeassistant.util import dt
 
 from . import DOMAIN
 
@@ -41,6 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "mdi:flash",
             "kW",
             DEVICE_CLASS_POWER,
+            STATE_CLASS_MEASUREMENT,
         ),
         KebaSensor(
             keba,
@@ -49,6 +52,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "session_energy",
             "mdi:gauge",
             ENERGY_KILO_WATT_HOUR,
+            DEVICE_CLASS_ENERGY,
+            STATE_CLASS_MEASUREMENT,
         ),
         KebaSensor(
             keba,
@@ -57,6 +62,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "total_energy",
             "mdi:gauge",
             ENERGY_KILO_WATT_HOUR,
+            DEVICE_CLASS_ENERGY,
+            STATE_CLASS_MEASUREMENT,
         ),
     ]
     async_add_entities(sensors)
@@ -65,7 +72,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class KebaSensor(SensorEntity):
     """The entity class for KEBA charging stations sensors."""
 
-    def __init__(self, keba, key, name, entity_type, icon, unit, device_class=None):
+    def __init__(
+        self,
+        keba,
+        key,
+        name,
+        entity_type,
+        icon,
+        unit,
+        device_class=None,
+        state_class=None,
+    ):
         """Initialize the KEBA Sensor."""
         self._keba = keba
         self._key = key
@@ -74,7 +91,7 @@ class KebaSensor(SensorEntity):
         self._icon = icon
         self._unit = unit
         self._device_class = device_class
-
+        self._attr_state_class = state_class
         self._state = None
         self._attributes = {}
 
@@ -132,6 +149,8 @@ class KebaSensor(SensorEntity):
             self._attributes["current_i3"] = str(self._keba.get_value("I3"))
         elif self._key == "Curr user":
             self._attributes["max_current_hardware"] = self._keba.get_value("Curr HW")
+        elif self._key == "E total":
+            self._attributes["last_reset"] = dt.utc_from_timestamp(0)
 
     def update_callback(self):
         """Schedule a state update."""
