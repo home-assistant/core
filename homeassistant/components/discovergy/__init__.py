@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         conf_access_token = None
-        if entry.data[CONF_ACCESS_TOKEN] and entry.data[CONF_ACCESS_TOKEN_SECRET]:
+        if CONF_ACCESS_TOKEN in entry.data and CONF_ACCESS_TOKEN_SECRET in entry.data:
             _LOGGER.debug("Reusing access token from config")
             conf_access_token = RequestToken(
                 entry.data[CONF_ACCESS_TOKEN], entry.data[CONF_ACCESS_TOKEN_SECRET]
