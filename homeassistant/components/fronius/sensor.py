@@ -281,11 +281,17 @@ class FroniusPowerFlow(FroniusAdapter):
 class FroniusTemplateSensor(SensorEntity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, parent: FroniusAdapter, key: str) -> None:
         """Initialize a singular value sensor."""
         self._key = key
         self._attr_name = f"{key.replace('_', ' ').capitalize()} {parent.name}"
         self._parent = parent
+        for prefix, device_class in PREFIX_DEVICE_CLASS_MAPPING:
+            if self._key.startswith(prefix):
+                self._attr_device_class = device_class
+                break
 
     @property
     def should_poll(self):
@@ -304,19 +310,6 @@ class FroniusTemplateSensor(SensorEntity):
         if isinstance(self._attr_state, float):
             self._attr_state = round(self._attr_state, 2)
         self._attr_unit_of_measurement = state.get("unit")
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, depends on prefix of sensor key."""
-        for prefix, device_class in PREFIX_DEVICE_CLASS_MAPPING:
-            if self._key.startswith(prefix):
-                return device_class
-        return None
-
-    @property
-    def state_class(self) -> str | None:
-        """Return class of the sensor state, is a measurement."""
-        return STATE_CLASS_MEASUREMENT
 
     @property
     def last_reset(self) -> dt.dt.datetime | None:
