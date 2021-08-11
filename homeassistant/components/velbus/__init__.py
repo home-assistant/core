@@ -29,18 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = controller
     await controller.connect()
 
-    for platform in PLATFORMS:
-        hass.add_job(hass.config_entries.async_forward_entry_setup(entry, platform))
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def scan(self, service=None):
         await controller.scan()
 
-    hass.services.async_register(DOMAIN, "scan", scan, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, "scan", scan)
 
     async def syn_clock(self, service=None):
         await controller.sync_clock()
 
-    hass.services.async_register(DOMAIN, "sync_clock", syn_clock, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, "sync_clock", syn_clock)
 
     def set_memo_text(service):
         """Handle Memo Text service call."""
@@ -107,7 +106,7 @@ class VelbusEntity(Entity):
         self._channel.on_status_update(self._on_update)
 
     async def _on_update(self):
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def device_info(self):

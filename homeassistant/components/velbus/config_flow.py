@@ -39,9 +39,8 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             controller = velbusaio.controller.Velbus(prt)
             await controller.connect(True)
             await controller.stop()
-        except Exception as excep:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self._errors[CONF_PORT] = "cannot_connect"
-            print(excep)
             return False
         return True
 
