@@ -152,7 +152,7 @@ class NeurioEnergy(SensorEntity):
             self._attr_device_class = DEVICE_CLASS_ENERGY
 
     @property
-    def last_reset(self) -> datetime:
+    def last_reset(self) -> datetime | None:
         """Return the time when the sensor was initialized."""
         return dt_util.start_of_local_day() if self._attr_device_class is DEVICE_CLASS_ENERGY else None
 
