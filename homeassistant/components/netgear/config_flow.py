@@ -1,4 +1,5 @@
 """Config flow to configure the Netgear integration."""
+from typing import Any
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -52,7 +53,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(self, user_input = None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -68,15 +69,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_CONSIDER_HOME, 
                     default=self.config_entry.options.get(
-                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
+                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
-                ): vol.All(cv.time_period, cv.positive_timedelta),
+                ): int,
                 vol.Optional(
                     CONF_TRACKED_LIST, 
                     default=self.config_entry.options.get(
-                        CONF_TRACKED_LIST, []
+                        CONF_TRACKED_LIST, ""
                     ),
-                ): list,
+                ): str,
             }
         )
 
