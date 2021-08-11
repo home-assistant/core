@@ -190,46 +190,36 @@ async def async_setup_entry(  # noqa: C901
             )
             entry_hass_data["value_update_events_enabled"] = True
 
+    async def async_on_value_update_discover_new_value(
+        device: device_registry.DeviceEntry,
+        platform_setup_tasks: dict[str, asyncio.Task],
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+        event: dict,
+    ) -> None:
+        """Discover values that previously had no value."""
+        # We only care about values that were previously not known
+        if event["args"]["prevValue"] is not None or event["args"]["newValue"] is None:
+            return
+
+        value: Value = event["value"]
+
+        for disc_info in async_discover_value(value):
+            await async_handle_discovered_info(
+                hass,
+                ent_reg,
+                entry,
+                client,
+                device,
+                disc_info,
+                registered_unique_ids,
+                platform_setup_tasks,
+                value_updates_disc_info,
+            )
+
+        listen_to_value_updated_events_if_needed(value.node, value_updates_disc_info)
+
     async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
-
-        async def async_on_value_update_discover_new_value(
-            hass: HomeAssistant,
-            ent_reg: entity_registry.EntityRegistry,
-            entry: ConfigEntry,
-            client: ZwaveClient,
-            device: device_registry.DeviceEntry,
-            registered_unique_ids: dict[str, dict[str, set[str]]],
-            platform_setup_tasks: dict[str, asyncio.Task],
-            value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
-            event: dict,
-        ) -> None:
-            """Discover values that previously had no value."""
-            # We only care about values that were previously not known
-            if (
-                event["args"]["prevValue"] is not None
-                or event["args"]["newValue"] is None
-            ):
-                return
-
-            value: Value = event["value"]
-
-            for _disc_info in async_discover_value(value):
-                await async_handle_discovered_info(
-                    hass,
-                    ent_reg,
-                    entry,
-                    client,
-                    device,
-                    _disc_info,
-                    registered_unique_ids,
-                    platform_setup_tasks,
-                    value_updates_disc_info,
-                )
-
-            listen_to_value_updated_events_if_needed(
-                value.node, value_updates_disc_info
-            )
 
         LOGGER.debug("Processing node %s", node)
 
@@ -263,12 +253,7 @@ async def async_setup_entry(  # noqa: C901
                 "value updated",
                 lambda event: hass.async_create_task(
                     async_on_value_update_discover_new_value(
-                        hass,
-                        ent_reg,
-                        entry,
-                        client,
                         device,
-                        registered_unique_ids,
                         platform_setup_tasks,
                         value_updates_disc_info,
                         event,
