@@ -1,5 +1,5 @@
 """Tests for the Velbus config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -23,9 +23,8 @@ def mock_controller_assert():
 @pytest.fixture(name="controller")
 def mock_controller():
     """Mock a successful velbus controller."""
-    controller = Mock()
+    controller = AsyncMock()
     with patch("velbusaio.controller.Velbus", return_value=controller):
-        controller.return_value.connect = Mock(side_effect=Exception)
         yield controller
 
 
