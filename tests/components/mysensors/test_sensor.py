@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 from tests.common import MockConfigEntry
 
@@ -136,8 +136,8 @@ async def test_temperature_sensor(
     hass: HomeAssistant,
     temperature_sensor: Sensor,
     integration: tuple[MockConfigEntry, Callable[[str], None]],
-    unit_system,
-    unit,
+    unit_system: UnitSystem,
+    unit: str,
 ) -> None:
     """Test a temperature sensor."""
     entity_id = "sensor.temperature_sensor_1_1"
