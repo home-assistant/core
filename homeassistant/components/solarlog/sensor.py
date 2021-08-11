@@ -58,7 +58,7 @@ class SolarlogSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(
-        self, entry_id, device_name, description: SolarLogSensorEntityDescription, data
+        self, entry_id, device_name, data, description: SolarLogSensorEntityDescription,
     ):
         """Initialize the sensor."""
         self.entry_id = entry_id
