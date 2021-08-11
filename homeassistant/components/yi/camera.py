@@ -1,4 +1,6 @@
 """Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -119,7 +121,9 @@ class YiCamera(Camera):
             self._is_on = False
             return None
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         url = await self._get_latest_video_url()
         if url and url != self._last_url:
