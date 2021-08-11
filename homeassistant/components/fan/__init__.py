@@ -607,7 +607,7 @@ class FanEntity(ToggleEntity):
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
         data: dict[str, float | str | None] = {}
-        supported_features = self.supported_features
+        supported_features = self.supported_features or 0
 
         if supported_features & SUPPORT_DIRECTION:
             data[ATTR_DIRECTION] = self.current_direction
@@ -627,11 +627,6 @@ class FanEntity(ToggleEntity):
             data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0
 
     @property
     def preset_mode(self) -> str | None:

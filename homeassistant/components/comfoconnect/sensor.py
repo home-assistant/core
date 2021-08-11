@@ -156,7 +156,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_SUPPLY_FAN_SPEED,
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Supply fan speed",
         unit_of_measurement="rpm",
@@ -165,7 +164,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_SUPPLY_FAN_DUTY,
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Supply fan duty",
         unit_of_measurement=PERCENTAGE,
@@ -174,7 +172,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_EXHAUST_FAN_SPEED,
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Exhaust fan speed",
         unit_of_measurement="rpm",
@@ -183,7 +180,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_EXHAUST_FAN_DUTY,
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Exhaust fan duty",
         unit_of_measurement=PERCENTAGE,
@@ -209,7 +205,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_AIR_FLOW_SUPPLY,
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Supply airflow",
         unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
@@ -218,7 +213,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_AIR_FLOW_EXHAUST,
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Exhaust airflow",
         unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
@@ -227,7 +221,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_BYPASS_STATE,
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         name="Bypass state",
         unit_of_measurement=PERCENTAGE,
@@ -236,7 +229,6 @@ SENSOR_TYPES = (
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_DAYS_TO_REPLACE_FILTER,
-        device_class=None,
         name="Days to replace filter",
         unit_of_measurement=TIME_DAYS,
         icon="mdi:calendar",
@@ -314,10 +306,10 @@ class ComfoConnectSensor(SensorEntity):
         """Initialize the ComfoConnect sensor."""
         self._ccb = ccb
         self.entity_description = description
-        self._attr_name = f"{ccb.name} {self.entity_description.name}"
-        self._attr_unique_id = f"{self._ccb.unique_id}-{self.entity_description.key}"
+        self._attr_name = f"{ccb.name} {description.name}"
+        self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug(
             "Registering for sensor %s (%d)",
@@ -345,15 +337,5 @@ class ComfoConnectSensor(SensorEntity):
             self.entity_description.sensor_id,
             value,
         )
-        self._ccb.data[self.entity_description.sensor_id] = round(
-            value * self.entity_description.multiplier, 2
-        )
+        self._attr_state = round(value * self.entity_description.multiplier, 2)
         self.schedule_update_ha_state()
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        try:
-            return self._ccb.data[self.entity_description.sensor_id]
-        except KeyError:
-            return None
