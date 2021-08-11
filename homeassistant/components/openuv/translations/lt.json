@@ -1,12 +1,12 @@
 {
     "config": {
         "error": {
-            "unknown": "Nenumatyta klaida"
+            "invalid_api_key": "Neteisingas API raktas"
         },
         "step": {
-            "link": {
+            "user": {
                 "data": {
-                    "code": "PIN kodas"
+                    "api_key": "API raktas"
                 }
             }
         }
