@@ -390,6 +390,7 @@ homeassistant/components/homekit_controller/* @Jc2k @bdraco
 tests/components/homekit_controller/* @Jc2k @bdraco
 homeassistant/components/homematic/* @pvizeli @danielperna84
 tests/components/homematic/* @pvizeli @danielperna84
+homeassistant/components/homewizard_energy/* @DCSBL
 homeassistant/components/honeywell/* @rdfurman
 tests/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core

@@ -1,0 +1,12 @@
+{
+  "domain": "homewizard_energy",
+  "name": "HomeWizard Energy",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/homewizard_energy",
+  "requirements": ["aiohwenergy==0.2.3"],
+  "zeroconf": ["_hwenergy._tcp.local."],
+  "codeowners": [
+    "@DCSBL"
+  ],
+  "iot_class": "local_polling"
+}
