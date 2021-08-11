@@ -164,7 +164,7 @@ class MiTempBtSensor(SensorEntity):
             if self.data:
                 self.data = self.data[1:]
             else:
-                self._attr_state = None
+                self._attr_native_value = None
             return
 
         if len(self.data) > self.median_count:
@@ -173,6 +173,6 @@ class MiTempBtSensor(SensorEntity):
         if len(self.data) == self.median_count:
             median = sorted(self.data)[int((self.median_count - 1) / 2)]
             _LOGGER.debug("Median is: %s", median)
-            self._attr_state = median
+            self._attr_native_value = median
         else:
             _LOGGER.debug("Not yet enough data for median calculation")
