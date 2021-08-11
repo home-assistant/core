@@ -64,7 +64,11 @@ class AdaxDevice(ClimateEntity):
         self._attr_unique_id = (
             f"{self._heater_data['homeId']}_{self._heater_data['id']}"
         )
-        self._attr_name = self._heater_data["name"]
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device, if any."""
+        return self._heater_data["name"]
 
     @property
     def hvac_mode(self) -> str:
