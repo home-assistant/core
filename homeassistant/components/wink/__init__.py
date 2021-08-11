@@ -112,22 +112,27 @@ AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        vol.All(
+            cv.deprecated(DOMAIN),
             {
-                vol.Inclusive(
-                    CONF_EMAIL, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Inclusive(
-                    CONF_PASSWORD, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Inclusive(
-                    CONF_CLIENT_ID, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Inclusive(
-                    CONF_CLIENT_SECRET, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean,
-            }
+                DOMAIN: vol.Schema(
+                    {
+                        vol.Inclusive(
+                            CONF_EMAIL, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                        ): cv.string,
+                        vol.Inclusive(
+                            CONF_PASSWORD, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                        ): cv.string,
+                        vol.Inclusive(
+                            CONF_CLIENT_ID, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                        ): cv.string,
+                        vol.Inclusive(
+                            CONF_CLIENT_SECRET, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                        ): cv.string,
+                        vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean,
+                    }
+                )
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
