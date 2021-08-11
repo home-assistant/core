@@ -14,12 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
-from .const import (
-    CC_SENSOR_TYPES,
-    CC_V3_SENSOR_TYPES,
-    DOMAIN,
-    ClimaCellSensorEntityDescription,
-)
+from .const import CC_V3_SENSOR_TYPES, DOMAIN, ClimaCellSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,15 +28,11 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     api_version = config_entry.data[CONF_API_VERSION]
 
-    if api_version == 3:
-        api_class = ClimaCellV3SensorEntity
-        sensor_types = CC_V3_SENSOR_TYPES
-    else:
-        api_class = ClimaCellSensorEntity
-        sensor_types = CC_SENSOR_TYPES
     entities = [
-        api_class(hass, config_entry, coordinator, api_version, description)
-        for description in sensor_types
+        ClimaCellV3SensorEntity(
+            hass, config_entry, coordinator, api_version, description
+        )
+        for description in CC_V3_SENSOR_TYPES
     ]
     async_add_entities(entities)
 
@@ -102,15 +93,6 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             return self.entity_description.value_map(state).name.lower()
 
         return state
-
-
-class ClimaCellSensorEntity(BaseClimaCellSensorEntity):
-    """Sensor entity that talks to ClimaCell v4 API to retrieve non-weather data."""
-
-    @property
-    def _state(self) -> str | int | float | None:
-        """Return the raw state."""
-        return self._get_current_property(self.entity_description.key)
 
 
 class ClimaCellV3SensorEntity(BaseClimaCellSensorEntity):

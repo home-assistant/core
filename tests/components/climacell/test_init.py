@@ -75,7 +75,7 @@ async def test_migrate_timestep(
     """Test migration to standardized timestep."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**V1_ENTRY_DATA, CONF_API_VERSION: 3},
+        data=V1_ENTRY_DATA,
         options={CONF_TIMESTEP: old_timestep},
         unique_id=_get_unique_id(hass, V1_ENTRY_DATA),
         version=1,
