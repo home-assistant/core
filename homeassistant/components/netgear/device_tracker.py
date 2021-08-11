@@ -107,7 +107,7 @@ class NetgearDeviceEntity(ScannerEntity):
         self._mac = device["mac"]
         self._name = self.get_device_name(device)
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
-        self._active = True
+        self._active = device["active"]
         self._attrs = {}
 
 

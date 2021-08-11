@@ -103,6 +103,7 @@ class NetgearRouter:
         entries = er.async_entries_for_config_entry(entity_registry, self.entry_id)
         for entity_entry in entries:
             self.devices[entity_entry.unique_id] = {
+                "mac": entity_entry.unique_id,
                 "name": entity_entry.original_name,
                 "active": False,
                 "last_seen": dt_util.utcnow()-timedelta(days=365),
