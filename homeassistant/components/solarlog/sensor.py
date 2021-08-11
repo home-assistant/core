@@ -65,7 +65,6 @@ class SolarlogSensor(SensorEntity):
         description: SolarLogSensorEntityDescription,
     ):
         """Initialize the sensor."""
-        self.entry_id = entry_id
         self.device_name = device_name
         self.entity_description = description
         self.data = data
