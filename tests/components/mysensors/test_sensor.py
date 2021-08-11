@@ -83,7 +83,7 @@ async def test_energy_sensor(
     energy_sensor: Sensor,
     integration: tuple[MockConfigEntry, Callable[[str], None]],
 ) -> None:
-    """Test a energy sensor."""
+    """Test an energy sensor."""
     entity_id = "sensor.energy_sensor_1_1"
 
     state = hass.states.get(entity_id)
