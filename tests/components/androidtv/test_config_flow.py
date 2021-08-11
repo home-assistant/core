@@ -25,8 +25,10 @@ from homeassistant.components.androidtv.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PLATFORM, CONF_PORT
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.androidtv.patchers import (
@@ -115,6 +117,28 @@ async def test_user_adb_server(hass):
     await _test_user(hass, CONFIG_ADB_SERVER)
 
 
+async def test_import(hass):
+    """Test import config."""
+
+    # test with all provided
+    with patch(
+        CONNECT_METHOD,
+        return_value=MockConfigDevice(),
+    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_PYTHON_ADB,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == HOST
+        assert result["data"] == CONFIG_PYTHON_ADB
+
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_user_adbkey(hass):
     """Test user step with adbkey file."""
     config_data = CONFIG_PYTHON_ADB.copy()
@@ -139,9 +163,29 @@ async def test_user_adbkey(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_import_data(hass):
+    """Test import from configuration file."""
+    config_data = CONFIG_PYTHON_ADB.copy()
+    config_data[CONF_PLATFORM] = DOMAIN
+    config_data[CONF_ADB_KEY] = ADB_KEY
+    config_data[CONF_TURN_OFF_COMMAND] = "off"
+    platform_data = {MP_DOMAIN: config_data}
+
+    with patch(
+        CONNECT_METHOD,
+        return_value=MockConfigDevice(),
+    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP, PATCH_ISFILE, PATCH_ACCESS:
+
+        assert await async_setup_component(hass, MP_DOMAIN, platform_data)
+        await hass.async_block_till_done()
+
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_error_both_key_server(hass):
     """Test we abort if both adb key and server are provided."""
     config_data = CONFIG_ADB_SERVER.copy()
+
     config_data[CONF_ADB_KEY] = ADB_KEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

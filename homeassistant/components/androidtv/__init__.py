@@ -30,6 +30,7 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     DOMAIN,
+    MIGRATION_DATA,
     SIGNAL_CONFIG_ENTITY,
 )
 
@@ -124,6 +125,14 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
+
+    host = entry.data[CONF_HOST]
+
+    # import options from migration if empty
+    yaml_options = hass.data.get(DOMAIN, {}).get(MIGRATION_DATA, {}).pop(host, {})
+    if not entry.options and yaml_options:
+        hass.config_entries.async_update_entry(entry, options=yaml_options)
+
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     json_rules = validate_state_det_rules(state_det_rules)
 

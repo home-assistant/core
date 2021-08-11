@@ -1,6 +1,7 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
 from datetime import datetime
 import functools
+import json
 import logging
 
 from adb_shell.exceptions import (
@@ -10,11 +11,12 @@ from adb_shell.exceptions import (
     InvalidResponseError,
     TcpTimeoutException,
 )
+from androidtv import ha_state_detection_rules_validator
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -28,11 +30,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -47,17 +51,26 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     ANDROID_DEV,
     ANDROID_DEV_OPT,
+    CONF_ADB_KEY,
+    CONF_ADB_SERVER_IP,
+    CONF_ADB_SERVER_PORT,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
     CONF_SCREENCAP,
+    CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
+    DEFAULT_ADB_SERVER_PORT,
+    DEFAULT_DEVICE_CLASS,
     DEFAULT_EXCLUDE_UNNAMED_APPS,
     DEFAULT_GET_SOURCES,
+    DEFAULT_PORT,
     DEFAULT_SCREENCAP,
     DEVICE_ANDROIDTV,
+    DEVICE_CLASSES,
     DOMAIN,
+    MIGRATION_DATA,
     SIGNAL_CONFIG_ENTITY,
 )
 
@@ -98,6 +111,35 @@ SERVICE_DOWNLOAD = "download"
 SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
+DEFAULT_NAME = "Android TV"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
+            DEVICE_CLASSES
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_ADB_KEY): cv.isfile,
+        vol.Optional(CONF_ADB_SERVER_IP): cv.string,
+        vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
+        vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
+        vol.Optional(CONF_APPS, default={}): vol.Schema(
+            {cv.string: vol.Any(cv.string, None)}
+        ),
+        vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
+        vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
+        vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
+            {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
+        ),
+        vol.Optional(
+            CONF_EXCLUDE_UNNAMED_APPS, default=DEFAULT_EXCLUDE_UNNAMED_APPS
+        ): cv.boolean,
+        vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
+    }
+)
+
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
     "off": STATE_OFF,
@@ -106,6 +148,54 @@ ANDROIDTV_STATES = {
     "playing": STATE_PLAYING,
     "paused": STATE_PAUSED,
 }
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Android TV / Fire TV platform."""
+
+    host = config[CONF_HOST]
+
+    # get main data
+    config_data = {
+        CONF_HOST: host,
+        CONF_NAME: config[CONF_NAME],
+        CONF_DEVICE_CLASS: config[CONF_DEVICE_CLASS],
+        CONF_PORT: config[CONF_PORT],
+        CONF_ADB_SERVER_PORT: config[CONF_ADB_SERVER_PORT],
+    }
+    for key in [CONF_ADB_KEY, CONF_ADB_SERVER_IP]:
+        if key in config:
+            config_data[key] = config[key]
+
+    # get options
+    config_options = {
+        CONF_GET_SOURCES: config[CONF_GET_SOURCES],
+        CONF_EXCLUDE_UNNAMED_APPS: config[CONF_EXCLUDE_UNNAMED_APPS],
+        CONF_SCREENCAP: config[CONF_SCREENCAP],
+    }
+    for key in [
+        CONF_APPS,
+        CONF_STATE_DETECTION_RULES,
+        CONF_TURN_OFF_COMMAND,
+        CONF_TURN_ON_COMMAND,
+    ]:
+        if key in config:
+            if key == CONF_STATE_DETECTION_RULES:
+                config_options[key] = json.dumps(config[key])
+            else:
+                config_options[key] = config[key]
+
+    # save option to use with entry
+    hass.data.setdefault(DOMAIN, {}).setdefault(MIGRATION_DATA, {})[
+        host
+    ] = config_options
+
+    # Launch config entries setup
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config_data
+        )
+    )
 
 
 async def async_setup_entry(
