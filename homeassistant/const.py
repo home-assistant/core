@@ -247,6 +247,7 @@ DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
+DEVICE_CLASS_GAS: Final = "gas"
 
 # #### STATES ####
 STATE_ON: Final = "on"
