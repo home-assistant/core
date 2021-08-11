@@ -9,6 +9,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
+    VOLUME_CUBIC_METERS,
 )
 
 from tests.common import MockEntity
@@ -30,6 +31,7 @@ UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_ENERGY: "kWh",  # energy (Wh/kWh)
     sensor.DEVICE_CLASS_POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
     sensor.DEVICE_CLASS_VOLTAGE: "V",  # voltage (V)
+    sensor.DEVICE_CLASS_GAS: VOLUME_CUBIC_METERS,  # gas (m³)
 }
 
 ENTITIES = {}
