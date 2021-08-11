@@ -1,6 +1,6 @@
 """Represent the Netgear router and its devices."""
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 from homeassistant.util import dt as dt_util
 from typing import Dict
 
@@ -105,7 +105,7 @@ class NetgearRouter:
             self.devices[entity_entry.unique_id] = {
                 "name": entity_entry.original_name,
                 "active": False,
-                "last_seen": datetime.min,
+                "last_seen": dt_util.utcnow()-timedelta(days=365),
                 "device_model": None,
                 "device_type": None,
                 "type": None,
