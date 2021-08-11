@@ -39,6 +39,11 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "°C",
 }
+GAS_SENSOR_ATTRIBUTES = {
+    "device_class": "gas",
+    "state_class": "measurement",
+    "unit_of_measurement": "m³",
+}
 
 
 @pytest.mark.parametrize(
@@ -154,11 +159,13 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     [
         ("energy", "kWh", "kWh", 1),
         ("energy", "Wh", "kWh", 1 / 1000),
-        ("monetary", "€", "€", 1),
+        ("monetary", "EUR", "EUR", 1),
         ("monetary", "SEK", "SEK", 1),
+        ("gas", "m³", "m³", 1),
+        ("gas", "ft³", "m³", 0.0283168466),
     ],
 )
-def test_compile_hourly_energy_statistics(
+def test_compile_hourly_sum_statistics(
     hass_recorder, caplog, device_class, unit, native_unit, factor
 ):
     """Test compiling hourly statistics."""
@@ -174,7 +181,7 @@ def test_compile_hourly_energy_statistics(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
 
-    four, eight, states = record_energy_states(
+    four, eight, states = record_meter_states(
         hass, zero, "sensor.test1", attributes, seq
     )
     hist = history.get_significant_states(
@@ -254,14 +261,14 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
     seq4 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
-    four, eight, states = record_energy_states(
+    four, eight, states = record_meter_states(
         hass, zero, "sensor.test1", sns1_attr, seq1
     )
-    _, _, _states = record_energy_states(hass, zero, "sensor.test2", sns2_attr, seq2)
+    _, _, _states = record_meter_states(hass, zero, "sensor.test2", sns2_attr, seq2)
     states = {**states, **_states}
-    _, _, _states = record_energy_states(hass, zero, "sensor.test3", sns3_attr, seq3)
+    _, _, _states = record_meter_states(hass, zero, "sensor.test3", sns3_attr, seq3)
     states = {**states, **_states}
-    _, _, _states = record_energy_states(hass, zero, "sensor.test4", sns4_attr, seq4)
+    _, _, _states = record_meter_states(hass, zero, "sensor.test4", sns4_attr, seq4)
     states = {**states, **_states}
 
     hist = history.get_significant_states(
@@ -336,14 +343,14 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
     seq4 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
-    four, eight, states = record_energy_states(
+    four, eight, states = record_meter_states(
         hass, zero, "sensor.test1", sns1_attr, seq1
     )
-    _, _, _states = record_energy_states(hass, zero, "sensor.test2", sns2_attr, seq2)
+    _, _, _states = record_meter_states(hass, zero, "sensor.test2", sns2_attr, seq2)
     states = {**states, **_states}
-    _, _, _states = record_energy_states(hass, zero, "sensor.test3", sns3_attr, seq3)
+    _, _, _states = record_meter_states(hass, zero, "sensor.test3", sns3_attr, seq3)
     states = {**states, **_states}
-    _, _, _states = record_energy_states(hass, zero, "sensor.test4", sns4_attr, seq4)
+    _, _, _states = record_meter_states(hass, zero, "sensor.test4", sns4_attr, seq4)
     states = {**states, **_states}
     hist = history.get_significant_states(
         hass, zero - timedelta.resolution, eight + timedelta.resolution
@@ -632,6 +639,8 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
         ("humidity", None, None, "mean"),
         ("monetary", "USD", "USD", "sum"),
         ("monetary", "None", "None", "sum"),
+        ("gas", "m³", "m³", "sum"),
+        ("gas", "ft³", "m³", "sum"),
         ("pressure", "Pa", "Pa", "mean"),
         ("pressure", "hPa", "Pa", "mean"),
         ("pressure", "mbar", "Pa", "mean"),
@@ -697,7 +706,7 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 def record_states(hass, zero, entity_id, attributes):
     """Record some test states.
 
-    We inject a bunch of state updates for temperature sensors.
+    We inject a bunch of state updates for measurement sensors.
     """
     attributes = dict(attributes)
 
@@ -725,10 +734,10 @@ def record_states(hass, zero, entity_id, attributes):
     return four, states
 
 
-def record_energy_states(hass, zero, entity_id, _attributes, seq):
+def record_meter_states(hass, zero, entity_id, _attributes, seq):
     """Record some test states.
 
-    We inject a bunch of state updates for energy sensors.
+    We inject a bunch of state updates for meter sensors.
     """
 
     def set_state(entity_id, state, **kwargs):
