@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.async_add_executor_job(Notifications, host)
     except ConnectError as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady("Failed to connect") from ex
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
