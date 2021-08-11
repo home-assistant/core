@@ -2,7 +2,7 @@
   "domain": "frontend",
   "name": "Ais dom Frontend",
   "documentation": "https://www.ai-speaker.com",
-  "requirements": ["ais-dom-frontend==20210804.0"],
+  "requirements": ["ais-dom-frontend==20210809.0"],
   "dependencies": [
     "api",
     "auth",
@@ -15,6 +15,8 @@
     "system_log",
     "websocket_api"
   ],
-  "codeowners": ["@home-assistant/frontend"],
+  "codeowners": [
+    "@home-assistant/frontend"
+  ],
   "quality_scale": "internal"
 }

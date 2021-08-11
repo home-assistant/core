@@ -141,9 +141,9 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
         self._poolid = self.coordinator.data[poolidx]["id"]
 
         pooldata = self._pooldata()
-        self._unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
+        self._attr_unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
         self._device_name = pooldata["name"]
-        self._name = f"{self._device_name} {description.name}"
+        self._attr_name = f"{self._device_name} {description.name}"
 
     def _pooldata(self):
         """Get pool data dict."""
@@ -167,11 +167,6 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
     def state(self):
         """Last value of the sensor."""
         return self._devdata()["value"]
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this entity."""
-        return self._unique_id
 
     @property
     def device_info(self):

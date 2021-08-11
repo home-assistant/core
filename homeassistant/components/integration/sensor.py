@@ -145,6 +145,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 )
                 self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
+                self._unit_of_measurement = state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
+
         @callback
         def calc_integration(event):
             """Handle the sensor state changes."""

@@ -365,7 +365,7 @@ beautifulsoup4==4.9.3
 bellows==0.26.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.16
+bimmer_connected==0.7.18
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -750,7 +750,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.44.0
+hass-nabucasa==0.46.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -783,7 +783,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-ais-dom-frontend==20210804.0
+ais-dom-frontend==20210809.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1565,7 +1565,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.7.2
+pylitterbot==2021.8.0
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1652,7 +1652,7 @@ pyobihai==1.3.1
 pyombi==0.1.10
 
 # homeassistant.components.openuv
-pyopenuv==1.0.9
+pyopenuv==2.1.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -2155,7 +2155,7 @@ smhi-pkg==1.0.15
 snapcast==2.1.3
 
 # homeassistant.components.sonos
-soco==0.23.2
+soco==0.23.3
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
@@ -2442,7 +2442,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.33.2
+zeroconf==0.34.3
 
 # homeassistant.components.zha
 zha-quirks==0.0.59
@@ -2457,7 +2457,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.12.0
+zigpy-deconz==0.12.1
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0
@@ -2466,7 +2466,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.5.2
+zigpy-znp==0.5.3
 
 # homeassistant.components.zha
 zigpy==0.36.1
