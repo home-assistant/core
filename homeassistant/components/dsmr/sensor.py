@@ -238,7 +238,7 @@ class DSMREntity(SensorEntity):
         return attr
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value = self.get_dsmr_object_attr("value")
         if value is None:
@@ -258,7 +258,7 @@ class DSMREntity(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self.get_dsmr_object_attr("unit")
 
