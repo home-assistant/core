@@ -101,19 +101,18 @@ class NetgearRouter:
         entity_registry = er.async_get(self.hass)
         entries = er.async_entries_for_config_entry(entity_registry, self.entry_id)
         for entity_entry in entries:
-            if entity_entry.unique_id in tracked_list:
-                _LOGGER.error(entity_entry)
-                self.devices[entity_entry.unique_id] = {
-                    "name": entity_entry.original_name,
-                    "active": False,
-                    "last_seen": datetime.min,
-                    "device_model": None,
-                    "device_type": None,
-                    "type": None,
-                    "link_rate": None,
-                    "signal": None,
-                    "ip": None,
-                }
+            _LOGGER.error(entity_entry)
+            self.devices[entity_entry.unique_id] = {
+                "name": entity_entry.original_name,
+                "active": False,
+                "last_seen": datetime.min,
+                "device_model": None,
+                "device_type": None,
+                "type": None,
+                "link_rate": None,
+                "signal": None,
+                "ip": None,
+            }
 
         await self.async_update_device_trackers()
         self._unsub_dispatcher = async_track_time_interval(
