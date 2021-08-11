@@ -62,7 +62,7 @@ class LitterRobotSleepTimeSensor(LitterRobotPropertySensor):
     def native_value(self) -> str | None:
         """Return the state."""
         if self.robot.sleep_mode_enabled:
-            return super().state.isoformat()
+            return super().native_value.isoformat()
         return None
 
     @property
