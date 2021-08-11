@@ -1,12 +1,19 @@
 """Support for Xiaomi Mi Temp BLE environmental sensor."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import btlewrap
 from btlewrap.base import BluetoothBackendException
 from mitemp_bt import mitemp_bt_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_MAC,
@@ -44,18 +51,34 @@ DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
 
 
-# Sensor types are defined like: Name, units
-SENSOR_TYPES = {
-    "temperature": [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
-    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", PERCENTAGE],
-    "battery": [DEVICE_CLASS_BATTERY, "Battery", PERCENTAGE],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        unit_of_measurement=TEMP_CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=DEVICE_CLASS_HUMIDITY,
+        unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="battery",
+        name="Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+        unit_of_measurement=PERCENTAGE,
+    ),
+)
+
+SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
@@ -80,71 +103,39 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         adapter=config.get(CONF_ADAPTER),
         backend=backend,
     )
+    prefix = config.get(CONF_NAME)
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)
     poller.retries = config.get(CONF_RETRIES)
 
-    devs = []
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    entities = [
+        MiTempBtSensor(poller, prefix, force_update, median, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
 
-    for parameter in config[CONF_MONITORED_CONDITIONS]:
-        device = SENSOR_TYPES[parameter][0]
-        name = SENSOR_TYPES[parameter][1]
-        unit = SENSOR_TYPES[parameter][2]
-
-        prefix = config.get(CONF_NAME)
-        if prefix:
-            name = f"{prefix} {name}"
-
-        devs.append(
-            MiTempBtSensor(poller, parameter, device, name, unit, force_update, median)
-        )
-
-    add_entities(devs)
+    add_entities(entities)
 
 
 class MiTempBtSensor(SensorEntity):
     """Implementing the MiTempBt sensor."""
 
-    def __init__(self, poller, parameter, device, name, unit, force_update, median):
+    def __init__(
+        self, poller, prefix, force_update, median, description: SensorEntityDescription
+    ):
         """Initialize the sensor."""
+        self.entity_description = description
         self.poller = poller
-        self.parameter = parameter
-        self._device = device
-        self._unit = unit
-        self._name = name
-        self._state = None
-        self.data = []
-        self._force_update = force_update
+        self.data: list[Any] = []
+        if prefix:
+            self._attr_name = f"{prefix} {description.name}"
+        self._attr_force_update = force_update
         # Median is used to filter out outliers. median of 3 will filter
         # single outliers, while  median of 5 will filter double outliers
         # Use median_count = 1 if no filtering is required.
         self.median_count = median
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit
-
-    @property
-    def device_class(self):
-        """Device class of this entity."""
-        return self._device
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
 
     def update(self):
         """
@@ -154,7 +145,7 @@ class MiTempBtSensor(SensorEntity):
         """
         try:
             _LOGGER.debug("Polling data for %s", self.name)
-            data = self.poller.parameter_value(self.parameter)
+            data = self.poller.parameter_value(self.entity_description.key)
         except OSError as ioerr:
             _LOGGER.warning("Polling error %s", ioerr)
             return
@@ -174,7 +165,7 @@ class MiTempBtSensor(SensorEntity):
             if self.data:
                 self.data = self.data[1:]
             else:
-                self._state = None
+                self._attr_state = None
             return
 
         if len(self.data) > self.median_count:
@@ -183,6 +174,6 @@ class MiTempBtSensor(SensorEntity):
         if len(self.data) == self.median_count:
             median = sorted(self.data)[int((self.median_count - 1) / 2)]
             _LOGGER.debug("Median is: %s", median)
-            self._state = median
+            self._attr_state = median
         else:
             _LOGGER.debug("Not yet enough data for median calculation")
