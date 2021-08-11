@@ -1,4 +1,6 @@
 """Demo camera platform that has a fake camera."""
+from __future__ import annotations
+
 from pathlib import Path
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
@@ -25,7 +27,9 @@ class DemoCamera(Camera):
         self.is_streaming = True
         self._images_index = 0
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes:
         """Return a faked still image response."""
         self._images_index = (self._images_index + 1) % 4
         image_path = Path(__file__).parent / f"demo_{self._images_index}.jpg"

@@ -26,7 +26,7 @@ PyRMVtransport==0.3.2
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
-# homeassistant.components.homekit
+# homeassistant.components.camera
 PyTurboJPEG==1.5.0
 
 # homeassistant.components.xiaomi_aqara
