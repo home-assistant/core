@@ -22,6 +22,7 @@ FLOWS = [
     "alarmdecoder",
     "almond",
     "ambee",
+    "amberelectric",
     "ambiclimate",
     "ambient_station",
     "apple_tv",

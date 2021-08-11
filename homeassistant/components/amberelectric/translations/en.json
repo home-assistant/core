@@ -1,0 +1,27 @@
+{
+    "title": "amberelectric",
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "API Token",
+                    "site_id": "Site ID",
+                    "site_nmi": "Site NMI",
+                    "site_name": "Site Name"
+                },
+                "title": "Amber Electric",
+                "description": "Go to https://app.amber.com.au/developers to generate an API key"
+            },
+            "site": {
+                "data": {
+                    "api_token": "API Token",
+                    "site_id": "Site ID",
+                    "site_nmi": "Site NMI",
+                    "site_name": "Site Name"
+                },
+                "title": "Amber Electric",
+                "description": "Select the NMI of the site you would like to add"
+            }
+        }
+    }
+}
