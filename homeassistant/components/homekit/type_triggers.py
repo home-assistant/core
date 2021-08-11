@@ -23,13 +23,12 @@ class DeviceTriggerAccessory(HomeAccessory):
     """Generate a Programmable switch."""
 
     def __init__(self, *args, device_triggers=None, device_id=None):
-        """Initialize a TemperatureSensor accessory object."""
+        """Initialize a Programmable switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH, device_id=device_id)
         self._device_triggers = device_triggers
         self._remove_triggers = None
         self._triggers = []
         for idx, trigger in enumerate(device_triggers):
-            _LOGGER.warning("Set up up trigger: %s", trigger)
             type_ = trigger.get("type")
             subtype = trigger.get("subtype")
             trigger_name = f"{type_} {subtype}" if subtype else type_
