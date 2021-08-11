@@ -92,7 +92,7 @@ class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
@@ -113,7 +113,7 @@ class SystemBridgeBatterySensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.battery.percent
@@ -135,7 +135,7 @@ class SystemBridgeBatteryTimeRemainingSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         if bridge.battery.timeRemaining is None:
@@ -159,7 +159,7 @@ class SystemBridgeCpuSpeedSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.cpu.currentSpeed.avg
@@ -181,7 +181,7 @@ class SystemBridgeCpuTemperatureSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.cpu.temperature.main
@@ -203,7 +203,7 @@ class SystemBridgeCpuVoltageSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.cpu.cpu.voltage
@@ -229,7 +229,7 @@ class SystemBridgeFilesystemSensor(SystemBridgeSensor):
         self._fs_key = key
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -268,7 +268,7 @@ class SystemBridgeMemoryFreeSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -294,7 +294,7 @@ class SystemBridgeMemoryUsedSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -320,7 +320,7 @@ class SystemBridgeMemoryUsedPercentageSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -346,7 +346,7 @@ class SystemBridgeKernelSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.os.kernel
@@ -368,7 +368,7 @@ class SystemBridgeOsSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return f"{bridge.os.distro} {bridge.os.release}"
@@ -390,7 +390,7 @@ class SystemBridgeProcessesLoadSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -431,7 +431,7 @@ class SystemBridgeBiosVersionSensor(SystemBridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.system.bios.version
