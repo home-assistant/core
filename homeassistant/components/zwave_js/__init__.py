@@ -224,7 +224,7 @@ async def async_setup_entry(  # noqa: C901
             entry: ConfigEntry,
             client: ZwaveClient,
             device: device_registry.DeviceEntry,
-            disc_info: ZwaveDiscoveryInfo,
+            _disc_info: ZwaveDiscoveryInfo,
             registered_unique_ids: dict[str, dict[str, set[str]]],
             platform_setup_tasks: dict[str, asyncio.Task],
             value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
@@ -240,21 +240,21 @@ async def async_setup_entry(  # noqa: C901
 
             value: Value = event["value"]
 
-            for disc_info in async_discover_value(value):
+            for _disc_info in async_discover_value(value):
                 await async_handle_discovered_info(
                     hass,
                     ent_reg,
                     entry,
                     client,
                     device,
-                    disc_info,
+                    _disc_info,
                     registered_unique_ids,
                     platform_setup_tasks,
                     value_updates_disc_info,
                 )
 
             listen_to_value_updated_events_if_needed(
-                disc_info.node, value_updates_disc_info
+                _disc_info.node, value_updates_disc_info
             )
 
         # add listener for value update events
