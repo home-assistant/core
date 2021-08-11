@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
-    SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -282,7 +281,7 @@ class FroniusPowerFlow(FroniusAdapter):
 class FroniusTemplateSensor(SensorEntity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
-    def __init__(self, parent: FroniusAdapter, key: str):
+    def __init__(self, parent: FroniusAdapter, key: str) -> None:
         """Initialize a singular value sensor."""
         self._key = key
         self._attr_name = f"{key.replace('_', ' ').capitalize()} {parent.name}"
@@ -308,6 +307,7 @@ class FroniusTemplateSensor(SensorEntity):
 
     @property
     def device_class(self) -> str | None:
+        """Return the class of this device, depends on prefix of sensor key."""
         for prefix, device_class in PREFIX_DEVICE_CLASS_MAPPING:
             if self._key.startswith(prefix):
                 return device_class
@@ -315,15 +315,17 @@ class FroniusTemplateSensor(SensorEntity):
 
     @property
     def state_class(self) -> str | None:
+        """Return class of the sensor state, is a measurement."""
         return STATE_CLASS_MEASUREMENT
 
     @property
     def last_reset(self) -> dt.dt.datetime | None:
+        """Return the time when the sensor was last reset, if it is a meter."""
         if self._key.endswith("day"):
             return dt.start_of_local_day()
-        elif self._key.endswith("year"):
+        if self._key.endswith("year"):
             return dt.start_of_local_day(dt.dt.date(dt.now().year, 1, 1))
-        elif self._key.endswith("total"):
+        if self._key.endswith("total") or self._key.startswith("energy_real"):
             return dt.utc_from_timestamp(0)
         return None
 
