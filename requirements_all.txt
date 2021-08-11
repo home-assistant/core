@@ -1610,7 +1610,7 @@ pymonoprice==0.3
 pymsteams==0.1.12
 
 # homeassistant.components.myq
-pymyq==3.1.1
+pymyq==3.1.2
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0
