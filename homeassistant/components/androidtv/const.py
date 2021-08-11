@@ -4,7 +4,7 @@ DOMAIN = "androidtv"
 ANDROID_DEV = DOMAIN
 ANDROID_DEV_OPT = "androidtv_opt"
 
-CONF_ADB_KEY = "adb_key"
+CONF_ADBKEY = "adbkey"
 CONF_ADB_SERVER_IP = "adb_server_ip"
 CONF_ADB_SERVER_PORT = "adb_server_port"
 CONF_APPS = "apps"

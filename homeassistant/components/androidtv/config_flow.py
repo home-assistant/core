@@ -12,9 +12,9 @@ from homeassistant.helpers import config_validation as cv
 
 from . import async_connect_androidtv, validate_state_det_rules
 from .const import (
-    CONF_ADB_KEY,
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
+    CONF_ADBKEY,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
@@ -48,11 +48,7 @@ def _is_file(value):
     """Validate that the value is an existing file."""
     file_in = os.path.expanduser(str(value))
 
-    if not os.path.isfile(file_in):
-        return False
-    if not os.access(file_in, os.R_OK):
-        return False
-    return True
+    return os.path.isfile(file_in) and os.access(file_in, os.R_OK)
 
 
 def _get_ip(host):
@@ -90,7 +86,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS
                     ): vol.In(DEVICE_CLASSES),
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_ADB_KEY): str,
+                    vol.Optional(CONF_ADBKEY): str,
                     vol.Optional(CONF_ADB_SERVER_IP): str,
                     vol.Required(
                         CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
@@ -126,7 +122,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         self._unique_id = None
         self._host = user_input[CONF_HOST]
-        adb_key = user_input.get(CONF_ADB_KEY)
+        adb_key = user_input.get(CONF_ADBKEY)
         adb_server = user_input.get(CONF_ADB_SERVER_IP)
 
         if adb_key and adb_server:
@@ -176,7 +172,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for Android TV."""
+    """Handle an option flow for Android TV."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""

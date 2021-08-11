@@ -9,9 +9,9 @@ from androidtv.exceptions import LockNotAcquiredException
 import pytest
 
 from homeassistant.components.androidtv.const import (
-    CONF_ADB_KEY,
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
+    CONF_ADBKEY,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_TURN_OFF_COMMAND,
@@ -337,7 +337,7 @@ async def test_adb_shell_returns_none_firetv_adb_server(hass):
 async def test_setup_with_adbkey(hass):
     """Test that setup succeeds when using an ADB key."""
     config = copy.deepcopy(CONFIG_ANDROIDTV_PYTHON_ADB)
-    config[DOMAIN][CONF_ADB_KEY] = hass.config.path("user_provided_adbkey")
+    config[DOMAIN][CONF_ADBKEY] = hass.config.path("user_provided_adbkey")
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
 

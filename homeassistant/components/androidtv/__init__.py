@@ -23,9 +23,9 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from .const import (
     ANDROID_DEV,
     ANDROID_DEV_OPT,
-    CONF_ADB_KEY,
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
+    CONF_ADBKEY,
     CONF_STATE_DETECTION_RULES,
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _setup_androidtv(hass, config):
     """Generate an ADB key (if needed) and load it."""
-    adbkey = config.get(CONF_ADB_KEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
+    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
         if not os.path.isfile(adbkey):

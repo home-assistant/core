@@ -11,9 +11,9 @@ from homeassistant.components.androidtv.config_flow import (
     CONF_APP_NAME,
 )
 from homeassistant.components.androidtv.const import (
-    CONF_ADB_KEY,
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
+    CONF_ADBKEY,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
@@ -37,7 +37,7 @@ from tests.components.androidtv.patchers import (
     PATCH_ISFILE,
 )
 
-ADB_KEY = "adbkey"
+ADBKEY = "adbkey"
 HOST = "127.0.0.1"
 SERIAL_NO = "12345"
 
@@ -142,7 +142,7 @@ async def test_import(hass):
 async def test_user_adbkey(hass):
     """Test user step with adbkey file."""
     config_data = CONFIG_PYTHON_ADB.copy()
-    config_data[CONF_ADB_KEY] = ADB_KEY
+    config_data[CONF_ADBKEY] = ADBKEY
 
     with patch(
         CONNECT_METHOD,
@@ -167,7 +167,7 @@ async def test_import_data(hass):
     """Test import from configuration file."""
     config_data = CONFIG_PYTHON_ADB.copy()
     config_data[CONF_PLATFORM] = DOMAIN
-    config_data[CONF_ADB_KEY] = ADB_KEY
+    config_data[CONF_ADBKEY] = ADBKEY
     config_data[CONF_TURN_OFF_COMMAND] = "off"
     platform_data = {MP_DOMAIN: config_data}
 
@@ -186,7 +186,7 @@ async def test_error_both_key_server(hass):
     """Test we abort if both adb key and server are provided."""
     config_data = CONFIG_ADB_SERVER.copy()
 
-    config_data[CONF_ADB_KEY] = ADB_KEY
+    config_data[CONF_ADBKEY] = ADBKEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -200,7 +200,7 @@ async def test_error_both_key_server(hass):
 async def test_error_invalid_key(hass):
     """Test we abort if component is already setup."""
     config_data = CONFIG_PYTHON_ADB.copy()
-    config_data[CONF_ADB_KEY] = ADB_KEY
+    config_data[CONF_ADBKEY] = ADBKEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
