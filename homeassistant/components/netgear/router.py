@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DEFAULT_CONSIDER_HOME, DEFAULT_METHOD_VERSION, DOMAIN
 from .errors import CannotLoginException
@@ -107,7 +108,7 @@ class NetgearRouter:
         now = dt_util.utcnow()
 
         for ntg_device in ntg_devices:
-            device_mac = ntg_device.mac
+            device_mac = format_mac(ntg_device.mac)
 
             if self._method_version == 2 and not ntg_device.link_rate:
                 continue
@@ -116,6 +117,7 @@ class NetgearRouter:
                 new_device = True
 
             self.devices[device_mac] = ntg_device._asdict()
+            self.devices["mac"] = device_mac
             self.devices[device_mac]["last_seen"] = now
 
         for device in self.devices.values():
