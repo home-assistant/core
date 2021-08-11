@@ -657,8 +657,8 @@ async def test_light_min_max_mireds(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
-    acc.char_color_temperature.properties["maxValue"] == 500
-    acc.char_color_temperature.properties["minValue"] == 100
+    acc.char_color_temp.properties["maxValue"] == 500
+    acc.char_color_temp.properties["minValue"] == 100
 
 
 async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
