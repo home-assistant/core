@@ -177,8 +177,7 @@ async def _async_get_image(
                 if (
                     width is not None
                     and height is not None
-                    and "jpeg" in content_type
-                    or "jpg" in content_type
+                    and ("jpeg" in content_type or "jpg" in content_type)
                 ):
                     assert width is not None
                     assert height is not None
