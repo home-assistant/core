@@ -70,7 +70,7 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -99,18 +99,6 @@ def generate_filter(
 @pytest.fixture(autouse=True)
 def always_patch_driver(hk_driver):
     """Load the hk_driver fixture."""
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 def _mock_homekit(hass, entry, homekit_mode, entity_filter=None):
