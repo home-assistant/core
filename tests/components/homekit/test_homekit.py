@@ -70,7 +70,7 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -99,18 +99,6 @@ def generate_filter(
 @pytest.fixture(autouse=True)
 def always_patch_driver(hk_driver):
     """Load the hk_driver fixture."""
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 def _mock_homekit(hass, entry, homekit_mode, entity_filter=None):
@@ -178,6 +166,7 @@ async def test_setup_min(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
     # Test auto start enabled
@@ -214,6 +203,7 @@ async def test_setup_auto_start_disabled(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
     # Test auto_start disabled
@@ -695,7 +685,7 @@ async def test_homekit_unpair(hass, device_reg, mock_zeroconf):
         homekit.status = STATUS_RUNNING
 
         state = homekit.driver.state
-        state.paired_clients = {"client1": "any"}
+        state.add_paired_client("client1", "any")
         formatted_mac = device_registry.format_mac(state.mac)
         hk_bridge_dev = device_reg.async_get_device(
             {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
@@ -1250,6 +1240,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
     # Test auto start enabled
@@ -1518,6 +1509,7 @@ async def test_reload(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
     yaml_path = os.path.join(
         _get_fixtures_base_path(),
@@ -1556,6 +1548,7 @@ async def test_reload(hass, mock_zeroconf):
         None,
         entry.entry_id,
         entry.title,
+        devices=[],
     )
 
 

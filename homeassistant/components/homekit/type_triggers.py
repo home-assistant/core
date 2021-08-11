@@ -23,32 +23,32 @@ class DeviceTriggerAccessory(HomeAccessory):
     """Generate a Programmable switch."""
 
     def __init__(self, *args, device_triggers=None, device_id=None):
-        """Initialize a TemperatureSensor accessory object."""
+        """Initialize a Programmable switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH, device_id=device_id)
         self._device_triggers = device_triggers
         self._remove_triggers = None
-        self._triggers = []
+        self.triggers = []
         for idx, trigger in enumerate(device_triggers):
-            _LOGGER.warning("Set up up trigger: %s", trigger)
             type_ = trigger.get("type")
             subtype = trigger.get("subtype")
+            trigger_name = f"{type_} {subtype}" if subtype else type_
             serv_service_label = self.add_preload_service(
                 SERV_SERVICE_LABEL, [CHAR_NAME]
             )
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
-            serv_service_label.configure_char(CHAR_NAME, value=f"{type_} {subtype}")
+            serv_service_label.configure_char(CHAR_NAME, value=trigger_name)
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
             )
-            self._triggers.append(
+            self.triggers.append(
                 serv_stateless_switch.configure_char(
                     CHAR_PROGRAMMABLE_SWITCH_EVENT,
                     value=0,
                     valid_values={"Press": 0},
                 )
             )
-            serv_stateless_switch.configure_char(CHAR_NAME, value=f"{type_} {subtype}")
+            serv_stateless_switch.configure_char(CHAR_NAME, value=trigger_name)
             serv_stateless_switch.configure_char(CHAR_SERVICE_LABEL_INDEX, value=idx)
 
     async def async_trigger(self, run_variables, context=None, skip_condition=False):
@@ -61,7 +61,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             reason = f' by {run_variables["trigger"]["description"]}'
         _LOGGER.debug("Button triggered%s - %s", reason, run_variables)
         idx = int(run_variables["trigger"]["idx"])
-        self._triggers[idx].set_value(0)
+        self.triggers[idx].set_value(0)
 
     # Attach the trigger using the helper in async run
     # and detach it in async stop

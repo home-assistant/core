@@ -521,6 +521,7 @@ class HomeKit:
         self._entry_title = entry_title
         self._homekit_mode = homekit_mode
         self._devices = devices or []
+        self.aid_storage = None
         self.status = STATUS_READY
 
         self.bridge = None
@@ -652,7 +653,7 @@ class HomeKit:
         return None
 
     def add_bridge_triggers_accessory(self, device, device_triggers):
-        """Try trigger accessory to th ebridge."""
+        """Add device automation triggers to the bridge."""
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
@@ -857,7 +858,7 @@ class HomeKit:
                 device = dev_reg.async_get(device_id)
                 if not device:
                     _LOGGER.warning(
-                        "HomeKit %s cannot add device %s because it is missing from the device registry.",
+                        "HomeKit %s cannot add device %s because it is missing from the device registry",
                         self._name,
                         device_id,
                     )

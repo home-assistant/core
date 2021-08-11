@@ -229,21 +229,27 @@ class HomeAccessory(Accessory):
         self.config = config or {}
         if device_id:
             self.device_id = device_id
+            serial_number = device_id
             domain = None
         else:
             self.device_id = None
+            serial_number = entity_id
             domain = split_entity_id(entity_id)[0].replace("_", " ")
 
         if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
         elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
-        else:
+        elif domain:
             manufacturer = f"{MANUFACTURER} {domain}".title()
+        else:
+            manufacturer = MANUFACTURER
         if self.config.get(ATTR_MODEL) is not None:
             model = self.config[ATTR_MODEL]
-        else:
+        elif domain:
             model = domain.title()
+        else:
+            model = MANUFACTURER
         sw_version = None
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
@@ -253,9 +259,7 @@ class HomeAccessory(Accessory):
         self.set_info_service(
             manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
             model=model[:MAX_MODEL_LENGTH],
-            serial_number=device_id[:MAX_SERIAL_LENGTH]
-            if device_id
-            else entity_id[:MAX_SERIAL_LENGTH],
+            serial_number=serial_number[:MAX_SERIAL_LENGTH],
             firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
