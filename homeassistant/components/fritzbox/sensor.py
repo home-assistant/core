@@ -109,8 +109,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
-    """The entity class for FRITZ!SmartHome battery sensors."""
+class FritzBoxSensor(FritzBoxEntity, SensorEntity):
+    """The entity class for FRITZ!SmartHome sensors."""
 
     def __init__(
         self,
@@ -122,13 +122,17 @@ class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
         FritzBoxEntity.__init__(self, entity_info, coordinator, ain)
         self._attr_native_unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
 
+
+class FritzBoxBatterySensor(FritzBoxSensor):
+    """The entity class for FRITZ!SmartHome battery sensors."""
+
     @property
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.device.battery_level  # type: ignore [no-any-return]
 
 
-class FritzBoxPowerSensor(FritzBoxEntity, SensorEntity):
+class FritzBoxPowerSensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome power consumption sensors."""
 
     @property
@@ -139,7 +143,7 @@ class FritzBoxPowerSensor(FritzBoxEntity, SensorEntity):
         return 0.0
 
 
-class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
+class FritzBoxEnergySensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome total energy sensors."""
 
     @property
@@ -156,18 +160,8 @@ class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
         return utc_from_timestamp(0)
 
 
-class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
+class FritzBoxTempSensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome temperature sensors."""
-
-    def __init__(
-        self,
-        entity_info: EntityInfo,
-        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
-        ain: str,
-    ) -> None:
-        """Initialize the FritzBox entity."""
-        FritzBoxEntity.__init__(self, entity_info, coordinator, ain)
-        self._attr_native_unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
 
     @property
     def native_value(self) -> float | None:
