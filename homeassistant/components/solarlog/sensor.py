@@ -65,7 +65,6 @@ class SolarlogSensor(SensorEntity):
         self.device_name = device_name
         self.entity_description = description
         self.data = data
-        self._attr_state = None
         self._attr_name = f"{self.device_name} {self.entity_description.name}"
         self._attr_unique_id = f"{self.entry_id}_{self.entity_description.key}"
 
