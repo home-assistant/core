@@ -61,7 +61,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockSensor(MockEntity):
+class MockSensor(MockEntity, sensor.SensorEntity):
     """Mock Sensor class."""
 
     @property
@@ -70,6 +70,11 @@ class MockSensor(MockEntity):
         return self._handle("device_class")
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit_of_measurement of this sensor."""
-        return self._handle("unit_of_measurement")
+    def native_unit_of_measurement(self):
+        """Return the native unit_of_measurement of this sensor."""
+        return self._handle("native_unit_of_measurement")
+
+    @property
+    def native_value(self):
+        """Return the native value of this sensor."""
+        return self._handle("native_value")
