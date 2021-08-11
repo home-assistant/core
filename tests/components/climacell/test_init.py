@@ -34,7 +34,7 @@ async def test_load_and_unload(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 0
 
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -75,7 +75,7 @@ async def test_migrate_timestep(
     """Test migration to standardized timestep."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=V1_ENTRY_DATA,
+        data={**V1_ENTRY_DATA, CONF_API_VERSION: 3},
         options={CONF_TIMESTEP: old_timestep},
         unique_id=_get_unique_id(hass, V1_ENTRY_DATA),
         version=1,

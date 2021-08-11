@@ -172,6 +172,7 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow for climacell."""
     user_config = _get_config_schema(hass)(MIN_CONFIG)
+    user_config[CONF_API_VERSION] = 3
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=user_config,
