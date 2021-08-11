@@ -40,7 +40,7 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
     StarlineSensorEntityDescription(
         key="battery",
         name_="Battery",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
     StarlineSensorEntityDescription(
         key="balance",
@@ -51,18 +51,18 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
         key="ctemp",
         name_="Interior Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     StarlineSensorEntityDescription(
         key="etemp",
         name_="Engine Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     StarlineSensorEntityDescription(
         key="gsm_lvl",
         name_="GSM Signal",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     StarlineSensorEntityDescription(
         key="fuel",
@@ -77,7 +77,7 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
     StarlineSensorEntityDescription(
         key="mileage",
         name_="Mileage",
-        unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=LENGTH_KILOMETERS,
         icon="mdi:counter",
     ),
 )
@@ -154,7 +154,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
                 return PERCENTAGE
             if type_value == "litres":
                 return VOLUME_LITERS
-        return self.entity_description.unit_of_measurement
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def extra_state_attributes(self):
