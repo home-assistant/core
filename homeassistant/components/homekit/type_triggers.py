@@ -27,7 +27,7 @@ class DeviceTriggerAccessory(HomeAccessory):
         super().__init__(*args, category=CATEGORY_SWITCH, device_id=device_id)
         self._device_triggers = device_triggers
         self._remove_triggers = None
-        self._triggers = []
+        self.triggers = []
         for idx, trigger in enumerate(device_triggers):
             type_ = trigger.get("type")
             subtype = trigger.get("subtype")
@@ -41,7 +41,7 @@ class DeviceTriggerAccessory(HomeAccessory):
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
             )
-            self._triggers.append(
+            self.triggers.append(
                 serv_stateless_switch.configure_char(
                     CHAR_PROGRAMMABLE_SWITCH_EVENT,
                     value=0,
@@ -61,7 +61,7 @@ class DeviceTriggerAccessory(HomeAccessory):
             reason = f' by {run_variables["trigger"]["description"]}'
         _LOGGER.debug("Button triggered%s - %s", reason, run_variables)
         idx = int(run_variables["trigger"]["idx"])
-        self._triggers[idx].set_value(0)
+        self.triggers[idx].set_value(0)
 
     # Attach the trigger using the helper in async run
     # and detach it in async stop
