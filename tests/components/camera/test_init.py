@@ -118,8 +118,31 @@ async def test_get_image_from_camera_with_width_height_scaled(hass, image_mock_u
         )
 
     assert mock_camera.called
-    assert image.content_type == "image/jpeg"
+    assert image.content_type == "image/jpg"
     assert image.content == EMPTY_8_6_JPEG
+
+
+async def test_get_image_from_camera_not_jpeg(hass, image_mock_url):
+    """Grab an image from camera entity that we cannot scale."""
+
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        autospec=True,
+        return_value=b"png",
+    ) as mock_camera:
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera_png", width=4, height=3
+        )
+
+    assert mock_camera.called
+    assert image.content_type == "image/png"
+    assert image.content == b"png"
 
 
 async def test_get_stream_source_from_camera(hass, mock_camera):
@@ -200,7 +223,7 @@ async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"]["content_type"] == "image/jpeg"
+    assert msg["result"]["content_type"] == "image/jpg"
     assert msg["result"]["content"] == base64.b64encode(b"Test").decode("utf-8")
 
 
