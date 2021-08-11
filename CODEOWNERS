@@ -228,6 +228,7 @@ homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit/* @bdraco
 homeassistant/components/homekit_controller/* @Jc2k @bdraco
 homeassistant/components/homematic/* @pvizeli @danielperna84
+homeassistant/components/homewizard_energy/* @DCSBL
 homeassistant/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
