@@ -10,6 +10,7 @@ from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
 
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mysensors import CONF_VERSION, DEFAULT_BAUD_RATE
 from homeassistant.components.mysensors.const import (
@@ -27,14 +28,14 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(autouse=True)
-def device_tracker_storage(mock_device_tracker_conf):
+def device_tracker_storage(mock_device_tracker_conf: list[Device]) -> list[Device]:
     """Mock out device tracker known devices storage."""
     devices = mock_device_tracker_conf
     return devices
 
 
 @pytest.fixture(name="mqtt")
-def mock_mqtt_fixture(hass) -> None:
+def mock_mqtt_fixture(hass: HomeAssistant) -> None:
     """Mock the MQTT integration."""
     hass.config.components.add(MQTT_DOMAIN)
 
@@ -75,14 +76,14 @@ def mock_gateway_features(
 ) -> None:
     """Mock the gateway features."""
 
-    async def mock_start_persistence():
+    async def mock_start_persistence() -> None:
         """Load nodes from via persistence."""
         gateway = transport_class.call_args[0][0]
         gateway.sensors.update(nodes)
 
     tasks.start_persistence.side_effect = mock_start_persistence
 
-    async def mock_start():
+    async def mock_start() -> None:
         """Mock the start method."""
         gateway = transport_class.call_args[0][0]
         gateway.on_conn_made(gateway)
@@ -97,7 +98,7 @@ def transport_fixture(serial_transport: MagicMock) -> MagicMock:
 
 
 @pytest.fixture(name="serial_entry")
-async def serial_entry_fixture(hass) -> MockConfigEntry:
+async def serial_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Create a config entry for a serial gateway."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -126,7 +127,7 @@ async def integration(
     config: dict[str, Any] = {DOMAIN: {CONF_GATEWAYS: [{CONF_DEVICE: device}]}}
     config_entry.add_to_hass(hass)
 
-    def receive_message(message_string) -> None:
+    def receive_message(message_string: str) -> None:
         """Receive a message with the transport.
 
         The message_string parameter is a string in the MySensors message format.
@@ -161,7 +162,7 @@ def gps_sensor_state_fixture() -> dict:
 
 
 @pytest.fixture
-def gps_sensor(gateway_nodes, gps_sensor_state) -> Sensor:
+def gps_sensor(gateway_nodes: dict[int, Sensor], gps_sensor_state: dict) -> Sensor:
     """Load the gps sensor."""
     nodes = update_gateway_nodes(gateway_nodes, gps_sensor_state)
     node = nodes[1]
@@ -175,7 +176,7 @@ def power_sensor_state_fixture() -> dict:
 
 
 @pytest.fixture
-def power_sensor(gateway_nodes, power_sensor_state) -> Sensor:
+def power_sensor(gateway_nodes: dict[int, Sensor], power_sensor_state: dict) -> Sensor:
     """Load the power sensor."""
     nodes = update_gateway_nodes(gateway_nodes, power_sensor_state)
     node = nodes[1]
@@ -189,7 +190,9 @@ def energy_sensor_state_fixture() -> dict:
 
 
 @pytest.fixture
-def energy_sensor(gateway_nodes, energy_sensor_state) -> Sensor:
+def energy_sensor(
+    gateway_nodes: dict[int, Sensor], energy_sensor_state: dict
+) -> Sensor:
     """Load the energy sensor."""
     nodes = update_gateway_nodes(gateway_nodes, energy_sensor_state)
     node = nodes[1]
@@ -203,7 +206,7 @@ def sound_sensor_state_fixture() -> dict:
 
 
 @pytest.fixture
-def sound_sensor(gateway_nodes, sound_sensor_state) -> Sensor:
+def sound_sensor(gateway_nodes: dict[int, Sensor], sound_sensor_state: dict) -> Sensor:
     """Load the sound sensor."""
     nodes = update_gateway_nodes(gateway_nodes, sound_sensor_state)
     node = nodes[1]
@@ -217,7 +220,9 @@ def distance_sensor_state_fixture() -> dict:
 
 
 @pytest.fixture
-def distance_sensor(gateway_nodes, distance_sensor_state) -> Sensor:
+def distance_sensor(
+    gateway_nodes: dict[int, Sensor], distance_sensor_state: dict
+) -> Sensor:
     """Load the distance sensor."""
     nodes = update_gateway_nodes(gateway_nodes, distance_sensor_state)
     node = nodes[1]
@@ -231,7 +236,9 @@ def temperature_sensor_state_fixture() -> dict:
 
 
 @pytest.fixture
-def temperature_sensor(gateway_nodes, temperature_sensor_state) -> Sensor:
+def temperature_sensor(
+    gateway_nodes: dict[int, Sensor], temperature_sensor_state: dict
+) -> Sensor:
     """Load the temperature sensor."""
     nodes = update_gateway_nodes(gateway_nodes, temperature_sensor_state)
     node = nodes[1]
