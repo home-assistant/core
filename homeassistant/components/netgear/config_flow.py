@@ -56,19 +56,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input = None):
         """Manage the options."""
         if user_input is not None:
-            new_data = user_input
-
-            # convert string to list
-            tracked_list_str = user_input.get(CONF_TRACKED_LIST, "")
-            tracked_list = []
-            tracked_list_unformatted = []
-            if tracked_list_str:
-                tracked_list_unformatted = tracked_list_str.replace(" ", "").split(",")
-            for mac in tracked_list_unformatted:
-                tracked_list.append(format_mac(mac))
-            new_data[CONF_TRACKED_LIST] = tracked_list
-
-            return self.async_create_entry(title="", data=new_data)
+            return self.async_create_entry(title="", data=user_input)
 
         settings_schema = vol.Schema(
             {

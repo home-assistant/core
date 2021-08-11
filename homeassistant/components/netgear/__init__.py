@@ -14,6 +14,19 @@ from .router import NetgearRouter
 _LOGGER = logging.getLogger(__name__)
 
 
+def convert_tracked_list(tracked_list_str):
+    """Convert tracked list string to a list."""
+    tracked_list = []
+    tracked_list_unformatted = []
+    if tracked_list_str:
+        tracked_list_unformatted = tracked_list_str.replace(" ", "").split(",")
+
+    for mac in tracked_list_unformatted:
+        tracked_list.append(format_mac(mac))
+
+    return tracked_list
+
+
 async def async_setup(hass, config):
     """Set up Netgear integration."""
     return True

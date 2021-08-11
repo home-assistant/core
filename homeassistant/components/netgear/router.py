@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.device_registry import format_mac
 
+from . import convert_tracked_list
 from .const import CONF_METHOD_VERSION, CONF_CONSIDER_HOME, CONF_TRACKED_LIST, DEFAULT_CONSIDER_HOME, DEFAULT_METHOD_VERSION, DOMAIN
 from .errors import CannotLoginException
 
@@ -60,7 +61,7 @@ class NetgearRouter:
         
         self._method_version = entry.options.get(CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION)
         consider_home_int = entry.options.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds())
-        self._tracked_list = entry.options.get(CONF_TRACKED_LIST, [])
+        self._tracked_list = convert_tracked_list(entry.options.get(CONF_TRACKED_LIST, ""))
         self._consider_home = timedelta(seconds=consider_home_int)
 
         self._api: Netgear = None
