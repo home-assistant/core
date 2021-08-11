@@ -12,8 +12,9 @@
         "step": {
             "user": {
                 "data": {
+                    "mfa": "MFA-Code (optional)",
                     "password": "Passwort",
-                    "username": "E-Mail-Adresse"
+                    "username": "E-Mail"
                 },
                 "description": "Bitte gib deine Daten ein.",
                 "title": "Tesla - Konfiguration"

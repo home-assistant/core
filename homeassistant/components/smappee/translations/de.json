@@ -9,7 +9,7 @@
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
             "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
         },
-        "flow_title": "Smappee: {name}",
+        "flow_title": "{name}",
         "step": {
             "environment": {
                 "data": {

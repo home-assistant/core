@@ -8,6 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_DEFAULT_NAME,
     TEMP_FAHRENHEIT,
 )
@@ -68,6 +69,7 @@ class TemperSensor(SensorEntity):
         self.current_value = None
         self._name = name
         self.set_temper_device(temper_device)
+        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
 
     @property
     def name(self):

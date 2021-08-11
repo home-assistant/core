@@ -1,8 +1,15 @@
 """Config flow for ezviz."""
 import logging
 
-from pyezviz.client import EzvizClient, HTTPError, InvalidURL, PyEzvizError
-from pyezviz.test_cam_rtsp import AuthTestResultFailed, InvalidHost, TestRTSPAuth
+from pyezviz.client import EzvizClient
+from pyezviz.exceptions import (
+    AuthTestResultFailed,
+    HTTPError,
+    InvalidHost,
+    InvalidURL,
+    PyEzvizError,
+)
+from pyezviz.test_cam_rtsp import TestRTSPAuth
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, OptionsFlow

@@ -156,6 +156,26 @@ class TodSensor(BinarySensorEntity):
         self._time_after += self._after_offset
         self._time_before += self._before_offset
 
+    def _turn_to_next_day(self):
+        """Turn to to the next day."""
+        if is_sun_event(self._after):
+            self._time_after = get_astral_event_next(
+                self.hass, self._after, self._time_after - self._after_offset
+            )
+            self._time_after += self._after_offset
+        else:
+            # Offset is already there
+            self._time_after += timedelta(days=1)
+
+        if is_sun_event(self._before):
+            self._time_before = get_astral_event_next(
+                self.hass, self._before, self._time_before - self._before_offset
+            )
+            self._time_before += self._before_offset
+        else:
+            # Offset is already there
+            self._time_before += timedelta(days=1)
+
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         self._calculate_boudary_time()
@@ -182,7 +202,7 @@ class TodSensor(BinarySensorEntity):
         if now < self._time_before:
             self._next_update = self._time_before
             return
-        self._calculate_boudary_time()
+        self._turn_to_next_day()
         self._next_update = self._time_after
 
     @callback

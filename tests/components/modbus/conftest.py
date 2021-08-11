@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
 _LOGGER = logging.getLogger(__name__)
@@ -39,9 +39,15 @@ def mock_pymodbus():
         yield mock_pb
 
 
-@pytest.fixture
-async def mock_modbus(hass, mock_pymodbus):
+@pytest.fixture(
+    params=[
+        {"testLoad": True},
+    ],
+)
+async def mock_modbus(hass, caplog, request, do_config):
     """Load integration modbus using mocked pymodbus."""
+
+    caplog.set_level(logging.WARNING)
     config = {
         DOMAIN: [
             {
@@ -49,12 +55,26 @@ async def mock_modbus(hass, mock_pymodbus):
                 CONF_HOST: "modbusTestHost",
                 CONF_PORT: 5501,
                 CONF_NAME: TEST_MODBUS_NAME,
+                **do_config,
             }
         ]
     }
-    assert await async_setup_component(hass, DOMAIN, config) is True
-    await hass.async_block_till_done()
-    yield mock_pymodbus
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+    ) as mock_pb:
+        if request.param["testLoad"]:
+            assert await async_setup_component(hass, DOMAIN, config) is True
+        else:
+            await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        yield mock_pb
+
+
+@pytest.fixture
+async def mock_test_state(hass, request):
+    """Mock restore cache."""
+    mock_restore_cache(hass, request.param)
+    return request.param
 
 
 # dataclass
@@ -77,7 +97,6 @@ async def base_test(
     register_words,
     expected,
     method_discovery=False,
-    check_config_only=False,
     config_modbus=None,
     scan_interval=None,
     expect_init_to_fail=False,
@@ -97,12 +116,9 @@ async def base_test(
 
     mock_sync = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        autospec=True,
         return_value=mock_sync,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
     ):
 
         # Setup inputs for the sensor
@@ -165,8 +181,6 @@ async def base_test(
                 assert device is None
             elif device is None:
                 pytest.fail("CONFIG failed, see output")
-        if check_config_only:
-            return
 
         # Trigger update call with time_changed event
         now = now + timedelta(seconds=scan_interval + 60)
@@ -177,37 +191,6 @@ async def base_test(
         # Check state
         entity_id = f"{entity_domain}.{device_name}"
         return hass.states.get(entity_id).state
-
-
-async def base_config_test(
-    hass,
-    config_device,
-    device_name,
-    entity_domain,
-    array_name_discovery,
-    array_name_old_config,
-    method_discovery=False,
-    config_modbus=None,
-    expect_init_to_fail=False,
-    expect_setup_to_fail=False,
-):
-    """Check config of device for given config."""
-
-    await base_test(
-        hass,
-        config_device,
-        device_name,
-        entity_domain,
-        array_name_discovery,
-        array_name_old_config,
-        None,
-        None,
-        method_discovery=method_discovery,
-        check_config_only=True,
-        config_modbus=config_modbus,
-        expect_init_to_fail=expect_init_to_fail,
-        expect_setup_to_fail=expect_setup_to_fail,
-    )
 
 
 async def prepare_service_update(hass, config):

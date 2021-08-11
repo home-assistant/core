@@ -173,10 +173,10 @@ class AugustData(AugustSubscriberMixin):
 
     async def _async_refresh_device_detail_by_ids(self, device_ids_list):
         await asyncio.gather(
-            *[
+            *(
                 self._async_refresh_device_detail_by_id(device_id)
                 for device_id in device_ids_list
-            ]
+            )
         )
 
     async def _async_refresh_device_detail_by_id(self, device_id):

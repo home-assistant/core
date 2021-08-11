@@ -64,7 +64,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 user = await self._awair.user()
                 devices = await user.devices()
                 results = await gather(
-                    *[self._fetch_air_data(device) for device in devices]
+                    *(self._fetch_air_data(device) for device in devices)
                 )
                 return {result.device.uuid: result for result in results}
             except AuthError as err:

@@ -262,7 +262,7 @@ class RMVDepartureData:
             elif journey["minutes"] < self._time_offset:
                 continue
 
-            for attr in ["direction", "departure_time", "product", "minutes"]:
+            for attr in ("direction", "departure_time", "product", "minutes"):
                 _nextdep[attr] = journey.get(attr, "")
 
             _nextdep["line"] = journey.get("number", "")

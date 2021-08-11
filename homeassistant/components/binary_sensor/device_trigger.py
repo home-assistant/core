@@ -1,14 +1,15 @@
 """Provides device triggers for binary sensors."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import (
@@ -177,7 +178,7 @@ ENTITY_TRIGGERS = {
 }
 
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
@@ -220,10 +221,7 @@ async def async_get_triggers(hass, device_id):
     ]
 
     for entry in entries:
-        device_class = DEVICE_CLASS_NONE
-        state = hass.states.get(entry.entity_id)
-        if state:
-            device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
 
         templates = ENTITY_TRIGGERS.get(
             device_class, ENTITY_TRIGGERS[DEVICE_CLASS_NONE]

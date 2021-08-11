@@ -202,7 +202,7 @@ class MVGLiveData:
 
             # now select the relevant data
             _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
-            for k in ["destination", "linename", "time", "direction", "product"]:
+            for k in ("destination", "linename", "time", "direction", "product"):
                 _nextdep[k] = _departure.get(k, "")
             _nextdep["time"] = int(_nextdep["time"])
             self.departures.append(_nextdep)

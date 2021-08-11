@@ -2,7 +2,7 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_POWER,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
 )
 
@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Max Current",
             "max_current",
             "mdi:flash",
-            ELECTRICAL_CURRENT_AMPERE,
+            ELECTRIC_CURRENT_AMPERE,
         ),
         KebaSensor(
             keba,

@@ -11,13 +11,13 @@
             "unknown": "Une erreur inconnue s'est produite"
         },
         "error": {
-            "linking": "Une erreur inconnue s'est produite lors de la liaison entre le pont et Home Assistant",
+            "linking": "Erreur inattendue",
             "register_failed": "\u00c9chec d'enregistrement. Veuillez r\u00e9essayer."
         },
         "step": {
             "init": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP"
+                    "host": "H\u00f4te"
                 },
                 "title": "Choisissez le pont Philips Hue"
             },

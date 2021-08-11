@@ -46,10 +46,8 @@ async def async_setup_entry(
     coordinator = data[COORDINATOR_CENTRAL]
 
     entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
-        SynoDSMUtilSensor(
-            api, sensor_type, UTILISATION_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in UTILISATION_SENSORS
+        SynoDSMUtilSensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in UTILISATION_SENSORS.items()
     ]
 
     # Handle all volumes
@@ -59,11 +57,11 @@ async def async_setup_entry(
                 SynoDSMStorageSensor(
                     api,
                     sensor_type,
-                    STORAGE_VOL_SENSORS[sensor_type],
+                    sensor,
                     coordinator,
                     volume,
                 )
-                for sensor_type in STORAGE_VOL_SENSORS
+                for sensor_type, sensor in STORAGE_VOL_SENSORS.items()
             ]
 
     # Handle all disks
@@ -73,18 +71,16 @@ async def async_setup_entry(
                 SynoDSMStorageSensor(
                     api,
                     sensor_type,
-                    STORAGE_DISK_SENSORS[sensor_type],
+                    sensor,
                     coordinator,
                     disk,
                 )
-                for sensor_type in STORAGE_DISK_SENSORS
+                for sensor_type, sensor in STORAGE_DISK_SENSORS.items()
             ]
 
     entities += [
-        SynoDSMInfoSensor(
-            api, sensor_type, INFORMATION_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in INFORMATION_SENSORS
+        SynoDSMInfoSensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in INFORMATION_SENSORS.items()
     ]
 
     async_add_entities(entities)

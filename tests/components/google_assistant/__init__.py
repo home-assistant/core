@@ -383,6 +383,13 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "lock.poorly_installed_door",
+        "name": {"name": "Poorly Installed Door"},
+        "traits": ["action.devices.traits.LockUnlock"],
+        "type": "action.devices.types.LOCK",
+        "willReportState": False,
+    },
+    {
         "id": "alarm_control_panel.alarm",
         "name": {"name": "Alarm"},
         "traits": ["action.devices.traits.ArmDisarm"],
@@ -403,6 +410,17 @@ DEMO_DEVICES = [
     {
         "id": "light.office_rgbw_lights",
         "name": {"name": "Office RGBW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
+    {
+        "id": "light.entrance_color_white_lights",
+        "name": {"name": "Entrance Color + White Lights"},
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",

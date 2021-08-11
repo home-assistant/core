@@ -5,21 +5,20 @@ from ipaddress import ip_address
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import get_local_ip
 
 from .const import (
     CONF_LOCAL_IP,
     CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
-    DISCOVERY_LOCATION,
-    DISCOVERY_ST,
-    DISCOVERY_UDN,
     DOMAIN,
     DOMAIN_CONFIG,
     DOMAIN_DEVICES,
@@ -49,24 +48,15 @@ async def async_construct_device(hass: HomeAssistant, udn: str, st: str) -> Devi
     """Discovery devices and construct a Device for one."""
     # pylint: disable=invalid-name
     _LOGGER.debug("Constructing device: %s::%s", udn, st)
+    discovery_info = ssdp.async_get_discovery_info_by_udn_st(hass, udn, st)
 
-    discoveries = [
-        discovery
-        for discovery in await Device.async_discover(hass)
-        if discovery[DISCOVERY_UDN] == udn and discovery[DISCOVERY_ST] == st
-    ]
-    if not discoveries:
+    if not discovery_info:
         _LOGGER.info("Device not discovered")
         return None
 
-    # Some additional clues for remote debugging.
-    if len(discoveries) > 1:
-        _LOGGER.info("Multiple devices discovered: %s", discoveries)
-
-    discovery = discoveries[0]
-    _LOGGER.debug("Constructing from discovery: %s", discovery)
-    location = discovery[DISCOVERY_LOCATION]
-    return await Device.async_create_device(hass, location)
+    return await Device.async_create_device(
+        hass, discovery_info[ssdp.ATTR_SSDP_LOCATION]
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
@@ -74,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     _LOGGER.debug("async_setup, config: %s", config)
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
     conf = config.get(DOMAIN, conf_default)
-    local_ip = await hass.async_add_executor_job(get_local_ip)
+    local_ip = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
     hass.data[DOMAIN] = {
         DOMAIN_CONFIG: conf,
         DOMAIN_DEVICES: {},

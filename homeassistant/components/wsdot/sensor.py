@@ -122,12 +122,12 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         """Return other details about the sensor state."""
         if self._data is not None:
             attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-            for key in [
+            for key in (
                 ATTR_AVG_TIME,
                 ATTR_NAME,
                 ATTR_DESCRIPTION,
                 ATTR_TRAVEL_TIME_ID,
-            ]:
+            ):
                 attrs[key] = self._data.get(key)
             attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(
                 self._data.get(ATTR_TIME_UPDATED)

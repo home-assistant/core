@@ -68,7 +68,7 @@ async def handle_sketch_version(
 @callback
 def _handle_child_update(
     hass: HomeAssistant, gateway_id: GatewayId, validated: dict[str, list[DevId]]
-):
+) -> None:
     """Handle a child update."""
     signals: list[str] = []
 
@@ -91,7 +91,9 @@ def _handle_child_update(
 
 
 @callback
-def _handle_node_update(hass: HomeAssistant, gateway_id: GatewayId, msg: Message):
+def _handle_node_update(
+    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
+) -> None:
     """Handle a node update."""
     signal = NODE_CALLBACK.format(gateway_id, msg.node_id)
     async_dispatcher_send(hass, signal)

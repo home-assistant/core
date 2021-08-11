@@ -43,11 +43,9 @@ class ArduinoSwitch(SwitchEntity):
     def __init__(self, pin, options, board):
         """Initialize the Pin."""
         self._pin = pin
-        self._name = options[CONF_NAME]
-        self.pin_type = CONF_TYPE
-        self.direction = "out"
+        self._attr_name = options[CONF_NAME]
 
-        self._state = options[CONF_INITIAL]
+        self._attr_is_on = options[CONF_INITIAL]
 
         if options[CONF_NEGATE]:
             self.turn_on_handler = board.set_digital_out_low
@@ -56,25 +54,15 @@ class ArduinoSwitch(SwitchEntity):
             self.turn_on_handler = board.set_digital_out_high
             self.turn_off_handler = board.set_digital_out_low
 
-        board.set_mode(self._pin, self.direction, self.pin_type)
-        (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
-
-    @property
-    def name(self):
-        """Get the name of the pin."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if pin is high/on."""
-        return self._state
+        board.set_mode(pin, "out", CONF_TYPE)
+        (self.turn_on_handler if self.is_on else self.turn_off_handler)(pin)
 
     def turn_on(self, **kwargs):
         """Turn the pin to high/on."""
-        self._state = True
+        self._attr_is_on = True
         self.turn_on_handler(self._pin)
 
     def turn_off(self, **kwargs):
         """Turn the pin to low/off."""
-        self._state = False
+        self._attr_is_on = False
         self.turn_off_handler(self._pin)

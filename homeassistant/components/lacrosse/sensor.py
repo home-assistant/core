@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
+    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -174,6 +175,7 @@ class LaCrosseSensor(SensorEntity):
 class LaCrosseTemperature(LaCrosseSensor):
     """Implementation of a Lacrosse temperature sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_unit_of_measurement = TEMP_CELSIUS
 
     @property

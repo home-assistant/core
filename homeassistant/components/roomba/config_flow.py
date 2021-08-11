@@ -206,7 +206,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             password = await self.hass.async_add_executor_job(roomba_pw.get_password)
-        except (OSError, ConnectionRefusedError):
+        except OSError:
             return await self.async_step_link_manual()
 
         if not password:

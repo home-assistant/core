@@ -8,7 +8,7 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Somfy MyLink {mac} ({ip})",
+        "flow_title": "{mac} ({ip})",
         "step": {
             "user": {
                 "data": {
@@ -49,5 +49,5 @@
             }
         }
     },
-    "title": ""
+    "title": "Somfy MyLink"
 }

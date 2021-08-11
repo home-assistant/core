@@ -146,8 +146,8 @@ def daemonize() -> None:
 
     # redirect standard file descriptors to devnull
     # pylint: disable=consider-using-with
-    infd = open(os.devnull)
-    outfd = open(os.devnull, "a+")
+    infd = open(os.devnull, encoding="utf8")
+    outfd = open(os.devnull, "a+", encoding="utf8")
     sys.stdout.flush()
     sys.stderr.flush()
     os.dup2(infd.fileno(), sys.stdin.fileno())
@@ -159,7 +159,7 @@ def check_pid(pid_file: str) -> None:
     """Check that Home Assistant is not already running."""
     # Check pid file
     try:
-        with open(pid_file) as file:
+        with open(pid_file, encoding="utf8") as file:
             pid = int(file.readline())
     except OSError:
         # PID File does not exist
@@ -182,7 +182,7 @@ def write_pid(pid_file: str) -> None:
     """Create a PID File."""
     pid = os.getpid()
     try:
-        with open(pid_file, "w") as file:
+        with open(pid_file, "w", encoding="utf8") as file:
             file.write(str(pid))
     except OSError:
         print(f"Fatal Error: Unable to write pid file {pid_file}")

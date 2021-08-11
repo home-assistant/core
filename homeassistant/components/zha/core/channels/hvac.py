@@ -11,7 +11,7 @@ from collections import namedtuple
 from typing import Any
 
 from zigpy.exceptions import ZigbeeException
-import zigpy.zcl.clusters.hvac as hvac
+from zigpy.zcl.clusters import hvac
 from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback

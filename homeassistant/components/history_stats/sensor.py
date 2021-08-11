@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
 
-    for template in [start, end]:
+    for template in (start, end):
         if template is not None:
             template.hass = hass
 

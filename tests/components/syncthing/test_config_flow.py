@@ -34,7 +34,7 @@ async def test_show_setup_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_flow_successfull(hass):
+async def test_flow_successful(hass):
     """Test with required fields only."""
     with patch(
         "aiosyncthing.system.System.status", return_value={"myID": "server-id"}

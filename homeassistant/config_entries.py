@@ -819,6 +819,19 @@ class ConfigEntries:
         dev_reg.async_clear_config_entry(entry_id)
         ent_reg.async_clear_config_entry(entry_id)
 
+        # If the configuration entry is removed during reauth, it should
+        # abort any reauth flow that is active for the removed entry.
+        for progress_flow in self.hass.config_entries.flow.async_progress():
+            context = progress_flow.get("context")
+            if (
+                context
+                and context["source"] == SOURCE_REAUTH
+                and "entry_id" in context
+                and context["entry_id"] == entry_id
+                and "flow_id" in progress_flow
+            ):
+                self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
         # After we have fully removed an "ignore" config entry we can try and rediscover it so that a
         # user is able to immediately start configuring it. We do this by starting a new flow with
         # the 'unignore' step. If the integration doesn't implement async_step_unignore then
@@ -837,7 +850,7 @@ class ConfigEntries:
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
         await asyncio.gather(
-            *[entry.async_shutdown() for entry in self._entries.values()]
+            *(entry.async_shutdown() for entry in self._entries.values())
         )
         await self.flow.async_shutdown()
 
@@ -1069,10 +1082,10 @@ class ConfigEntries:
         """Forward the unloading of an entry to platforms."""
         return all(
             await asyncio.gather(
-                *[
+                *(
                     self.async_forward_entry_unload(entry, platform)
                     for platform in platforms
-                ]
+                )
             )
         )
 
@@ -1493,7 +1506,7 @@ class EntityRegistryDisabledHandler:
         )
 
         await asyncio.gather(
-            *[self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload]
+            *(self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload)
         )
 
 

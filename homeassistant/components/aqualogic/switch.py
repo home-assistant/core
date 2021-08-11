@@ -44,10 +44,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AquaLogicSwitch(SwitchEntity):
     """Switch implementation for the AquaLogic component."""
 
+    _attr_should_poll = False
+
     def __init__(self, processor, switch_type):
         """Initialize switch."""
         self._processor = processor
-        self._type = switch_type
         self._state_name = {
             "lights": States.LIGHTS,
             "filter": States.FILTER,
@@ -60,16 +61,7 @@ class AquaLogicSwitch(SwitchEntity):
             "aux_6": States.AUX_6,
             "aux_7": States.AUX_7,
         }[switch_type]
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"AquaLogic {SWITCH_TYPES[self._type]}"
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
+        self._attr_name = f"AquaLogic {SWITCH_TYPES[switch_type]}"
 
     @property
     def is_on(self):

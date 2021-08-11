@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "Api kucs",
                     "destination": "C\u00e9l",
+                    "name": "N\u00e9v",
                     "origin": "Eredet"
                 },
                 "description": "Az eredet \u00e9s a c\u00e9l megad\u00e1sakor megadhat egy vagy t\u00f6bb helyet a pipa karakterrel elv\u00e1lasztva, c\u00edm, sz\u00e9less\u00e9gi / hossz\u00fas\u00e1gi koordin\u00e1t\u00e1k vagy Google helyazonos\u00edt\u00f3 form\u00e1j\u00e1ban. Amikor a helyet megadja egy Google helyazonos\u00edt\u00f3val, akkor az azonos\u00edt\u00f3t el\u0151taggal kell ell\u00e1tni a `hely_azonos\u00edt\u00f3:` sz\u00f3val."

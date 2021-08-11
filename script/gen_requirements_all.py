@@ -19,6 +19,7 @@ COMMENT_REQUIREMENTS = (
     "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
+    "bme280spi",
     "bme680",
     "decora",
     "decora_wifi",
@@ -72,6 +73,11 @@ httplib2>=0.19.0
 # https://github.com/home-assistant/core/issues/40148
 grpcio==1.31.0
 
+# Newer versions of cloud pubsub pin a higher version of grpcio. This can
+# be reverted when the grpcio pin is reverted, see:
+# https://github.com/home-assistant/core/issues/53427
+google-cloud-pubsub==2.1.0
+
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 
@@ -83,6 +89,9 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
+# Temporary constraint on pandas, to unblock 2021.7 releases
+# until we have fixed the wheels builds for newer versions.
+pandas==1.3.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from pyopenuv.errors import InvalidApiKeyError
-import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openuv import DOMAIN
@@ -15,19 +14,6 @@ from homeassistant.const import (
 )
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(autouse=True)
-def mock_setup():
-    """Prevent setup."""
-    with patch(
-        "homeassistant.components.openuv.async_setup",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.openuv.async_setup_entry",
-        return_value=True,
-    ):
-        yield
 
 
 async def test_duplicate_error(hass):
@@ -81,7 +67,7 @@ async def test_step_user(hass):
     }
 
     with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+        "homeassistant.components.openuv.async_setup_entry", return_value=True
     ), patch("pyopenuv.client.Client.uv_index"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}

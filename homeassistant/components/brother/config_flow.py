@@ -30,9 +30,9 @@ def host_valid(host: str) -> bool:
         if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
-        disallowed = re.compile(r"[^a-zA-Z\d\-]")
-        return all(x and not disallowed.search(x) for x in host.split("."))
-    return False
+        pass
+    disallowed = re.compile(r"[^a-zA-Z\d\-]")
+    return all(x and not disallowed.search(x) for x in host.split("."))
 
 
 class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

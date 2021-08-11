@@ -60,6 +60,12 @@ ZEROCONF = {
             "domain": "devolo_home_control"
         }
     ],
+    "_easylink._tcp.local.": [
+        {
+            "domain": "modern_forms",
+            "name": "wac*"
+        }
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato"
@@ -178,6 +184,11 @@ ZEROCONF = {
         {
             "domain": "brother",
             "name": "brother*"
+        }
+    ],
+    "_sonos._tcp.local.": [
+        {
+            "domain": "sonos"
         }
     ],
     "_spotify-connect._tcp.local.": [

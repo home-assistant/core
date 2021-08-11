@@ -23,7 +23,7 @@
                 "data": {
                     "protocol": "Protokoll"
                 },
-                "title": "W\u00e4hlen Sie das AlarmDecoder-Protokoll"
+                "title": "W\u00e4hle das AlarmDecoder-Protokoll"
             }
         }
     },
@@ -59,7 +59,7 @@
                     "zone_rfid": "RF Serial",
                     "zone_type": "Zonentyp"
                 },
-                "description": "Geben Sie Details f\u00fcr Zone {zone_number} ein. Um Zone {zone_number} zu l\u00f6schen, lassen Sie Zonenname leer.",
+                "description": "Gib Details f\u00fcr Zone {zone_number} ein. Um Zone {zone_number} zu l\u00f6schen, lass den Zonennamen leer.",
                 "title": "AlarmDecoder konfigurieren"
             },
             "zone_select": {

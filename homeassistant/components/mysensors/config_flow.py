@@ -1,7 +1,6 @@
 """Config flow for MySensors."""
 from __future__ import annotations
 
-from contextlib import suppress
 import logging
 import os
 from typing import Any
@@ -55,7 +54,6 @@ def _get_schema_common(user_input: dict[str, str]) -> dict:
     schema = {
         vol.Required(
             CONF_VERSION,
-            default="",
             description={
                 "suggested_value": user_input.get(CONF_VERSION, DEFAULT_VERSION)
             },
@@ -67,14 +65,14 @@ def _get_schema_common(user_input: dict[str, str]) -> dict:
 
 def _validate_version(version: str) -> dict[str, str]:
     """Validate a version string from the user."""
-    version_okay = False
-    with suppress(AwesomeVersionStrategyException):
-        version_okay = bool(
-            AwesomeVersion.ensure_strategy(
-                version,
-                [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
-            )
+    version_okay = True
+    try:
+        AwesomeVersion(
+            version,
+            [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
         )
+    except AwesomeVersionStrategyException:
+        version_okay = False
 
     if version_okay:
         return {}
@@ -82,8 +80,8 @@ def _validate_version(version: str) -> dict[str, str]:
 
 
 def _is_same_device(
-    gw_type: ConfGatewayType, user_input: dict[str, str], entry: ConfigEntry
-):
+    gw_type: ConfGatewayType, user_input: dict[str, Any], entry: ConfigEntry
+) -> bool:
     """Check if another ConfigDevice is actually the same as user_input.
 
     This function only compares addresses and tcp ports, so it is possible to fool it with tricks like port forwarding.
@@ -91,7 +89,9 @@ def _is_same_device(
     if entry.data[CONF_DEVICE] != user_input[CONF_DEVICE]:
         return False
     if gw_type == CONF_GATEWAY_TYPE_TCP:
-        return entry.data[CONF_TCP_PORT] == user_input[CONF_TCP_PORT]
+        entry_tcp_port: int = entry.data[CONF_TCP_PORT]
+        input_tcp_port: int = user_input[CONF_TCP_PORT]
+        return entry_tcp_port == input_tcp_port
     if gw_type == CONF_GATEWAY_TYPE_MQTT:
         entry_topics = {
             entry.data[CONF_TOPIC_IN_PREFIX],
@@ -347,7 +347,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 break
 
         # if no errors so far, try to connect
-        if not errors and not await try_connect(self.hass, user_input):
+        if not errors and not await try_connect(self.hass, gw_type, user_input):
             errors["base"] = "cannot_connect"
 
         return errors

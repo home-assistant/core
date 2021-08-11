@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -213,6 +214,7 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = POWER_WATT
 
     @property
@@ -316,6 +318,27 @@ class CarbonMonoxideConcentration(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_CO
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_PARTS_PER_MILLION
+
+
+@STRICT_MATCH(generic_ids="channel_0x042e")
+@STRICT_MATCH(channel_names="voc_level")
+class VOCLevel(Sensor):
+    """VOC Level sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
+@STRICT_MATCH(channel_names="formaldehyde_concentration")
+class FormaldehydeConcentration(Sensor):
+    """Formaldehyde Concentration sensor."""
+
+    SENSOR_ATTR = "measured_value"
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION

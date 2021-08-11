@@ -119,7 +119,7 @@ async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
         "location": "http://1.1.1.1",
     }
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
-    # If we get duplicate respones, ensure we only look it up once
+    # If we get duplicate response, ensure we only look it up once
     assert len(aioclient_mock.mock_calls) == 1
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
@@ -295,15 +295,15 @@ async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
-    assert async_start_mock.call_count == 1
-    assert async_search_mock.call_count == 1
+    assert async_start_mock.call_count == 2
+    assert async_search_mock.call_count == 2
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
-    assert async_start_mock.call_count == 1
-    assert async_search_mock.call_count == 1
+    assert async_start_mock.call_count == 2
+    assert async_search_mock.call_count == 2
 
 
 async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog):
@@ -363,11 +363,11 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         "x-rincon-bootseq": "55",
         "ext": "",
     }
-    not_matching_intergration_callbacks = []
-    intergration_match_all_callbacks = []
-    intergration_match_all_not_present_callbacks = []
-    intergration_callbacks = []
-    intergration_callbacks_from_cache = []
+    not_matching_integration_callbacks = []
+    integration_match_all_callbacks = []
+    integration_match_all_not_present_callbacks = []
+    integration_callbacks = []
+    integration_callbacks_from_cache = []
     match_any_callbacks = []
 
     @callback
@@ -375,24 +375,24 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         raise ValueError
 
     @callback
-    def _async_intergration_callbacks(info):
-        intergration_callbacks.append(info)
+    def _async_integration_callbacks(info):
+        integration_callbacks.append(info)
 
     @callback
-    def _async_intergration_match_all_callbacks(info):
-        intergration_match_all_callbacks.append(info)
+    def _async_integration_match_all_callbacks(info):
+        integration_match_all_callbacks.append(info)
 
     @callback
-    def _async_intergration_match_all_not_present_callbacks(info):
-        intergration_match_all_not_present_callbacks.append(info)
+    def _async_integration_match_all_not_present_callbacks(info):
+        integration_match_all_not_present_callbacks.append(info)
 
     @callback
-    def _async_intergration_callbacks_from_cache(info):
-        intergration_callbacks_from_cache.append(info)
+    def _async_integration_callbacks_from_cache(info):
+        integration_callbacks_from_cache.append(info)
 
     @callback
-    def _async_not_matching_intergration_callbacks(info):
-        not_matching_intergration_callbacks.append(info)
+    def _async_not_matching_integration_callbacks(info):
+        not_matching_integration_callbacks.append(info)
 
     @callback
     def _async_match_any_callbacks(info):
@@ -422,22 +422,22 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         ssdp.async_register_callback(hass, _async_exception_callbacks, {})
         ssdp.async_register_callback(
             hass,
-            _async_intergration_callbacks,
+            _async_integration_callbacks,
             {"st": "mock-st"},
         )
         ssdp.async_register_callback(
             hass,
-            _async_intergration_match_all_callbacks,
+            _async_integration_match_all_callbacks,
             {"x-rincon-bootseq": MATCH_ALL},
         )
         ssdp.async_register_callback(
             hass,
-            _async_intergration_match_all_not_present_callbacks,
+            _async_integration_match_all_not_present_callbacks,
             {"x-not-there": MATCH_ALL},
         )
         ssdp.async_register_callback(
             hass,
-            _async_not_matching_intergration_callbacks,
+            _async_not_matching_integration_callbacks,
             {"st": "not-match-mock-st"},
         )
         ssdp.async_register_callback(
@@ -448,7 +448,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
         ssdp.async_register_callback(
             hass,
-            _async_intergration_callbacks_from_cache,
+            _async_integration_callbacks_from_cache,
             {"st": "mock-st"},
         )
         await hass.async_block_till_done()
@@ -459,13 +459,13 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         await hass.async_block_till_done()
         assert hass.state == CoreState.running
 
-    assert len(intergration_callbacks) == 3
-    assert len(intergration_callbacks_from_cache) == 3
-    assert len(intergration_match_all_callbacks) == 3
-    assert len(intergration_match_all_not_present_callbacks) == 0
-    assert len(match_any_callbacks) == 3
-    assert len(not_matching_intergration_callbacks) == 0
-    assert intergration_callbacks[0] == {
+    assert len(integration_callbacks) == 5
+    assert len(integration_callbacks_from_cache) == 5
+    assert len(integration_match_all_callbacks) == 5
+    assert len(integration_match_all_not_present_callbacks) == 0
+    assert len(match_any_callbacks) == 5
+    assert len(not_matching_integration_callbacks) == 0
+    assert integration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_EXT: "",
         ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
@@ -503,11 +503,11 @@ async def test_unsolicited_ssdp_registered_callback(hass, aioclient_mock, caplog
         "x-rincon-variant": "1",
         "household.smartspeaker.audio": "Sonos_v3294823948542543534",
     }
-    intergration_callbacks = []
+    integration_callbacks = []
 
     @callback
-    def _async_intergration_callbacks(info):
-        intergration_callbacks.append(info)
+    def _async_integration_callbacks(info):
+        integration_callbacks.append(info)
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         listener = SSDPListener(*args, **kwargs)
@@ -532,7 +532,7 @@ async def test_unsolicited_ssdp_registered_callback(hass, aioclient_mock, caplog
         await hass.async_block_till_done()
         ssdp.async_register_callback(
             hass,
-            _async_intergration_callbacks,
+            _async_integration_callbacks,
             {"nts": "ssdp:alive", "x-rincon-bootseq": MATCH_ALL},
         )
         await hass.async_block_till_done()
@@ -546,9 +546,9 @@ async def test_unsolicited_ssdp_registered_callback(hass, aioclient_mock, caplog
         assert hass.state == CoreState.running
 
     assert (
-        len(intergration_callbacks) == 2
+        len(integration_callbacks) == 4
     )  # unsolicited callbacks without st are not cached
-    assert intergration_callbacks[0] == {
+    assert integration_callbacks[0] == {
         "UDN": "uuid:RINCON_1111BB963FD801400",
         "bootid.upnp.org": "250",
         "deviceType": "Paulus",
@@ -589,11 +589,11 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         }
     )
     mock_get_ssdp = {"mock-domain": [{"st": "mock-st"}]}
-    intergration_callbacks = []
+    integration_callbacks = []
 
     @callback
-    def _async_intergration_callbacks(info):
-        intergration_callbacks.append(info)
+    def _async_integration_callbacks(info):
+        integration_callbacks.append(info)
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         listener = SSDPListener(*args, **kwargs)
@@ -622,7 +622,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         await hass.async_block_till_done()
         remove = ssdp.async_register_callback(
             hass,
-            _async_intergration_callbacks,
+            _async_integration_callbacks,
             {"st": "mock-st"},
         )
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -635,8 +635,8 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
         await hass.async_block_till_done()
 
-    assert len(intergration_callbacks) == 2
-    assert intergration_callbacks[0] == {
+    assert len(integration_callbacks) == 4
+    assert integration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_EXT: "",
         ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
@@ -781,7 +781,74 @@ async def test_async_detect_interfaces_setting_empty_route(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert {create_args[0][1]["source_ip"], create_args[1][1]["source_ip"]} == {
-        IPv4Address("192.168.1.5"),
-        IPv6Address("2001:db8::"),
+    argset = set()
+    for argmap in create_args:
+        argset.add((argmap[1].get("source_ip"), argmap[1].get("target_ip")))
+
+    assert argset == {
+        (IPv6Address("2001:db8::"), None),
+        (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
+        (IPv4Address("192.168.1.5"), None),
     }
+
+
+async def test_bind_failure_skips_adapter(hass, caplog):
+    """Test that an adapter with a bind failure is skipped."""
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
+    create_args = []
+    did_search = 0
+
+    @callback
+    def _callback(*_):
+        nonlocal did_search
+        did_search += 1
+        pass
+
+    def _generate_failing_ssdp_listener(*args, **kwargs):
+        create_args.append([args, kwargs])
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            if kwargs["source_ip"] == IPv6Address("2001:db8::"):
+                raise OSError
+            pass
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_failing_ssdp_listener,
+    ), patch(
+        "homeassistant.components.ssdp.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    argset = set()
+    for argmap in create_args:
+        argset.add((argmap[1].get("source_ip"), argmap[1].get("target_ip")))
+
+    assert argset == {
+        (IPv6Address("2001:db8::"), None),
+        (IPv4Address("192.168.1.5"), IPv4Address("255.255.255.255")),
+        (IPv4Address("192.168.1.5"), None),
+    }
+    assert "Failed to setup listener for" in caplog.text
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
+    assert did_search == 2

@@ -25,7 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
@@ -92,7 +92,7 @@ def valid_supported_color_modes(color_modes: Iterable[str]) -> set[str]:
         or COLOR_MODE_UNKNOWN in color_modes
         or (COLOR_MODE_BRIGHTNESS in color_modes and len(color_modes) > 1)
         or (COLOR_MODE_ONOFF in color_modes and len(color_modes) > 1)
-        or (COLOR_MODE_WHITE in color_modes and len(color_modes) == 1)
+        or (COLOR_MODE_WHITE in color_modes and not color_supported(color_modes))
     ):
         raise vol.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
     return color_modes
@@ -370,13 +370,13 @@ async def async_setup(hass, config):  # noqa: C901
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
+        legacy_supported_color_modes = (
+            light._light_internal_supported_color_modes  # pylint: disable=protected-access
+        )
         supported_color_modes = light.supported_color_modes
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
         # for legacy lights
         if ATTR_RGBW_COLOR in params:
-            legacy_supported_color_modes = (
-                light._light_internal_supported_color_modes  # pylint: disable=protected-access
-            )
             if (
                 COLOR_MODE_RGBW in legacy_supported_color_modes
                 and not supported_color_modes
@@ -384,6 +384,16 @@ async def async_setup(hass, config):  # noqa: C901
                 rgbw_color = params.pop(ATTR_RGBW_COLOR)
                 params[ATTR_RGB_COLOR] = rgbw_color[0:3]
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
+
+        # If a color temperature is specified, emulate it if not supported by the light
+        if (
+            ATTR_COLOR_TEMP in params
+            and COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes
+        ):
+            color_temp = params.pop(ATTR_COLOR_TEMP)
+            if color_supported(legacy_supported_color_modes):
+                temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
+                params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
 
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes
@@ -576,7 +586,7 @@ class Profiles:
         for profile_path in profile_paths:
             if not os.path.isfile(profile_path):
                 continue
-            with open(profile_path) as inp:
+            with open(profile_path, encoding="utf8") as inp:
                 reader = csv.reader(inp)
 
                 # Skip the header
@@ -628,17 +638,23 @@ class Profiles:
             params.setdefault(ATTR_TRANSITION, profile.transition)
 
 
+@dataclasses.dataclass
+class LightEntityDescription(ToggleEntityDescription):
+    """A class that describes binary sensor entities."""
+
+
 class LightEntity(ToggleEntity):
     """Base class for light entities."""
 
+    entity_description: LightEntityDescription
     _attr_brightness: int | None = None
     _attr_color_mode: str | None = None
     _attr_color_temp: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
     _attr_hs_color: tuple[float, float] | None = None
-    _attr_max_mired: int = 500
-    _attr_min_mired: int = 153
+    _attr_max_mireds: int = 500
+    _attr_min_mireds: int = 153
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
@@ -738,14 +754,14 @@ class LightEntity(ToggleEntity):
         """Return the coldest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
-        return self._attr_min_mired
+        return self._attr_min_mireds
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
-        return self._attr_max_mired
+        return self._attr_max_mireds
 
     @property
     def white_value(self) -> int | None:

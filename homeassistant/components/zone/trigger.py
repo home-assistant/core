@@ -21,7 +21,7 @@ DEFAULT_EVENT = EVENT_ENTER
 
 _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "zone",
         vol.Required(CONF_ENTITY_ID): cv.entity_ids,
@@ -37,7 +37,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type: str = "zone"
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
@@ -74,6 +74,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
+                        **trigger_data,
                         "platform": platform_type,
                         "entity_id": entity,
                         "from_state": from_s,
@@ -81,7 +82,6 @@ async def async_attach_trigger(
                         "zone": zone_state,
                         "event": event,
                         "description": description,
-                        "id": trigger_id,
                     }
                 },
                 to_s.context,

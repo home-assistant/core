@@ -77,8 +77,8 @@ class ElgatoLight(LightEntity):
             min_mired = 153
             max_mired = 285
 
-        self._attr_max_mired = max_mired
-        self._attr_min_mired = min_mired
+        self._attr_max_mireds = max_mired
+        self._attr_min_mireds = min_mired
         self._attr_name = info.display_name or info.product_name
         self._attr_supported_color_modes = supported_color_modes
         self._attr_unique_id = info.serial_number

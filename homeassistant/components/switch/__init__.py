@@ -1,9 +1,10 @@
 """Component to interface with switches that can be controlled remotely."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, cast, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -19,12 +20,10 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -52,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the switch is on based on the statemachine.
 
     Async friendly.
@@ -76,17 +75,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return cast(bool, await hass.data[DOMAIN].async_setup_entry(entry))
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return cast(bool, await hass.data[DOMAIN].async_unload_entry(entry))
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class SwitchEntityDescription(ToggleEntityDescription):
+    """A class that describes switch entities."""
 
 
 class SwitchEntity(ToggleEntity):
     """Base class for switch entities."""
 
+    entity_description: SwitchEntityDescription
     _attr_current_power_w: float | None = None
     _attr_today_energy_kwh: float | None = None
 
@@ -117,9 +124,9 @@ class SwitchEntity(ToggleEntity):
 class SwitchDevice(SwitchEntity):
     """Representation of a switch (for backwards compatibility)."""
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
         _LOGGER.warning(
             "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
             cls.__name__,

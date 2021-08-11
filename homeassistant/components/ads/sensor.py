@@ -5,6 +5,7 @@ from homeassistant.components import ads
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import StateType
 
 from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
 
@@ -49,7 +50,7 @@ class AdsSensor(AdsEntity, SensorEntity):
     def __init__(self, ads_hub, ads_var, ads_type, name, unit_of_measurement, factor):
         """Initialize AdsSensor entity."""
         super().__init__(ads_hub, name, ads_var)
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._ads_type = ads_type
         self._factor = factor
 
@@ -63,11 +64,6 @@ class AdsSensor(AdsEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._state_dict[STATE_KEY_STATE]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement

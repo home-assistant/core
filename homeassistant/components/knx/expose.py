@@ -5,6 +5,8 @@ from typing import Callable
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
+from xknx.dpt import DPTNumeric
+from xknx.remote_value import RemoteValueSensor
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -98,10 +100,8 @@ class KNXExposeSensor:
     def _init_expose_state(self) -> None:
         """Initialize state of the exposure."""
         init_state = self.hass.states.get(self.entity_id)
-        init_value = self._get_expose_value(init_state)
-        self.device.sensor_value.value = (
-            init_value if init_value is not None else self.expose_default
-        )
+        state_value = self._get_expose_value(init_state)
+        self.device.sensor_value.value = state_value
 
     @callback
     def shutdown(self) -> None:
@@ -114,17 +114,24 @@ class KNXExposeSensor:
     def _get_expose_value(self, state: State | None) -> StateType:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return None
-        value = (
-            state.state
-            if self.expose_attribute is None
-            else state.attributes.get(self.expose_attribute)
-        )
+            value = self.expose_default
+        else:
+            value = (
+                state.state
+                if self.expose_attribute is None
+                else state.attributes.get(self.expose_attribute, self.expose_default)
+            )
         if self.type == "binary":
             if value in (1, STATE_ON, "True"):
-                value = True
-            elif value in (0, STATE_OFF, "False"):
-                value = False
+                return True
+            if value in (0, STATE_OFF, "False"):
+                return False
+        if (
+            value is not None
+            and isinstance(self.device.sensor_value, RemoteValueSensor)
+            and issubclass(self.device.sensor_value.dpt_class, DPTNumeric)
+        ):
+            return float(value)
         return value
 
     async def _async_entity_changed(self, event: Event) -> None:
@@ -134,7 +141,8 @@ class KNXExposeSensor:
         if new_value is None:
             return
         old_state = event.data.get("old_state")
-        old_value = self._get_expose_value(old_state)
+        # don't use default value for comparison on first state change (old_state is None)
+        old_value = self._get_expose_value(old_state) if old_state is not None else None
         # don't send same value sequentially
         if new_value != old_value:
             await self._async_set_knx_value(new_value)
@@ -142,9 +150,7 @@ class KNXExposeSensor:
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
         if value is None:
-            if self.expose_default is None:
-                return
-            value = self.expose_default
+            return
         await self.device.set(value)
 
 

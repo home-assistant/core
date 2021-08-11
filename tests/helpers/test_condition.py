@@ -1,13 +1,20 @@
 """Test the condition helper."""
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
-from homeassistant.const import ATTR_DEVICE_CLASS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+)
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import condition, trace
 from homeassistant.helpers.template import Template
@@ -1034,7 +1041,7 @@ async def test_state_attribute(hass):
         },
     )
 
-    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 200})
+    hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 200})
     with pytest.raises(ConditionError):
         test(hass)
 
@@ -1330,7 +1337,7 @@ async def test_numeric_state_attribute(hass):
         },
     )
 
-    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 10})
+    hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 10})
     with pytest.raises(ConditionError):
         assert test(hass)
 
@@ -2829,3 +2836,30 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
         "sun",
         {"result": True, "wanted_time_after": "2015-07-23T11:22:18.467277+00:00"},
     )
+
+
+async def test_trigger(hass):
+    """Test trigger condition."""
+    test = await condition.async_from_config(
+        hass,
+        {"alias": "Trigger Cond", "condition": "trigger", "id": "123456"},
+    )
+
+    assert not test(hass)
+    assert not test(hass, {})
+    assert not test(hass, {"other_var": "123456"})
+    assert not test(hass, {"trigger": {"trigger_id": "123456"}})
+    assert test(hass, {"trigger": {"id": "123456"}})
+
+
+async def test_platform_async_validate_condition_config(hass):
+    """Test platform.async_validate_condition_config will be called if it exists."""
+    config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
+    platform = AsyncMock()
+    with patch(
+        "homeassistant.helpers.condition.async_get_device_automation_platform",
+        return_value=platform,
+    ):
+        platform.async_validate_condition_config.return_value = config
+        await condition.async_validate_condition_config(hass, config)
+        platform.async_validate_condition_config.assert_awaited()

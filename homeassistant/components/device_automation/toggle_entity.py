@@ -29,7 +29,7 @@ from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import TRIGGER_BASE_SCHEMA
+from . import DEVICE_TRIGGER_BASE_SCHEMA
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -91,7 +91,7 @@ CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TURNED_OFF, CONF_TURNED_ON]),

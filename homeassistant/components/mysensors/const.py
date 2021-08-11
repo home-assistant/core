@@ -2,23 +2,23 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Literal, Tuple
+from typing import Final, Literal, Tuple, TypedDict
 
-ATTR_DEVICES: str = "devices"
-ATTR_GATEWAY_ID: str = "gateway_id"
+ATTR_DEVICES: Final = "devices"
+ATTR_GATEWAY_ID: Final = "gateway_id"
 
-CONF_BAUD_RATE: str = "baud_rate"
-CONF_DEVICE: str = "device"
-CONF_GATEWAYS: str = "gateways"
-CONF_NODES: str = "nodes"
-CONF_PERSISTENCE: str = "persistence"
-CONF_PERSISTENCE_FILE: str = "persistence_file"
-CONF_RETAIN: str = "retain"
-CONF_TCP_PORT: str = "tcp_port"
-CONF_TOPIC_IN_PREFIX: str = "topic_in_prefix"
-CONF_TOPIC_OUT_PREFIX: str = "topic_out_prefix"
-CONF_VERSION: str = "version"
-CONF_GATEWAY_TYPE: str = "gateway_type"
+CONF_BAUD_RATE: Final = "baud_rate"
+CONF_DEVICE: Final = "device"
+CONF_GATEWAYS: Final = "gateways"
+CONF_NODES: Final = "nodes"
+CONF_PERSISTENCE: Final = "persistence"
+CONF_PERSISTENCE_FILE: Final = "persistence_file"
+CONF_RETAIN: Final = "retain"
+CONF_TCP_PORT: Final = "tcp_port"
+CONF_TOPIC_IN_PREFIX: Final = "topic_in_prefix"
+CONF_TOPIC_OUT_PREFIX: Final = "topic_out_prefix"
+CONF_VERSION: Final = "version"
+CONF_GATEWAY_TYPE: Final = "gateway_type"
 ConfGatewayType = Literal["Serial", "TCP", "MQTT"]
 CONF_GATEWAY_TYPE_SERIAL: ConfGatewayType = "Serial"
 CONF_GATEWAY_TYPE_TCP: ConfGatewayType = "TCP"
@@ -29,19 +29,28 @@ CONF_GATEWAY_TYPE_ALL: list[str] = [
     CONF_GATEWAY_TYPE_TCP,
 ]
 
-DOMAIN: str = "mysensors"
+DOMAIN: Final = "mysensors"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
-MYSENSORS_GATEWAYS: str = "mysensors_gateways"
-PLATFORM: str = "platform"
-SCHEMA: str = "schema"
+MYSENSORS_GATEWAYS: Final = "mysensors_gateways"
+PLATFORM: Final = "platform"
+SCHEMA: Final = "schema"
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
-MYSENSORS_DISCOVERY = "mysensors_discovery_{}_{}"
-MYSENSORS_ON_UNLOAD = "mysensors_on_unload_{}"
-TYPE: str = "type"
+MYSENSORS_DISCOVERY: str = "mysensors_discovery_{}_{}"
+MYSENSORS_ON_UNLOAD: str = "mysensors_on_unload_{}"
+TYPE: Final = "type"
 UPDATE_DELAY: float = 0.1
 
-SERVICE_SEND_IR_CODE: str = "send_ir_code"
+
+class DiscoveryInfo(TypedDict):
+    """Represent the discovery info type for mysensors platforms."""
+
+    devices: list[DevId]
+    name: str  # CONF_NAME is used in the notify base integration.
+    gateway_id: GatewayId
+
+
+SERVICE_SEND_IR_CODE: Final = "send_ir_code"
 
 SensorType = str
 # S_DOOR, S_MOTION, S_SMOKE, ...

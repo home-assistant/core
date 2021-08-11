@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -24,7 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -142,23 +143,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await cast(EntityComponent, hass.data[DOMAIN]).async_unload_entry(entry)
 
 
+@dataclass
+class RemoteEntityDescription(ToggleEntityDescription):
+    """A class that describes remote entities."""
+
+
 class RemoteEntity(ToggleEntity):
     """Base class for remote entities."""
+
+    entity_description: RemoteEntityDescription
+    _attr_activity_list: list[str] | None = None
+    _attr_current_activity: str | None = None
+    _attr_supported_features: int = 0
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return 0
+        return self._attr_supported_features
 
     @property
     def current_activity(self) -> str | None:
         """Active activity."""
-        return None
+        return self._attr_current_activity
 
     @property
     def activity_list(self) -> list[str] | None:
         """List of available activities."""
-        return None
+        return self._attr_activity_list
 
     @final
     @property

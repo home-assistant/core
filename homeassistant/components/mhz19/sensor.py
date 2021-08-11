@@ -11,6 +11,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_TEMPERATURE,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -29,8 +31,8 @@ ATTR_CO2_CONCENTRATION = "co2_concentration"
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_CO2 = "co2"
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ["Temperature", None],
-    SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION],
+    SENSOR_TEMPERATURE: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION, DEVICE_CLASS_CO2],
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -80,6 +82,7 @@ class MHZ19Sensor(SensorEntity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._ppm = None
         self._temperature = None
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):

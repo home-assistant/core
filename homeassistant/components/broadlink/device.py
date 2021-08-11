@@ -51,6 +51,11 @@ class BroadlinkDevice:
         """Return the unique id of the device."""
         return self.config.unique_id
 
+    @property
+    def mac_address(self):
+        """Return the mac address of the device."""
+        return self.config.data[CONF_MAC]
+
     @staticmethod
     async def async_update(hass, entry):
         """Update the device and related entities.

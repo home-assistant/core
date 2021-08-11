@@ -12,7 +12,7 @@
                 "data": {
                     "code": "Station code"
                 },
-                "description": "Voer de code van het meteoklimatologische station in (bv. ESCAT43000043206B)",
+                "description": "Voer de code van het meteoklimatologische station in (bv. ESCAT4300000043206B)",
                 "title": "Meteoclimatic"
             }
         }

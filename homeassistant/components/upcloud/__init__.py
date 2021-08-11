@@ -286,7 +286,7 @@ class UpCloudServerEntity(CoordinatorEntity):
         """Return True if entity is available."""
         return super().available and STATE_MAP.get(
             self._server.state, self._server.state
-        ) in [STATE_ON, STATE_OFF]
+        ) in (STATE_ON, STATE_OFF)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

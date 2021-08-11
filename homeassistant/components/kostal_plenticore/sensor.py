@@ -1,11 +1,15 @@
 """Platform for Kostal Plenticore sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Callable
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -180,9 +184,19 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_data.get(ATTR_DEVICE_CLASS)
 
     @property
+    def state_class(self) -> str | None:
+        """Return the class of the state of this device, from component STATE_CLASSES."""
+        return self._sensor_data.get(ATTR_STATE_CLASS)
+
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._sensor_data.get(ATTR_ENABLED_DEFAULT, False)
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the last_reset time."""
+        return self._sensor_data.get(ATTR_LAST_RESET)
 
     @property
     def state(self) -> Any | None:

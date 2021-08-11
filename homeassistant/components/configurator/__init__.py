@@ -166,10 +166,10 @@ class Configurator:
         data.update(
             {
                 key: value
-                for key, value in [
+                for key, value in (
                     (ATTR_DESCRIPTION, description),
                     (ATTR_SUBMIT_CAPTION, submit_caption),
-                ]
+                )
                 if value is not None
             }
         )

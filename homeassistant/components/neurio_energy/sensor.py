@@ -6,7 +6,11 @@ import neurio
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, ENERGY_KILO_WATT_HOUR, POWER_WATT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -135,6 +139,7 @@ class NeurioEnergy(SensorEntity):
 
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
         elif sensor_type == DAILY_TYPE:
             self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
 

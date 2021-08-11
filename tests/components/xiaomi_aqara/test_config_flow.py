@@ -113,7 +113,7 @@ async def test_config_flow_user_success(hass):
 
 
 async def test_config_flow_user_multiple_success(hass):
-    """Test a successful config flow initialized by the user with multiple gateways discoverd."""
+    """Test a successful config flow initialized by the user with multiple gateways discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -249,7 +249,7 @@ async def test_config_flow_user_host_mac_success(hass):
 
 
 async def test_config_flow_user_discovery_error(hass):
-    """Test a failed config flow initialized by the user with no gateways discoverd."""
+    """Test a failed config flow initialized by the user with no gateways discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
