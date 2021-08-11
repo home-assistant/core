@@ -46,6 +46,7 @@ from .const import (
     SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_CREATE_SWITCHES,
     SONOS_ENTITY_CREATED,
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
@@ -191,8 +192,13 @@ class SonosSpeaker:
         self.muted: bool | None = None
         self.night_mode: bool | None = None
         self.dialog_mode: bool | None = None
+        self.cross_fade: bool | None = None
         self.bass_level: int | None = None
         self.treble_level: int | None = None
+
+        # Misc features
+        self.buttons_enabled: bool | None = None
+        self.status_light: bool | None = None
 
         # Grouping
         self.coordinator: SonosSpeaker | None = None
@@ -239,6 +245,8 @@ class SonosSpeaker:
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
+
+        dispatcher_send(self.hass, SONOS_CREATE_SWITCHES, self)
 
         self._event_dispatchers = {
             "AlarmClock": self.async_dispatch_alarms,

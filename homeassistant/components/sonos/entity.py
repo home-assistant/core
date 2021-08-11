@@ -33,6 +33,7 @@ class SonosEntity(Entity):
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
         self.speaker = speaker
+        self._attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
@@ -107,8 +108,3 @@ class SonosEntity(Entity):
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available
-
-    @property
-    def should_poll(self) -> bool:
-        """Return that we should not be polled (we handle that internally)."""
-        return False

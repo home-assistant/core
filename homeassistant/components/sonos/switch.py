@@ -17,6 +17,7 @@ from .const import (
     DOMAIN as SONOS_DOMAIN,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
+    SONOS_CREATE_SWITCHES,
 )
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
@@ -31,11 +32,39 @@ ATTR_SCHEDULED_TODAY = "scheduled_today"
 ATTR_VOLUME = "volume"
 ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 
+ATTR_CROSSFADE = "cross_fade"
+ATTR_NIGHT_SOUND = "night_mode"
+ATTR_SPEECH_ENHANCEMENT = "dialog_mode"
+ATTR_STATUS_LIGHT = "status_light"
+ATTR_TOUCH_CONTROLS = "buttons_enabled"
+
+ALL_FEATURES = (
+    ATTR_TOUCH_CONTROLS,
+    ATTR_CROSSFADE,
+    ATTR_NIGHT_SOUND,
+    ATTR_SPEECH_ENHANCEMENT,
+    ATTR_STATUS_LIGHT,
+)
+
+POLL_REQUIRED = (
+    ATTR_TOUCH_CONTROLS,
+    ATTR_CROSSFADE,
+    ATTR_STATUS_LIGHT,
+)
+
+FRIENDLY_NAMES = {
+    ATTR_CROSSFADE: "Crossfade",
+    ATTR_NIGHT_SOUND: "Night Sound",
+    ATTR_SPEECH_ENHANCEMENT: "Speech Enhancement",
+    ATTR_STATUS_LIGHT: "Status Light",
+    ATTR_TOUCH_CONTROLS: "Touch Controls",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
-    async def _async_create_entity(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
+    async def _async_create_alarms(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
         entities = []
         created_alarms = (
             hass.data[DATA_SONOS].alarms[speaker.household_id].created_alarm_ids
@@ -48,9 +77,86 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(SonosAlarmEntity(alarm_id, speaker))
         async_add_entities(entities)
 
+    def available_soco_attributes(speaker: SonosSpeaker) -> list[tuple[str, bool]]:
+        features = []
+        for feature_type in ALL_FEATURES:
+            if (state := getattr(speaker.soco, feature_type, None)) is not None:
+                features.append((feature_type, state))
+        return features
+
+    async def _async_create_switches(speaker: SonosSpeaker) -> None:
+        entities = []
+        available_features = await hass.async_add_executor_job(
+            available_soco_attributes, speaker
+        )
+        for feature_type, is_on in available_features:
+            _LOGGER.debug(
+                "Creating %s switch on %s",
+                FRIENDLY_NAMES[feature_type],
+                speaker.zone_name,
+            )
+            entities.append(SonosSwitchEntity(feature_type, speaker, is_on))
+        async_add_entities(entities)
+
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, SONOS_CREATE_ALARM, _async_create_entity)
+        async_dispatcher_connect(hass, SONOS_CREATE_ALARM, _async_create_alarms)
     )
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SONOS_CREATE_SWITCHES, _async_create_switches)
+    )
+
+
+class SonosSwitchEntity(SonosEntity, SwitchEntity):
+    """Representation of a Sonos feature switch."""
+
+    def __init__(self, feature_type: str, speaker: SonosSpeaker, is_on: bool) -> None:
+        """Initialize the switch."""
+        super().__init__(speaker)
+        self.feature_type = feature_type
+        self._attr_name = f"Sonos {speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
+        self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
+        self._attr_is_on = is_on
+
+        if feature_type == ATTR_NIGHT_SOUND:
+            self._attr_icon = "mdi:chat-sleep"
+        elif feature_type == ATTR_SPEECH_ENHANCEMENT:
+            self._attr_icon = "mdi:ear-hearing"
+        elif feature_type == ATTR_CROSSFADE:
+            self._attr_icon = "mdi:swap-horizontal"
+        elif feature_type == ATTR_STATUS_LIGHT:
+            self._attr_icon = "mdi:led-on"
+        elif feature_type == ATTR_TOUCH_CONTROLS:
+            self._attr_icon = "mdi:gesture-tap"
+
+        if feature_type in POLL_REQUIRED:
+            self._attr_entity_registry_enabled_default = False
+            self._attr_should_poll = True
+
+    def update(self) -> None:
+        """Fetch switch state if necessary."""
+        self._attr_is_on = getattr(self.speaker.soco, self.feature_type)
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        if self.feature_type in POLL_REQUIRED:
+            return self._attr_is_on
+        return getattr(self.speaker, self.feature_type)
+
+    def turn_on(self) -> None:
+        """Turn the entity on."""
+        self.send_command(True)
+
+    def turn_off(self) -> None:
+        """Turn the entity off."""
+        self.send_command(False)
+
+    def send_command(self, enable: bool) -> None:
+        """Enable or disable the feature on the device."""
+        try:
+            setattr(self.speaker.soco, self.feature_type, enable)
+        except SoCoUPnPException as exc:
+            _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
 
 
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
