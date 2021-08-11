@@ -65,7 +65,6 @@ class SolarlogSensor(SensorEntity):
         description: SolarLogSensorEntityDescription,
     ):
         """Initialize the sensor."""
-        self.device_name = device_name
         self.entity_description = description
         self.data = data
         self._attr_name = f"{device_name} {description.name}"
@@ -75,8 +74,8 @@ class SolarlogSensor(SensorEntity):
     def device_info(self):
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self.entry_id)},
-            "name": self.device_name,
+            "identifiers": {(DOMAIN, entry_id)},
+            "name": device_name,
             "manufacturer": "Solar-Log",
         }
 
