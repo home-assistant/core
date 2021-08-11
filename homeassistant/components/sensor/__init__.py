@@ -212,8 +212,9 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with device_class %s reports a temperature in "
-                    "%s which will be converted to %s, this is deprecated and will"
-                    " be removed from Home Assistant Core 2022.2. Please update "
+                    "%s which will be converted to %s. Temperature conversion for "
+                    "entities without correct device_class is deprecated and will"
+                    " be removed from Home Assistant Core 2022.3. Please update "
                     "your configuration if device_class is manually configured, "
                     "otherwise %s",
                     self.entity_id,
