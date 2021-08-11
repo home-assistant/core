@@ -20,13 +20,25 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.device_registry import format_mac
 
-from . import convert_tracked_list
 from .const import CONF_METHOD_VERSION, CONF_CONSIDER_HOME, CONF_TRACKED_LIST, DEFAULT_CONSIDER_HOME, DEFAULT_METHOD_VERSION, DOMAIN
 from .errors import CannotLoginException
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def convert_tracked_list(tracked_list_str):
+    """Convert tracked list string to a list."""
+    tracked_list = []
+    tracked_list_unformatted = []
+    if tracked_list_str:
+        tracked_list_unformatted = tracked_list_str.replace(" ", "").split(",")
+
+    for mac in tracked_list_unformatted:
+        tracked_list.append(format_mac(mac))
+
+    return tracked_list
 
 
 def get_api(

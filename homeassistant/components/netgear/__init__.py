@@ -7,25 +7,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, PLATFORMS
 from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def convert_tracked_list(tracked_list_str):
-    """Convert tracked list string to a list."""
-    tracked_list = []
-    tracked_list_unformatted = []
-    if tracked_list_str:
-        tracked_list_unformatted = tracked_list_str.replace(" ", "").split(",")
-
-    for mac in tracked_list_unformatted:
-        tracked_list.append(format_mac(mac))
-
-    return tracked_list
 
 
 async def async_setup(hass, config):
