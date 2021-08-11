@@ -143,11 +143,11 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
             return self._attr_is_on
         return getattr(self.speaker, self.feature_type)
 
-    def turn_on(self) -> None:
+    def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         self.send_command(True)
 
-    def turn_off(self) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         self.send_command(False)
 
