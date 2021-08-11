@@ -127,7 +127,7 @@ class ArloSensor(SensorEntity):
         self.async_schedule_update_ha_state(True)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

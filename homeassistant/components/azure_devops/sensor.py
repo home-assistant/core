@@ -71,7 +71,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
         unit_of_measurement: str = "",
     ) -> None:
         """Initialize Azure DevOps sensor."""
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self.client = client
         self.organization = organization
         self.project = project
@@ -107,7 +107,7 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             _LOGGER.warning(exception)
             self._attr_available = False
             return False
-        self._attr_state = build.build_number
+        self._attr_native_value = build.build_number
         self._attr_extra_state_attributes = {
             "definition_id": build.definition.id,
             "definition_name": build.definition.name,

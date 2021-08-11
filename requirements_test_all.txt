@@ -78,7 +78,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.ambient_station
-aioambient==1.2.5
+aioambient==1.2.6
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.3.4
@@ -948,7 +948,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.openuv
-pyopenuv==1.0.9
+pyopenuv==2.1.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
