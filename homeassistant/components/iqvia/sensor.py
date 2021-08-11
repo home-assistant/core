@@ -104,7 +104,7 @@ class ForecastSensor(IQVIAEntity):
     @callback
     def update_from_latest_data(self):
         """Update the sensor."""
-        if not self.coordinator.last_update_success:
+        if not self.available:
             return
 
         data = self.coordinator.data.get("Location", {})
