@@ -60,14 +60,12 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         key=ATTR_CURRENT_VERSION,
         primary_key="software",
         sensor_key="softwareVersion",
-        native_unit_of_measurement=None,
         icon="mdi:checkbox-marked-circle-outline",
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_NEW_VERSION,
         primary_key="software",
         sensor_key="updateNewVersion",
-        native_unit_of_measurement=None,
         icon="mdi:update",
     ),
     GoogleWifiSensorEntityDescription(
@@ -81,21 +79,18 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         key=ATTR_LAST_RESTART,
         primary_key="system",
         sensor_key="uptime",
-        native_unit_of_measurement=None,
         icon="mdi:restart",
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_LOCAL_IP,
         primary_key="wan",
         sensor_key="localIpAddress",
-        native_unit_of_measurement=None,
         icon="mdi:access-point-network",
     ),
     GoogleWifiSensorEntityDescription(
         key=ATTR_STATUS,
         primary_key="wan",
         sensor_key="online",
-        native_unit_of_measurement=None,
         icon="mdi:google",
     ),
 )
