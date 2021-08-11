@@ -99,7 +99,7 @@ def add_entities(router, async_add_entities, tracked):
 class NetgearDeviceEntity(ScannerEntity):
     """Representation of a device connected to a Netgear router."""
 
-    def __init__(self, router: NetgearRouter, device: dict[str, any]) -> None:
+    def __init__(self, router: NetgearRouter, device) -> None:
         """Initialize a Netgear device."""
         self._router = router
         self._device = device
@@ -169,12 +169,12 @@ class NetgearDeviceEntity(ScannerEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self) -> dict[str, any]:
+    def device_state_attributes(self):
         """Return the attributes."""
         return self._attrs
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
