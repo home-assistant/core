@@ -17,6 +17,7 @@ from homeassistant.const import (
 VALID_UNITS: tuple[str, ...] = (
     PRESSURE_PA,
     PRESSURE_HPA,
+    PRESSURE_BAR,
     PRESSURE_MBAR,
     PRESSURE_INHG,
     PRESSURE_PSI,
