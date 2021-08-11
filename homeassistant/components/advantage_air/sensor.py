@@ -112,7 +112,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone wireless signal sensor."""
-        super().__init__(instance, ac_key, zone_key=zone_key)
+        super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Signal'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
@@ -149,7 +149,9 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Temperature'
-        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-temp'
+        )
 
     @property
     def state(self):
