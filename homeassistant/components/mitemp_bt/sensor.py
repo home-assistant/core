@@ -56,19 +56,19 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="battery",
         name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
 )
 
