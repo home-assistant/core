@@ -98,7 +98,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
         TEMP_KELVIN: temperature_util.kelvin_to_celsius,
     },
-    # Convert cubic feet to cubic meter
+    # Convert volume to cubic meter
     DEVICE_CLASS_GAS: {
         VOLUME_CUBIC_METERS: lambda x: x,
         VOLUME_CUBIC_FEET: volume_util.cubic_feet_to_cubic_meter,
