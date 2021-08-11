@@ -3,7 +3,11 @@ from datetime import timedelta
 import logging
 
 from py17track.client import Client
-from py17track.errors import SeventeenTrackError
+from py17track.errors import (
+    InvalidTrackingNumberError,
+    RequestError,
+    SeventeenTrackError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -130,14 +134,26 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
 
         async def async_add_package(service: ServiceCall):
             """Add new package."""
-            device_registry = self.hass.helpers.device_registry.async_get(self.hass)
-            device = device_registry.async_get(service.data[CONF_ACCOUNT])
+            device = self.hass.helpers.device_registry.async_get(self.hass).async_get(
+                service.data[CONF_ACCOUNT]
+            )
+            if device is None:
+                _LOGGER.error("17Track device not found")
+                return
             for config_entry_id in device.config_entries:
                 client = self.hass.data[DOMAIN][config_entry_id].client
                 break
-            await client.profile.add_package(
-                service.data[CONF_TRACKING_NUMBER], service.data[CONF_FRIENDLY_NAME]
-            )
+            try:
+                await client.profile.add_package(
+                    service.data[CONF_TRACKING_NUMBER],
+                    service.data.get(CONF_FRIENDLY_NAME),
+                )
+            except RequestError as err:
+                _LOGGER.error("Package exists or could not be added: %s", err)
+                return
+            except InvalidTrackingNumberError as err:
+                _LOGGER.error("Could not set friendly_name: %s", err)
+                return
             await self.async_request_refresh()
 
         self.hass.services.async_register(

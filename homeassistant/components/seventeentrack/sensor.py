@@ -49,15 +49,15 @@ async def async_setup_entry(
 class SeventeenTrackBaseSensor(CoordinatorEntity, SensorEntity):
     """Base class for SeventeenTrack sensors."""
 
+    coordinator: SeventeenTrackDataCoordinator
     _attr_icon = ICON
     _attr_unit_of_measurement = "packages"
 
     def __init__(self, coordinator: SeventeenTrackDataCoordinator) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
-        self._name = coordinator.config_entry.data[CONF_NAME]
-        self._username = coordinator.config_entry.data[CONF_USERNAME]
+        self._attr_name: str = coordinator.config_entry.data[CONF_NAME]
+        self._username: str = coordinator.config_entry.data[CONF_USERNAME]
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
@@ -65,30 +65,20 @@ class SeventeenTrackBaseSensor(CoordinatorEntity, SensorEntity):
         """Return device information about this 17Track instance."""
         return {
             "identifiers": {(DOMAIN, self._username)},
-            "name": self._username,
+            "name": self.coordinator.config_entry.data[CONF_NAME],
             "manufacturer": "17Track",
             "entry_type": "service",
         }
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
 
 
 class SeventeenTrackPackagesSensor(SeventeenTrackBaseSensor):
     """Define sensor for all packages."""
 
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return f"{self._name} all packages"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
-        return f"{self._username}-{slugify(self.name)}"
+    def __init__(self, coordinator: SeventeenTrackDataCoordinator) -> None:
+        """Initialize package sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{self._attr_name} all packages"
+        self._attr_unique_id = f"{self._username}-{slugify(self._attr_name)}"
 
     @property
     def state(self) -> int:
@@ -130,17 +120,9 @@ class SeventeenTrackSummarySensor(SeventeenTrackBaseSensor):
     ) -> None:
         """Initialize the sensor type."""
         super().__init__(coordinator)
+        self._attr_name = f"{self._attr_name} packages {sensor_type}"
+        self._attr_unique_id = f"{self._username}-{slugify(self._attr_name)}"
         self.sensor_type = sensor_type
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return f"{self._name} packages {self.sensor_type}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
-        return f"{self._username}-{slugify(self.name)}"
 
     @property
     def state(self) -> str:
