@@ -200,6 +200,8 @@ class TrafikverketWeatherStation(SensorEntity):
         """Get the latest data from Trafikverket and updates the states."""
         try:
             self._weather = await self._weather_api.async_get_weather(self._station)
-            self._attr_state = getattr(self._weather, self.entity_description.api_key)
+            self._attr_native_value = getattr(
+                self._weather, self.entity_description.api_key
+            )
         except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
             _LOGGER.error("Could not fetch weather data: %s", error)
