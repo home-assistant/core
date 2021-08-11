@@ -54,6 +54,17 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
+PREFIX_DEVICE_CLASS_MAPPING = [
+    ("state_of_charge", DEVICE_CLASS_BATTERY),
+    ("temperature", DEVICE_CLASS_TEMPERATURE),
+    ("power_factor", DEVICE_CLASS_POWER_FACTOR),
+    ("power", DEVICE_CLASS_POWER),
+    ("energy", DEVICE_CLASS_ENERGY),
+    ("current", DEVICE_CLASS_CURRENT),
+    ("timestamp", DEVICE_CLASS_TIMESTAMP),
+    ("voltage", DEVICE_CLASS_VOLTAGE),
+]
+
 
 def _device_id_validator(config):
     """Ensure that inverters have default id 1 and other devices 0."""
@@ -167,43 +178,6 @@ class FroniusAdapter:
         """Whether the fronius device is active."""
         return self._available
 
-    def entity_description(  # pylint: disable=no-self-use
-        self, key
-    ) -> SensorEntityDescription:
-        """Create entity description for a key."""
-        device_class: str | None = None
-        if key.startswith("state_of_charge"):
-            device_class = DEVICE_CLASS_BATTERY
-        elif key.startswith("temperature"):
-            device_class = DEVICE_CLASS_TEMPERATURE
-        elif key.startswith("power_factor"):
-            device_class = DEVICE_CLASS_POWER_FACTOR
-        elif key.startswith("power"):
-            device_class = DEVICE_CLASS_POWER
-        elif key.startswith("energy"):
-            device_class = DEVICE_CLASS_ENERGY
-        elif key.startswith("current"):
-            device_class = DEVICE_CLASS_CURRENT
-        elif key.startswith("timestamp"):
-            device_class = DEVICE_CLASS_TIMESTAMP
-        elif key.startswith("voltage"):
-            device_class = DEVICE_CLASS_VOLTAGE
-
-        last_reset: dt.dt.datetime | None = None
-        if "day" in key:
-            last_reset = dt.start_of_local_day()
-        elif "year" in key:
-            last_reset = dt.start_of_local_day(dt.dt.date(dt.now().year, 1, 1))
-        elif "total" in key:
-            last_reset = dt.utc_from_timestamp(0)
-
-        return SensorEntityDescription(
-            key=key,
-            device_class=device_class,
-            state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=last_reset,
-        )
-
     async def async_update(self):
         """Retrieve and update latest state."""
         try:
@@ -308,12 +282,11 @@ class FroniusPowerFlow(FroniusAdapter):
 class FroniusTemplateSensor(SensorEntity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
-    def __init__(self, parent: FroniusAdapter, key):
+    def __init__(self, parent: FroniusAdapter, key: str):
         """Initialize a singular value sensor."""
         self._key = key
         self._attr_name = f"{key.replace('_', ' ').capitalize()} {parent.name}"
         self._parent = parent
-        self.entity_description = parent.entity_description(key)
 
     @property
     def should_poll(self):
@@ -332,6 +305,27 @@ class FroniusTemplateSensor(SensorEntity):
         if isinstance(self._attr_state, float):
             self._attr_state = round(self._attr_state, 2)
         self._attr_unit_of_measurement = state.get("unit")
+
+    @property
+    def device_class(self) -> str | None:
+        for prefix, device_class in PREFIX_DEVICE_CLASS_MAPPING:
+            if self._key.startswith(prefix):
+                return device_class
+        return None
+
+    @property
+    def state_class(self) -> str | None:
+        return STATE_CLASS_MEASUREMENT
+
+    @property
+    def last_reset(self) -> dt.dt.datetime | None:
+        if self._key.endswith("day"):
+            return dt.start_of_local_day()
+        elif self._key.endswith("year"):
+            return dt.start_of_local_day(dt.dt.date(dt.now().year, 1, 1))
+        elif self._key.endswith("total"):
+            return dt.utc_from_timestamp(0)
+        return None
 
     async def async_added_to_hass(self):
         """Register at parent component for updates."""
