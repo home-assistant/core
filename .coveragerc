@@ -671,6 +671,7 @@ omit =
     homeassistant/components/mystrom/light.py
     homeassistant/components/mystrom/switch.py
     homeassistant/components/myq/__init__.py
+    homeassistant/components/myq/cover.py
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
     homeassistant/components/neato/__init__.py
