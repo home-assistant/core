@@ -26,7 +26,9 @@ def _get_sensor(hass, name="Last", sensor_type="last_capture", data=None):
         sensor_entry for sensor_entry in SENSOR_TYPES if sensor_entry.key == sensor_type
     )
     sensor_entry.name = name
-    return arlo.ArloSensor(data, sensor_entry)
+    sensor = arlo.ArloSensor(data, sensor_entry)
+    sensor.hass = hass
+    return sensor
 
 
 @pytest.fixture()
