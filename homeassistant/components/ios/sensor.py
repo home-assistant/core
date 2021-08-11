@@ -14,7 +14,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="level",
         name="Battery Level",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="state",
@@ -114,12 +114,16 @@ class IOSSensor(SensorEntity):
     def _update(self, device):
         """Get the latest state of the sensor."""
         self._device = device
-        self._attr_state = self._device[ios.ATTR_BATTERY][self.entity_description.key]
+        self._attr_native_value = self._device[ios.ATTR_BATTERY][
+            self.entity_description.key
+        ]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Added to hass so need to register to dispatch."""
-        self._attr_state = self._device[ios.ATTR_BATTERY][self.entity_description.key]
+        self._attr_native_value = self._device[ios.ATTR_BATTERY][
+            self.entity_description.key
+        ]
         device_id = self._device[ios.ATTR_DEVICE_ID]
         self.async_on_remove(
             async_dispatcher_connect(self.hass, f"{DOMAIN}.{device_id}", self._update)
