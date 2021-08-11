@@ -98,10 +98,10 @@ class NetgearRouter:
             self._url,
         )
 
+        # set already known devices to away instead of unavailable
         entity_registry = er.async_get(self.hass)
         entries = er.async_entries_for_config_entry(entity_registry, self.entry_id)
         for entity_entry in entries:
-            _LOGGER.error(entity_entry)
             self.devices[entity_entry.unique_id] = {
                 "name": entity_entry.original_name,
                 "active": False,
