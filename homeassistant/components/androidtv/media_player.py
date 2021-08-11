@@ -163,7 +163,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_PORT: config[CONF_PORT],
         CONF_ADB_SERVER_PORT: config[CONF_ADB_SERVER_PORT],
     }
-    for key in [CONF_ADB_KEY, CONF_ADB_SERVER_IP]:
+    for key in (CONF_ADB_KEY, CONF_ADB_SERVER_IP):
         if key in config:
             config_data[key] = config[key]
 
@@ -173,12 +173,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_EXCLUDE_UNNAMED_APPS: config[CONF_EXCLUDE_UNNAMED_APPS],
         CONF_SCREENCAP: config[CONF_SCREENCAP],
     }
-    for key in [
+    for key in (
         CONF_APPS,
         CONF_STATE_DETECTION_RULES,
         CONF_TURN_OFF_COMMAND,
         CONF_TURN_ON_COMMAND,
-    ]:
+    ):
         if key in config:
             if key == CONF_STATE_DETECTION_RULES:
                 config_options[key] = json.dumps(config[key])

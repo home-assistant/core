@@ -186,11 +186,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def _save_config(self, data):
         """Save the updated options."""
-        for param in [
+        for param in (
             CONF_TURN_OFF_COMMAND,
             CONF_TURN_ON_COMMAND,
             CONF_STATE_DETECTION_RULES,
-        ]:
+        ):
             value = data.get(param)
             if value is not None:
                 value = value.strip()
