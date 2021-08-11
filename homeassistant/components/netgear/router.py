@@ -33,7 +33,7 @@ def convert_tracked_list(tracked_list_str):
     tracked_list = []
     tracked_list_unformatted = []
     if tracked_list_str:
-        tracked_list_unformatted = tracked_list_str.replace(" ", "").split(",")
+        tracked_list_unformatted = tracked_list_str.replace(" ", "").replace("]", "").replace("[", "").split(",")
 
     for mac in tracked_list_unformatted:
         tracked_list.append(format_mac(mac))
