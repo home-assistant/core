@@ -73,7 +73,7 @@ class LuftdatenSensor(SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self._data is not None:
             try:
@@ -82,7 +82,7 @@ class LuftdatenSensor(SensorEntity):
                 return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

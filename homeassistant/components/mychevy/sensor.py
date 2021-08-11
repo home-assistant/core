@@ -98,7 +98,7 @@ class MyChevyStatus(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 
@@ -166,7 +166,7 @@ class EVSensor(SensorEntity):
             self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 
@@ -176,7 +176,7 @@ class EVSensor(SensorEntity):
         return self._state_attributes
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement the state is expressed in."""
         return self._unit_of_measurement
 
