@@ -104,6 +104,11 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                 "stat_energy_from": "my_solar_production",
                 "config_entry_solar_forecast": ["predicted_config_entry"],
             },
+            {
+                "type": "battery",
+                "stat_energy_from": "my_battery_draining",
+                "stat_energy_to": "my_battery_charging",
+            },
         ],
         "device_consumption": [{"stat_consumption": "some_device_usage"}],
     }
