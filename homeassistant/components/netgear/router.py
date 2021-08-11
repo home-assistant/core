@@ -59,6 +59,7 @@ class NetgearRouter:
         self._password = entry.data[CONF_PASSWORD]
         self._method_version = DEFAULT_METHOD_VERSION
         self._consider_home = DEFAULT_CONSIDER_HOME
+        self._tracked_list = []
 
         self._api: Netgear = None
         self._attrs = {}
@@ -113,11 +114,14 @@ class NetgearRouter:
             if self._method_version == 2 and not ntg_device.link_rate:
                 continue
 
+            if self._tracked_list and device_mac not in self._tracked_list:
+                continue
+
             if not self.devices.get(device_mac):
                 new_device = True
 
             self.devices[device_mac] = ntg_device._asdict()
-            self.devices["mac"] = device_mac
+            self.devices[device_mac]["mac"] = device_mac
             self.devices[device_mac]["last_seen"] = now
 
         for device in self.devices.values():
