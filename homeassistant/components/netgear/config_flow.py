@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -15,8 +16,9 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_METHOD_VERSION, CONF_CONSIDER_HOME, CONF_TRACKED_LIST, DEFAULT_METHOD_VERSION, DEFAULT_CONSIDER_HOME, DOMAIN  # pylint: disable=unused-import
 from .errors import CannotLoginException
 from .router import get_api
 
@@ -43,6 +45,44 @@ def _ordered_shared_schema(schema_input):
     }
 
 
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options for the component."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Init object."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        settings_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_METHOD_VERSION, 
+                    default=self.config_entry.options.get(
+                        CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION
+                    ),
+                ): vol.In([1, 2]),
+                vol.Optional(
+                    CONF_CONSIDER_HOME, 
+                    default=self.config_entry.options.get(
+                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
+                    ),
+                ): vol.All(cv.time_period, cv.positive_timedelta),
+                vol.Optional(
+                    CONF_TRACKED_LIST, 
+                    default=self.config_entry.options.get(
+                        CONF_TRACKED_LIST, []
+                    ),
+                ): list,
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=settings_schema)
+
+
 class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -57,6 +97,14 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: DEFAULT_PORT,
             CONF_USERNAME: DEFAULT_USER,
         }
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow."""
+        return OptionsFlowHandler(config_entry)
 
     async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
