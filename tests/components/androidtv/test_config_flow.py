@@ -199,11 +199,33 @@ async def test_invalid_serial(hass):
         assert result["reason"] == "invalid_unique_id"
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_host_exist(hass):
     """Test we abort if component is already setup."""
     MockConfigEntry(
         domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=SERIAL_NO
     ).add_to_hass(hass)
+
+    config_data = CONFIG_ADB_SERVER.copy()
+    config_data[CONF_HOST] = "name"
+    # Should fail, same IP Address (by PATCH_GET_HOST_IP)
+    with PATCH_GET_HOST_IP:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=config_data,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_abort_if_unique_exist(hass):
+    """Test we abort if component is already setup."""
+    config_data = CONFIG_ADB_SERVER.copy()
+    config_data[CONF_HOST] = "127.0.0.2"
+    MockConfigEntry(domain=DOMAIN, data=config_data, unique_id=SERIAL_NO).add_to_hass(
+        hass
+    )
 
     # Should fail, same SerialNo
     with patch(

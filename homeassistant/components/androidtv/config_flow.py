@@ -6,7 +6,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
@@ -85,6 +85,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                    vol.Optional(CONF_NAME): str,
                     vol.Required(
                         CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS
                     ): vol.In(DEVICE_CLASSES),
@@ -140,21 +141,26 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not ip_address:
                 errors["base"] = "invalid_host"
 
-        if not errors:
-            result = await self._async_check_connection(user_input)
-            if result != RESULT_SUCCESS:
-                errors["base"] = result
-
         if errors:
             return self._show_setup_form(user_input, errors)
 
+        self._async_abort_entries_match({CONF_HOST: self._host})
+        if ip_address != self._host:
+            self._async_abort_entries_match({CONF_HOST: ip_address})
+
+        result = await self._async_check_connection(user_input)
+        if result != RESULT_SUCCESS:
+            return self._show_setup_form(user_input, {"base": result})
+
         if not self._unique_id:
             return self.async_abort(reason="invalid_unique_id")
+
         await self.async_set_unique_id(self._unique_id)
         self._abort_if_unique_id_configured()
+        name = user_input.get(CONF_NAME, self._host)
 
         return self.async_create_entry(
-            title=self._host,
+            title=name,
             data=user_input,
         )
 
@@ -265,7 +271,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if user_input.get(CONF_APP_DELETE, False):
                     self._apps.pop(app_id)
                 else:
-                    self._apps[app_id] = user_input[CONF_APP_NAME]
+                    self._apps[app_id] = user_input.get(CONF_APP_NAME, "").strip()
 
         return await self.async_step_init()
 
