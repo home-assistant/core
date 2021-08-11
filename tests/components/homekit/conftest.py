@@ -1,9 +1,12 @@
 """HomeKit session fixtures."""
+from contextlib import suppress
+import os
 from unittest.mock import patch
 
 from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
+from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.homekit.const import EVENT_HOMEKIT_CHANGED
 
 from tests.common import async_capture_events, mock_device_registry, mock_registry
@@ -59,3 +62,11 @@ def device_reg_fixture(hass):
 def entity_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
+
+
+@pytest.fixture
+def demo_cleanup(hass):
+    """Clean up device tracker demo file."""
+    yield
+    with suppress(FileNotFoundError):
+        os.remove(hass.config.path(YAML_DEVICES))

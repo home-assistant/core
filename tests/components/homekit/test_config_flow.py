@@ -368,7 +368,9 @@ async def test_options_flow_exclude_mode_basic(hass):
     }
 
 
-async def test_options_flow_devices(mock_hap, hass, device_reg, entity_reg):
+async def test_options_flow_devices(
+    mock_hap, hass, demo_cleanup, device_reg, entity_reg
+):
     """Test devices can be bridged."""
 
     config_entry = _mock_config_entry_with_options_populated()
