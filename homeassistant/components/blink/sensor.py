@@ -19,13 +19,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TYPE_TEMPERATURE,
         name="Temperature",
-        unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key=TYPE_WIFI_STRENGTH,
         name="Wifi Signal",
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
     ),
 )
