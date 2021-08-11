@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import velbusaio
+from velbusaio.exceptions import VelbuConnectionFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,7 +40,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             controller = velbusaio.controller.Velbus(prt)
             await controller.connect(True)
             await controller.stop()
-        except Exception:  # pylint: disable=broad-except
+        except VelbuConnectionFailed:
             self._errors[CONF_PORT] = "cannot_connect"
             return False
         return True

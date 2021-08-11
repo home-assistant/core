@@ -4,7 +4,11 @@ from __future__ import annotations
 from datetime import datetime
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.const import DEVICE_CLASS_ENERGY, DEVICE_CLASS_POWER
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+)
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import VelbusEntity
@@ -53,6 +57,8 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             return DEVICE_CLASS_ENERGY
         if self._channel.is_counter_channel():
             return DEVICE_CLASS_POWER
+        if self._channel.is_temperature():
+            return DEVICE_CLASS_TEMPERATURE
         return None
 
     @property
