@@ -74,9 +74,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): int,
                 vol.Optional(
                     CONF_TRACKED_LIST, 
-                    default=self.config_entry.options.get(
-                        CONF_TRACKED_LIST, ""
-                    ),
+                    description={"suggested_value": self.config_entry.options.get(CONF_TRACKED_LIST, "")},
                 ): str,
             }
         )

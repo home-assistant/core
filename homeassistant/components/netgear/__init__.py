@@ -45,3 +45,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
             hass.data.pop(DOMAIN)
 
     return unload_ok
+
+async def update_listener(
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)

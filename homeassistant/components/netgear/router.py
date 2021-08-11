@@ -20,7 +20,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_CONSIDER_HOME, DEFAULT_METHOD_VERSION, DOMAIN
+from .const import CONF_METHOD_VERSION, CONF_CONSIDER_HOME, CONF_TRACKED_LIST, DEFAULT_CONSIDER_HOME, DEFAULT_METHOD_VERSION, DOMAIN
 from .errors import CannotLoginException
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -57,9 +57,18 @@ class NetgearRouter:
         self._ssl = entry.data.get(CONF_SSL)
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
-        self._method_version = DEFAULT_METHOD_VERSION
-        self._consider_home = DEFAULT_CONSIDER_HOME
+        
+        self._method_version = entry.options.get(CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION)
+        consider_home_int = entry.options.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds())
+        tracked_list_str = entry.options.get(CONF_TRACKED_LIST, "")
+        self._consider_home = timedelta(seconds=consider_home_int)
         self._tracked_list = []
+        tracked_list_unformatted = []
+        if tracked_list_str:
+            tracked_list_unformatted = tracked_list_str.replace(" ", "").split(",")
+
+        for mac in tracked_list_unformatted:
+            self._tracked_list.append(format_mac(mac))
 
         self._api: Netgear = None
         self._attrs = {}
