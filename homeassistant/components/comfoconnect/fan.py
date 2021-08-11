@@ -46,6 +46,7 @@ class ComfoConnectFan(FanEntity):
 
     _attr_icon = "mdi:air-conditioner"
     _attr_should_poll = False
+    _attr_supported_features = SUPPORT_SET_SPEED
 
     def __init__(self, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
@@ -74,11 +75,6 @@ class ComfoConnectFan(FanEntity):
         )
         self._ccb.data[SENSOR_FAN_SPEED_MODE] = value
         self.schedule_update_ha_state()
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
     @property
     def percentage(self):
