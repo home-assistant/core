@@ -73,7 +73,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{station} {description.name}"
         if not hass.config.units.is_metric:
-            self._attr_unit_of_measurement = description.unit_convert
+            self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
     def native_value(self):
