@@ -196,6 +196,7 @@ async def test_setup_get_template_headers(hass):
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {
+                    "Accept": CONTENT_TYPE_JSON,
                     "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
                 },
             }
@@ -203,6 +204,7 @@ async def test_setup_get_template_headers(hass):
     )
     await async_setup_component(hass, "homeassistant", {})
 
+    assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
     assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
 
 

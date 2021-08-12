@@ -162,6 +162,7 @@ async def test_setup_with_template_headers(hass, aioclient_mock):
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
                 CONF_HEADERS: {
+                    "Accept": CONTENT_TYPE_JSON,
                     "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
                 },
             }
@@ -169,6 +170,7 @@ async def test_setup_with_template_headers(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[-1][3].get("Accept") == CONTENT_TYPE_JSON
     assert aioclient_mock.mock_calls[-1][3].get("User-Agent") == "Mozilla/5.0"
     assert_setup_component(1, SWITCH_DOMAIN)
 
