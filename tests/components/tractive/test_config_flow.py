@@ -7,6 +7,8 @@ from homeassistant import config_entries, setup
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
 USER_INPUT = {
     "email": "test-email@example.com",
     "password": "test-password",
@@ -76,3 +78,21 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
+    """Test user input for config_entry that already exists."""
+    first_entry = MockConfigEntry(
+        domain="tractive",
+        data=USER_INPUT,
+        unique_id={"user_id": "USERID"},
+    )
+    first_entry.add_to_hass(hass)
+
+    with patch("aiotractive.api.API.user_id", return_value={"user_id": "USERID"}):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"

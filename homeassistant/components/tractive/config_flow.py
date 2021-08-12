@@ -17,7 +17,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({CONF_EMAIL: str, CONF_PASSWORD: str})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -61,6 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            print(info["user_id"])
             await self.async_set_unique_id(info["user_id"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
@@ -68,6 +71,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, _: dict = None) -> FlowResult:
+        """Prompt user to re-authenticate."""
+        return await self.async_step_user()
 
 
 class InvalidAuth(HomeAssistantError):

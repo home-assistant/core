@@ -5,7 +5,6 @@ import logging
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -97,7 +96,6 @@ class TractiveDeviceTracker(TrackerEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
 
-        @callback
         def handle_hardware_status_update(event):
             self._battery_level = event["battery_level"]
             self._attr_available = True
@@ -111,7 +109,6 @@ class TractiveDeviceTracker(TrackerEntity):
             )
         )
 
-        @callback
         def handle_position_update(event):
             self._latitude = event["latitude"]
             self._longitude = event["longitude"]
@@ -127,7 +124,6 @@ class TractiveDeviceTracker(TrackerEntity):
             )
         )
 
-        @callback
         def handle_server_unavailable():
             self._latitude = None
             self._longitude = None
