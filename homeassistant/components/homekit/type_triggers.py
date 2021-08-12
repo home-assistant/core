@@ -46,11 +46,10 @@ class DeviceTriggerAccessory(HomeAccessory):
                 )
             )
             serv_stateless_switch.configure_char(CHAR_NAME, value=trigger_name)
-            serv_stateless_switch.configure_char(
-                CHAR_SERVICE_LABEL_INDEX, value=idx + 1
-            )
+            serv_stateless_switch.configure_char(CHAR_SERVICE_LABEL_INDEX, value=idx)
             serv_service_label = self.add_preload_service(SERV_SERVICE_LABEL)
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
+            serv_stateless_switch.add_linked_service(serv_service_label)
 
     async def async_trigger(self, run_variables, context=None, skip_condition=False):
         """Trigger button press.
