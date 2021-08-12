@@ -1,4 +1,6 @@
 """Support for Telegram bot using polling."""
+from __future__ import annotations
+
 import logging
 
 from telegram import Update
@@ -62,11 +64,12 @@ def message_handler(handler):
             update: HandlerArg,
             dispatcher: Dispatcher,
             check_result: object,
-            context: CallbackContext = None,
+            context: CallbackContext | None = None,
         ):
             """Handle update."""
             optional_args = self.collect_optional_args(dispatcher, update)
-            context.args = optional_args
+            if context:
+                context.args = optional_args
             return self.callback(update, context)
 
     return MessageHandler()
