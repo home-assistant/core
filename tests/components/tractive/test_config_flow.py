@@ -85,11 +85,11 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     first_entry = MockConfigEntry(
         domain="tractive",
         data=USER_INPUT,
-        unique_id={"user_id": "USERID"},
+        unique_id="USERID",
     )
     first_entry.add_to_hass(hass)
 
-    with patch("aiotractive.api.API.user_id", return_value={"user_id": "USERID"}):
+    with patch("aiotractive.api.API.user_id", return_value="USERID"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=USER_INPUT
         )
