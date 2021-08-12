@@ -1,16 +1,43 @@
 """Support for Tractive sensors."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    TIME_MINUTES,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_ACTIVITY,
-    ATTR_HARDWARE,
+    ATTR_DAILY_GOAL,
+    ATTR_MINUTES_ACTIVE,
     DOMAIN,
-    SENSOR_TYPES,
     SERVER_UNAVAILABLE,
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
+)
+from .model import TractiveSensorEntityDescription
+
+ATTR_ACTIVITY = "activity"
+ATTR_HARDWARE = "hardware"
+
+SENSOR_TYPES = (
+    TractiveSensorEntityDescription(
+        key=ATTR_BATTERY_LEVEL,
+        name="Battery Level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        event_type=ATTR_HARDWARE,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_MINUTES_ACTIVE,
+        name="Minutes Active",
+        icon="mdi:clock-time-eight-outline",
+        native_unit_of_measurement=TIME_MINUTES,
+        event_type=ATTR_ACTIVITY,
+        attributes=(ATTR_DAILY_GOAL,),
+    ),
 )
 
 
