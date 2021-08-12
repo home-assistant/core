@@ -93,12 +93,12 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
             self._attr_is_on = not vehicle_state.all_lids_closed
             for lid in vehicle_state.lids:
                 result[lid.name] = lid.state.value
-        if self._attribute == "windows":
+        elif self._attribute == "windows":
             self._attr_is_on = not vehicle_state.all_windows_closed
             for window in vehicle_state.windows:
                 result[window.name] = window.state.value
         # device class lock: On means unlocked, Off means locked
-        if self._attribute == "door_lock_state":
+        elif self._attribute == "door_lock_state":
             # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
             self._attr_is_on = vehicle_state.door_lock_state not in [
                 LockState.LOCKED,
@@ -107,15 +107,15 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
             result["door_lock_state"] = vehicle_state.door_lock_state.value
             result["last_update_reason"] = vehicle_state.last_update_reason
         # device class light: On means light detected, Off means no light
-        if self._attribute == "lights_parking":
+        elif self._attribute == "lights_parking":
             self._attr_is_on = vehicle_state.are_parking_lights_on
             result["lights_parking"] = vehicle_state.parking_lights.value
         # device class problem: On means problem detected, Off means no problem
-        if self._attribute == "condition_based_services":
+        elif self._attribute == "condition_based_services":
             self._attr_is_on = not vehicle_state.are_all_cbs_ok
             for report in vehicle_state.condition_based_services:
                 result.update(self._format_cbs_report(report))
-        if self._attribute == "check_control_messages":
+        elif self._attribute == "check_control_messages":
             self._attr_is_on = vehicle_state.has_check_control_messages
             check_control_messages = vehicle_state.check_control_messages
             has_check_control_messages = vehicle_state.has_check_control_messages
@@ -127,13 +127,13 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
             else:
                 result["check_control_messages"] = "OK"
         # device class power: On means power detected, Off means no power
-        if self._attribute == "charging_status":
+        elif self._attribute == "charging_status":
             self._attr_is_on = vehicle_state.charging_status in [ChargingState.CHARGING]
             result["charging_status"] = vehicle_state.charging_status.value
             result["last_charging_end_result"] = vehicle_state.last_charging_end_result
         # device class plug: On means device is plugged in,
         #                    Off means device is unplugged
-        if self._attribute == "connection_status":
+        elif self._attribute == "connection_status":
             self._attr_is_on = vehicle_state.connection_status == "CONNECTED"
             result["connection_status"] = vehicle_state.connection_status
 
