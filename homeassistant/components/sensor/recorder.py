@@ -301,10 +301,13 @@ def compile_statistics(
                 reset = False
                 if (
                     state_class != STATE_CLASS_METER
-                    and (last_reset := state.attributes["last_reset"]) != old_last_reset
+                    and (last_reset := state.attributes.get("last_reset"))
+                    != old_last_reset
                 ):
                     reset = True
-                if state_class == STATE_CLASS_METER and (
+                elif old_state is None and last_reset is None:
+                    reset = True
+                elif state_class == STATE_CLASS_METER and (
                     old_state is None or fstate < old_state
                 ):
                     reset = True
