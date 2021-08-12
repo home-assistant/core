@@ -82,7 +82,7 @@ class SolarlogSensor(SensorEntity):
         return f"{self.device_name} {self._label}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the state of the sensor."""
         return self._unit_of_measurement
 
@@ -92,7 +92,7 @@ class SolarlogSensor(SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
