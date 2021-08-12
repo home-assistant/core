@@ -127,15 +127,15 @@ class QBittorrentSensor(SensorEntity):
         sensor_type = self.entity_description.key
         if sensor_type == SENSOR_TYPE_CURRENT_STATUS:
             if upload > 0 and download > 0:
-                self._attr_state = "up_down"
+                self._attr_native_value = "up_down"
             elif upload > 0 and download == 0:
-                self._attr_state = "seeding"
+                self._attr_native_value = "seeding"
             elif upload == 0 and download > 0:
-                self._attr_state = "downloading"
+                self._attr_native_value = "downloading"
             else:
-                self._attr_state = STATE_IDLE
+                self._attr_native_value = STATE_IDLE
 
         elif sensor_type == SENSOR_TYPE_DOWNLOAD_SPEED:
-            self._attr_state = format_speed(download)
+            self._attr_native_value = format_speed(download)
         elif sensor_type == SENSOR_TYPE_UPLOAD_SPEED:
-            self._attr_state = format_speed(upload)
+            self._attr_native_value = format_speed(upload)
