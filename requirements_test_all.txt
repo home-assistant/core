@@ -1322,6 +1322,7 @@ xknx==0.18.9
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
+# homeassistant.components.ted6000
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 
