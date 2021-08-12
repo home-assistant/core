@@ -169,10 +169,10 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset for entities with state_class other than 'total' or "
-                    "total_increasing is deprecated and will be removed from Home "
-                    "Assistant Core 2021.10. Please update your configuration if "
-                    "state_class is manually configured, otherwise %s",
+                    "last_reset for entities with state_class other than 'total' is "
+                    "deprecated and will be removed from Home Assistant Core 2021.10. "
+                    "Please update your configuration if state_class is manually "
+                    "configured, otherwise %s",
                     self.entity_id,
                     type(self),
                     self.state_class,
