@@ -32,11 +32,6 @@ class DeviceTriggerAccessory(HomeAccessory):
             type_ = trigger.get("type")
             subtype = trigger.get("subtype")
             trigger_name = f"{type_} {subtype}" if subtype else type_
-            serv_service_label = self.add_preload_service(
-                SERV_SERVICE_LABEL, [CHAR_NAME]
-            )
-            serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
-            serv_service_label.configure_char(CHAR_NAME, value=trigger_name)
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
@@ -45,11 +40,16 @@ class DeviceTriggerAccessory(HomeAccessory):
                 serv_stateless_switch.configure_char(
                     CHAR_PROGRAMMABLE_SWITCH_EVENT,
                     value=0,
-                    valid_values={"Press": 0},
+                    valid_values={"SinglePress": 0},
                 )
             )
             serv_stateless_switch.configure_char(CHAR_NAME, value=trigger_name)
             serv_stateless_switch.configure_char(CHAR_SERVICE_LABEL_INDEX, value=idx)
+            serv_service_label = self.add_preload_service(
+                SERV_SERVICE_LABEL, [CHAR_NAME]
+            )
+            serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
+            serv_service_label.configure_char(CHAR_NAME, value=trigger_name)
 
     async def async_trigger(self, run_variables, context=None, skip_condition=False):
         """Trigger button press.
