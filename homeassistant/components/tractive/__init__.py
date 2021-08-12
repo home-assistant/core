@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         creds = await client.authenticate()
     except aiotractive.exceptions.UnauthorizedError as error:
+        print("hhhh")
         await client.close()
         raise ConfigEntryAuthFailed from error
     except aiotractive.exceptions.TractiveError as error:

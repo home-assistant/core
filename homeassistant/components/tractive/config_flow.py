@@ -44,6 +44,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize the flow."""
+        self._email = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -71,9 +75,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, _: dict[str, Any]) -> FlowResult:
-        """Prompt user to re-authenticate."""
-        return await self.async_step_user()
+    async def async_step_reauth(self, user_input: dict = None) -> FlowResult:
+        """Handle configuration by re-auth."""
+        errors = {}
+
+        if user_input is not None:
+            self._email = user_input.get(CONF_EMAIL)
+            try:
+                info = await validate_input(self.hass, user_input)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                entry = await self.async_set_unique_id(info["user_id"])
+                if entry is not None:
+                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+                    return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_EMAIL, default=self._email): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
 
 
 class InvalidAuth(HomeAssistantError):
