@@ -48,26 +48,26 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
         key="temperature",
         precision=1,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     MinutPointSensorEntityDescription(
         key="pressure",
         precision=0,
         device_class=DEVICE_CLASS_PRESSURE,
-        unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_HPA,
     ),
     MinutPointSensorEntityDescription(
         key="humidity",
         precision=1,
         device_class=DEVICE_CLASS_HUMIDITY,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     MinutPointSensorEntityDescription(
         key="sound",
         precision=1,
         device_class=DEVICE_CLASS_SOUND,
         icon="mdi:ear-hearing",
-        unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
     ),
 )
 
