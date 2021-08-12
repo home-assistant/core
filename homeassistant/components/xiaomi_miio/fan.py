@@ -108,11 +108,9 @@ ATTR_BUZZER = "buzzer"
 ATTR_CHILD_LOCK = "child_lock"
 ATTR_LED = "led"
 ATTR_LED_BRIGHTNESS = "led_brightness"
-ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_LEVEL = "level"
 ATTR_FAN_LEVEL = "fan_level"
-ATTR_MOTOR2_SPEED = "motor2_speed"
 ATTR_LEARN_MODE = "learn_mode"
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_SLEEP_LEARN_COUNT = "sleep_mode_learn_count"
@@ -139,7 +137,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
     ATTR_AUTO_DETECT: "auto_detect",
@@ -151,11 +148,8 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_USE_TIME: "use_time",
-    ATTR_MOTOR2_SPEED: "motor2_speed",
     ATTR_VOLUME: "volume",
-    # perhaps supported but unconfirmed
     ATTR_AUTO_DETECT: "auto_detect",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
@@ -163,7 +157,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_MOTOR2_SPEED: "motor2_speed",
     ATTR_VOLUME: "volume",
 }
 
@@ -177,7 +170,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_USE_TIME: "use_time",
     ATTR_BUZZER: "buzzer",
     ATTR_LED_BRIGHTNESS: "led_brightness",
@@ -191,8 +183,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     ATTR_BUZZER: "buzzer",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_VOLUME: "volume",
-    ATTR_MOTOR2_SPEED: "motor2_speed",
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_LEARN_MODE: "learn_mode",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
