@@ -191,15 +191,6 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
     if manager.data is None:
         return result
 
-    if "recorder" not in hass.config.components:
-        result.errors.append(
-            ValidationMessage(
-                "Recorder integration is not configured",
-                "https://www.home-assistant.io/integrations/recorder",
-            )
-        )
-        return result
-
     for source in manager.data["energy_sources"]:
         source_result = ValidationResult()
         result.energy_sources.append(source_result)

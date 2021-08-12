@@ -41,22 +41,6 @@ async def test_validation_empty_config(hass):
     }
 
 
-async def test_validation_no_recorder(hass):
-    """Test validating an empty config."""
-    hass.config.components.remove("recorder")
-    assert (await validate.async_validate(hass)).as_dict() == {
-        "errors": [
-            {
-                "message": "Recorder integration is not configured",
-                "link": "https://www.home-assistant.io/integrations/recorder",
-            }
-        ],
-        "warnings": [],
-        "energy_sources": [],
-        "device_consumption": [],
-    }
-
-
 async def test_validation_device_consumption_entity_missing(hass, mock_energy_manager):
     """Test validating missing stat for device."""
     await mock_energy_manager.async_update(
