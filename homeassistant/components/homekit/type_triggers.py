@@ -31,7 +31,9 @@ class DeviceTriggerAccessory(HomeAccessory):
         for idx, trigger in enumerate(device_triggers):
             type_ = trigger.get("type")
             subtype = trigger.get("subtype")
-            trigger_name = f"{type_} {subtype}" if subtype else type_
+            trigger_name = (
+                f"{type_.title()} {subtype.title()}" if subtype else type_.title()
+            )
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
@@ -40,7 +42,7 @@ class DeviceTriggerAccessory(HomeAccessory):
                 serv_stateless_switch.configure_char(
                     CHAR_PROGRAMMABLE_SWITCH_EVENT,
                     value=0,
-                    valid_values={"SinglePress": 0},
+                    valid_values={"Trigger": 0},
                 )
             )
             serv_stateless_switch.configure_char(CHAR_NAME, value=trigger_name)
