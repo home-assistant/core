@@ -1,10 +1,8 @@
 """Provide tools for migrating from the zwave integration."""
-from homeassistant.helpers.device_registry import (
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
-    async_get_registry as async_get_entity_registry,
+    async_get as async_get_entity_registry,
 )
 
 from .const import DOMAIN, MIGRATED, NODES_VALUES
@@ -49,16 +47,17 @@ async def async_get_migration_data(hass):
     nodes_values = hass.data[DOMAIN][NODES_VALUES]
     ozw_config_entries = hass.config_entries.async_entries(DOMAIN)
     config_entry = ozw_config_entries[0]  # ozw only has a single config entry
-    ent_reg = await async_get_entity_registry(hass)
+    ent_reg = async_get_entity_registry(hass)
     entity_entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
     unique_entries = {entry.unique_id: entry for entry in entity_entries}
-    dev_reg = await async_get_device_registry(hass)
+    dev_reg = async_get_device_registry(hass)
 
     for node_id, node_values in nodes_values.items():
         for entity_values in node_values:
             unique_id = create_value_id(entity_values.primary)
             if unique_id not in unique_entries:
                 continue
+            entity_entry = unique_entries[unique_id]
             node = entity_values.primary.node
             device_identifier = (
                 DOMAIN,
@@ -68,12 +67,14 @@ async def async_get_migration_data(hass):
             data[unique_id] = {
                 "node_id": node_id,
                 "node_instance": entity_values.primary.instance,
-                "device_id": device_entry.id,
                 "command_class": entity_values.primary.command_class.value,
                 "command_class_label": entity_values.primary.label,
                 "value_index": entity_values.primary.index,
+                "device_id": device_entry.id,
+                "domain": entity_entry.domain,
+                "entity_id": entity_entry.entity_id,
                 "unique_id": unique_id,
-                "entity_entry": unique_entries[unique_id],
+                "unit_of_measurement": entity_entry.unit_of_measurement,
             }
 
     return data
@@ -124,10 +125,8 @@ def map_node_values(zwave_data, ozw_data):
 
         # Save the zwave_entry under the ozw entity_id to create the map.
         # Check that the mapped entities have the same domain.
-        if zwave_entry["entity_entry"].domain == ozw_entry["entity_entry"].domain:
-            migration_map["entity_entries"][
-                ozw_entry["entity_entry"].entity_id
-            ] = zwave_entry
+        if zwave_entry["domain"] == ozw_entry["domain"]:
+            migration_map["entity_entries"][ozw_entry["entity_id"]] = zwave_entry
         migration_map["device_entries"][ozw_entry["device_id"]] = zwave_entry[
             "device_id"
         ]
@@ -137,7 +136,7 @@ def map_node_values(zwave_data, ozw_data):
 
 async def async_migrate(hass, migration_map):
     """Perform zwave to ozw migration."""
-    dev_reg = await async_get_device_registry(hass)
+    dev_reg = async_get_device_registry(hass)
     for ozw_device_id, zwave_device_id in migration_map["device_entries"].items():
         zwave_device_entry = dev_reg.async_get(zwave_device_id)
         dev_reg.async_update_device(
@@ -146,13 +145,11 @@ async def async_migrate(hass, migration_map):
             name_by_user=zwave_device_entry.name_by_user,
         )
 
-    ent_reg = await async_get_entity_registry(hass)
-    for zwave_entry in migration_map["entity_entries"].values():
-        zwave_entity_id = zwave_entry["entity_entry"].entity_id
-        ent_reg.async_remove(zwave_entity_id)
-
+    ent_reg = async_get_entity_registry(hass)
     for ozw_entity_id, zwave_entry in migration_map["entity_entries"].items():
-        entity_entry = zwave_entry["entity_entry"]
+        zwave_entity_id = zwave_entry["entity_id"]
+        entity_entry = ent_reg.async_get(zwave_entity_id)
+        ent_reg.async_remove(zwave_entity_id)
         ent_reg.async_update_entity(
             ozw_entity_id,
             new_entity_id=entity_entry.entity_id,

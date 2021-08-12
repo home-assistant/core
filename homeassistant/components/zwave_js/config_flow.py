@@ -302,6 +302,16 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
+    async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
+        """Handle imported data.
+
+        This step will be used when importing data
+        during Z-Wave to Z-Wave JS migration.
+        """
+        self.network_key = data.get(CONF_NETWORK_KEY)
+        self.usb_path = data.get(CONF_USB_PATH)
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

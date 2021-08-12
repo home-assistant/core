@@ -188,7 +188,9 @@ async def websocket_migrate_zwave(hass, connection, msg):
         return
 
     zwave = hass.components.zwave
-    zwave_data = await zwave.async_get_ozw_migration_data(hass)
+    zwave_config_entries = hass.config_entries.async_entries("zwave")
+    zwave_config_entry = zwave_config_entries[0]  # zwave only has a single config entry
+    zwave_data = await zwave.async_get_migration_data(hass, zwave_config_entry)
     _LOGGER.debug("Migration zwave data: %s", zwave_data)
 
     ozw_data = await async_get_migration_data(hass)
@@ -196,16 +198,14 @@ async def websocket_migrate_zwave(hass, connection, msg):
 
     can_migrate = map_node_values(zwave_data, ozw_data)
 
-    zwave_entity_ids = [
-        entry["entity_entry"].entity_id for entry in zwave_data.values()
-    ]
-    ozw_entity_ids = [entry["entity_entry"].entity_id for entry in ozw_data.values()]
+    zwave_entity_ids = [entry["entity_id"] for entry in zwave_data.values()]
+    ozw_entity_ids = [entry["entity_id"] for entry in ozw_data.values()]
     migration_device_map = {
         zwave_device_id: ozw_device_id
         for ozw_device_id, zwave_device_id in can_migrate["device_entries"].items()
     }
     migration_entity_map = {
-        zwave_entry["entity_entry"].entity_id: ozw_entity_id
+        zwave_entry["entity_id"]: ozw_entity_id
         for ozw_entity_id, zwave_entry in can_migrate["entity_entries"].items()
     }
     _LOGGER.debug("Migration entity map: %s", migration_entity_map)

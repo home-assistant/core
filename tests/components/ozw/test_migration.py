@@ -69,36 +69,43 @@ def zwave_migration_data_fixture(hass):
         name=ZWAVE_POWER_NAME,
         icon=ZWAVE_POWER_ICON,
     )
+
     zwave_migration_data = {
         ZWAVE_SOURCE_NODE_UNIQUE_ID: {
             "node_id": 10,
             "node_instance": 1,
-            "device_id": zwave_source_node_device.id,
             "command_class": 113,
             "command_class_label": "SourceNodeId",
             "value_index": 2,
+            "device_id": zwave_source_node_device.id,
+            "domain": zwave_source_node_entry.domain,
+            "entity_id": zwave_source_node_entry.entity_id,
             "unique_id": ZWAVE_SOURCE_NODE_UNIQUE_ID,
-            "entity_entry": zwave_source_node_entry,
+            "unit_of_measurement": zwave_source_node_entry.unit_of_measurement,
         },
         ZWAVE_BATTERY_UNIQUE_ID: {
             "node_id": 36,
             "node_instance": 1,
-            "device_id": zwave_battery_device.id,
             "command_class": 128,
             "command_class_label": "Battery Level",
             "value_index": 0,
+            "device_id": zwave_battery_device.id,
+            "domain": zwave_battery_entry.domain,
+            "entity_id": zwave_battery_entry.entity_id,
             "unique_id": ZWAVE_BATTERY_UNIQUE_ID,
-            "entity_entry": zwave_battery_entry,
+            "unit_of_measurement": zwave_battery_entry.unit_of_measurement,
         },
         ZWAVE_POWER_UNIQUE_ID: {
             "node_id": 32,
             "node_instance": 1,
-            "device_id": zwave_power_device.id,
             "command_class": 50,
             "command_class_label": "Power",
             "value_index": 8,
+            "device_id": zwave_power_device.id,
+            "domain": zwave_power_entry.domain,
+            "entity_id": zwave_power_entry.entity_id,
             "unique_id": ZWAVE_POWER_UNIQUE_ID,
-            "entity_entry": zwave_power_entry,
+            "unit_of_measurement": zwave_power_entry.unit_of_measurement,
         },
     }
 
@@ -129,7 +136,7 @@ def zwave_integration_fixture(hass, zwave_migration_data):
     zwave_config_entry = MockConfigEntry(domain="zwave", data={"usb_path": "/dev/test"})
     zwave_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.zwave.async_get_ozw_migration_data",
+        "homeassistant.components.zwave.async_get_migration_data",
         return_value=zwave_migration_data,
     ):
         yield zwave_config_entry
