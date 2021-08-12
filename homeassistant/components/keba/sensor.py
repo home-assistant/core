@@ -95,13 +95,14 @@ class KebaSensor(SensorEntity):
     ):
         """Initialize the KEBA Sensor."""
         self._keba = keba
+        self._key = description.key
         self.entity_description = description
         self._entity_type = entity_type
 
         self._attr_name = f"{keba.device_name} {description.name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
-        self._state = None
+        self._attr_native_value = None
         self._attributes: dict[str, str] = {}
 
     @property
@@ -110,18 +111,13 @@ class KebaSensor(SensorEntity):
         return False
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return self._attributes
 
     async def async_update(self):
         """Get latest cached states from the device."""
-        self._state = self._keba.get_value(self._key)
+        self._attr_native_value = self._keba.get_value(self._key)
 
         if self._key == "P":
             self._attributes["power_factor"] = self._keba.get_value("PF")
