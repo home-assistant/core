@@ -115,7 +115,7 @@ class SolarlogSensor(SensorEntity):
         device_name: str,
         data: SolarlogData,
         description: SolarLogSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data
