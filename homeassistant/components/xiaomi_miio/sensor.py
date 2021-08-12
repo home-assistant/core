@@ -31,17 +31,21 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    VOLUME_CUBIC_METERS,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt
 
 from .const import (
     CONF_DEVICE,
@@ -86,13 +90,16 @@ ATTR_DISPLAY_CLOCK = "display_clock"
 ATTR_FILTER_LIFE_REMAINING = "filter_life_remaining"
 ATTR_HUMIDITY = "humidity"
 ATTR_ILLUMINANCE = "illuminance"
+ATTR_ILLUMINANCE_LUX = "illuminance_lux"
 ATTR_LOAD_POWER = "load_power"
+ATTR_MOTOR2_SPEED = "motor2_speed"
 ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
 ATTR_POWER = "power"
 ATTR_PRESSURE = "pressure"
+ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
 
@@ -103,6 +110,7 @@ class XiaomiMiioSensorDescription(SensorEntityDescription):
 
     valid_min_value: float | None = None
     valid_max_value: float | None = None
+    attributes: tuple = ()
 
 
 SENSOR_TYPES = {
@@ -156,10 +164,24 @@ SENSOR_TYPES = {
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
+    ATTR_MOTOR2_SPEED: XiaomiMiioSensorDescription(
+        key=ATTR_MOTOR2_SPEED,
+        name="Second Motor Speed",
+        native_unit_of_measurement="rpm",
+        icon="mdi:fast-forward",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
     ATTR_ILLUMINANCE: XiaomiMiioSensorDescription(
         key=ATTR_ILLUMINANCE,
         name="Illuminance",
         native_unit_of_measurement=UNIT_LUMEN,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_ILLUMINANCE_LUX: XiaomiMiioSensorDescription(
+        key=ATTR_ILLUMINANCE,
+        name="Illuminance",
+        native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -169,6 +191,7 @@ SENSOR_TYPES = {
         native_unit_of_measurement="AQI",
         icon="mdi:cloud",
         state_class=STATE_CLASS_MEASUREMENT,
+        attributes=("average_aqi",),
     ),
     ATTR_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LIFE_REMAINING,
@@ -176,6 +199,12 @@ SENSOR_TYPES = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=STATE_CLASS_MEASUREMENT,
+        attributes=(
+            "filter_hours_used",
+            "filter_rfid_product_id",
+            "filter_rfid_tag",
+            "filter_type",
+        ),
     ),
     ATTR_CARBON_DIOXIDE: XiaomiMiioSensorDescription(
         key=ATTR_CARBON_DIOXIDE,
@@ -184,15 +213,24 @@ SENSOR_TYPES = {
         device_class=DEVICE_CLASS_CO2,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
+    ATTR_PURIFY_VOLUME: XiaomiMiioSensorDescription(
+        key=ATTR_PURIFY_VOLUME,
+        name="Purify Volume",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        device_class=DEVICE_CLASS_GAS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
+        entity_registry_enabled_default=False,
+    ),
 }
 
 HUMIDIFIER_MIIO_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 HUMIDIFIER_CA1_CB1_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_MOTOR_SPEED)
 HUMIDIFIER_MIOT_SENSORS = (
+    ATTR_ACTUAL_SPEED,
     ATTR_HUMIDITY,
     ATTR_TEMPERATURE,
     ATTR_WATER_LEVEL,
-    ATTR_ACTUAL_SPEED,
 )
 HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
@@ -200,6 +238,7 @@ PURIFIER_MIIO_SENSORS = (
     ATTR_AQI,
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_HUMIDITY,
+    ATTR_MOTOR_SPEED,
     ATTR_TEMPERATURE,
 )
 PURIFIER_MIOT_SENSORS = (
@@ -207,22 +246,42 @@ PURIFIER_MIOT_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_HUMIDITY,
     ATTR_MOTOR_SPEED,
+    ATTR_PURIFY_VOLUME,
     ATTR_TEMPERATURE,
 )
-PURIFIER_V3_SENSORS = (ATTR_AQI, ATTR_ILLUMINANCE, ATTR_FILTER_LIFE_REMAINING)
+PURIFIER_V3_SENSORS = (
+    ATTR_AQI,
+    ATTR_ILLUMINANCE_LUX,
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_MOTOR_SPEED,
+    ATTR_MOTOR2_SPEED,
+    ATTR_PURIFY_VOLUME,
+)
+PURIFIER_V6_SENSORS = (
+    ATTR_AQI,
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_HUMIDITY,
+    ATTR_ILLUMINANCE_LUX,
+    ATTR_TEMPERATURE,
+    ATTR_MOTOR_SPEED,
+    ATTR_MOTOR2_SPEED,
+    ATTR_PURIFY_VOLUME,
+)
 PURIFIER_V7_SENSORS = (
     ATTR_AQI,
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_HUMIDITY,
-    ATTR_ILLUMINANCE,
+    ATTR_ILLUMINANCE_LUX,
     ATTR_TEMPERATURE,
+    ATTR_MOTOR_SPEED,
+    ATTR_MOTOR2_SPEED,
 )
 AIRFRESH_SENSORS = (
     ATTR_AQI,
     ATTR_CARBON_DIOXIDE,
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_HUMIDITY,
-    ATTR_ILLUMINANCE,
+    ATTR_ILLUMINANCE_LUX,
     ATTR_TEMPERATURE,
 )
 
@@ -363,6 +422,15 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         ):
             return None
         return self._state
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            attr: self._extract_value_from_attribute(self.coordinator.data, attr)
+            for attr in self.entity_description.attributes
+            if hasattr(self.coordinator.data, attr)
+        }
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):

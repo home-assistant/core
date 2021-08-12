@@ -28,7 +28,6 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -103,26 +102,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ATTR_MODEL = "model"
 
 # Air Purifier
-ATTR_HUMIDITY = "humidity"
-ATTR_AIR_QUALITY_INDEX = "aqi"
-ATTR_FILTER_HOURS_USED = "filter_hours_used"
 ATTR_FILTER_LIFE = "filter_life_remaining"
 ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_BUZZER = "buzzer"
 ATTR_CHILD_LOCK = "child_lock"
 ATTR_LED = "led"
 ATTR_LED_BRIGHTNESS = "led_brightness"
-ATTR_MOTOR_SPEED = "motor_speed"
-ATTR_AVERAGE_AIR_QUALITY_INDEX = "average_aqi"
 ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_LEVEL = "level"
 ATTR_FAN_LEVEL = "fan_level"
 ATTR_MOTOR2_SPEED = "motor2_speed"
-ATTR_ILLUMINANCE = "illuminance"
-ATTR_FILTER_RFID_PRODUCT_ID = "filter_rfid_product_id"
-ATTR_FILTER_RFID_TAG = "filter_rfid_tag"
-ATTR_FILTER_TYPE = "filter_type"
 ATTR_LEARN_MODE = "learn_mode"
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_SLEEP_LEARN_COUNT = "sleep_mode_learn_count"
@@ -135,22 +125,12 @@ ATTR_VOLUME = "volume"
 ATTR_USE_TIME = "use_time"
 ATTR_BUTTON_PRESSED = "button_pressed"
 
-# Air Fresh
-ATTR_CO2 = "co2"
-
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_HUMIDITY: "humidity",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
-    ATTR_MOTOR_SPEED: "motor_speed",
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
     ATTR_LEARN_MODE: "learn_mode",
     ATTR_EXTRA_FEATURES: "extra_features",
     ATTR_TURBO_MODE_SUPPORTED: "turbo_mode_supported",
@@ -173,10 +153,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_USE_TIME: "use_time",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
-    ATTR_ILLUMINANCE: "illuminance",
     ATTR_MOTOR2_SPEED: "motor2_speed",
     ATTR_VOLUME: "volume",
     # perhaps supported but unconfirmed
@@ -187,10 +163,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
-    ATTR_ILLUMINANCE: "illuminance",
     ATTR_MOTOR2_SPEED: "motor2_speed",
     ATTR_VOLUME: "volume",
 }
@@ -198,52 +170,28 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_BUZZER: "buzzer",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
-    ATTR_ILLUMINANCE: "illuminance",
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_HUMIDITY: "humidity",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
-    ATTR_MOTOR_SPEED: "motor_speed",
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
     ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_USE_TIME: "use_time",
     ATTR_BUZZER: "buzzer",
     ATTR_LED_BRIGHTNESS: "led_brightness",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
     ATTR_FAN_LEVEL: "fan_level",
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
     ATTR_LED: "led",
     ATTR_BUZZER: "buzzer",
     ATTR_CHILD_LOCK: "child_lock",
-    ATTR_ILLUMINANCE: "illuminance",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
-    ATTR_MOTOR_SPEED: "motor_speed",
-    # perhaps supported but unconfirmed
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
     ATTR_VOLUME: "volume",
     ATTR_MOTOR2_SPEED: "motor2_speed",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
     ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_LEARN_MODE: "learn_mode",
     ATTR_SLEEP_TIME: "sleep_time",
@@ -255,20 +203,12 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
 }
 
 AVAILABLE_ATTRIBUTES_AIRFRESH = {
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
-    ATTR_CO2: "co2",
-    ATTR_HUMIDITY: "humidity",
     ATTR_MODE: "mode",
     ATTR_LED: "led",
     ATTR_LED_BRIGHTNESS: "led_brightness",
     ATTR_BUZZER: "buzzer",
     ATTR_CHILD_LOCK: "child_lock",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
     ATTR_USE_TIME: "use_time",
-    ATTR_MOTOR_SPEED: "motor_speed",
     ATTR_EXTRA_FEATURES: "extra_features",
 }
 
