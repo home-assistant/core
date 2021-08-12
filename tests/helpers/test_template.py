@@ -578,6 +578,21 @@ def test_to_json(hass):
     assert actual_result == expected_result
 
 
+def test_to_json_string(hass):
+    """Test the object to JSON string filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    actual_value_ascii = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json }}", hass
+    ).async_render()
+    assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
+    actual_value = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json(ensureascii=False) }}", hass
+    ).async_render()
+    assert actual_value == '"Bar ҝ éèà"'
+
+
 def test_from_json(hass):
     """Test the JSON string to object filter."""
 
