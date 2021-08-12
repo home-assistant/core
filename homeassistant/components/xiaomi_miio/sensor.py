@@ -26,9 +26,11 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -49,11 +51,16 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
+    MODEL_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_V3,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
+    MODELS_PURIFIER_MIIO,
+    MODELS_PURIFIER_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
@@ -72,9 +79,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 ATTR_ACTUAL_SPEED = "actual_speed"
-ATTR_AIR_QUALITY = "air_quality"
+ATTR_AQI = "aqi"
+ATTR_CARBON_DIOXIDE = "co2"
 ATTR_CHARGING = "charging"
 ATTR_DISPLAY_CLOCK = "display_clock"
+ATTR_FILTER_LIFE_REMAINING = "filter_life_remaining"
 ATTR_HUMIDITY = "humidity"
 ATTR_ILLUMINANCE = "illuminance"
 ATTR_LOAD_POWER = "load_power"
@@ -154,10 +163,25 @@ SENSOR_TYPES = {
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ATTR_AIR_QUALITY: XiaomiMiioSensorDescription(
-        key=ATTR_AIR_QUALITY,
+    ATTR_AQI: XiaomiMiioSensorDescription(
+        key=ATTR_AQI,
+        name="Air Quality Index",
         native_unit_of_measurement="AQI",
         icon="mdi:cloud",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
+        key=ATTR_FILTER_LIFE_REMAINING,
+        name="Filter Life Remaining",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:air-filter",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ATTR_CARBON_DIOXIDE: XiaomiMiioSensorDescription(
+        key=ATTR_CARBON_DIOXIDE,
+        name="Carbon Dioxide",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=DEVICE_CLASS_CO2,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
@@ -171,6 +195,36 @@ HUMIDIFIER_MIOT_SENSORS = (
     ATTR_ACTUAL_SPEED,
 )
 HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
+
+PURIFIER_MIIO_SENSORS = (
+    ATTR_AQI,
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_HUMIDITY,
+    ATTR_TEMPERATURE,
+)
+PURIFIER_MIOT_SENSORS = (
+    ATTR_AQI,
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_HUMIDITY,
+    ATTR_MOTOR_SPEED,
+    ATTR_TEMPERATURE,
+)
+PURIFIER_V3_SENSORS = (ATTR_AQI, ATTR_ILLUMINANCE, ATTR_FILTER_LIFE_REMAINING)
+PURIFIER_V7_SENSORS = (
+    ATTR_AQI,
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_HUMIDITY,
+    ATTR_ILLUMINANCE,
+    ATTR_TEMPERATURE,
+)
+AIRFRESH_SENSORS = (
+    ATTR_AQI,
+    ATTR_CARBON_DIOXIDE,
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_HUMIDITY,
+    ATTR_ILLUMINANCE,
+    ATTR_TEMPERATURE,
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -238,13 +292,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif model in MODELS_HUMIDIFIER_MIIO:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_MIIO_SENSORS
+        elif model == MODEL_AIRPURIFIER_V3:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = PURIFIER_V3_SENSORS
+        elif model == MODEL_AIRPURIFIER_PRO_V7:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = PURIFIER_V7_SENSORS
+        elif model == MODEL_AIRFRESH_VA2:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = AIRFRESH_SENSORS
+        elif model in MODELS_PURIFIER_MIIO:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = PURIFIER_MIIO_SENSORS
+        elif model in MODELS_PURIFIER_MIOT:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = PURIFIER_MIOT_SENSORS
         else:
             unique_id = config_entry.unique_id
             name = config_entry.title
             _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
             device = AirQualityMonitor(host, token)
-            description = SENSOR_TYPES[ATTR_AIR_QUALITY]
+            description = SENSOR_TYPES[ATTR_AQI]
             entities.append(
                 XiaomiAirQualityMonitor(
                     name, device, config_entry, unique_id, description
