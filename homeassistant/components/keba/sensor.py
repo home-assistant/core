@@ -95,8 +95,7 @@ class KebaSensor(SensorEntity):
     ):
         """Initialize the KEBA Sensor."""
         self._keba = keba
-        self._key = description.key
-        self._name = description.name
+        self.entity_description = description
         self._entity_type = entity_type
 
         self._attr_name = f"{self._keba.device_name} {self._name}"
