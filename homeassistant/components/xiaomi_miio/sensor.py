@@ -26,6 +26,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_HOST,
     CONF_NAME,
@@ -58,7 +59,9 @@ from .const import (
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
+    MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_V2,
     MODEL_AIRPURIFIER_V3,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -188,8 +191,8 @@ SENSOR_TYPES = {
     ATTR_AQI: XiaomiMiioSensorDescription(
         key=ATTR_AQI,
         name="Air Quality Index",
-        native_unit_of_measurement="AQI",
-        icon="mdi:cloud",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        icon="mdi:blur",
         state_class=STATE_CLASS_MEASUREMENT,
         attributes=("average_aqi",),
     ),
@@ -249,6 +252,14 @@ PURIFIER_MIOT_SENSORS = (
     ATTR_PURIFY_VOLUME,
     ATTR_TEMPERATURE,
 )
+PURIFIER_V2_SENSORS = (
+    ATTR_AQI,
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_HUMIDITY,
+    ATTR_MOTOR_SPEED,
+    ATTR_PURIFY_VOLUME,
+    ATTR_TEMPERATURE,
+)
 PURIFIER_V3_SENSORS = (
     ATTR_AQI,
     ATTR_ILLUMINANCE_LUX,
@@ -257,7 +268,7 @@ PURIFIER_V3_SENSORS = (
     ATTR_MOTOR2_SPEED,
     ATTR_PURIFY_VOLUME,
 )
-PURIFIER_V6_SENSORS = (
+PURIFIER_PRO_SENSORS = (
     ATTR_AQI,
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_HUMIDITY,
@@ -267,7 +278,7 @@ PURIFIER_V6_SENSORS = (
     ATTR_MOTOR2_SPEED,
     ATTR_PURIFY_VOLUME,
 )
-PURIFIER_V7_SENSORS = (
+PURIFIER_PRO_V7_SENSORS = (
     ATTR_AQI,
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_HUMIDITY,
@@ -351,12 +362,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif model in MODELS_HUMIDIFIER_MIIO:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_MIIO_SENSORS
+        elif model == MODEL_AIRPURIFIER_V2:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = PURIFIER_V2_SENSORS
         elif model == MODEL_AIRPURIFIER_V3:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = PURIFIER_V3_SENSORS
         elif model == MODEL_AIRPURIFIER_PRO_V7:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            sensors = PURIFIER_V7_SENSORS
+            sensors = PURIFIER_PRO_V7_SENSORS
+        elif model == MODEL_AIRPURIFIER_PRO:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = PURIFIER_PRO_SENSORS
         elif model == MODEL_AIRFRESH_VA2:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = AIRFRESH_SENSORS
