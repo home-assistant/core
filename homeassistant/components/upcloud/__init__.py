@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -28,7 +28,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -115,37 +114,6 @@ class UpCloudHassData:
     coordinators: dict[str, UpCloudDataUpdateCoordinator] = dataclasses.field(
         default_factory=dict
     )
-    scan_interval_migrations: dict[str, int] = dataclasses.field(default_factory=dict)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up UpCloud component."""
-    domain_config = config.get(DOMAIN)
-    if not domain_config:
-        return True
-
-    _LOGGER.warning(
-        "Loading upcloud via top level config is deprecated and no longer "
-        "necessary as of 0.117; Please remove it from your YAML configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: domain_config[CONF_USERNAME],
-                CONF_PASSWORD: domain_config[CONF_PASSWORD],
-            },
-        )
-    )
-
-    if domain_config[CONF_SCAN_INTERVAL]:
-        hass.data[DATA_UPCLOUD] = UpCloudHassData()
-        hass.data[DATA_UPCLOUD].scan_interval_migrations[
-            domain_config[CONF_USERNAME]
-        ] = domain_config[CONF_SCAN_INTERVAL]
-
-    return True
 
 
 def _config_entry_update_signal_name(config_entry: ConfigEntry) -> str:
@@ -178,22 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to connect", exc_info=True)
         raise ConfigEntryNotReady from err
 
-    upcloud_data = hass.data.setdefault(DATA_UPCLOUD, UpCloudHassData())
-
-    # Handle pre config entry (0.117) scan interval migration to options
-    migrated_scan_interval = upcloud_data.scan_interval_migrations.pop(
-        entry.data[CONF_USERNAME], None
-    )
-    if migrated_scan_interval and (
-        not entry.options.get(CONF_SCAN_INTERVAL)
-        or entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL.total_seconds()
-    ):
-        update_interval = migrated_scan_interval
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_SCAN_INTERVAL: update_interval.total_seconds()},
-        )
-    elif entry.options.get(CONF_SCAN_INTERVAL):
+    if entry.options.get(CONF_SCAN_INTERVAL):
         update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
     else:
         update_interval = DEFAULT_SCAN_INTERVAL
@@ -218,7 +171,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    upcloud_data.coordinators[entry.data[CONF_USERNAME]] = coordinator
+    hass.data[DATA_UPCLOUD] = UpCloudHassData()
+    hass.data[DATA_UPCLOUD].coordinators[entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
     hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_DOMAINS)
