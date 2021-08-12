@@ -95,7 +95,6 @@ class KebaSensor(SensorEntity):
     ):
         """Initialize the KEBA Sensor."""
         self._keba = keba
-        self._key = description.key
         self.entity_description = description
         self._entity_type = entity_type
 
@@ -106,20 +105,15 @@ class KebaSensor(SensorEntity):
         self._attributes: dict[str, str] = {}
 
     @property
-    def should_poll(self):
-        """Deactivate polling. Data updated by KebaHandler."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return self._attributes
 
     async def async_update(self):
         """Get latest cached states from the device."""
-        self._attr_native_value = self._keba.get_value(self._key)
+        self._attr_native_value = self._keba.get_value(self.entity_description.key)
 
-        if self._key == "P":
+        if self.entity_description.key == "P":
             self._attributes["power_factor"] = self._keba.get_value("PF")
             self._attributes["voltage_u1"] = str(self._keba.get_value("U1"))
             self._attributes["voltage_u2"] = str(self._keba.get_value("U2"))
@@ -127,7 +121,7 @@ class KebaSensor(SensorEntity):
             self._attributes["current_i1"] = str(self._keba.get_value("I1"))
             self._attributes["current_i2"] = str(self._keba.get_value("I2"))
             self._attributes["current_i3"] = str(self._keba.get_value("I3"))
-        elif self._key == "Curr user":
+        elif self.entity_description.key == "Curr user":
             self._attributes["max_current_hardware"] = self._keba.get_value("Curr HW")
 
     def update_callback(self):
