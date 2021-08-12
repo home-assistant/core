@@ -5,8 +5,9 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.const import ELECTRIC_CURRENT_AMPERE, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ELECTRIC_CURRENT_AMPERE, ENERGY_KILO_WATT_HOUR, POWER_KILO_WATT
 from homeassistant.util import dt
 
 from . import DOMAIN
@@ -22,51 +23,56 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = [
         KebaSensor(
             keba,
-            "Curr user",
-            "Max Current",
             "max_current",
-            None,
-            ELECTRIC_CURRENT_AMPERE,
-            DEVICE_CLASS_CURRENT,
+            SensorEntityDescription(
+                key="Curr user",
+                name="Max Current",
+                unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+                device_class=DEVICE_CLASS_CURRENT,
+            ),
         ),
         KebaSensor(
             keba,
-            "Setenergy",
-            "Energy Target",
             "energy_target",
-            None,
-            ENERGY_KILO_WATT_HOUR,
-            DEVICE_CLASS_ENERGY,
+            SensorEntityDescription(
+                key="Setenergy",
+                name="Energy Target",
+                unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                device_class=DEVICE_CLASS_ENERGY,
+            ),
         ),
         KebaSensor(
             keba,
-            "P",
-            "Charging Power",
             "charging_power",
-            None,
-            "kW",
-            DEVICE_CLASS_POWER,
-            STATE_CLASS_MEASUREMENT,
+            SensorEntityDescription(
+                key="P",
+                name="Charging Power",
+                unit_of_measurement=POWER_KILO_WATT,
+                device_class=DEVICE_CLASS_POWER,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
         ),
         KebaSensor(
             keba,
-            "E pres",
-            "Session Energy",
             "session_energy",
-            None,
-            ENERGY_KILO_WATT_HOUR,
-            DEVICE_CLASS_ENERGY,
+            SensorEntityDescription(
+                key="E pres",
+                name="Session Energy",
+                unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                device_class=DEVICE_CLASS_ENERGY,
+            ),
         ),
         KebaSensor(
             keba,
-            "E total",
-            "Total Energy",
             "total_energy",
-            None,
-            ENERGY_KILO_WATT_HOUR,
-            DEVICE_CLASS_ENERGY,
-            STATE_CLASS_MEASUREMENT,
-            dt.utc_from_timestamp(0),
+            SensorEntityDescription(
+                key="E total",
+                name="Total Energy",
+                unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                device_class=DEVICE_CLASS_ENERGY,
+                state_class=STATE_CLASS_MEASUREMENT,
+                last_reset=dt.utc_from_timestamp(0),
+            ),
         ),
     ]
     async_add_entities(sensors)
@@ -80,27 +86,22 @@ class KebaSensor(SensorEntity):
     def __init__(
         self,
         keba,
-        key,
-        name,
         entity_type,
-        icon,
-        unit,
-        device_class=None,
-        state_class=None,
-        last_reset=None,
+        description: SensorEntityDescription,
     ):
         """Initialize the KEBA Sensor."""
         self._keba = keba
-        self._key = key
-        self._name = name
+        self._key = description.key
+        self._name = description.name
         self._entity_type = entity_type
-        self._icon = icon
-        self._unit = unit
-        self._device_class = device_class
 
-        self._attr_device_class = device_class
-        self._attr_state_class = state_class
-        self._attr_last_reset = last_reset
+        self._attr_name = f"{self._keba.device_name} {self._name}"
+        self._attr_unique_id = f"{self._keba.device_id}_{self._entity_type}"
+        self._attr_icon = description.icon
+        self._attr_unit_of_measurement = description.unit_of_measurement
+        self._attr_device_class = description.device_class
+        self._attr_state_class = description.state_class
+        self._attr_last_reset = description.last_reset
 
         self._state = None
         self._attributes = {}
@@ -111,26 +112,6 @@ class KebaSensor(SensorEntity):
         return False
 
     @property
-    def unique_id(self):
-        """Return the unique ID of the binary sensor."""
-        return f"{self._keba.device_id}_{self._entity_type}"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"{self._keba.device_name} {self._name}"
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
@@ -138,7 +119,7 @@ class KebaSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Get the unit of measurement."""
-        return self._unit
+        return self._attr_unit_of_measurement
 
     @property
     def extra_state_attributes(self):
