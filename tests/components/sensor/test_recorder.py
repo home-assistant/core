@@ -154,7 +154,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-@pytest.mark.parametrize("state_class", ["measurement", "amount"])
+@pytest.mark.parametrize("state_class", ["measurement", "total"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
@@ -249,7 +249,7 @@ def test_compile_hourly_sum_statistics_amount(
         ("gas", "ft³", "m³", 0.0283168466),
     ],
 )
-def test_compile_hourly_sum_statistics_amount_no_reset(
+def test_compile_hourly_sum_statistics_total_no_reset(
     hass_recorder, caplog, device_class, unit, native_unit, factor
 ):
     """Test compiling hourly statistics."""
@@ -259,7 +259,7 @@ def test_compile_hourly_sum_statistics_amount_no_reset(
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
-        "state_class": "amount",
+        "state_class": "total",
         "unit_of_measurement": unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
@@ -329,7 +329,7 @@ def test_compile_hourly_sum_statistics_amount_no_reset(
         ("gas", "ft³", "m³", 0.0283168466),
     ],
 )
-def test_compile_hourly_sum_statistics_amount_increasing(
+def test_compile_hourly_sum_statistics_total_increasing(
     hass_recorder, caplog, device_class, unit, native_unit, factor
 ):
     """Test compiling hourly statistics."""
@@ -339,7 +339,7 @@ def test_compile_hourly_sum_statistics_amount_increasing(
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
-        "state_class": "amount_increasing",
+        "state_class": "total_increasing",
         "unit_of_measurement": unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
