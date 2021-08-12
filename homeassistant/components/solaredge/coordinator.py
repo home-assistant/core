@@ -216,7 +216,9 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
             if len(meter["values"][0]) == 2:
                 self.data[meter["type"]] = meter["values"][0]["value"]
                 self.attributes[meter["type"]] = {"date": meter["values"][0]["date"]}
-                reset = datetime.strptime(meter["values"][0]["date"], "%Y-%m-%d %H:%M:%S")
+                reset = datetime.strptime(
+                    meter["values"][0]["date"], "%Y-%m-%d %H:%M:%S"
+                )
                 reset = reset.replace(tzinfo=timezone.utc)
                 self.attributes[meter["type"]] = {"last_reset": reset.isoformat()}
 
