@@ -329,7 +329,7 @@ def test_compile_hourly_sum_statistics_amount_no_reset(
         ("gas", "ft³", "m³", 0.0283168466),
     ],
 )
-def test_compile_hourly_sum_statistics_meter(
+def test_compile_hourly_sum_statistics_amount_increasing(
     hass_recorder, caplog, device_class, unit, native_unit, factor
 ):
     """Test compiling hourly statistics."""
@@ -339,7 +339,7 @@ def test_compile_hourly_sum_statistics_meter(
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
-        "state_class": "meter",
+        "state_class": "amount_increasing",
         "unit_of_measurement": unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]

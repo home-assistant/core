@@ -17,8 +17,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_AMOUNT,
+    STATE_CLASS_AMOUNT_INCRESING,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_METER,
     STATE_CLASSES,
 )
 from homeassistant.const import (
@@ -70,7 +70,7 @@ DEVICE_CLASS_OR_UNIT_STATISTICS = {
         DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_MONETARY: {"sum"},
     },
-    STATE_CLASS_METER: {
+    STATE_CLASS_AMOUNT_INCRESING: {
         DEVICE_CLASS_ENERGY: {"sum"},
         DEVICE_CLASS_GAS: {"sum"},
     },
@@ -300,14 +300,14 @@ def compile_statistics(
 
                 reset = False
                 if (
-                    state_class != STATE_CLASS_METER
+                    state_class != STATE_CLASS_AMOUNT_INCRESING
                     and (last_reset := state.attributes.get("last_reset"))
                     != old_last_reset
                 ):
                     reset = True
                 elif old_state is None and last_reset is None:
                     reset = True
-                elif state_class == STATE_CLASS_METER and (
+                elif state_class == STATE_CLASS_AMOUNT_INCRESING and (
                     old_state is None or fstate < old_state
                 ):
                     reset = True
