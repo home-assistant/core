@@ -1,22 +1,55 @@
 """The Contec Controllers integration."""
 from __future__ import annotations
 
+from datetime import timedelta
+import logging
+
+from ContecControllers.ContecConectivityConfiguration import (
+    ContecConectivityConfiguration,
+)
+from ContecControllers.ControllerManager import ControllerManager
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .contec_tracer import ContecTracer
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
 PLATFORMS = ["light"]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Contec Controllers from a config entry."""
     # TODO Store an API object for your platforms to access
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"SomeKey": "SomeValue"}
 
+    numberOfControllers: int = entry.data["numberOfControllers"]
+    controllersIp: str = entry.data["ip"]
+    controllersPort: int = entry.data["port"]
+    controllerManager: ControllerManager = ControllerManager(
+        ContecTracer(logging.getLogger("ContecControllers")),
+        ContecConectivityConfiguration(
+            numberOfControllers,
+            controllersIp,
+            controllersPort,
+        ),
+    )
+
+    controllerManager.Init()
+    if not await controllerManager.IsConnected(timedelta(seconds=700)):
+        _LOGGER.warning(
+            f"Failed to connect to Contec Controllers at address {controllersIp},{controllersPort}"
+        )
+        await controllerManager.CloseAsync()
+        return False
+
+    await controllerManager.DiscoverEntitiesAsync()
+
+    hass.data[DOMAIN][entry.entry_id] = controllerManager
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

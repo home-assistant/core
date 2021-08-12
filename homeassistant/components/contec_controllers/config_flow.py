@@ -15,12 +15,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required("ip"): str,
+        vol.Required("numberOfControllers"): int,
+        vol.Required("port"): int,
     }
 )
 
@@ -54,11 +53,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
-    _LOGGER.info("TEST TEST")
+    # hub = PlaceholderHub(data["host"])
 
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
+    # if not await hub.authenticate(data["username"], data["password"]):
+    #    raise InvalidAuth
 
     # If you cannot connect:
     # throw CannotConnect
