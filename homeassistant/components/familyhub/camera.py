@@ -1,4 +1,6 @@
 """Family Hub camera for Samsung Refrigerators."""
+from __future__ import annotations
+
 from pyfamilyhublocal import FamilyHubCam
 import voluptuous as vol
 
@@ -38,7 +40,9 @@ class FamilyHubCamera(Camera):
         self._name = name
         self.family_hub_cam = family_hub_cam
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response."""
         return await self.family_hub_cam.async_get_cam_image()
 

@@ -28,7 +28,7 @@ class UptimeRobotEntity(CoordinatorEntity):
         self._monitor = monitor
         self._attr_device_info = {
             "identifiers": {(DOMAIN, str(self.monitor.id))},
-            "name": "Uptime Robot",
+            "name": self.monitor.friendly_name,
             "manufacturer": "Uptime Robot Team",
             "entry_type": "service",
             "model": self.monitor.type.name,

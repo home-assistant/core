@@ -86,7 +86,7 @@ class DaikinSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         raise NotImplementedError
 
@@ -101,7 +101,7 @@ class DaikinSensor(SensorEntity):
         return self._sensor.get(CONF_ICON)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor[CONF_UNIT_OF_MEASUREMENT]
 
@@ -119,7 +119,7 @@ class DaikinClimateSensor(DaikinSensor):
     """Representation of a Climate Sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the internal state of the sensor."""
         if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
             return self._api.device.inside_temperature
@@ -141,7 +141,7 @@ class DaikinPowerSensor(DaikinSensor):
     """Representation of a power/energy consumption sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._device_attribute == ATTR_TOTAL_POWER:
             return round(self._api.device.current_total_power_consumption, 2)

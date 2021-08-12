@@ -114,7 +114,7 @@ class EddystoneTemp(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.temperature
 
@@ -124,7 +124,7 @@ class EddystoneTemp(SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return TEMP_CELSIUS
 

@@ -81,7 +81,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         super().__init__(coordinator, client, key, name, icon)
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
@@ -103,7 +103,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -139,7 +139,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
@@ -176,7 +176,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -213,7 +213,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:

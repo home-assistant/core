@@ -1,6 +1,6 @@
 """Test the Yeelight light."""
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 from yeelight import (
     BulbException,
@@ -19,6 +19,7 @@ from yeelight.main import _MODEL_SPECS
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -426,6 +427,115 @@ async def test_services(hass: HomeAssistant, caplog):
     assert (
         len([x for x in caplog.records if x.levelno == logging.ERROR]) == err_count + 1
     )
+
+
+async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
+    """Ensure we suppress state changes that will increase the rate limit when there is no change."""
+    mocked_bulb = _mocked_bulb()
+    properties = {**PROPERTIES}
+    properties.pop("active_mode")
+    properties["color_mode"] = "3"  # HSV
+    mocked_bulb.last_properties = properties
+    mocked_bulb.bulb_type = BulbType.Color
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
+    )
+    config_entry.add_to_hass(hass)
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        # We use asyncio.create_task now to avoid
+        # blocking starting so we need to block again
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_HS_COLOR: (PROPERTIES["hue"], PROPERTIES["sat"]),
+        },
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+
+    mocked_bulb.last_properties["color_mode"] = 1
+    rgb = int(PROPERTIES["rgb"])
+    blue = rgb & 0xFF
+    green = (rgb >> 8) & 0xFF
+    red = (rgb >> 16) & 0xFF
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGB_COLOR: (red, green, blue)},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.async_set_rgb.reset_mock()
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_BRIGHTNESS_PCT: PROPERTIES["current_brightness"],
+        },
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP: 250},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    # Should call for the color mode change
+    assert mocked_bulb.async_set_color_temp.mock_calls == [
+        call(4000, duration=350, light_type=ANY)
+    ]
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.async_set_color_temp.reset_mock()
+
+    mocked_bulb.last_properties["color_mode"] = 2
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP: 250},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+
+    mocked_bulb.last_properties["color_mode"] = 3
+    # This last change should generate a call even though
+    # the color mode is the same since the HSV has changed
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_HS_COLOR: (5, 5)},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == [
+        call(5.0, 5.0, duration=350, light_type=ANY)
+    ]
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
 
 
 async def test_device_types(hass: HomeAssistant, caplog):

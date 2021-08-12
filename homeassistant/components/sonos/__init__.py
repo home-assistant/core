@@ -187,8 +187,7 @@ class SonosDiscoveryManager:
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         await asyncio.gather(
-            *(speaker.async_unsubscribe() for speaker in self.data.discovered.values()),
-            return_exceptions=True,
+            *(speaker.async_unsubscribe() for speaker in self.data.discovered.values())
         )
         if events_asyncio.event_listener:
             await events_asyncio.event_listener.async_stop()

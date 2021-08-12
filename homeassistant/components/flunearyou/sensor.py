@@ -116,7 +116,7 @@ class FluNearYouSensor(CoordinatorEntity, SensorEntity):
             f"{entry.data[CONF_LATITUDE]},"
             f"{entry.data[CONF_LONGITUDE]}_{sensor_type}"
         )
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._entry = entry
         self._sensor_type = sensor_type
 
@@ -149,7 +149,7 @@ class CdcSensor(FluNearYouSensor):
                 ATTR_STATE: self.coordinator.data["name"],
             }
         )
-        self._attr_state = self.coordinator.data[self._sensor_type]
+        self._attr_native_value = self.coordinator.data[self._sensor_type]
 
 
 class UserSensor(FluNearYouSensor):
@@ -181,7 +181,7 @@ class UserSensor(FluNearYouSensor):
         ] = self.coordinator.data["state"]["last_week_data"][states_key]
 
         if self._sensor_type == SENSOR_TYPE_USER_TOTAL:
-            self._attr_state = sum(
+            self._attr_native_value = sum(
                 v
                 for k, v in self.coordinator.data["local"].items()
                 if k
@@ -194,4 +194,4 @@ class UserSensor(FluNearYouSensor):
                 )
             )
         else:
-            self._attr_state = self.coordinator.data["local"][self._sensor_type]
+            self._attr_native_value = self.coordinator.data["local"][self._sensor_type]

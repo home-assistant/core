@@ -109,7 +109,7 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
         self._attr_icon = icon
         self._attr_name = name
         self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{sensor_type}"
-        self._attr_unit_of_measurement = "index"
+        self._attr_native_unit_of_measurement = "index"
         self._entry = entry
         self._type = sensor_type
 

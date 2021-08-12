@@ -41,7 +41,7 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         key="room_temperature",
         name="Room Temperature",
         icon="mdi:thermometer",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         value_fn=lambda x: x.device.room_temperature,
         enabled=lambda x: True,
@@ -50,7 +50,7 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         key="energy",
         name="Energy",
         icon="mdi:factory",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         value_fn=lambda x: x.device.total_energy_consumed,
         enabled=lambda x: x.device.has_energy_consumed_meter,
@@ -61,7 +61,7 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         key="outside_temperature",
         name="Outside Temperature",
         icon="mdi:thermometer",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         value_fn=lambda x: x.device.outside_temperature,
         enabled=lambda x: True,
@@ -70,7 +70,7 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         key="tank_temperature",
         name="Tank Temperature",
         icon="mdi:thermometer",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         value_fn=lambda x: x.device.tank_temperature,
         enabled=lambda x: True,
@@ -81,7 +81,7 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         key="room_temperature",
         name="Room Temperature",
         icon="mdi:thermometer",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         value_fn=lambda zone: zone.room_temperature,
         enabled=lambda x: True,
@@ -90,7 +90,7 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         key="flow_temperature",
         name="Flow Temperature",
         icon="mdi:thermometer",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         value_fn=lambda zone: zone.flow_temperature,
         enabled=lambda x: True,
@@ -99,7 +99,7 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         key="return_temperature",
         name="Flow Return Temperature",
         icon="mdi:thermometer",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         value_fn=lambda zone: zone.return_temperature,
         enabled=lambda x: True,
@@ -156,7 +156,7 @@ class MelDeviceSensor(SensorEntity):
             self._attr_last_reset = dt_util.utc_from_timestamp(0)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._api)
 
@@ -187,6 +187,6 @@ class AtwZoneSensor(MelDeviceSensor):
         self._attr_name = f"{api.name} {zone.name} {description.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return zone based state."""
         return self.entity_description.value_fn(self._zone)

@@ -71,7 +71,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(user_input[CONF_API_KEY], 0, 0, websession)
+        client = Client(user_input[CONF_API_KEY], 0, 0, session=websession)
 
         try:
             await client.uv_index()

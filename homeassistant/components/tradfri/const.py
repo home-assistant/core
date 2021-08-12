@@ -15,7 +15,6 @@ CONF_IDENTITY = "identity"
 CONF_IMPORT_GROUPS = "import_groups"
 CONF_GATEWAY_ID = "gateway_id"
 CONF_KEY = "key"
-CONFIG_FILE = ".tradfri_psk.conf"
 DEFAULT_ALLOW_TRADFRI_GROUPS = False
 DOMAIN = "tradfri"
 KEY_API = "tradfri_api"

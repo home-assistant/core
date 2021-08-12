@@ -120,7 +120,7 @@ class NMBSLiveBoard(SensorEntity):
         return DEFAULT_ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensor state."""
         return self._state
 
@@ -166,7 +166,7 @@ class NMBSLiveBoard(SensorEntity):
 class NMBSSensor(SensorEntity):
     """Get the the total travel time for a given connection."""
 
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(
         self, api_client, name, show_on_map, station_from, station_to, excl_vias
@@ -238,7 +238,7 @@ class NMBSSensor(SensorEntity):
         return attrs
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

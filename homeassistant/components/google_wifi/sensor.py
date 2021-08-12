@@ -95,7 +95,7 @@ class GoogleWifiSensor(SensorEntity):
         return self._var_icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._var_units
 
@@ -105,7 +105,7 @@ class GoogleWifiSensor(SensorEntity):
         return self._api.available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

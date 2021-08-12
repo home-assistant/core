@@ -126,7 +126,7 @@ class Season(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current season."""
         return self.season
 

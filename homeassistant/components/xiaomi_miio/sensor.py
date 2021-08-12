@@ -100,34 +100,34 @@ SENSOR_TYPES = {
     ATTR_TEMPERATURE: XiaomiMiioSensorDescription(
         key=ATTR_TEMPERATURE,
         name="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_HUMIDITY: XiaomiMiioSensorDescription(
         key=ATTR_HUMIDITY,
         name="Humidity",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_PRESSURE: XiaomiMiioSensorDescription(
         key=ATTR_PRESSURE,
         name="Pressure",
-        unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_HPA,
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_LOAD_POWER: XiaomiMiioSensorDescription(
         key=ATTR_LOAD_POWER,
         name="Load Power",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
     ATTR_WATER_LEVEL: XiaomiMiioSensorDescription(
         key=ATTR_WATER_LEVEL,
         name="Water Level",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-check",
         state_class=STATE_CLASS_MEASUREMENT,
         valid_min_value=0.0,
@@ -136,27 +136,27 @@ SENSOR_TYPES = {
     ATTR_ACTUAL_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_ACTUAL_SPEED,
         name="Actual Speed",
-        unit_of_measurement="rpm",
+        native_unit_of_measurement="rpm",
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_MOTOR_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_MOTOR_SPEED,
         name="Motor Speed",
-        unit_of_measurement="rpm",
+        native_unit_of_measurement="rpm",
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_ILLUMINANCE: XiaomiMiioSensorDescription(
         key=ATTR_ILLUMINANCE,
         name="Illuminance",
-        unit_of_measurement=UNIT_LUMEN,
+        native_unit_of_measurement=UNIT_LUMEN,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_AIR_QUALITY: XiaomiMiioSensorDescription(
         key=ATTR_AIR_QUALITY,
-        unit_of_measurement="AQI",
+        native_unit_of_measurement="AQI",
         icon="mdi:cloud",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -331,7 +331,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -378,7 +378,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._sub_device.status[self.entity_description.key]
 
@@ -403,7 +403,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

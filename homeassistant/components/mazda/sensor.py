@@ -46,7 +46,7 @@ class MazdaFuelRemainingSensor(MazdaEntity, SensorEntity):
         return f"{self.vin}_fuel_remaining_percentage"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 
@@ -56,7 +56,7 @@ class MazdaFuelRemainingSensor(MazdaEntity, SensorEntity):
         return "mdi:gas-station"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.data["status"]["fuelRemainingPercent"]
 
@@ -76,7 +76,7 @@ class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
         return f"{self.vin}_fuel_distance_remaining"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             return LENGTH_MILES
@@ -88,7 +88,7 @@ class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
         return "mdi:gas-station"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         fuel_distance_km = self.data["status"]["fuelDistanceRemainingKm"]
         return (
@@ -115,7 +115,7 @@ class MazdaOdometerSensor(MazdaEntity, SensorEntity):
         return f"{self.vin}_odometer"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             return LENGTH_MILES
@@ -127,7 +127,7 @@ class MazdaOdometerSensor(MazdaEntity, SensorEntity):
         return "mdi:speedometer"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         odometer_km = self.data["status"]["odometerKm"]
         return (
@@ -152,7 +152,7 @@ class MazdaFrontLeftTirePressureSensor(MazdaEntity, SensorEntity):
         return f"{self.vin}_front_left_tire_pressure"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PRESSURE_PSI
 
@@ -162,7 +162,7 @@ class MazdaFrontLeftTirePressureSensor(MazdaEntity, SensorEntity):
         return "mdi:car-tire-alert"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         tire_pressure = self.data["status"]["tirePressure"]["frontLeftTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)
@@ -183,7 +183,7 @@ class MazdaFrontRightTirePressureSensor(MazdaEntity, SensorEntity):
         return f"{self.vin}_front_right_tire_pressure"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PRESSURE_PSI
 
@@ -193,7 +193,7 @@ class MazdaFrontRightTirePressureSensor(MazdaEntity, SensorEntity):
         return "mdi:car-tire-alert"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         tire_pressure = self.data["status"]["tirePressure"]["frontRightTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)
@@ -214,7 +214,7 @@ class MazdaRearLeftTirePressureSensor(MazdaEntity, SensorEntity):
         return f"{self.vin}_rear_left_tire_pressure"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PRESSURE_PSI
 
@@ -224,7 +224,7 @@ class MazdaRearLeftTirePressureSensor(MazdaEntity, SensorEntity):
         return "mdi:car-tire-alert"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         tire_pressure = self.data["status"]["tirePressure"]["rearLeftTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)
@@ -245,7 +245,7 @@ class MazdaRearRightTirePressureSensor(MazdaEntity, SensorEntity):
         return f"{self.vin}_rear_right_tire_pressure"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PRESSURE_PSI
 
@@ -255,7 +255,7 @@ class MazdaRearRightTirePressureSensor(MazdaEntity, SensorEntity):
         return "mdi:car-tire-alert"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         tire_pressure = self.data["status"]["tirePressure"]["rearRightTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)

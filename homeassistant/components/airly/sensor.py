@@ -84,7 +84,7 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         state = self.coordinator.data[self.entity_description.key]
         return cast(StateType, self.entity_description.value(state))

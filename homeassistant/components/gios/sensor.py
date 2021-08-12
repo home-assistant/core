@@ -107,7 +107,7 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
         return self._attrs
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         state = getattr(self.coordinator.data, self.entity_description.key).value
         assert self.entity_description.value is not None
@@ -118,7 +118,7 @@ class GiosAqiSensor(GiosSensor):
     """Define an GIOS AQI sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         return cast(
             StateType, getattr(self.coordinator.data, self.entity_description.key).value

@@ -1,4 +1,6 @@
 """Support for Blink system camera."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.camera import Camera
@@ -65,6 +67,8 @@ class BlinkCamera(Camera):
         self._camera.snap_picture()
         self.data.refresh()
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         return self._camera.image_from_cache.content

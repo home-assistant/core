@@ -129,7 +129,7 @@ class WaqiSensor(SensorEntity):
         return "mdi:cloud"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self._data is not None:
             return self._data.get("aqi")
@@ -146,7 +146,7 @@ class WaqiSensor(SensorEntity):
         return self.uid
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return "AQI"
 

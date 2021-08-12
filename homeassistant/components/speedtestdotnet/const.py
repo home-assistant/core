@@ -17,19 +17,19 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="ping",
         name="Ping",
-        unit_of_measurement=TIME_MILLISECONDS,
+        native_unit_of_measurement=TIME_MILLISECONDS,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="download",
         name="Download",
-        unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="upload",
         name="Upload",
-        unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 )

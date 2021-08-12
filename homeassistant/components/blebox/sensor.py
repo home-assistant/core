@@ -20,10 +20,10 @@ class BleBoxSensorEntity(BleBoxEntity, SensorEntity):
     def __init__(self, feature):
         """Initialize a BleBox sensor feature."""
         super().__init__(feature)
-        self._attr_unit_of_measurement = BLEBOX_TO_UNIT_MAP[feature.unit]
+        self._attr_native_unit_of_measurement = BLEBOX_TO_UNIT_MAP[feature.unit]
         self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._feature.current

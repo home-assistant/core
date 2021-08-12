@@ -149,7 +149,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return True
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return units for the sensor."""
         measure = self.coordinator.data["measures"][self.key]
         if "unit" not in measure:
@@ -162,6 +162,6 @@ class Measurement(CoordinatorEntity, SensorEntity):
         return {ATTR_ATTRIBUTION: self.attribution}
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current sensor value."""
         return self.coordinator.data["measures"][self.key]["latestReading"]["value"]

@@ -83,6 +83,7 @@ async def test_single_ban(hass):
     """Test that log is parsed correctly for single ban."""
     log_parser = BanLogParser("/test/fail2ban.log")
     sensor = BanSensor("fail2ban", "jail_one", log_parser)
+    sensor.hass = hass
     assert sensor.name == "fail2ban jail_one"
     mock_fh = mock_open(read_data=fake_log("single_ban"))
     with patch("homeassistant.components.fail2ban.sensor.open", mock_fh, create=True):
@@ -97,6 +98,7 @@ async def test_ipv6_ban(hass):
     """Test that log is parsed correctly for IPV6 bans."""
     log_parser = BanLogParser("/test/fail2ban.log")
     sensor = BanSensor("fail2ban", "jail_one", log_parser)
+    sensor.hass = hass
     assert sensor.name == "fail2ban jail_one"
     mock_fh = mock_open(read_data=fake_log("ipv6_ban"))
     with patch("homeassistant.components.fail2ban.sensor.open", mock_fh, create=True):
@@ -111,6 +113,7 @@ async def test_multiple_ban(hass):
     """Test that log is parsed correctly for multiple ban."""
     log_parser = BanLogParser("/test/fail2ban.log")
     sensor = BanSensor("fail2ban", "jail_one", log_parser)
+    sensor.hass = hass
     assert sensor.name == "fail2ban jail_one"
     mock_fh = mock_open(read_data=fake_log("multi_ban"))
     with patch("homeassistant.components.fail2ban.sensor.open", mock_fh, create=True):
@@ -131,6 +134,7 @@ async def test_unban_all(hass):
     """Test that log is parsed correctly when unbanning."""
     log_parser = BanLogParser("/test/fail2ban.log")
     sensor = BanSensor("fail2ban", "jail_one", log_parser)
+    sensor.hass = hass
     assert sensor.name == "fail2ban jail_one"
     mock_fh = mock_open(read_data=fake_log("unban_all"))
     with patch("homeassistant.components.fail2ban.sensor.open", mock_fh, create=True):
@@ -148,6 +152,7 @@ async def test_unban_one(hass):
     """Test that log is parsed correctly when unbanning one ip."""
     log_parser = BanLogParser("/test/fail2ban.log")
     sensor = BanSensor("fail2ban", "jail_one", log_parser)
+    sensor.hass = hass
     assert sensor.name == "fail2ban jail_one"
     mock_fh = mock_open(read_data=fake_log("unban_one"))
     with patch("homeassistant.components.fail2ban.sensor.open", mock_fh, create=True):
@@ -166,6 +171,8 @@ async def test_multi_jail(hass):
     log_parser = BanLogParser("/test/fail2ban.log")
     sensor1 = BanSensor("fail2ban", "jail_one", log_parser)
     sensor2 = BanSensor("fail2ban", "jail_two", log_parser)
+    sensor1.hass = hass
+    sensor2.hass = hass
     assert sensor1.name == "fail2ban jail_one"
     assert sensor2.name == "fail2ban jail_two"
     mock_fh = mock_open(read_data=fake_log("multi_jail"))
@@ -185,6 +192,7 @@ async def test_ban_active_after_update(hass):
     """Test that ban persists after subsequent update."""
     log_parser = BanLogParser("/test/fail2ban.log")
     sensor = BanSensor("fail2ban", "jail_one", log_parser)
+    sensor.hass = hass
     assert sensor.name == "fail2ban jail_one"
     mock_fh = mock_open(read_data=fake_log("single_ban"))
     with patch("homeassistant.components.fail2ban.sensor.open", mock_fh, create=True):

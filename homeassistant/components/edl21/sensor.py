@@ -301,7 +301,7 @@ class EDL21Entity(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
 
@@ -315,7 +315,7 @@ class EDL21Entity(SensorEntity):
         }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._telegram.get("unit")
 

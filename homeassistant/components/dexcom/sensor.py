@@ -42,12 +42,12 @@ class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
         return GLUCOSE_VALUE_ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of the device."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return getattr(self.coordinator.data, self._attribute_unit_of_measurement)
@@ -82,7 +82,7 @@ class DexcomGlucoseTrendSensor(CoordinatorEntity, SensorEntity):
         return GLUCOSE_TREND_ICON[0]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.trend_description

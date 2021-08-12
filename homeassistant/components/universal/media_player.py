@@ -158,7 +158,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._cmds = commands
         self._attrs = {}
         for key, val in attributes.items():
-            attr = val.split("|", 1)
+            attr = list(map(str.strip, val.split("|", 1)))
             if len(attr) == 1:
                 attr.append(None)
             self._attrs[key] = attr

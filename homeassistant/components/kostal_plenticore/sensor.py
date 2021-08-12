@@ -169,7 +169,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return f"{self.platform_name} {self._sensor_name}"
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of this Sensor Entity or None."""
         return self._sensor_data.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -199,7 +199,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_data.get(ATTR_LAST_RESET)
 
     @property
-    def state(self) -> Any | None:
+    def native_value(self) -> Any | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN

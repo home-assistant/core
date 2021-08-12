@@ -151,5 +151,5 @@ class VersionSensor(SensorEntity):
     async def async_update(self):
         """Get the latest version information."""
         await self.data.async_update()
-        self._attr_state = self.data.api.version
+        self._attr_native_value = self.data.api.version
         self._attr_extra_state_attributes = self.data.api.version_data

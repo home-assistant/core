@@ -144,7 +144,7 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.reading
 

@@ -180,7 +180,9 @@ class NestCamera(Camera):
             self._device.add_update_listener(self.async_write_ha_state)
         )
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         # Returns the snapshot of the last event for ~30 seconds after the event
         active_event_image = await self._async_active_event_image()

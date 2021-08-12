@@ -194,10 +194,12 @@ class UnifiVideoCamera(Camera):
         self._caminfo = caminfo
         return True
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return the image of this camera."""
         if not self._camera and not self._login():
-            return
+            return None
 
         def _get_image(retry=True):
             try:

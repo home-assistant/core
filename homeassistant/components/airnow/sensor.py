@@ -72,11 +72,11 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"AirNow {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
         self._attr_icon = SENSOR_TYPES[self.kind][ATTR_ICON]
         self._attr_device_class = SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
-        self._attr_unit_of_measurement = SENSOR_TYPES[self.kind][ATTR_UNIT]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[self.kind][ATTR_UNIT]
         self._attr_unique_id = f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         self._state = self.coordinator.data[self.kind]
         return self._state

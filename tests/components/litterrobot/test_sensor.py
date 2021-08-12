@@ -26,6 +26,7 @@ async def test_sleep_time_sensor_with_none_state(hass):
     sensor = LitterRobotSleepTimeSensor(
         robot, "Sleep Mode Start Time", Mock(), "sleep_mode_start_time"
     )
+    sensor.hass = hass
 
     assert sensor
     assert sensor.state is None

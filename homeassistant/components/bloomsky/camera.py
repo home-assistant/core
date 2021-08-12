@@ -1,4 +1,6 @@
 """Support for a camera of a BloomSky weather station."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -37,7 +39,9 @@ class BloomSkyCamera(Camera):
         self._logger = logging.getLogger(__name__)
         self._attr_unique_id = self._id
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Update the camera's image if it has changed."""
         try:
             self._url = self._bloomsky.devices[self._id]["Data"]["ImageURL"]

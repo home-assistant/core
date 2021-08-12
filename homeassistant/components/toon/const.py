@@ -18,10 +18,12 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_GAS,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.util import dt as dt_util
 
@@ -38,7 +40,6 @@ DEFAULT_MIN_TEMP = 6.0
 
 CURRENCY_EUR = "EUR"
 VOLUME_CM3 = "CM3"
-VOLUME_M3 = "M3"
 VOLUME_LHOUR = "L/H"
 VOLUME_LMIN = "L/MIN"
 
@@ -125,7 +126,8 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Average Daily Gas Usage",
         ATTR_SECTION: "gas_usage",
         ATTR_MEASUREMENT: "day_average",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
         ATTR_ICON: "mdi:gas-cylinder",
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -133,7 +135,8 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Gas Usage Today",
         ATTR_SECTION: "gas_usage",
         ATTR_MEASUREMENT: "day_usage",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
         ATTR_ICON: "mdi:gas-cylinder",
     },
     "gas_daily_cost": {
@@ -147,9 +150,10 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Gas Meter",
         ATTR_SECTION: "gas_usage",
         ATTR_MEASUREMENT: "meter",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
         ATTR_ICON: "mdi:gas-cylinder",
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_GAS,
         ATTR_LAST_RESET: dt_util.utc_from_timestamp(0),
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -321,7 +325,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Average Daily Water Usage",
         ATTR_SECTION: "water_usage",
         ATTR_MEASUREMENT: "day_average",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
         ATTR_ICON: "mdi:water",
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -329,7 +333,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Water Usage Today",
         ATTR_SECTION: "water_usage",
         ATTR_MEASUREMENT: "day_usage",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
         ATTR_ICON: "mdi:water",
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -337,7 +341,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Water Meter",
         ATTR_SECTION: "water_usage",
         ATTR_MEASUREMENT: "meter",
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
         ATTR_ICON: "mdi:water",
         ATTR_DEFAULT_ENABLED: False,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,

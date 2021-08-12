@@ -114,7 +114,7 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         return f"{self.gateway_name} {self.sensor['name']}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.sensor.get("unit")
 
@@ -125,7 +125,7 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         value = self.sensor["value"]
         return (value - 1) if "supply" in self._data_key else value
@@ -160,7 +160,7 @@ class ScreenLogicChemistrySensor(ScreenLogicSensor):
         self._key = key
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         value = self.sensor["value"]
         if "dosing_state" in self._key:

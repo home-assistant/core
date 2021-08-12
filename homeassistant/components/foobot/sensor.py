@@ -126,7 +126,7 @@ class FoobotSensor(SensorEntity):
         return SENSOR_TYPES[self.type][2]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         try:
             data = self.foobot_data.data[self.type]
@@ -140,7 +140,7 @@ class FoobotSensor(SensorEntity):
         return f"{self._uuid}_{self.type}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
 

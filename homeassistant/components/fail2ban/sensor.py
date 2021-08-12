@@ -70,7 +70,7 @@ class BanSensor(SensorEntity):
         return self.ban_dict
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the most recently banned IP Address."""
         return self.last_ban
 

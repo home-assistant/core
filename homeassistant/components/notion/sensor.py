@@ -63,7 +63,7 @@ class NotionSensor(NotionEntity, SensorEntity):
             coordinator, task_id, sensor_id, bridge_id, system_id, name, device_class
         )
 
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
 
     @callback
     def _async_update_from_latest_data(self) -> None:
@@ -71,7 +71,7 @@ class NotionSensor(NotionEntity, SensorEntity):
         task = self.coordinator.data["tasks"][self._task_id]
 
         if task["task_type"] == SENSOR_TEMPERATURE:
-            self._attr_state = round(float(task["status"]["value"]), 1)
+            self._attr_native_value = round(float(task["status"]["value"]), 1)
         else:
             LOGGER.error(
                 "Unknown task type: %s: %s",

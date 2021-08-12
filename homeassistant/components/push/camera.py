@@ -1,4 +1,6 @@
 """Camera platform that receives images through HTTP POST."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 from datetime import timedelta
@@ -155,7 +157,9 @@ class PushCamera(Camera):
 
         self.async_write_ha_state()
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response."""
         if self.queue:
             if self._state == STATE_IDLE:

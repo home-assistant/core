@@ -90,12 +90,12 @@ class MHZ19Sensor(SensorEntity):
         return f"{self._name}: {SENSOR_TYPES[self._sensor_type][0]}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._ppm if self._sensor_type == SENSOR_CO2 else self._temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

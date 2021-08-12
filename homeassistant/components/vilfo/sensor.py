@@ -72,7 +72,7 @@ class VilfoRouterSensor(SensorEntity):
         return f"{parent_device_name} {sensor_name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 
@@ -82,7 +82,7 @@ class VilfoRouterSensor(SensorEntity):
         return self._unique_id
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return SENSOR_TYPES[self.sensor_type].get(ATTR_UNIT)
 

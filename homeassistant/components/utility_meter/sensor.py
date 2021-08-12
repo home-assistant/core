@@ -321,7 +321,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -336,7 +336,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         return STATE_CLASS_MEASUREMENT
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 

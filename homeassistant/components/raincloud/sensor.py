@@ -48,12 +48,12 @@ class RainCloudSensor(RainCloudEntity, SensorEntity):
     """A sensor implementation for raincloud device."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
 

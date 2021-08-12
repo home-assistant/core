@@ -39,7 +39,7 @@ class HassioAddonSensor(HassioAddonEntity, SensorEntity):
     """Sensor to track a Hass.io add-on attribute."""
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return state of entity."""
         return self.addon_info[self.attribute_name]
 
@@ -48,6 +48,6 @@ class HassioOSSensor(HassioOSEntity, SensorEntity):
     """Sensor to track a Hass.io add-on attribute."""
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return state of entity."""
         return self.os_info[self.attribute_name]

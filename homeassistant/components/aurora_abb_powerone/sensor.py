@@ -51,7 +51,7 @@ class AuroraABBSolarPVMonitorSensor(SensorEntity):
     """Representation of a Sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = POWER_WATT
     _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(self, client, name, typename):
@@ -68,7 +68,7 @@ class AuroraABBSolarPVMonitorSensor(SensorEntity):
             self.client.connect()
             # read ADC channel 3 (grid power output)
             power_watts = self.client.measure(3, True)
-            self._attr_state = round(power_watts, 1)
+            self._attr_native_value = round(power_watts, 1)
         except AuroraError as error:
             # aurorapy does not have different exceptions (yet) for dealing
             # with timeout vs other comms errors.
@@ -82,7 +82,7 @@ class AuroraABBSolarPVMonitorSensor(SensorEntity):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
                 raise error
-            self._attr_state = None
+            self._attr_native_value = None
         finally:
             if self.client.serline.isOpen():
                 self.client.close()

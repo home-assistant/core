@@ -130,7 +130,7 @@ class ToonSensor(ToonEntity, SensorEntity):
         self._attr_last_reset = sensor.get(ATTR_LAST_RESET)
         self._attr_name = sensor[ATTR_NAME]
         self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
-        self._attr_unit_of_measurement = sensor[ATTR_UNIT_OF_MEASUREMENT]
+        self._attr_native_unit_of_measurement = sensor[ATTR_UNIT_OF_MEASUREMENT]
         self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
         self._attr_unique_id = (
             # This unique ID is a bit ugly and contains unneeded information.
@@ -139,7 +139,7 @@ class ToonSensor(ToonEntity, SensorEntity):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(
             self.coordinator.data, SENSOR_ENTITIES[self.key][ATTR_SECTION]

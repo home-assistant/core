@@ -48,12 +48,12 @@ class YetiSensor(YetiEntity):
         self._attr_entity_registry_enabled_default = sensor.get(ATTR_DEFAULT_ENABLED)
         self._attr_last_reset = sensor.get(ATTR_LAST_RESET)
         self._attr_name = f"{name} {sensor.get(ATTR_NAME)}"
+        self._attr_native_unit_of_measurement = sensor.get(ATTR_UNIT_OF_MEASUREMENT)
         self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
         self._attr_unique_id = f"{server_unique_id}/{sensor_name}"
-        self._attr_unit_of_measurement = sensor.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state."""
         if self.api.data:
             return self.api.data.get(self._condition)

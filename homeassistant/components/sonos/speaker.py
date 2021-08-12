@@ -346,10 +346,13 @@ class SonosSpeaker:
     async def async_unsubscribe(self) -> None:
         """Cancel all subscriptions."""
         _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(subscription.unsubscribe() for subscription in self._subscriptions),
             return_exceptions=True,
         )
+        for result in results:
+            if isinstance(result, Exception):
+                _LOGGER.debug("Unsubscribe failed for %s: %s", self.zone_name, result)
         self._subscriptions = []
 
     @callback

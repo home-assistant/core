@@ -88,7 +88,7 @@ class WashingtonStateTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -96,7 +96,7 @@ class WashingtonStateTransportSensor(SensorEntity):
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, name, access_code, travel_time_id):
         """Construct a travel time sensor."""

@@ -131,7 +131,7 @@ class EagleSensor(SensorEntity):
         self._type = sensor_type
         sensor_info = SENSORS[sensor_type]
         self._attr_name = sensor_info.name
-        self._attr_unit_of_measurement = sensor_info.unit_of_measurement
+        self._attr_native_unit_of_measurement = sensor_info.unit_of_measurement
         self._attr_device_class = sensor_info.device_class
         self._attr_state_class = sensor_info.state_class
         self._attr_last_reset = sensor_info.last_reset
@@ -139,7 +139,7 @@ class EagleSensor(SensorEntity):
     def update(self):
         """Get the energy information from the Rainforest Eagle."""
         self.eagle_data.update()
-        self._attr_state = self.eagle_data.get_state(self._type)
+        self._attr_native_value = self.eagle_data.get_state(self._type)
 
 
 class EagleData:

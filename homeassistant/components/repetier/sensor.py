@@ -77,7 +77,7 @@ class RepetierSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return SENSOR_TYPES[self._sensor_type][1]
 
@@ -92,7 +92,7 @@ class RepetierSensor(SensorEntity):
         return False
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensor state."""
         return self._state
 
@@ -134,7 +134,7 @@ class RepetierTempSensor(RepetierSensor):
     """Represent a Repetier temp sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensor state."""
         if self._state is None:
             return None
@@ -156,7 +156,7 @@ class RepetierJobSensor(RepetierSensor):
     """Represent a Repetier job sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensor state."""
         if self._state is None:
             return None

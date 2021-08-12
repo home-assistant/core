@@ -127,11 +127,11 @@ class BME280Sensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self.temp_unit = temp_unit
         self.type = sensor_type
-        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.type == SENSOR_TEMP:
             temperature = round(self.coordinator.data.temperature, 1)

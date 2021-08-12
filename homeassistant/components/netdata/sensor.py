@@ -117,7 +117,7 @@ class NetdataSensor(SensorEntity):
         return f"{self._name} {self._sensor_name}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -127,7 +127,7 @@ class NetdataSensor(SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the resources."""
         return self._state
 
@@ -162,7 +162,7 @@ class NetdataAlarms(SensorEntity):
         return f"{self._name} Alarms"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the resources."""
         return self._state
 

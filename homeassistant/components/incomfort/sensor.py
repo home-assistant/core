@@ -59,7 +59,7 @@ class IncomfortSensor(IncomfortChild, SensorEntity):
         self._unit_of_measurement = None
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._heater.status[self._state_attr]
 
@@ -69,7 +69,7 @@ class IncomfortSensor(IncomfortChild, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 

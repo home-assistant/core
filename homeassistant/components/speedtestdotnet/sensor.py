@@ -85,7 +85,7 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._attr_state = state.state
+            self._attr_native_value = state.state
 
         @callback
         def update() -> None:
@@ -100,8 +100,12 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         """Update sensors state."""
         if self.coordinator.data:
             if self.entity_description.key == "ping":
-                self._attr_state = self.coordinator.data["ping"]
+                self._attr_native_value = self.coordinator.data["ping"]
             elif self.entity_description.key == "download":
-                self._attr_state = round(self.coordinator.data["download"] / 10 ** 6, 2)
+                self._attr_native_value = round(
+                    self.coordinator.data["download"] / 10 ** 6, 2
+                )
             elif self.entity_description.key == "upload":
-                self._attr_state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
+                self._attr_native_value = round(
+                    self.coordinator.data["upload"] / 10 ** 6, 2
+                )

@@ -59,8 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 config_entry.data[CONF_API_KEY],
                 config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
                 config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-                websession,
                 altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
+                session=websession,
             )
         )
         await openuv.async_update()

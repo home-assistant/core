@@ -106,7 +106,7 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._pvpc_data.state
 

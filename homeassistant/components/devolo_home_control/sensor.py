@@ -78,7 +78,7 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self._value
 
@@ -106,7 +106,7 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
-        self._attr_unit_of_measurement = self._multi_level_sensor_property.unit
+        self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
 
         self._value = self._multi_level_sensor_property.value
 
@@ -132,7 +132,7 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
-        self._attr_unit_of_measurement = PERCENTAGE
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
         self._value = device_instance.battery_level
 
@@ -157,7 +157,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
         self._sensor_type = consumption
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(consumption)
-        self._attr_unit_of_measurement = getattr(
+        self._attr_native_unit_of_measurement = getattr(
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
 

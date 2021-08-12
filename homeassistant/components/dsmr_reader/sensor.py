@@ -33,9 +33,9 @@ class DSMRSensor(SensorEntity):
         def message_received(message):
             """Handle new MQTT messages."""
             if self.entity_description.state is not None:
-                self._attr_state = self.entity_description.state(message.payload)
+                self._attr_native_value = self.entity_description.state(message.payload)
             else:
-                self._attr_state = message.payload
+                self._attr_native_value = message.payload
 
             self.async_write_ha_state()
 

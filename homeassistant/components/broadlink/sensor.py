@@ -91,10 +91,10 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
         self._attr_device_class = SENSOR_TYPES[monitored_condition][2]
         self._attr_name = f"{device.name} {SENSOR_TYPES[monitored_condition][0]}"
         self._attr_state_class = SENSOR_TYPES[monitored_condition][3]
-        self._attr_state = self._coordinator.data[monitored_condition]
+        self._attr_native_value = self._coordinator.data[monitored_condition]
         self._attr_unique_id = f"{device.unique_id}-{monitored_condition}"
-        self._attr_unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
 
     def _update_state(self, data):
         """Update the state of the entity."""
-        self._attr_state = data[self._monitored_condition]
+        self._attr_native_value = data[self._monitored_condition]

@@ -84,7 +84,7 @@ class Inverter(SensorEntity):
         self.unit = unit
 
     @property
-    def state(self):
+    def native_value(self):
         """State of this inverter attribute."""
         return self.value
 
@@ -99,7 +99,7 @@ class Inverter(SensorEntity):
         return f"Solax {self.serial} {self.key}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.unit
 

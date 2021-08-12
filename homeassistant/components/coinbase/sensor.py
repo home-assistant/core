@@ -116,12 +116,12 @@ class AccountSensor(SensorEntity):
         return self._id
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
@@ -181,12 +181,12 @@ class ExchangeRateSensor(SensorEntity):
         return self._id
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 

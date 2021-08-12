@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositif d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Adresse mail",
+                    "password": "Mot de passe"
+                }
+            }
+        }
+    }
+}

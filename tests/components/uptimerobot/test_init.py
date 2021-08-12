@@ -150,6 +150,7 @@ async def test_device_management(hass: HomeAssistant):
     assert len(devices) == 1
 
     assert devices[0].identifiers == {(DOMAIN, "1234")}
+    assert devices[0].name == "Test monitor"
 
     assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
     assert hass.states.get(f"{UPTIMEROBOT_TEST_ENTITY}_2") is None

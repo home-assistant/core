@@ -111,7 +111,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         return "{} {}".format(super().name, self.quantity_name or "").strip()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if not self.available:
             return None
@@ -129,7 +129,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         return SENSOR_TYPES[self._type][0] if self._type in SENSOR_TYPES else None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return SENSOR_TYPES[self._type][1] if self._type in SENSOR_TYPES else None
 

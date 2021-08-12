@@ -79,7 +79,16 @@ class SolarSourceType(TypedDict):
     config_entry_solar_forecast: list[str] | None
 
 
-SourceType = Union[GridSourceType, SolarSourceType]
+class BatterySourceType(TypedDict):
+    """Dictionary holding the source of battery storage."""
+
+    type: Literal["battery"]
+
+    stat_energy_from: str
+    stat_energy_to: str
+
+
+SourceType = Union[GridSourceType, SolarSourceType, BatterySourceType]
 
 
 class DeviceConsumption(TypedDict):
@@ -177,6 +186,13 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
+BATTERY_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "battery",
+        vol.Required("stat_energy_from"): str,
+        vol.Required("stat_energy_to"): str,
+    }
+)
 
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
@@ -197,6 +213,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
                 {
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
+                    "battery": BATTERY_SOURCE_SCHEMA,
                 },
             )
         ]

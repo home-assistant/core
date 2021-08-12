@@ -1,4 +1,6 @@
 """Support for Homekit cameras."""
+from __future__ import annotations
+
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.camera import Camera
@@ -21,12 +23,14 @@ class HomeKitCamera(AccessoryEntity, Camera):
         """Return the current state of the camera."""
         return "idle"
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a jpeg with the current camera snapshot."""
         return await self._accessory.pairing.image(
             self._aid,
-            640,
-            480,
+            width or 640,
+            height or 480,
         )
 
 

@@ -127,7 +127,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         return f"{self._tado.home_name} {self.home_variable}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -137,7 +137,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         return self._state_attributes
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.home_variable in ["temperature", "outdoor temperature"]:
             return TEMP_CELSIUS
@@ -232,7 +232,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         return f"{self.zone_name} {self.zone_variable}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -242,7 +242,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         return self._state_attributes
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.zone_variable == "temperature":
             return self.hass.config.units.temperature_unit
