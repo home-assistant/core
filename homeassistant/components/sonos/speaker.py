@@ -636,8 +636,8 @@ class SonosSpeaker:
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
         if not hasattr(event, "zone_player_uui_ds_in_group"):
-            return None
-        self.hass.async_add_job(self.create_update_groups_coro(event))
+            return
+        self.hass.async_create_task(self.create_update_groups_coro(event))
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
