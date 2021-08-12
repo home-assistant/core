@@ -602,13 +602,7 @@ class HomeKit:
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
-        # The bridge itself counts as an accessory
-        if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
-            _LOGGER.warning(
-                "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
-                state.entity_id,
-                MAX_DEVICES,
-            )
+        if self._would_exceed_max_devices(state.entity_id):
             return
 
         if state_needs_accessory_mode(state):
@@ -639,15 +633,21 @@ class HomeKit:
             )
         return None
 
-    def add_bridge_triggers_accessory(self, device, device_triggers):
-        """Add device automation triggers to the bridge."""
+    def _would_exceed_max_devices(self, name):
+        """Check if adding another devices would reach the limit and log."""
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
                 "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
-                device.name,
+                name,
                 MAX_DEVICES,
             )
+            return True
+        return False
+
+    def add_bridge_triggers_accessory(self, device, device_triggers):
+        """Add device automation triggers to the bridge."""
+        if self._would_exceed_max_devices(device.name):
             return
 
         aid = self.aid_storage.get_or_allocate_aid(device.id, device.id)
@@ -655,17 +655,9 @@ class HomeKit:
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
         config = {}
-        if device.manufacturer:
-            config[ATTR_MANUFACTURER] = device.manufacturer
-        if device.model:
-            config[ATTR_MODEL] = device.model
-        if device.config_entries:
-            first_entry = list(device.config_entries)[0]
-            if entry := self.hass.config_entries.async_get_entry(first_entry):
-                config[ATTR_INTEGRATION] = entry.domain
-
-        try:
-            acc = DeviceTriggerAccessory(
+        self._fill_config_from_device_registry_entry(device, config)
+        self.bridge.add_accessory(
+            DeviceTriggerAccessory(
                 self.hass,
                 self.driver,
                 device.name,
@@ -675,15 +667,7 @@ class HomeKit:
                 device_id=device.id,
                 device_triggers=device_triggers,
             )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Failed to create a HomeKit accessory for %s (%s)",
-                device.name,
-                device.id,
-            )
-            return
-
-        self.bridge.add_accessory(acc)
+        )
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
@@ -839,19 +823,24 @@ class HomeKit:
             self.add_bridge_accessory(state)
         dev_reg = device_registry.async_get(self.hass)
         if self._devices:
-            triggers = await device_automation.async_get_device_automations(
-                self.hass, "trigger", self._devices
-            )
-            for device_id, device_triggers in triggers.items():
-                device = dev_reg.async_get(device_id)
-                if not device:
+            valid_device_ids = []
+            for device_id in self._devices:
+                if not dev_reg.async_get(device_id):
                     _LOGGER.warning(
                         "HomeKit %s cannot add device %s because it is missing from the device registry",
                         self._name,
                         device_id,
                     )
-                    continue
-                self.add_bridge_triggers_accessory(device, device_triggers)
+                else:
+                    valid_device_ids.append(device_id)
+            for device_id, device_triggers in (
+                await device_automation.async_get_device_automations(
+                    self.hass, "trigger", valid_device_ids
+                )
+            ).items():
+                self.add_bridge_triggers_accessory(
+                    dev_reg.async_get(device_id), device_triggers
+                )
         return self.bridge
 
     async def _async_create_accessories(self):
@@ -943,15 +932,8 @@ class HomeKit:
         """Set attributes that will be used for homekit device info."""
         ent_cfg = self._config.setdefault(entity_id, {})
         if ent_reg_ent.device_id:
-            dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
-            if dev_reg_ent is not None:
-                # Handle missing devices
-                if dev_reg_ent.manufacturer:
-                    ent_cfg[ATTR_MANUFACTURER] = dev_reg_ent.manufacturer
-                if dev_reg_ent.model:
-                    ent_cfg[ATTR_MODEL] = dev_reg_ent.model
-                if dev_reg_ent.sw_version:
-                    ent_cfg[ATTR_SW_VERSION] = dev_reg_ent.sw_version
+            if dev_reg_ent := dev_reg.async_get(ent_reg_ent.device_id):
+                self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
         if ATTR_MANUFACTURER not in ent_cfg:
             try:
                 integration = await async_get_integration(
@@ -960,6 +942,19 @@ class HomeKit:
                 ent_cfg[ATTR_INTEGRATION] = integration.name
             except IntegrationNotFound:
                 ent_cfg[ATTR_INTEGRATION] = ent_reg_ent.platform
+
+    def _fill_config_from_device_registry_entry(self, device_entry, config):
+        """Populate a config dict from the registry."""
+        if device_entry.manufacturer:
+            config[ATTR_MANUFACTURER] = device_entry.manufacturer
+        if device_entry.model:
+            config[ATTR_MODEL] = device_entry.model
+        if device_entry.sw_version:
+            config[ATTR_SW_VERSION] = device_entry.sw_version
+        if device_entry.config_entries:
+            first_entry = list(device_entry.config_entries)[0]
+            if entry := self.hass.config_entries.async_get_entry(first_entry):
+                config[ATTR_INTEGRATION] = entry.domain
 
 
 class HomeKitPairingQRView(HomeAssistantView):
