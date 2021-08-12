@@ -130,7 +130,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.screenlogic.*",
     "homeassistant.components.search.*",
     "homeassistant.components.sense.*",
-    "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
     "homeassistant.components.sma.*",
     "homeassistant.components.smartthings.*",
