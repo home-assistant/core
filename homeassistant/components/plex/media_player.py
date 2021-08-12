@@ -23,11 +23,11 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
@@ -36,11 +36,13 @@ from .const import (
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
+    PLEX_CLIENTS_SERVICE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
+    SINGLETON_DEVICE_MODELS,
     TRANSIENT_DEVICE_MODELS,
 )
 from .media_browser import browse_media
@@ -63,11 +65,13 @@ def needs_session(func):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    registry = await async_get_registry(hass)
+    entity_registry = ent_reg.async_get(hass)
 
     @callback
     def async_new_media_players(new_entities):
-        _async_add_entities(hass, registry, async_add_entities, server_id, new_entities)
+        _async_add_entities(
+            hass, entity_registry, async_add_entities, server_id, new_entities
+        )
 
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
@@ -77,7 +81,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def _async_add_entities(hass, registry, async_add_entities, server_id, new_entities):
+def _async_add_entities(
+    hass, entity_registry, async_add_entities, server_id, new_entities
+):
     """Set up Plex media_player entities."""
     _LOGGER.debug("New entities: %s", new_entities)
     entities = []
@@ -87,7 +93,7 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
         entities.append(plex_mp)
 
         # Migration to per-server unique_ids
-        old_entity_id = registry.async_get_entity_id(
+        old_entity_id = entity_registry.async_get_entity_id(
             MP_DOMAIN, PLEX_DOMAIN, plex_mp.machine_identifier
         )
         if old_entity_id is not None:
@@ -97,7 +103,9 @@ def _async_add_entities(hass, registry, async_add_entities, server_id, new_entit
                 plex_mp.machine_identifier,
                 new_unique_id,
             )
-            registry.async_update_entity(old_entity_id, new_unique_id=new_unique_id)
+            entity_registry.async_update_entity(
+                old_entity_id, new_unique_id=new_unique_id
+            )
 
     async_add_entities(entities, True)
 
@@ -136,6 +144,23 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
+        if self.device_product in SINGLETON_DEVICE_MODELS:
+            device_registry = dev_reg.async_get(self.hass)
+            entity_registry = ent_reg.async_get(self.hass)
+            client_service = device_registry.async_get_device(
+                {(PLEX_DOMAIN, PLEX_CLIENTS_SERVICE)}
+            )
+            service_entities = ent_reg.async_entries_for_device(
+                entity_registry, client_service.id
+            )
+            for entity in service_entities:
+                if (
+                    entity.original_name == self.name
+                    and entity.unique_id != self.unique_id
+                ):
+                    _LOGGER.debug("Cleaning up duplicate entity: %s", entity.entity_id)
+                    entity_registry.async_remove(entity.entity_id)
+
         _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
         self.async_on_remove(
             async_dispatcher_connect(
@@ -530,7 +555,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         if self.device_product in TRANSIENT_DEVICE_MODELS:
             return {
-                "identifiers": {(PLEX_DOMAIN, "plex.tv-clients")},
+                "identifiers": {(PLEX_DOMAIN, PLEX_CLIENTS_SERVICE)},
                 "name": "Plex Client Service",
                 "manufacturer": "Plex",
                 "model": "Plex Clients",

@@ -4,7 +4,9 @@ from homeassistant.const import __version__
 DOMAIN = "plex"
 NAME_FORMAT = "Plex ({})"
 COMMON_PLAYERS = ["Plex Web"]
+SINGLETON_DEVICE_MODELS = ["Plex for Sonos"]
 TRANSIENT_DEVICE_MODELS = ["Plex Web", "Plex for Sonos"]
+PLEX_CLIENTS_SERVICE = "plex.tv-clients"
 
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
