@@ -58,7 +58,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="power AC",
         icon="mdi:solar-power",
         unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
@@ -67,7 +66,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="power DC",
         icon="mdi:solar-power",
         unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
@@ -92,7 +90,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield day",
         icon="mdi:solar-power",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
@@ -101,7 +98,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield yesterday",
         icon="mdi:solar-power",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarLogSensorEntityDescription(
         key="yield_month",
@@ -109,7 +105,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield month",
         icon="mdi:solar-power",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="yield_year",
@@ -117,7 +113,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield year",
         icon="mdi:solar-power",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="yield_total",
@@ -125,7 +121,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield total",
         icon="mdi:solar-power",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
         last_reset=dt.utc_from_timestamp(0),
     ),
@@ -158,6 +153,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="consumption month",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_year",
@@ -165,6 +161,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="consumption year",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_total",
@@ -188,14 +185,12 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="alternator loss",
         icon="mdi:solar-power",
         unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="capacity",
         json_key="CAPACITY",
         name="capacity",
-        icon="mdi:solar-power",
         unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -214,7 +209,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="power available",
         icon="mdi:solar-power",
         unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
