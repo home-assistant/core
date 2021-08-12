@@ -101,7 +101,6 @@ class KebaSensor(SensorEntity):
         self._attr_name = f"{keba.device_name} {description.name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
-        self._attr_native_value = None
         self._attributes: dict[str, str] = {}
 
     @property
