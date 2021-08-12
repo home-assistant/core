@@ -565,19 +565,6 @@ DISCOVERY_SCHEMAS = [
         ],
         entity_registry_enabled_default=False,
     ),
-    # sensor for basic CC without targetValue (just currentValue)
-    ZWaveDiscoverySchema(
-        platform="sensor",
-        hint="numeric_sensor",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.BASIC,
-            },
-            type={"number"},
-            property={"currentValue"},
-        ),
-        entity_registry_enabled_default=False,
-    ),
     # binary switches
     ZWaveDiscoverySchema(
         platform="switch",
