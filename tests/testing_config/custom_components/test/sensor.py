@@ -72,6 +72,11 @@ class MockSensor(MockEntity, sensor.SensorEntity):
         return self._handle("device_class")
 
     @property
+    def last_reset(self):
+        """Return the last_reset of this sensor."""
+        return self._handle("last_reset")
+
+    @property
     def native_unit_of_measurement(self):
         """Return the native unit_of_measurement of this sensor."""
         return self._handle("native_unit_of_measurement")
@@ -80,3 +85,8 @@ class MockSensor(MockEntity, sensor.SensorEntity):
     def native_value(self):
         """Return the native value of this sensor."""
         return self._handle("native_value")
+
+    @property
+    def state_class(self):
+        """Return the state class of this sensor."""
+        return self._handle("state_class")
