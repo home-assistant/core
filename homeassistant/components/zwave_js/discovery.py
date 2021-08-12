@@ -542,8 +542,7 @@ DISCOVERY_SCHEMAS = [
         allow_multi=True,
         entity_registry_enabled_default=False,
     ),
-    # number
-    # Basic CC
+    # number for Basic CC
     ZWaveDiscoverySchema(
         platform="number",
         hint="Basic",
