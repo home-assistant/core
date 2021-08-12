@@ -1,6 +1,7 @@
 """Support for monitoring a Smappee energy sensor."""
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -34,7 +35,7 @@ TREND_SENSORS = {
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_today",
-        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_ENERGY,
         False,  # cloud only
     ],
     "power_current_hour": [
@@ -42,7 +43,7 @@ TREND_SENSORS = {
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_current_hour",
-        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_ENERGY,
         False,  # cloud only
     ],
     "power_last_5_minutes": [
@@ -50,7 +51,7 @@ TREND_SENSORS = {
         "mdi:power-plug",
         ENERGY_WATT_HOUR,
         "power_last_5_minutes",
-        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_ENERGY,
         False,  # cloud only
     ],
     "alwayson_today": [
@@ -58,7 +59,7 @@ TREND_SENSORS = {
         "mdi:sleep",
         ENERGY_WATT_HOUR,
         "alwayson_today",
-        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_ENERGY,
         False,  # cloud only
     ],
 }
@@ -85,7 +86,7 @@ SOLAR_SENSORS = {
         "mdi:white-balance-sunny",
         ENERGY_WATT_HOUR,
         "solar_today",
-        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_POWER,
         False,  # cloud only
     ],
     "solar_current_hour": [
@@ -93,7 +94,7 @@ SOLAR_SENSORS = {
         "mdi:white-balance-sunny",
         ENERGY_WATT_HOUR,
         "solar_current_hour",
-        ENERGY_WATT_HOUR,
+        DEVICE_CLASS_POWER,
         False,  # cloud only
     ],
 }
@@ -262,7 +263,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             "mdi:power-plug",
                             ENERGY_KILO_WATT_HOUR,
                             actuator_id,
-                            ENERGY_KILO_WATT_HOUR,
+                            DEVICE_CLASS_ENERGY,
                             False,  # cloud only
                         ],
                     )
