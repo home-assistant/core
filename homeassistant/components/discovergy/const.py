@@ -26,14 +26,14 @@ ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="power",
         name="Total power",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="power1",
         name="Phase 1 power",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -41,7 +41,7 @@ ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="power2",
         name="Phase 2 power",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -49,7 +49,7 @@ ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="power3",
         name="Phase 3 power",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -57,7 +57,7 @@ ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energy",
         name="Total consumption",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
         last_reset=utc_from_timestamp(0),
@@ -65,7 +65,7 @@ ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="energyOut",
         name="Total production",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
         last_reset=utc_from_timestamp(0),

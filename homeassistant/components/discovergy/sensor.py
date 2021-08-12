@@ -91,18 +91,16 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = description
         self._attr_name = (
-            f"{self._meter.measurement_type.capitalize()} "
-            f"{self._meter.location.street} "
-            f"{self._meter.location.street_number} - "
-            f"{self.entity_description.name}"
+            f"{meter.measurement_type.capitalize()} "
+            f"{meter.location.street} "
+            f"{meter.location.street_number} - "
+            f"{description.name}"
         )
-        self._attr_unique_id = (
-            f"{self._meter.serial_number}-" f"{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{meter.serial_number}-" f"{description.key}"
         self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._meter.get_meter_id())},
+            ATTR_IDENTIFIERS: {(DOMAIN, meter.get_meter_id())},
             ATTR_NAME: self.device_name,
-            ATTR_MODEL: f"{self._meter.type.capitalize()} {self._meter.measurement_type.capitalize()}",
+            ATTR_MODEL: f"{meter.type.capitalize()} {meter.measurement_type.capitalize()}",
             ATTR_MANUFACTURER: MANUFACTURER,
         }
 
@@ -116,7 +114,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def state(self) -> StateType:
+    def native_state(self) -> StateType:
         """Return the sensor state."""
         if self.coordinator.data:
             if (
