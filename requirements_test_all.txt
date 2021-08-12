@@ -1024,6 +1024,9 @@ pysmartapp==0.3.3
 # homeassistant.components.smartthings
 pysmartthings==0.7.6
 
+# homeassistant.components.solar_frontier
+pysolarfrontier==1.1
+
 # homeassistant.components.soma
 pysoma==0.0.10
 

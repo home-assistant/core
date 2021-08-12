@@ -1789,6 +1789,9 @@ pysml==0.0.5
 # homeassistant.components.snmp
 pysnmp==4.4.12
 
+# homeassistant.components.solar_frontier
+pysolarfrontier==1.1
+
 # homeassistant.components.soma
 pysoma==0.0.10
 

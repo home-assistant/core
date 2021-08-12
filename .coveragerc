@@ -955,6 +955,7 @@ omit =
     homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
+    homeassistant/components/solar_frontier/sensor.py
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/coordinator.py
     homeassistant/components/solaredge/sensor.py

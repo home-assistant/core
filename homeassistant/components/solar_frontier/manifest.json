@@ -1,0 +1,17 @@
+{
+  "domain": "solar_frontier",
+  "name": "Solar Frontier Inverter",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/solar_frontier",
+  "requirements": [
+    "pysolarfrontier==1.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@coen800"
+  ],
+  "iot_class": "local_polling"
+}
