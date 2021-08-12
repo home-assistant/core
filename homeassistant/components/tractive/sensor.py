@@ -62,8 +62,8 @@ class TractiveSensor(SensorEntity):
         self._tracker_id = tracker_details["_id"]
         self._attr_unique_id = unique_id
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._tracker_id)},
-            "name": f"Tractive ({self._tracker_id})",
+            "identifiers": {(DOMAIN, tracker_details["_id"])},
+            "name": f"Tractive ({tracker_details['_id']})",
             "manufacturer": "Tractive GmbH",
             "sw_version": tracker_details["fw_version"],
             "model": tracker_details["model_number"],
