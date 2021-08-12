@@ -100,11 +100,6 @@ class KebaSensor(SensorEntity):
 
         self._attr_name = f"{keba.device_name} {description.name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
-        self._attr_icon = description.icon
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_device_class = description.device_class
-        self._attr_state_class = description.state_class
-        self._attr_last_reset = description.last_reset
 
         self._state = None
         self._attributes: dict[str, str] = {}
