@@ -59,5 +59,6 @@ class FAADataUpdateCoordinator(DataUpdateCoordinator):
             with timeout(10):
                 await self.data.update()
         except ClientConnectionError as err:
+            _LOGGER.warning(err)
             raise UpdateFailed(err) from err
         return self.data
