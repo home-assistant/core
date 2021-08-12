@@ -134,7 +134,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         # device class plug: On means device is plugged in,
         #                    Off means device is unplugged
         if self._attribute == "connection_status":
-            self._attr_state = vehicle_state.connection_status == "CONNECTED"
+            self._attr_is_on = vehicle_state.connection_status == "CONNECTED"
             result["connection_status"] = vehicle_state.connection_status
 
         self._attr_extra_state_attributes = result
