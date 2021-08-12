@@ -1,7 +1,7 @@
 """Class to hold all sensor accessories."""
 import logging
 
-from pyhap.const import CATEGORY_SWITCH
+from pyhap.const import CATEGORY_SENSOR
 
 from homeassistant.helpers.trigger import async_initialize_triggers
 
@@ -24,7 +24,7 @@ class DeviceTriggerAccessory(HomeAccessory):
 
     def __init__(self, *args, device_triggers=None, device_id=None):
         """Initialize a Programmable switch accessory object."""
-        super().__init__(*args, category=CATEGORY_SWITCH, device_id=device_id)
+        super().__init__(*args, category=CATEGORY_SENSOR, device_id=device_id)
         self._device_triggers = device_triggers
         self._remove_triggers = None
         self.triggers = []
@@ -47,11 +47,8 @@ class DeviceTriggerAccessory(HomeAccessory):
             serv_stateless_switch.configure_char(
                 CHAR_SERVICE_LABEL_INDEX, value=idx + 1
             )
-            serv_service_label = self.add_preload_service(
-                SERV_SERVICE_LABEL, [CHAR_NAME]
-            )
+            serv_service_label = self.add_preload_service(SERV_SERVICE_LABEL)
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
-            serv_service_label.configure_char(CHAR_NAME, value=trigger_name)
 
     async def async_trigger(self, run_variables, context=None, skip_condition=False):
         """Trigger button press.
