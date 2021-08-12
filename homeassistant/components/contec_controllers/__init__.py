@@ -15,9 +15,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .contec_tracer import ContecTracer
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = ["light", "cover"]
 
 _LOGGER = logging.getLogger(__name__)
 

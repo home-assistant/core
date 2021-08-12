@@ -21,7 +21,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Awesome Light platform."""
+    """Set up the Contec Lights."""
     controllerManager: ControllerManager = hass.data[DOMAIN][config_entry.entry_id]
     allLights: List[ContecLight] = []
     for onOff in controllerManager.OnOffActivations:
@@ -30,7 +30,7 @@ async def async_setup_entry(
 
 
 class ContecLight(LightEntity):
-    """Representation of an Awesome Light."""
+    """Representation of a Contec light."""
 
     _id: str
     _name: str
@@ -74,10 +74,3 @@ class ContecLight(LightEntity):
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         await self._onOffActivation.SetActivationState(False)
-
-    # def update(self):
-    #    """Fetch new state data for this light.
-
-    #    This is the only method that should fetch new data for Home Assistant.
-    #    """
-    #    self._state = self._onOffActivation.IsOn
