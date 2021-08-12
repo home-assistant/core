@@ -111,11 +111,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_EVENT, default=[]): vol.All(
             cv.ensure_list,
-            [
-                vol.Any(
-                    *EVENTS,
-                )
-            ],
+            [vol.In(EVENTS)],
         ),
     }
 )
@@ -207,6 +203,8 @@ class TraccarScanner:
     ):
         """Initialize."""
 
+        if EVENT_ALL_EVENTS in event_types:
+            event_types = EVENTS
         self._event_types = {camelcase(evt): evt for evt in event_types}
         self._custom_attributes = custom_attributes
         self._scan_interval = scan_interval
@@ -322,9 +320,8 @@ class TraccarScanner:
                     ),
                     None,
                 )
-                event_types = {camelcase(evt): evt for evt in EVENTS}
                 self._hass.bus.async_fire(
-                    f"traccar_{event_types.get(event['type'])}",
+                    f"traccar_{self._event_types.get(event['type'])}",
                     {
                         "device_traccar_id": event["deviceId"],
                         "device_name": device_name,
