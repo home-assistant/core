@@ -183,7 +183,9 @@ async def async_setup_entry(hass, config_entry):
             "SERVICE_MAINTENANCE",
             "UPSTREAM_TIMEOUT",
         ]:
-            raise ConfigEntryNotReady(f"Temporarily unable to communicate with Tesla API: {ex.message}") from ex
+            raise ConfigEntryNotReady(
+                f"Temporarily unable to communicate with Tesla API: {ex.message}"
+            ) from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
 
