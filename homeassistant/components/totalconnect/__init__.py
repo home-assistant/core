@@ -1,5 +1,5 @@
 """The totalconnect component."""
-from total_connect_client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     temp_codes = conf[CONF_USERCODES]
     usercodes = {int(code): temp_codes[code] for code in temp_codes}
     client = await hass.async_add_executor_job(
-        TotalConnectClient.TotalConnectClient, username, password, usercodes
+        TotalConnectClient, username, password, usercodes
     )
 
     if not client.is_valid_credentials():

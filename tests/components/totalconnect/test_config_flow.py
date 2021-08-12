@@ -43,10 +43,10 @@ async def test_user_show_locations(hass):
     ]
 
     with patch("zeep.Client", autospec=True), patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ) as mock_request, patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.get_zone_details",
+        "homeassistant.components.totalconnect.TotalConnectClient.get_zone_details",
         return_value=True,
     ), patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
@@ -94,7 +94,7 @@ async def test_abort_if_already_setup(hass):
 
     # Should fail, same USERNAME (flow)
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
@@ -110,7 +110,7 @@ async def test_abort_if_already_setup(hass):
 async def test_login_failed(hass):
     """Test when we have errors during login."""
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = False
         result = await hass.config_entries.flow.async_init(
@@ -139,7 +139,7 @@ async def test_reauth(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
     ) as client_mock, patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):

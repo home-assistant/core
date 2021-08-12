@@ -1,7 +1,9 @@
 """Common methods used across tests for TotalConnect."""
 from unittest.mock import patch
 
-from total_connect_client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.location import TotalConnectLocation
+from total_connect_client.zone import ZONE_STATUS_NORMAL
 
 from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -31,7 +33,7 @@ USER = {
 }
 
 RESPONSE_AUTHENTICATE = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultCode": TotalConnectClient.SUCCESS,
     "SessionID": 1,
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
@@ -39,58 +41,58 @@ RESPONSE_AUTHENTICATE = {
 }
 
 RESPONSE_AUTHENTICATE_FAILED = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultCode": TotalConnectClient.BAD_USER_OR_PASSWORD,
     "ResultData": "test bad authentication",
 }
 
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+    "ArmingState": TotalConnectLocation.DISARMED,
 }
 
 PARTITION_ARMED_STAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY,
+    "ArmingState": TotalConnectLocation.ARMED_STAY,
 }
 
 PARTITION_ARMED_AWAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_AWAY,
+    "ArmingState": TotalConnectLocation.ARMED_AWAY,
 }
 
 PARTITION_ARMED_CUSTOM = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_CUSTOM_BYPASS,
+    "ArmingState": TotalConnectLocation.ARMED_CUSTOM_BYPASS,
 }
 
 PARTITION_ARMED_NIGHT = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY_NIGHT,
+    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
 }
 
 PARTITION_ARMING = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMING,
+    "ArmingState": TotalConnectLocation.ARMING,
 }
 PARTITION_DISARMING = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMING,
+    "ArmingState": TotalConnectLocation.DISARMING,
 }
 
 PARTITION_TRIGGERED_POLICE = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ALARMING,
+    "ArmingState": TotalConnectLocation.ALARMING,
 }
 
 PARTITION_TRIGGERED_FIRE = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ALARMING_FIRE_SMOKE,
+    "ArmingState": TotalConnectLocation.ALARMING_FIRE_SMOKE,
 }
 
 PARTITION_TRIGGERED_CARBON_MONOXIDE = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ALARMING_CARBON_MONOXIDE,
+    "ArmingState": TotalConnectLocation.ALARMING_CARBON_MONOXIDE,
 }
 
 PARTITION_UNKNOWN = {
@@ -128,7 +130,7 @@ PARTITIONS_UNKNOWN = {"PartitionInfo": PARTITION_INFO_UNKNOWN}
 ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
     "PartitionId": "1",
 }
 
@@ -200,22 +202,18 @@ RESPONSE_TRIGGERED_CARBON_MONOXIDE = {
 }
 RESPONSE_UNKNOWN = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_UNKNOWN}
 
-RESPONSE_ARM_SUCCESS = {"ResultCode": TotalConnectClient.TotalConnectClient.ARM_SUCCESS}
-RESPONSE_ARM_FAILURE = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED
-}
-RESPONSE_DISARM_SUCCESS = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.DISARM_SUCCESS
-}
+RESPONSE_ARM_SUCCESS = {"ResultCode": TotalConnectClient.ARM_SUCCESS}
+RESPONSE_ARM_FAILURE = {"ResultCode": TotalConnectClient.COMMAND_FAILED}
+RESPONSE_DISARM_SUCCESS = {"ResultCode": TotalConnectClient.DISARM_SUCCESS}
 RESPONSE_DISARM_FAILURE = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": TotalConnectClient.COMMAND_FAILED,
     "ResultData": "Command Failed",
 }
 RESPONSE_USER_CODE_INVALID = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_INVALID,
+    "ResultCode": TotalConnectClient.USER_CODE_INVALID,
     "ResultData": "testing user code invalid",
 }
-RESPONSE_SUCCESS = {"ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS}
+RESPONSE_SUCCESS = {"ResultCode": TotalConnectClient.SUCCESS}
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
@@ -253,10 +251,10 @@ async def setup_platform(hass, platform):
     with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
         "zeep.Client", autospec=True
     ), patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ) as mock_request, patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.get_zone_details",
+        "homeassistant.components.totalconnect.TotalConnectClient.get_zone_details",
         return_value=True,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

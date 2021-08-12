@@ -52,7 +52,7 @@ DATA = {ATTR_ENTITY_ID: ENTITY_ID}
 async def test_attributes(hass):
     """Test the alarm control panel attributes are correct."""
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         return_value=RESPONSE_DISARMED,
     ) as mock_request:
         await setup_platform(hass, ALARM_DOMAIN)
@@ -71,7 +71,7 @@ async def test_arm_home_success(hass):
     """Test arm home method success."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -89,7 +89,7 @@ async def test_arm_home_failure(hass):
     """Test arm home method failure."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -108,7 +108,7 @@ async def test_arm_home_invalid_usercode(hass):
     """Test arm home method with invalid usercode."""
     responses = [RESPONSE_DISARMED, RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -127,7 +127,7 @@ async def test_arm_away_success(hass):
     """Test arm away method success."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -144,7 +144,7 @@ async def test_arm_away_failure(hass):
     """Test arm away method failure."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -163,7 +163,7 @@ async def test_disarm_success(hass):
     """Test disarm method success."""
     responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_SUCCESS, RESPONSE_DISARMED]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -180,7 +180,7 @@ async def test_disarm_failure(hass):
     """Test disarm method failure."""
     responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_FAILURE, RESPONSE_ARMED_AWAY]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -199,7 +199,7 @@ async def test_disarm_invalid_usercode(hass):
     """Test disarm method failure."""
     responses = [RESPONSE_ARMED_AWAY, RESPONSE_USER_CODE_INVALID, RESPONSE_ARMED_AWAY]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -218,7 +218,7 @@ async def test_arm_night_success(hass):
     """Test arm night method success."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_NIGHT]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -236,7 +236,7 @@ async def test_arm_night_failure(hass):
     """Test arm night method failure."""
     responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -255,7 +255,7 @@ async def test_arming(hass):
     """Test arming."""
     responses = [RESPONSE_DISARMED, RESPONSE_SUCCESS, RESPONSE_ARMING]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -271,7 +271,7 @@ async def test_disarming(hass):
     """Test disarming."""
     responses = [RESPONSE_ARMED_AWAY, RESPONSE_SUCCESS, RESPONSE_DISARMING]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -287,7 +287,7 @@ async def test_triggered_fire(hass):
     """Test triggered by fire."""
     responses = [RESPONSE_TRIGGERED_FIRE]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -300,7 +300,7 @@ async def test_triggered_police(hass):
     """Test triggered by police."""
     responses = [RESPONSE_TRIGGERED_POLICE]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -313,7 +313,7 @@ async def test_triggered_carbon_monoxide(hass):
     """Test triggered by carbon monoxide."""
     responses = [RESPONSE_TRIGGERED_CARBON_MONOXIDE]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -326,7 +326,7 @@ async def test_armed_custom(hass):
     """Test armed custom."""
     responses = [RESPONSE_ARMED_CUSTOM]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
@@ -338,7 +338,7 @@ async def test_unknown(hass):
     """Test unknown arm status."""
     responses = [RESPONSE_UNKNOWN]
     with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
