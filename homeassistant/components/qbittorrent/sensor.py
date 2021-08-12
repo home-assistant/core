@@ -39,12 +39,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
-        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         name="Up Speed",
-        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
     ),
 )
 
