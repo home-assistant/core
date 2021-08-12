@@ -30,7 +30,7 @@ SENSOR_TYPES = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
         name="Battery Level",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         event_type=ATTR_HARDWARE,
     ),
@@ -38,7 +38,7 @@ SENSOR_TYPES = (
         key=ATTR_MINUTES_ACTIVE,
         name="Minutes Active",
         icon="mdi:clock-time-eight-outline",
-        unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=TIME_MINUTES,
         event_type=ATTR_ACTIVITY,
         attributes=(ATTR_DAILY_GOAL,),
     ),
