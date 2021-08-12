@@ -177,6 +177,16 @@ async def async_setup_entry(hass, config_entry):
         await async_client.aclose()
         if ex.code == HTTP_UNAUTHORIZED:
             raise ConfigEntryAuthFailed from ex
+        if ex.message in [
+            "VEHICLE_UNAVAILABLE",
+            "TOO_MANY_REQUESTS",
+            "SERVICE_MAINTENANCE",
+            "UPSTREAM_TIMEOUT",
+        ]:
+            _LOGGER.warning(
+                "Temporarily unable to communicate with Tesla API: %s", ex.message
+            )
+            raise ConfigEntryNotReady from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
 
