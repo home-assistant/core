@@ -107,7 +107,7 @@ class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
@@ -118,7 +118,7 @@ class HMSensor(HMDevice, SensorEntity):
         return self._hm_get_state()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return HM_UNIT_HA_CAST.get(self._state)
 
