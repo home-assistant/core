@@ -2,14 +2,14 @@
   "domain": "squeezebox",
   "name": "Logitech Squeezebox",
   "documentation": "https://www.home-assistant.io/integrations/squeezebox",
-  "codeowners": [
-    "@rajlaud"
-  ],
-  "requirements": [
-    "pysqueezebox==0.5.5"
-  ],
+  "codeowners": ["@rajlaud"],
+  "requirements": ["pysqueezebox==0.5.5"],
   "config_flow": true,
   "dhcp": [
-    {"hostname":"squeezebox*","macaddress":"000420*"}
-  ]
+    {
+      "hostname": "squeezebox*",
+      "macaddress": "000420*"
+    }
+  ],
+  "iot_class": "local_polling"
 }

@@ -22,18 +22,19 @@ async def test_setting_rising(hass, legacy_patchable_time):
     await hass.async_block_till_done()
     state = hass.states.get(sun.ENTITY_ID)
 
-    from astral import Astral
+    from astral import LocationInfo
+    import astral.sun
 
-    astral = Astral()
     utc_today = utc_now.date()
 
-    latitude = hass.config.latitude
-    longitude = hass.config.longitude
+    location = LocationInfo(
+        latitude=hass.config.latitude, longitude=hass.config.longitude
+    )
 
     mod = -1
     while True:
-        next_dawn = astral.dawn_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_dawn = astral.sun.dawn(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_dawn > utc_now:
             break
@@ -41,8 +42,8 @@ async def test_setting_rising(hass, legacy_patchable_time):
 
     mod = -1
     while True:
-        next_dusk = astral.dusk_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_dusk = astral.sun.dusk(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_dusk > utc_now:
             break
@@ -50,8 +51,8 @@ async def test_setting_rising(hass, legacy_patchable_time):
 
     mod = -1
     while True:
-        next_midnight = astral.solar_midnight_utc(
-            utc_today + timedelta(days=mod), longitude
+        next_midnight = astral.sun.midnight(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_midnight > utc_now:
             break
@@ -59,15 +60,17 @@ async def test_setting_rising(hass, legacy_patchable_time):
 
     mod = -1
     while True:
-        next_noon = astral.solar_noon_utc(utc_today + timedelta(days=mod), longitude)
+        next_noon = astral.sun.noon(
+            location.observer, date=utc_today + timedelta(days=mod)
+        )
         if next_noon > utc_now:
             break
         mod += 1
 
     mod = -1
     while True:
-        next_rising = astral.sunrise_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_rising = astral.sun.sunrise(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_rising > utc_now:
             break
@@ -75,8 +78,8 @@ async def test_setting_rising(hass, legacy_patchable_time):
 
     mod = -1
     while True:
-        next_setting = astral.sunset_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
+        next_setting = astral.sun.sunset(
+            location.observer, date=utc_today + timedelta(days=mod)
         )
         if next_setting > utc_now:
             break
@@ -152,10 +155,10 @@ async def test_norway_in_june(hass):
 
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_RISING]
-    ) == datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 

@@ -46,7 +46,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
         hass: core.HomeAssistant,
         config_entry: config_entries.ConfigEntry,
         implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize Home Connect Auth."""
         self.hass = hass
         self.config_entry = config_entry

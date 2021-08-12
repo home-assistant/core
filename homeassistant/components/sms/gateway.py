@@ -25,6 +25,10 @@ class Gateway:
             await self._worker.set_incoming_sms_async()
         except gammu.ERR_NOTSUPPORTED:
             _LOGGER.warning("Your phone does not support incoming SMS notifications!")
+        except gammu.GSMError:
+            _LOGGER.warning(
+                "GSM error, your phone does not support incoming SMS notifications!"
+            )
         else:
             await self._worker.set_incoming_callback_async(self.sms_callback)
 
@@ -43,7 +47,7 @@ class Gateway:
         )
         entries = self.get_and_delete_all_sms(state_machine)
         _LOGGER.debug("SMS entries:%s", entries)
-        data = list()
+        data = []
 
         for entry in entries:
             decoded_entry = gammu.DecodeSMS(entry)
@@ -78,7 +82,7 @@ class Gateway:
         start_remaining = remaining
         # Get all sms
         start = True
-        entries = list()
+        entries = []
         all_parts = -1
         all_parts_arrived = False
         _LOGGER.debug("Start remaining:%i", start_remaining)

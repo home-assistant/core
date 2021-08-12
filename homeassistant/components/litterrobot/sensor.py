@@ -1,54 +1,101 @@
 """Support for Litter-Robot sensors."""
-from homeassistant.const import PERCENTAGE
-from homeassistant.helpers.entity import Entity
+from __future__ import annotations
+
+from pylitterbot.robot import Robot
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .hub import LitterRobotEntity
-
-WASTE_DRAWER = "Waste Drawer"
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Litter-Robot sensors using config entry."""
-    hub = hass.data[DOMAIN][config_entry.entry_id]
-
-    entities = []
-    for robot in hub.account.robots:
-        entities.append(LitterRobotSensor(robot, WASTE_DRAWER, hub))
-
-    if entities:
-        async_add_entities(entities, True)
+from .entity import LitterRobotEntity
+from .hub import LitterRobotHub
 
 
-class LitterRobotSensor(LitterRobotEntity, Entity):
-    """Litter-Robot sensors."""
+def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str:
+    """Return a gauge icon valid identifier."""
+    if gauge_level is None or gauge_level <= 0 + offset:
+        return "mdi:gauge-empty"
+    if gauge_level > 70 + offset:
+        return "mdi:gauge-full"
+    if gauge_level > 30 + offset:
+        return "mdi:gauge"
+    return "mdi:gauge-low"
+
+
+class LitterRobotPropertySensor(LitterRobotEntity, SensorEntity):
+    """Litter-Robot property sensor."""
+
+    def __init__(
+        self, robot: Robot, entity_type: str, hub: LitterRobotHub, sensor_attribute: str
+    ) -> None:
+        """Pass robot, entity_type and hub to LitterRobotEntity."""
+        super().__init__(robot, entity_type, hub)
+        self.sensor_attribute = sensor_attribute
 
     @property
-    def state(self):
+    def native_value(self) -> str:
         """Return the state."""
-        return self.robot.waste_drawer_gauge
+        return getattr(self.robot, self.sensor_attribute)
+
+
+class LitterRobotWasteSensor(LitterRobotPropertySensor):
+    """Litter-Robot waste sensor."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return unit of measurement."""
         return PERCENTAGE
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
-        if self.robot.waste_drawer_gauge <= 10:
-            return "mdi:gauge-empty"
-        if self.robot.waste_drawer_gauge < 50:
-            return "mdi:gauge-low"
-        if self.robot.waste_drawer_gauge <= 90:
-            return "mdi:gauge"
-        return "mdi:gauge-full"
+        return icon_for_gauge_level(self.state, 10)
+
+
+class LitterRobotSleepTimeSensor(LitterRobotPropertySensor):
+    """Litter-Robot sleep time sensor."""
 
     @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return {
-            "cycle_count": self.robot.cycle_count,
-            "cycle_capacity": self.robot.cycle_capacity,
-            "cycles_after_drawer_full": self.robot.cycles_after_drawer_full,
-        }
+    def native_value(self) -> str | None:
+        """Return the state."""
+        if self.robot.sleep_mode_enabled:
+            return super().native_value.isoformat()
+        return None
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class, if any."""
+        return DEVICE_CLASS_TIMESTAMP
+
+
+ROBOT_SENSORS: list[tuple[type[LitterRobotPropertySensor], str, str]] = [
+    (LitterRobotWasteSensor, "Waste Drawer", "waste_drawer_level"),
+    (LitterRobotSleepTimeSensor, "Sleep Mode Start Time", "sleep_mode_start_time"),
+    (LitterRobotSleepTimeSensor, "Sleep Mode End Time", "sleep_mode_end_time"),
+]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Litter-Robot sensors using config entry."""
+    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+
+    entities = []
+    for robot in hub.account.robots:
+        for (sensor_class, entity_type, sensor_attribute) in ROBOT_SENSORS:
+            entities.append(
+                sensor_class(
+                    robot=robot,
+                    entity_type=entity_type,
+                    hub=hub,
+                    sensor_attribute=sensor_attribute,
+                )
+            )
+
+    async_add_entities(entities, True)

@@ -1,7 +1,9 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Volcano Feeds."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
+import logging
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -11,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -53,7 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Sensor setup done")
 
 
-class GeonetnzVolcanoSensor(Entity):
+class GeonetnzVolcanoSensor(SensorEntity):
     """This represents an external event with GeoNet NZ Volcano feed data."""
 
     def __init__(self, config_entry_id, feed_manager, external_id, unit_system):
@@ -129,7 +130,7 @@ class GeonetnzVolcanoSensor(Entity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._alert_level
 
@@ -139,17 +140,17 @@ class GeonetnzVolcanoSensor(Entity):
         return DEFAULT_ICON
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return f"Volcano {self._title}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return "alert level"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

@@ -4,20 +4,19 @@ turn_on:
   name: Activate
   description: Activate a scene.
   target:
+    entity:
+      domain: scene
   fields:
     transition:
       name: Transition
       description:
-        Transition duration in seconds it takes to bring devices to the state
+        Transition duration it takes to bring devices to the state
         defined in the scene.
-      example: 2.5
       selector:
         number:
           min: 0
           max: 300
-          step: 1
           unit_of_measurement: seconds
-          mode: slider
 
 reload:
   name: Reload
@@ -41,16 +40,13 @@ apply:
     transition:
       name: Transition
       description:
-        Transition duration in seconds it takes to bring devices to the state
+        Transition duration it takes to bring devices to the state
         defined in the scene.
-      example: 2.5
       selector:
         number:
           min: 0
           max: 300
-          step: 1
           unit_of_measurement: seconds
-          mode: slider
 
 create:
   name: Create

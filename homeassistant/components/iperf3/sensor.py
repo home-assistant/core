@@ -1,4 +1,5 @@
 """Support for Iperf3 sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     async_add_entities(sensors, True)
 
 
-class Iperf3Sensor(RestoreEntity):
+class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
     def __init__(self, iperf3_data, sensor_type):
@@ -40,12 +41,12 @@ class Iperf3Sensor(RestoreEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -55,7 +56,7 @@ class Iperf3Sensor(RestoreEntity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

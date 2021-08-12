@@ -1,4 +1,6 @@
 """Support to the Logi Circle cameras."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -125,7 +127,7 @@ class LogiCam(Camera):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -142,7 +144,9 @@ class LogiCam(Camera):
 
         return state
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image from the camera."""
         return await self._camera.live_stream.download_jpeg()
 

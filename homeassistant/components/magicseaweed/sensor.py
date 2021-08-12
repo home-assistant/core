@@ -5,7 +5,7 @@ import logging
 import magicseaweed
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -90,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class MagicSeaweedSensor(Entity):
+class MagicSeaweedSensor(SensorEntity):
     """Implementation of a MagicSeaweed sensor."""
 
     def __init__(self, forecast_data, sensor_type, name, unit_system, hour=None):
@@ -116,7 +115,7 @@ class MagicSeaweedSensor(Entity):
         return f"{self.hour} {self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -126,7 +125,7 @@ class MagicSeaweedSensor(Entity):
         return self._unit_system
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -136,7 +135,7 @@ class MagicSeaweedSensor(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 

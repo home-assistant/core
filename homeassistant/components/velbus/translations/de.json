@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "name": "Der Name f\u00fcr diese Velbus-Verbindung",
-                    "port": "Verbindungs details"
+                    "port": "Verbindungsdetails"
                 },
                 "title": "Definieren des Velbus-Verbindungstyps"
             }

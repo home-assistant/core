@@ -1,10 +1,16 @@
 """InfluxDB component which allows you to get data from an Influx database."""
+from __future__ import annotations
+
+import datetime
 import logging
-from typing import Dict
+from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_NAME,
@@ -15,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import create_influx_url, get_influx_connection, validate_version_specific_config
@@ -59,6 +64,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL: Final = datetime.timedelta(seconds=60)
+
 
 def _merge_connection_config_into_query(conf, query):
     """Merge connection details into each configured query."""
@@ -67,7 +74,7 @@ def _merge_connection_config_into_query(conf, query):
             query[key] = conf[key]
 
 
-def validate_query_format_for_version(conf: Dict) -> Dict:
+def validate_query_format_for_version(conf: dict) -> dict:
     """Ensure queries are provided in correct format based on API version."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_QUERIES_FLUX not in conf:
@@ -168,7 +175,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda _: influx.close())
 
 
-class InfluxSensor(Entity):
+class InfluxSensor(SensorEntity):
     """Implementation of a Influxdb sensor."""
 
     def __init__(self, hass, influx, query):
@@ -215,12 +222,12 @@ class InfluxSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

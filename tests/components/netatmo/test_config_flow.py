@@ -36,7 +36,7 @@ async def test_abort_if_existing_entry(hass):
 
     result = await hass.config_entries.flow.async_init(
         "netatmo",
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

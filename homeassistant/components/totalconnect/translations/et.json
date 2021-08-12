@@ -11,9 +11,10 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Asukoht"
+                    "location": "Asukoht",
+                    "usercode": "Kasutajakood"
                 },
-                "description": "Sisesta selle kasutaja kood selles asukohas",
+                "description": "Sisesta kasutaja kood asukohale {location_id}",
                 "title": "Asukoha kasutajakoodid"
             },
             "reauth_confirm": {

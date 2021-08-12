@@ -80,6 +80,8 @@ PRESET_MODE_TO_CODE = {"home": 0, "alternate": 1, "away": 2, "holiday": 3}
 
 CODE_TO_PRESET_MODE = {0: "home", 1: "alternate", 2: "away", 3: "holiday"}
 
+CODE_TO_HOLD_STATE = {0: False, 1: True}
+
 
 def round_temp(temperature):
     """Round a temperature to the resolution of the thermostat.
@@ -181,7 +183,7 @@ class RadioThermostat(ClimateEntity):
         return PRECISION_HALVES
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {ATTR_FAN_ACTION: self._fstate}
 
@@ -300,6 +302,7 @@ class RadioThermostat(ClimateEntity):
             self._fstate = CODE_TO_FAN_STATE[data["fstate"]]
             self._tmode = CODE_TO_TEMP_MODE[data["tmode"]]
             self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
+            self._hold_set = CODE_TO_HOLD_STATE[data["hold"]]
 
             self._current_operation = self._tmode
             if self._tmode == HVAC_MODE_COOL:
@@ -372,6 +375,6 @@ class RadioThermostat(ClimateEntity):
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else:
             _LOGGER.error(
-                "preset_mode  %s not in PRESET_MODES",
+                "Preset_mode %s not in PRESET_MODES",
                 preset_mode,
             )

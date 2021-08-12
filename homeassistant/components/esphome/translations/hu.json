@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az ESP-t m\u00e1r konfigur\u00e1ltad."
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van."
         },
         "error": {
             "connection_error": "Nem lehet csatlakozni az ESP-hez. K\u00e9rlek gy\u0151z\u0151dj meg r\u00f3la, hogy a YAML f\u00e1jl tartalmaz egy \"api:\" sort.",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "resolve_error": "Az ESP c\u00edme nem oldhat\u00f3 fel. Ha a hiba tov\u00e1bbra is fenn\u00e1ll, k\u00e9rlek, \u00e1ll\u00edts be egy statikus IP-c\u00edmet: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

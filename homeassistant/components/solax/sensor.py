@@ -6,11 +6,10 @@ from solax import real_time_api
 from solax.inverter import InverterError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 DEFAULT_PORT = 80
@@ -73,7 +72,7 @@ class RealTimeDataEndpoint:
                 sensor.async_schedule_update_ha_state()
 
 
-class Inverter(Entity):
+class Inverter(SensorEntity):
     """Class for a sensor."""
 
     def __init__(self, uid, serial, key, unit):
@@ -85,7 +84,7 @@ class Inverter(Entity):
         self.unit = unit
 
     @property
-    def state(self):
+    def native_value(self):
         """State of this inverter attribute."""
         return self.value
 
@@ -100,7 +99,7 @@ class Inverter(Entity):
         return f"Solax {self.serial} {self.key}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.unit
 

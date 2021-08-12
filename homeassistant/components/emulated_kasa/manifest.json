@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/emulated_kasa",
   "requirements": ["sense_energy==0.9.0"],
   "codeowners": ["@kbickar"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "iot_class": "local_push"
 }

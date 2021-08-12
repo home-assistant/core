@@ -26,7 +26,7 @@ from pycomfoconnect import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -45,7 +45,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
@@ -258,7 +257,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class ComfoConnectSensor(Entity):
+class ComfoConnectSensor(SensorEntity):
     """Representation of a ComfoConnect sensor."""
 
     def __init__(self, name, ccb: ComfoConnectBridge, sensor_type) -> None:
@@ -298,7 +297,7 @@ class ComfoConnectSensor(Entity):
         self.schedule_update_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         try:
             return self._ccb.data[self._sensor_id]
@@ -326,7 +325,7 @@ class ComfoConnectSensor(Entity):
         return SENSOR_TYPES[self._sensor_type][ATTR_ICON]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return SENSOR_TYPES[self._sensor_type][ATTR_UNIT]
 

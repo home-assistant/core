@@ -9,7 +9,7 @@ from typing import Any
 
 
 def kill_subprocess(
-    # pylint: disable=unsubscriptable-object # https://github.com/PyCQA/pylint/issues/4034
+    # pylint: disable=unsubscriptable-object # https://github.com/PyCQA/pylint/issues/4369
     process: subprocess.Popen[Any],
 ) -> None:
     """Force kill a subprocess and wait for it to exit."""

@@ -1,6 +1,8 @@
 """The media_source integration."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
+from urllib.parse import quote
 
 import voluptuous as vol
 
@@ -17,6 +19,8 @@ from homeassistant.loader import bind_hass
 from . import local_source, models
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 from .error import Unresolvable
+
+DEFAULT_EXPIRY_TIME = 3600 * 24
 
 
 def is_media_source_id(media_content_id: str):
@@ -54,7 +58,7 @@ async def _process_media_source_platform(hass, domain, platform):
 
 @callback
 def _get_media_item(
-    hass: HomeAssistant, media_content_id: Optional[str]
+    hass: HomeAssistant, media_content_id: str | None
 ) -> models.MediaSourceItem:
     """Return media item."""
     if media_content_id:
@@ -104,7 +108,7 @@ async def websocket_browse_media(hass, connection, msg):
     {
         vol.Required("type"): "media_source/resolve_media",
         vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-        vol.Optional("expires", default=30): int,
+        vol.Optional("expires", default=DEFAULT_EXPIRY_TIME): int,
     }
 )
 @websocket_api.async_response
@@ -120,7 +124,7 @@ async def websocket_resolve_media(hass, connection, msg):
             url = async_sign_path(
                 hass,
                 connection.refresh_token_id,
-                url,
+                quote(url),
                 timedelta(seconds=msg["expires"]),
             )
 

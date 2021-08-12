@@ -8,8 +8,7 @@
             "bad_pin_format": "El PIN ha de tenir 4 d\u00edgits",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "incorrect_pin": "PIN incorrecte",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "unknown": "Error inesperat"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "pin": {

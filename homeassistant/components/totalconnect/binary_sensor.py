@@ -73,7 +73,7 @@ class TotalConnectBinarySensor(BinarySensorEntity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attributes = {
             "zone_id": self._zone_id,

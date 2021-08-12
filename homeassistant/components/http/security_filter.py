@@ -1,17 +1,19 @@
 """Middleware to add some basic security filtering to requests."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 import logging
 import re
+from typing import Final
 
-from aiohttp.web import HTTPBadRequest, middleware
+from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
 
 from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
-# mypy: allow-untyped-defs
-
 # fmt: off
-FILTERS = re.compile(
+FILTERS: Final = re.compile(
     r"(?:"
 
     # Common exploits
@@ -34,12 +36,14 @@ FILTERS = re.compile(
 
 
 @callback
-def setup_security_filter(app):
+def setup_security_filter(app: Application) -> None:
     """Create security filter middleware for the app."""
 
     @middleware
-    async def security_filter_middleware(request, handler):
-        """Process request and block commonly known exploit attempts."""
+    async def security_filter_middleware(
+        request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
+    ) -> StreamResponse:
+        """Process request and tblock commonly known exploit attempts."""
         if FILTERS.search(request.path):
             _LOGGER.warning(
                 "Filtered a potential harmful request to: %s", request.raw_path

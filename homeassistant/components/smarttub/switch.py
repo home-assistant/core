@@ -6,7 +6,7 @@ from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
 
-from .const import API_TIMEOUT, DOMAIN, SMARTTUB_CONTROLLER
+from .const import API_TIMEOUT, ATTR_PUMPS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
         SmartTubPump(controller.coordinator, pump)
         for spa in controller.spas
-        for pump in await spa.get_pumps()
+        for pump in controller.coordinator.data[spa.id][ATTR_PUMPS].values()
     ]
 
     async_add_entities(entities)
@@ -39,7 +39,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
-        return self.coordinator.data[self.spa.id]["pumps"][self.pump_id]
+        return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
 
     @property
     def unique_id(self) -> str:
@@ -60,6 +60,20 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return True if the pump is on."""
         return self.pump.state != SpaPump.PumpState.OFF
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn the pump on."""
+
+        # the API only supports toggling
+        if not self.is_on:
+            await self.async_toggle()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the pump off."""
+
+        # the API only supports toggling
+        if self.is_on:
+            await self.async_toggle()
 
     async def async_toggle(self, **kwargs) -> None:
         """Toggle the pump on or off."""

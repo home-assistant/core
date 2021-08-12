@@ -30,7 +30,24 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions(hass, device_reg, entity_reg):
+@pytest.mark.parametrize(
+    "set_state,features_reg,features_state,expected_action_types",
+    [
+        (False, 0, 0, ["set_hvac_mode"]),
+        (False, const.SUPPORT_PRESET_MODE, 0, ["set_hvac_mode", "set_preset_mode"]),
+        (True, 0, 0, ["set_hvac_mode"]),
+        (True, 0, const.SUPPORT_PRESET_MODE, ["set_hvac_mode", "set_preset_mode"]),
+    ],
+)
+async def test_get_actions(
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    features_reg,
+    features_state,
+    expected_action_types,
+):
     """Test we get the expected actions from a climate."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -38,46 +55,30 @@ async def test_get_actions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
-    hass.states.async_set("climate.test_5678", const.HVAC_MODE_COOL, {})
-    hass.states.async_set("climate.test_5678", "attributes", {"supported_features": 17})
-    expected_actions = [
-        {
-            "domain": DOMAIN,
-            "type": "set_hvac_mode",
-            "device_id": device_entry.id,
-            "entity_id": "climate.test_5678",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "set_preset_mode",
-            "device_id": device_entry.id,
-            "entity_id": "climate.test_5678",
-        },
-    ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert_lists_same(actions, expected_actions)
-
-
-async def test_get_action_hvac_only(hass, device_reg, entity_reg):
-    """Test we get the expected actions from a climate."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=features_reg,
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
-    hass.states.async_set("climate.test_5678", const.HVAC_MODE_COOL, {})
-    hass.states.async_set("climate.test_5678", "attributes", {"supported_features": 1})
-    expected_actions = [
+    if set_state:
+        hass.states.async_set(
+            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+        )
+
+    expected_actions = []
+
+    expected_actions += [
         {
             "domain": DOMAIN,
-            "type": "set_hvac_mode",
+            "type": action,
             "device_id": device_entry.id,
-            "entity_id": "climate.test_5678",
-        },
+            "entity_id": f"{DOMAIN}.test_5678",
+        }
+        for action in expected_action_types
     ]
+
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)
 
@@ -142,61 +143,153 @@ async def test_action(hass):
     assert len(set_preset_mode_calls) == 1
 
 
-async def test_capabilities(hass):
+@pytest.mark.parametrize(
+    "set_state,capabilities_reg,capabilities_state,action,expected_capabilities",
+    [
+        (
+            False,
+            {const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF]},
+            {},
+            "set_hvac_mode",
+            [
+                {
+                    "name": "hvac_mode",
+                    "options": [("cool", "cool"), ("off", "off")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            False,
+            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {},
+            "set_preset_mode",
+            [
+                {
+                    "name": "preset_mode",
+                    "options": [("home", "home"), ("away", "away")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF]},
+            "set_hvac_mode",
+            [
+                {
+                    "name": "hvac_mode",
+                    "options": [("cool", "cool"), ("off", "off")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            "set_preset_mode",
+            [
+                {
+                    "name": "preset_mode",
+                    "options": [("home", "home"), ("away", "away")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+    ],
+)
+async def test_capabilities(
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    capabilities_reg,
+    capabilities_state,
+    action,
+    expected_capabilities,
+):
     """Test getting capabilities."""
-    hass.states.async_set(
-        "climate.entity",
-        const.HVAC_MODE_COOL,
-        {
-            const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF],
-            const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
-        },
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        capabilities=capabilities_reg,
+    )
+    if set_state:
+        hass.states.async_set(
+            f"{DOMAIN}.test_5678",
+            const.HVAC_MODE_COOL,
+            capabilities_state,
+        )
 
-    # Set HVAC mode
     capabilities = await device_action.async_get_action_capabilities(
         hass,
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
-            "entity_id": "climate.entity",
-            "type": "set_hvac_mode",
+            "entity_id": f"{DOMAIN}.test_5678",
+            "type": action,
         },
     )
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
-        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [
-        {
-            "name": "hvac_mode",
-            "options": [("cool", "cool"), ("off", "off")],
-            "required": True,
-            "type": "select",
-        }
-    ]
+    assert (
+        voluptuous_serialize.convert(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
+        == expected_capabilities
+    )
 
-    # Set preset mode
+
+@pytest.mark.parametrize(
+    "action,capability_name",
+    [("set_hvac_mode", "hvac_mode"), ("set_preset_mode", "preset_mode")],
+)
+async def test_capabilities_missing_entity(
+    hass, device_reg, entity_reg, action, capability_name
+):
+    """Test getting capabilities."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+
     capabilities = await device_action.async_get_action_capabilities(
         hass,
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
-            "entity_id": "climate.entity",
-            "type": "set_preset_mode",
+            "entity_id": f"{DOMAIN}.test_5678",
+            "type": action,
         },
     )
 
-    assert capabilities and "extra_fields" in capabilities
-
-    assert voluptuous_serialize.convert(
-        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [
+    expected_capabilities = [
         {
-            "name": "preset_mode",
-            "options": [("home", "home"), ("away", "away")],
+            "name": capability_name,
+            "options": [],
             "required": True,
             "type": "select",
         }
     ]
+
+    assert capabilities and "extra_fields" in capabilities
+
+    assert (
+        voluptuous_serialize.convert(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
+        == expected_capabilities
+    )

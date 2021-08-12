@@ -3,5 +3,6 @@
   "name": "Deluge",
   "documentation": "https://www.home-assistant.io/integrations/deluge",
   "requirements": ["deluge-client==1.7.1"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

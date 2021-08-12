@@ -34,6 +34,7 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
@@ -256,11 +257,7 @@ class PlexServer:
 
     async def async_update_session(self, payload):
         """Process a session payload received from a websocket callback."""
-        try:
-            session_payload = payload["PlaySessionStateNotification"][0]
-        except KeyError:
-            await self.async_update_platforms()
-            return
+        session_payload = payload["PlaySessionStateNotification"][0]
 
         state = session_payload["state"]
         if state == "buffering":
@@ -294,10 +291,10 @@ class PlexServer:
             media = self.fetch_item(rating_key)
             active_session.update_media(media)
 
-        if active_session.media_content_id != rating_key and state in [
+        if active_session.media_content_id != rating_key and state in (
             "playing",
             "paused",
-        ]:
+        ):
             await self.hass.async_add_executor_job(update_with_new_media)
 
         async_dispatcher_send(
@@ -319,9 +316,11 @@ class PlexServer:
             self.plextv_clients(),
         )
 
-    async def _async_update_platforms(self):
+    async def _async_update_platforms(self):  # noqa: C901
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
+
+        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
@@ -366,17 +365,20 @@ class PlexServer:
                 PLAYER_SOURCE, source
             )
 
-            if device.machineIdentifier not in ignored_clients:
-                if self.option_ignore_plexweb_clients and device.product == "Plex Web":
-                    ignored_clients.add(device.machineIdentifier)
-                    if device.machineIdentifier not in self._known_clients:
-                        _LOGGER.debug(
-                            "Ignoring %s %s: %s",
-                            "Plex Web",
-                            source,
-                            device.machineIdentifier,
-                        )
-                    return
+            if (
+                device.machineIdentifier not in ignored_clients
+                and self.option_ignore_plexweb_clients
+                and device.product == "Plex Web"
+            ):
+                ignored_clients.add(device.machineIdentifier)
+                if device.machineIdentifier not in self._known_clients:
+                    _LOGGER.debug(
+                        "Ignoring %s %s: %s",
+                        "Plex Web",
+                        source,
+                        device.machineIdentifier,
+                    )
+                return
 
             if device.machineIdentifier not in (
                 self._created_clients | ignored_clients | new_clients
@@ -395,9 +397,10 @@ class PlexServer:
                 client = PlexClient(
                     server=self._plex_server,
                     baseurl=baseurl,
+                    identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except requests.exceptions.ConnectionError:
+            except (NotFound, requests.exceptions.ConnectionError):
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,
@@ -418,9 +421,11 @@ class PlexServer:
             """Connect to a plex.tv resource and return a Plex client."""
             try:
                 client = resource.connect(timeout=3)
-                _LOGGER.debug("plex.tv resource connection successful: %s", client)
+                _LOGGER.debug("Resource connection successful to plex.tv: %s", client)
             except NotFound:
-                _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+                _LOGGER.error(
+                    "Resource connection failed to plex.tv: %s", resource.name
+                )
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
                 self._client_device_cache[client.machineIdentifier] = client
@@ -531,6 +536,11 @@ class PlexServer:
     def plex_server(self):
         """Return the plexapi PlexServer instance."""
         return self._plex_server
+
+    @property
+    def has_token(self):
+        """Return if a token is used to connect to this Plex server."""
+        return self._token is not None
 
     @property
     def accounts(self):

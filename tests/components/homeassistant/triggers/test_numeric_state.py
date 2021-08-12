@@ -10,12 +10,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_TURN_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -52,9 +47,13 @@ async def setup_comp(hass):
             }
         },
     )
+    hass.states.async_set("number.value_10", 10)
+    hass.states.async_set("sensor.value_10", 10)
 
 
-@pytest.mark.parametrize("below", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "below", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_not_fires_on_entity_removal(hass, calls, below):
     """Test the firing with removed entity."""
     hass.states.async_set("test.entity", 11)
@@ -80,7 +79,9 @@ async def test_if_not_fires_on_entity_removal(hass, calls, below):
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("below", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "below", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_fires_on_entity_change_below(hass, calls, below):
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -97,7 +98,10 @@ async def test_if_fires_on_entity_change_below(hass, calls, below):
                     "entity_id": "test.entity",
                     "below": below,
                 },
-                "action": {"service": "test.automation"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
             }
         },
     )
@@ -119,9 +123,12 @@ async def test_if_fires_on_entity_change_below(hass, calls, below):
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
-@pytest.mark.parametrize("below", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "below", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_fires_on_entity_change_over_to_below(hass, calls, below):
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -148,7 +155,9 @@ async def test_if_fires_on_entity_change_over_to_below(hass, calls, below):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("below", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "below", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_fires_on_entities_change_over_to_below(hass, calls, below):
     """Test the firing with changed entities."""
     hass.states.async_set("test.entity_1", 11)
@@ -179,7 +188,9 @@ async def test_if_fires_on_entities_change_over_to_below(hass, calls, below):
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize("below", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "below", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_not_fires_on_entity_change_below_to_below(hass, calls, below):
     """Test the firing with changed entity."""
     context = Context()
@@ -218,7 +229,9 @@ async def test_if_not_fires_on_entity_change_below_to_below(hass, calls, below):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("below", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "below", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_not_below_fires_on_entity_change_to_equal(hass, calls, below):
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 11)
@@ -245,7 +258,9 @@ async def test_if_not_below_fires_on_entity_change_to_equal(hass, calls, below):
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("below", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "below", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_not_fires_on_initial_entity_below(hass, calls, below):
     """Test the firing when starting with a match."""
     hass.states.async_set("test.entity", 9)
@@ -272,7 +287,9 @@ async def test_if_not_fires_on_initial_entity_below(hass, calls, below):
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("above", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "above", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_not_fires_on_initial_entity_above(hass, calls, above):
     """Test the firing when starting with a match."""
     hass.states.async_set("test.entity", 11)
@@ -299,7 +316,9 @@ async def test_if_not_fires_on_initial_entity_above(hass, calls, above):
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("above", (10, "input_number.value_10"))
+@pytest.mark.parametrize(
+    "above", (10, "input_number.value_10", "number.value_10", "sensor.value_10")
+)
 async def test_if_fires_on_entity_change_above(hass, calls, above):
     """Test the firing with changed entity."""
     hass.states.async_set("test.entity", 9)
@@ -345,52 +364,6 @@ async def test_if_fires_on_entity_unavailable_at_startup(hass, calls):
     hass.states.async_set("test.entity", 11)
     await hass.async_block_till_done()
     assert len(calls) == 0
-
-
-async def test_if_not_fires_on_entity_unavailable(hass, calls):
-    """Test the firing with entity changing to unavailable."""
-    # set initial state
-    hass.states.async_set("test.entity", 9)
-    await hass.async_block_till_done()
-
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "numeric_state",
-                    "entity_id": "test.entity",
-                    "above": 10,
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    # 11 is above 10
-    hass.states.async_set("test.entity", 11)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-
-    # Going to unavailable and back should not fire
-    hass.states.async_set("test.entity", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    hass.states.async_set("test.entity", 11)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-
-    # Crossing threshold via unavailable should fire
-    hass.states.async_set("test.entity", 9)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    hass.states.async_set("test.entity", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    hass.states.async_set("test.entity", 11)
-    await hass.async_block_till_done()
-    assert len(calls) == 2
 
 
 @pytest.mark.parametrize("above", (10, "input_number.value_10"))
@@ -1522,7 +1495,7 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls, above, below)
     assert len(calls) == 1
 
 
-async def test_if_not_fires_on_error_with_for_template(hass, caplog, calls):
+async def test_if_not_fires_on_error_with_for_template(hass, calls):
     """Test for not firing on error with for template."""
     hass.states.async_set("test.entity", 0)
     await hass.async_block_till_done()
@@ -1547,16 +1520,10 @@ async def test_if_not_fires_on_error_with_for_template(hass, caplog, calls):
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
-
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     hass.states.async_set("test.entity", "unavailable")
     await hass.async_block_till_done()
     assert len(calls) == 0
-
-    assert len(caplog.record_tuples) == 1
-    assert caplog.record_tuples[0][1] == logging.WARNING
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     hass.states.async_set("test.entity", 101)
@@ -1685,8 +1652,8 @@ def test_below_above():
         )
 
 
-def test_schema_input_number():
-    """Test input_number only is accepted for above/below."""
+def test_schema_unacceptable_entities():
+    """Test input_number, number & sensor only is accepted for above/below."""
     with pytest.raises(vol.Invalid):
         numeric_state_trigger.TRIGGER_SCHEMA(
             {

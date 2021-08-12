@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

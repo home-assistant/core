@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.mqtt import DOMAIN, debug_info
 from homeassistant.components.mqtt.device_trigger import async_attach_trigger
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -836,7 +837,7 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock):
 
 async def test_entity_device_info_with_connection(hass, mqtt_mock):
     """Test MQTT device registry integration."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
     data = json.dumps(
         {
@@ -845,7 +846,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
             "type": "foo",
             "subtype": "bar",
             "device": {
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
@@ -856,9 +857,11 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    device = registry.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
+    )
     assert device is not None
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
@@ -867,7 +870,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT device registry integration."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
     data = json.dumps(
         {
@@ -898,7 +901,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
     config = {
         "automation_type": "trigger",
@@ -907,7 +910,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
         "subtype": "bar",
         "device": {
             "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
@@ -1159,34 +1162,70 @@ async def test_trigger_debug_info(hass, mqtt_mock):
 
     This is a test helper for MQTT debug_info.
     """
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
-    config = {
+    config1 = {
         "platform": "mqtt",
         "automation_type": "trigger",
         "topic": "test-topic",
         "type": "foo",
         "subtype": "bar",
         "device": {
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
             "sw_version": "0.1-beta",
         },
     }
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    config2 = {
+        "platform": "mqtt",
+        "automation_type": "trigger",
+        "topic": "test-topic2",
+        "type": "foo",
+        "subtype": "bar",
+        "device": {
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
+        },
+    }
+    data = json.dumps(config1)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data)
+    data = json.dumps(config2)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    device = registry.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
+    )
     assert device is not None
 
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 0
+    assert len(debug_info_data["triggers"]) == 2
+    topic_map = {
+        "homeassistant/device_automation/bla1/config": config1,
+        "homeassistant/device_automation/bla2/config": config2,
+    }
+    assert (
+        topic_map[debug_info_data["triggers"][0]["discovery_data"]["topic"]]
+        != topic_map[debug_info_data["triggers"][1]["discovery_data"]["topic"]]
+    )
+    assert (
+        debug_info_data["triggers"][0]["discovery_data"]["payload"]
+        == topic_map[debug_info_data["triggers"][0]["discovery_data"]["topic"]]
+    )
+    assert (
+        debug_info_data["triggers"][1]["discovery_data"]["payload"]
+        == topic_map[debug_info_data["triggers"][1]["discovery_data"]["topic"]]
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    await hass.async_block_till_done()
     debug_info_data = await debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 1
     assert (
         debug_info_data["triggers"][0]["discovery_data"]["topic"]
-        == "homeassistant/device_automation/bla/config"
+        == "homeassistant/device_automation/bla2/config"
     )
-    assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config
+    assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2

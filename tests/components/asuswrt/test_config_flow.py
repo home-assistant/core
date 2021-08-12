@@ -1,6 +1,6 @@
 """Tests for the AsusWrt config flow."""
 from socket import gaierror
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -46,7 +46,7 @@ def mock_controller_connect():
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
-        service_mock.return_value.connection.disconnect = AsyncMock()
+        service_mock.return_value.connection.disconnect = Mock()
         yield service_mock
 
 

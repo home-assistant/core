@@ -4,6 +4,8 @@ start:
   name: Start
   description: Start a timer
   target:
+    entity:
+      domain: timer
   fields:
     duration:
       description: Duration the timer requires to finish. [optional]
@@ -16,13 +18,19 @@ pause:
   name: Pause
   description: Pause a timer.
   target:
+    entity:
+      domain: timer
 
 cancel:
   name: Cancel
   description: Cancel a timer.
   target:
+    entity:
+      domain: timer
 
 finish:
   name: Finish
   description: Finish a timer.
   target:
+    entity:
+      domain: timer

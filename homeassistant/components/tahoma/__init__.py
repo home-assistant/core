@@ -137,7 +137,7 @@ class TahomaDevice(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {"tahoma_device_id": self.tahoma_device.url}
 

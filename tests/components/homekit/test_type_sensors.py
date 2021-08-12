@@ -30,7 +30,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CoreState
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_temperature(hass, hk_driver):
@@ -326,7 +326,7 @@ async def test_sensor_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     registry.async_get_or_create(
         "sensor",

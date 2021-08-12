@@ -12,7 +12,7 @@
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "Code PIN d'authentification \u00e0 2 facteurs"
+                    "2fa": "Code NIP d'authentification \u00e0 2 facteurs"
                 },
                 "description": "Vide",
                 "title": "Authentification \u00e0 2 facteurs"

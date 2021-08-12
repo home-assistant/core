@@ -23,9 +23,11 @@ CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
 
 SUPPORTED_LANGUAGES = [
+    "af-ZA",
     "ar-XA",
+    "bg-BG",
     "bn-IN",
-    "yue-HK",
+    "ca-ES",
     "cmn-CN",
     "cmn-TW",
     "cs-CZ",
@@ -37,6 +39,7 @@ SUPPORTED_LANGUAGES = [
     "en-IN",
     "en-US",
     "es-ES",
+    "es-US",
     "fi-FI",
     "fil-PH",
     "fr-CA",
@@ -45,10 +48,12 @@ SUPPORTED_LANGUAGES = [
     "hi-IN",
     "hu-HU",
     "id-ID",
+    "is-IS",
     "it-IT",
     "ja-JP",
     "kn-IN",
     "ko-KR",
+    "lv-LV",
     "ml-IN",
     "nb-NO",
     "nl-NL",
@@ -58,6 +63,7 @@ SUPPORTED_LANGUAGES = [
     "ro-RO",
     "ru-RU",
     "sk-SK",
+    "sr-RS",
     "sv-SE",
     "ta-IN",
     "te-IN",
@@ -65,6 +71,7 @@ SUPPORTED_LANGUAGES = [
     "tr-TR",
     "uk-UA",
     "vi-VN",
+    "yue-HK",
 ]
 DEFAULT_LANG = "en-US"
 

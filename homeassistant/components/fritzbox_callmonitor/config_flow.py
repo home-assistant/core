@@ -16,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from .base import FritzBoxPhonebook
-
-# pylint:disable=unused-import
 from .const import (
     CONF_PHONEBOOK,
     CONF_PREFIXES,
@@ -53,7 +51,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a fritzbox_callmonitor config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""

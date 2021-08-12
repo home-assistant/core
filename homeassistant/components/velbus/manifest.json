@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/velbus",
   "requirements": ["python-velbus==2.1.2"],
   "config_flow": true,
-  "codeowners": ["@Cereal2nd", "@brefra"]
+  "codeowners": ["@Cereal2nd", "@brefra"],
+  "iot_class": "local_push"
 }

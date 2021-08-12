@@ -12,11 +12,13 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
+    SOUND_PRESSURE_WEIGHTED_DBA,
     TEMP_CELSIUS,
 )
 
@@ -71,7 +73,7 @@ SENSOR_TYPES = {
     API_SPL_A: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:ear-hearing",
-        ATTR_UNIT: "dBa",
+        ATTR_UNIT: SOUND_PRESSURE_WEIGHTED_DBA,
         ATTR_LABEL: "Sound level",
         ATTR_UNIQUE_ID: "sound_level",
     },
@@ -104,7 +106,7 @@ SENSOR_TYPES = {
         ATTR_UNIQUE_ID: "PM10",  # matches legacy format
     },
     API_CO2: {
-        ATTR_DEVICE_CLASS: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2,
         ATTR_ICON: "mdi:cloud",
         ATTR_UNIT: CONCENTRATION_PARTS_PER_MILLION,
         ATTR_LABEL: "Carbon dioxide",

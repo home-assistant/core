@@ -40,18 +40,13 @@ class AdsBinarySensor(AdsEntity, BinarySensorEntity):
     def __init__(self, ads_hub, name, ads_var, device_class):
         """Initialize ADS binary sensor."""
         super().__init__(ads_hub, name, ads_var)
-        self._device_class = device_class or DEVICE_CLASS_MOVING
+        self._attr_device_class = device_class or DEVICE_CLASS_MOVING
 
     async def async_added_to_hass(self):
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class

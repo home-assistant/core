@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/arlo",
   "requirements": ["pyarlo==0.2.4"],
   "dependencies": ["ffmpeg"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

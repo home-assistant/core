@@ -34,8 +34,6 @@ async def test_form(hass, requests_mock):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.metoffice.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.metoffice.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -52,7 +50,6 @@ async def test_form(hass, requests_mock):
         "longitude": TEST_LONGITUDE_WAVERTREE,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -69,6 +66,10 @@ async def test_form_already_configured(hass, requests_mock):
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
         "/public/data/val/wxfcs/all/json/354107?res=3hourly",
+        text="",
+    )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily",
         text="",
     )
 

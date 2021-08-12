@@ -1,10 +1,10 @@
 """Support for Vilfo Router sensors."""
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import ATTR_ICON
 
 from .const import (
     ATTR_API_DATA_FIELD,
     ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     ATTR_LABEL,
     ATTR_UNIT,
     DOMAIN,
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class VilfoRouterSensor(Entity):
+class VilfoRouterSensor(SensorEntity):
     """Define a Vilfo Router Sensor."""
 
     def __init__(self, sensor_type, api):
@@ -72,7 +72,7 @@ class VilfoRouterSensor(Entity):
         return f"{parent_device_name} {sensor_name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 
@@ -82,7 +82,7 @@ class VilfoRouterSensor(Entity):
         return self._unique_id
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return SENSOR_TYPES[self.sensor_type].get(ATTR_UNIT)
 

@@ -19,7 +19,7 @@ from RestrictedPython.Guards import (
 )
 import voluptuous as vol
 
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
@@ -70,6 +70,8 @@ ALLOWED_DT_UTIL = {
     "parse_date",
     "get_age",
 }
+
+CONF_FIELDS = "fields"
 
 
 class ScriptError(HomeAssistantError):
@@ -125,8 +127,9 @@ def discover_scripts(hass):
         hass.services.register(DOMAIN, name, python_script_service_handler)
 
         service_desc = {
-            "description": services_dict.get(name, {}).get("description", ""),
-            "fields": services_dict.get(name, {}).get("fields", {}),
+            CONF_NAME: services_dict.get(name, {}).get("name", name),
+            CONF_DESCRIPTION: services_dict.get(name, {}).get("description", ""),
+            CONF_FIELDS: services_dict.get(name, {}).get("fields", {}),
         }
         async_set_service_schema(hass, DOMAIN, name, service_desc)
 
@@ -136,7 +139,7 @@ def execute_script(hass, name, data=None):
     """Execute a script."""
     filename = f"{name}.py"
     raise_if_invalid_filename(filename)
-    with open(hass.config.path(FOLDER, filename)) as fil:
+    with open(hass.config.path(FOLDER, filename), encoding="utf8") as fil:
         source = fil.read()
     execute(hass, filename, source, data)
 
@@ -192,6 +195,7 @@ def execute(hass, filename, source, data=None):
         "sum": sum,
         "any": any,
         "all": all,
+        "enumerate": enumerate,
     }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)

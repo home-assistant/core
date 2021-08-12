@@ -4,16 +4,18 @@ from unittest.mock import patch
 from goalzero import exceptions
 
 from homeassistant.components.goalzero.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.setup import async_setup_component
 
 from . import (
     CONF_CONFIG_FLOW,
     CONF_DATA,
+    CONF_DHCP_FLOW,
     CONF_HOST,
     CONF_NAME,
     NAME,
@@ -114,3 +116,69 @@ async def test_flow_user_unknown_error(hass):
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}
+
+
+async def test_dhcp_discovery(hass):
+    """Test we can process the discovery from dhcp."""
+    await async_setup_component(hass, "persistent_notification", {})
+    mocked_yeti = await _create_mocked_yeti()
+    with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=CONF_DHCP_FLOW,
+        )
+        assert result["type"] == "form"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Yeti",
+        }
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=CONF_DHCP_FLOW,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_failed(hass):
+    """Test failed setup from dhcp."""
+    mocked_yeti = await _create_mocked_yeti(True)
+    with _patch_config_flow_yeti(mocked_yeti) as yetimock:
+        yetimock.side_effect = exceptions.ConnectError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=CONF_DHCP_FLOW,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
+
+    with _patch_config_flow_yeti(mocked_yeti) as yetimock:
+        yetimock.side_effect = exceptions.InvalidHost
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=CONF_DHCP_FLOW,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "invalid_host"
+
+    with _patch_config_flow_yeti(mocked_yeti) as yetimock:
+        yetimock.side_effect = Exception
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=CONF_DHCP_FLOW,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "unknown"

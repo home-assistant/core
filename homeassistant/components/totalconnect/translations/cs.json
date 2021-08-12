@@ -13,6 +13,9 @@
                     "location": "Um\u00edst\u011bn\u00ed"
                 }
             },
+            "reauth_confirm": {
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
             "user": {
                 "data": {
                     "password": "Heslo",

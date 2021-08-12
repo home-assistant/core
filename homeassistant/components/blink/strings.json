@@ -11,7 +11,7 @@
       "2fa": {
         "title": "Two-factor authentication",
         "data": { "2fa": "Two-factor code" },
-        "description": "Enter the pin sent to your email"
+        "description": "Enter the PIN sent to your email"
       }
     },
     "error": {

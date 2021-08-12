@@ -1,12 +1,13 @@
 """Config flow for Withings."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, Union
 
 import voluptuous as vol
 from withings_api.common import AuthScope
 
-from homeassistant import config_entries
 from homeassistant.components.withings import const
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 
@@ -17,9 +18,9 @@ class WithingsFlowHandler(
     """Handle a config flow."""
 
     DOMAIN = const.DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
     # Temporarily holds authorization data during the profile step.
-    _current_data: Dict[str, Union[None, str, int]] = {}
+    _current_data: dict[str, None | str | int] = {}
 
     @property
     def logger(self) -> logging.Logger:
@@ -50,7 +51,7 @@ class WithingsFlowHandler(
         errors = {}
         reauth_profile = (
             self.context.get(const.PROFILE)
-            if self.context.get("source") == "reauth"
+            if self.context.get("source") == SOURCE_REAUTH
             else None
         )
         profile = data.get(const.PROFILE) or reauth_profile
@@ -58,7 +59,7 @@ class WithingsFlowHandler(
         if profile:
             existing_entries = [
                 config_entry
-                for config_entry in self.hass.config_entries.async_entries(const.DOMAIN)
+                for config_entry in self._async_current_entries()
                 if slugify(config_entry.data.get(const.PROFILE)) == slugify(profile)
             ]
 

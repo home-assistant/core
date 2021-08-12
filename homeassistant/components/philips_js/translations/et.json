@@ -10,6 +10,13 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN kood"
+                },
+                "description": "Sisesta teleris kuvatav PIN-kood",
+                "title": "Paarita"
+            },
             "user": {
                 "data": {
                     "api_version": "API versioon",
@@ -21,6 +28,15 @@
     "device_automation": {
         "trigger_type": {
             "turn_on": "Seadmel palutakse sisse l\u00fclituda"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Luba teavitusteenused."
+                }
+            }
         }
     }
 }

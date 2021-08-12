@@ -1,11 +1,11 @@
-"""Support for the Hive sesnors."""
+"""Support for the Hive sensors."""
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
 
-from . import ATTR_AVAILABLE, DATA_HIVE, DOMAIN, HiveEntity
+from . import HiveEntity
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -14,22 +14,19 @@ DEVICETYPE = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Hive Sensor."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN].get(DATA_HIVE)
-    devices = hive.devices.get("sensor")
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("sensor")
     entities = []
     if devices:
         for dev in devices:
-            if dev["hiveType"] in DEVICETYPE:
-                entities.append(HiveSensorEntity(hive, dev))
+            entities.append(HiveSensorEntity(hive, dev))
     async_add_entities(entities, True)
 
 
-class HiveSensorEntity(HiveEntity, Entity):
+class HiveSensorEntity(HiveEntity, SensorEntity):
     """Hive Sensor Entity."""
 
     @property
@@ -40,7 +37,14 @@ class HiveSensorEntity(HiveEntity, Entity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        return {
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
+        }
 
     @property
     def available(self):
@@ -53,7 +57,7 @@ class HiveSensorEntity(HiveEntity, Entity):
         return DEVICETYPE[self.device["hiveType"]].get("type")
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return DEVICETYPE[self.device["hiveType"]].get("unit")
 
@@ -63,16 +67,11 @@ class HiveSensorEntity(HiveEntity, Entity):
         return self.device["haName"]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.device["status"]["state"]
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE)}
 
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.sensor.get_sensor(self.device)
+        self.device = await self.hive.sensor.getSensor(self.device)

@@ -12,16 +12,22 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_WINDOW,
 )
 from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.remote import SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -39,10 +45,7 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     ATTR_DISPLAY_NAME,
-    ATTR_INTERGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
+    ATTR_INTEGRATION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -54,15 +57,20 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
+    DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
+    MAX_MANUFACTURER_LENGTH,
+    MAX_MODEL_LENGTH,
+    MAX_NAME_LENGTH,
+    MAX_SERIAL_LENGTH,
+    MAX_VERSION_LENGTH,
     SERV_BATTERY_SERVICE,
+    SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -91,7 +99,7 @@ SWITCH_TYPES = {
 TYPES = Registry()
 
 
-def get_accessory(hass, driver, state, aid, config):
+def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
@@ -103,6 +111,7 @@ def get_accessory(hass, driver, state, aid, config):
 
     a_type = None
     name = config.get(CONF_NAME, state.name)
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     if state.domain == "alarm_control_panel":
         a_type = "SecuritySystem"
@@ -115,7 +124,6 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
@@ -126,7 +134,7 @@ def get_accessory(hass, driver, state, aid, config):
             and features & cover.SUPPORT_SET_POSITION
         ):
             a_type = "Window"
-        elif features & cover.SUPPORT_SET_POSITION:
+        elif features & (cover.SUPPORT_SET_POSITION | cover.SUPPORT_SET_TILT_POSITION):
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "WindowCoveringBasic"
@@ -167,7 +175,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "AirQualitySensor"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == DEVICE_CLASS_CO2 or DEVICE_CLASS_CO2 in state.entity_id:
+        elif device_class == DEVICE_CLASS_CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"
@@ -178,6 +186,9 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
+
+    elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
+        a_type = "ActivityRemote"
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"
@@ -211,30 +222,33 @@ class HomeAccessory(Accessory):
         **kwargs,
     ):
         """Initialize a Accessory object."""
-        super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
+        super().__init__(
+            driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
+        )
         self.config = config or {}
         domain = split_entity_id(entity_id)[0].replace("_", " ")
 
-        if ATTR_MANUFACTURER in self.config:
+        if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
-        elif ATTR_INTERGRATION in self.config:
-            manufacturer = self.config[ATTR_INTERGRATION].replace("_", " ").title()
+        elif self.config.get(ATTR_INTEGRATION) is not None:
+            manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
         else:
             manufacturer = f"{MANUFACTURER} {domain}".title()
-        if ATTR_MODEL in self.config:
+        if self.config.get(ATTR_MODEL) is not None:
             model = self.config[ATTR_MODEL]
         else:
             model = domain.title()
-        if ATTR_SOFTWARE_VERSION in self.config:
-            sw_version = format_sw_version(self.config[ATTR_SOFTWARE_VERSION])
-        else:
+        sw_version = None
+        if self.config.get(ATTR_SW_VERSION) is not None:
+            sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
+        if sw_version is None:
             sw_version = __version__
 
         self.set_info_service(
-            manufacturer=manufacturer,
-            model=model,
-            serial_number=entity_id,
-            firmware_revision=sw_version,
+            manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
+            model=model[:MAX_MODEL_LENGTH],
+            serial_number=entity_id[:MAX_SERIAL_LENGTH],
+            firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
         self.category = category
@@ -447,6 +461,17 @@ class HomeAccessory(Accessory):
         self.hass.async_create_task(
             self.hass.services.async_call(
                 domain, service, service_data, context=context
+            )
+        )
+
+    @ha_callback
+    def async_reset(self):
+        """Reset and recreate an accessory."""
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                DOMAIN,
+                SERVICE_HOMEKIT_RESET_ACCESSORY,
+                {ATTR_ENTITY_ID: self.entity_id},
             )
         )
 

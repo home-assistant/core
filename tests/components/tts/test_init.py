@@ -102,6 +102,7 @@ async def test_setup_component_demo(hass):
 
     assert hass.services.has_service(tts.DOMAIN, "demo_say")
     assert hass.services.has_service(tts.DOMAIN, "clear_cache")
+    assert f"{tts.DOMAIN}.demo" in hass.config.components
 
 
 async def test_setup_component_demo_no_access_cache_folder(hass, mock_init_cache_dir):

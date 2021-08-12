@@ -8,16 +8,14 @@ airflow_min:
   fields:
     airflow:
       name: Percent
-      description: Airflow percent in 5% increments
+      description: Airflow percent.
       required: true
-      example: 95
       selector:
         number:
           min: 0
           max: 100
           step: 5
           unit_of_measurement: "%"
-          mode: slider
 airflow_max:
   name: Set maximum airflow
   description: Set the airflow maximum percent for a zone
@@ -28,13 +26,11 @@ airflow_max:
   fields:
     airflow:
       name: Percent
-      description: Airflow percent in 5% increments
+      description: Airflow percent.
       required: true
-      example: 95
       selector:
         number:
           min: 0
           max: 100
           step: 5
           unit_of_measurement: "%"
-          mode: slider

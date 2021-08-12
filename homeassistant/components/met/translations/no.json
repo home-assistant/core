@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Ingen hjemmekoordinater er angitt i Home Assistant-konfigurasjonen"
+        },
         "error": {
             "already_configured": "Tjenesten er allerede konfigurert"
         },

@@ -1,7 +1,5 @@
 name: Report an issue with Home Assistant Core
-about: Report an issue with Home Assistant Core.
-title: ""
-issue_body: true
+description: Report an issue with Home Assistant Core.
 body:
   - type: markdown
     attributes:
@@ -26,6 +24,7 @@ body:
       value: |
         ## Environment
   - type: input
+    id: version
     validations:
       required: true
     attributes:
@@ -52,11 +51,13 @@ body:
         - Home Assistant Supervised
         - Home Assistant Core
   - type: input
+    id: integration_name
     attributes:
       label: Integration causing the issue
       description: >
         The name of the integration, for example, Automation or Philips Hue.
   - type: input
+    id: integration_link
     attributes:
       label: Link to integration documentation on our website
       placeholder: "https://www.home-assistant.io/integrations/..."
@@ -76,27 +77,16 @@ body:
       description: |
         If this issue has an example piece of YAML that can help reproducing this problem, please provide.
         This can be an piece of YAML from, e.g., an automation, script, scene or configuration.
-      value: |
-        ```yaml
-        # Put your YAML below this line
-
-        ```
+      render: yaml
   - type: textarea
     attributes:
       label: Anything in the logs that might be useful for us?
       description: For example, error message, or stack traces.
-      value: |
-        ```txt
-        # Put your logs below this line
-
-        ```
-  - type: markdown
+      render: txt
+  - type: textarea
     attributes:
-      value: |
-        ## Additional information
-  - type: markdown
-    attributes:
-      value: >
+      label: Additional information
+      description: >
         If you have any additional information for us, use the field below.
         Please note, you can attach screenshots or screen recordings here, by
         dragging and dropping files in the field below.

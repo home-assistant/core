@@ -5,17 +5,14 @@ import broadlink.exceptions as blke
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.device import get_domains
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_ERROR,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
 
 from tests.common import mock_device_registry, mock_registry
+
+DEVICE_FACTORY = "homeassistant.components.broadlink.device.blk.gendevice"
 
 
 async def test_device_setup(hass):
@@ -27,13 +24,15 @@ async def test_device_setup(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass)
+        mock_setup = await device.setup_entry(hass)
 
-    assert mock_entry.state == ENTRY_STATE_LOADED
-    assert mock_api.auth.call_count == 1
-    assert mock_api.get_fwversion.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
+    assert mock_setup.api.auth.call_count == 1
+    assert mock_setup.api.get_fwversion.call_count == 1
+    assert mock_setup.factory.call_count == 1
+
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_api.type)
+    domains = get_domains(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
     assert mock_init.call_count == 0
@@ -50,10 +49,10 @@ async def test_device_setup_authentication_error(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_ERROR
-    assert mock_api.auth.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 1
     assert mock_init.mock_calls[0][2]["context"]["source"] == "reauth"
@@ -74,10 +73,10 @@ async def test_device_setup_network_timeout(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
-    assert mock_api.auth.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
 
@@ -93,10 +92,10 @@ async def test_device_setup_os_error(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
-    assert mock_api.auth.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
 
@@ -112,10 +111,10 @@ async def test_device_setup_broadlink_exception(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_ERROR
-    assert mock_api.auth.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
 
@@ -131,11 +130,11 @@ async def test_device_setup_update_network_timeout(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
-    assert mock_api.auth.call_count == 1
-    assert mock_api.check_sensors.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_setup.api.auth.call_count == 1
+    assert mock_setup.api.check_sensors.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
 
@@ -144,18 +143,22 @@ async def test_device_setup_update_authorization_error(hass):
     """Test we handle an authorization error in the update step."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = (blke.AuthorizationError(), None)
+    mock_api.check_sensors.side_effect = (
+        blke.AuthorizationError(),
+        {"temperature": 30},
+    )
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_LOADED
-    assert mock_api.auth.call_count == 2
-    assert mock_api.check_sensors.call_count == 2
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
+    assert mock_setup.api.auth.call_count == 2
+    assert mock_setup.api.check_sensors.call_count == 2
+
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
     domains = get_domains(mock_api.type)
     assert mock_forward.call_count == len(domains)
@@ -175,11 +178,11 @@ async def test_device_setup_update_authentication_error(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
-    assert mock_api.auth.call_count == 2
-    assert mock_api.check_sensors.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_setup.api.auth.call_count == 2
+    assert mock_setup.api.check_sensors.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 1
     assert mock_init.mock_calls[0][2]["context"]["source"] == "reauth"
@@ -200,11 +203,11 @@ async def test_device_setup_update_broadlink_exception(hass):
     ) as mock_forward, patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_init:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_RETRY
-    assert mock_api.auth.call_count == 1
-    assert mock_api.check_sensors.call_count == 1
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_setup.api.auth.call_count == 1
+    assert mock_setup.api.check_sensors.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
 
@@ -216,11 +219,11 @@ async def test_device_setup_get_fwversion_broadlink_exception(hass):
     mock_api.get_fwversion.side_effect = blke.BroadlinkException()
 
     with patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
-        mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_LOADED
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_api.type)
+    domains = get_domains(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -232,11 +235,11 @@ async def test_device_setup_get_fwversion_os_error(hass):
     mock_api.get_fwversion.side_effect = OSError()
 
     with patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
-        _, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
-    assert mock_entry.state == ENTRY_STATE_LOADED
+    assert mock_setup.entry.state is ConfigEntryState.LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_api.type)
+    domains = get_domains(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -248,12 +251,14 @@ async def test_device_setup_registry(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    _, mock_entry = await device.setup_entry(hass)
+    mock_setup = await device.setup_entry(hass)
     await hass.async_block_till_done()
 
     assert len(device_registry.devices) == 1
 
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     assert device_entry.identifiers == {(DOMAIN, device.mac)}
     assert device_entry.name == device.name
     assert device_entry.model == device.model
@@ -269,16 +274,16 @@ async def test_device_unload_works(hass):
     device = get_device("Office")
 
     with patch.object(hass.config_entries, "async_forward_entry_setup"):
-        mock_api, mock_entry = await device.setup_entry(hass)
+        mock_setup = await device.setup_entry(hass)
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
     ) as mock_forward:
-        await hass.config_entries.async_unload(mock_entry.entry_id)
+        await hass.config_entries.async_unload(mock_setup.entry.entry_id)
 
-    assert mock_entry.state == ENTRY_STATE_NOT_LOADED
+    assert mock_setup.entry.state is ConfigEntryState.NOT_LOADED
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    domains = get_domains(mock_api.type)
+    domains = get_domains(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
 
@@ -292,14 +297,14 @@ async def test_device_unload_authentication_error(hass):
     with patch.object(hass.config_entries, "async_forward_entry_setup"), patch.object(
         hass.config_entries.flow, "async_init"
     ):
-        _, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
     ) as mock_forward:
-        await hass.config_entries.async_unload(mock_entry.entry_id)
+        await hass.config_entries.async_unload(mock_setup.entry.entry_id)
 
-    assert mock_entry.state == ENTRY_STATE_NOT_LOADED
+    assert mock_setup.entry.state is ConfigEntryState.NOT_LOADED
     assert mock_forward.call_count == 0
 
 
@@ -310,14 +315,14 @@ async def test_device_unload_update_failed(hass):
     mock_api.check_sensors.side_effect = blke.NetworkTimeoutError()
 
     with patch.object(hass.config_entries, "async_forward_entry_setup"):
-        _, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+        mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
     ) as mock_forward:
-        await hass.config_entries.async_unload(mock_entry.entry_id)
+        await hass.config_entries.async_unload(mock_setup.entry.entry_id)
 
-    assert mock_entry.state == ENTRY_STATE_NOT_LOADED
+    assert mock_setup.entry.state is ConfigEntryState.NOT_LOADED
     assert mock_forward.call_count == 0
 
 
@@ -328,16 +333,16 @@ async def test_device_update_listener(hass):
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_api, mock_entry = await device.setup_entry(hass)
+    mock_setup = await device.setup_entry(hass)
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.broadlink.device.blk.gendevice", return_value=mock_api
-    ):
-        hass.config_entries.async_update_entry(mock_entry, title="New Name")
+    with patch(DEVICE_FACTORY, return_value=mock_setup.api):
+        hass.config_entries.async_update_entry(mock_setup.entry, title="New Name")
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    device_entry = device_registry.async_get_device(
+        {(DOMAIN, mock_setup.entry.unique_id)}
+    )
     assert device_entry.name == "New Name"
     for entry in async_entries_for_device(entity_registry, device_entry.id):
         assert entry.original_name.startswith("New Name")

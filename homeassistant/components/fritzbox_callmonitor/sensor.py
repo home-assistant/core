@@ -8,7 +8,7 @@ from time import sleep
 from fritzconnection.core.fritzmonitor import FritzMonitor
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_PREFIXES,
@@ -43,7 +42,7 @@ from .const import (
     STATE_IDLE,
     STATE_RINGING,
     STATE_TALKING,
-    UNKOWN_NAME,
+    UNKNOWN_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +101,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([sensor])
 
 
-class FritzBoxCallSensor(Entity):
+class FritzBoxCallSensor(SensorEntity):
     """Implementation of a Fritz!Box call monitor."""
 
     def __init__(self, name, unique_id, fritzbox_phonebook, prefixes, host, port):
@@ -159,7 +158,7 @@ class FritzBoxCallSensor(Entity):
         return self._fritzbox_phonebook is not None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -169,7 +168,7 @@ class FritzBoxCallSensor(Entity):
         return ICON_PHONE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._prefixes:
             self._attributes[ATTR_PREFIXES] = self._prefixes
@@ -194,7 +193,7 @@ class FritzBoxCallSensor(Entity):
     def number_to_name(self, number):
         """Return a name for a given phone number."""
         if self._fritzbox_phonebook is None:
-            return UNKOWN_NAME
+            return UNKNOWN_NAME
         return self._fritzbox_phonebook.get_name(number)
 
     def update(self):

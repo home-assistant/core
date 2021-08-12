@@ -28,8 +28,6 @@ async def test_form_user(hass):
         "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
         return_value=mock_thermostat,
     ), patch(
-        "homeassistant.components.nuheat.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nuheat.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -49,7 +47,6 @@ async def test_form_user(hass):
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

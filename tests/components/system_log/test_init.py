@@ -291,20 +291,19 @@ async def async_log_error_from_test_path(hass, path, sq):
     call_path = "internal_path.py"
     with patch.object(
         _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
+    ), patch(
+        "traceback.extract_stack",
+        MagicMock(
+            return_value=[
+                get_frame("main_path/main.py"),
+                get_frame(path),
+                get_frame(call_path),
+                get_frame("venv_path/logging/log.py"),
+            ]
+        ),
     ):
-        with patch(
-            "traceback.extract_stack",
-            MagicMock(
-                return_value=[
-                    get_frame("main_path/main.py"),
-                    get_frame(path),
-                    get_frame(call_path),
-                    get_frame("venv_path/logging/log.py"),
-                ]
-            ),
-        ):
-            _LOGGER.error("error message")
-            await _async_block_until_queue_empty(hass, sq)
+        _LOGGER.error("error message")
+        await _async_block_until_queue_empty(hass, sq)
 
 
 async def test_homeassistant_path(hass, simple_queue, hass_client):

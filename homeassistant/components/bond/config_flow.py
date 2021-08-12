@@ -1,6 +1,8 @@
 """Config flow for Bond integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_api import Bond
@@ -13,9 +15,12 @@ from homeassistant.const import (
     CONF_NAME,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .utils import BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,10 +33,12 @@ DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 TOKEN_SCHEMA = vol.Schema({})
 
 
-async def _validate_input(data: Dict[str, Any]) -> Tuple[str, str]:
+async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
     """Validate the user input allows us to connect."""
 
-    bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
+    bond = Bond(
+        data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
+    )
     try:
         hub = BondHub(bond)
         await hub.setup(max_devices=1)
@@ -56,11 +63,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bond."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self._discovered: Dict[str, str] = {}
+        self._discovered: dict[str, str] = {}
 
     async def _async_try_automatic_configure(self) -> None:
         """Try to auto configure the device.
@@ -69,7 +75,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         online longer then the allowed setup period, and we will
         instead ask them to manually enter the token.
         """
-        bond = Bond(self._discovered[CONF_HOST], "")
+        bond = Bond(
+            self._discovered[CONF_HOST], "", session=async_get_clientsession(self.hass)
+        )
         try:
             response = await bond.token()
         except ClientConnectionError:
@@ -80,10 +88,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
-        _, hub_name = await _validate_input(self._discovered)
+        _, hub_name = await _validate_input(self.hass, self._discovered)
         self._discovered[CONF_NAME] = hub_name
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType) -> Dict[str, Any]:  # type: ignore
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         name: str = discovery_info[CONF_NAME]
         host: str = discovery_info[CONF_HOST]
@@ -106,8 +116,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
@@ -125,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._discovered[CONF_HOST],
             }
             try:
-                _, hub_name = await _validate_input(data)
+                _, hub_name = await _validate_input(self.hass, data)
             except InputValidationError as error:
                 errors["base"] = error.base
             else:
@@ -147,13 +157,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
             try:
-                bond_id, hub_name = await _validate_input(user_input)
+                bond_id, hub_name = await _validate_input(self.hass, user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
             else:
@@ -169,7 +179,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class InputValidationError(exceptions.HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
-    def __init__(self, base: str):
+    def __init__(self, base: str) -> None:
         """Initialize with error base."""
         super().__init__()
         self.base = base

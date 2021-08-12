@@ -36,10 +36,9 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,7 +162,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template fans."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
@@ -275,6 +273,11 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_modes = preset_modes
 
     @property
+    def _implemented_speed(self):
+        """Return true if speed has been implemented."""
+        return bool(self._set_speed_script or self._speed_template)
+
+    @property
     def name(self):
         """Return the display name of this fan."""
         return self._name
@@ -292,7 +295,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return self._speed_count or super().speed_count
+        return self._speed_count or 100
 
     @property
     def speed_list(self) -> list:
@@ -462,7 +465,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         # Validate state
         if result in _VALID_STATES:
             self._state = result
-        elif result in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif result in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._state = None
         else:
             _LOGGER.error(
@@ -523,11 +526,10 @@ class TemplateFan(TemplateEntity, FanEntity):
         speed = str(speed)
 
         if speed in self._speed_list:
-            self._state = STATE_OFF if speed == SPEED_OFF else STATE_ON
             self._speed = speed
             self._percentage = self.speed_to_percentage(speed)
             self._preset_mode = speed if speed in self.preset_modes else None
-        elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif speed in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._speed = None
             self._percentage = 0
             self._preset_mode = None
@@ -552,7 +554,6 @@ class TemplateFan(TemplateEntity, FanEntity):
             return
 
         if 0 <= percentage <= 100:
-            self._state = STATE_OFF if percentage == 0 else STATE_ON
             self._percentage = percentage
             if self._speed_list:
                 self._speed = self.percentage_to_speed(percentage)
@@ -569,11 +570,10 @@ class TemplateFan(TemplateEntity, FanEntity):
         preset_mode = str(preset_mode)
 
         if preset_mode in self.preset_modes:
-            self._state = STATE_ON
             self._speed = preset_mode
             self._percentage = None
             self._preset_mode = preset_mode
-        elif preset_mode in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif preset_mode in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._speed = None
             self._percentage = None
             self._preset_mode = None
@@ -594,7 +594,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._oscillating = True
         elif oscillating == "False" or oscillating is False:
             self._oscillating = False
-        elif oscillating in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif oscillating in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._oscillating = None
         else:
             _LOGGER.error(
@@ -608,7 +608,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         # Validate direction
         if direction in _VALID_DIRECTIONS:
             self._direction = direction
-        elif direction in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif direction in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._direction = None
         else:
             _LOGGER.error(

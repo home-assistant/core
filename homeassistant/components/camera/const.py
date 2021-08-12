@@ -1,14 +1,16 @@
 """Constants for Camera component."""
-DOMAIN = "camera"
+from typing import Final
 
-DATA_CAMERA_PREFS = "camera_prefs"
+DOMAIN: Final = "camera"
 
-PREF_PRELOAD_STREAM = "preload_stream"
+DATA_CAMERA_PREFS: Final = "camera_prefs"
 
-SERVICE_RECORD = "record"
+PREF_PRELOAD_STREAM: Final = "preload_stream"
 
-CONF_LOOKBACK = "lookback"
-CONF_DURATION = "duration"
+SERVICE_RECORD: Final = "record"
 
-CAMERA_STREAM_SOURCE_TIMEOUT = 10
-CAMERA_IMAGE_TIMEOUT = 10
+CONF_LOOKBACK: Final = "lookback"
+CONF_DURATION: Final = "duration"
+
+CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
+CAMERA_IMAGE_TIMEOUT: Final = 10

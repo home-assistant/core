@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import List
 
 import transmissionrpc
 from transmissionrpc.error import TransmissionError
@@ -92,7 +91,8 @@ TRANS_SCHEMA = vol.All(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}, extra=vol.ALLOW_EXTRA
+    vol.All(cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}),
+    extra=vol.ALLOW_EXTRA,
 )
 
 PLATFORMS = ["sensor", "switch"]
@@ -128,8 +128,9 @@ async def async_unload_entry(hass, config_entry):
     if client.unsub_timer:
         client.unsub_timer()
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
@@ -137,7 +138,7 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
         hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
 
-    return True
+    return unload_ok
 
 
 async def get_api(hass, entry):
@@ -173,8 +174,8 @@ class TransmissionClient:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
-        self.tm_api = None  # type: transmissionrpc.Client
-        self._tm_data = None  # type: TransmissionData
+        self.tm_api: transmissionrpc.Client = None
+        self._tm_data: TransmissionData = None
         self.unsub_timer = None
 
     @property
@@ -199,12 +200,7 @@ class TransmissionClient:
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         def add_torrent(service):
             """Add new torrent to download."""
@@ -345,14 +341,14 @@ class TransmissionData:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config = config
-        self.data = None  # type: transmissionrpc.Session
-        self.available = True  # type: bool
-        self._all_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._api = api  # type: transmissionrpc.Client
-        self._completed_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._session = None  # type: transmissionrpc.Session
-        self._started_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._torrents = []  # type: List[transmissionrpc.Torrent]
+        self.data: transmissionrpc.Session = None
+        self.available: bool = True
+        self._all_torrents: list[transmissionrpc.Torrent] = []
+        self._api: transmissionrpc.Client = api
+        self._completed_torrents: list[transmissionrpc.Torrent] = []
+        self._session: transmissionrpc.Session = None
+        self._started_torrents: list[transmissionrpc.Torrent] = []
+        self._torrents: list[transmissionrpc.Torrent] = []
 
     @property
     def host(self):
@@ -365,7 +361,7 @@ class TransmissionData:
         return f"{DATA_UPDATED}-{self.host}"
 
     @property
-    def torrents(self) -> List[transmissionrpc.Torrent]:
+    def torrents(self) -> list[transmissionrpc.Torrent]:
         """Get the list of torrents."""
         return self._torrents
 
@@ -451,6 +447,8 @@ class TransmissionData:
 
     def stop_torrents(self):
         """Stop all active torrents."""
+        if len(self._torrents) == 0:
+            return
         torrent_ids = [torrent.id for torrent in self._torrents]
         self._api.stop_torrent(torrent_ids)
 

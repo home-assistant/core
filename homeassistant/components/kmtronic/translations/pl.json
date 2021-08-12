@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "Odwr\u00f3\u0107 logik\u0119 prze\u0142\u0105cznika (u\u017cyj NC)"
+                }
+            }
+        }
     }
 }

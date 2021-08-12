@@ -4,7 +4,13 @@ Provide a mock sensor platform.
 Call init before using it in your tests to ensure clean test data.
 """
 import homeassistant.components.sensor as sensor
-from homeassistant.const import PERCENTAGE, PRESSURE_HPA, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    SIGNAL_STRENGTH_DECIBELS,
+    VOLUME_CUBIC_METERS,
+)
 
 from tests.common import MockEntity
 
@@ -13,17 +19,19 @@ DEVICE_CLASSES.append("none")
 
 UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_BATTERY: PERCENTAGE,  # % of battery that is left
+    sensor.DEVICE_CLASS_CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
+    sensor.DEVICE_CLASS_CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
     sensor.DEVICE_CLASS_HUMIDITY: PERCENTAGE,  # % of humidity in the air
     sensor.DEVICE_CLASS_ILLUMINANCE: "lm",  # current light level (lx/lm)
     sensor.DEVICE_CLASS_SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
     sensor.DEVICE_CLASS_TEMPERATURE: "C",  # temperature (C/F)
-    sensor.DEVICE_CLASS_TIMESTAMP: "hh:mm:ss",  # timestamp (ISO8601)
     sensor.DEVICE_CLASS_PRESSURE: PRESSURE_HPA,  # pressure (hPa/mbar)
     sensor.DEVICE_CLASS_POWER: "kW",  # power (W/kW)
     sensor.DEVICE_CLASS_CURRENT: "A",  # current (A)
     sensor.DEVICE_CLASS_ENERGY: "kWh",  # energy (Wh/kWh)
     sensor.DEVICE_CLASS_POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
     sensor.DEVICE_CLASS_VOLTAGE: "V",  # voltage (V)
+    sensor.DEVICE_CLASS_GAS: VOLUME_CUBIC_METERS,  # gas (m³)
 }
 
 ENTITIES = {}
@@ -55,7 +63,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockSensor(MockEntity):
+class MockSensor(MockEntity, sensor.SensorEntity):
     """Mock Sensor class."""
 
     @property
@@ -64,6 +72,11 @@ class MockSensor(MockEntity):
         return self._handle("device_class")
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit_of_measurement of this sensor."""
-        return self._handle("unit_of_measurement")
+    def native_unit_of_measurement(self):
+        """Return the native unit_of_measurement of this sensor."""
+        return self._handle("native_unit_of_measurement")
+
+    @property
+    def native_value(self):
+        """Return the native value of this sensor."""
+        return self._handle("native_value")

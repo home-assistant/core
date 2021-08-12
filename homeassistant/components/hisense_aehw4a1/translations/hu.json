@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "A h\u00e1l\u00f3zaton nem tal\u00e1lhat\u00f3 Hisense AEH-W4A1 eszk\u00f6z.",
-            "single_instance_allowed": "Csak egy konfigur\u00e1ci\u00f3 lehet Hisense AEH-W4A1 eset\u00e9n."
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
         "step": {
             "confirm": {

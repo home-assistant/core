@@ -14,10 +14,10 @@
                 "data": {
                     "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
                     "password": "Password",
-                    "platform": "The app where your account register",
+                    "platform": "The app where your account is registered",
                     "username": "Username"
                 },
-                "description": "Enter your Tuya credential.",
+                "description": "Enter your Tuya credentials.",
                 "title": "Tuya"
             }
         }

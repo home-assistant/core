@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     unique_id = config_entry.entry_id
     async_add_entities(UpbLink(upb.links[link], unique_id, upb) for link in upb.links)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_LINK_DEACTIVATE, {}, "async_link_deactivate"

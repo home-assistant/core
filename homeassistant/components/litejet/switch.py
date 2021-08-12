@@ -77,7 +77,7 @@ class LiteJetSwitch(SwitchEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 

@@ -5,8 +5,8 @@ import logging
 import voluptuous as vol
 from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
-from homeassistant.const import CONF_TYPE, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_TYPE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
 from . import DOMAIN, PLATFORM_SCHEMA, XBeeAnalogIn, XBeeAnalogInConfig, XBeeConfig
 
@@ -43,8 +43,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor_class(config_class(config), zigbee_device)], True)
 
 
-class XBeeTemperatureSensor(Entity):
+class XBeeTemperatureSensor(SensorEntity):
     """Representation of XBee Pro temperature sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(self, config, device):
         """Initialize the sensor."""
@@ -58,14 +61,9 @@ class XBeeTemperatureSensor(Entity):
         return self._config.name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._temp
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement the value is expressed in."""
-        return TEMP_CELSIUS
 
     def update(self):
         """Get the latest data."""

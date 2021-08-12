@@ -6,7 +6,7 @@ from numbers import Number
 from pyflume import FlumeData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -108,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(flume_entity_list)
 
 
-class FlumeSensor(CoordinatorEntity):
+class FlumeSensor(CoordinatorEntity, SensorEntity):
     """Representation of the Flume sensor."""
 
     def __init__(self, coordinator, flume_device, flume_query_sensor, name, device_id):
@@ -136,7 +136,7 @@ class FlumeSensor(CoordinatorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         sensor_key = self._flume_query_sensor[0]
         if sensor_key not in self._flume_device.values:
@@ -145,7 +145,7 @@ class FlumeSensor(CoordinatorEntity):
         return _format_state_value(self._flume_device.values[sensor_key])
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         # This is in gallons per SCAN_INTERVAL
         return self._flume_query_sensor[1]["unit_of_measurement"]

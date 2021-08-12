@@ -32,9 +32,8 @@ async def test_light(
     assert state is not None
     assert state.state == light_state
 
-    light: SpaLight = next(
-        light for light in await spa.get_lights() if light.zone == light_zone
-    )
+    status = await spa.get_status_full()
+    light: SpaLight = next(light for light in status.lights if light.zone == light_zone)
 
     await hass.services.async_call(
         "light",

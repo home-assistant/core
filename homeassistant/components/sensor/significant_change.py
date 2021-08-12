@@ -1,5 +1,7 @@
 """Helper to test significant sensor state changes."""
-from typing import Any, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -19,7 +21,7 @@ def async_check_significant_change(
     new_state: str,
     new_attrs: dict,
     **kwargs: Any,
-) -> Optional[bool]:
+) -> bool | None:
     """Test if state significantly changed."""
     device_class = new_attrs.get(ATTR_DEVICE_CLASS)
 
@@ -28,7 +30,7 @@ def async_check_significant_change(
 
     if device_class == DEVICE_CLASS_TEMPERATURE:
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-            change: Union[float, int] = 1
+            change: float | int = 1
         else:
             change = 0.5
 

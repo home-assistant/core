@@ -1,5 +1,5 @@
 """Generate CODEOWNERS."""
-from typing import Dict
+from __future__ import annotations
 
 from .model import Config, Integration
 
@@ -33,7 +33,7 @@ homeassistant/components/demo/weather @fabaff
 """
 
 
-def generate_and_validate(integrations: Dict[str, Integration]):
+def generate_and_validate(integrations: dict[str, Integration]):
     """Generate CODEOWNERS."""
     parts = [BASE]
 
@@ -61,7 +61,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
     return "\n".join(parts)
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
     config.cache["codeowners"] = content = generate_and_validate(integrations)
@@ -79,7 +79,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: Dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config):
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
     with open(str(codeowners_path), "w") as fp:

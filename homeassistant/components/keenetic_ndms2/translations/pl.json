@@ -1,16 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "no_udn": "Informacje o wykrywaniu SSDP nie maj\u0105 UDN",
+            "not_keenetic_ndms2": "Wykryty element nie jest routerem Keenetic"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "name": "Nazwa",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"

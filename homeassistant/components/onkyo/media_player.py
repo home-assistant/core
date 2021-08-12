@@ -1,6 +1,7 @@
 """Support for Onkyo Receivers."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 import eiscp
 from eiscp import eISCP
@@ -56,7 +57,7 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | SUPPORT_PLAY_MEDIA
 )
 
-KNOWN_HOSTS: List[str] = []
+KNOWN_HOSTS: list[str] = []
 DEFAULT_SOURCES = {
     "tv": "TV",
     "bd": "Bluray",
@@ -318,8 +319,10 @@ class OnkyoDevice(MediaPlayerEntity):
         preset_raw = self.command("preset query")
         if self._audio_info_supported:
             audio_information_raw = self.command("audio-information query")
+            self._parse_audio_information(audio_information_raw)
         if self._video_info_supported:
             video_information_raw = self.command("video-information query")
+            self._parse_video_information(video_information_raw)
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -341,9 +344,6 @@ class OnkyoDevice(MediaPlayerEntity):
         self._volume = volume_raw[1] / (
             self._receiver_max_volume * self._max_volume / 100
         )
-
-        self._parse_audio_information(audio_information_raw)
-        self._parse_video_information(video_information_raw)
 
         if not hdmi_out_raw:
             return
@@ -392,7 +392,7 @@ class OnkyoDevice(MediaPlayerEntity):
         return self._source_list
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return self._attributes
 

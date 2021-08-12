@@ -34,8 +34,6 @@ async def test_form(hass):
         "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
         return_value="123456789abcdef",
     ), patch(
-        "homeassistant.components.flick_electric.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flick_electric.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -48,7 +46,6 @@ async def test_form(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Flick Electric: test-username"
     assert result2["data"] == CONF
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

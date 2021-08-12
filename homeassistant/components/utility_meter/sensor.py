@@ -5,9 +5,17 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -50,8 +58,12 @@ ATTR_SOURCE_ID = "source"
 ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
-ATTR_LAST_RESET = "last_reset"
 ATTR_TARIFF = "tariff"
+
+DEVICE_CLASS_MAP = {
+    ENERGY_WATT_HOUR: DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR: DEVICE_CLASS_ENERGY,
+}
 
 ICON = "mdi:counter"
 
@@ -93,7 +105,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(meters)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
@@ -102,7 +114,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class UtilityMeterSensor(RestoreEntity):
+class UtilityMeterSensor(RestoreEntity, SensorEntity):
     """Representation of an utility meter sensor."""
 
     def __init__(
@@ -119,7 +131,7 @@ class UtilityMeterSensor(RestoreEntity):
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._collecting = None
         if name:
             self._name = name
@@ -225,7 +237,7 @@ class UtilityMeterSensor(RestoreEntity):
         if self._tariff_entity != entity_id:
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._last_period = str(self._state)
         self._state = 0
         self.async_write_ha_state()
@@ -272,8 +284,8 @@ class UtilityMeterSensor(RestoreEntity):
             self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
-            self._last_reset = dt_util.parse_datetime(
-                state.attributes.get(ATTR_LAST_RESET)
+            self._last_reset = dt_util.as_utc(
+                dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
             )
             if state.attributes.get(ATTR_STATUS) == COLLECTING:
                 # Fake cancellation function to init the meter in similar state
@@ -309,12 +321,22 @@ class UtilityMeterSensor(RestoreEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_MAP.get(self.unit_of_measurement)
+
+    @property
+    def state_class(self):
+        """Return the device class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -324,13 +346,12 @@ class UtilityMeterSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         state_attr = {
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: self._last_period,
-            ATTR_LAST_RESET: self._last_reset,
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
@@ -342,3 +363,8 @@ class UtilityMeterSensor(RestoreEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset."""
+        return self._last_reset

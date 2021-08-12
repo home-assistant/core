@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
                 "description": "No s'ha pogut configurar l'enlla\u00e7 (amfitri\u00f3: {host}) importat de configuration.yaml.",

@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
@@ -132,8 +133,8 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         else:
             hvac_mode = TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(state)
             _LOGGER.warning(
-                "HomeKit device %s: Setting temperature in %s mode is not supported yet."
-                " Consider raising a ticket if you have this device and want to help us implement this feature.",
+                "HomeKit device %s: Setting temperature in %s mode is not supported yet;"
+                " Consider raising a ticket if you have this device and want to help us implement this feature",
                 self.entity_id,
                 hvac_mode,
             )
@@ -147,8 +148,8 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
             return
         if hvac_mode not in {HVAC_MODE_HEAT, HVAC_MODE_COOL}:
             _LOGGER.warning(
-                "HomeKit device %s: Setting temperature in %s mode is not supported yet."
-                " Consider raising a ticket if you have this device and want to help us implement this feature.",
+                "HomeKit device %s: Setting temperature in %s mode is not supported yet;"
+                " Consider raising a ticket if you have this device and want to help us implement this feature",
                 self.entity_id,
                 hvac_mode,
             )
@@ -342,16 +343,27 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
+        chars = {}
+
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        mode = MODE_HOMEKIT_TO_HASS.get(value)
+
+        if kwargs.get(ATTR_HVAC_MODE, mode) != mode:
+            mode = kwargs[ATTR_HVAC_MODE]
+            chars[CharacteristicsTypes.HEATING_COOLING_TARGET] = MODE_HASS_TO_HOMEKIT[
+                mode
+            ]
+
         temp = kwargs.get(ATTR_TEMPERATURE)
         heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
+
+        if (mode == HVAC_MODE_HEAT_COOL) and (
             SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
         ):
             if temp is None:
                 temp = (cool_temp + heat_temp) / 2
-            await self.async_put_characteristics(
+            chars.update(
                 {
                     CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: heat_temp,
                     CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: cool_temp,
@@ -359,9 +371,9 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
                 }
             )
         else:
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.TEMPERATURE_TARGET: temp}
-            )
+            chars[CharacteristicsTypes.TEMPERATURE_TARGET] = temp
+
+        await self.async_put_characteristics(chars)
 
     async def async_set_humidity(self, humidity):
         """Set new target humidity."""

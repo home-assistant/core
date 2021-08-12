@@ -153,7 +153,6 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
 
     # Test set config parameter
     config_param = result[0]
-    print(config_param)
     current_val = config_param[ATTR_VALUE]
     new_val = next(
         option[0]

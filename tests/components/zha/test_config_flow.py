@@ -10,7 +10,7 @@ import zigpy.config
 from homeassistant import setup
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -26,6 +26,57 @@ def com_port():
     port.description = "Some serial port"
 
     return port
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery(detect_mock, hass):
+    """Test zeroconf flow -- radio detected."""
+    service_info = {
+        "host": "192.168.1.200",
+        "port": 6053,
+        "hostname": "_tube_zb_gw._tcp.local.",
+        "properties": {"name": "tube_123456"},
+    }
+    flow = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "socket://192.168.1.200:6638"
+    assert result["data"] == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
+            "path": "socket://192.168.1.200:6638",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_already_setup(detect_mock, hass):
+    """Test zeroconf flow -- radio detected."""
+    service_info = {
+        "host": "192.168.1.200",
+        "port": 6053,
+        "hostname": "_tube_zb_gw._tcp.local.",
+        "properties": {"name": "tube_123456"},
+    }
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -86,6 +137,7 @@ async def test_user_flow_show_form(hass):
     assert result["step_id"] == "user"
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[]))
 async def test_user_flow_show_manual(hass):
     """Test user flow manual entry when no comport detected."""
     result = await hass.config_entries.flow.async_init(

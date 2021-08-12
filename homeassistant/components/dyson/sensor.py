@@ -2,6 +2,7 @@
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -13,7 +14,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_HOURS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DYSON_DEVICES, DysonEntity
 
@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class DysonSensor(DysonEntity, Entity):
+class DysonSensor(DysonEntity, SensorEntity):
     """Representation of a generic Dyson sensor."""
 
     def __init__(self, device, sensor_type):
@@ -129,7 +129,7 @@ class DysonSensor(DysonEntity, Entity):
         return f"{self._device.serial}-{self._sensor_type}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -152,7 +152,7 @@ class DysonFilterLifeSensor(DysonSensor):
         super().__init__(device, "filter_life")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return filter life in hours."""
         return int(self._device.state.filter_life)
 
@@ -165,7 +165,7 @@ class DysonCarbonFilterLifeSensor(DysonSensor):
         super().__init__(device, "carbon_filter_state")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return filter life remaining in percent."""
         return int(self._device.state.carbon_filter_state)
 
@@ -178,7 +178,7 @@ class DysonHepaFilterLifeSensor(DysonSensor):
         super().__init__(device, f"{filter_type}_filter_state")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return filter life remaining in percent."""
         return int(self._device.state.hepa_filter_state)
 
@@ -191,7 +191,7 @@ class DysonDustSensor(DysonSensor):
         super().__init__(device, "dust")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return Dust value."""
         return self._device.environmental_state.dust
 
@@ -204,7 +204,7 @@ class DysonHumiditySensor(DysonSensor):
         super().__init__(device, "humidity")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return Humidity value."""
         if self._device.environmental_state.humidity == 0:
             return STATE_OFF
@@ -220,7 +220,7 @@ class DysonTemperatureSensor(DysonSensor):
         self._unit = unit
 
     @property
-    def state(self):
+    def native_value(self):
         """Return Temperature value."""
         temperature_kelvin = self._device.environmental_state.temperature
         if temperature_kelvin == 0:
@@ -230,7 +230,7 @@ class DysonTemperatureSensor(DysonSensor):
         return float(f"{(temperature_kelvin * 9 / 5 - 459.67):.1f}")
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
 
@@ -243,6 +243,6 @@ class DysonAirQualitySensor(DysonSensor):
         super().__init__(device, "air_quality")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return Air Quality value."""
         return int(self._device.environmental_state.volatil_organic_compounds)

@@ -4,8 +4,8 @@ from unittest.mock import ANY, patch
 from haphilipsjs import PairingFailure
 from pytest import fixture
 
-from homeassistant import config_entries
-from homeassistant.components.philips_js.const import DOMAIN
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
 
 from . import (
     MOCK_CONFIG,
@@ -17,22 +17,17 @@ from . import (
     MOCK_USERNAME,
 )
 
-
-@fixture(autouse=True)
-def mock_setup():
-    """Disable component setup."""
-    with patch(
-        "homeassistant.components.philips_js.async_setup", return_value=True
-    ) as mock_setup:
-        yield mock_setup
+from tests.common import MockConfigEntry
 
 
-@fixture(autouse=True)
-def mock_setup_entry():
+@fixture(autouse=True, name="mock_setup_entry")
+def mock_setup_entry_fixture():
     """Disable component setup."""
     with patch(
         "homeassistant.components.philips_js.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.philips_js.async_unload_entry", return_value=True
+    ):
         yield mock_setup_entry
 
 
@@ -50,7 +45,7 @@ async def mock_tv_pairable(mock_tv):
     return mock_tv
 
 
-async def test_import(hass, mock_setup, mock_setup_entry):
+async def test_import(hass, mock_setup_entry):
     """Test we get an item on import."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -61,7 +56,6 @@ async def test_import(hass, mock_setup, mock_setup_entry):
     assert result["type"] == "create_entry"
     assert result["title"] == "Philips TV (1234567890)"
     assert result["data"] == MOCK_CONFIG
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -77,7 +71,7 @@ async def test_import_exist(hass, mock_config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_form(hass, mock_setup, mock_setup_entry):
+async def test_form(hass, mock_setup_entry):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -94,7 +88,6 @@ async def test_form(hass, mock_setup, mock_setup_entry):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Philips TV (1234567890)"
     assert result2["data"] == MOCK_CONFIG
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -128,7 +121,7 @@ async def test_form_unexpected_error(hass, mock_tv):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_pairing(hass, mock_tv_pairable, mock_setup, mock_setup_entry):
+async def test_pairing(hass, mock_tv_pairable, mock_setup_entry):
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 
@@ -163,16 +156,14 @@ async def test_pairing(hass, mock_tv_pairable, mock_setup, mock_setup_entry):
         "title": "55PUS7181/12 (ABCDEFGHIJKLF)",
         "data": MOCK_CONFIG_PAIRED,
         "version": 1,
+        "options": {},
     }
 
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_pair_request_failed(
-    hass, mock_tv_pairable, mock_setup, mock_setup_entry
-):
+async def test_pair_request_failed(hass, mock_tv_pairable, mock_setup_entry):
     """Test we get the form."""
     mock_tv = mock_tv_pairable
     mock_tv.pairRequest.side_effect = PairingFailure({})
@@ -197,7 +188,7 @@ async def test_pair_request_failed(
     }
 
 
-async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup, mock_setup_entry):
+async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup_entry):
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 
@@ -239,3 +230,28 @@ async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup, mock_setup_
         "reason": "pairing_failure",
         "type": "abort",
     }
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
+        data=MOCK_CONFIG_PAIRED,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {CONF_ALLOW_NOTIFY: True}

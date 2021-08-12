@@ -33,6 +33,7 @@
             "invalid_serial": "Port s\u00e8rie inv\u00e0lid",
             "invalid_subscribe_topic": "Topic de subscripci\u00f3 inv\u00e0lid",
             "invalid_version": "Versi\u00f3 de MySensors inv\u00e0lida",
+            "mqtt_required": "La integraci\u00f3 MQTT no est\u00e0 configurada",
             "not_a_number": "Introdueix un n\u00famero",
             "port_out_of_range": "El n\u00famero de port ha d'estar entre 1 i 65535",
             "same_topic": "Els topics de publicaci\u00f3 i subscripci\u00f3 son els mateixos",

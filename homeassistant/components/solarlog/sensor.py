@@ -5,8 +5,8 @@ from urllib.parse import ParseResult, urlparse
 from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
@@ -55,7 +55,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class SolarlogSensor(Entity):
+class SolarlogSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, entry_id, device_name, sensor_key, data):
@@ -82,7 +82,7 @@ class SolarlogSensor(Entity):
         return f"{self.device_name} {self._label}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the state of the sensor."""
         return self._unit_of_measurement
 
@@ -92,7 +92,7 @@ class SolarlogSensor(Entity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

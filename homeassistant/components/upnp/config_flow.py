@@ -1,6 +1,9 @@
 """Config flow for UPNP."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, Mapping, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -23,27 +26,16 @@ from .const import (
     DISCOVERY_UNIQUE_ID,
     DISCOVERY_USN,
     DOMAIN,
-    DOMAIN_COORDINATORS,
+    DOMAIN_DEVICES,
     LOGGER as _LOGGER,
 )
-from .device import Device
-
-
-def discovery_info_to_discovery(discovery_info: Mapping) -> Mapping:
-    """Convert a SSDP-discovery to 'our' discovery."""
-    return {
-        DISCOVERY_UDN: discovery_info[ssdp.ATTR_UPNP_UDN],
-        DISCOVERY_ST: discovery_info[ssdp.ATTR_SSDP_ST],
-        DISCOVERY_LOCATION: discovery_info[ssdp.ATTR_SSDP_LOCATION],
-        DISCOVERY_USN: discovery_info[ssdp.ATTR_SSDP_USN],
-    }
+from .device import Device, discovery_info_to_discovery
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     # Paths:
     # - ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
@@ -55,7 +47,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discoveries: Mapping = None
 
     async def async_step_user(
-        self, user_input: Optional[Mapping] = None
+        self, user_input: Mapping | None = None
     ) -> Mapping[str, Any]:
         """Handle a flow start."""
         _LOGGER.debug("async_step_user: user_input: %s", user_input)
@@ -111,9 +103,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
-    async def async_step_import(
-        self, import_info: Optional[Mapping]
-    ) -> Mapping[str, Any]:
+    async def async_step_import(self, import_info: Mapping | None) -> Mapping[str, Any]:
         """Import a new UPnP/IGD device as a config entry.
 
         This flow is triggered by `async_setup`. If no device has been
@@ -176,15 +166,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = discovery_info_to_discovery(discovery_info)
 
         # Ensure not already configuring/configured.
-        discovery = await Device.async_supplement_discovery(self.hass, discovery)
-        unique_id = discovery[DISCOVERY_UNIQUE_ID]
+        unique_id = discovery[DISCOVERY_USN]
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={CONFIG_ENTRY_HOSTNAME: discovery[DISCOVERY_HOSTNAME]}
         )
 
         # Handle devices changing their UDN, only allow a single
-        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+        existing_entries = self._async_current_entries()
         for config_entry in existing_entries:
             entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
             if entry_hostname == discovery[DISCOVERY_HOSTNAME]:
@@ -192,6 +181,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Found existing config_entry with same hostname, discovery ignored"
                 )
                 return self.async_abort(reason="discovery_ignored")
+
+        # Get more data about the device.
+        discovery = await Device.async_supplement_discovery(self.hass, discovery)
 
         # Store discovery.
         self._discoveries = [discovery]
@@ -204,7 +196,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
-        self, user_input: Optional[Mapping] = None
+        self, user_input: Mapping | None = None
     ) -> Mapping[str, Any]:
         """Confirm integration via SSDP."""
         _LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
@@ -252,7 +244,7 @@ class UpnpOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             udn = self.config_entry.data[CONFIG_ENTRY_UDN]
-            coordinator = self.hass.data[DOMAIN][DOMAIN_COORDINATORS][udn]
+            coordinator = self.hass.data[DOMAIN][DOMAIN_DEVICES][udn].coordinator
             update_interval_sec = user_input.get(
                 CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )

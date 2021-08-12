@@ -89,7 +89,7 @@ class NmapDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.debug("Scanning...")
+        _LOGGER.debug("Scanning")
 
         scanner = PortScanner()
 

@@ -6,5 +6,6 @@
   "requirements": ["PyXiaomiGateway==0.13.4"],
   "after_dependencies": ["discovery"],
   "codeowners": ["@danielhiversen", "@syssi"],
-  "zeroconf": ["_miio._udp.local."]
+  "zeroconf": ["_miio._udp.local."],
+  "iot_class": "local_push"
 }

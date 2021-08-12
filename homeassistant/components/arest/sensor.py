@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,7 +123,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class ArestSensor(Entity):
+class ArestSensor(SensorEntity):
     """Implementation of an aREST sensor for exposed variables."""
 
     def __init__(
@@ -140,48 +139,27 @@ class ArestSensor(Entity):
     ):
         """Initialize the sensor."""
         self.arest = arest
-        self._resource = resource
-        self._name = f"{location.title()} {name.title()}"
+        self._attr_name = f"{location.title()} {name.title()}"
         self._variable = variable
-        self._pin = pin
-        self._state = None
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._renderer = renderer
 
-        if self._pin is not None:
-            request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
+        if pin is not None:
+            request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
             if request.status_code != HTTP_OK:
-                _LOGGER.error("Can't set mode of %s", self._resource)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        values = self.arest.data
-
-        if "error" in values:
-            return values["error"]
-
-        value = self._renderer(values.get("value", values.get(self._variable, None)))
-        return value
+                _LOGGER.error("Can't set mode of %s", resource)
 
     def update(self):
         """Get the latest data from aREST API."""
         self.arest.update()
-
-    @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self.arest.available
+        self._attr_available = self.arest.available
+        values = self.arest.data
+        if "error" in values:
+            self._attr_native_value = values["error"]
+        else:
+            self._attr_native_value = self._renderer(
+                values.get("value", values.get(self._variable, None))
+            )
 
 
 class ArestData:
@@ -192,7 +170,7 @@ class ArestData:
         self._resource = resource
         self._pin = pin
         self.data = {}
-        self.available = True
+        self._attr_available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -213,7 +191,7 @@ class ArestData:
                         f"{self._resource}/digital/{self._pin}", timeout=10
                     )
                     self.data = {"value": response.json()["return_value"]}
-            self.available = True
+            self._attr_available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to device %s", self._resource)
-            self.available = False
+            self._attr_available = False

@@ -1,5 +1,6 @@
 """Support for INSTEON Modems (PLM and Hub)."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from pyinsteon import async_close, async_connect, devices
@@ -8,6 +9,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from . import api
 from .const import (
     CONF_CAT,
     CONF_DIM_STEPS,
@@ -37,10 +39,8 @@ async def async_get_device_config(hass, config_entry):
     # Make a copy of addresses due to edge case where the list of devices could change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
-        try:
+        with suppress(AttributeError):
             await devices[address].async_status()
-        except AttributeError:
-            pass
 
     await devices.async_load(id_devices=1)
     for addr in devices:
@@ -97,7 +97,9 @@ async def async_setup_entry(hass, entry):
             _LOGGER.error("Could not connect to Insteon modem")
             raise ConfigEntryNotReady from exception
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
+    )
 
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0
@@ -162,6 +164,8 @@ async def async_setup_entry(hass, entry):
         model=f"{devices.modem.model} ({devices.modem.cat!r}, 0x{devices.modem.subcat:02x})",
         sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
     )
+
+    api.async_load_api(hass)
 
     asyncio.create_task(async_get_device_config(hass, entry))
 

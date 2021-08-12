@@ -159,7 +159,8 @@ class LGDevice(MediaPlayerEntity):
         """Return the available sound modes."""
         modes = []
         for equaliser in self._equalisers:
-            modes.append(temescal.equalisers[equaliser])
+            if equaliser < len(temescal.equalisers):
+                modes.append(temescal.equalisers[equaliser])
         return sorted(modes)
 
     @property
@@ -174,7 +175,8 @@ class LGDevice(MediaPlayerEntity):
         """List of available input sources."""
         sources = []
         for function in self._functions:
-            sources.append(temescal.functions[function])
+            if function < len(temescal.functions):
+                sources.append(temescal.functions[function])
         return sorted(sources)
 
     @property

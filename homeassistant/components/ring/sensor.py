@@ -1,7 +1,11 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+)
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN
@@ -15,24 +19,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
 
     for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams"):
-        for sensor_type in SENSOR_TYPES:
-            if device_type not in SENSOR_TYPES[sensor_type][1]:
+        for sensor_type, sensor in SENSOR_TYPES.items():
+            if device_type not in sensor[1]:
                 continue
 
             for device in devices[device_type]:
                 if device_type == "battery" and device.battery_life is None:
                     continue
 
-                sensors.append(
-                    SENSOR_TYPES[sensor_type][6](
-                        config_entry.entry_id, device, sensor_type
-                    )
-                )
+                sensors.append(sensor[6](config_entry.entry_id, device, sensor_type))
 
     async_add_entities(sensors)
 
 
-class RingSensor(RingEntityMixin, Entity):
+class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
     def __init__(self, config_entry_id, device, sensor_type):
@@ -40,9 +40,9 @@ class RingSensor(RingEntityMixin, Entity):
         super().__init__(config_entry_id, device)
         self._sensor_type = sensor_type
         self._extra = None
-        self._icon = "mdi:{}".format(SENSOR_TYPES.get(sensor_type)[3])
+        self._icon = f"mdi:{SENSOR_TYPES.get(sensor_type)[3]}"
         self._kind = SENSOR_TYPES.get(sensor_type)[4]
-        self._name = "{} {}".format(self._device.name, SENSOR_TYPES.get(sensor_type)[0])
+        self._name = f"{self._device.name} {SENSOR_TYPES.get(sensor_type)[0]}"
         self._unique_id = f"{device.id}-{sensor_type}"
 
     @property
@@ -56,7 +56,7 @@ class RingSensor(RingEntityMixin, Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._sensor_type == "volume":
             return self._device.volume
@@ -84,7 +84,7 @@ class RingSensor(RingEntityMixin, Entity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return SENSOR_TYPES.get(self._sensor_type)[2]
 
@@ -120,7 +120,7 @@ class HealthDataRingSensor(RingSensor):
         return False
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._sensor_type == "wifi_signal_category":
             return self._device.wifi_signal_category
@@ -172,7 +172,7 @@ class HistoryRingSensor(RingSensor):
         self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._latest_event is None:
             return None
@@ -180,9 +180,9 @@ class HistoryRingSensor(RingSensor):
         return self._latest_event["created_at"].isoformat()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         if self._latest_event:
             attrs["created_at"] = self._latest_event["created_at"]
@@ -210,7 +210,7 @@ SENSOR_TYPES = {
         None,
         "history",
         None,
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "last_ding": [
@@ -219,7 +219,7 @@ SENSOR_TYPES = {
         None,
         "history",
         "ding",
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "last_motion": [
@@ -228,7 +228,7 @@ SENSOR_TYPES = {
         None,
         "history",
         "motion",
-        "timestamp",
+        DEVICE_CLASS_TIMESTAMP,
         HistoryRingSensor,
     ],
     "volume": [

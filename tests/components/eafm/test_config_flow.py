@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from voluptuous.error import MultipleInvalid
 
+from homeassistant import config_entries
 from homeassistant.components.eafm import const
 
 
@@ -11,7 +12,7 @@ async def test_flow_no_discovered_stations(hass, mock_get_stations):
     """Test config flow discovers no station."""
     mock_get_stations.return_value = []
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "no_stations"
@@ -24,7 +25,7 @@ async def test_flow_invalid_station(hass, mock_get_stations):
     ]
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -44,7 +45,7 @@ async def test_flow_works(hass, mock_get_stations, mock_get_station):
     ]
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 

@@ -1,7 +1,9 @@
 """Represent the AsusWrt router."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt
 
@@ -19,11 +21,12 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -37,12 +40,108 @@ from .const import (
     DEFAULT_TRACK_UNKNOWN,
     DOMAIN,
     PROTOCOL_TELNET,
+    SENSORS_BYTES,
+    SENSORS_CONNECTED_DEVICE,
+    SENSORS_LOAD_AVG,
+    SENSORS_RATES,
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
+
+KEY_COORDINATOR = "coordinator"
+KEY_SENSORS = "sensors"
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
+SENSORS_TYPE_BYTES = "sensors_bytes"
+SENSORS_TYPE_COUNT = "sensors_count"
+SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
+SENSORS_TYPE_RATES = "sensors_rates"
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_dict(keys: list, values: list) -> dict[str, Any]:
+    """Create a dict from a list of keys and values."""
+    ret_dict: dict[str, Any] = dict.fromkeys(keys)
+
+    for index, key in enumerate(ret_dict):
+        ret_dict[key] = values[index]
+
+    return ret_dict
+
+
+class AsusWrtSensorDataHandler:
+    """Data handler for AsusWrt sensor."""
+
+    def __init__(self, hass, api):
+        """Initialize a AsusWrt sensor data handler."""
+        self._hass = hass
+        self._api = api
+        self._connected_devices = 0
+
+    async def _get_connected_devices(self):
+        """Return number of connected devices."""
+        return {SENSORS_CONNECTED_DEVICE[0]: self._connected_devices}
+
+    async def _get_bytes(self):
+        """Fetch byte information from the router."""
+        try:
+            datas = await self._api.async_get_bytes_total()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return _get_dict(SENSORS_BYTES, datas)
+
+    async def _get_rates(self):
+        """Fetch rates information from the router."""
+        try:
+            rates = await self._api.async_get_current_transfer_rates()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return _get_dict(SENSORS_RATES, rates)
+
+    async def _get_load_avg(self):
+        """Fetch load average information from the router."""
+        try:
+            avg = await self._api.async_get_loadavg()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return _get_dict(SENSORS_LOAD_AVG, avg)
+
+    def update_device_count(self, conn_devices: int):
+        """Update connected devices attribute."""
+        if self._connected_devices == conn_devices:
+            return False
+        self._connected_devices = conn_devices
+        return True
+
+    async def get_coordinator(self, sensor_type: str, should_poll=True):
+        """Get the coordinator for a specific sensor type."""
+        if sensor_type == SENSORS_TYPE_COUNT:
+            method = self._get_connected_devices
+        elif sensor_type == SENSORS_TYPE_BYTES:
+            method = self._get_bytes
+        elif sensor_type == SENSORS_TYPE_LOAD_AVG:
+            method = self._get_load_avg
+        elif sensor_type == SENSORS_TYPE_RATES:
+            method = self._get_rates
+        else:
+            raise RuntimeError(f"Invalid sensor type: {sensor_type}")
+
+        coordinator = DataUpdateCoordinator(
+            self._hass,
+            _LOGGER,
+            name=sensor_type,
+            update_method=method,
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=SCAN_INTERVAL if should_poll else None,
+        )
+        await coordinator.async_refresh()
+
+        return coordinator
 
 
 class AsusWrtDevInfo:
@@ -101,7 +200,7 @@ class AsusWrtDevInfo:
 class AsusWrtRouter:
     """Representation of a AsusWrt router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a AsusWrt router."""
         self.hass = hass
         self._entry = entry
@@ -109,9 +208,15 @@ class AsusWrtRouter:
         self._api: AsusWrt = None
         self._protocol = entry.data[CONF_PROTOCOL]
         self._host = entry.data[CONF_HOST]
+        self._model = "Asus Router"
+        self._sw_v = None
 
-        self._devices: Dict[str, Any] = {}
+        self._devices: dict[str, Any] = {}
+        self._connected_devices = 0
         self._connect_error = False
+
+        self._sensors_data_handler: AsusWrtSensorDataHandler = None
+        self._sensors_coordinator: dict[str, Any] = {}
 
         self._on_close = []
 
@@ -134,6 +239,14 @@ class AsusWrtRouter:
         if not self._api.is_connected:
             raise ConfigEntryNotReady
 
+        # System
+        model = await _get_nvram_info(self._api, "MODEL")
+        if model and "model" in model:
+            self._model = model["model"]
+        firmware = await _get_nvram_info(self._api, "FIRMWARE")
+        if firmware and "firmver" in firmware and "buildno" in firmware:
+            self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
+
         # Load tracked entities from registry
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         track_entries = (
@@ -150,11 +263,14 @@ class AsusWrtRouter:
         # Update devices
         await self.update_devices()
 
+        # Init Sensors
+        await self.init_sensors_coordinator()
+
         self.async_on_close(
             async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
         )
 
-    async def update_all(self, now: Optional[datetime] = None) -> None:
+    async def update_all(self, now: datetime | None = None) -> None:
         """Update all AsusWrt platforms."""
         await self.update_devices()
 
@@ -183,9 +299,9 @@ class AsusWrtRouter:
         )
         track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
-        for device_mac in self._devices:
+        for device_mac, device in self._devices.items():
             dev_info = wrt_devices.get(device_mac)
-            self._devices[device_mac].update(dev_info, consider_home)
+            device.update(dev_info, consider_home)
 
         for device_mac, dev_info in wrt_devices.items():
             if device_mac in self._devices:
@@ -201,11 +317,47 @@ class AsusWrtRouter:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
 
+        self._connected_devices = len(wrt_devices)
+        await self._update_unpolled_sensors()
+
+    async def init_sensors_coordinator(self) -> None:
+        """Init AsusWrt sensors coordinators."""
+        if self._sensors_data_handler:
+            return
+
+        self._sensors_data_handler = AsusWrtSensorDataHandler(self.hass, self._api)
+        self._sensors_data_handler.update_device_count(self._connected_devices)
+
+        sensors_types = {
+            SENSORS_TYPE_BYTES: SENSORS_BYTES,
+            SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
+            SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
+            SENSORS_TYPE_RATES: SENSORS_RATES,
+        }
+
+        for sensor_type, sensor_names in sensors_types.items():
+            coordinator = await self._sensors_data_handler.get_coordinator(
+                sensor_type, sensor_type != SENSORS_TYPE_COUNT
+            )
+            self._sensors_coordinator[sensor_type] = {
+                KEY_COORDINATOR: coordinator,
+                KEY_SENSORS: sensor_names,
+            }
+
+    async def _update_unpolled_sensors(self) -> None:
+        """Request refresh for AsusWrt unpolled sensors."""
+        if not self._sensors_data_handler:
+            return
+
+        if SENSORS_TYPE_COUNT in self._sensors_coordinator:
+            coordinator = self._sensors_coordinator[SENSORS_TYPE_COUNT][KEY_COORDINATOR]
+            if self._sensors_data_handler.update_device_count(self._connected_devices):
+                await coordinator.async_refresh()
+
     async def close(self) -> None:
         """Close the connection."""
-        if self._api is not None:
-            if self._protocol == PROTOCOL_TELNET:
-                await self._api.connection.disconnect()
+        if self._api is not None and self._protocol == PROTOCOL_TELNET:
+            self._api.connection.disconnect()
         self._api = None
 
         for func in self._on_close:
@@ -217,7 +369,7 @@ class AsusWrtRouter:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    def update_options(self, new_options: Dict) -> bool:
+    def update_options(self, new_options: dict) -> bool:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():
@@ -229,6 +381,17 @@ class AsusWrtRouter:
 
         self._options.update(new_options)
         return req_reload
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, "AsusWRT")},
+            "name": self._host,
+            "model": self._model,
+            "manufacturer": "Asus",
+            "sw_version": self._sw_v,
+        }
 
     @property
     def signal_device_new(self) -> str:
@@ -246,9 +409,14 @@ class AsusWrtRouter:
         return self._host
 
     @property
-    def devices(self) -> Dict[str, Any]:
+    def devices(self) -> dict[str, Any]:
         """Return devices."""
         return self._devices
+
+    @property
+    def sensors_coordinator(self) -> dict[str, Any]:
+        """Return sensors coordinators."""
+        return self._sensors_coordinator
 
     @property
     def api(self) -> AsusWrt:
@@ -256,7 +424,18 @@ class AsusWrtRouter:
         return self._api
 
 
-def get_api(conf: Dict, options: Optional[Dict] = None) -> AsusWrt:
+async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
+    """Get AsusWrt router info from nvram."""
+    info = {}
+    try:
+        info = await api.async_get_nvram(info_type)
+    except (OSError, UnicodeDecodeError) as exc:
+        _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
+
+    return info
+
+
+def get_api(conf: dict, options: dict | None = None) -> AsusWrt:
     """Get the AsusWrt API."""
     opt = options or {}
 

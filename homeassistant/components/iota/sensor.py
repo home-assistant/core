@@ -1,6 +1,7 @@
 """Support for IOTA wallet sensors."""
 from datetime import timedelta
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
 
 from . import CONF_WALLETS, IotaDevice
@@ -27,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class IotaBalanceSensor(IotaDevice):
+class IotaBalanceSensor(IotaDevice, SensorEntity):
     """Implement an IOTA sensor for displaying wallets balance."""
 
     def __init__(self, wallet_config, iota_config):
@@ -46,12 +47,12 @@ class IotaBalanceSensor(IotaDevice):
         return f"{self._name} Balance"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return "IOTA"
 
@@ -60,7 +61,7 @@ class IotaBalanceSensor(IotaDevice):
         self._state = self.api.get_inputs()["totalBalance"]
 
 
-class IotaNodeSensor(IotaDevice):
+class IotaNodeSensor(IotaDevice, SensorEntity):
     """Implement an IOTA sensor for displaying attributes of node."""
 
     def __init__(self, iota_config):
@@ -80,12 +81,12 @@ class IotaNodeSensor(IotaDevice):
         return "IOTA Node"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attr
 

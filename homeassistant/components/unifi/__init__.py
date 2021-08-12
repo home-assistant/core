@@ -44,7 +44,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
+    )
 
     LOGGER.debug("UniFi config options %s", config_entry.options)
 

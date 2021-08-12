@@ -11,7 +11,18 @@
             "user": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",
+                    "region": "ConnectedDrive \uc9c0\uc5ed",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "\uc77d\uae30 \uc804\uc6a9(\uc13c\uc11c \ubc0f \uc54c\ub9bc\ub9cc \uac00\ub2a5, \uc11c\ube44\uc2a4 \uc2e4\ud589 \ubc0f \uc7a0\uae08 \uc5c6\uc74c)",
+                    "use_location": "\ucc28\ub7c9 \uc704\uce58 \ud3f4\ub9c1\uc5d0 Home Assistant \uc704\uce58\ub97c \uc0ac\uc6a9\ud569\ub2c8\ub2e4(2014\ub144 7\uc6d4 \uc774\uc804\uc5d0 \uc0dd\uc0b0\ub41c i3/i8\uc774 \uc544\ub2cc \ucc28\ub7c9\uc758 \uacbd\uc6b0 \ud544\uc694)"
                 }
             }
         }

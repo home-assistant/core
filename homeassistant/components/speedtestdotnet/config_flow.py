@@ -1,9 +1,14 @@
 """Config flow for Speedtest.net."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from . import server_id_valid
 from .const import (
@@ -21,15 +26,18 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Speedtest.net config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
         return SpeedTestOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -50,7 +58,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="wrong_server_id")
 
         import_config[CONF_SCAN_INTERVAL] = int(
-            import_config[CONF_SCAN_INTERVAL].seconds / 60
+            import_config[CONF_SCAN_INTERVAL].total_seconds() / 60
         )
         import_config.pop(CONF_MONITORED_CONDITIONS)
 
@@ -60,14 +68,16 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle SpeedTest options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
-        self._servers = {}
+        self._servers: dict = {}
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             server_name = user_input[CONF_SERVER_NAME]

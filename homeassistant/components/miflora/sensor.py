@@ -8,7 +8,11 @@ from btlewrap import BluetoothBackendException
 from miflora import miflora_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONDUCTIVITY,
     CONF_FORCE_UPDATE,
@@ -27,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -130,7 +133,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devs)
 
 
-class MiFloraSensor(Entity):
+class MiFloraSensor(SensorEntity):
     """Implementing the MiFlora sensor."""
 
     def __init__(
@@ -177,7 +180,7 @@ class MiFloraSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -189,7 +192,7 @@ class MiFloraSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
 
@@ -199,7 +202,12 @@ class MiFloraSensor(Entity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def state_class(self):
+        """Return the state class of this entity."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
 

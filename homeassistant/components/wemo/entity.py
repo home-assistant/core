@@ -1,16 +1,20 @@
 """Classes shared among Wemo entities."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Generator
 import contextlib
 import logging
-from typing import Any, Dict, Generator, Optional
 
 import async_timeout
 from pywemo import WeMoDevice
 from pywemo.exceptions import ActionException
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN as WEMO_DOMAIN
+from .const import DOMAIN as WEMO_DOMAIN, SIGNAL_WEMO_STATE_PUSH
+from .wemo_device import DeviceWrapper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +23,7 @@ class ExceptionHandlerStatus:
     """Exit status from the _wemo_exception_handler context manager."""
 
     # An exception if one was raised in the _wemo_exception_handler.
-    exception: Optional[Exception] = None
+    exception: Exception | None = None
 
     @property
     def success(self) -> bool:
@@ -33,9 +37,9 @@ class WemoEntity(Entity):
     Requires that subclasses implement the _update method.
     """
 
-    def __init__(self, device: WeMoDevice) -> None:
+    def __init__(self, wemo: WeMoDevice) -> None:
         """Initialize the WeMo device."""
-        self.wemo = device
+        self.wemo = wemo
         self._state = None
         self._available = True
         self._update_lock = None
@@ -68,7 +72,7 @@ class WemoEntity(Entity):
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
 
-    def _update(self, force_update: Optional[bool] = True):
+    def _update(self, force_update: bool | None = True):
         """Update the device state."""
         raise NotImplementedError()
 
@@ -91,7 +95,7 @@ class WemoEntity(Entity):
 
         try:
             async with async_timeout.timeout(
-                self.platform.scan_interval.seconds - 0.1
+                self.platform.scan_interval.total_seconds() - 0.1
             ) as timeout:
                 await asyncio.shield(self._async_locked_update(True, timeout))
         except asyncio.TimeoutError:
@@ -99,7 +103,7 @@ class WemoEntity(Entity):
             self._available = False
 
     async def _async_locked_update(
-        self, force_update: bool, timeout: Optional[async_timeout.timeout] = None
+        self, force_update: bool, timeout: async_timeout.timeout | None = None
     ) -> None:
         """Try updating within an async lock."""
         async with self._update_lock:
@@ -118,20 +122,21 @@ class WemoEntity(Entity):
 class WemoSubscriptionEntity(WemoEntity):
     """Common methods for Wemo devices that register for update callbacks."""
 
+    def __init__(self, device: DeviceWrapper) -> None:
+        """Initialize WemoSubscriptionEntity."""
+        super().__init__(device.wemo)
+        self._device_id = device.device_id
+        self._device_info = device.device_info
+
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
         return self.wemo.serialnumber
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(WEMO_DOMAIN, self.unique_id)},
-            "model": self.wemo.model_name,
-            "manufacturer": "Belkin",
-        }
+        return self._device_info
 
     @property
     def is_on(self) -> bool:
@@ -167,27 +172,25 @@ class WemoSubscriptionEntity(WemoEntity):
         """Wemo device added to Home Assistant."""
         await super().async_added_to_hass()
 
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.register, self.wemo)
-        registry.on(self.wemo, None, self._subscription_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_WEMO_STATE_PUSH, self._async_subscription_callback
+            )
+        )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Wemo device removed from hass."""
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.unregister, self.wemo)
-
-    def _subscription_callback(
-        self, _device: WeMoDevice, _type: str, _params: str
+    async def _async_subscription_callback(
+        self, device_id: str, event_type: str, params: str
     ) -> None:
         """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription update for %s", self.name)
-        updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(self._async_locked_subscription_callback(not updated))
-
-    async def _async_locked_subscription_callback(self, force_update: bool) -> None:
-        """Handle an update from a subscription."""
+        # Only respond events for this device.
+        if device_id != self._device_id:
+            return
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
 
-        await self._async_locked_update(force_update)
+        _LOGGER.debug("Subscription event (%s) for %s", event_type, self.name)
+        updated = await self.hass.async_add_executor_job(
+            self.wemo.subscription_update, event_type, params
+        )
+        await self._async_locked_update(not updated)

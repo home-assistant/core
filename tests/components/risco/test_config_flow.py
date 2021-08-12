@@ -59,8 +59,6 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.close"
     ) as mock_close, patch(
-        "homeassistant.components.risco.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -72,7 +70,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_SITE_NAME
     assert result2["data"] == TEST_DATA
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     mock_close.assert_awaited_once()
 

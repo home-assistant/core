@@ -2,6 +2,7 @@
 
 from nexia.const import UNIT_CELSIUS
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -149,7 +150,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaThermostatSensor(NexiaThermostatEntity):
+class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
     """Provides Nexia thermostat sensor support."""
 
     def __init__(
@@ -181,7 +182,7 @@ class NexiaThermostatSensor(NexiaThermostatEntity):
         return self._class
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         val = getattr(self._thermostat, self._call)()
         if self._modifier:
@@ -191,12 +192,12 @@ class NexiaThermostatSensor(NexiaThermostatEntity):
         return val
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
 
-class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity):
+class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
     """Nexia Zone Sensor Support."""
 
     def __init__(
@@ -229,7 +230,7 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity):
         return self._class
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         val = getattr(self._zone, self._call)()
         if self._modifier:
@@ -239,6 +240,6 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity):
         return val
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement

@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
 
@@ -28,7 +29,7 @@ async def mock_panel_fixture():
 async def test_flow_works(hass, mock_panel):
     """Test config flow ."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -65,7 +66,7 @@ async def test_flow_works(hass, mock_panel):
 async def test_pro_flow_works(hass, mock_panel):
     """Test config flow ."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -110,7 +111,7 @@ async def test_ssdp(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://1.2.3.4:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -137,7 +138,7 @@ async def test_import_no_host_user_finish(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "default_options": {
                 "blink": True,
@@ -204,7 +205,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "default_options": {
                 "blink": True,
@@ -238,7 +239,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     # discover the panel via ssdp
     ssdp_result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://0.0.0.0:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -281,7 +282,7 @@ async def test_ssdp_already_configured(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://0.0.0.0:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -357,7 +358,7 @@ async def test_ssdp_host_update(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             "ssdp_location": "http://1.1.1.1:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
@@ -382,7 +383,7 @@ async def test_import_existing_config(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",
@@ -515,7 +516,7 @@ async def test_import_existing_config_entry(hass, mock_panel):
     hass.data[config_flow.DOMAIN] = {"access_token": "SUPERSECRETTOKEN"}
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -573,7 +574,7 @@ async def test_import_pin_config(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",

@@ -6,10 +6,9 @@ from fixerio import Fixerio
 from fixerio.exceptions import FixerioException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, CONF_TARGET
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ExchangeRateSensor(data, name, target)], True)
 
 
-class ExchangeRateSensor(Entity):
+class ExchangeRateSensor(SensorEntity):
     """Representation of a Exchange sensor."""
 
     def __init__(self, data, name, target):
@@ -65,17 +64,17 @@ class ExchangeRateSensor(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._target
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.data.rate is not None:
             return {

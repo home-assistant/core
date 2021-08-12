@@ -1,14 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
+            "already_configured": "Account is already configured",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "The SmartTub integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "email": "Email",

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -15,9 +15,9 @@
                     "name": "Name",
                     "password": "Passwort",
                     "port": "Port",
-                    "ssl": "Nutzt ein SSL-Zertifikat",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "SSL-Zertifikat verfizieren"
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "title": "Mit NZBGet verbinden"
             }

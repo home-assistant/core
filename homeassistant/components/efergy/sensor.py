@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_CURRENCY,
     CONF_MONITORED_VARIABLES,
@@ -13,7 +13,6 @@ from homeassistant.const import (
     POWER_WATT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://engage.efergy.com/mobile_proxy/"
@@ -94,7 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class EfergySensor(Entity):
+class EfergySensor(SensorEntity):
     """Implementation of an Efergy sensor."""
 
     def __init__(self, sensor_type, app_token, utc_offset, period, currency, sid=None):
@@ -121,12 +120,12 @@ class EfergySensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

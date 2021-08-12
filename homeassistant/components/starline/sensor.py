@@ -1,13 +1,12 @@
 """Reads vehicle status from StarLine API."""
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
 from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     TEMP_CELSIUS,
-    VOLT,
     VOLUME_LITERS,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .account import StarlineAccount, StarlineDevice
@@ -15,7 +14,7 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 SENSOR_TYPES = {
-    "battery": ["Battery", None, VOLT, None],
+    "battery": ["Battery", None, ELECTRIC_POTENTIAL_VOLT, None],
     "balance": ["Balance", None, None, "mdi:cash-multiple"],
     "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
     "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
@@ -38,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class StarlineSensor(StarlineEntity, Entity):
+class StarlineSensor(StarlineEntity, SensorEntity):
     """Representation of a StarLine sensor."""
 
     def __init__(
@@ -50,7 +49,7 @@ class StarlineSensor(StarlineEntity, Entity):
         device_class: str,
         unit: str,
         icon: str,
-    ):
+    ) -> None:
         """Initialize StarLine sensor."""
         super().__init__(account, device, key, name)
         self._device_class = device_class
@@ -70,7 +69,7 @@ class StarlineSensor(StarlineEntity, Entity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._key == "battery":
             return self._device.battery_level
@@ -91,7 +90,7 @@ class StarlineSensor(StarlineEntity, Entity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Get the unit of measurement."""
         if self._key == "balance":
             return self._device.balance.get("currency") or "₽"
@@ -109,7 +108,7 @@ class StarlineSensor(StarlineEntity, Entity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._key == "balance":
             return self._account.balance_attrs(self._device)

@@ -11,9 +11,19 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "IP-Addresse",
+                    "host": "IP-Adresse",
                     "password": "Passwort",
                     "username": "Benutzername"
+                },
+                "description": "Bitte gib deine Control4-Kontodaten und die IP-Adresse deiner lokalen Steuerung ein."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunden zwischen Updates"
                 }
             }
         }

@@ -1,7 +1,9 @@
 """Test the Shark IQ vacuum entity."""
+from __future__ import annotations
+
 from copy import deepcopy
 import enum
-from typing import Any, Iterable, List, Optional
+from typing import Any, Iterable
 from unittest.mock import patch
 
 import pytest
@@ -46,6 +48,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -79,11 +82,11 @@ class MockAyla(AylaApi):
     async def async_sign_in(self):
         """Instead of signing in, just return."""
 
-    async def async_list_devices(self) -> List[dict]:
+    async def async_list_devices(self) -> list[dict]:
         """Return the device list."""
         return [SHARK_DEVICE_DICT]
 
-    async def async_get_devices(self, update: bool = True) -> List[SharkIqVacuum]:
+    async def async_get_devices(self, update: bool = True) -> list[SharkIqVacuum]:
         """Get the list of devices."""
         shark = MockShark(self, SHARK_DEVICE_DICT)
         shark.properties_full = deepcopy(SHARK_PROPERTIES_DICT)
@@ -97,7 +100,7 @@ class MockAyla(AylaApi):
 class MockShark(SharkIqVacuum):
     """Mocked SharkIqVacuum that won't hit the API."""
 
-    async def async_update(self, property_list: Optional[Iterable[str]] = None):
+    async def async_update(self, property_list: Iterable[str] | None = None):
         """Don't do anything."""
 
     def set_property_value(self, property_name, value):
@@ -128,7 +131,7 @@ async def setup_integration(hass):
 async def test_simple_properties(hass: HomeAssistant):
     """Test that simple properties work as intended."""
     state = hass.states.get(VAC_ENTITY_ID)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity = registry.async_get(VAC_ENTITY_ID)
 
     assert entity
@@ -199,7 +202,7 @@ async def test_device_properties(
     hass: HomeAssistant, device_property: str, target_value: str
 ):
     """Test device properties."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
 
@@ -223,7 +226,7 @@ async def test_locate(hass):
 )
 @patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
 async def test_coordinator_updates(
-    hass: HomeAssistant, side_effect: Optional[Exception], success: bool
+    hass: HomeAssistant, side_effect: Exception | None, success: bool
 ) -> None:
     """Test the update coordinator update functions."""
     coordinator = hass.data[DOMAIN][ENTRY_ID]

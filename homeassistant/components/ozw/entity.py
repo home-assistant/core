@@ -83,9 +83,9 @@ class ZWaveDeviceEntityValues:
             return
 
         # Go through the possible values for this entity defined by the schema.
-        for name in self._values:
+        for name, name_value in self._values.items():
             # Skip if it's already been added.
-            if self._values[name] is not None:
+            if name_value is not None:
                 continue
             # Skip if the value doesn't match the schema.
             if not check_value_schema(value, self._schema[const.DISC_VALUES][name]):
@@ -209,7 +209,7 @@ class ZWaveDeviceEntity(Entity):
         return device_info
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {const.ATTR_NODE_ID: self.values.primary.node.node_id}
 

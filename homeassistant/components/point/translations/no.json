@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
-            "authorize_url_fail": "Ukjent feil under generering av en autoriserings-URL.",
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
             "external_setup": "Punktet er konfigurert fra en annen flyt.",
             "no_flows": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",

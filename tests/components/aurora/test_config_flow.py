@@ -29,8 +29,6 @@ async def test_form(hass):
         "homeassistant.components.aurora.config_flow.AuroraForecast.get_forecast_data",
         return_value=True,
     ), patch(
-        "homeassistant.components.aurora.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.aurora.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -43,7 +41,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Aurora - Home"
     assert result2["data"] == DATA
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

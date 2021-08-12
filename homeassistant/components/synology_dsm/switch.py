@@ -1,27 +1,37 @@
 """Support for Synology DSM switch."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
+from typing import Any
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.switch import ToggleEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_SWITCHES, DOMAIN, SURVEILLANCE_SWITCH, SYNO_API
+from .const import (
+    COORDINATOR_SWITCHES,
+    DOMAIN,
+    SURVEILLANCE_SWITCH,
+    SYNO_API,
+    EntityInfo,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS switch."""
 
     data = hass.data[DOMAIN][entry.unique_id]
-    api = data[SYNO_API]
+    api: SynoApi = data[SYNO_API]
 
     entities = []
 
@@ -30,13 +40,13 @@ async def async_setup_entry(
         version = info["data"]["CMSMinVersion"]
 
         # initial data fetch
-        coordinator = data[COORDINATOR_SWITCHES]
+        coordinator: DataUpdateCoordinator = data[COORDINATOR_SWITCHES]
         await coordinator.async_refresh()
         entities += [
             SynoDSMSurveillanceHomeModeToggle(
-                api, sensor_type, SURVEILLANCE_SWITCH[sensor_type], version, coordinator
+                api, sensor_type, switch, version, coordinator
             )
-            for sensor_type in SURVEILLANCE_SWITCH
+            for sensor_type, switch in SURVEILLANCE_SWITCH.items()
         ]
 
     async_add_entities(entities, True)
@@ -45,14 +55,16 @@ async def async_setup_entry(
 class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     """Representation a Synology Surveillance Station Home Mode toggle."""
 
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]]
+
     def __init__(
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: Dict[str, str],
+        entity_info: EntityInfo,
         version: str,
-        coordinator: DataUpdateCoordinator,
-    ):
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]],
+    ) -> None:
         """Initialize a Synology Surveillance Station Home Mode."""
         super().__init__(
             api,
@@ -67,7 +79,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         """Return the state."""
         return self.coordinator.data["switches"][self.entity_type]
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Home mode."""
         _LOGGER.debug(
             "SynoDSMSurveillanceHomeModeToggle.turn_on(%s)",
@@ -78,7 +90,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off Home mode."""
         _LOGGER.debug(
             "SynoDSMSurveillanceHomeModeToggle.turn_off(%s)",
@@ -95,14 +107,13 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         return bool(self._api.surveillance_station)
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {
                 (
                     DOMAIN,
-                    self._api.information.serial,
-                    SynoSurveillanceStation.INFO_API_KEY,
+                    f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
                 )
             },
             "name": "Surveillance Station",

@@ -51,19 +51,19 @@ async def test_humanify_alexa_event(hass):
     event1, event2, event3 = results
 
     assert event1["name"] == "Amazon Alexa"
-    assert event1["message"] == "send command Alexa.Discovery/Discover"
+    assert event1["message"] == "sent command Alexa.Discovery/Discover"
     assert event1["entity_id"] is None
 
     assert event2["name"] == "Amazon Alexa"
     assert (
         event2["message"]
-        == "send command Alexa.PowerController/TurnOn for Kitchen Light"
+        == "sent command Alexa.PowerController/TurnOn for Kitchen Light"
     )
     assert event2["entity_id"] == "light.kitchen"
 
     assert event3["name"] == "Amazon Alexa"
     assert (
         event3["message"]
-        == "send command Alexa.PowerController/TurnOn for light.non_existing"
+        == "sent command Alexa.PowerController/TurnOn for light.non_existing"
     )
     assert event3["entity_id"] == "light.non_existing"

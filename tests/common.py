@@ -1,9 +1,11 @@
 """Test the helper method for writing tests."""
+from __future__ import annotations
+
 import asyncio
 import collections
 from collections import OrderedDict
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools as ft
 from io import StringIO
 import json
@@ -14,9 +16,8 @@ import threading
 import time
 from time import monotonic
 import types
-from typing import Any, Awaitable, Collection, Optional
+from typing import Any, Awaitable, Collection
 from unittest.mock import AsyncMock, Mock, patch
-import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 
@@ -28,12 +29,11 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import recorder
+from homeassistant.components import device_automation, recorder
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
-    _async_get_device_automations as async_get_device_automations,
 )
-from homeassistant.components.mqtt.models import Message
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -43,7 +43,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -59,12 +59,23 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
+import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
+
+
+async def async_get_device_automations(
+    hass: HomeAssistant, automation_type: str, device_id: str
+) -> Any:
+    """Get a device automation for a single device id."""
+    automations = await device_automation.async_get_device_automations(
+        hass, automation_type, [device_id]
+    )
+    return automations.get(device_id)
 
 
 def threadsafe_callback_factory(func):
@@ -197,12 +208,12 @@ async def async_test_home_assistant(loop, load_registries=True):
         """
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
-        start_time: Optional[float] = None
+        start_time: float | None = None
 
         while len(self._pending_tasks) > max_remaining_tasks:
-            pending = [
+            pending: Collection[Awaitable[Any]] = [
                 task for task in self._pending_tasks if not task.done()
-            ]  # type: Collection[Awaitable[Any]]
+            ]
             self._pending_tasks.clear()
             if len(pending) > max_remaining_tasks:
                 remaining_pending = await self._await_count_and_log_pending(
@@ -268,13 +279,13 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.time_zone = date_util.get_time_zone("US/Pacific")
+    hass.config.time_zone = "US/Pacific"
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
-    hass.config_entries._entries = []
+    hass.config_entries._entries = {}
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     # Load the registries
@@ -351,7 +362,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = Message(topic, payload, qos, retain)
+    msg = ReceiveMessage(topic, payload, qos, retain)
     hass.data["mqtt"]._mqtt_handle_message(msg)
 
 
@@ -359,7 +370,9 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(hass, datetime_, fire_all=False):
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime, fire_all: bool = False
+) -> None:
     """Fire a time changes event."""
     hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
@@ -564,7 +577,7 @@ class MockModule:
         if platform_schema_base is not None:
             self.PLATFORM_SCHEMA_BASE = platform_schema_base
 
-        if setup is not None:
+        if setup:
             # We run this in executor, wrap it in function
             self.setup = lambda *args: setup(*args)
 
@@ -728,21 +741,22 @@ class MockConfigEntry(config_entries.ConfigEntry):
         title="Mock Title",
         state=None,
         options={},
-        system_options={},
-        connection_class=config_entries.CONN_CLASS_UNKNOWN,
+        pref_disable_new_entities=None,
+        pref_disable_polling=None,
         unique_id=None,
         disabled_by=None,
+        reason=None,
     ):
         """Initialize a mock config entry."""
         kwargs = {
-            "entry_id": entry_id or uuid.uuid4().hex,
+            "entry_id": entry_id or uuid_util.random_uuid_hex(),
             "domain": domain,
             "data": data or {},
-            "system_options": system_options,
+            "pref_disable_new_entities": pref_disable_new_entities,
+            "pref_disable_polling": pref_disable_polling,
             "options": options,
             "version": version,
             "title": title,
-            "connection_class": connection_class,
             "unique_id": unique_id,
             "disabled_by": disabled_by,
         }
@@ -751,20 +765,22 @@ class MockConfigEntry(config_entries.ConfigEntry):
         if state is not None:
             kwargs["state"] = state
         super().__init__(**kwargs)
+        if reason is not None:
+            self.reason = reason
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
-        hass.config_entries._entries.append(self)
+        hass.config_entries._entries[self.entry_id] = self
 
     def add_to_manager(self, manager):
         """Test helper to add entry to entry manager."""
-        manager._entries.append(self)
+        manager._entries[self.entry_id] = self
 
 
 def patch_yaml_files(files_dict, endswith=True):
     """Patch load_yaml with a dictionary of yaml files."""
     # match using endswith, start search with longest string
-    matchlist = sorted(list(files_dict.keys()), key=len) if endswith else []
+    matchlist = sorted(files_dict.keys(), key=len) if endswith else []
 
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""
@@ -1044,10 +1060,15 @@ async def get_system_health_info(hass, domain):
     return await hass.data["system_health"][domain].info_callback(hass)
 
 
-def mock_integration(hass, module):
+def mock_integration(hass, module, built_in=True):
     """Mock an integration."""
     integration = loader.Integration(
-        hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
+        hass,
+        f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
+        if built_in
+        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
+        None,
+        module.mock_manifest(),
     )
 
     def mock_import_platform(platform_name):

@@ -18,5 +18,14 @@
                 "title": "AEMET OpenData"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "Zbieraj dane ze stacji pogodowych AEMET"
+                }
+            }
+        }
     }
 }

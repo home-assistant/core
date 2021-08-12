@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Weet u zeker dat u Twilio wilt instellen?",
+                "description": "Wil je beginnen met instellen?",
                 "title": "Stel de Twilio Webhook in"
             }
         }

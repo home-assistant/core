@@ -7,7 +7,7 @@ import async_timeout
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_VARIABLES,
@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class StartcaSensor(Entity):
+class StartcaSensor(SensorEntity):
     """Representation of Start.ca Bandwidth sensor."""
 
     def __init__(self, startcadata, sensor_type, name):
@@ -94,12 +93,12 @@ class StartcaSensor(Entity):
         return f"{self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

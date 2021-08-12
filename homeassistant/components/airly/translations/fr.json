@@ -22,7 +22,9 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Acc\u00e8s au serveur Airly"
+            "can_reach_server": "Acc\u00e8s au serveur Airly",
+            "requests_per_day": "Demandes autoris\u00e9es par jour",
+            "requests_remaining": "Demandes autoris\u00e9es restantes"
         }
     }
 }

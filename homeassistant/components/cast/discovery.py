@@ -13,7 +13,6 @@ from .const import (
     CONF_KNOWN_HOSTS,
     DEFAULT_PORT,
     INTERNAL_DISCOVERY_RUNNING_KEY,
-    KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
 )
@@ -38,12 +37,8 @@ def discover_chromecast(hass: HomeAssistant, device_info):
         return
 
     info = info.fill_out_missing_chromecast_info()
-    if info.uuid in hass.data[KNOWN_CHROMECAST_INFO_KEY]:
-        _LOGGER.debug("Discovered update for known chromecast %s", info)
-    else:
-        _LOGGER.debug("Discovered chromecast %s", info)
+    _LOGGER.debug("Discovered new or updated chromecast %s", info)
 
-    hass.data[KNOWN_CHROMECAST_INFO_KEY][info.uuid] = info
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)
 
 

@@ -61,7 +61,7 @@ async def test_websocket_supervisor_api(
     assert await async_setup_component(hass, "hassio", {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.post(
-        "http://127.0.0.1/snapshots/new/partial",
+        "http://127.0.0.1/backups/new/partial",
         json={"result": "ok", "data": {"slug": "sn_slug"}},
     )
 
@@ -69,7 +69,7 @@ async def test_websocket_supervisor_api(
         {
             WS_ID: 1,
             WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/snapshots/new/partial",
+            ATTR_ENDPOINT: "/backups/new/partial",
             ATTR_METHOD: "post",
         }
     )
@@ -88,3 +88,27 @@ async def test_websocket_supervisor_api(
 
     msg = await websocket_client.receive_json()
     assert msg["result"]["version_latest"] == "1.0.0"
+
+
+async def test_websocket_supervisor_api_error(
+    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
+):
+    """Test Supervisor websocket api error."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/ping",
+        json={"result": "error", "message": "example error"},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/ping",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["error"]["message"] == "example error"

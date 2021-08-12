@@ -1,7 +1,7 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from os import path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 import respx
@@ -41,9 +41,11 @@ async def test_setup_missing_schema(hass):
 
 
 @respx.mock
-async def test_setup_failed_connect(hass):
+async def test_setup_failed_connect(hass, caplog):
     """Test setup when connection error occurs."""
-    respx.get("http://localhost").mock(side_effect=httpx.RequestError)
+    respx.get("http://localhost").mock(
+        side_effect=httpx.RequestError("server offline", request=MagicMock())
+    )
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
@@ -57,6 +59,7 @@ async def test_setup_failed_connect(hass):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    assert "server offline" in caplog.text
 
 
 @respx.mock

@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineLock(StarlineEntity, LockEntity):
     """Representation of a StarLine lock."""
 
-    def __init__(self, account: StarlineAccount, device: StarlineDevice):
+    def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
         """Initialize the lock."""
         super().__init__(account, device, "lock", "Security")
 
@@ -31,7 +31,7 @@ class StarlineLock(StarlineEntity, LockEntity):
         return super().available and self._device.online
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the lock.
 
         Possible dictionary keys:

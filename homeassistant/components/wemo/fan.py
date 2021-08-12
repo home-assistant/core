@@ -75,13 +75,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
     await asyncio.gather(
-        *[
+        *(
             _discovered_wemo(device)
             for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
-        ]
+        )
     )
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     # This will call WemoHumidifier.set_humidity(target_humidity=VALUE)
     platform.async_register_entity_service(
@@ -115,7 +115,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         return "mdi:water-percent"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_CURRENT_HUMIDITY: self._current_humidity,

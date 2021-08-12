@@ -1,5 +1,4 @@
 """Tests for the Awair sensor platform."""
-
 from unittest.mock import patch
 
 from homeassistant.components.awair.const import (
@@ -27,6 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     AWAIR_UUID,
@@ -74,7 +74,7 @@ async def test_awair_gen1_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -170,7 +170,7 @@ async def test_awair_gen2_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN2_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -204,7 +204,7 @@ async def test_awair_mint_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, MINT_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -246,7 +246,7 @@ async def test_awair_glow_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GLOW_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -266,7 +266,7 @@ async def test_awair_omni_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, OMNI_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -319,7 +319,7 @@ async def test_awair_unavailable(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,

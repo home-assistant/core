@@ -1,10 +1,12 @@
 """Provides device triggers for Shelly."""
-from typing import List
+from __future__ import annotations
+
+from typing import Any, Final
 
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -20,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
+from . import get_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -27,11 +30,13 @@ from .const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_SUBTYPES,
+    SHBTN_INPUTS_EVENTS_TYPES,
+    SHBTN_MODELS,
     SUPPORTED_INPUTS_EVENTS_TYPES,
 )
-from .utils import get_device_wrapper, get_input_triggers
+from .utils import get_input_triggers
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(SUPPORTED_INPUTS_EVENTS_TYPES),
         vol.Required(CONF_SUBTYPE): vol.In(INPUTS_EVENTS_SUBTYPES),
@@ -39,13 +44,15 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> dict[str, Any]:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
     # if device is available verify parameters against device capabilities
     wrapper = get_device_wrapper(hass, config[CONF_DEVICE_ID])
-    if not wrapper:
+    if not wrapper or not wrapper.device.initialized:
         return config
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -60,13 +67,28 @@ async def async_validate_trigger_config(hass, config):
     )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers for Shelly devices."""
     triggers = []
 
     wrapper = get_device_wrapper(hass, device_id)
     if not wrapper:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
+
+    if wrapper.model in SHBTN_MODELS:
+        for trigger in SHBTN_INPUTS_EVENTS_TYPES:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_TYPE: trigger,
+                    CONF_SUBTYPE: "button",
+                }
+            )
+        return triggers
 
     for block in wrapper.device.blocks:
         input_triggers = get_input_triggers(wrapper.device, block)
@@ -92,7 +114,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
         event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,

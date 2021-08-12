@@ -2,12 +2,10 @@
 import logging
 from typing import Any, Callable
 
-from homeassistant.core import HassJob, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
-
-from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"
@@ -15,7 +13,7 @@ DATA_DISPATCHER = "dispatcher"
 
 @bind_hass
 def dispatcher_connect(
-    hass: HomeAssistantType, signal: str, target: Callable[..., None]
+    hass: HomeAssistant, signal: str, target: Callable[..., None]
 ) -> Callable[[], None]:
     """Connect a callable function to a signal."""
     async_unsub = run_callback_threadsafe(
@@ -32,7 +30,7 @@ def dispatcher_connect(
 @callback
 @bind_hass
 def async_dispatcher_connect(
-    hass: HomeAssistantType, signal: str, target: Callable[..., Any]
+    hass: HomeAssistant, signal: str, target: Callable[..., Any]
 ) -> Callable[[], None]:
     """Connect a callable function to a signal.
 
@@ -69,14 +67,14 @@ def async_dispatcher_connect(
 
 
 @bind_hass
-def dispatcher_send(hass: HomeAssistantType, signal: str, *args: Any) -> None:
+def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     """Send signal and data."""
     hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
 
 
 @callback
 @bind_hass
-def async_dispatcher_send(hass: HomeAssistantType, signal: str, *args: Any) -> None:
+def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     """Send signal and data.
 
     This method must be run in the event loop.

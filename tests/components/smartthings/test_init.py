@@ -6,6 +6,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from pysmartthings import InstalledAppStatus, OAuthToken
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
     CONF_CLOUDHOOK_URL,
@@ -41,7 +42,7 @@ async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["handler"] == "smartthings"
-    assert flows[0]["context"] == {"source": "import"}
+    assert flows[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
 
 
 async def test_unrecoverable_api_errors_create_new_flow(
@@ -71,7 +72,7 @@ async def test_unrecoverable_api_errors_create_new_flow(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["handler"] == "smartthings"
-    assert flows[0]["context"] == {"source": "import"}
+    assert flows[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
     hass.config_entries.flow.async_abort(flows[0]["flow_id"])
 
 

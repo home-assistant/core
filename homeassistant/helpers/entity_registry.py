@@ -7,20 +7,12 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
+from __future__ import annotations
+
 from collections import OrderedDict
+from collections.abc import Iterable, Mapping
 import logging
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 import attr
 
@@ -32,16 +24,25 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
+    MAX_LENGTH_STATE_DOMAIN,
+    MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
+from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
-from .typing import UNDEFINED, HomeAssistantType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -80,12 +81,12 @@ class RegistryEntry:
     entity_id: str = attr.ib()
     unique_id: str = attr.ib()
     platform: str = attr.ib()
-    name: Optional[str] = attr.ib(default=None)
-    icon: Optional[str] = attr.ib(default=None)
-    device_id: Optional[str] = attr.ib(default=None)
-    area_id: Optional[str] = attr.ib(default=None)
-    config_entry_id: Optional[str] = attr.ib(default=None)
-    disabled_by: Optional[str] = attr.ib(
+    name: str | None = attr.ib(default=None)
+    icon: str | None = attr.ib(default=None)
+    device_id: str | None = attr.ib(default=None)
+    area_id: str | None = attr.ib(default=None)
+    config_entry_id: str | None = attr.ib(default=None)
+    disabled_by: str | None = attr.ib(
         default=None,
         validator=attr.validators.in_(
             (
@@ -98,13 +99,13 @@ class RegistryEntry:
             )
         ),
     )
-    capabilities: Optional[Dict[str, Any]] = attr.ib(default=None)
+    capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
-    device_class: Optional[str] = attr.ib(default=None)
-    unit_of_measurement: Optional[str] = attr.ib(default=None)
+    device_class: str | None = attr.ib(default=None)
+    unit_of_measurement: str | None = attr.ib(default=None)
     # As set by integration
-    original_name: Optional[str] = attr.ib(default=None)
-    original_icon: Optional[str] = attr.ib(default=None)
+    original_name: str | None = attr.ib(default=None)
+    original_icon: str | None = attr.ib(default=None)
     domain: str = attr.ib(init=False, repr=False)
 
     @domain.default
@@ -118,9 +119,9 @@ class RegistryEntry:
         return self.disabled_by is not None
 
     @callback
-    def write_unavailable_state(self, hass: HomeAssistantType) -> None:
+    def write_unavailable_state(self, hass: HomeAssistant) -> None:
         """Write the unavailable state to the state machine."""
-        attrs: Dict[str, Any] = {ATTR_RESTORED: True}
+        attrs: dict[str, Any] = {ATTR_RESTORED: True}
 
         if self.capabilities is not None:
             attrs.update(self.capabilities)
@@ -148,20 +149,26 @@ class RegistryEntry:
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
-    def __init__(self, hass: HomeAssistantType):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
-        self.entities: Dict[str, RegistryEntry]
-        self._index: Dict[Tuple[str, str, str], str] = {}
+        self.entities: dict[str, RegistryEntry]
+        self._index: dict[tuple[str, str, str], str] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
         )
 
     @callback
-    def async_get_device_class_lookup(self, domain_device_classes: set) -> dict:
-        """Return a lookup for the device class by domain."""
-        lookup: Dict[str, Dict[Tuple[Any, Any], str]] = {}
+    def async_get_device_class_lookup(
+        self, domain_device_classes: set[tuple[str, str | None]]
+    ) -> dict:
+        """Return a lookup of entity ids for devices which have matching entities.
+
+        Entities must match a set of (domain, device_class) tuples.
+        The result is indexed by device_id, then by the matching (domain, device_class)
+        """
+        lookup: dict[str, dict[tuple[Any, Any], str]] = {}
         for entity in self.entities.values():
             if not entity.device_id:
                 continue
@@ -180,14 +187,14 @@ class EntityRegistry:
         return entity_id in self.entities
 
     @callback
-    def async_get(self, entity_id: str) -> Optional[RegistryEntry]:
+    def async_get(self, entity_id: str) -> RegistryEntry | None:
         """Get EntityEntry for an entity_id."""
         return self.entities.get(entity_id)
 
     @callback
     def async_get_entity_id(
         self, domain: str, platform: str, unique_id: str
-    ) -> Optional[str]:
+    ) -> str | None:
         """Check if an entity_id is currently registered."""
         return self._index.get((domain, platform, unique_id))
 
@@ -196,13 +203,17 @@ class EntityRegistry:
         self,
         domain: str,
         suggested_object_id: str,
-        known_object_ids: Optional[Iterable[str]] = None,
+        known_object_ids: Iterable[str] | None = None,
     ) -> str:
         """Generate an entity ID that does not conflict.
 
         Conflicts checked against registered and currently existing entities.
         """
         preferred_string = f"{domain}.{slugify(suggested_object_id)}"
+
+        if len(domain) > MAX_LENGTH_STATE_DOMAIN:
+            raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
+
         test_string = preferred_string
         if not known_object_ids:
             known_object_ids = {}
@@ -216,6 +227,11 @@ class EntityRegistry:
             tries += 1
             test_string = f"{preferred_string}_{tries}"
 
+        if len(test_string) > MAX_LENGTH_STATE_ENTITY_ID:
+            raise MaxLengthExceeded(
+                test_string, "generated_entity_id", MAX_LENGTH_STATE_ENTITY_ID
+            )
+
         return test_string
 
     @callback
@@ -226,20 +242,20 @@ class EntityRegistry:
         unique_id: str,
         *,
         # To influence entity ID generation
-        suggested_object_id: Optional[str] = None,
-        known_object_ids: Optional[Iterable[str]] = None,
+        suggested_object_id: str | None = None,
+        known_object_ids: Iterable[str] | None = None,
         # To disable an entity if it gets created
-        disabled_by: Optional[str] = None,
+        disabled_by: str | None = None,
         # Data that we want entry to have
-        config_entry: Optional["ConfigEntry"] = None,
-        device_id: Optional[str] = None,
-        area_id: Optional[str] = None,
-        capabilities: Optional[Dict[str, Any]] = None,
-        supported_features: Optional[int] = None,
-        device_class: Optional[str] = None,
-        unit_of_measurement: Optional[str] = None,
-        original_name: Optional[str] = None,
-        original_icon: Optional[str] = None,
+        config_entry: ConfigEntry | None = None,
+        device_id: str | None = None,
+        area_id: str | None = None,
+        capabilities: Mapping[str, Any] | None = None,
+        supported_features: int | None = None,
+        device_class: str | None = None,
+        unit_of_measurement: str | None = None,
+        original_name: str | None = None,
+        original_icon: str | None = None,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
@@ -276,7 +292,7 @@ class EntityRegistry:
         if (
             disabled_by is None
             and config_entry
-            and config_entry.system_options.disable_new_entities
+            and config_entry.pref_disable_new_entities
         ):
             disabled_by = DISABLED_INTEGRATION
 
@@ -363,12 +379,12 @@ class EntityRegistry:
         self,
         entity_id: str,
         *,
-        name: Union[str, None, UndefinedType] = UNDEFINED,
-        icon: Union[str, None, UndefinedType] = UNDEFINED,
-        area_id: Union[str, None, UndefinedType] = UNDEFINED,
-        new_entity_id: Union[str, UndefinedType] = UNDEFINED,
-        new_unique_id: Union[str, UndefinedType] = UNDEFINED,
-        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        name: str | None | UndefinedType = UNDEFINED,
+        icon: str | None | UndefinedType = UNDEFINED,
+        area_id: str | None | UndefinedType = UNDEFINED,
+        new_entity_id: str | UndefinedType = UNDEFINED,
+        new_unique_id: str | UndefinedType = UNDEFINED,
+        disabled_by: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Update properties of an entity."""
         return self._async_update_entity(
@@ -386,20 +402,20 @@ class EntityRegistry:
         self,
         entity_id: str,
         *,
-        name: Union[str, None, UndefinedType] = UNDEFINED,
-        icon: Union[str, None, UndefinedType] = UNDEFINED,
-        config_entry_id: Union[str, None, UndefinedType] = UNDEFINED,
-        new_entity_id: Union[str, UndefinedType] = UNDEFINED,
-        device_id: Union[str, None, UndefinedType] = UNDEFINED,
-        area_id: Union[str, None, UndefinedType] = UNDEFINED,
-        new_unique_id: Union[str, UndefinedType] = UNDEFINED,
-        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
-        capabilities: Union[Dict[str, Any], None, UndefinedType] = UNDEFINED,
-        supported_features: Union[int, UndefinedType] = UNDEFINED,
-        device_class: Union[str, None, UndefinedType] = UNDEFINED,
-        unit_of_measurement: Union[str, None, UndefinedType] = UNDEFINED,
-        original_name: Union[str, None, UndefinedType] = UNDEFINED,
-        original_icon: Union[str, None, UndefinedType] = UNDEFINED,
+        name: str | None | UndefinedType = UNDEFINED,
+        icon: str | None | UndefinedType = UNDEFINED,
+        config_entry_id: str | None | UndefinedType = UNDEFINED,
+        new_entity_id: str | UndefinedType = UNDEFINED,
+        device_id: str | None | UndefinedType = UNDEFINED,
+        area_id: str | None | UndefinedType = UNDEFINED,
+        new_unique_id: str | UndefinedType = UNDEFINED,
+        disabled_by: str | None | UndefinedType = UNDEFINED,
+        capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
+        supported_features: int | UndefinedType = UNDEFINED,
+        device_class: str | None | UndefinedType = UNDEFINED,
+        unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        original_name: str | None | UndefinedType = UNDEFINED,
+        original_icon: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -479,7 +495,7 @@ class EntityRegistry:
             old_conf_load_func=load_yaml,
             old_conf_migrate_func=_async_migrate,
         )
-        entities: Dict[str, RegistryEntry] = OrderedDict()
+        entities: dict[str, RegistryEntry] = OrderedDict()
 
         if data is not None:
             for entity in data["entities"]:
@@ -516,7 +532,7 @@ class EntityRegistry:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> Dict[str, Any]:
+    def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
         data = {}
 
@@ -581,12 +597,12 @@ class EntityRegistry:
 
 
 @callback
-def async_get(hass: HomeAssistantType) -> EntityRegistry:
+def async_get(hass: HomeAssistant) -> EntityRegistry:
     """Get entity registry."""
     return cast(EntityRegistry, hass.data[DATA_REGISTRY])
 
 
-async def async_load(hass: HomeAssistantType) -> None:
+async def async_load(hass: HomeAssistant) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = EntityRegistry(hass)
@@ -594,7 +610,7 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 
 @bind_hass
-async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
+async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
     """Get entity registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.
@@ -605,7 +621,7 @@ async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
 @callback
 def async_entries_for_device(
     registry: EntityRegistry, device_id: str, include_disabled_entities: bool = False
-) -> List[RegistryEntry]:
+) -> list[RegistryEntry]:
     """Return entries that match a device."""
     return [
         entry
@@ -618,7 +634,7 @@ def async_entries_for_device(
 @callback
 def async_entries_for_area(
     registry: EntityRegistry, area_id: str
-) -> List[RegistryEntry]:
+) -> list[RegistryEntry]:
     """Return entries that match an area."""
     return [entry for entry in registry.entities.values() if entry.area_id == area_id]
 
@@ -626,7 +642,7 @@ def async_entries_for_area(
 @callback
 def async_entries_for_config_entry(
     registry: EntityRegistry, config_entry_id: str
-) -> List[RegistryEntry]:
+) -> list[RegistryEntry]:
     """Return entries that match a config entry."""
     return [
         entry
@@ -637,7 +653,7 @@ def async_entries_for_config_entry(
 
 @callback
 def async_config_entry_disabled_by_changed(
-    registry: EntityRegistry, config_entry: "ConfigEntry"
+    registry: EntityRegistry, config_entry: ConfigEntry
 ) -> None:
     """Handle a config entry being disabled or enabled.
 
@@ -665,7 +681,7 @@ def async_config_entry_disabled_by_changed(
         )
 
 
-async def _async_migrate(entities: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+async def _async_migrate(entities: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Migrate the YAML config file to storage helper format."""
     return {
         "entities": [
@@ -675,9 +691,7 @@ async def _async_migrate(entities: Dict[str, Any]) -> Dict[str, List[Dict[str, A
 
 
 @callback
-def async_setup_entity_restore(
-    hass: HomeAssistantType, registry: EntityRegistry
-) -> None:
+def async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Set up the entity restore mechanism."""
 
     @callback
@@ -719,9 +733,9 @@ def async_setup_entity_restore(
 
 
 async def async_migrate_entries(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry_id: str,
-    entry_callback: Callable[[RegistryEntry], Optional[dict]],
+    entry_callback: Callable[[RegistryEntry], dict | None],
 ) -> None:
     """Migrator of unique IDs."""
     ent_reg = await async_get_registry(hass)

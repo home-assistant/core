@@ -5,9 +5,18 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
+            "invalid_pin": "PIN non valido",
+            "pairing_failure": "Impossibile eseguire l'associazione: {error_id}",
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "Codice PIN"
+                },
+                "description": "Inserire il PIN visualizzato sul televisore",
+                "title": "Associa"
+            },
             "user": {
                 "data": {
                     "api_version": "Versione API",
@@ -19,6 +28,15 @@
     "device_automation": {
         "trigger_type": {
             "turn_on": "Si richiede l'accensione del dispositivo"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Consenti l'utilizzo del servizio di notifica dei dati."
+                }
+            }
         }
     }
 }

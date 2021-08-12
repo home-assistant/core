@@ -4,8 +4,16 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
     CONF_NAME,
@@ -20,6 +28,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -83,7 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([integral])
 
 
-class IntegrationSensor(RestoreEntity):
+class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
     def __init__(
@@ -115,16 +124,30 @@ class IntegrationSensor(RestoreEntity):
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
+        self._attr_last_reset = dt_util.utcnow()
         if state:
             try:
                 self._state = Decimal(state.state)
-            except ValueError as err:
+            except (DecimalException, ValueError) as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
+            else:
+                last_reset = dt_util.parse_datetime(
+                    state.attributes.get(ATTR_LAST_RESET, "")
+                )
+                self._attr_last_reset = (
+                    last_reset if last_reset else dt_util.utc_from_timestamp(0)
+                )
+                self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+
+                self._unit_of_measurement = state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
 
         @callback
         def calc_integration(event):
@@ -133,8 +156,8 @@ class IntegrationSensor(RestoreEntity):
             new_state = event.data.get("new_state")
             if (
                 old_state is None
-                or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-                or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
 
@@ -143,7 +166,11 @@ class IntegrationSensor(RestoreEntity):
                 self._unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
                 )
-
+            if (
+                self.device_class is None
+                and new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+            ):
+                self._attr_device_class = DEVICE_CLASS_ENERGY
             try:
                 # integration as the Riemann integral of previous measures.
                 area = 0
@@ -186,12 +213,12 @@ class IntegrationSensor(RestoreEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return round(self._state, self._round_digits)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -201,7 +228,7 @@ class IntegrationSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_SOURCE_ID: self._sensor_source_id}
 

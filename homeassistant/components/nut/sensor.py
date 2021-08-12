@@ -1,8 +1,15 @@
 """Provides a sensor to track various status aspects of a UPS."""
+from __future__ import annotations
+
 import logging
 
+from homeassistant.components.nut import PyNUTData
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import ATTR_STATE, CONF_RESOURCES, STATE_UNKNOWN
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     COORDINATOR,
@@ -15,11 +22,7 @@ from .const import (
     PYNUT_MODEL,
     PYNUT_NAME,
     PYNUT_UNIQUE_ID,
-    SENSOR_DEVICE_CLASS,
-    SENSOR_ICON,
-    SENSOR_NAME,
     SENSOR_TYPES,
-    SENSOR_UNIT,
     STATE_TYPES,
 )
 
@@ -59,7 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     coordinator,
                     data,
                     name.title(),
-                    sensor_type,
+                    SENSOR_TYPES[sensor_type],
                     unique_id,
                     manufacturer,
                     model,
@@ -76,31 +79,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NUTSensor(CoordinatorEntity):
+class NUTSensor(CoordinatorEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     def __init__(
         self,
-        coordinator,
-        data,
-        name,
-        sensor_type,
-        unique_id,
-        manufacturer,
-        model,
-        firmware,
-    ):
+        coordinator: DataUpdateCoordinator,
+        data: PyNUTData,
+        name: str,
+        sensor_description: SensorEntityDescription,
+        unique_id: str,
+        manufacturer: str | None,
+        model: str | None,
+        firmware: str | None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._type = sensor_type
+        self.entity_description = sensor_description
         self._manufacturer = manufacturer
         self._firmware = firmware
         self._model = model
         self._device_name = name
-        self._name = f"{name} {SENSOR_TYPES[sensor_type][SENSOR_NAME]}"
-        self._unit = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
         self._data = data
         self._unique_id = unique_id
+
+        self._attr_name = f"{name} {sensor_description.name}"
 
     @property
     def device_info(self):
@@ -124,43 +127,19 @@ class NUTSensor(CoordinatorEntity):
         """Sensor Unique id."""
         if not self._unique_id:
             return None
-        return f"{self._unique_id}_{self._type}"
+        return f"{self._unique_id}_{self.entity_description.key}"
 
     @property
-    def name(self):
-        """Return the name of the UPS sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        if SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]:
-            # The UI will assign an icon
-            # if it has a class
-            return None
-        return SENSOR_TYPES[self._type][SENSOR_ICON]
-
-    @property
-    def device_class(self):
-        """Device class of the sensor."""
-        return SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return entity state from ups."""
         if not self._data.status:
             return None
-        if self._type == KEY_STATUS_DISPLAY:
+        if self.entity_description.key == KEY_STATUS_DISPLAY:
             return _format_display_state(self._data.status)
-        return self._data.status.get(self._type)
+        return self._data.status.get(self.entity_description.key)
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor attributes."""
         return {ATTR_STATE: _format_display_state(self._data.status)}
 

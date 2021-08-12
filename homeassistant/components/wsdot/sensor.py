@@ -6,7 +6,7 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_NAME,
@@ -17,7 +17,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class WashingtonStateTransportSensor(Entity):
+class WashingtonStateTransportSensor(SensorEntity):
     """
     Sensor that reads the WSDOT web API.
 
@@ -73,6 +72,8 @@ class WashingtonStateTransportSensor(Entity):
     mountain pass conditions, and more. Subclasses of this
     can read them and make them available.
     """
+
+    _attr_icon = ICON
 
     def __init__(self, name, access_code):
         """Initialize the sensor."""
@@ -87,18 +88,15 @@ class WashingtonStateTransportSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
 
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
+
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, name, access_code, travel_time_id):
         """Construct a travel time sensor."""
@@ -120,26 +118,21 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._state = self._data.get(ATTR_CURRENT_TIME)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         if self._data is not None:
             attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-            for key in [
+            for key in (
                 ATTR_AVG_TIME,
                 ATTR_NAME,
                 ATTR_DESCRIPTION,
                 ATTR_TRAVEL_TIME_ID,
-            ]:
+            ):
                 attrs[key] = self._data.get(key)
             attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(
                 self._data.get(ATTR_TIME_UPDATED)
             )
             return attrs
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return TIME_MINUTES
 
 
 def _parse_wsdot_timestamp(timestamp):

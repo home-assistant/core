@@ -7,16 +7,16 @@ import math
 from Adafruit_SHT31 import SHT31
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.util import Throttle
 
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devs = []
     for sensor_type, sensor_class in sensor_classes.items():
-        name = "{} {}".format(config.get(CONF_NAME), sensor_type.capitalize())
+        name = f"{config.get(CONF_NAME)} {sensor_type.capitalize()}"
         devs.append(sensor_class(sensor_client, name))
 
     add_entities(devs)
@@ -93,7 +93,7 @@ class SHTClient:
         self.humidity = humidity
 
 
-class SHTSensor(Entity):
+class SHTSensor(SensorEntity):
     """An abstract SHTSensor, can be either temperature or humidity."""
 
     def __init__(self, sensor, name):
@@ -108,7 +108,7 @@ class SHTSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -120,8 +120,10 @@ class SHTSensor(Entity):
 class SHTSensorTemperature(SHTSensor):
     """Representation of a temperature sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.hass.config.units.temperature_unit
 
@@ -139,7 +141,7 @@ class SHTSensorHumidity(SHTSensor):
     """Representation of a humidity sensor."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 

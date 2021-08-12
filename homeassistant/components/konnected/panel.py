@@ -376,7 +376,7 @@ class AlarmPanel:
             self.async_desired_settings_payload()
             != self.async_current_settings_payload()
         ):
-            _LOGGER.info("pushing settings to device %s", self.device_id)
+            _LOGGER.info("Pushing settings to device %s", self.device_id)
             await self.client.put_settings(**self.async_desired_settings_payload())
 
 

@@ -1,47 +1,56 @@
 """MySensors constants."""
+from __future__ import annotations
+
 from collections import defaultdict
-from typing import Dict, List, Literal, Set, Tuple
+from typing import Final, Literal, Tuple, TypedDict
 
-ATTR_DEVICES: str = "devices"
-ATTR_GATEWAY_ID: str = "gateway_id"
+ATTR_DEVICES: Final = "devices"
+ATTR_GATEWAY_ID: Final = "gateway_id"
 
-CONF_BAUD_RATE: str = "baud_rate"
-CONF_DEVICE: str = "device"
-CONF_GATEWAYS: str = "gateways"
-CONF_NODES: str = "nodes"
-CONF_PERSISTENCE: str = "persistence"
-CONF_PERSISTENCE_FILE: str = "persistence_file"
-CONF_RETAIN: str = "retain"
-CONF_TCP_PORT: str = "tcp_port"
-CONF_TOPIC_IN_PREFIX: str = "topic_in_prefix"
-CONF_TOPIC_OUT_PREFIX: str = "topic_out_prefix"
-CONF_VERSION: str = "version"
-CONF_GATEWAY_TYPE: str = "gateway_type"
+CONF_BAUD_RATE: Final = "baud_rate"
+CONF_DEVICE: Final = "device"
+CONF_GATEWAYS: Final = "gateways"
+CONF_NODES: Final = "nodes"
+CONF_PERSISTENCE: Final = "persistence"
+CONF_PERSISTENCE_FILE: Final = "persistence_file"
+CONF_RETAIN: Final = "retain"
+CONF_TCP_PORT: Final = "tcp_port"
+CONF_TOPIC_IN_PREFIX: Final = "topic_in_prefix"
+CONF_TOPIC_OUT_PREFIX: Final = "topic_out_prefix"
+CONF_VERSION: Final = "version"
+CONF_GATEWAY_TYPE: Final = "gateway_type"
 ConfGatewayType = Literal["Serial", "TCP", "MQTT"]
 CONF_GATEWAY_TYPE_SERIAL: ConfGatewayType = "Serial"
 CONF_GATEWAY_TYPE_TCP: ConfGatewayType = "TCP"
 CONF_GATEWAY_TYPE_MQTT: ConfGatewayType = "MQTT"
-CONF_GATEWAY_TYPE_ALL: List[str] = [
+CONF_GATEWAY_TYPE_ALL: list[str] = [
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_GATEWAY_TYPE_TCP,
 ]
 
-
-DOMAIN: str = "mysensors"
-MYSENSORS_GATEWAY_READY: str = "mysensors_gateway_ready_{}"
+DOMAIN: Final = "mysensors"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
-MYSENSORS_GATEWAYS: str = "mysensors_gateways"
-PLATFORM: str = "platform"
-SCHEMA: str = "schema"
+MYSENSORS_GATEWAYS: Final = "mysensors_gateways"
+PLATFORM: Final = "platform"
+SCHEMA: Final = "schema"
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
-MYSENSORS_DISCOVERY = "mysensors_discovery_{}_{}"
-MYSENSORS_ON_UNLOAD = "mysensors_on_unload_{}"
-TYPE: str = "type"
+MYSENSORS_DISCOVERY: str = "mysensors_discovery_{}_{}"
+MYSENSORS_ON_UNLOAD: str = "mysensors_on_unload_{}"
+TYPE: Final = "type"
 UPDATE_DELAY: float = 0.1
 
-SERVICE_SEND_IR_CODE: str = "send_ir_code"
+
+class DiscoveryInfo(TypedDict):
+    """Represent the discovery info type for mysensors platforms."""
+
+    devices: list[DevId]
+    name: str  # CONF_NAME is used in the notify base integration.
+    gateway_id: GatewayId
+
+
+SERVICE_SEND_IR_CODE: Final = "send_ir_code"
 
 SensorType = str
 # S_DOOR, S_MOTION, S_SMOKE, ...
@@ -63,7 +72,7 @@ DevId = Tuple[GatewayId, int, int, int]
 # The MySensors integration brings these together by creating an entity for every v_type of every child_id of every node.
 # The DevId tuple perfectly captures this.
 
-BINARY_SENSOR_TYPES: Dict[SensorType, Set[ValueType]] = {
+BINARY_SENSOR_TYPES: dict[SensorType, set[ValueType]] = {
     "S_DOOR": {"V_TRIPPED"},
     "S_MOTION": {"V_TRIPPED"},
     "S_SMOKE": {"V_TRIPPED"},
@@ -74,23 +83,23 @@ BINARY_SENSOR_TYPES: Dict[SensorType, Set[ValueType]] = {
     "S_MOISTURE": {"V_TRIPPED"},
 }
 
-CLIMATE_TYPES: Dict[SensorType, Set[ValueType]] = {"S_HVAC": {"V_HVAC_FLOW_STATE"}}
+CLIMATE_TYPES: dict[SensorType, set[ValueType]] = {"S_HVAC": {"V_HVAC_FLOW_STATE"}}
 
-COVER_TYPES: Dict[SensorType, Set[ValueType]] = {
+COVER_TYPES: dict[SensorType, set[ValueType]] = {
     "S_COVER": {"V_DIMMER", "V_PERCENTAGE", "V_LIGHT", "V_STATUS"}
 }
 
-DEVICE_TRACKER_TYPES: Dict[SensorType, Set[ValueType]] = {"S_GPS": {"V_POSITION"}}
+DEVICE_TRACKER_TYPES: dict[SensorType, set[ValueType]] = {"S_GPS": {"V_POSITION"}}
 
-LIGHT_TYPES: Dict[SensorType, Set[ValueType]] = {
+LIGHT_TYPES: dict[SensorType, set[ValueType]] = {
     "S_DIMMER": {"V_DIMMER", "V_PERCENTAGE"},
     "S_RGB_LIGHT": {"V_RGB"},
     "S_RGBW_LIGHT": {"V_RGBW"},
 }
 
-NOTIFY_TYPES: Dict[SensorType, Set[ValueType]] = {"S_INFO": {"V_TEXT"}}
+NOTIFY_TYPES: dict[SensorType, set[ValueType]] = {"S_INFO": {"V_TEXT"}}
 
-SENSOR_TYPES: Dict[SensorType, Set[ValueType]] = {
+SENSOR_TYPES: dict[SensorType, set[ValueType]] = {
     "S_SOUND": {"V_LEVEL"},
     "S_VIBRATION": {"V_LEVEL"},
     "S_MOISTURE": {"V_LEVEL"},
@@ -118,7 +127,7 @@ SENSOR_TYPES: Dict[SensorType, Set[ValueType]] = {
     "S_DUST": {"V_DUST_LEVEL", "V_LEVEL"},
 }
 
-SWITCH_TYPES: Dict[SensorType, Set[ValueType]] = {
+SWITCH_TYPES: dict[SensorType, set[ValueType]] = {
     "S_LIGHT": {"V_LIGHT"},
     "S_BINARY": {"V_STATUS"},
     "S_DOOR": {"V_ARMED"},
@@ -135,7 +144,7 @@ SWITCH_TYPES: Dict[SensorType, Set[ValueType]] = {
 }
 
 
-PLATFORM_TYPES: Dict[str, Dict[SensorType, Set[ValueType]]] = {
+PLATFORM_TYPES: dict[str, dict[SensorType, set[ValueType]]] = {
     "binary_sensor": BINARY_SENSOR_TYPES,
     "climate": CLIMATE_TYPES,
     "cover": COVER_TYPES,
@@ -146,13 +155,13 @@ PLATFORM_TYPES: Dict[str, Dict[SensorType, Set[ValueType]]] = {
     "switch": SWITCH_TYPES,
 }
 
-FLAT_PLATFORM_TYPES: Dict[Tuple[str, SensorType], Set[ValueType]] = {
+FLAT_PLATFORM_TYPES: dict[tuple[str, SensorType], set[ValueType]] = {
     (platform, s_type_name): v_type_name
     for platform, platform_types in PLATFORM_TYPES.items()
     for s_type_name, v_type_name in platform_types.items()
 }
 
-TYPE_TO_PLATFORMS: Dict[SensorType, List[str]] = defaultdict(list)
+TYPE_TO_PLATFORMS: dict[SensorType, list[str]] = defaultdict(list)
 
 for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:

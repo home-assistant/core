@@ -5,7 +5,7 @@ import ssl
 from unittest.mock import patch
 
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.util.dt import utcnow
 
@@ -81,7 +81,7 @@ async def test_async_setup_entry_host_unavailable(hass):
         assert await hass.config_entries.async_setup(entry.entry_id) is False
         await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
     next_update = utcnow() + timedelta(seconds=45)
     async_fire_time_changed(hass, next_update)

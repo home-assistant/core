@@ -9,7 +9,7 @@
             "snmp_error": "SNMP-server on v\u00e4lja l\u00fclitatud v\u00f5i printerit ei toetata.",
             "wrong_host": "Sobimatu hostinimi v\u00f5i IP-aadress."
         },
-        "flow_title": "Brotheri printer: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {

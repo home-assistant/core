@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "pH-forskyvning (positiv eller negativ)",
                     "polling_interval": "Avstemningsintervall (i sekunder)"
                 }
             }

@@ -1,10 +1,10 @@
 """Provides device triggers for lutron caseta."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -33,7 +33,7 @@ from .const import (
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
-LUTRON_BUTTON_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+LUTRON_BUTTON_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(SUPPORTED_INPUTS_EVENTS_TYPES),
     }
@@ -225,7 +225,7 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     return schema(config)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for lutron caseta devices."""
     triggers = []
 

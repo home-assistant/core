@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_ALIAS,
+    CONF_BASE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -21,20 +22,13 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
-    SENSOR_NAME,
     SENSOR_TYPES,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-
-
-SENSOR_DICT = {
-    sensor_id: sensor_spec[SENSOR_NAME]
-    for sensor_id, sensor_spec in SENSOR_TYPES.items()
-}
 
 
 def _base_schema(discovery_info):
@@ -58,15 +52,15 @@ def _resource_schema_base(available_resources, selected_resources):
     """Resource selection schema."""
 
     known_available_resources = {
-        sensor_id: sensor[SENSOR_NAME]
-        for sensor_id, sensor in SENSOR_TYPES.items()
+        sensor_id: sensor_desc.name
+        for sensor_id, sensor_desc in SENSOR_TYPES.items()
         if sensor_id in available_resources
     }
 
     if KEY_STATUS in known_available_resources:
         known_available_resources[KEY_STATUS_DISPLAY] = SENSOR_TYPES[
             KEY_STATUS_DISPLAY
-        ][SENSOR_NAME]
+        ].name
 
     return {
         vol.Required(CONF_RESOURCES, default=selected_resources): cv.multi_select(
@@ -115,7 +109,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Network UPS Tools (NUT)."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the nut config flow."""
@@ -211,10 +204,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, config)
         except CannotConnect:
-            errors["base"] = "cannot_connect"
+            errors[CONF_BASE] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            errors[CONF_BASE] = "unknown"
         return info, errors
 
     @staticmethod
@@ -227,7 +220,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for nut."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -241,7 +234,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
 
-        info = await validate_input(self.hass, self.config_entry.data)
+        errors = {}
+        try:
+            info = await validate_input(self.hass, self.config_entry.data)
+        except CannotConnect:
+            errors[CONF_BASE] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors[CONF_BASE] = "unknown"
+
+        if errors:
+            return self.async_show_form(step_id="abort", errors=errors)
 
         base_schema = _resource_schema_base(info["available_resources"], resources)
         base_schema[
@@ -249,9 +252,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ] = cv.positive_int
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(base_schema),
+            step_id="init", data_schema=vol.Schema(base_schema), errors=errors
         )
+
+    async def async_step_abort(self, user_input=None):
+        """Abort options flow."""
+        return self.async_create_entry(title="", data=self.config_entry.options)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

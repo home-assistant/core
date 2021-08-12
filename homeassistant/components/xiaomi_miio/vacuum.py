@@ -122,7 +122,7 @@ STATE_CODE_TO_STATE = {
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Miio configuration from YAML."""
     _LOGGER.warning(
-        "Loading Xiaomi Miio Vacuum via platform setup is deprecated. Please remove it from your configuration."
+        "Loading Xiaomi Miio Vacuum via platform setup is deprecated; Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -150,7 +150,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         mirobo = MiroboVacuum(name, vacuum, config_entry, unique_id)
         entities.append(mirobo)
 
-        platform = entity_platform.current_platform.get()
+        platform = entity_platform.async_get_current_platform()
 
         platform.async_register_entity_service(
             SERVICE_START_REMOTE_CONTROL,
@@ -305,7 +305,7 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         ]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         attrs = {}
         if self.vacuum_state is not None:
@@ -507,7 +507,11 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
 
         # Fetch timers separately, see #38285
         try:
-            self._timers = self._device.timer()
+            # Do not try this if the first fetch timed out.
+            # Two timeouts take longer than 10 seconds and trigger a warning.
+            # See #52353
+            if self._available:
+                self._timers = self._device.timer()
         except DeviceException as exc:
             _LOGGER.debug(
                 "Unable to fetch timers, this may happen on some devices: %s", exc

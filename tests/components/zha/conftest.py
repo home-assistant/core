@@ -48,6 +48,15 @@ async def config_entry_fixture(hass):
             zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0"},
             zha_const.CONF_RADIO_TYPE: "ezsp",
         },
+        options={
+            zha_const.CUSTOM_CONFIGURATION: {
+                zha_const.ZHA_ALARM_OPTIONS: {
+                    zha_const.CONF_ALARM_ARM_REQUIRES_CODE: False,
+                    zha_const.CONF_ALARM_MASTER_CODE: "4321",
+                    zha_const.CONF_ALARM_FAILED_TRIES: 2,
+                }
+            }
+        },
     )
     entry.add_to_hass(hass)
     return entry

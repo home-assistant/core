@@ -9,7 +9,7 @@
             "default": "Plaato {device_type} med navnet **{device_name}** ble konfigurert!"
         },
         "error": {
-            "invalid_webhook_device": "Du har valgt en enhet som ikke st\u00f8tter sending av data til en webhook. Den er kun tilgjengelig for Airlock",
+            "invalid_webhook_device": "Du har valgt en enhet som ikke st\u00f8tter sending av data til en webhook. Den er bare tilgjengelig for luftsluse",
             "no_api_method": "Du m\u00e5 legge til et godkjenningstoken eller velge webhook",
             "no_auth_token": "Du m\u00e5 legge til et godkjenningstoken"
         },

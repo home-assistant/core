@@ -5,16 +5,10 @@
         },
         "error": {
             "cannot_connect": "\u00dchendumine nurjus",
-            "invalid_auth": "Tuvastamise viga",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {
-                "data": {
-                    "host": "Host",
-                    "password": "Salas\u00f5na",
-                    "username": "Kasutajanimi"
-                },
                 "description": "Kas seadistada Mullvad VPN sidumine?"
             }
         }

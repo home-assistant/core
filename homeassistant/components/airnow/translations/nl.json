@@ -14,8 +14,10 @@
                 "data": {
                     "api_key": "API-sleutel",
                     "latitude": "Breedtegraad",
-                    "longitude": "Lengtegraad"
+                    "longitude": "Lengtegraad",
+                    "radius": "Stationsradius (mijl; optioneel)"
                 },
+                "description": "AirNow luchtkwaliteit integratie opzetten. Om een API sleutel te genereren ga naar https://docs.airnowapi.org/account/request/",
                 "title": "AirNow"
             }
         }

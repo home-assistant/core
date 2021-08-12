@@ -1,6 +1,5 @@
 """Sensor platform for mobile_app."""
-from functools import partial
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -49,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
     @callback
-    def handle_sensor_registration(webhook_id, data):
+    def handle_sensor_registration(data):
         if data[CONF_WEBHOOK_ID] != webhook_id:
             return
 
@@ -67,19 +66,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(
         hass,
         f"{DOMAIN}_{ENTITY_TYPE}_register",
-        partial(handle_sensor_registration, webhook_id),
+        handle_sensor_registration,
     )
 
 
-class MobileAppSensor(MobileAppEntity):
+class MobileAppSensor(MobileAppEntity, SensorEntity):
     """Representation of an mobile app sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._config[ATTR_SENSOR_STATE]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._config.get(ATTR_SENSOR_UOM)

@@ -1,5 +1,7 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from haphilipsjs import ConnectionFailure
 import voluptuous as vol
@@ -41,9 +43,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
@@ -102,7 +103,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):
@@ -122,12 +123,14 @@ async def async_setup_entry(
 class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_device_class = DEVICE_CLASS_TV
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
-        system: Dict[str, Any],
+        system: dict[str, Any],
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
         self._coordinator = coordinator
@@ -137,10 +140,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._system = system
         self._unique_id = unique_id
         self._state = STATE_OFF
-        self._media_content_type: Optional[str] = None
-        self._media_content_id: Optional[str] = None
-        self._media_title: Optional[str] = None
-        self._media_channel: Optional[str] = None
+        self._media_content_type: str | None = None
+        self._media_content_id: str | None = None
+        self._media_title: str | None = None
+        self._media_channel: str | None = None
 
         super().__init__(coordinator)
         self._update_from_coordinator()
@@ -168,9 +171,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Get the device state. An exception means OFF state."""
-        if self._tv.on:
-            if self._tv.powerstate == "On" or self._tv.powerstate is None:
-                return STATE_ON
+        if self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None):
+            return STATE_ON
         return STATE_OFF
 
     @property
@@ -316,11 +318,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             return app.get("label")
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TV
-
-    @property
     def unique_id(self):
         """Return unique identifier if known."""
         return self._unique_id
@@ -370,9 +367,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                     media_content_type=MEDIA_TYPE_CHANNEL,
                     can_play=True,
                     can_expand=False,
-                    thumbnail=self.get_browse_image_url(
-                        MEDIA_TYPE_APP, channel_id, media_image_id=None
-                    ),
                 )
                 for channel_id, channel in self._tv.channels.items()
             ]
@@ -410,9 +404,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                         media_content_type=MEDIA_TYPE_CHANNEL,
                         can_play=True,
                         can_expand=False,
-                        thumbnail=self.get_browse_image_url(
-                            MEDIA_TYPE_APP, channel, media_image_id=None
-                        ),
                     )
                     for channel in favorites
                 ]

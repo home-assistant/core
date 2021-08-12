@@ -1,10 +1,10 @@
 """Provides device triggers for NEW_NAME."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -24,7 +24,7 @@ from . import DOMAIN
 # TODO specify your supported trigger types.
 TRIGGER_TYPES = {"turned_on", "turned_off"}
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -32,7 +32,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for NEW_NAME devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -51,24 +51,14 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
 
         # Add triggers for each entity that belongs to this integration
         # TODO add your own triggers.
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_on",
-            }
-        )
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_off",
-            }
-        )
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+        triggers.append({**base_trigger, CONF_TYPE: "turned_on"})
+        triggers.append({**base_trigger, CONF_TYPE: "turned_off"})
 
     return triggers
 

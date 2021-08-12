@@ -5,6 +5,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    SensorEntity,
 )
 from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -58,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
 
 
-class NumberEntity(WiffiEntity):
+class NumberEntity(WiffiEntity, SensorEntity):
     """Entity for wiffi metrics which have a number value."""
 
     def __init__(self, device, metric, options):
@@ -77,12 +78,12 @@ class NumberEntity(WiffiEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the entity."""
         return self._value
 
@@ -100,7 +101,7 @@ class NumberEntity(WiffiEntity):
         self.async_write_ha_state()
 
 
-class StringEntity(WiffiEntity):
+class StringEntity(WiffiEntity, SensorEntity):
     """Entity for wiffi metrics which have a string value."""
 
     def __init__(self, device, metric, options):
@@ -110,7 +111,7 @@ class StringEntity(WiffiEntity):
         self.reset_expiration_date()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the entity."""
         return self._value
 

@@ -8,11 +8,12 @@ import re
 import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -40,10 +41,12 @@ SUPPORTED_COMPONENTS = [
     "device_automation",
     "device_tracker",
     "fan",
+    "humidifier",
     "light",
     "lock",
     "number",
     "scene",
+    "select",
     "sensor",
     "switch",
     "tag",
@@ -79,9 +82,9 @@ class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
 
-async def async_start(
-    hass: HomeAssistantType, discovery_topic, config_entry=None
-) -> bool:
+async def async_start(  # noqa: C901
+    hass: HomeAssistant, discovery_topic, config_entry=None
+) -> None:
     """Start MQTT Discovery."""
     mqtt_integrations = {}
 
@@ -94,6 +97,10 @@ async def async_start(
         match = TOPIC_MATCHER.match(topic_trimmed)
 
         if not match:
+            if topic_trimmed.endswith("config"):
+                _LOGGER.warning(
+                    "Received message on illegal discovery topic '%s'", topic
+                )
             return
 
         component, node_id, object_id = match.groups()
@@ -269,14 +276,22 @@ async def async_start(
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
+                data = {
+                    "topic": msg.topic,
+                    "payload": msg.payload,
+                    "qos": msg.qos,
+                    "retain": msg.retain,
+                    "subscribed_topic": msg.subscribed_topic,
+                    "timestamp": msg.timestamp,
+                }
                 result = await hass.config_entries.flow.async_init(
-                    integration, context={"source": DOMAIN}, data=msg
+                    integration, context={"source": DOMAIN}, data=data
                 )
                 if (
                     result
-                    and result["type"] == "abort"
+                    and result["type"] == RESULT_TYPE_ABORT
                     and result["reason"]
-                    in ["already_configured", "single_instance_allowed"]
+                    in ("already_configured", "single_instance_allowed")
                 ):
                     unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
                     if unsub is None:
@@ -292,10 +307,8 @@ async def async_start(
                 0,
             )
 
-    return True
 
-
-async def async_stop(hass: HomeAssistantType) -> bool:
+async def async_stop(hass: HomeAssistant) -> None:
     """Stop MQTT Discovery."""
     if DISCOVERY_UNSUBSCRIBE in hass.data:
         for unsub in hass.data[DISCOVERY_UNSUBSCRIBE]:

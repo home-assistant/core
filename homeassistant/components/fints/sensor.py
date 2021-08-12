@@ -1,17 +1,18 @@
 """Read the balance of your bank accounts via FinTS."""
+from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.info("skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
         account_name = account_config.get(account.iban)
@@ -87,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
             _LOGGER.info(
-                "skipping holdings %s for bank %s", account.accountnumber, fints_name
+                "Skipping holdings %s for bank %s", account.accountnumber, fints_name
             )
             continue
 
@@ -108,7 +109,7 @@ class FinTsClient:
     Use this class as Context Manager to get the FinTS3Client object.
     """
 
-    def __init__(self, credentials: BankCredentials, name: str):
+    def __init__(self, credentials: BankCredentials, name: str) -> None:
         """Initialize a FinTsClient."""
         self._credentials = credentials
         self.name = name
@@ -154,7 +155,7 @@ class FinTsClient:
         return balance_accounts, holdings_accounts
 
 
-class FinTsAccount(Entity):
+class FinTsAccount(SensorEntity):
     """Sensor for a FinTS balance account.
 
     A balance account contains an amount of money (=balance). The amount may
@@ -165,48 +166,25 @@ class FinTsAccount(Entity):
         """Initialize a FinTs balance account."""
         self._client = client
         self._account = account
-        self._name = name
-        self._balance: float = None
-        self._currency: str = None
+        self._attr_name = name
+        self._attr_icon = ICON
+        self._attr_extra_state_attributes = {
+            ATTR_ACCOUNT: self._account.iban,
+            ATTR_ACCOUNT_TYPE: "balance",
+        }
+        if self._client.name:
+            self._attr_extra_state_attributes[ATTR_BANK] = self._client.name
 
     def update(self) -> None:
         """Get the current balance and currency for the account."""
         bank = self._client.client
         balance = bank.get_balance(self._account)
-        self._balance = balance.amount.amount
-        self._currency = balance.amount.currency
+        self._attr_native_value = balance.amount.amount
+        self._attr_native_unit_of_measurement = balance.amount.currency
         _LOGGER.debug("updated balance of account %s", self.name)
 
-    @property
-    def name(self) -> str:
-        """Friendly name of the sensor."""
-        return self._name
 
-    @property
-    def state(self) -> float:
-        """Return the balance of the account as state."""
-        return self._balance
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Use the currency as unit of measurement."""
-        return self._currency
-
-    @property
-    def device_state_attributes(self) -> dict:
-        """Additional attributes of the sensor."""
-        attributes = {ATTR_ACCOUNT: self._account.iban, ATTR_ACCOUNT_TYPE: "balance"}
-        if self._client.name:
-            attributes[ATTR_BANK] = self._client.name
-        return attributes
-
-    @property
-    def icon(self) -> str:
-        """Set the icon for the sensor."""
-        return ICON
-
-
-class FinTsHoldingsAccount(Entity):
+class FinTsHoldingsAccount(SensorEntity):
     """Sensor for a FinTS holdings account.
 
     A holdings account does not contain money but rather some financial
@@ -216,29 +194,20 @@ class FinTsHoldingsAccount(Entity):
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs holdings account."""
         self._client = client
-        self._name = name
+        self._attr_name = name
         self._account = account
-        self._holdings = []
-        self._total: float = None
+        self._holdings: list[Any] = []
+        self._attr_icon = ICON
+        self._attr_native_unit_of_measurement = "EUR"
 
     def update(self) -> None:
         """Get the current holdings for the account."""
         bank = self._client.client
         self._holdings = bank.get_holdings(self._account)
-        self._total = sum(h.total_value for h in self._holdings)
+        self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
-    def state(self) -> float:
-        """Return total market value as state."""
-        return self._total
-
-    @property
-    def icon(self) -> str:
-        """Set the icon for the sensor."""
-        return ICON
-
-    @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.
@@ -258,18 +227,3 @@ class FinTsHoldingsAccount(Entity):
             attributes[price_name] = holding.market_value
 
         return attributes
-
-    @property
-    def name(self) -> str:
-        """Friendly name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Get the unit of measurement.
-
-        Hardcoded to EUR, as the library does not provide the currency for the
-        holdings. And as FinTS is only used in Germany, most accounts will be
-        in EUR anyways.
-        """
-        return "EUR"

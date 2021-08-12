@@ -1,5 +1,5 @@
 """Support for HomematicIP Cloud cover devices."""
-from typing import Optional
+from __future__ import annotations
 
 from homematicip.aio.device import (
     AsyncBlindModule,
@@ -15,10 +15,13 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -30,7 +33,7 @@ HMIP_SLATS_CLOSED = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -64,6 +67,11 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP blind module."""
 
     @property
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_BLIND
+
+    @property
     def current_cover_position(self) -> int:
         """Return current position of cover."""
         if self._device.primaryShadingLevel is not None:
@@ -95,7 +103,7 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
         )
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._device.primaryShadingLevel is not None:
             return self._device.primaryShadingLevel == HMIP_COVER_CLOSED
@@ -152,6 +160,11 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         )
 
     @property
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_SHUTTER
+
+    @property
     def current_cover_position(self) -> int:
         """Return current position of cover."""
         if self._device.functionalChannels[self._channel].shutterLevel is not None:
@@ -168,7 +181,7 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         await self._device.set_shutter_level(level, self._channel)
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._device.functionalChannels[self._channel].shutterLevel is not None:
             return (
@@ -265,7 +278,12 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
         return door_state_to_position.get(self._device.doorState)
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_GARAGE
+
+    @property
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return self._device.doorState == DoorState.CLOSED
 
@@ -291,6 +309,11 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         super().__init__(hap, device, post, is_multi_channel=False)
 
     @property
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_SHUTTER
+
+    @property
     def current_cover_position(self) -> int:
         """Return current position of cover."""
         if self._device.shutterLevel is not None:
@@ -305,7 +328,7 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         return None
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._device.shutterLevel is not None:
             return self._device.shutterLevel == HMIP_COVER_CLOSED

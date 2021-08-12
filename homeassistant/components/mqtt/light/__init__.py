@@ -4,8 +4,9 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import light
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .. import DOMAIN, PLATFORMS
 from ..mixins import async_setup_entry_helper
@@ -31,7 +32,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT light through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)

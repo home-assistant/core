@@ -13,13 +13,13 @@ from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
-    "Adafruit-DHT",
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
+    "bme280spi",
     "bme680",
     "decora",
     "decora_wifi",
@@ -28,7 +28,6 @@ COMMENT_REQUIREMENTS = (
     "face_recognition",
     "i2csense",
     "opencv-python-headless",
-    "py_noaa",
     "pybluez",
     "pycups",
     "PySwitchbot",
@@ -66,10 +65,6 @@ urllib3>=1.24.3
 # Constrain H11 to ensure we get a new enough version to support non-rfc line endings
 h11>=0.12.0
 
-# Constrain httpcore to fix exception when connection dropped
-# https://github.com/encode/httpcore/issues/239
-httpcore>=0.12.3
-
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
@@ -77,6 +72,11 @@ httplib2>=0.19.0
 # gRPC 1.32+ currently causes issues on ARMv7, see:
 # https://github.com/home-assistant/core/issues/40148
 grpcio==1.31.0
+
+# Newer versions of cloud pubsub pin a higher version of grpcio. This can
+# be reverted when the grpcio pin is reverted, see:
+# https://github.com/home-assistant/core/issues/53427
+google-cloud-pubsub==2.1.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -89,6 +89,9 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
+# Temporary constraint on pandas, to unblock 2021.7 releases
+# until we have fixed the wheels builds for newer versions.
+pandas==1.3.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -96,6 +99,7 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "check-json",
     "no-commit-to-branch",
     "prettier",
+    "python-typing-update",
 )
 
 

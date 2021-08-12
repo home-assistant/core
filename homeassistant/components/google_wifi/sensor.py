@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     TIME_DAYS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class GoogleWifiSensor(Entity):
+class GoogleWifiSensor(SensorEntity):
     """Representation of a Google Wifi sensor."""
 
     def __init__(self, api, name, variable):
@@ -96,7 +95,7 @@ class GoogleWifiSensor(Entity):
         return self._var_icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._var_units
 
@@ -106,7 +105,7 @@ class GoogleWifiSensor(Entity):
         return self._api.available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -176,9 +175,10 @@ class GoogleWifiAPI:
                             sensor_value = "Online"
                         else:
                             sensor_value = "Offline"
-                    elif attr_key == ATTR_LOCAL_IP:
-                        if not self.raw_data["wan"]["online"]:
-                            sensor_value = STATE_UNKNOWN
+                    elif (
+                        attr_key == ATTR_LOCAL_IP and not self.raw_data["wan"]["online"]
+                    ):
+                        sensor_value = STATE_UNKNOWN
 
                     self.data[attr_key] = sensor_value
             except KeyError:

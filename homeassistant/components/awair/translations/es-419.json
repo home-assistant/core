@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "description": "Vuelva a ingresar su token de acceso de desarrollador de Awair."
+            },
+            "user": {
+                "description": "Debe registrarse para obtener un token de acceso de desarrollador de Awair en: https://developer.getawair.com/onboard/login"
+            }
+        }
+    }
+}

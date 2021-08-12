@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mailgun",
   "requirements": ["pymailgunner==1.4"],
   "dependencies": ["webhook"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

@@ -1,24 +1,18 @@
 """Helper methods for various modules."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
-from functools import wraps
+from functools import lru_cache, wraps
 import random
 import re
 import socket
 import string
 import threading
 from types import MappingProxyType
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    Iterable,
-    KeysView,
-    Optional,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, TypeVar
 
 import slugify as unicode_slug
 
@@ -85,9 +79,9 @@ def sanitize_path(path: str) -> str:
     return path
 
 
-def slugify(text: str, *, separator: str = "_") -> str:
+def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    if text == "":
+    if text == "" or text is None:
         return ""
     slug = unicode_slug.slugify(text, separator=separator)
     return "unknown" if slug == "" else slug
@@ -106,8 +100,8 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(
-    value: Optional[T], to_type: Callable[[T], U], default: Optional[U] = None
-) -> Optional[U]:
+    value: T | None, to_type: Callable[[T], U], default: U | None = None
+) -> U | None:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
@@ -117,7 +111,7 @@ def convert(
 
 
 def ensure_unique_string(
-    preferred_string: str, current_strings: Union[Iterable[str], KeysView[str]]
+    preferred_string: str, current_strings: Iterable[str] | KeysView[str]
 ) -> str:
     """Return a string that is not present in current_strings.
 
@@ -136,6 +130,7 @@ def ensure_unique_string(
 
 
 # Taken from: http://stackoverflow.com/a/11735897
+@lru_cache(maxsize=None)
 def get_local_ip() -> str:
     """Try to determine the local IP address of the machine."""
     try:
@@ -165,9 +160,6 @@ def get_random_string(length: int = 10) -> str:
 
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
-
-    # https://github.com/PyCQA/pylint/issues/2306
-    # pylint: disable=comparison-with-callable
 
     def __ge__(self, other: ENUM_T) -> bool:
         """Return the greater than element."""
@@ -213,7 +205,7 @@ class Throttle:
     """
 
     def __init__(
-        self, min_time: timedelta, limit_no_throttle: Optional[timedelta] = None
+        self, min_time: timedelta, limit_no_throttle: timedelta | None = None
     ) -> None:
         """Initialize the throttle."""
         self.min_time = min_time
@@ -253,7 +245,7 @@ class Throttle:
         )
 
         @wraps(method)
-        def wrapper(*args: Any, **kwargs: Any) -> Union[Callable, Coroutine]:
+        def wrapper(*args: Any, **kwargs: Any) -> Callable | Coroutine:
             """Wrap that allows wrapped to be called only once per min_time.
 
             If we cannot acquire the lock, it is running so return None.

@@ -5,8 +5,8 @@ import logging
 
 from aiohttp import ClientResponseError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, HTTP_TOO_MANY_REQUESTS
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -96,8 +96,8 @@ class HabitipyData:
         except ClientResponseError as error:
             if error.status == HTTP_TOO_MANY_REQUESTS:
                 _LOGGER.warning(
-                    "Sensor data update for %s has too many API requests."
-                    " Skipping the update.",
+                    "Sensor data update for %s has too many API requests;"
+                    " Skipping the update",
                     DOMAIN,
                 )
             else:
@@ -113,8 +113,8 @@ class HabitipyData:
             except ClientResponseError as error:
                 if error.status == HTTP_TOO_MANY_REQUESTS:
                     _LOGGER.warning(
-                        "Sensor data update for %s has too many API requests."
-                        " Skipping the update.",
+                        "Sensor data update for %s has too many API requests;"
+                        " Skipping the update",
                         DOMAIN,
                     )
                 else:
@@ -125,7 +125,7 @@ class HabitipyData:
                     )
 
 
-class HabitipySensor(Entity):
+class HabitipySensor(SensorEntity):
     """A generic Habitica sensor."""
 
     def __init__(self, name, sensor_name, updater):
@@ -155,17 +155,17 @@ class HabitipySensor(Entity):
         return f"{DOMAIN}_{self._name}_{self._sensor_name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._sensor_type.unit
 
 
-class HabitipyTaskSensor(Entity):
+class HabitipyTaskSensor(SensorEntity):
     """A Habitica task sensor."""
 
     def __init__(self, name, task_name, updater):
@@ -195,12 +195,12 @@ class HabitipyTaskSensor(Entity):
         return f"{DOMAIN}_{self._name}_{self._task_name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of all user tasks."""
         if self._updater.tasks is not None:
             all_received_tasks = self._updater.tasks
@@ -220,6 +220,6 @@ class HabitipyTaskSensor(Entity):
             return attrs
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._task_type.unit

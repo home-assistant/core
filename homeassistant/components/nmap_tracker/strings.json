@@ -1,0 +1,40 @@
+{
+  "title": "Nmap Tracker",
+  "options": {
+    "step": {
+        "init": {
+            "description": "[%key:component::nmap_tracker::config::step::user::description%]",
+            "data": {
+                "hosts": "[%key:component::nmap_tracker::config::step::user::data::hosts%]",
+                "home_interval": "[%key:component::nmap_tracker::config::step::user::data::home_interval%]",
+                "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
+                "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]",
+                "track_new_devices": "Track new devices",
+                "interval_seconds": "Scan interval"
+              }
+        }
+    },
+    "error": {
+      "invalid_hosts": "[%key:component::nmap_tracker::config::error::invalid_hosts%]"
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description":"Configure hosts to be scanned by Nmap. Network address and excludes can be IP Addresses (192.168.1.1), IP Networks (192.168.0.0/24) or IP Ranges (192.168.1.0-32).",
+        "data": {
+          "hosts": "Network addresses (comma seperated) to scan",
+          "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
+          "exclude": "Network addresses (comma seperated) to exclude from scanning",
+          "scan_options": "Raw configurable scan options for Nmap"
+        }
+      }
+    },
+    "error": {
+      "invalid_hosts": "Invalid Hosts"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  }
+}

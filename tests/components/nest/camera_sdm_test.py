@@ -16,6 +16,7 @@ import pytest
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -168,13 +169,13 @@ async def test_camera_device(hass):
     assert camera is not None
     assert camera.state == STATE_IDLE
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("camera.my_camera")
     assert entry.unique_id == "some-device-id-camera"
     assert entry.original_name == "My Camera"
     assert entry.domain == "camera"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Camera"
     assert device.model == "Camera"
@@ -255,7 +256,10 @@ async def test_refresh_expired_stream_token(hass, auth):
 
     # Request a stream for the camera entity to exercise nest cam + camera interaction
     # and shutdown on url expiration
-    await camera.async_request_stream(hass, cam.entity_id, "hls")
+    with patch("homeassistant.components.camera.create_stream") as create_stream:
+        hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
+        assert hls_url.startswith("/api/hls/")  # Includes access token
+        assert create_stream.called
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
@@ -272,6 +276,13 @@ async def test_refresh_expired_stream_token(hass, auth):
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
+    # HLS stream is not re-created, just the source is updated
+    with patch("homeassistant.components.camera.create_stream") as create_stream:
+        hls_url1 = await camera.async_request_stream(
+            hass, "camera.my_camera", fmt="hls"
+        )
+        assert hls_url == hls_url1
+
     # Next alarm is well before stream_2_expiration, no change
     next_update = now + datetime.timedelta(seconds=100)
     await fire_alarm(hass, next_update)
@@ -283,6 +294,13 @@ async def test_refresh_expired_stream_token(hass, auth):
     await fire_alarm(hass, next_update)
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.3.streamingToken"
+
+    # HLS stream is still not re-created
+    with patch("homeassistant.components.camera.create_stream") as create_stream:
+        hls_url2 = await camera.async_request_stream(
+            hass, "camera.my_camera", fmt="hls"
+        )
+        assert hls_url == hls_url2
 
 
 async def test_stream_response_already_expired(hass, auth):
@@ -362,11 +380,19 @@ async def test_refresh_expired_stream_failure(hass, auth):
         make_stream_url_response(expiration=stream_2_expiration, token_num=2),
     ]
     await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert await async_setup_component(hass, "stream", {})
 
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_IDLE
+
+    # Request an HLS stream
+    with patch("homeassistant.components.camera.create_stream") as create_stream:
+
+        hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
+        assert hls_url.startswith("/api/hls/")  # Includes access token
+        assert create_stream.called
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
@@ -379,6 +405,16 @@ async def test_refresh_expired_stream_failure(hass, auth):
     # The stream is entirely refreshed
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
+
+    # Requesting an HLS stream will create an entirely new stream
+    with patch("homeassistant.components.camera.create_stream") as create_stream:
+        # The HLS stream endpoint was invalidated, with a new auth token
+        hls_url2 = await camera.async_request_stream(
+            hass, "camera.my_camera", fmt="hls"
+        )
+        assert hls_url != hls_url2
+        assert hls_url2.startswith("/api/hls/")  # Includes access token
+        assert create_stream.called
 
 
 async def test_camera_image_from_last_event(hass, auth):

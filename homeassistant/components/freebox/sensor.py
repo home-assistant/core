@@ -1,13 +1,15 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
-import logging
-from typing import Dict
+from __future__ import annotations
 
+import logging
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -27,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the sensors."""
     router = hass.data[DOMAIN][entry.unique_id]
@@ -48,36 +50,34 @@ async def async_setup_entry(
             )
         )
 
-    for sensor_key in CONNECTION_SENSORS:
-        entities.append(
-            FreeboxSensor(router, sensor_key, CONNECTION_SENSORS[sensor_key])
-        )
+    for sensor_key, sensor in CONNECTION_SENSORS.items():
+        entities.append(FreeboxSensor(router, sensor_key, sensor))
 
-    for sensor_key in CALL_SENSORS:
-        entities.append(FreeboxCallSensor(router, sensor_key, CALL_SENSORS[sensor_key]))
+    for sensor_key, sensor in CALL_SENSORS.items():
+        entities.append(FreeboxCallSensor(router, sensor_key, sensor))
 
     _LOGGER.debug("%s - %s - %s disk(s)", router.name, router.mac, len(router.disks))
     for disk in router.disks.values():
         for partition in disk["partitions"]:
-            for sensor_key in DISK_PARTITION_SENSORS:
+            for sensor_key, sensor in DISK_PARTITION_SENSORS.items():
                 entities.append(
                     FreeboxDiskSensor(
                         router,
                         disk,
                         partition,
                         sensor_key,
-                        DISK_PARTITION_SENSORS[sensor_key],
+                        sensor,
                     )
                 )
 
     async_add_entities(entities, True)
 
 
-class FreeboxSensor(Entity):
+class FreeboxSensor(SensorEntity):
     """Representation of a Freebox sensor."""
 
     def __init__(
-        self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]
+        self, router: FreeboxRouter, sensor_type: str, sensor: dict[str, Any]
     ) -> None:
         """Initialize a Freebox sensor."""
         self._state = None
@@ -109,12 +109,12 @@ class FreeboxSensor(Entity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state."""
         return self._state
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit."""
         return self._unit
 
@@ -129,7 +129,7 @@ class FreeboxSensor(Entity):
         return self._device_class
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return self._router.device_info
 
@@ -160,7 +160,7 @@ class FreeboxCallSensor(FreeboxSensor):
     """Representation of a Freebox call sensor."""
 
     def __init__(
-        self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]
+        self, router: FreeboxRouter, sensor_type: str, sensor: dict[str, Any]
     ) -> None:
         """Initialize a Freebox call sensor."""
         super().__init__(router, sensor_type, sensor)
@@ -180,7 +180,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self._state = len(self._call_list_for_type)
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
             dt_util.utc_from_timestamp(call["datetime"]).isoformat(): call["name"]
@@ -194,10 +194,10 @@ class FreeboxDiskSensor(FreeboxSensor):
     def __init__(
         self,
         router: FreeboxRouter,
-        disk: Dict[str, any],
-        partition: Dict[str, any],
+        disk: dict[str, Any],
+        partition: dict[str, Any],
         sensor_type: str,
-        sensor: Dict[str, any],
+        sensor: dict[str, Any],
     ) -> None:
         """Initialize a Freebox disk sensor."""
         super().__init__(router, sensor_type, sensor)
@@ -207,7 +207,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._unique_id = f"{self._router.mac} {sensor_type} {self._disk['id']} {self._partition['id']}"
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._disk["id"])},

@@ -8,6 +8,7 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
@@ -19,7 +20,7 @@ async def test_sensors(hass, nzbget_api) -> None:
     with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):
         entry = await init_integration(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     uptime = now - timedelta(seconds=600)
 

@@ -33,6 +33,7 @@ from homeassistant.components.homekit.util import (
     format_sw_version,
     port_is_available,
     show_setup_message,
+    state_needs_accessory_mode,
     temperature_to_homekit,
     temperature_to_states,
     validate_entity_config as vec,
@@ -294,5 +295,13 @@ async def test_accessory_friendly_name():
 
     accessory = Mock()
     accessory.display_name = "same"
-    assert accessory_friendly_name("same", accessory) == "same"
+    assert accessory_friendly_name("Same", accessory) == "Same"
     assert accessory_friendly_name("hass title", accessory) == "hass title (same)"
+    accessory.display_name = "Hass title 123"
+    assert accessory_friendly_name("hass title", accessory) == "Hass title 123"
+
+
+async def test_lock_state_needs_accessory_mode(hass):
+    """Test that locks are setup as accessories."""
+    hass.states.async_set("lock.mine", "locked")
+    assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True
