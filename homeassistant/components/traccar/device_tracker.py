@@ -74,6 +74,26 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
+EVENTS = [
+    EVENT_DEVICE_MOVING,
+    EVENT_COMMAND_RESULT,
+    EVENT_DEVICE_FUEL_DROP,
+    EVENT_GEOFENCE_ENTER,
+    EVENT_DEVICE_OFFLINE,
+    EVENT_DRIVER_CHANGED,
+    EVENT_GEOFENCE_EXIT,
+    EVENT_DEVICE_OVERSPEED,
+    EVENT_DEVICE_ONLINE,
+    EVENT_DEVICE_STOPPED,
+    EVENT_MAINTENANCE,
+    EVENT_ALARM,
+    EVENT_TEXT_MESSAGE,
+    EVENT_DEVICE_UNKNOWN,
+    EVENT_IGNITION_OFF,
+    EVENT_IGNITION_ON,
+    EVENT_ALL_EVENTS,
+]
+
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
@@ -93,23 +113,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
             cv.ensure_list,
             [
                 vol.Any(
-                    EVENT_DEVICE_MOVING,
-                    EVENT_COMMAND_RESULT,
-                    EVENT_DEVICE_FUEL_DROP,
-                    EVENT_GEOFENCE_ENTER,
-                    EVENT_DEVICE_OFFLINE,
-                    EVENT_DRIVER_CHANGED,
-                    EVENT_GEOFENCE_EXIT,
-                    EVENT_DEVICE_OVERSPEED,
-                    EVENT_DEVICE_ONLINE,
-                    EVENT_DEVICE_STOPPED,
-                    EVENT_MAINTENANCE,
-                    EVENT_ALARM,
-                    EVENT_TEXT_MESSAGE,
-                    EVENT_DEVICE_UNKNOWN,
-                    EVENT_IGNITION_OFF,
-                    EVENT_IGNITION_ON,
-                    EVENT_ALL_EVENTS,
+                    *EVENTS,
                 )
             ],
         ),
@@ -318,8 +322,9 @@ class TraccarScanner:
                     ),
                     None,
                 )
+                event_types = {camelcase(evt): evt for evt in EVENTS}
                 self._hass.bus.async_fire(
-                    f"traccar_{self._event_types.get(event['type'])}",
+                    f"traccar_{event_types.get(event['type'])}",
                     {
                         "device_traccar_id": event["deviceId"],
                         "device_name": device_name,
