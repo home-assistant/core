@@ -17,5 +17,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure OpenUV",
+        "data": {
+          "from_window": "Starting UV index for the protection window",
+          "to_window": "Ending UV index for the protection window"
+        }
+      }
+    }
   }
 }
