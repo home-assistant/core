@@ -26,12 +26,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ArticleCacheMB",
         name="Article Cache",
-        unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
         key="AverageDownloadRate",
         name="Average Speed",
-        unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadPaused",
@@ -40,22 +40,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="DownloadRate",
         name="Speed",
-        unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadedSizeMB",
         name="Size",
-        unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
         key="FreeDiskSpaceMB",
         name="Disk Free",
-        unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
         key="PostJobCount",
         name="Post Processing Jobs",
-        unit_of_measurement="Jobs",
+        native_unit_of_measurement="Jobs",
     ),
     SensorEntityDescription(
         key="PostPaused",
@@ -64,7 +64,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="RemainingSizeMB",
         name="Queue Size",
-        unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_MEGABYTES,
     ),
     SensorEntityDescription(
         key="UpTimeSec",
