@@ -130,4 +130,4 @@ class SolarlogSensor(SensorEntity):
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data.update()
-        self._attr_state = self.data.data[self.entity_description.json_key]
+        self._attr_native_value = self.data.data[self.entity_description.json_key]
