@@ -54,33 +54,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class SolarlogSensor(SensorEntity):
-    """Representation of a Sensor."""
-
-    def __init__(
-        self,
-        entry_id: str,
-        device_name: str,
-        data,
-        description: SolarLogSensorEntityDescription,
-    ):
-        """Initialize the sensor."""
-        self.entity_description = description
-        self.data = data
-        self._attr_name = f"{device_name} {description.name}"
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry_id)},
-            "name": device_name,
-            "manufacturer": "Solar-Log",
-        }
-
-    def update(self):
-        """Get the latest data from the sensor and update the state."""
-        self.data.update()
-        self._attr_state = self.data.data[self.entity_description.json_key]
-
-
 class SolarlogData:
     """Get and update the latest data."""
 
@@ -131,3 +104,30 @@ class SolarlogData:
             _LOGGER.debug("Updated Solarlog overview data: %s", self.data)
         except AttributeError:
             _LOGGER.error("Missing details data in Solarlog response")
+
+
+class SolarlogSensor(SensorEntity):
+    """Representation of a Sensor."""
+
+    def __init__(
+        self,
+        entry_id: str,
+        device_name: str,
+        data: SolarlogData,
+        description: SolarLogSensorEntityDescription,
+    ):
+        """Initialize the sensor."""
+        self.entity_description = description
+        self.data = data
+        self._attr_name = f"{device_name} {description.name}"
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry_id)},
+            "name": device_name,
+            "manufacturer": "Solar-Log",
+        }
+
+    def update(self):
+        """Get the latest data from the sensor and update the state."""
+        self.data.update()
+        self._attr_state = self.data.data[self.entity_description.json_key]
