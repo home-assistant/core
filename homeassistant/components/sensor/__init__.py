@@ -71,10 +71,18 @@ DEVICE_CLASSES: Final[list[str]] = [
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
+# The state represents a total amount, e.g. a value of a stock portfolio
+STATE_CLASS_AMOUNT: Final = "amount"
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
+# The state represents a monotonically increasing total, e.g. an amount of consumed gas
+STATE_CLASS_METER: Final = "meter"
 
-STATE_CLASSES: Final[list[str]] = [STATE_CLASS_MEASUREMENT]
+STATE_CLASSES: Final[list[str]] = [
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_AMOUNT,
+    STATE_CLASS_METER,
+]
 
 STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(STATE_CLASSES))
 
