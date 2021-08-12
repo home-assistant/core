@@ -63,7 +63,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            print(info["user_id"])
             await self.async_set_unique_id(info["user_id"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
