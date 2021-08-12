@@ -27,7 +27,7 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    _LOGGER.warning("Loading VELBUS via platform config is deprecated")
+    _LOGGER.warning("Loading VELBUS via configuration.yaml is deprecated")
 
     port = config[DOMAIN].get(CONF_PORT)
     data = {}
