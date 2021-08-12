@@ -155,12 +155,12 @@ class NetgearDeviceEntity(ScannerEntity):
 
     @property
     def ip_address(self) -> str:
-        """Return the IP adress."""
+        """Return the IP address."""
         return self._device["ip"]
 
     @property
     def mac_address(self) -> str:
-        """Return the mac adress."""
+        """Return the mac address."""
         return self._mac
 
     @property
