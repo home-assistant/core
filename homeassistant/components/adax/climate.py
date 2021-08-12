@@ -61,9 +61,7 @@ class AdaxDevice(ClimateEntity):
         self._heater_data = heater_data
         self._adax_data_handler = adax_data_handler
 
-        self._attr_unique_id = (
-            f"{heater_data['homeId']}_{heater_data['id']}"
-        )
+        self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
 
     @property
     def name(self) -> str:
