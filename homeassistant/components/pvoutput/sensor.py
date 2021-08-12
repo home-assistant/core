@@ -79,7 +79,7 @@ class PvoutputSensor(SensorEntity, RestoreEntity):
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_unit_of_measurement = ENERGY_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_WATT_HOUR
 
     _old_state: int | None = None
 
@@ -104,7 +104,7 @@ class PvoutputSensor(SensorEntity, RestoreEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.pvcoutput is not None:
             return self.pvcoutput.energy_generation

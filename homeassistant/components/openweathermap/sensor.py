@@ -68,7 +68,7 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
         self._weather_coordinator = weather_coordinator
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._weather_coordinator.data.get(self._sensor_type, None)
 
@@ -91,7 +91,7 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
         self._weather_coordinator = weather_coordinator
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
         if forecasts is not None and len(forecasts) > 0:

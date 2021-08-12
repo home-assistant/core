@@ -130,7 +130,7 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         return f"{self._unique_id}_{self.entity_description.key}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return entity state from ups."""
         if not self._data.status:
             return None

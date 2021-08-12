@@ -103,12 +103,12 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         return self._unique_id
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit that the state of sensor is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         value = self.coordinator.data["status"].get(self._sensor_type)
 
