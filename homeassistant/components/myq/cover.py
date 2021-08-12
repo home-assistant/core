@@ -115,7 +115,9 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         # Write closing state to HASS
         self.async_write_ha_state()
 
-        if not await wait_task:
+        result = wait_task if isinstance(wait_task, bool) else await wait_task
+
+        if not result:
             _LOGGER.error("Closing of cover %s failed", self._device.name)
 
         # Write final state to HASS
@@ -137,7 +139,9 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         # Write opening state to HASS
         self.async_write_ha_state()
 
-        if not await wait_task:
+        result = wait_task if isinstance(wait_task, bool) else await wait_task
+
+        if not result:
             _LOGGER.error("Opening of cover %s failed", self._device.name)
 
         # Write final state to HASS
