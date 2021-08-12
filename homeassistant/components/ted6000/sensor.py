@@ -1,78 +1,43 @@
 """Support gathering ted6000 information."""
-from contextlib import suppress
-from datetime import timedelta
 import logging
 
-import requests
-import voluptuous as vol
-import xmltodict
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    SensorEntity,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    ELECTRIC_POTENTIAL_VOLT,
-    POWER_WATT,
-)
-from homeassistant.helpers import config_validation as cv
-from homeassistant.util import Throttle
+from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "ted"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up envoy sensor platform."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data[COORDINATOR]
+    name = data[NAME]
 
+    entities = []
+    for sensor_description in SENSORS:
+        entity_name = f"{name} {sensor_description.name}"
+        entities.append(
+            Ted6000Sensor(
+                sensor_description, entity_name, config_entry.unique_id, coordinator
+            )
+        )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Ted6000 sensor."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME)
-
-    url = f"http://{host}:{port}/api/SystemOverview.xml?T=0&D=0&M=0"
-
-    gateway = Ted6000Gateway(url)
-
-    # Get MUT information to create the sensors.
-    gateway.update()
-
-    dev = []
-    for mtu in gateway.data:
-        dev.append(Ted6000Sensor(gateway, name, mtu, POWER_WATT))
-        dev.append(Ted6000Sensor(gateway, name, mtu, ELECTRIC_POTENTIAL_VOLT))
-
-    add_entities(dev)
+    async_add_entities(entities)
     return True
 
 
-class Ted6000Sensor(SensorEntity):
+class Ted6000Sensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Ted6000 sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-
-    def __init__(self, gateway, name, mtu, unit):
+    def __init__(self, description, name, device_id, coordinator):
         """Initialize the sensor."""
-        units = {POWER_WATT: "power", ELECTRIC_POTENTIAL_VOLT: "voltage"}
-        self._gateway = gateway
-        self._name = f"{name} mtu{mtu} {units[unit]}"
-        self._mtu = mtu
-        self._unit = unit
-        self.update()
+        self.entity_description = description
+        self._device_id = device_id
+        self._name = name
+
+        super().__init__(coordinator)
 
     @property
     def name(self):
@@ -80,45 +45,16 @@ class Ted6000Sensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:flash"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return f"{self._device_id}_{self.entity_description.key}"
 
     @property
     def state(self):
         """Return the state of the resources."""
-        with suppress(KeyError):
-            return self._gateway.data[self._mtu][self._unit]
-
-    def update(self):
-        """Get the latest data from REST API."""
-        self._gateway.update()
-
-
-class Ted6000Gateway:
-    """The class for handling the data retrieval."""
-
-    def __init__(self, url):
-        """Initialize the data object."""
-        self.url = url
-        self.data = {}
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from the Ted6000 XML API."""
-
-        try:
-            request = requests.get(self.url, timeout=10)
-        except requests.exceptions.RequestException as err:
-            _LOGGER.error("No connection to endpoint: %s", err)
-        else:
-            doc = xmltodict.parse(request.text)
-
-            for i, mtu in enumerate(doc["DialDataDetail"]["MTUVal"].values()):
-                power = int(mtu["Value"])
-                voltage = int(0 if mtu["Voltage"] is None else mtu["Voltage"])
-
-                self.data[i + 1] = {
-                    POWER_WATT: power,
-                    ELECTRIC_POTENTIAL_VOLT: voltage / 10,
-                }
+        return self.coordinator.data.get(self.entity_description.key)

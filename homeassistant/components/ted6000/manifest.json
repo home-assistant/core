@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ted6000",
   "requirements": ["xmltodict==0.12.0"],
   "codeowners": ["@rianadon"],
+  "config_flow": true,
   "iot_class": "local_polling"
 }
