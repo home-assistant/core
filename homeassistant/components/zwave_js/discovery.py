@@ -542,7 +542,30 @@ DISCOVERY_SCHEMAS = [
         allow_multi=True,
         entity_registry_enabled_default=False,
     ),
-    # sensor for basic CC
+    # number
+    # Basic CC with currentValue and targetValue
+    ZWaveDiscoverySchema(
+        platform="number",
+        hint="Basic",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.BASIC,
+            },
+            type={"number"},
+            property={"currentValue"},
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={
+                    CommandClass.BASIC,
+                },
+                type={"number"},
+                property={"targetValue"},
+            )
+        ],
+        entity_registry_enabled_default=False,
+    ),
+    # sensor for basic CC without targetValue (just currentValue)
     ZWaveDiscoverySchema(
         platform="sensor",
         hint="numeric_sensor",
