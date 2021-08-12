@@ -41,7 +41,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
 
 from .const import (
     _LOGGER,
@@ -153,7 +152,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._heat_away_temp = heat_away_temp
         self._away = False
 
-        self._attr_unique_id = dr.format_mac(device.mac_address)
+        self._attr_unique_id = device.deviceid
         self._attr_name = device.name
         self._attr_temperature_unit = (
             TEMP_CELSIUS if device.temperature_unit == "C" else TEMP_FAHRENHEIT
