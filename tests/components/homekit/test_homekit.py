@@ -37,6 +37,7 @@ from homeassistant.components.homekit.const import (
     SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_UNPAIR,
 )
+from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -101,7 +102,7 @@ def always_patch_driver(hk_driver):
     """Load the hk_driver fixture."""
 
 
-def _mock_homekit(hass, entry, homekit_mode, entity_filter=None):
+def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
     return HomeKit(
         hass=hass,
         name=BRIDGE_NAME,
@@ -114,6 +115,7 @@ def _mock_homekit(hass, entry, homekit_mode, entity_filter=None):
         advertise_ip=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
+        devices=devices,
     )
 
 
@@ -590,6 +592,41 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, mock_zeroc
     await homekit.async_start()
     await hass.async_block_till_done()
     assert not hk_driver_start.called
+
+
+async def test_homekit_start_with_a_device(
+    hass, hk_driver, mock_zeroconf, demo_cleanup, device_reg, entity_reg
+):
+    """Test HomeKit start method with a device."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    assert await async_setup_component(hass, "demo", {"demo": {}})
+    await hass.async_block_till_done()
+
+    reg_entry = entity_reg.async_get("light.ceiling_lights")
+    assert reg_entry is not None
+    device_id = reg_entry.device_id
+    await async_init_entry(hass, entry)
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, None, devices=[device_id])
+    homekit.driver = hk_driver
+
+    with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ) as mock_setup_msg:
+        await homekit.async_start()
+
+    await hass.async_block_till_done()
+    mock_setup_msg.assert_called_with(
+        hass, entry.entry_id, "Mock Title (Home Assistant Bridge)", ANY, ANY
+    )
+    assert homekit.status == STATUS_RUNNING
+
+    assert isinstance(
+        list(homekit.driver.accessory.accessories.values())[0], DeviceTriggerAccessory
+    )
+    await homekit.async_stop()
 
 
 async def test_homekit_stop(hass):
