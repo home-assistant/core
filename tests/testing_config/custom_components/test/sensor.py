@@ -9,6 +9,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
+    VOLUME_CUBIC_METERS,
 )
 
 from tests.common import MockEntity
@@ -30,6 +31,7 @@ UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_ENERGY: "kWh",  # energy (Wh/kWh)
     sensor.DEVICE_CLASS_POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
     sensor.DEVICE_CLASS_VOLTAGE: "V",  # voltage (V)
+    sensor.DEVICE_CLASS_GAS: VOLUME_CUBIC_METERS,  # gas (m³)
 }
 
 ENTITIES = {}
@@ -61,7 +63,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockSensor(MockEntity):
+class MockSensor(MockEntity, sensor.SensorEntity):
     """Mock Sensor class."""
 
     @property
@@ -70,6 +72,11 @@ class MockSensor(MockEntity):
         return self._handle("device_class")
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit_of_measurement of this sensor."""
-        return self._handle("unit_of_measurement")
+    def native_unit_of_measurement(self):
+        """Return the native unit_of_measurement of this sensor."""
+        return self._handle("native_unit_of_measurement")
+
+    @property
+    def native_value(self):
+        """Return the native value of this sensor."""
+        return self._handle("native_value")

@@ -248,11 +248,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install VCN tools
+        uses: home-assistant/actions/helpers/vcn@master
+
       - name: Build Meta Image
         shell: bash
         run: |
-          bash <(curl https://getvcn.codenotary.com -L)
-
           export DOCKER_CLI_EXPERIMENTAL=enabled
 
           function create_manifest() {

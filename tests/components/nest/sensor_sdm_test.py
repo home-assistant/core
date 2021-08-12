@@ -208,5 +208,5 @@ async def test_device_with_unknown_type(hass):
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
-    assert device.model == "Unknown"
+    assert device.model is None
     assert device.identifiers == {("nest", "some-device-id")}

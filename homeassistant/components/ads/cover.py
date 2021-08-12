@@ -91,13 +91,13 @@ class AdsCover(AdsEntity, CoverEntity):
     ):
         """Initialize AdsCover entity."""
         super().__init__(ads_hub, name, ads_var_is_closed)
-        if self._ads_var is None:
+        if self._attr_unique_id is None:
             if ads_var_position is not None:
-                self._unique_id = ads_var_position
+                self._attr_unique_id = ads_var_position
             elif ads_var_pos_set is not None:
-                self._unique_id = ads_var_pos_set
+                self._attr_unique_id = ads_var_pos_set
             elif ads_var_open is not None:
-                self._unique_id = ads_var_open
+                self._attr_unique_id = ads_var_open
 
         self._state_dict[STATE_KEY_POSITION] = None
         self._ads_var_position = ads_var_position

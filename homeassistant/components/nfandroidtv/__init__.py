@@ -1,6 +1,4 @@
 """The NFAndroidTV integration."""
-import logging
-
 from notifications_android_tv.notifications import ConnectError, Notifications
 
 from homeassistant.components.notify import DOMAIN as NOTIFY
@@ -11,8 +9,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [NOTIFY]
 
@@ -41,8 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.async_add_executor_job(Notifications, host)
     except ConnectError as ex:
-        _LOGGER.warning("Failed to connect: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady("Failed to connect") from ex
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {

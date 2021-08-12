@@ -10,6 +10,7 @@ import os
 import time
 from typing import TYPE_CHECKING, Callable
 
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
@@ -332,4 +333,5 @@ def perodic_db_cleanups(instance: Recorder):
     if instance.engine.dialect.name == "sqlite":
         # Execute sqlite to create a wal checkpoint and free up disk space
         _LOGGER.debug("WAL checkpoint")
-        instance.engine.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+        with instance.engine.connect() as connection:
+            connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
