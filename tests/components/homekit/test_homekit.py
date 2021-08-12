@@ -1168,6 +1168,7 @@ async def test_homekit_finds_linked_batteries(
             "manufacturer": "Tesla",
             "model": "Powerwall 2",
             "sw_version": "0.16.0",
+            "platform": "test",
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
         },
@@ -1444,6 +1445,7 @@ async def test_homekit_finds_linked_motion_sensors(
         {
             "manufacturer": "Ubq",
             "model": "Camera Server",
+            "platform": "test",
             "sw_version": "0.16.0",
             "linked_motion_sensor": "binary_sensor.camera_motion_sensor",
         },
@@ -1508,6 +1510,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         {
             "manufacturer": "Home Assistant",
             "model": "Smart Brainy Clever Humidifier",
+            "platform": "test",
             "sw_version": "0.16.1",
             "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
         },
