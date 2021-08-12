@@ -329,11 +329,13 @@ class SmappeeSensor(SensorEntity):
         """Return the time when the sensor was last reset, if any."""
         if self._sensor in ("power_today", "solar_today", "alwayson_today", "switch"):
             return start_of_local_day()
-        elif self._sensor in ("power_current_hour", "solar_current_hour"):
+
+        if self._sensor in ("power_current_hour", "solar_current_hour"):
             datetime_now = now()
             datetime_now = datetime_now.replace(minute=0)
             return as_utc(datetime_now)
-        elif self._sensor in ("power_last_5_minutes"):
+
+        if self._sensor in ("power_last_5_minutes"):
             datetime_now = now()
             datetime_now = datetime_now.replace(minute=int(datetime_now.minute / 5) * 5)
             return as_utc(datetime_now)
