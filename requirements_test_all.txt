@@ -920,7 +920,7 @@ pymodbus==2.5.3rc1
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==3.0.4
+pymyq==3.1.2
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0
