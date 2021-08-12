@@ -114,7 +114,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the sensor state."""
         if self.coordinator.data:
             if (
