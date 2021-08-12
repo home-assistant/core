@@ -17,7 +17,7 @@ from .const import (
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
 )
-from .model import TractiveSensorEntityDescription
+from .model import TractiveEntity, TractiveSensorEntityDescription
 
 ATTR_ACTIVITY = "activity"
 ATTR_HARDWARE = "hardware"
@@ -79,22 +79,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class TractiveSensor(SensorEntity):
+class TractiveSensor(TractiveEntity, SensorEntity):
     """Tractive sensor."""
 
     def __init__(self, user_id, trackable, tracker_details, unique_id, description):
         """Initialize sensor entity."""
-        self._user_id = user_id
-        self._trackable = trackable
-        self._tracker_id = tracker_details["_id"]
+        super().__init__(user_id, trackable, tracker_details)
+
         self._attr_unique_id = unique_id
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, tracker_details["_id"])},
-            "name": f"Tractive ({tracker_details['_id']})",
-            "manufacturer": "Tractive GmbH",
-            "sw_version": tracker_details["fw_version"],
-            "model": tracker_details["model_number"],
-        }
+        self._attr_device_info = self._device_info
         self.entity_description = description
 
     @callback
