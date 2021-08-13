@@ -44,8 +44,8 @@ T = TypeVar("T")
 
 
 @dataclass
-class FlowAdapter:
-    """Adapter to allow flows to be used as sensors."""
+class SourceAdapter:
+    """Adapter to allow sources and their flows to be used as sensors."""
 
     source_type: Literal["grid", "gas"]
     flow_type: Literal["flow_from", "flow_to"] | None
@@ -56,8 +56,8 @@ class FlowAdapter:
     entity_id_suffix: str
 
 
-FLOW_ADAPTERS: Final = (
-    FlowAdapter(
+SOURCE_ADAPTERS: Final = (
+    SourceAdapter(
         "grid",
         "flow_from",
         "stat_energy_from",
@@ -66,7 +66,7 @@ FLOW_ADAPTERS: Final = (
         "Cost",
         "cost",
     ),
-    FlowAdapter(
+    SourceAdapter(
         "grid",
         "flow_to",
         "stat_energy_to",
@@ -75,7 +75,7 @@ FLOW_ADAPTERS: Final = (
         "Compensation",
         "compensation",
     ),
-    FlowAdapter(
+    SourceAdapter(
         "gas",
         None,
         "stat_energy_from",
@@ -123,7 +123,7 @@ class SensorManager:
             return
 
         for energy_source in self.manager.data["energy_sources"]:
-            for adapter in FLOW_ADAPTERS:
+            for adapter in SOURCE_ADAPTERS:
                 if adapter.source_type != energy_source["type"]:
                     continue
 
@@ -151,7 +151,7 @@ class SensorManager:
     @callback
     def _process_sensor_data(
         self,
-        adapter: FlowAdapter,
+        adapter: SourceAdapter,
         config: dict,
         to_add: list[SensorEntity],
         to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
@@ -193,7 +193,7 @@ class EnergyCostSensor(SensorEntity):
 
     def __init__(
         self,
-        adapter: FlowAdapter,
+        adapter: SourceAdapter,
         flow: dict,
     ) -> None:
         """Initialize the sensor."""
