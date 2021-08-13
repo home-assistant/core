@@ -10,9 +10,7 @@ SSE_LISTENERS: Final = "sse_listeners"
 UART_LISTENERS: Final = "uart_listeners"
 
 # Class attributes
-ATTR_SSE: Final = "sse"
 ATTR_UART: Final = "uart"
-ATTR_CLOUD: Final = "cloud"
 
 # Unique ID suffixes
 CROWNSTONE_SUFFIX: Final = "crownstone"

@@ -490,13 +490,13 @@ coronavirus==1.1.1
 croniter==1.0.6
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.5
+crownstone-cloud==1.4.6
 
 # homeassistant.components.crownstone
-crownstone-sse==2.0.0
+crownstone-sse==2.0.1
 
 # homeassistant.components.crownstone
-crownstone-uart==2.0.0
+crownstone-uart==2.1.0
 
 # homeassistant.components.datadog
 datadog==0.15.0

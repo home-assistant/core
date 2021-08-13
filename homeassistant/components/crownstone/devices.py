@@ -38,6 +38,6 @@ class CrownstoneDevice:
             ATTR_IDENTIFIERS: {(DOMAIN, self.cloud_id)},
             ATTR_NAME: self.device.name,
             ATTR_MANUFACTURER: "Crownstone",
-            ATTR_MODEL: str(CROWNSTONE_INCLUDE_TYPES.get(self.device.type)),
+            ATTR_MODEL: CROWNSTONE_INCLUDE_TYPES[self.device.type],
             ATTR_SW_VERSION: self.device.sw_version,
         }

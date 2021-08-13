@@ -12,6 +12,7 @@ from crownstone_cloud.exceptions import (
 )
 from crownstone_sse import CrownstoneSSEAsync
 from crownstone_uart import CrownstoneUart, UartEventBus
+from crownstone_uart.Exceptions import UartException
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +27,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
-    ATTR_SSE,
     ATTR_UART,
     CONF_USB_PATH,
     CONF_USE_CROWNSTONE_USB,
@@ -37,7 +37,7 @@ from .const import (
     UART_LISTENERS,
 )
 from .helpers import get_port
-from .listeners import create_data_listeners
+from .listeners import setup_sse_listeners, setup_uart_listeners
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,9 +67,9 @@ class CrownstoneEntryManager:
         customer_email = self.config_entry.data[CONF_EMAIL]
         customer_password = self.config_entry.data[CONF_PASSWORD]
 
-        # Add entry listener
+        # Add entry update listener
         self.config_entry.async_on_unload(
-            self.config_entry.add_update_listener(options_update_listener)
+            self.config_entry.add_update_listener(async_update_entry_options)
         )
 
         # Create cloud instance
@@ -101,27 +101,27 @@ class CrownstoneEntryManager:
             websession=aiohttp_client.async_create_clientsession(self.hass),
         )
         # Listen for events in the background, without task tracking
-        asyncio.create_task(self.process_events(self.sse))
+        asyncio.create_task(self.async_process_events(self.sse))
+        # Create listeners for events to update entity data
+        setup_sse_listeners(self)
 
         # Check if a usb by-id exists, if not use cloud
         if self.config_entry.data[CONF_USB_PATH] is not None:
             port = await self.hass.async_add_executor_job(
                 get_port, self.config_entry.data[CONF_USB_PATH]
             )
-            # port is None when Home Assistant is started without the USB plugged in,
-            # but a setup exists
+            # port can be None when Home Assistant is started without the USB plugged in
             if port is not None:
                 self.uart = CrownstoneUart()
-                # initialize USB, this waits for the usb to be initialized
-                # this usually takes less than a second when the port is correct
+                # UartException is raised when serial controller fails to open
                 try:
-                    await asyncio.wait_for(self.uart.initialize_usb(port), timeout=3)
-                except asyncio.TimeoutError:
+                    await self.uart.initialize_usb(port)
+                except UartException:
                     # remove usb path to make usb setup available from options
                     entry_data = self.config_entry.data.copy()
                     entry_data[CONF_USB_PATH] = None
                     self.hass.config_entries.async_update_entry(
-                        self.config_entry, data=entry_data
+                        entry=self.config_entry, data=entry_data
                     )
                     # show notification to ensure the user knows the cloud is now used
                     persistent_notification.async_create(
@@ -132,6 +132,8 @@ class CrownstoneEntryManager:
                         "Crownstone",
                         "crownstone_usb_dongle_setup",
                     )
+                # Create listeners for uart events
+                setup_uart_listeners(self)
 
         # Save in what sphere the Crownstone USB is if it was setup correctly
         # Crownstones could only be switched using the USB if they are in the same sphere (using BLE)
@@ -142,18 +144,15 @@ class CrownstoneEntryManager:
                     if crownstone.type == CROWNSTONE_USB:
                         self.usb_sphere_id = sphere.cloud_id
 
-        # Create listeners for SSE and UART
-        create_data_listeners(self.hass, self)
-
         # create listener for when home assistant is stopped
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_close)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_shutdown)
 
         # register all entities
         self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         return True
 
-    async def process_events(self, sse_client: CrownstoneSSEAsync) -> None:
+    async def async_process_events(self, sse_client: CrownstoneSSEAsync) -> None:
         """Asynchronous iteration of Crownstone SSE events."""
         async with sse_client as client:
             async for event in client:
@@ -167,17 +166,16 @@ class CrownstoneEntryManager:
         if self.cloud.cloud_data is None:
             return True
 
-        # stop services
-        if hasattr(self, ATTR_UART):
-            self.uart.stop()
-        if hasattr(self, ATTR_SSE):
-            self.sse.close_client()
-
-        # Unsubscribe from listeners
+        # close sse client and unsub from listeners
+        self.sse.close_client()
         for sse_unsub in self.listeners[SSE_LISTENERS]:
             sse_unsub()
-        for subscription_id in self.listeners[UART_LISTENERS]:
-            UartEventBus.unsubscribe(subscription_id)
+
+        # close uart connection and unsub from listeners
+        if hasattr(self, ATTR_UART):
+            self.uart.stop()
+            for subscription_id in self.listeners[UART_LISTENERS]:
+                UartEventBus.unsubscribe(subscription_id)
 
         # unload all platform entities
         unload_ok = await self.hass.config_entries.async_unload_platforms(
@@ -190,16 +188,15 @@ class CrownstoneEntryManager:
         return unload_ok
 
     @callback
-    def on_close(self, event: Event) -> None:
-        """Close SSE client and uart bridge."""
-        _LOGGER.debug(event.data)
-        if hasattr(self, ATTR_SSE):
-            self.sse.close_client()
+    def on_shutdown(self, event: Event) -> None:
+        """Close all IO connections."""
+        self.sse.close_client()
         if hasattr(self, ATTR_UART):
             self.uart.stop()
 
 
-async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+@callback
+async def async_update_entry_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     entry_data = entry.data.copy()
     # USB was configured at setup & user wants to remove config
