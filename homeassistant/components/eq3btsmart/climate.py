@@ -7,6 +7,11 @@ from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
+from .const import (
+    PRESET_PERMANENT_HOLD,
+    PRESET_NO_HOLD,
+)
+
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
@@ -56,9 +61,9 @@ HA_TO_EQ_HVAC = {
     HVAC_MODE_AUTO: eq3.Mode.Auto,
 }
 
-EQ_TO_HA_PRESET = {eq3.Mode.Boost: PRESET_BOOST, eq3.Mode.Away: PRESET_AWAY}
+EQ_TO_HA_PRESET = {eq3.Mode.Boost: PRESET_BOOST, eq3.Mode.Away: PRESET_AWAY, eq3.Mode.Manual: PRESET_PERMANENT_HOLD, eq3.Mode.Auto: PRESET_NO_HOLD}
 
-HA_TO_EQ_PRESET = {PRESET_BOOST: eq3.Mode.Boost, PRESET_AWAY: eq3.Mode.Away}
+HA_TO_EQ_PRESET = {PRESET_BOOST: eq3.Mode.Boost, PRESET_AWAY: eq3.Mode.Away, PRESET_PERMANENT_HOLD: eq3.Mode.Manual, PRESET_NO_HOLD: eq3.Mode.Auto}
 
 
 DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_MAC): cv.string})

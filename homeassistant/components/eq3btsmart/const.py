@@ -1,0 +1,3 @@
+PRESET_PERMANENT_HOLD = "PermanentHold"
+PRESET_NO_HOLD = "NoHold"
+
