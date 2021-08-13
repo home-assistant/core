@@ -9,9 +9,6 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
-      },
-      "upgrade_needed": {
-        "description": "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) we will migrate your existing [%key:component::climacell::title%] config entry to the new [%key:component::tomorrowio::title%] integration after you finish this config flow. Unfortunately, **the V3 API is now deprecated** and you will need to get a new V4 API key from [Tomorrow.io](https://app.tomorrow.io/development/keys) before we can complete the migration. Once you have obtained a new API key, enter it on the next screen and hit submit so it can be verified. Your old [%key:component::climacell::title%] config entry will then be automatically removed and replaced by a [%key:component::tomorrowio::title%] one. Once you have entered a new V4 API key, there is nothing more you need to do since the new integration is a drop in replacement and your existing entities will be migrated over. Just note that the location of the integration card on the [Integrations Configuration](/config/integrations) page will change since the integration name will have changed."
       }
     },
     "error": {

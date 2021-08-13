@@ -250,13 +250,7 @@ async def test_import_flow_v3(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "upgrade_needed"
-
-    # Fake hitting submit on upgrade needed form
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    # We need to do this twice because the first one the system catches, second one
-    # user does.
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "this is a test"}

@@ -185,15 +185,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_upgrade_needed(self, import_config: dict = None) -> FlowResult:
-        """Tell the user upgrade is needed and what will happen after config flow."""
-        # We have to do this twice to make sure the dialog shows when the user opens it.
-        if self._showed_import_message < 2:
-            self._showed_import_message += 1
-            return self.async_show_form(step_id="upgrade_needed")
-
-        return await self.async_step_user()
-
     async def async_step_import(self, import_config: dict) -> FlowResult:
         """Import from config."""
         # Store import config for later
@@ -205,15 +196,19 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 (
                     "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) "
                     "we will migrate your existing ClimaCell config entry (or config "
-                    "entries) to the new Tomorrow.io integration, but in order to "
-                    "complete this activity, we will need your input. Visit the "
+                    "entries) to the new Tomorrow.io integration, but because **the "
+                    " V3 is now deprecated**, you will need to get a new V4 API key "
+                    "from [Tomorrow.io](https://app.tomorrow.io/development/keys). "
+                    "Once that is done, visit the "
                     "[Integrations Configuration](/config/integrations) page and "
-                    "click Configure on the Tomorrow.io card(s) to learn more."
+                    "click Configure on the Tomorrow.io card(s) to submit the new "
+                    "key. Once your key has been validated, your config entry will "
+                    "automatically be migrated."
                 ),
                 INTEGRATION_NAME,
                 f"{CC_DOMAIN}_to_{DOMAIN}_new_api_key_needed",
             )
-            return await self.async_step_upgrade_needed()
+            return await self.async_step_user()
 
         self.hass.components.persistent_notification.async_create(
             (
