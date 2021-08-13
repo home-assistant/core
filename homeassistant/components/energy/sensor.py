@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import partial
 import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
@@ -16,6 +15,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,12 +36,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the energy sensors."""
-    manager = await async_get_manager(hass)
-    process_now = partial(_process_manager_data, hass, manager, async_add_entities, {})
-    manager.async_listen_updates(process_now)
-
-    if manager.data:
-        await process_now()
+    sensor_manager = SensorManager(await async_get_manager(hass), async_add_entities)
+    await sensor_manager.async_start()
 
 
 T = TypeVar("T")
@@ -51,7 +47,8 @@ T = TypeVar("T")
 class FlowAdapter:
     """Adapter to allow flows to be used as sensors."""
 
-    flow_type: Literal["flow_from", "flow_to"]
+    source_type: Literal["grid", "gas"]
+    flow_type: Literal["flow_from", "flow_to"] | None
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     entity_energy_key: Literal["entity_energy_from", "entity_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -61,6 +58,7 @@ class FlowAdapter:
 
 FLOW_ADAPTERS: Final = (
     FlowAdapter(
+        "grid",
         "flow_from",
         "stat_energy_from",
         "entity_energy_from",
@@ -69,6 +67,7 @@ FLOW_ADAPTERS: Final = (
         "cost",
     ),
     FlowAdapter(
+        "grid",
         "flow_to",
         "stat_energy_to",
         "entity_energy_to",
@@ -76,67 +75,113 @@ FLOW_ADAPTERS: Final = (
         "Compensation",
         "compensation",
     ),
+    FlowAdapter(
+        "gas",
+        None,
+        "stat_energy_from",
+        "entity_energy_from",
+        "stat_cost",
+        "Cost",
+        "cost",
+    ),
 )
 
 
-async def _process_manager_data(
-    hass: HomeAssistant,
-    manager: EnergyManager,
-    async_add_entities: AddEntitiesCallback,
-    current_entities: dict[tuple[str, str], EnergyCostSensor],
-) -> None:
-    """Process updated data."""
-    to_add: list[SensorEntity] = []
-    to_remove = dict(current_entities)
+class SensorManager:
+    """Class to handle creation/removal of sensor data."""
 
-    async def finish() -> None:
-        if to_add:
-            async_add_entities(to_add)
+    def __init__(
+        self, manager: EnergyManager, async_add_entities: AddEntitiesCallback
+    ) -> None:
+        """Initialize sensor manager."""
+        self.manager = manager
+        self.async_add_entities = async_add_entities
+        self.current_entities: dict[tuple[str, str | None, str], EnergyCostSensor] = {}
 
-        for key, entity in to_remove.items():
-            current_entities.pop(key)
-            await entity.async_remove()
+    async def async_start(self) -> None:
+        """Start."""
+        self.manager.async_listen_updates(self._process_manager_data)
 
-    if not manager.data:
+        if self.manager.data:
+            await self._process_manager_data()
+
+    async def _process_manager_data(self) -> None:
+        """Process manager data."""
+        to_add: list[SensorEntity] = []
+        to_remove = dict(self.current_entities)
+
+        async def finish() -> None:
+            if to_add:
+                self.async_add_entities(to_add)
+
+            for key, entity in to_remove.items():
+                self.current_entities.pop(key)
+                await entity.async_remove()
+
+        if not self.manager.data:
+            await finish()
+            return
+
+        for energy_source in self.manager.data["energy_sources"]:
+            for adapter in FLOW_ADAPTERS:
+                if adapter.source_type != energy_source["type"]:
+                    continue
+
+                if adapter.flow_type is None:
+                    self._process_sensor_data(
+                        adapter,
+                        # Opting out of the type complexity because can't get it to work
+                        energy_source,  # type: ignore
+                        to_add,
+                        to_remove,
+                    )
+                    continue
+
+                for flow in energy_source[adapter.flow_type]:  # type: ignore
+                    self._process_sensor_data(
+                        adapter,
+                        # Opting out of the type complexity because can't get it to work
+                        flow,  # type: ignore
+                        to_add,
+                        to_remove,
+                    )
+
         await finish()
-        return
 
-    for energy_source in manager.data["energy_sources"]:
-        if energy_source["type"] != "grid":
-            continue
+    @callback
+    def _process_sensor_data(
+        self,
+        adapter: FlowAdapter,
+        config: dict,
+        to_add: list[SensorEntity],
+        to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
+    ) -> None:
+        """Process sensor data."""
+        # No need to create an entity if we already have a cost stat
+        if config.get(adapter.total_money_key) is not None:
+            return
 
-        for adapter in FLOW_ADAPTERS:
-            for flow in energy_source[adapter.flow_type]:
-                # Opting out of the type complexity because can't get it to work
-                untyped_flow = cast(dict, flow)
+        # This is unique among all flow_from's
+        key = (adapter.source_type, adapter.flow_type, config[adapter.stat_energy_key])
 
-                # No need to create an entity if we already have a cost stat
-                if untyped_flow.get(adapter.total_money_key) is not None:
-                    continue
+        # Make sure the right data is there
+        # If the entity existed, we don't pop it from to_remove so it's removed
+        if config.get(adapter.entity_energy_key) is None or (
+            config.get("entity_energy_price") is None
+            and config.get("number_energy_price") is None
+        ):
+            return
 
-                # This is unique among all flow_from's
-                key = (adapter.flow_type, untyped_flow[adapter.stat_energy_key])
+        current_entity = to_remove.pop(key, None)
+        if current_entity:
+            current_entity.update_config(config)
+            return
 
-                # Make sure the right data is there
-                # If the entity existed, we don't pop it from to_remove so it's removed
-                if untyped_flow.get(adapter.entity_energy_key) is None or (
-                    untyped_flow.get("entity_energy_price") is None
-                    and untyped_flow.get("number_energy_price") is None
-                ):
-                    continue
-
-                current_entity = to_remove.pop(key, None)
-                if current_entity:
-                    current_entity.update_config(untyped_flow)
-                    continue
-
-                current_entities[key] = EnergyCostSensor(
-                    adapter,
-                    untyped_flow,
-                )
-                to_add.append(current_entities[key])
-
-    await finish()
+        self.current_entities[key] = EnergyCostSensor(
+            adapter,
+            config,
+        )
+        to_add.append(self.current_entities[key])
 
 
 class EnergyCostSensor(SensorEntity):
@@ -197,8 +242,11 @@ class EnergyCostSensor(SensorEntity):
             except ValueError:
                 return
 
-            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{ENERGY_WATT_HOUR}"
+            if (
+                self._adapter.source_type == "grid"
+                and energy_price_state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT, ""
+                ).endswith(f"/{ENERGY_WATT_HOUR}")
             ):
                 energy_price *= 1000.0
 
@@ -213,9 +261,17 @@ class EnergyCostSensor(SensorEntity):
 
         energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if energy_unit == ENERGY_WATT_HOUR:
-            energy_price /= 1000
-        elif energy_unit != ENERGY_KILO_WATT_HOUR:
+        if self._adapter.source_type == "grid":
+            if energy_unit == ENERGY_WATT_HOUR:
+                energy_price /= 1000
+            elif energy_unit != ENERGY_KILO_WATT_HOUR:
+                energy_unit = None
+
+        elif self._adapter.source_type == "gas":
+            if energy_unit != VOLUME_CUBIC_METERS:
+                energy_unit = None
+
+        if energy_unit is None:
             _LOGGER.warning(
                 "Found unexpected unit %s for %s", energy_unit, energy_state.entity_id
             )
