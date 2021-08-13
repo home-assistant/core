@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -247,9 +248,10 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
         super().__init__(config_entry, client, info)
 
         # Entity class attributes
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
         if self.device_class == DEVICE_CLASS_ENERGY:
-            self._attr_last_reset = dt.utc_from_timestamp(0)
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        else:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @callback
     def async_update_last_reset(
