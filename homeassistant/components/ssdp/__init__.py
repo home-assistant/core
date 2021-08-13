@@ -228,13 +228,20 @@ class Scanner:
         """Scan for new entries."""
         for listener in self._ssdp_listeners:
             listener.async_search()
+
+        self.async_scan_broadcast()
+
+    @core_callback
+    def async_scan_broadcast(self, *_: Any) -> None:
+        """Scan for new entries using broadcast target."""
+        # Some sonos devices only seem to respond if we send to the broadcast
+        # address. This matches pysonos' behavior
+        # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+        for listener in self._ssdp_listeners:
             try:
                 IPv4Address(listener.source_ip)
             except ValueError:
                 continue
-            # Some sonos devices only seem to respond if we send to the broadcast
-            # address. This matches pysonos' behavior
-            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
             listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
@@ -270,16 +277,9 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL
         )
 
-        # Trigger a manual broadcast-search. Normal search is automatically done.
-        for listener in self._ssdp_listeners:
-            try:
-                IPv4Address(listener.source_ip)
-            except ValueError:
-                continue
-            # Some sonos devices only seem to respond if we send to the broadcast
-            # address. This matches pysonos' behavior
-            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
-            listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
+        # Trigger a broadcast-scan. Regular scan is implicitly triggered
+        # by SSDPListener.
+        self.async_scan_broadcast()
 
     @core_callback
     def _async_get_matching_callbacks(
