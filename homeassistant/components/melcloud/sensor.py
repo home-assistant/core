@@ -11,11 +11,11 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
-from homeassistant.util import dt as dt_util
 
 from . import MelCloudDevice
 from .const import DOMAIN
@@ -150,10 +150,11 @@ class MelDeviceSensor(SensorEntity):
 
         self._attr_name = f"{api.name} {description.name}"
         self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{description.key}"
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
         if description.device_class == DEVICE_CLASS_ENERGY:
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        else:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def native_value(self):
