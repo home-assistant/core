@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -56,6 +57,19 @@ async def async_setup_entry(
                         ATTR_ENTITY_ID: f"{device.ain}_temperature",
                         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
                         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    },
+                    coordinator,
+                    ain,
+                )
+            )
+            entities.append(
+                FritzBoxHumiditySensor(
+                    {
+                        ATTR_NAME: f"{device.name} Humidity",
+                        ATTR_ENTITY_ID: f"{device.ain}_humidity",
+                        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
                         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                     },
                     coordinator,
@@ -176,3 +190,12 @@ class FritzBoxTempSensor(FritzBoxSensor):
             ATTR_STATE_LOCKED: self.device.lock,
         }
         return attrs
+
+
+class FritzBoxHumiditySensor(FritzBoxSensor):
+    """The entity class for FRITZ!SmartHome humidity sensors."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return self.device.rel_humidity  # type: ignore [no-any-return]
