@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import datetime
 from functools import lru_cache
 import logging
 import os
 import socket
 import sys
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import psutil
 import voluptuous as vol
@@ -47,6 +46,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
+from .model import SensorData, SystemMonitorSensorEntityDescription
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = "arg"
@@ -56,163 +57,226 @@ if sys.maxsize > 2 ** 32:
 else:
     CPU_ICON = "mdi:cpu-32-bit"
 
-SENSOR_TYPE_NAME = 0
-SENSOR_TYPE_UOM = 1
-SENSOR_TYPE_ICON = 2
-SENSOR_TYPE_DEVICE_CLASS = 3
-SENSOR_TYPE_STATE_CLASS = 4
-SENSOR_TYPE_MANDATORY_ARG = 5
-
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
-# Schema: [name, unit of measurement, icon, device class, state class, flag if mandatory arg]
-SENSOR_TYPES: dict[
-    str, tuple[str, str | None, str | None, str | None, str | None, bool]
-] = {
-    "disk_free": (
-        "Disk free",
-        DATA_GIBIBYTES,
-        "mdi:harddisk",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
+    SystemMonitorSensorEntityDescription(
+        key="disk_free",
+        name="Disk free",
+        unit_of_measurement=DATA_GIBIBYTES,
+        icon="mdi:harddisk",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "disk_use": (
-        "Disk use",
-        DATA_GIBIBYTES,
-        "mdi:harddisk",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="disk_use",
+        name="Disk use",
+        unit_of_measurement=DATA_GIBIBYTES,
+        icon="mdi:harddisk",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "disk_use_percent": (
-        "Disk use (percent)",
-        PERCENTAGE,
-        "mdi:harddisk",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="disk_use_percent",
+        name="Disk use (percent)",
+        unit_of_measurement=PERCENTAGE,
+        icon="mdi:harddisk",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "ipv4_address": ("IPv4 address", "", "mdi:server-network", None, None, True),
-    "ipv6_address": ("IPv6 address", "", "mdi:server-network", None, None, True),
-    "last_boot": ("Last boot", None, None, DEVICE_CLASS_TIMESTAMP, None, False),
-    "load_15m": ("Load (15m)", " ", CPU_ICON, None, STATE_CLASS_MEASUREMENT, False),
-    "load_1m": ("Load (1m)", " ", CPU_ICON, None, STATE_CLASS_MEASUREMENT, False),
-    "load_5m": ("Load (5m)", " ", CPU_ICON, None, STATE_CLASS_MEASUREMENT, False),
-    "memory_free": (
-        "Memory free",
-        DATA_MEBIBYTES,
-        "mdi:memory",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="ipv4_address",
+        name="IPv4 address",
+        unit_of_measurement=None,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=None,
+        mandatory=True,
     ),
-    "memory_use": (
-        "Memory use",
-        DATA_MEBIBYTES,
-        "mdi:memory",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="ipv6_address",
+        name="IPv6 address",
+        unit_of_measurement=None,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=None,
+        mandatory=True,
     ),
-    "memory_use_percent": (
-        "Memory use (percent)",
-        PERCENTAGE,
-        "mdi:memory",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="last_boot",
+        name="Last boot",
+        unit_of_measurement=None,
+        icon=None,
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        state_class=None,
+        mandatory=False,
     ),
-    "network_in": (
-        "Network in",
-        DATA_MEBIBYTES,
-        "mdi:server-network",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        True,
+    SystemMonitorSensorEntityDescription(
+        key="load_15m",
+        name="Load (15m)",
+        unit_of_measurement=None,
+        icon=CPU_ICON,
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "network_out": (
-        "Network out",
-        DATA_MEBIBYTES,
-        "mdi:server-network",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        True,
+    SystemMonitorSensorEntityDescription(
+        key="load_1m",
+        name="Load (1m)",
+        unit_of_measurement=None,
+        icon=CPU_ICON,
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "packets_in": (
-        "Packets in",
-        " ",
-        "mdi:server-network",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        True,
+    SystemMonitorSensorEntityDescription(
+        key="load_5m",
+        name="Load (5m)",
+        unit_of_measurement=None,
+        icon=CPU_ICON,
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "packets_out": (
-        "Packets out",
-        " ",
-        "mdi:server-network",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        True,
+    SystemMonitorSensorEntityDescription(
+        key="memory_free",
+        name="Memory free",
+        unit_of_measurement=DATA_MEBIBYTES,
+        icon="mdi:memory",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "throughput_network_in": (
-        "Network throughput in",
-        DATA_RATE_MEGABYTES_PER_SECOND,
-        "mdi:server-network",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        True,
+    SystemMonitorSensorEntityDescription(
+        key="memory_use",
+        name="Memory use",
+        unit_of_measurement=DATA_MEBIBYTES,
+        icon="mdi:memory",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "throughput_network_out": (
-        "Network throughput out",
-        DATA_RATE_MEGABYTES_PER_SECOND,
-        "mdi:server-network",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        True,
+    SystemMonitorSensorEntityDescription(
+        key="memory_use_percent",
+        name="Memory use (percent)",
+        unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
     ),
-    "process": ("Process", " ", CPU_ICON, None, None, True),
-    "processor_use": (
-        "Processor use (percent)",
-        PERCENTAGE,
-        CPU_ICON,
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="network_in",
+        name="Network in",
+        unit_of_measurement=DATA_MEBIBYTES,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=True,
     ),
-    "processor_temperature": (
-        "Processor temperature",
-        TEMP_CELSIUS,
-        None,
-        DEVICE_CLASS_TEMPERATURE,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="network_out",
+        name="Network out",
+        unit_of_measurement=DATA_MEBIBYTES,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=True,
     ),
-    "swap_free": (
-        "Swap free",
-        DATA_MEBIBYTES,
-        "mdi:harddisk",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="packets_in",
+        name="Packets in",
+        unit_of_measurement=None,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=True,
     ),
-    "swap_use": (
-        "Swap use",
-        DATA_MEBIBYTES,
-        "mdi:harddisk",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="packets_out",
+        name="Packets out",
+        unit_of_measurement=None,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=True,
     ),
-    "swap_use_percent": (
-        "Swap use (percent)",
-        PERCENTAGE,
-        "mdi:harddisk",
-        None,
-        STATE_CLASS_MEASUREMENT,
-        False,
+    SystemMonitorSensorEntityDescription(
+        key="throughput_network_in",
+        name="Network throughput in",
+        unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=True,
     ),
-}
+    SystemMonitorSensorEntityDescription(
+        key="throughput_network_out",
+        name="Network throughput out",
+        unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        icon="mdi:server-network",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=True,
+    ),
+    SystemMonitorSensorEntityDescription(
+        key="process",
+        name="Process",
+        unit_of_measurement=None,
+        icon=CPU_ICON,
+        device_class=None,
+        state_class=None,
+        mandatory=True,
+    ),
+    SystemMonitorSensorEntityDescription(
+        key="processor_use",
+        name="Processor use (percent)",
+        unit_of_measurement=PERCENTAGE,
+        icon=CPU_ICON,
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
+    ),
+    SystemMonitorSensorEntityDescription(
+        key="processor_temperature",
+        name="Processor temperature",
+        unit_of_measurement=TEMP_CELSIUS,
+        icon=None,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
+    ),
+    SystemMonitorSensorEntityDescription(
+        key="swap_free",
+        name="Swap free",
+        unit_of_measurement=DATA_MEBIBYTES,
+        icon="mdi:harddisk",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
+    ),
+    SystemMonitorSensorEntityDescription(
+        key="swap_use",
+        name="Swap use",
+        unit_of_measurement=DATA_MEBIBYTES,
+        icon="mdi:harddisk",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
+    ),
+    SystemMonitorSensorEntityDescription(
+        key="swap_use_percent",
+        name="Swap use (percent)",
+        unit_of_measurement=PERCENTAGE,
+        icon="mdi:harddisk",
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+        mandatory=False,
+    ),
+)
 
 
 def check_required_arg(value: Any) -> Any:
@@ -221,7 +285,10 @@ def check_required_arg(value: Any) -> Any:
         sensor_type = sensor[CONF_TYPE]
         sensor_arg = sensor.get(CONF_ARG)
 
-        if sensor_arg is None and SENSOR_TYPES[sensor_type][SENSOR_TYPE_MANDATORY_ARG]:
+        is_mandatory = next(
+            iter([t.mandatory for t in SENSOR_TYPES if t.key == sensor_type])
+        )
+        if sensor_arg is None and is_mandatory:
             raise vol.RequiredFieldInvalid(
                 f"Mandatory 'arg' is missing for sensor type '{sensor_type}'."
             )
@@ -236,7 +303,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [
                 vol.Schema(
                     {
-                        vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
+                        vol.Required(CONF_TYPE): vol.In([t.key for t in SENSOR_TYPES]),
                         vol.Optional(CONF_ARG): cv.string,
                     }
                 )
@@ -282,17 +349,6 @@ CPU_SENSOR_PREFIXES = [
 ]
 
 
-@dataclass
-class SensorData:
-    """Data for a sensor."""
-
-    argument: Any
-    state: str | None
-    value: Any | None
-    update_time: datetime.datetime | None
-    last_exception: BaseException | None
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -326,7 +382,10 @@ async def async_setup_platform(
         sensor_registry[(type_, argument)] = SensorData(
             argument, None, None, None, None
         )
-        entities.append(SystemMonitorSensor(sensor_registry, type_, argument))
+        sensor_description = next(iter(t for t in SENSOR_TYPES if t.key == type_))
+        entities.append(
+            SystemMonitorSensor(sensor_registry, sensor_description, argument)
+        )
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
@@ -396,29 +455,22 @@ class SystemMonitorSensor(SensorEntity):
     def __init__(
         self,
         sensor_registry: dict[tuple[str, str], SensorData],
-        sensor_type: str,
+        sensor_description: SystemMonitorSensorEntityDescription,
         argument: str = "",
     ) -> None:
         """Initialize the sensor."""
-        self._type: str = sensor_type
-        self._name: str = f"{self.sensor_type[SENSOR_TYPE_NAME]} {argument}".rstrip()
-        self._unique_id: str = slugify(f"{sensor_type}_{argument}")
+        self.entity_description = sensor_description
+        self._attr_name: str = f"{sensor_description.name} {argument}".rstrip()
+        self._attr_should_poll = False
+        self._attr_unique_id: str = slugify(f"{sensor_description.key}_{argument}")
         self._sensor_registry = sensor_registry
+        self._type: str = sensor_description.key
         self._argument: str = argument
-        self._attr_device_class: str | None = self.sensor_type[SENSOR_TYPE_DEVICE_CLASS]
-        self._attr_icon: str | None = self.sensor_type[SENSOR_TYPE_ICON]
-        self._attr_state_class: str | None = self.sensor_type[SENSOR_TYPE_STATE_CLASS]
-        self._attr_unit_of_measurement: str | None = self.sensor_type[SENSOR_TYPE_UOM]
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID."""
-        return self._unique_id
+    def data(self) -> SensorData:
+        """Return registry entry for the data."""
+        return self._sensor_registry[(self._type, self._argument)]
 
     @property
     def native_value(self) -> str | None:
@@ -429,21 +481,6 @@ class SystemMonitorSensor(SensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data.last_exception is None
-
-    @property
-    def should_poll(self) -> bool:
-        """Entity does not poll."""
-        return False
-
-    @property
-    def sensor_type(self) -> list:
-        """Return sensor type data for the sensor."""
-        return SENSOR_TYPES[self._type]  # type: ignore
-
-    @property
-    def data(self) -> SensorData:
-        """Return registry entry for the data."""
-        return self._sensor_registry[(self._type, self._argument)]
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

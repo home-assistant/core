@@ -1012,6 +1012,7 @@ omit =
     homeassistant/components/system_bridge/const.py
     homeassistant/components/system_bridge/coordinator.py
     homeassistant/components/system_bridge/sensor.py
+    homeassistant/components/systemmonitor/model.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/*
     homeassistant/components/tahoma/*
