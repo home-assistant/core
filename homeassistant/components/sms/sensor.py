@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     key="signal",
                     name=f"gsm_signal_imei_{imei}",
                     device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-                    unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+                    native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
                     entity_registry_enabled_default=False,
                 ),
             )
@@ -55,7 +55,7 @@ class GSMSignalSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state["SignalStrength"]
 

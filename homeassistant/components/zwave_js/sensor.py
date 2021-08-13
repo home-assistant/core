@@ -181,14 +181,14 @@ class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave String sensor."""
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
         return str(self.info.primary_value.value)
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if self.info.primary_value.metadata.unit is None:
             return None
@@ -215,14 +215,14 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             )
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return 0
         return round(float(self.info.primary_value.value), 2)
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if self.info.primary_value.metadata.unit is None:
             return None
@@ -345,7 +345,7 @@ class ZWaveListSensor(ZwaveSensorBase):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
@@ -387,7 +387,7 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
@@ -439,7 +439,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_device_info = {
             "identifiers": {get_device_id(self.client, self.node)},
         }
-        self._attr_state: str = node.status.name.lower()
+        self._attr_native_value: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
@@ -447,7 +447,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     def _status_changed(self, _: dict) -> None:
         """Call when status event is received."""
-        self._attr_state = self.node.status.name.lower()
+        self._attr_native_value = self.node.status.name.lower()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

@@ -290,7 +290,9 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._attr_icon = self._sensor_data.get("icon")
         self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
         self._attr_state_class = self._sensor_data.get("state_class")
-        self._attr_unit_of_measurement = self._sensor_data.get("unit_of_measurement")
+        self._attr_native_unit_of_measurement = self._sensor_data.get(
+            "unit_of_measurement"
+        )
         self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         super().__init__(fritzbox_tools, device_friendly_name)
 
@@ -311,7 +313,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        self._attr_state = self._last_device_value = self._state_provider(
+        self._attr_native_value = self._last_device_value = self._state_provider(
             status, self._last_device_value
         )
 

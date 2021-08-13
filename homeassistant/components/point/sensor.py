@@ -70,13 +70,13 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         return self._device_prop[0]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.value is None:
             return None
         return round(self.value, self._device_prop[1])
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._device_prop[2]

@@ -335,11 +335,6 @@ class BMWConnectedDriveBaseEntity(Entity):
             "manufacturer": vehicle.attributes.get("brand"),
         }
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return self._attrs
-
     def update_callback(self):
         """Schedule a state update."""
         self.schedule_update_ha_state(True)

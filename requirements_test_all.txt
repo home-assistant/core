@@ -202,7 +202,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.19.1
+async-upnp-client==0.19.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -920,7 +920,7 @@ pymodbus==2.5.3rc1
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==3.0.4
+pymyq==3.1.2
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0

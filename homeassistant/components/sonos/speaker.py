@@ -346,10 +346,13 @@ class SonosSpeaker:
     async def async_unsubscribe(self) -> None:
         """Cancel all subscriptions."""
         _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(subscription.unsubscribe() for subscription in self._subscriptions),
             return_exceptions=True,
         )
+        for result in results:
+            if isinstance(result, Exception):
+                _LOGGER.debug("Unsubscribe failed for %s: %s", self.zone_name, result)
         self._subscriptions = []
 
     @callback
@@ -633,8 +636,8 @@ class SonosSpeaker:
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
         if not hasattr(event, "zone_player_uui_ds_in_group"):
-            return None
-        self.hass.async_add_job(self.create_update_groups_coro(event))
+            return
+        self.hass.async_create_task(self.create_update_groups_coro(event))
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
