@@ -296,6 +296,16 @@ AIRFRESH_SENSORS = (
     ATTR_TEMPERATURE,
 )
 
+MODEL_TO_SENSORS_MAP = {
+    MODEL_AIRHUMIDIFIER_CA1: HUMIDIFIER_CA1_CB1_SENSORS,
+    MODEL_AIRHUMIDIFIER_CB1: HUMIDIFIER_CA1_CB1_SENSORS,
+    MODEL_AIRPURIFIER_V2: PURIFIER_V2_SENSORS,
+    MODEL_AIRPURIFIER_V3: PURIFIER_V3_SENSORS,
+    MODEL_AIRPURIFIER_PRO_V7: PURIFIER_PRO_V7_SENSORS,
+    MODEL_AIRPURIFIER_PRO: PURIFIER_PRO_SENSORS,
+    MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
+}
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Miio configuration from YAML."""
@@ -350,24 +360,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
         sensors = []
-        if model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
-            sensors = HUMIDIFIER_CA1_CB1_SENSORS
+        if model in MODEL_TO_SENSORS_MAP:
+            sensors = MODEL_TO_SENSORS_MAP[model]
         elif model in MODELS_HUMIDIFIER_MIOT:
             sensors = HUMIDIFIER_MIOT_SENSORS
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_SENSORS
         elif model in MODELS_HUMIDIFIER_MIIO:
             sensors = HUMIDIFIER_MIIO_SENSORS
-        elif model == MODEL_AIRPURIFIER_V2:
-            sensors = PURIFIER_V2_SENSORS
-        elif model == MODEL_AIRPURIFIER_V3:
-            sensors = PURIFIER_V3_SENSORS
-        elif model == MODEL_AIRPURIFIER_PRO_V7:
-            sensors = PURIFIER_PRO_V7_SENSORS
-        elif model == MODEL_AIRPURIFIER_PRO:
-            sensors = PURIFIER_PRO_SENSORS
-        elif model == MODEL_AIRFRESH_VA2:
-            sensors = AIRFRESH_SENSORS
         elif model in MODELS_PURIFIER_MIIO:
             sensors = PURIFIER_MIIO_SENSORS
         elif model in MODELS_PURIFIER_MIOT:
