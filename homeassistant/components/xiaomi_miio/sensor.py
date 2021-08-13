@@ -348,40 +348,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         model = config_entry.data[CONF_MODEL]
-        device = None
+        if hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE):
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         sensors = []
         if model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_CA1_CB1_SENSORS
         elif model in MODELS_HUMIDIFIER_MIOT:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_MIOT_SENSORS
         elif model in MODELS_HUMIDIFIER_MJJSQ:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_MJJSQ_SENSORS
         elif model in MODELS_HUMIDIFIER_MIIO:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_MIIO_SENSORS
         elif model == MODEL_AIRPURIFIER_V2:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = PURIFIER_V2_SENSORS
         elif model == MODEL_AIRPURIFIER_V3:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = PURIFIER_V3_SENSORS
         elif model == MODEL_AIRPURIFIER_PRO_V7:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = PURIFIER_PRO_V7_SENSORS
         elif model == MODEL_AIRPURIFIER_PRO:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = PURIFIER_PRO_SENSORS
         elif model == MODEL_AIRFRESH_VA2:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = AIRFRESH_SENSORS
         elif model in MODELS_PURIFIER_MIIO:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = PURIFIER_MIIO_SENSORS
         elif model in MODELS_PURIFIER_MIOT:
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = PURIFIER_MIOT_SENSORS
         else:
             unique_id = config_entry.unique_id
