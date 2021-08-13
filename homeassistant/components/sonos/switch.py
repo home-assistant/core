@@ -60,6 +60,14 @@ FRIENDLY_NAMES = {
     ATTR_TOUCH_CONTROLS: "Touch Controls",
 }
 
+FEATURE_ICONS = {
+    ATTR_NIGHT_SOUND: "mdi:chat-sleep",
+    ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
+    ATTR_CROSSFADE: "mdi:swap-horizontal",
+    ATTR_STATUS_LIGHT: "mdi:led-on",
+    ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
@@ -115,18 +123,8 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         self.feature_type = feature_type
         self._attr_name = f"Sonos {speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
+        self._attr_icon = FEATURE_ICONS.get(feature_type)
         self._attr_is_on = is_on
-
-        if feature_type == ATTR_NIGHT_SOUND:
-            self._attr_icon = "mdi:chat-sleep"
-        elif feature_type == ATTR_SPEECH_ENHANCEMENT:
-            self._attr_icon = "mdi:ear-hearing"
-        elif feature_type == ATTR_CROSSFADE:
-            self._attr_icon = "mdi:swap-horizontal"
-        elif feature_type == ATTR_STATUS_LIGHT:
-            self._attr_icon = "mdi:led-on"
-        elif feature_type == ATTR_TOUCH_CONTROLS:
-            self._attr_icon = "mdi:gesture-tap"
 
         if feature_type in POLL_REQUIRED:
             self._attr_entity_registry_enabled_default = False
