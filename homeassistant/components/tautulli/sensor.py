@@ -1,18 +1,7 @@
 """A platform which allows you to get information from Tautulli."""
-from __future__ import annotations
-
 from datetime import timedelta
-from logging import Logger, getLogger
-from typing import Any
 
-from pytautulli import (
-    PyTautulli,
-    PyTautulliApiActivity,
-    PyTautulliApiHomeStats,
-    PyTautulliApiUser,
-    PyTautulliConnectionException,
-    PyTautulliException,
-)
+from pytautulli import PyTautulli
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -31,8 +20,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-_LOGGER: Logger = getLogger(__name__)
-
 CONF_MONITORED_USERS = "monitored_users"
 
 DEFAULT_NAME = "Tautulli"
@@ -47,12 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_MONITORED_USERS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
+        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_MONITORED_USERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
@@ -65,117 +48,138 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the Tautulli sensor."""
 
-    name = config[CONF_NAME]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    users = config[CONF_MONITORED_USERS]
-    verify_ssl = config[CONF_VERIFY_SSL]
+    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
+    port = config.get(CONF_PORT)
+    path = config.get(CONF_PATH)
+    api_key = config[CONF_API_KEY]
+    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    user = config.get(CONF_MONITORED_USERS)
+    use_ssl = config[CONF_SSL]
+    verify_ssl = config.get(CONF_VERIFY_SSL)
 
     session = async_get_clientsession(hass, verify_ssl)
-    client = PyTautulli(
-        api_token=config[CONF_API_KEY],
-        hostname=config[CONF_HOST],
-        session=session,
-        verify_ssl=verify_ssl,
-        port=config[CONF_PORT],
-        ssl=config[CONF_SSL],
-        base_api_path=config[CONF_PATH],
+    tautulli = TautulliData(
+        PyTautulli(
+            api_token=api_key,
+            hostname=host,
+            session=session,
+            verify_ssl=verify_ssl,
+            port=port,
+            ssl=use_ssl,
+            base_api_path=path,
+        )
     )
-    try:
-        await client.async_get_server_info()
-    except PyTautulliConnectionException as exception:
-        raise PlatformNotReady(exception) from exception
-    except PyTautulliException as exception:
-        _LOGGER.error(exception)
-        return
 
-    async_add_entities(
-        [TautulliSensor(TautulliData(client), name, monitored_conditions, users)], True
-    )
+    await tautulli.async_update()
+    if not tautulli.activity or not tautulli.home_stats or not tautulli.users:
+        raise PlatformNotReady
+
+    sensor = [TautulliSensor(tautulli, name, monitored_conditions, user)]
+
+    async_add_entities(sensor, True)
 
 
 class TautulliSensor(SensorEntity):
     """Representation of a Tautulli sensor."""
 
-    _attr_icon = "mdi:plex"
-    _attr_native_unit_of_measurement = "Watching"
-
-    def __init__(
-        self,
-        data: TautulliData,
-        name: str,
-        monitored_conditions: list[str],
-        users: list[str],
-    ):
+    def __init__(self, tautulli, name, monitored_conditions, users):
         """Initialize the Tautulli sensor."""
-        self._attr_name = name
-        self.data = data
+        self.tautulli = tautulli
         self.monitored_conditions = monitored_conditions
         self.usernames = users
+        self.sessions = {}
+        self.home = {}
+        self._attributes = {}
+        self._name = name
+        self._state = None
 
     async def async_update(self):
         """Get the latest data from the Tautulli API."""
-        try:
-            await self.data.async_update()
-        except PyTautulliException as exception:
-            _LOGGER.error(exception)
-            self._attr_available = False
+        await self.tautulli.async_update()
+        if (
+            not self.tautulli.activity
+            or not self.tautulli.home_stats
+            or not self.tautulli.users
+        ):
             return
 
-        if not self.data.activity or not self.data.home_stats or not self.data.users:
-            self._attr_available = False
-            return
+        self._attr_native_value = self.tautulli.activity.stream_count
 
-        self._attr_available = True
-        self._attr_native_value = self.data.activity.stream_count
-
-        _attributes: dict[str, Any] = {
-            "stream_count": self.data.activity.stream_count,
-            "stream_count_direct_play": self.data.activity.stream_count_direct_play,
-            "stream_count_direct_stream": self.data.activity.stream_count_direct_stream,
-            "stream_count_transcode": self.data.activity.stream_count_transcode,
-            "total_bandwidth": self.data.activity.total_bandwidth,
-            "lan_bandwidth": self.data.activity.lan_bandwidth,
-            "wan_bandwidth": self.data.activity.wan_bandwidth,
+        self._attributes = {
+            "stream_count": self.tautulli.activity.stream_count,
+            "stream_count_direct_play": self.tautulli.activity.stream_count_direct_play,
+            "stream_count_direct_stream": self.tautulli.activity.stream_count_direct_stream,
+            "stream_count_transcode": self.tautulli.activity.stream_count_transcode,
+            "total_bandwidth": self.tautulli.activity.total_bandwidth,
+            "lan_bandwidth": self.tautulli.activity.lan_bandwidth,
+            "wan_bandwidth": self.tautulli.activity.wan_bandwidth,
         }
 
-        for stat in self.data.home_stats:
+        for stat in self.tautulli.home_stats:
             if stat.stat_id == "top_movies":
-                _attributes["Top Movie"] = stat.rows[0].title if stat.rows else None
+                self._attributes["Top Movie"] = (
+                    stat.rows[0].title if stat.rows else None
+                )
             elif stat.stat_id == "top_tv":
-                _attributes["Top TV Show"] = stat.rows[0].title if stat.rows else None
+                self._attributes["Top TV Show"] = (
+                    stat.rows[0].title if stat.rows else None
+                )
             elif stat.stat_id == "top_users":
-                _attributes["Top User"] = stat.rows[0].user if stat.rows else None
+                self._attributes["Top User"] = stat.rows[0].user if stat.rows else None
 
-        for user in self.data.users:
+        for user in self.tautulli.users:
             if (
                 self.usernames
                 and user.username not in self.usernames
                 or user.username == "Local"
             ):
                 continue
-            _attributes.setdefault(user.username, {})["Activity"] = None
+            self._attributes.setdefault(user.username, {})["Activity"] = None
 
-        for session in self.data.activity.sessions:
-            if not _attributes.get(session.username):
+        for session in self.tautulli.activity.sessions:
+            if not self._attributes.get(session.username):
                 continue
 
-            _attributes[session.username]["Activity"] = session.state
+            self._attributes[session.username]["Activity"] = session.state
             for key in self.monitored_conditions:
-                _attributes[session.username][key] = session.__getattribute__(key)
+                self._attributes[session.username][key] = session.__getattribute__(key)
 
-        self._attr_extra_state_attributes = _attributes
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self.tautulli.activity.stream_count
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:plex"
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "Watching"
+
+    @property
+    def extra_state_attributes(self):
+        """Return attributes for the sensor."""
+        return self._attributes
 
 
 class TautulliData:
     """Get the latest data and update the states."""
 
-    activity: PyTautulliApiActivity | None = None
-    home_stats: list[PyTautulliApiHomeStats] | None = None
-    users: list[PyTautulliApiUser] | None = None
-
-    def __init__(self, client: PyTautulli):
+    def __init__(self, client):
         """Initialize the data object."""
         self._client = client
+        self.activity = None
+        self.home_stats = None
+        self.users = None
 
     @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self):
