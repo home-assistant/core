@@ -8,7 +8,7 @@ codecov==2.1.12
 coverage==5.5
 jsonpickle==1.4.1
 mock-open==1.4.0
-mypy==0.902
+mypy==0.910
 pre-commit==2.13.0
 pylint==2.9.5
 pipdeptree==1.0.0
