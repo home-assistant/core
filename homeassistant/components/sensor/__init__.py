@@ -73,8 +73,16 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
+# The state represents a total amount, e.g. a value of a stock portfolio
+STATE_CLASS_TOTAL: Final = "total"
+# The state represents a monotonically increasing total, e.g. an amount of consumed gas
+STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
-STATE_CLASSES: Final[list[str]] = [STATE_CLASS_MEASUREMENT]
+STATE_CLASSES: Final[list[str]] = [
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+]
 
 STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(STATE_CLASSES))
 
@@ -118,6 +126,7 @@ class SensorEntity(Entity):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType = None
     _attr_state_class: str | None
+    _last_reset_reported = False
     _temperature_conversion_reported = False
 
     @property
@@ -151,6 +160,25 @@ class SensorEntity(Entity):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
+            if (
+                last_reset is not None
+                and self.state_class == STATE_CLASS_MEASUREMENT
+                and not self._last_reset_reported
+            ):
+                self._last_reset_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) with state_class %s has set last_reset. Setting "
+                    "last_reset for entities with state_class other than 'total' is "
+                    "deprecated and will be removed from Home Assistant Core 2021.10. "
+                    "Please update your configuration if state_class is manually "
+                    "configured, otherwise %s",
+                    self.entity_id,
+                    type(self),
+                    self.state_class,
+                    report_issue,
+                )
+
             return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None

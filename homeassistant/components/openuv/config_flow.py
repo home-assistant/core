@@ -51,10 +51,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
