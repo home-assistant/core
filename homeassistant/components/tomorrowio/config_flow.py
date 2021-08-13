@@ -120,7 +120,7 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self._showed_import_message = False
+        self._showed_import_message = 0
         self._import_config: dict[str, Any] | None = None
 
     @staticmethod
@@ -160,7 +160,7 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         old_config_entry_id
                     )
                     assert old_config_entry
-                    options = old_config_entry.options
+                    options = dict(old_config_entry.options)
                     user_input["old_config_entry_id"] = old_config_entry_id
                     self.hass.components.persistent_notification.async_dismiss(
                         f"{CC_DOMAIN}_to_{DOMAIN}_new_api_key_needed"
@@ -187,8 +187,9 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_upgrade_needed(self, import_config: dict = None) -> FlowResult:
         """Tell the user upgrade is needed and what will happen after config flow."""
-        if not self._showed_import_message:
-            self._showed_import_message = True
+        # We have to do this twice to make sure the dialog shows when the user opens it.
+        if self._showed_import_message < 2:
+            self._showed_import_message += 1
             return self.async_show_form(step_id="upgrade_needed")
 
         return await self.async_step_user()

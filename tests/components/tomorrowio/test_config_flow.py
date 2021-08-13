@@ -254,6 +254,9 @@ async def test_import_flow_v3(
 
     # Fake hitting submit on upgrade needed form
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    # We need to do this twice because the first one the system catches, second one
+    # user does.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "this is a test"}
