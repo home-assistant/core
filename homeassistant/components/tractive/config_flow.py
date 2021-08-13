@@ -75,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: dict = None) -> FlowResult:
+    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         errors = {}
 
