@@ -3,6 +3,7 @@
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     SensorEntity,
 )
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
@@ -37,7 +38,6 @@ class MillHeaterEnergySensor(SensorEntity):
         self._attr_name = f"{heater.name} {sensor_type.replace('_', ' ')}"
         self._attr_unique_id = f"{heater.device_id}_{sensor_type}"
         self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_device_info = {
             "identifiers": {(DOMAIN, heater.device_id)},
             "name": self.name,
@@ -45,15 +45,19 @@ class MillHeaterEnergySensor(SensorEntity):
             "model": f"generation {1 if heater.is_gen1 else 2}",
         }
         if self._sensor_type == CONSUMPTION_TODAY:
+            self._attr_state_class = STATE_CLASS_TOTAL
             self._attr_last_reset = dt_util.as_utc(
                 dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
             )
         elif self._sensor_type == CONSUMPTION_YEAR:
+            self._attr_state_class = STATE_CLASS_TOTAL
             self._attr_last_reset = dt_util.as_utc(
                 dt_util.now().replace(
                     month=1, day=1, hour=0, minute=0, second=0, microsecond=0
                 )
             )
+        else:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_update(self):
         """Retrieve latest state."""
