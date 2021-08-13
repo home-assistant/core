@@ -100,6 +100,7 @@ class FritzDeviceSensorMock(FritzDeviceBaseMock):
     lock = "fake_locked"
     present = True
     temperature = 1.23
+    rel_humidity = 42
 
 
 class FritzDeviceSwitchMock(FritzDeviceBaseMock):
