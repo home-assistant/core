@@ -104,8 +104,6 @@ class TautulliSensor(SensorEntity):
         ):
             return
 
-        self._attr_native_value = self.tautulli.activity.stream_count
-
         self._attributes = {
             "stream_count": self.tautulli.activity.stream_count,
             "stream_count_direct_play": self.tautulli.activity.stream_count_direct_play,
@@ -142,8 +140,9 @@ class TautulliSensor(SensorEntity):
                 continue
 
             self._attributes[session.username]["Activity"] = session.state
-            for key in self.monitored_conditions:
-                self._attributes[session.username][key] = session.__getattribute__(key)
+            if self.monitored_conditions:
+                for key in self.monitored_conditions:
+                    self._attributes[session.username][key] = getattr(session, key)
 
     @property
     def name(self):
@@ -153,6 +152,8 @@ class TautulliSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if not self.tautulli.activity:
+            return 0
         return self.tautulli.activity.stream_count
 
     @property
@@ -174,9 +175,9 @@ class TautulliSensor(SensorEntity):
 class TautulliData:
     """Get the latest data and update the states."""
 
-    def __init__(self, client):
+    def __init__(self, api):
         """Initialize the data object."""
-        self._client = client
+        self.api = api
         self.activity = None
         self.home_stats = None
         self.users = None
@@ -184,6 +185,6 @@ class TautulliData:
     @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from Tautulli."""
-        self.activity = await self._client.async_get_activity()
-        self.home_stats = await self._client.async_get_home_stats()
-        self.users = await self._client.async_get_users()
+        self.activity = await self.api.async_get_activity()
+        self.home_stats = await self.api.async_get_home_stats()
+        self.users = await self.api.async_get_users()
