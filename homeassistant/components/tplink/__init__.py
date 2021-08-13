@@ -27,8 +27,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import as_local, utc_from_timestamp
 
-from .common import SmartDevices, async_discover_devices, get_static_devices
+from .common import (
+    SmartDevices,
+    async_discover_devices,
+    get_static_devices,
+    get_time_offset,
+)
 from .const import (
     ATTR_CONFIG,
     ATTR_CURRENT_A,
@@ -262,6 +268,18 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_CURRENT_A: round(float(emeter_readings["current"]), 2),
                 }
                 emeter_statics = self.smartplug.get_emeter_daily()
+                last_reset = datetime.now() - get_time_offset(self.smartplug)
+                last_reset_local = as_local(last_reset.replace(microsecond=0))
+                _LOGGER.debug(
+                    "%s last reset time as local to server is %s"
+                    % (
+                        self.smartplug.alias,
+                        last_reset_local.strftime("%Y/%m/%d %H:%M:%S"),
+                    )
+                )
+                data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
+                    ATTR_TODAY_ENERGY_KWH
+                ] = last_reset_local
                 if emeter_statics.get(int(time.strftime("%e"))):
                     data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
                         float(emeter_statics[int(time.strftime("%e"))]), 3

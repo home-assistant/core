@@ -1,6 +1,7 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Final
 
 from pyHS100 import SmartPlug
@@ -153,3 +154,10 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.data[CONF_MAC])},
             "sw_version": self.data[CONF_SW_VERSION],
         }
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the  last reset time for emeter."""
+        return self.data[CONF_EMETER_PARAMS][ATTR_LAST_RESET].get(
+            self.entity_description.key
+        )
