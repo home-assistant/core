@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
         MillHeaterEnergySensor(mill_data_coordinator, sensor_type, heater)
         for sensor_type in (CONSUMPTION_TODAY, CONSUMPTION_YEAR)
-        for heater in mill_data_connection.heaters.values()
+        for heater in mill_data_coordinator.data.values()
     ]
     async_add_entities(entities)
 
