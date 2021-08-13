@@ -1803,7 +1803,7 @@ pysyncthru==0.7.3
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
-pytautulli==0.5.0
+pytautulli==21.8.1
 
 # homeassistant.components.tfiac
 pytfiac==0.4
