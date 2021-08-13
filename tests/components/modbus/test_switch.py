@@ -39,7 +39,7 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import ReadResult, base_test, prepare_service_update
+from .conftest import ReadResult, base_test
 
 from tests.common import async_fire_time_changed
 
@@ -291,33 +291,32 @@ async def test_switch_service_turn(hass, caplog, mock_pymodbus):
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_service_switch_update(hass, mock_pymodbus):
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: SWITCH_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {},
+                }
+            ]
+        },
+    ],
+)
+async def test_service_switch_update(hass, mock_modbus, mock_ha):
     """Run test for service homeassistant.update_entity."""
-
-    config = {
-        CONF_SWITCHES: [
-            {
-                CONF_NAME: SWITCH_NAME,
-                CONF_ADDRESS: 1234,
-                CONF_WRITE_TYPE: CALL_TYPE_COIL,
-                CONF_VERIFY: {},
-            }
-        ]
-    }
-    mock_pymodbus.read_discrete_inputs.return_value = ReadResult([0x01])
-    await prepare_service_update(
-        hass,
-        config,
-    )
-    await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
-    )
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
-    mock_pymodbus.read_coils.return_value = ReadResult([0x00])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 async def test_delay_switch(hass, mock_pymodbus):

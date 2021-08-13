@@ -105,7 +105,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
 
         self._attr_icon = icon
         self._attr_name = name
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
 
     @callback
     def update_from_latest_data(self) -> None:
@@ -119,22 +119,22 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
         self._attr_available = True
 
         if self._sensor_type == TYPE_CURRENT_OZONE_LEVEL:
-            self._attr_state = data["ozone"]
+            self._attr_native_value = data["ozone"]
         elif self._sensor_type == TYPE_CURRENT_UV_INDEX:
-            self._attr_state = data["uv"]
+            self._attr_native_value = data["uv"]
         elif self._sensor_type == TYPE_CURRENT_UV_LEVEL:
             if data["uv"] >= 11:
-                self._attr_state = UV_LEVEL_EXTREME
+                self._attr_native_value = UV_LEVEL_EXTREME
             elif data["uv"] >= 8:
-                self._attr_state = UV_LEVEL_VHIGH
+                self._attr_native_value = UV_LEVEL_VHIGH
             elif data["uv"] >= 6:
-                self._attr_state = UV_LEVEL_HIGH
+                self._attr_native_value = UV_LEVEL_HIGH
             elif data["uv"] >= 3:
-                self._attr_state = UV_LEVEL_MODERATE
+                self._attr_native_value = UV_LEVEL_MODERATE
             else:
-                self._attr_state = UV_LEVEL_LOW
+                self._attr_native_value = UV_LEVEL_LOW
         elif self._sensor_type == TYPE_MAX_UV_INDEX:
-            self._attr_state = data["uv_max"]
+            self._attr_native_value = data["uv_max"]
             uv_max_time = parse_datetime(data["uv_max_time"])
             if uv_max_time:
                 self._attr_extra_state_attributes.update(
@@ -148,6 +148,6 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
             TYPE_SAFE_EXPOSURE_TIME_5,
             TYPE_SAFE_EXPOSURE_TIME_6,
         ):
-            self._attr_state = data["safe_exposure_time"][
+            self._attr_native_value = data["safe_exposure_time"][
                 EXPOSURE_TYPE_MAP[self._sensor_type]
             ]

@@ -51,10 +51,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -71,7 +67,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(user_input[CONF_API_KEY], 0, 0, websession)
+        client = Client(user_input[CONF_API_KEY], 0, 0, session=websession)
 
         try:
             await client.uv_index()

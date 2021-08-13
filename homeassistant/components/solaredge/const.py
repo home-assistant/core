@@ -42,7 +42,7 @@ SENSOR_TYPES = [
         icon="mdi:solar-power",
         last_reset=dt_util.utc_from_timestamp(0),
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -51,7 +51,7 @@ SENSOR_TYPES = [
         name="Energy this year",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -60,7 +60,7 @@ SENSOR_TYPES = [
         name="Energy this month",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -69,7 +69,7 @@ SENSOR_TYPES = [
         name="Energy today",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -78,7 +78,7 @@ SENSOR_TYPES = [
         name="Current Power",
         icon="mdi:solar-power",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
     SolarEdgeSensorEntityDescription(
@@ -185,6 +185,6 @@ SENSOR_TYPES = [
         name="Storage Level",
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
 ]

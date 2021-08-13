@@ -346,10 +346,13 @@ class SonosSpeaker:
     async def async_unsubscribe(self) -> None:
         """Cancel all subscriptions."""
         _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(subscription.unsubscribe() for subscription in self._subscriptions),
             return_exceptions=True,
         )
+        for result in results:
+            if isinstance(result, Exception):
+                _LOGGER.debug("Unsubscribe failed for %s: %s", self.zone_name, result)
         self._subscriptions = []
 
     @callback
@@ -496,9 +499,7 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(
-        self, now: datetime.datetime | None = None, will_reconnect: bool = False
-    ) -> None:
+    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         if self._seen_timer:
             self._seen_timer()
@@ -527,9 +528,8 @@ class SonosSpeaker:
 
         await self.async_unsubscribe()
 
-        if not will_reconnect:
-            self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-            self.async_write_entity_states()
+        self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
+        self.async_write_entity_states()
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
@@ -538,8 +538,24 @@ class SonosSpeaker:
             self.zone_name,
             soco,
         )
-        await self.async_unseen(will_reconnect=True)
-        await self.async_seen(soco)
+        await self.async_unsubscribe()
+        self.soco = soco
+        await self.async_subscribe()
+        if self._seen_timer:
+            self._seen_timer()
+        self._seen_timer = self.hass.helpers.event.async_call_later(
+            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+        )
+        if not self._poll_timer:
+            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+                partial(
+                    async_dispatcher_send,
+                    self.hass,
+                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                ),
+                SCAN_INTERVAL,
+            )
+        self.async_write_entity_states()
 
     #
     # Battery management
@@ -620,8 +636,8 @@ class SonosSpeaker:
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
         if not hasattr(event, "zone_player_uui_ds_in_group"):
-            return None
-        self.hass.async_add_job(self.create_update_groups_coro(event))
+            return
+        self.hass.async_create_task(self.create_update_groups_coro(event))
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""

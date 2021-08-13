@@ -48,14 +48,13 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_CONNECTED_DEVICE[0],
         name="Devices Connected",
         icon="mdi:router-network",
-        unit_of_measurement=UNIT_DEVICES,
-        entity_registry_enabled_default=True,
+        native_unit_of_measurement=UNIT_DEVICES,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[0],
         name="Download Speed",
         icon="mdi:download-network",
-        unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
         factor=125000,
     ),
@@ -63,7 +62,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_RATES[1],
         name="Upload Speed",
         icon="mdi:upload-network",
-        unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
         factor=125000,
     ),
@@ -71,7 +70,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_BYTES[0],
         name="Download",
         icon="mdi:download",
-        unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=DATA_GIGABYTES,
         entity_registry_enabled_default=False,
         factor=1000000000,
     ),
@@ -79,7 +78,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         key=SENSORS_BYTES[1],
         name="Upload",
         icon="mdi:upload",
-        unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=DATA_GIGABYTES,
         entity_registry_enabled_default=False,
         factor=1000000000,
     ),
@@ -151,11 +150,11 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{DOMAIN} {self.name}"
         self._attr_state_class = STATE_CLASS_MEASUREMENT
 
-        if description.unit_of_measurement == DATA_GIGABYTES:
+        if description.native_unit_of_measurement == DATA_GIGABYTES:
             self._attr_last_reset = dt_util.utc_from_timestamp(0)
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return current state."""
         descr = self.entity_description
         state = self.coordinator.data.get(descr.key)

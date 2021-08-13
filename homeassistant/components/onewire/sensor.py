@@ -368,7 +368,7 @@ class OneWireSensor(OneWireBaseEntity, SensorEntity):
     """Mixin for sensor specific attributes."""
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -377,7 +377,7 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
     """Implementation of a 1-Wire sensor connected through owserver."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self._state
 
@@ -405,7 +405,7 @@ class OneWireDirectSensor(OneWireSensor):
         self._owsensor = owsensor
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self._state
 

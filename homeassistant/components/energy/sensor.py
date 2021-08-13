@@ -164,7 +164,7 @@ class EnergyCostSensor(SensorEntity):
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
-        self._attr_state = 0.0
+        self._attr_native_value = 0.0
         self._cur_value = 0.0
         self._attr_last_reset = dt_util.utcnow()
         self._last_energy_sensor_state = energy_state
@@ -231,7 +231,7 @@ class EnergyCostSensor(SensorEntity):
             # Update with newly incurred cost
             old_energy_value = float(self._last_energy_sensor_state.state)
             self._cur_value += (energy - old_energy_value) * energy_price
-            self._attr_state = round(self._cur_value, 2)
+            self._attr_native_value = round(self._cur_value, 2)
 
         self._last_energy_sensor_state = energy_state
 
@@ -281,6 +281,6 @@ class EnergyCostSensor(SensorEntity):
         self._flow = flow
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return self.hass.config.currency
