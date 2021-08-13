@@ -39,6 +39,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
@@ -69,7 +70,7 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
         "homeassistant.util.dt.utcnow",
         return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
     ):
-        data = _get_config_schema(hass)(config)
+        data = _get_config_schema(hass, SOURCE_USER)(config)
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data=data,

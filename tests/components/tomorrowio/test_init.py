@@ -14,7 +14,7 @@ from homeassistant.components.tomorrowio.config_flow import (
 )
 from homeassistant.components.tomorrowio.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -33,7 +33,7 @@ async def test_load_and_unload(
     tomorrowio_config_entry_update: pytest.fixture,
 ) -> None:
     """Test loading and unloading entry."""
-    data = _get_config_schema(hass)(MIN_CONFIG)
+    data = _get_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=data, unique_id=_get_unique_id(hass, data), version=1
     )
@@ -109,7 +109,7 @@ async def test_climacell_migration_logic(
     # Now let's create a new tomorrowio config entry that is supposedly created from a
     # climacell import and see what happens - we are also changing the API key to ensure
     # that things work as expected
-    new_data = _get_config_schema(hass)(MIN_CONFIG)
+    new_data = _get_config_schema(hass, SOURCE_IMPORT)(MIN_CONFIG)
     new_data["old_config_entry_id"] = old_config_entry.entry_id
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -137,7 +137,7 @@ async def test_climacell_migration_logic(
     new_entity_daily = ent_reg.async_get(old_entity_daily.entity_id)
     assert new_entity_daily.platform == DOMAIN
     assert new_entity_daily.name == NEW_NAME
-    assert new_entity_daily.original_name == "Tomorrow.io - Daily"
+    assert new_entity_daily.original_name == "ClimaCell - Daily"
     assert new_entity_daily.device_id != old_device.id
     assert new_entity_daily.unique_id == f"{_get_unique_id(hass, new_data)}_daily"
     assert new_entity_daily.disabled_by is None
@@ -145,7 +145,7 @@ async def test_climacell_migration_logic(
     new_entity_hourly = ent_reg.async_get(old_entity_hourly.entity_id)
     assert new_entity_hourly.platform == DOMAIN
     assert new_entity_hourly.name is None
-    assert new_entity_hourly.original_name == "Tomorrow.io - Hourly"
+    assert new_entity_hourly.original_name == "ClimaCell - Hourly"
     assert new_entity_hourly.device_id != old_device.id
     assert new_entity_hourly.unique_id == f"{_get_unique_id(hass, new_data)}_hourly"
     assert new_entity_hourly.disabled_by == er.DISABLED_USER
@@ -153,7 +153,7 @@ async def test_climacell_migration_logic(
     new_entity_nowcast = ent_reg.async_get(old_entity_nowcast.entity_id)
     assert new_entity_nowcast.platform == DOMAIN
     assert new_entity_nowcast.name is None
-    assert new_entity_nowcast.original_name == "Tomorrow.io - Nowcast"
+    assert new_entity_nowcast.original_name == "ClimaCell - Nowcast"
     assert new_entity_nowcast.device_id != old_device.id
     assert new_entity_nowcast.unique_id == f"{_get_unique_id(hass, new_data)}_nowcast"
     assert new_entity_nowcast.disabled_by is None

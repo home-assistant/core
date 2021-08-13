@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_config_schema(
-    hass: core.HomeAssistant, input_dict: dict[str, Any] = None
+    hass: core.HomeAssistant, source: str | None, input_dict: dict[str, Any] = None
 ) -> vol.Schema:
     """
     Return schema defaults for init step based on user input/config dict.
@@ -51,25 +51,33 @@ def _get_config_schema(
     if input_dict is None:
         input_dict = {}
 
-    return vol.Schema(
-        {
-            vol.Required(
-                CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
-            ): str,
-            vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
-            vol.Required(
-                CONF_LATITUDE,
-                "location",
-                default=input_dict.get(CONF_LATITUDE, hass.config.latitude),
-            ): cv.latitude,
-            vol.Required(
-                CONF_LONGITUDE,
-                "location",
-                default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
-            ): cv.longitude,
-        },
-        extra=vol.REMOVE_EXTRA,
-    )
+    api_key_schema = {
+        vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
+    }
+
+    if source == config_entries.SOURCE_USER:
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
+                ): str,
+                **api_key_schema,
+                vol.Required(
+                    CONF_LATITUDE,
+                    "location",
+                    default=input_dict.get(CONF_LATITUDE, hass.config.latitude),
+                ): cv.latitude,
+                vol.Required(
+                    CONF_LONGITUDE,
+                    "location",
+                    default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
+                ): cv.longitude,
+            },
+            extra=vol.REMOVE_EXTRA,
+        )
+
+    # For imports we just need to ask for the API key
+    return vol.Schema(api_key_schema, extra=vol.REMOVE_EXTRA)
 
 
 def _get_unique_id(hass: HomeAssistant, input_dict: dict[str, Any]):
@@ -126,7 +134,11 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        if user_input is not None or (user_input := self._import_config):
+        if user_input is not None:
+            # Grab the API key and add it to the rest of the config before continuing
+            if self._import_config:
+                self._import_config[CONF_API_KEY] = user_input[CONF_API_KEY]
+                user_input = self._import_config.copy()
             await self.async_set_unique_id(
                 unique_id=_get_unique_id(self.hass, user_input)
             )
@@ -151,7 +163,7 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     options = old_config_entry.options
                     user_input["old_config_entry_id"] = old_config_entry_id
                     self.hass.components.persistent_notification.async_dismiss(
-                        self.hass, f"{CC_DOMAIN}_to_{DOMAIN}_new_api_key_needed"
+                        f"{CC_DOMAIN}_to_{DOMAIN}_new_api_key_needed"
                     )
 
                 return self.async_create_entry(
@@ -169,7 +181,7 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_config_schema(self.hass, user_input),
+            data_schema=_get_config_schema(self.hass, self.source, user_input),
             errors=errors,
         )
 
@@ -189,7 +201,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Clear API key from import config
             self._import_config[CONF_API_KEY] = ""
             self.hass.components.persistent_notification.async_create(
-                self.hass,
                 (
                     "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) "
                     "we will migrate your existing ClimaCell config entry (or config "
@@ -204,7 +215,6 @@ class TomorrowioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_upgrade_needed()
 
         self.hass.components.persistent_notification.async_create(
-            self.hass,
             (
                 "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) "
                 "we have automatically migrated your existing ClimaCell config entry "

@@ -53,7 +53,9 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=_get_tomorrowio_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+        user_input=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
+            MIN_CONFIG
+        ),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -66,7 +68,9 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
     """Test user config flow with the same unique ID as an existing entry."""
-    user_input = _get_tomorrowio_config_schema(hass, MIN_CONFIG)(MIN_CONFIG)
+    user_input = _get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
+        MIN_CONFIG
+    )
     MockConfigEntry(
         domain=DOMAIN,
         data=user_input,
@@ -94,7 +98,9 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
+                MIN_CONFIG
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -110,7 +116,9 @@ async def test_user_flow_invalid_api(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
+                MIN_CONFIG
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -126,7 +134,9 @@ async def test_user_flow_rate_limited(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
+                MIN_CONFIG
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -142,7 +152,9 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=_get_tomorrowio_config_schema(hass, MIN_CONFIG)(MIN_CONFIG),
+            data=_get_tomorrowio_config_schema(hass, SOURCE_USER, MIN_CONFIG)(
+                MIN_CONFIG
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -151,7 +163,7 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow for tomorrowio."""
-    user_config = _get_tomorrowio_config_schema(hass)(MIN_CONFIG)
+    user_config = _get_tomorrowio_config_schema(hass, SOURCE_USER)(MIN_CONFIG)
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=user_config,
@@ -240,22 +252,15 @@ async def test_import_flow_v3(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "upgrade_needed"
 
-    # Force config validation to fail since we have an empty key
-    with patch(
-        "homeassistant.components.tomorrowio.config_flow.TomorrowioV4.realtime",
-        side_effect=InvalidAPIKeyException,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    # Do the same thing again with the fixture forcing validation to pass so we can
-    # confirm that the API key got wiped out
+    # Fake hitting submit on upgrade needed form
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "this is a test"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        CONF_API_KEY: "",
+        CONF_API_KEY: "this is a test",
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
         CONF_NAME: "ClimaCell",

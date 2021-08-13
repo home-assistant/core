@@ -95,7 +95,7 @@ def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> tim
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
-    await hass.async_create_task(
+    hass.async_create_task(
         hass.config_entries.flow.async_init(
             TOMORROW_DOMAIN,
             context={"source": SOURCE_IMPORT, "old_config_entry_id": entry.entry_id},
