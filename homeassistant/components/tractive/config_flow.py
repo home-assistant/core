@@ -80,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._email = user_input.get(CONF_EMAIL)
+            self._email = user_input[CONF_EMAIL]
             try:
                 info = await validate_input(self.hass, user_input)
             except InvalidAuth:
