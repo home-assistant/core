@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 from zwave_js_server.event import Event
 
-from homeassistant.components.sensor import ATTR_LAST_RESET, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_VALUE,
@@ -31,7 +35,6 @@ from .common import (
     BASIC_SENSOR,
     CURRENT_SENSOR,
     DATETIME_LAST_RESET,
-    DATETIME_ZERO,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
     ID_LOCK_CONFIG_PARAMETER_SENSOR,
@@ -77,7 +80,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.16"
     assert state.attributes["unit_of_measurement"] == ENERGY_KILO_WATT_HOUR
     assert state.attributes["device_class"] == DEVICE_CLASS_ENERGY
-    assert state.attributes["state_class"] == STATE_CLASS_MEASUREMENT
+    assert state.attributes["state_class"] == STATE_CLASS_TOTAL_INCREASING
 
     state = hass.states.get(VOLTAGE_SENSOR)
 
@@ -206,12 +209,6 @@ async def test_reset_meter(
     # Validate that non accumulating meter does not have a last reset attribute
 
     assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
-
-    # Validate that the sensor last reset is starting from nothing
-    assert (
-        hass.states.get(METER_ENERGY_SENSOR).attributes[ATTR_LAST_RESET]
-        == DATETIME_ZERO.isoformat()
-    )
 
     # Test successful meter reset call, patching utcnow so we can make sure the last
     # reset gets updated
