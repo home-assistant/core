@@ -373,7 +373,7 @@ async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
             "$/kWh",
             "Entity sensor.grid_price_1 has non-numeric value 123,123.12",
         ),
-        ("-100", "$/kWh", "Entity sensor.grid_price_1 has negative value -100"),
+        ("-100", "$/kWh", "Entity sensor.grid_price_1 has negative value -100.0"),
         (
             "123",
             "$/Ws",
