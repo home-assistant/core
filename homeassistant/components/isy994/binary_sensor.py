@@ -184,7 +184,7 @@ def _detect_device_type_and_class(node: Group | Node) -> (str, str):
     # Z-Wave Devices:
     if node.protocol == PROTO_ZWAVE:
         device_type = f"Z{node.zwave_props.category}"
-        for device_class in [*BINARY_SENSOR_DEVICE_TYPES_ZWAVE]:
+        for device_class in (*BINARY_SENSOR_DEVICE_TYPES_ZWAVE,):
             if (
                 node.zwave_props.category
                 in BINARY_SENSOR_DEVICE_TYPES_ZWAVE[device_class]
@@ -193,7 +193,7 @@ def _detect_device_type_and_class(node: Group | Node) -> (str, str):
         return (None, device_type)
 
     # Other devices (incl Insteon.)
-    for device_class in [*BINARY_SENSOR_DEVICE_TYPES_ISY]:
+    for device_class in (*BINARY_SENSOR_DEVICE_TYPES_ISY,):
         if any(
             device_type.startswith(t)
             for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
