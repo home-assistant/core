@@ -1,4 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     STATE_CLASS_MEASUREMENT,
