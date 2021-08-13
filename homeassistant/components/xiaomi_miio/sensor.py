@@ -348,8 +348,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         model = config_entry.data[CONF_MODEL]
-        if hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE):
-            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+        device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
         sensors = []
         if model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
             sensors = HUMIDIFIER_CA1_CB1_SENSORS
