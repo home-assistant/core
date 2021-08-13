@@ -24,6 +24,7 @@ from homeassistant.components.androidtv.const import (
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
     DOMAIN,
+    PROP_ETHMAC,
 )
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -73,7 +74,7 @@ class MockConfigDevice:
     def __init__(self, eth_mac=ETH_MAC):
         """Initialize a fake device to test config flow."""
         self.available = True
-        self.device_properties = {"ethmac": eth_mac}
+        self.device_properties = {PROP_ETHMAC: eth_mac}
 
     async def adb_close(self):
         """Fake method to close connection."""

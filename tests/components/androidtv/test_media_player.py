@@ -130,7 +130,7 @@ def _setup(config):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config[DOMAIN],
-        unique_id="12345678",
+        unique_id="a1:b1:c1:d1:e1:f1",
         options=config[DOMAIN].get(CONF_OPTIONS),
     )
 

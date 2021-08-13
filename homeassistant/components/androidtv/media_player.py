@@ -45,7 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -73,6 +73,8 @@ from .const import (
     DEVICE_CLASSES,
     DOMAIN,
     MIGRATION_DATA,
+    PROP_ETHMAC,
+    PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
 
@@ -175,7 +177,7 @@ async def async_setup_platform(
         CONF_DEVICE_CLASS: config.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
         CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
     }
-    for key in (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT):
+    for key in (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT, CONF_NAME):
         if key in config:
             config_data[key] = config[key]
 
@@ -218,8 +220,11 @@ async def async_setup_entry(
     """Set up the Android TV entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
-    device_name = "Android TV " if device_class == DEVICE_ANDROIDTV else "Fire TV "
-    device_name += entry.data[CONF_HOST]
+    if CONF_NAME in entry.data:
+        device_name = entry.data[CONF_NAME]
+    else:
+        device_name = "Android TV " if device_class == DEVICE_ANDROIDTV else "Fire TV "
+        device_name += entry.data[CONF_HOST]
 
     device_args = [
         aftv,
@@ -325,7 +330,7 @@ class ADBDevice(MediaPlayerEntity):
         self._dev_id = unique_id
         self._dev_props = aftv.device_properties
         self._attr_name = name
-        self._attr_unique_id = f"{unique_id}-media_player"
+        self._attr_unique_id = unique_id
 
         self._app_id_to_name = {}
         self._app_name_to_id = {}
@@ -403,7 +408,7 @@ class ADBDevice(MediaPlayerEntity):
         model = f"{model} ({default_model})" if model else default_model
         manufacturer = info.get("manufacturer")
         sw_version = info.get("sw_version")
-        mac = info.get("ethmac") or info.get("wifimac")
+        mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
 
         data = {
             "identifiers": {(DOMAIN, self._dev_id)},

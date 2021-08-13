@@ -6,7 +6,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -31,6 +31,8 @@ from .const import (
     DEFAULT_SCREENCAP,
     DEVICE_CLASSES,
     DOMAIN,
+    PROP_ETHMAC,
+    PROP_WIFIMAC,
 )
 
 APPS_NEW_ID = "NewApp"
@@ -68,16 +70,18 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _show_setup_form(self, user_input=None, error=None):
         """Show the setup form to the user."""
         user_input = user_input or {}
-        data_schema = {
-            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-            vol.Required(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
-                DEVICE_CLASSES
-            ),
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        }
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                vol.Required(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
+                    DEVICE_CLASSES
+                ),
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            },
+        )
 
         if self.show_advanced_options:
-            data_schema.update(
+            data_schema = data_schema.extend(
                 {
                     vol.Optional(CONF_ADBKEY): str,
                     vol.Optional(CONF_ADB_SERVER_IP): str,
@@ -89,7 +93,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=data_schema,
             errors={"base": error},
         )
 
@@ -108,7 +112,9 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
-        unique_id = format_mac(dev_prop.get("ethmac", dev_prop.get("wifimac", "")))
+        unique_id = format_mac(
+            dev_prop.get(PROP_ETHMAC) or dev_prop.get(PROP_WIFIMAC, "")
+        )
         await aftv.adb_close()
         return None, unique_id
 
@@ -146,7 +152,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=host,
+                    title=user_input.get(CONF_NAME) or host,
                     data=user_input,
                 )
 

@@ -8,7 +8,8 @@ from androidtv import state_detection_rules_validator
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.setup_async import setup
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
@@ -32,10 +33,11 @@ from .const import (
     DEVICE_FIRETV,
     DOMAIN,
     MIGRATION_DATA,
+    PROP_SERIALNO,
     SIGNAL_CONFIG_ENTITY,
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [MP_DOMAIN]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,6 +121,31 @@ async def async_connect_androidtv(
     return aftv
 
 
+async def _async_migrate_aftv_entity(hass, aftv, entry_unique_id):
+    """Migrate a entity to new unique id."""
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entity_unique_id = entry_unique_id
+    if entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, entity_unique_id):
+        # entity already exist, nothing to do
+        return
+
+    old_unique_id = aftv.device_properties.get(PROP_SERIALNO)
+    if not old_unique_id:
+        # serial no not found, exit
+        return
+
+    migr_entity = entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, old_unique_id)
+    if not migr_entity:
+        # old entity not found, exit
+        return
+
+    try:
+        entity_registry.async_update_entity(migr_entity, new_unique_id=entity_unique_id)
+    except ValueError as exp:
+        _LOGGER.warning("Migration of old entity failed: %s", exp)
+
+
 async def async_setup(hass, config):
     """Set up the Android TV integration."""
     return True
@@ -142,6 +169,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if not aftv:
         raise ConfigEntryNotReady()
+
+    # migrate existing entity to new unique ID
+    if entry.source == SOURCE_IMPORT:
+        await _async_migrate_aftv_entity(hass, aftv, entry.unique_id)
 
     async def async_close_connection(event):
         """Close Android TV connection on HA Stop."""
