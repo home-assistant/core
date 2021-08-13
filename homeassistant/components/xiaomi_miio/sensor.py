@@ -19,6 +19,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -46,7 +47,6 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt
 
 from .const import (
     CONF_DEVICE,
@@ -228,8 +228,7 @@ SENSOR_TYPES = {
         name="Purify Volume",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=DEVICE_CLASS_GAS,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
 }
