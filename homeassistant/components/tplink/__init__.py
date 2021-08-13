@@ -220,6 +220,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.smartplug = smartplug
+        self.has_emeter = self.smartplug.has_emeter
 
         update_interval = timedelta(seconds=30)
         super().__init__(
@@ -239,9 +240,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
             if self.smartplug.context is None:
                 data[CONF_ALIAS] = info["alias"]
                 data[CONF_DEVICE_ID] = info["mac"]
-                data[CONF_STATE] = (
-                    self.smartplug.state == self.smartplug.SWITCH_STATE_ON
-                )
+                data[CONF_STATE] = bool(info["relay_state"])
             else:
                 plug_from_context = next(
                     c
@@ -251,7 +250,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                 data[CONF_ALIAS] = plug_from_context["alias"]
                 data[CONF_DEVICE_ID] = self.smartplug.context
                 data[CONF_STATE] = plug_from_context["state"] == 1
-            if self.smartplug.has_emeter:
+            if self.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
                 data[CONF_EMETER_PARAMS] = {
                     ATTR_CURRENT_POWER_W: round(float(emeter_readings["power"]), 2),
