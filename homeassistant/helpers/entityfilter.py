@@ -74,7 +74,7 @@ def convert_include_exclude_filter(
             CONF_EXCLUDE_ENTITIES: exclude[CONF_ENTITIES],
         }
     )
-    setattr(filt, "config", config)
+    setattr(filt, "config", {CONF_INCLUDE: include, CONF_EXCLUDE: exclude})
     return filt
 
 

@@ -18,7 +18,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
+from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
@@ -265,7 +265,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     history.async_setup(hass)
     statistics.async_setup(hass)
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
-
+    websocket_api.async_register_command(hass, ws_info)
     return await instance.async_db_ready
 
 
@@ -1028,3 +1028,20 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
         self._end_session()
         self._close_connection()
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/info",
+    }
+)
+@callback
+def ws_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command."""
+    connection.send_result(
+        msg["id"], {"entity_filter": hass.data[DATA_INSTANCE].entity_filter.config}
+    )

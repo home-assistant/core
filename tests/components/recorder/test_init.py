@@ -1134,3 +1134,35 @@ def test_entity_id_filter(hass_recorder):
             db_events = list(session.query(Events).filter_by(event_type="hello"))
             # Keep referring idx + 1, as no new events are being added
             assert len(db_events) == idx + 1, data
+
+
+async def test_ws_info(hass, hass_ws_client):
+    """Test recorder WS API."""
+    await async_init_recorder_component(
+        hass,
+        {
+            "auto_purge": False,
+            "include": {"domains": "included_domain"},
+            "exclude": {"domains": "excluded_domain"},
+        },
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 6, "type": "recorder/info"})
+    msg = await client.receive_json()
+    assert msg["id"] == 6
+    assert msg["success"]
+    assert msg["result"] == {
+        "entity_filter": {
+            "include": {
+                "domains": ["included_domain"],
+                "entities": [],
+                "entity_globs": [],
+            },
+            "exclude": {
+                "domains": ["excluded_domain"],
+                "entities": [],
+                "entity_globs": [],
+            },
+        }
+    }
