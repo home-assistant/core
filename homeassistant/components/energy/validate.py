@@ -232,6 +232,22 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                         source_result,
                     )
 
+        elif source["type"] == "gas":
+            _async_validate_energy_stat(hass, source["stat_energy_from"], source_result)
+
+            if source.get("stat_cost") is not None:
+                _async_validate_cost_stat(hass, source["stat_cost"], source_result)
+
+            elif source.get("entity_energy_price") is not None:
+                _async_validate_price_entity(
+                    hass, source["entity_energy_price"], source_result
+                )
+                _async_validate_cost_entity(
+                    hass,
+                    hass.data[DOMAIN]["cost_sensors"][source["stat_energy_from"]],
+                    source_result,
+                )
+
         elif source["type"] == "solar":
             _async_validate_energy_stat(hass, source["stat_energy_from"], source_result)
 
