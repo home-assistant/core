@@ -2,7 +2,6 @@
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
-    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     SensorEntity,
 )
@@ -56,8 +55,6 @@ class MillHeaterEnergySensor(SensorEntity):
                     month=1, day=1, hour=0, minute=0, second=0, microsecond=0
                 )
             )
-        else:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_update(self):
         """Retrieve latest state."""
