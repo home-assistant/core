@@ -6,9 +6,10 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from . import async_connect_androidtv, validate_state_det_rules
 from .const import (
@@ -64,35 +65,37 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize Android TV config flow."""
-        self._host = None
-        self._unique_id = None
 
     @callback
-    def _show_setup_form(self, user_input=None, errors=None):
+    def _show_setup_form(self, user_input=None, error=None):
         """Show the setup form to the user."""
+        user_input = user_input or {}
+        data_schema = {
+            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+            vol.Required(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
+                DEVICE_CLASSES
+            ),
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        }
 
-        if user_input is None:
-            user_input = {}
+        if self.show_advanced_options:
+            data_schema = {
+                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                vol.Required(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
+                    DEVICE_CLASSES
+                ),
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_ADBKEY): str,
+                vol.Optional(CONF_ADB_SERVER_IP): str,
+                vol.Required(
+                    CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
+                ): cv.port,
+            }
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Required(
-                        CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS
-                    ): vol.In(DEVICE_CLASSES),
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_ADBKEY): str,
-                    vol.Optional(CONF_ADB_SERVER_IP): str,
-                    vol.Required(
-                        CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
-                    ): cv.port,
-                }
-            ),
-            errors=errors or {},
+            data_schema=vol.Schema(data_schema),
+            errors={"base": error},
         )
 
     async def _async_check_connection(self, user_input):
@@ -102,66 +105,59 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             aftv = await async_connect_androidtv(self.hass, user_input, timeout=30.0)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unknown error connecting with Android TV at %s", self._host
+                "Unknown error connecting with Android TV at %s", user_input[CONF_HOST]
             )
-            return RESULT_UNKNOWN
+            return RESULT_UNKNOWN, None
 
         if not aftv:
-            return RESULT_CONN_ERROR
+            return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
-        self._unique_id = dev_prop.get("ethmac") or dev_prop.get("wifimac")
+        unique_id = format_mac(dev_prop.get("ethmac", "wifimac"))
         await aftv.adb_close()
-        return RESULT_SUCCESS
+        return None, unique_id
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        if user_input is None:
-            return self._show_setup_form(user_input)
+         error = None
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            adb_key = user_input.get(CONF_ADBKEY)
+            adb_server = user_input.get(CONF_ADB_SERVER_IP)
 
-        errors = {}
-        self._unique_id = None
-        self._host = user_input[CONF_HOST]
-        adb_key = user_input.get(CONF_ADBKEY)
-        adb_server = user_input.get(CONF_ADB_SERVER_IP)
+            if adb_key and adb_server:
+                return self._show_setup_form(user_input, "key_and_server")
+            if adb_key:
+                isfile = await self.hass.async_add_executor_job(_is_file, adb_key)
+                if not isfile:
+                    return self._show_setup_form(user_input, "adbkey_not_file")
 
-        if adb_key and adb_server:
-            errors["base"] = "key_and_server"
-        elif adb_key:
-            isfile = await self.hass.async_add_executor_job(_is_file, adb_key)
-            if not isfile:
-                errors["base"] = "adbkey_not_file"
-
-        if not errors:
-            ip_address = await self.hass.async_add_executor_job(_get_ip, self._host)
+            ip_address = await self.hass.async_add_executor_job(_get_ip, host)
             if not ip_address:
-                errors["base"] = "invalid_host"
+                return self._show_setup_form(user_input, "invalid_host")
 
-        if errors:
-            return self._show_setup_form(user_input, errors)
+            self._async_abort_entries_match({CONF_HOST: host})
+            if ip_address != host:
+                self._async_abort_entries_match({CONF_HOST: ip_address})
 
-        self._async_abort_entries_match({CONF_HOST: self._host})
-        if ip_address != self._host:
-            self._async_abort_entries_match({CONF_HOST: ip_address})
+            error, unique_id = await self._async_check_connection(user_input)
+            if error is None:
+                if not unique_id:
+                    return self.async_abort(reason="invalid_unique_id")
 
-        result = await self._async_check_connection(user_input)
-        if result != RESULT_SUCCESS:
-            return self._show_setup_form(user_input, {"base": result})
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
 
-        if not self._unique_id:
-            return self.async_abort(reason="invalid_unique_id")
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME) or host,
+                    data=user_input,
+                )
+        user_input = user_input or {}
+        return self._show_setup_form(user_input, error)
 
-        await self.async_set_unique_id(self._unique_id)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=self._host,
-            data=user_input,
-        )
-
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_config=None):
         """Import a config entry."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_config)
 
     @staticmethod
     @callback

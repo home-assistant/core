@@ -290,7 +290,7 @@ async def test_on_connect_failed(hass):
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     with patch(

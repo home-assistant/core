@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "invalid_unique_id": "Impossible to determinate a valid unique id for the device"
+            "invalid_unique_id": "Impossible to determine a valid unique id for the device"
         },
         "error": {
             "adbkey_not_file": "ADB key file not found",
@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "adb_key": "Path to your ADB key file (leave empy to auto generate)",
+                    "adbkey": "Path to your ADB key file (leave empty to auto generate)",
                     "adb_server_ip": "IP address of the ADB server",
                     "adb_server_port": "Port of the ADB server",
                     "device_class": "The type of device",

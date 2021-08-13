@@ -93,10 +93,10 @@ async def async_connect_androidtv(
         config[CONF_HOST],
         config[CONF_PORT],
         adbkey,
-        config.get(CONF_ADB_SERVER_IP, ""),
-        config[CONF_ADB_SERVER_PORT],
+        config.get(CONF_ADB_SERVER_IP),
+        config.get(CONF_ADB_SERVER_PORT),
         state_detection_rules,
-        config[CONF_DEVICE_CLASS],
+        config.get(CONF_DEVICE_CLASS),
         timeout,
         signer,
     )
