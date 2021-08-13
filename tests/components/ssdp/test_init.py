@@ -29,7 +29,13 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     async def _async_callback(*_):
         await listener.async_callback(info)
 
+    @callback
+    def _async_search(*_):
+        # Prevent an actual scan.
+        pass
+
     listener.async_start = _async_callback
+    listener.async_search = _async_search
     return listener
 
 
@@ -287,7 +293,10 @@ async def test_invalid_characters(hass, aioclient_mock):
 
 @patch("homeassistant.components.ssdp.SSDPListener.async_start")
 @patch("homeassistant.components.ssdp.SSDPListener.async_search")
-async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
+@patch("homeassistant.components.ssdp.SSDPListener.async_stop")
+async def test_start_stop_scanner(
+    async_stop_mock, async_search_mock, async_start_mock, hass
+):
     """Test we start and stop the scanner."""
     assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
 
@@ -295,15 +304,18 @@ async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
-    assert async_start_mock.call_count == 2
-    assert async_search_mock.call_count == 1
+    assert async_start_mock.call_count == 1
+    # Next is 3, as async_upnp_client triggers 1 SSDPListener._async_on_connect
+    assert async_search_mock.call_count == 3
+    assert async_stop_mock.call_count == 0
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
-    assert async_start_mock.call_count == 2
-    assert async_search_mock.call_count == 1
+    assert async_start_mock.call_count == 1
+    assert async_search_mock.call_count == 3
+    assert async_stop_mock.call_count == 1
 
 
 async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog):
@@ -801,12 +813,12 @@ async def test_bind_failure_skips_adapter(hass, caplog):
         ]
     }
     create_args = []
-    did_search = 0
+    search_args = []
 
     @callback
-    def _callback(*_):
-        nonlocal did_search
-        did_search += 1
+    def _callback(*args):
+        nonlocal search_args
+        search_args.append(args)
         pass
 
     def _generate_failing_ssdp_listener(*args, **kwargs):
@@ -849,7 +861,15 @@ async def test_bind_failure_skips_adapter(hass, caplog):
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
-    assert did_search == 2
+    assert set(search_args) == {
+        (),
+        (
+            (
+                "255.255.255.255",
+                1900,
+            ),
+        ),
+    }
 
 
 async def test_ipv4_does_additional_search_for_sonos(hass, caplog):

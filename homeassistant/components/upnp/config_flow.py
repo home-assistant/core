@@ -30,13 +30,11 @@ from .const import (
 
 def _friendly_name_from_discovery(discovery_info: Mapping[str, Any]) -> str:
     """Extract user-friendly name from discovery."""
-    if discovery_info.get("friendlyName"):
-        return discovery_info["friendlyName"]
-
-    if discovery_info.get("modeName"):
-        return discovery_info["modelName"]
-
-    return discovery_info.get("_host", "")
+    return (
+        discovery_info.get("friendlyName")
+        or discovery_info.get("modeName")
+        or discovery_info.get("_host", "")
+    )
 
 
 async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
