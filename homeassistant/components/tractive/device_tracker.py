@@ -14,7 +14,7 @@ from .const import (
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
 )
-from .model import TractiveEntity
+from .entity import TractiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 

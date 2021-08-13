@@ -1082,7 +1082,7 @@ omit =
     homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/device_tracker.py
-    homeassistant/components/tractive/model.py
+    homeassistant/components/tractive/entity.py
     homeassistant/components/tractive/sensor.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py

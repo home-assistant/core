@@ -1,19 +1,6 @@
-"""Type definitions for Tractive integration."""
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-from homeassistant.components.sensor import SensorEntityDescription
+"""A entity class for Tractive integration."""
 
 from .const import DOMAIN
-
-
-@dataclass
-class TractiveSensorEntityDescription(SensorEntityDescription):
-    """Class describing Tractive sensor entities."""
-
-    event_type: str | None = None
-    attributes: tuple = ()
 
 
 class TractiveEntity:

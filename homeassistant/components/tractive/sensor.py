@@ -1,5 +1,9 @@
 """Support for Tractive sensors."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
@@ -17,7 +21,16 @@ from .const import (
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
 )
-from .model import TractiveEntity, TractiveSensorEntityDescription
+from .entity import TractiveEntity
+
+
+@dataclass
+class TractiveSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tractive sensor entities."""
+
+    event_type: str | None = None
+    attributes: tuple = ()
+
 
 ATTR_ACTIVITY = "activity"
 ATTR_HARDWARE = "hardware"
