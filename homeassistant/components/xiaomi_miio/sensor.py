@@ -385,7 +385,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
             device = AirQualityMonitor(host, token)
-            description = SENSOR_TYPES[ATTR_AQI]
+            description = SENSOR_TYPES[ATTR_AIR_QUALITY]
             entities.append(
                 XiaomiAirQualityMonitor(
                     name, device, config_entry, unique_id, description
