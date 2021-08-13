@@ -32,7 +32,7 @@ TREND_SENSORS = {
     ],
     "power_today": [
         "Total consumption - Today",
-        "mdi:power-plug",
+        None,
         ENERGY_WATT_HOUR,
         "power_today",
         DEVICE_CLASS_ENERGY,
@@ -40,7 +40,7 @@ TREND_SENSORS = {
     ],
     "power_current_hour": [
         "Total consumption - Current hour",
-        "mdi:power-plug",
+        None,
         ENERGY_WATT_HOUR,
         "power_current_hour",
         DEVICE_CLASS_ENERGY,
@@ -48,7 +48,7 @@ TREND_SENSORS = {
     ],
     "power_last_5_minutes": [
         "Total consumption - Last 5 minutes",
-        "mdi:power-plug",
+        None,
         ENERGY_WATT_HOUR,
         "power_last_5_minutes",
         DEVICE_CLASS_ENERGY,
@@ -56,7 +56,7 @@ TREND_SENSORS = {
     ],
     "alwayson_today": [
         "Always on - Today",
-        "mdi:sleep",
+        None,
         ENERGY_WATT_HOUR,
         "alwayson_today",
         DEVICE_CLASS_ENERGY,
@@ -83,7 +83,7 @@ SOLAR_SENSORS = {
     ],
     "solar_today": [
         "Total production - Today",
-        "mdi:white-balance-sunny",
+        None,
         ENERGY_WATT_HOUR,
         "solar_today",
         DEVICE_CLASS_POWER,
@@ -91,7 +91,7 @@ SOLAR_SENSORS = {
     ],
     "solar_current_hour": [
         "Total production - Current hour",
-        "mdi:white-balance-sunny",
+        None,
         ENERGY_WATT_HOUR,
         "solar_current_hour",
         DEVICE_CLASS_POWER,
@@ -101,7 +101,7 @@ SOLAR_SENSORS = {
 VOLTAGE_SENSORS = {
     "phase_voltages_a": [
         "Phase voltages - A",
-        "mdi:flash",
+        None,
         ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_a",
         DEVICE_CLASS_VOLTAGE,
@@ -109,7 +109,7 @@ VOLTAGE_SENSORS = {
     ],
     "phase_voltages_b": [
         "Phase voltages - B",
-        "mdi:flash",
+        None,
         ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_b",
         DEVICE_CLASS_VOLTAGE,
@@ -117,7 +117,7 @@ VOLTAGE_SENSORS = {
     ],
     "phase_voltages_c": [
         "Phase voltages - C",
-        "mdi:flash",
+        None,
         ELECTRIC_POTENTIAL_VOLT,
         "phase_voltage_c",
         DEVICE_CLASS_VOLTAGE,
@@ -125,7 +125,7 @@ VOLTAGE_SENSORS = {
     ],
     "line_voltages_a": [
         "Line voltages - A",
-        "mdi:flash",
+        None,
         ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_a",
         DEVICE_CLASS_VOLTAGE,
@@ -133,7 +133,7 @@ VOLTAGE_SENSORS = {
     ],
     "line_voltages_b": [
         "Line voltages - B",
-        "mdi:flash",
+        None,
         ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_b",
         DEVICE_CLASS_VOLTAGE,
@@ -141,7 +141,7 @@ VOLTAGE_SENSORS = {
     ],
     "line_voltages_c": [
         "Line voltages - C",
-        "mdi:flash",
+        None,
         ELECTRIC_POTENTIAL_VOLT,
         "line_voltage_c",
         DEVICE_CLASS_VOLTAGE,
@@ -260,7 +260,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         sensor="switch",
                         attributes=[
                             f"{actuator.name} - energy today",
-                            "mdi:power-plug",
+                            None,
                             ENERGY_KILO_WATT_HOUR,
                             actuator_id,
                             DEVICE_CLASS_ENERGY,
