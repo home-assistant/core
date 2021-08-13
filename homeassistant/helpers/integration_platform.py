@@ -23,7 +23,7 @@ async def async_process_integration_platforms(
     """Process a specific platform for all current and future loaded integrations."""
 
     async def _process(component_name: str) -> None:
-        """Process the intents of a component."""
+        """Process component being loaded."""
         if "." in component_name:
             return
 
