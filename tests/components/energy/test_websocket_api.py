@@ -17,6 +17,26 @@ async def setup_integration(hass):
     )
 
 
+@pytest.fixture
+def mock_energy_platform(hass):
+    """Mock an energy platform."""
+    hass.config.components.add("some_domain")
+    mock_platform(
+        hass,
+        "some_domain.energy",
+        Mock(
+            async_get_solar_forecast=AsyncMock(
+                return_value={
+                    "wh_hours": {
+                        "2021-06-27T13:00:00+00:00": 12,
+                        "2021-06-27T14:00:00+00:00": 8,
+                    }
+                }
+            )
+        ),
+    )
+
+
 async def test_get_preferences_no_data(hass, hass_ws_client) -> None:
     """Test we get error if no preferences set."""
     client = await hass_ws_client(hass)
@@ -48,7 +68,9 @@ async def test_get_preferences_default(hass, hass_ws_client, hass_storage) -> No
     assert msg["result"] == data.EnergyManager.default_preferences()
 
 
-async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
+async def test_save_preferences(
+    hass, hass_ws_client, hass_storage, mock_energy_platform
+) -> None:
     """Test we can save preferences."""
     client = await hass_ws_client(hass)
 
@@ -142,7 +164,8 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
         "cost_sensors": {
             "sensor.heat_pump_meter_2": "sensor.heat_pump_meter_2_cost",
             "sensor.return_to_grid_offpeak": "sensor.return_to_grid_offpeak_compensation",
-        }
+        },
+        "solar_forecast_domains": ["some_domain"],
     }
 
     # Prefs with limited options

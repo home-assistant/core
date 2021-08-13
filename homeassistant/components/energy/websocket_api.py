@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.singleton import singleton
 
 from .const import DOMAIN
 from .data import (
@@ -22,8 +23,6 @@ from .data import (
     async_get_manager,
 )
 from .validate import async_validate
-
-DATA_ENERGY_PLATFORMS = "energy_platforms"
 
 EnergyWebSocketCommandHandler = Callable[
     [HomeAssistant, websocket_api.ActiveConnection, Dict[str, Any], "EnergyManager"],
@@ -43,6 +42,25 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_validate)
     websocket_api.async_register_command(hass, ws_solar_forecast)
+
+
+@singleton("energy_platforms")
+async def async_get_energy_platforms(hass: HomeAssistant) -> dict[str, Any]:
+    """Get energy platforms."""
+    platforms = {}
+
+    async def _process_energy_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
+        """Process energy platforms."""
+        if not hasattr(platform, "async_get_solar_forecast"):
+            return
+
+        platforms[domain] = platform.async_get_solar_forecast
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_energy_platform)
+
+    return platforms
 
 
 def _ws_with_manager(
@@ -113,16 +131,21 @@ async def ws_save_prefs(
         vol.Required("type"): "energy/info",
     }
 )
-@callback
-def ws_info(
+@websocket_api.async_response
+async def ws_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
     """Handle get info command."""
-    # TODO provide integrations that can provide solar forecasts.
-
-    connection.send_result(msg["id"], hass.data[DOMAIN])
+    forecast_platforms = await async_get_energy_platforms(hass)
+    connection.send_result(
+        msg["id"],
+        {
+            "cost_sensors": hass.data[DOMAIN]["cost_sensors"],
+            "solar_forecast_domains": list(forecast_platforms),
+        },
+    )
 
 
 @websocket_api.websocket_command(
@@ -176,36 +199,18 @@ async def ws_solar_forecast(
 
     forecasts = {}
 
-    if DATA_ENERGY_PLATFORMS not in hass.data:
-        hass.data[DATA_ENERGY_PLATFORMS] = {}
-        await async_process_integration_platforms(
-            hass, DOMAIN, _process_energy_platform
-        )
-
-    get_forecast_by_domain = hass.data[DATA_ENERGY_PLATFORMS]
+    forecast_platforms = await async_get_energy_platforms(hass)
 
     for config_entry_id in config_entries:
         config_entry = hass.config_entries.async_get_entry(config_entry_id)
         # Filter out non-existing config entries or unsupported domains
 
-        if config_entry is None or config_entry.domain not in get_forecast_by_domain:
+        if config_entry is None or config_entry.domain not in forecast_platforms:
             continue
 
-        forecast = await get_forecast_by_domain[config_entry.domain](
-            hass, config_entry_id
-        )
+        forecast = await forecast_platforms[config_entry.domain](hass, config_entry_id)
 
         if forecast is not None:
             forecasts[config_entry_id] = forecast
 
     connection.send_result(msg["id"], forecasts)
-
-
-async def _process_energy_platform(
-    hass: HomeAssistant, domain: str, platform: Any
-) -> None:
-    """Process energy platforms."""
-    if not hasattr(platform, "async_get_solar_forecast"):
-        return
-
-    hass.data[DATA_ENERGY_PLATFORMS][domain] = platform.async_get_solar_forecast
