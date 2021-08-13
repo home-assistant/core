@@ -27,6 +27,7 @@ from .const import (
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
     CONF_STATE_DETECTION_RULES,
+    DEFAULT_ADB_SERVER_PORT,
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     DOMAIN,
@@ -80,7 +81,7 @@ def validate_state_det_rules(state_det_rules):
 
 
 async def async_connect_androidtv(
-    hass, config, *, state_detection_rules=None, timeout=10.0
+    hass, config, *, state_detection_rules=None, timeout=30.0
 ):
     """Connect to Android device."""
     address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
@@ -94,9 +95,9 @@ async def async_connect_androidtv(
         config[CONF_PORT],
         adbkey,
         config.get(CONF_ADB_SERVER_IP),
-        config.get(CONF_ADB_SERVER_PORT),
+        config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
         state_detection_rules,
-        config.get(CONF_DEVICE_CLASS),
+        config[CONF_DEVICE_CLASS],
         timeout,
         signer,
     )

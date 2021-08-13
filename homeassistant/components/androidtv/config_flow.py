@@ -6,7 +6,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -40,7 +40,6 @@ CONF_APP_NAME = "app_name"
 
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_UNKNOWN = "unknown"
-RESULT_SUCCESS = "success"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +64,6 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-
     @callback
     def _show_setup_form(self, user_input=None, error=None):
         """Show the setup form to the user."""
@@ -79,18 +77,15 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         if self.show_advanced_options:
-            data_schema = {
-                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                vol.Required(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
-                    DEVICE_CLASSES
-                ),
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_ADBKEY): str,
-                vol.Optional(CONF_ADB_SERVER_IP): str,
-                vol.Required(
-                    CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
-                ): cv.port,
-            }
+            data_schema.update(
+                {
+                    vol.Optional(CONF_ADBKEY): str,
+                    vol.Optional(CONF_ADB_SERVER_IP): str,
+                    vol.Required(
+                        CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
+                    ): cv.port,
+                }
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -102,7 +97,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Attempt to connect the Android TV."""
 
         try:
-            aftv = await async_connect_androidtv(self.hass, user_input, timeout=30.0)
+            aftv = await async_connect_androidtv(self.hass, user_input)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error connecting with Android TV at %s", user_input[CONF_HOST]
@@ -113,13 +108,14 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
-        unique_id = format_mac(dev_prop.get("ethmac", "wifimac"))
+        unique_id = format_mac(dev_prop.get("ethmac", dev_prop.get("wifimac", "")))
         await aftv.adb_close()
         return None, unique_id
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-         error = None
+        error = None
+
         if user_input is not None:
             host = user_input[CONF_HOST]
             adb_key = user_input.get(CONF_ADBKEY)
@@ -127,6 +123,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if adb_key and adb_server:
                 return self._show_setup_form(user_input, "key_and_server")
+
             if adb_key:
                 isfile = await self.hass.async_add_executor_job(_is_file, adb_key)
                 if not isfile:
@@ -149,9 +146,10 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME) or host,
+                    title=host,
                     data=user_input,
                 )
+
         user_input = user_input or {}
         return self._show_setup_form(user_input, error)
 

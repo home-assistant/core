@@ -83,7 +83,7 @@ class MockConfigDevice:
 async def _test_user(hass, config):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -95,7 +95,7 @@ async def _test_user(hass, config):
     ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER},
+            context={"source": SOURCE_USER, "show_advanced_options": True},
             data=config,
         )
         await hass.async_block_till_done()
@@ -151,7 +151,7 @@ async def test_user_adbkey(hass):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER},
+            context={"source": SOURCE_USER, "show_advanced_options": True},
             data=config_data,
         )
         await hass.async_block_till_done()

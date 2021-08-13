@@ -174,9 +174,8 @@ async def async_setup_platform(
         CONF_HOST: host,
         CONF_DEVICE_CLASS: config.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
         CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
-        CONF_ADB_SERVER_PORT: config.get(CONF_ADB_SERVER_PORT, DEFAULT_ADB_SERVER_PORT),
     }
-    for key in (CONF_ADBKEY, CONF_ADB_SERVER_IP):
+    for key in (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT):
         if key in config:
             config_data[key] = config[key]
 
