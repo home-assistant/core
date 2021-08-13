@@ -104,7 +104,8 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         self._unique_id = unique_id
 
         self._attr_name = f"{name} {sensor_description.name}"
-        self._attr_unique_id = f"{self._unique_id}_{self.entity_description.key}"
+        if unique_id is not None:
+            self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
 
     @property
     def device_info(self):
