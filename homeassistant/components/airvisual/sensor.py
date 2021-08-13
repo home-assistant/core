@@ -1,5 +1,8 @@
 """Support for AirVisual air quality sensors."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -18,7 +21,10 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import AirVisualEntity
 from .const import (
@@ -141,14 +147,19 @@ POLLUTANT_UNITS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AirVisual sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
-    if config_entry.data[CONF_INTEGRATION_TYPE] in [
+    sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
+    if config_entry.data[CONF_INTEGRATION_TYPE] in (
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
-    ]:
+    ):
         sensors = [
             AirVisualGeographySensor(
                 coordinator,
@@ -174,7 +185,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to geography data via the Cloud API."""
 
-    def __init__(self, coordinator, config_entry, kind, name, icon, unit, locale):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        kind: str,
+        name: str,
+        icon: str,
+        unit: str | None,
+        locale: str,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
@@ -192,7 +212,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         self._attr_icon = icon
         self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {name}"
         self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{kind}"
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._config_entry = config_entry
         self._kind = kind
         self._locale = locale
@@ -203,7 +223,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         return super().available and self.coordinator.data["current"]["pollution"]
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         try:
             data = self.coordinator.data["current"]["pollution"]
@@ -212,16 +232,16 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            [(self._attr_state, self._attr_icon)] = [
+            [(self._attr_native_value, self._attr_icon)] = [
                 (name, icon)
                 for (floor, ceiling), (name, icon) in POLLUTANT_LEVELS.items()
                 if floor <= aqi <= ceiling
             ]
         elif self._kind == SENSOR_KIND_AQI:
-            self._attr_state = data[f"aqi{self._locale}"]
+            self._attr_native_value = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._attr_state = symbol
+            self._attr_native_value = symbol
             self._attr_extra_state_attributes.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
@@ -260,18 +280,29 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to a Node/Pro unit."""
 
-    def __init__(self, coordinator, kind, name, device_class, icon, unit):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        kind: str,
+        name: str,
+        device_class: str | None,
+        icon: str | None,
+        unit: str,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_device_class = device_class
         self._attr_icon = icon
-        self._attr_unit_of_measurement = unit
+        self._attr_name = (
+            f"{coordinator.data['settings']['node_name']} Node/Pro: {name}"
+        )
+        self._attr_unique_id = f"{coordinator.data['serial_number']}_{kind}"
+        self._attr_native_unit_of_measurement = unit
         self._kind = kind
-        self._name = name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return {
             "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
@@ -284,40 +315,35 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
             ),
         }
 
-    @property
-    def name(self):
-        """Return the name."""
-        node_name = self.coordinator.data["settings"]["node_name"]
-        return f"{node_name} Node/Pro: {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['serial_number']}_{self._kind}"
-
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         if self._kind == SENSOR_KIND_AQI:
             if self.coordinator.data["settings"]["is_aqi_usa"]:
-                self._attr_state = self.coordinator.data["measurements"]["aqi_us"]
+                self._attr_native_value = self.coordinator.data["measurements"][
+                    "aqi_us"
+                ]
             else:
-                self._attr_state = self.coordinator.data["measurements"]["aqi_cn"]
+                self._attr_native_value = self.coordinator.data["measurements"][
+                    "aqi_cn"
+                ]
         elif self._kind == SENSOR_KIND_BATTERY_LEVEL:
-            self._attr_state = self.coordinator.data["status"]["battery"]
+            self._attr_native_value = self.coordinator.data["status"]["battery"]
         elif self._kind == SENSOR_KIND_CO2:
-            self._attr_state = self.coordinator.data["measurements"].get("co2")
+            self._attr_native_value = self.coordinator.data["measurements"].get("co2")
         elif self._kind == SENSOR_KIND_HUMIDITY:
-            self._attr_state = self.coordinator.data["measurements"].get("humidity")
+            self._attr_native_value = self.coordinator.data["measurements"].get(
+                "humidity"
+            )
         elif self._kind == SENSOR_KIND_PM_0_1:
-            self._attr_state = self.coordinator.data["measurements"].get("pm0_1")
+            self._attr_native_value = self.coordinator.data["measurements"].get("pm0_1")
         elif self._kind == SENSOR_KIND_PM_1_0:
-            self._attr_state = self.coordinator.data["measurements"].get("pm1_0")
+            self._attr_native_value = self.coordinator.data["measurements"].get("pm1_0")
         elif self._kind == SENSOR_KIND_PM_2_5:
-            self._attr_state = self.coordinator.data["measurements"].get("pm2_5")
+            self._attr_native_value = self.coordinator.data["measurements"].get("pm2_5")
         elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._attr_state = self.coordinator.data["measurements"].get(
+            self._attr_native_value = self.coordinator.data["measurements"].get(
                 "temperature_C"
             )
         elif self._kind == SENSOR_KIND_VOC:
-            self._attr_state = self.coordinator.data["measurements"].get("voc")
+            self._attr_native_value = self.coordinator.data["measurements"].get("voc")

@@ -135,12 +135,12 @@ class Sensor(ZhaEntity, SensorEntity):
         return self._state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         return self._unit
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.SENSOR_ATTR is not None
         raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
@@ -214,6 +214,7 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = POWER_WATT
 
     @property
@@ -273,7 +274,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.formatter_function(value)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return Unit of measurement."""
         return self._channel.unit_of_measurement
 

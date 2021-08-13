@@ -7,11 +7,11 @@
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "create_entry": {
-            "default": "Erfolgreich authentifiziert."
+            "default": "Erfolgreich authentifiziert"
         },
         "step": {
             "pick_implementation": {
-                "title": "W\u00e4hle Authentifizierungs-Methode"
+                "title": "W\u00e4hle die Authentifizierungsmethode"
             }
         }
     },

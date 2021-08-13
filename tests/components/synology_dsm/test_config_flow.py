@@ -23,7 +23,7 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -253,6 +253,56 @@ async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
+
+
+async def test_reauth(hass: HomeAssistant, service: MagicMock):
+    """Test reauthentication."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: f"{PASSWORD}_invalid",
+        },
+        unique_id=SERIAL,
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=True,
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "data": {
+                    CONF_HOST: HOST,
+                    CONF_USERNAME: USERNAME,
+                    CONF_PASSWORD: PASSWORD,
+                },
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth"
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "data": {
+                    CONF_HOST: HOST,
+                    CONF_USERNAME: USERNAME,
+                    CONF_PASSWORD: PASSWORD,
+                },
+            },
+            data={
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant, service: MagicMock):

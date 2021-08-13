@@ -94,7 +94,7 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
@@ -123,7 +123,7 @@ class LyricIndoorTemperatureSensor(LyricSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.device.indoorTemperature
 
@@ -152,7 +152,7 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.device.outdoorTemperature
 
@@ -181,7 +181,7 @@ class LyricOutdoorHumiditySensor(LyricSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.device.displayedOutdoorHumidity
 
@@ -209,7 +209,7 @@ class LyricNextPeriodSensor(LyricSensor):
         )
 
     @property
-    def state(self) -> datetime:
+    def native_value(self) -> datetime:
         """Return the state of the sensor."""
         device = self.device
         time = dt_util.parse_time(device.changeableValues.nextPeriodTime)
@@ -242,7 +242,7 @@ class LyricSetpointStatusSensor(LyricSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         device = self.device
         if device.changeableValues.thermostatSetpointStatus == PRESET_HOLD_UNTIL:

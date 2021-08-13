@@ -19,6 +19,7 @@ import threading
 from time import monotonic
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from urllib.parse import urlparse
 
 import attr
 import voluptuous as vol
@@ -382,14 +383,14 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Awaitable) -> asyncio.tasks.Task:
+    def async_create_task(self, target: Awaitable) -> asyncio.Task:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
 
         target: target to call.
         """
-        task: asyncio.tasks.Task = self.loop.create_task(target)
+        task: asyncio.Task = self.loop.create_task(target)
 
         if self._track_task:
             self._pending_tasks.append(task)
@@ -1545,6 +1546,7 @@ class Config:
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None
+        self.currency: str = "EUR"
 
         self.config_source: str = "default"
 
@@ -1650,6 +1652,7 @@ class Config:
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
+            "currency": self.currency,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1676,6 +1679,7 @@ class Config:
         # pylint: disable=dangerous-default-value # _UNDEFs not modified
         external_url: str | dict | None = _UNDEF,
         internal_url: str | dict | None = _UNDEF,
+        currency: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1698,6 +1702,8 @@ class Config:
             self.external_url = cast(Optional[str], external_url)
         if internal_url is not _UNDEF:
             self.internal_url = cast(Optional[str], internal_url)
+        if currency is not None:
+            self.currency = currency
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -1712,18 +1718,35 @@ class Config:
         )
         data = await store.async_load()
 
-        if data:
-            self._update(
-                source=SOURCE_STORAGE,
-                latitude=data.get("latitude"),
-                longitude=data.get("longitude"),
-                elevation=data.get("elevation"),
-                unit_system=data.get("unit_system"),
-                location_name=data.get("location_name"),
-                time_zone=data.get("time_zone"),
-                external_url=data.get("external_url", _UNDEF),
-                internal_url=data.get("internal_url", _UNDEF),
-            )
+        if not data:
+            return
+
+        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
+        # but this data still lives in storage, so we print a warning.
+        if data.get("external_url") and urlparse(data["external_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid external_url set. It's not allowed to have a path")
+
+        if data.get("internal_url") and urlparse(data["internal_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
+
+        self._update(
+            source=SOURCE_STORAGE,
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
+            elevation=data.get("elevation"),
+            unit_system=data.get("unit_system"),
+            location_name=data.get("location_name"),
+            time_zone=data.get("time_zone"),
+            external_url=data.get("external_url", _UNDEF),
+            internal_url=data.get("internal_url", _UNDEF),
+            currency=data.get("currency"),
+        )
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
@@ -1736,6 +1759,7 @@ class Config:
             "time_zone": self.time_zone,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
+            "currency": self.currency,
         }
 
         store = self.hass.helpers.storage.Store(

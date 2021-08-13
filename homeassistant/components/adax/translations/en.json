@@ -5,15 +5,14 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {
                 "data": {
+                    "account_id": "Account ID",
                     "host": "Host",
-                    "password": "Password",
-                    "account_id": "Account ID"
+                    "password": "Password"
                 }
             }
         }

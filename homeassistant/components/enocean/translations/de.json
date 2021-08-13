@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_dongle_path": "Ung\u00fcltiger Dongle-Pfad",
-            "single_instance_allowed": "Schon konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
             "invalid_dongle_path": "Kein g\u00fcltiger Dongle unter diesem Pfad gefunden"

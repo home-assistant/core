@@ -357,7 +357,7 @@ class SensiboClimate(ClimateEntity):
         if change_needed:
             await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
 
-        if state in [STATE_ON, HVAC_MODE_OFF]:
+        if state in (STATE_ON, HVAC_MODE_OFF):
             self._external_state = None
         else:
             self._external_state = state

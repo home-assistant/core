@@ -11,6 +11,11 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
+from homeassistant.components.sensor import ATTR_LAST_RESET
+from homeassistant.core import State
+
+from .common import DATETIME_LAST_RESET
+
 from tests.common import MockConfigEntry, load_fixture
 
 # Add-on fixtures
@@ -166,13 +171,13 @@ def uninstall_addon_fixture():
         yield uninstall_addon
 
 
-@pytest.fixture(name="create_shapshot")
-def create_snapshot_fixture():
-    """Mock create snapshot."""
+@pytest.fixture(name="create_backup")
+def create_backup_fixture():
+    """Mock create backup."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_create_snapshot"
-    ) as create_shapshot:
-        yield create_shapshot
+        "homeassistant.components.zwave_js.addon.async_create_backup"
+    ) as create_backup:
+        yield create_backup
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -835,3 +840,16 @@ def aeotec_zw164_siren_fixture(client, aeotec_zw164_siren_state):
 def firmware_file_fixture():
     """Return mock firmware file stream."""
     return io.BytesIO(bytes(10))
+
+
+@pytest.fixture(name="restore_last_reset")
+def restore_last_reset_fixture():
+    """Return mock restore last reset."""
+    state = State(
+        "sensor.test", "test", {ATTR_LAST_RESET: DATETIME_LAST_RESET.isoformat()}
+    )
+    with patch(
+        "homeassistant.components.zwave_js.sensor.ZWaveMeterSensor.async_get_last_state",
+        return_value=state,
+    ):
+        yield state

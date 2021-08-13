@@ -133,6 +133,10 @@ TEST_CAMERA = {
 }
 TEST_CAMERAS = {"cameras": [TEST_CAMERA]}
 TEST_SURVEILLANCE_USERNAME = "surveillance_username"
+TEST_SWITCH_ENTITY_ID_BASE = "switch.test_camera"
+TEST_SWITCH_MOTION_DETECTION_ENTITY_ID = (
+    f"{TEST_SWITCH_ENTITY_ID_BASE}_motion_detection"
+)
 
 
 def create_mock_motioneye_client() -> AsyncMock:

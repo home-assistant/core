@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 8
+MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -247,6 +247,7 @@ DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
+DEVICE_CLASS_GAS: Final = "gas"
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -452,6 +453,7 @@ LENGTH_MILES: Final = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
 # Pressure units
@@ -509,6 +511,8 @@ IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
 # Precipitation units
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
+PRECIPITATION_INCHES: Final = "in"
+PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
 
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
@@ -609,6 +613,7 @@ SERVICE_CLOSE_COVER: Final = "close_cover"
 SERVICE_CLOSE_COVER_TILT: Final = "close_cover_tilt"
 SERVICE_OPEN_COVER: Final = "open_cover"
 SERVICE_OPEN_COVER_TILT: Final = "open_cover_tilt"
+SERVICE_SAVE_PERSISTENT_STATES: Final = "save_persistent_states"
 SERVICE_SET_COVER_POSITION: Final = "set_cover_position"
 SERVICE_SET_COVER_TILT_POSITION: Final = "set_cover_tilt_position"
 SERVICE_STOP_COVER: Final = "stop_cover"

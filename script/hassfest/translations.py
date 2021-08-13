@@ -21,6 +21,20 @@ REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
 
+# Only allow translatino of integration names if they contain non-brand names
+ALLOW_NAME_TRANSLATION = {
+    "cert_expiry",
+    "emulated_roku",
+    "garages_amsterdam",
+    "google_travel_time",
+    "homekit_controller",
+    "islamic_prayer_times",
+    "local_ip",
+    "nmap_tracker",
+    "rpi_power",
+    "waze_travel_time",
+}
+
 REMOVED_TITLE_MSG = (
     "config.title key has been moved out of config and into the root of strings.json. "
     "Starting Home Assistant 0.109 you only need to define this key in the root "
@@ -256,6 +270,20 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
         else:
             if strings_file.name == "strings.json":
                 find_references(strings, name, references)
+
+                if (
+                    integration.domain not in ALLOW_NAME_TRANSLATION
+                    # Only enforce for core because custom integratinos can't be
+                    # added to allow list.
+                    and integration.core
+                    and strings.get("title") == integration.name
+                    and integration.quality_scale != "internal"
+                ):
+                    integration.add_error(
+                        "translations",
+                        "Don't specify title in translation strings if it's a brand name "
+                        "or add exception to ALLOW_NAME_TRANSLATION",
+                    )
 
     platform_string_schema = gen_platform_strings_schema(config, integration)
     platform_strings = [integration.path.glob("strings.*.json")]

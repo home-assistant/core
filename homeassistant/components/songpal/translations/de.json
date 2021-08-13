@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "not_songpal_device": "Kein Songpal-Ger\u00e4t"
         },
         "error": {

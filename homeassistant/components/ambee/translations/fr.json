@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "R\u00e9-authentification r\u00e9ussie"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_api_key": "Cl\u00e9 API non valide"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "cl\u00e9 API",
+                    "description": "R\u00e9-authentifiez-vous avec votre compte Ambee."
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "cl\u00e9 API",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nom"
+                },
+                "description": "Configurer Ambee pour l'int\u00e9grer \u00e0 Home Assistant."
+            }
+        }
+    }
+}

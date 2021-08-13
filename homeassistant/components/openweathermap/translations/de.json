@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "API-Schl\u00fcssel",
                     "language": "Sprache",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",

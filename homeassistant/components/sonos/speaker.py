@@ -11,13 +11,13 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
-from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
-from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
-from pysonos.events_base import Event as SonosEvent, SubscriptionBase
-from pysonos.exceptions import SoCoException
-from pysonos.music_library import MusicLibrary
-from pysonos.plugins.sharelink import ShareLinkPlugin
-from pysonos.snapshot import Snapshot
+from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
+from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
+from soco.events_base import Event as SonosEvent, SubscriptionBase
+from soco.exceptions import SoCoException, SoCoUPnPException
+from soco.music_library import MusicLibrary
+from soco.plugins.sharelink import ShareLinkPlugin
+from soco.snapshot import Snapshot
 
 from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -25,6 +25,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
@@ -345,10 +346,13 @@ class SonosSpeaker:
     async def async_unsubscribe(self) -> None:
         """Cancel all subscriptions."""
         _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(subscription.unsubscribe() for subscription in self._subscriptions),
             return_exceptions=True,
         )
+        for result in results:
+            if isinstance(result, Exception):
+                _LOGGER.debug("Unsubscribe failed for %s: %s", self.zone_name, result)
         self._subscriptions = []
 
     @callback
@@ -459,7 +463,6 @@ class SonosSpeaker:
             self.soco = soco
 
         was_available = self.available
-        _LOGGER.debug("Async seen: %s, was_available: %s", self.soco, was_available)
 
         if self._seen_timer:
             self._seen_timer()
@@ -471,6 +474,12 @@ class SonosSpeaker:
         if was_available:
             self.async_write_entity_states()
             return
+
+        _LOGGER.debug(
+            "%s [%s] was not available, setting up",
+            self.zone_name,
+            self.soco.ip_address,
+        )
 
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
             partial(
@@ -490,9 +499,7 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(
-        self, now: datetime.datetime | None = None, will_reconnect: bool = False
-    ) -> None:
+    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         if self._seen_timer:
             self._seen_timer()
@@ -521,9 +528,8 @@ class SonosSpeaker:
 
         await self.async_unsubscribe()
 
-        if not will_reconnect:
-            self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
-            self.async_write_entity_states()
+        self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
+        self.async_write_entity_states()
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
@@ -532,8 +538,24 @@ class SonosSpeaker:
             self.zone_name,
             soco,
         )
-        await self.async_unseen(will_reconnect=True)
-        await self.async_seen(soco)
+        await self.async_unsubscribe()
+        self.soco = soco
+        await self.async_subscribe()
+        if self._seen_timer:
+            self._seen_timer()
+        self._seen_timer = self.hass.helpers.event.async_call_later(
+            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+        )
+        if not self._poll_timer:
+            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+                partial(
+                    async_dispatcher_send,
+                    self.hass,
+                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                ),
+                SCAN_INTERVAL,
+            )
+        self.async_write_entity_states()
 
     #
     # Battery management
@@ -614,8 +636,8 @@ class SonosSpeaker:
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
         if not hasattr(event, "zone_player_uui_ds_in_group"):
-            return None
-        self.hass.async_add_job(self.create_update_groups_coro(event))
+            return
+        self.hass.async_create_task(self.create_update_groups_coro(event))
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
@@ -648,7 +670,11 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
-            if group == [self.soco.uid] and self.sonos_group == [self]:
+            if (
+                group == [self.soco.uid]
+                and self.sonos_group == [self]
+                and self.sonos_group_entities
+            ):
                 # Skip updating existing single speakers in polling mode
                 return
 
@@ -802,27 +828,58 @@ class SonosSpeaker:
         """Restore snapshots for all the speakers."""
 
         def _restore_groups(
-            speakers: list[SonosSpeaker], with_group: bool
+            speakers: set[SonosSpeaker], with_group: bool
         ) -> list[list[SonosSpeaker]]:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
-                if speaker.media.playback_status == SONOS_STATE_PLAYING:
-                    speaker.soco.pause()
+                if (
+                    speaker.media.playback_status == SONOS_STATE_PLAYING
+                    and "Pause" in speaker.soco.available_actions
+                ):
+                    try:
+                        speaker.soco.pause()
+                    except SoCoUPnPException as exc:
+                        _LOGGER.debug(
+                            "Pause failed during restore of %s: %s",
+                            speaker.zone_name,
+                            speaker.soco.available_actions,
+                            exc_info=exc,
+                        )
 
             groups = []
+            if not with_group:
+                return groups
 
-            if with_group:
-                # Unjoin slaves first to prevent inheritance of queues
-                for speaker in [s for s in speakers if not s.is_coordinator]:
-                    if speaker.snapshot_group != speaker.sonos_group:
-                        speaker.unjoin()
+            # Unjoin non-coordinator speakers not contained in the desired snapshot group
+            #
+            # If a coordinator is unjoined from its group, another speaker from the group
+            # will inherit the coordinator's playqueue and its own playqueue will be lost
+            speakers_to_unjoin = set()
+            for speaker in speakers:
+                if speaker.sonos_group == speaker.snapshot_group:
+                    continue
 
-                # Bring back the original group topology
-                for speaker in (s for s in speakers if s.snapshot_group):
-                    assert speaker.snapshot_group is not None
-                    if speaker.snapshot_group[0] == speaker:
+                speakers_to_unjoin.update(
+                    {
+                        s
+                        for s in speaker.sonos_group[1:]
+                        if s not in speaker.snapshot_group
+                    }
+                )
+
+            for speaker in speakers_to_unjoin:
+                speaker.unjoin()
+
+            # Bring back the original group topology
+            for speaker in (s for s in speakers if s.snapshot_group):
+                assert speaker.snapshot_group is not None
+                if speaker.snapshot_group[0] == speaker:
+                    if (
+                        speaker.snapshot_group != speaker.sonos_group
+                        and speaker.snapshot_group != [speaker]
+                    ):
                         speaker.join(speaker.snapshot_group)
-                        groups.append(speaker.snapshot_group.copy())
+                    groups.append(speaker.snapshot_group.copy())
 
             return groups
 
@@ -836,6 +893,11 @@ class SonosSpeaker:
 
         # Find all affected players
         speakers_set = {s for s in speakers if s.soco_snapshot}
+        if missing_snapshots := set(speakers) - speakers_set:
+            raise HomeAssistantError(
+                f"Restore failed, speakers are missing snapshots: {[s.zone_name for s in missing_snapshots]}"
+            )
+
         if with_group:
             for speaker in [s for s in speakers_set if s.snapshot_group]:
                 assert speaker.snapshot_group is not None

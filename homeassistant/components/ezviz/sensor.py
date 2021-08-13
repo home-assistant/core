@@ -66,7 +66,7 @@ class EzvizSensor(CoordinatorEntity, Entity):
         return self._name
 
     @property
-    def state(self) -> int | str:
+    def native_value(self) -> int | str:
         """Return the state of the sensor."""
         return self.coordinator.data[self._idx][self._name]
 

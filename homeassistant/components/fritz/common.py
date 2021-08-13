@@ -108,6 +108,7 @@ class FritzBoxTools:
             user=self.username,
             password=self.password,
             timeout=60.0,
+            pool_maxsize=30,
         )
 
         if not self.connection:

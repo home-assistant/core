@@ -189,11 +189,16 @@ class CharacteristicEntity(HomeKitEntity):
     the service entity.
     """
 
+    def __init__(self, accessory, devinfo, char):
+        """Initialise a generic single characteristic HomeKit entity."""
+        self._char = char
+        super().__init__(accessory, devinfo)
+
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-aid:{self._aid}-sid:{self._iid}-cid:{self._iid}"
+        return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
 
 
 async def async_setup_entry(hass, entry):

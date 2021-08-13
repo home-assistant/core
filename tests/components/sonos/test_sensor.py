@@ -1,5 +1,5 @@
 """Tests for the Sonos battery sensor platform."""
-from pysonos.exceptions import NotSupportedException
+from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE

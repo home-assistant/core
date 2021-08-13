@@ -38,17 +38,8 @@ class YetiSwitch(YetiEntity, SwitchEntity):
         """Initialize a Goal Zero Yeti switch."""
         super().__init__(api, coordinator, name, server_unique_id)
         self._condition = switch_name
-        self._condition_name = SWITCH_DICT[switch_name]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._name} {self._condition_name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the switch."""
-        return f"{self._server_unique_id}/{self._condition}"
+        self._attr_name = f"{name} {SWITCH_DICT[switch_name]}"
+        self._attr_unique_id = f"{server_unique_id}/{switch_name}"
 
     @property
     def is_on(self) -> bool:

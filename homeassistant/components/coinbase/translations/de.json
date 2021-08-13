@@ -16,7 +16,7 @@
                     "currencies": "Kontostand W\u00e4hrungen",
                     "exchange_rates": "Wechselkurse"
                 },
-                "description": "Bitte gib die Details deines API-Schl\u00fcssels ein, wie von Coinbase bereitgestellt. Trenne mehrere W\u00e4hrungen mit einem Komma (z. B. \"BTC, EUR\")",
+                "description": "Bitte gib die Details deines API-Schl\u00fcssels ein, wie von Coinbase bereitgestellt.",
                 "title": "Coinbase API Schl\u00fcssel Details"
             }
         }
@@ -31,6 +31,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Zu meldende Wallet-Guthaben.",
+                    "exchange_base": "Basisw\u00e4hrung f\u00fcr Wechselkurssensoren.",
                     "exchange_rate_currencies": "Zu meldende Wechselkurse."
                 },
                 "description": "Coinbase-Optionen anpassen"
