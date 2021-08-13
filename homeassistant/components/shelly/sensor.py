@@ -126,7 +126,7 @@ SENSORS: Final = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_TOTAL,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("emeter", "energyReturned"): BlockAttributeDescription(
         name="Energy Returned",
