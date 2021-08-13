@@ -201,10 +201,10 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     hass, flow["stat_energy_from"], source_result
                 )
 
-                if "stat_cost" in flow:
+                if flow.get("stat_cost") is not None:
                     _async_validate_cost_stat(hass, flow["stat_cost"], source_result)
 
-                elif "entity_energy_price" in flow:
+                elif flow.get("entity_energy_price") is not None:
                     _async_validate_price_entity(
                         hass, flow["entity_energy_price"], source_result
                     )
@@ -217,12 +217,12 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             for flow in source["flow_to"]:
                 _async_validate_energy_stat(hass, flow["stat_energy_to"], source_result)
 
-                if "stat_compensation" in flow:
+                if flow.get("stat_compensation") is not None:
                     _async_validate_cost_stat(
                         hass, flow["stat_compensation"], source_result
                     )
 
-                elif "entity_energy_price" in flow:
+                elif flow.get("entity_energy_price") is not None:
                     _async_validate_price_entity(
                         hass, flow["entity_energy_price"], source_result
                     )
