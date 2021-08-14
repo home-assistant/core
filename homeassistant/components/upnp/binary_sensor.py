@@ -65,7 +65,7 @@ async def async_setup_entry(
 
 
 class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """Base class for UPnP/IGD sensors."""
+    """Base class for UPnP/IGD binary sensors."""
 
     def __init__(
         self,
