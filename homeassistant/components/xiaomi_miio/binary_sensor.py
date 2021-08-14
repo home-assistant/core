@@ -13,6 +13,8 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODELS_HUMIDIFIER_MIIO,
+    MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
 )
 from .device import XiaomiCoordinatedMiioEntity
@@ -33,6 +35,8 @@ BINARY_SENSOR_TYPES = (
     ),
 )
 
+HUMIDIFIER_MIIO_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
+HUMIDIFIER_MIOT_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MJJSQ_BINARY_SENSORS = (ATTR_NO_WATER, ATTR_WATER_TANK_DETACHED)
 
 
@@ -43,6 +47,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
         sensors = []
+        if model in MODELS_HUMIDIFIER_MIIO:
+            sensors = HUMIDIFIER_MIIO_BINARY_SENSORS
+        if model in MODELS_HUMIDIFIER_MIOT:
+            sensors = HUMIDIFIER_MIOT_BINARY_SENSORS
         if model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         for description in BINARY_SENSOR_TYPES:
