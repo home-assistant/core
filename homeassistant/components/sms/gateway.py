@@ -19,6 +19,7 @@ class Gateway:
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
+        self._firstPull = True
 
     async def init_async(self):
         """Initialize the sms gateway asynchronously."""
@@ -26,10 +27,12 @@ class Gateway:
         try:
             await self._worker.set_incoming_sms_async()
         except gammu.ERR_NOTSUPPORTED:
-            _LOGGER.warning("Your phone does not support incoming SMS notifications!")
+            _LOGGER.info(
+                "Your phone does not support callback SMS notifications!, falling back to pulling method"
+            )
         except gammu.GSMError:
-            _LOGGER.warning(
-                "GSM error, your phone does not support incoming SMS notifications!"
+            _LOGGER.info(
+                "GSM error, your phone does not support callback SMS notifications!, falling back to pulling method"
             )
         else:
             await self._worker.set_incoming_callback_async(self.sms_callback)
@@ -43,7 +46,8 @@ class Gateway:
         state_machine.ReadDevice()
 
         _LOGGER.debug("Pulling modem")
-        self.sms_read_messages(state_machine, True)
+        self.sms_read_messages(state_machine, self._firstPull)
+        self._firstPull = False
 
     def sms_callback(self, state_machine, callback_type, callback_data):
         """Receive notification about incoming event.
