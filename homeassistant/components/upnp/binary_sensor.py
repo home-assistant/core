@@ -24,7 +24,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     DOMAIN_DEVICES,
-    LOGGER as _LOGGER,
+    LOGGER,
     UPTIME,
     WANIP,
     WANSTATUS,
