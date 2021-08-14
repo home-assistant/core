@@ -15,14 +15,13 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .contec_tracer import ContecTracer
 
-PLATFORMS = ["light", "cover"]
+PLATFORMS = ["light", "cover", "binary_sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Contec Controllers from a config entry."""
-    # TODO Store an API object for your platforms to access
     hass.data.setdefault(DOMAIN, {})
 
     numberOfControllers: int = entry.data["numberOfControllers"]
