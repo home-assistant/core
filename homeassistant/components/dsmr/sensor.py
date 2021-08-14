@@ -44,6 +44,8 @@ from .const import (
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
+    DSMR_VERSION_MAP,
+    DSMR_VERSIONS,
     LOGGER,
     SENSORS,
 )
@@ -54,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5L", "5B", "5", "4", "2.2"])
+            cv.string, vol.In(DSMR_VERSIONS)
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
@@ -89,6 +91,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
+    _dsmr_version = DSMR_VERSION_MAP.get(dsmr_version, dsmr_version)
     entities = [
         DSMREntity(description, entry)
         for description in SENSORS
@@ -118,7 +121,7 @@ async def async_setup_entry(
             create_tcp_dsmr_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
-            entry.data[CONF_DSMR_VERSION],
+            _dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
             keep_alive_interval=60,
@@ -127,7 +130,7 @@ async def async_setup_entry(
         reader_factory = partial(
             create_dsmr_reader,
             entry.data[CONF_PORT],
-            entry.data[CONF_DSMR_VERSION],
+            _dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
         )
@@ -217,6 +220,8 @@ class DSMREntity(SensorEntity):
         if entity_description.is_gas:
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
+        if device_serial is None:
+            device_serial = entry.entry_id
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, device_serial)},

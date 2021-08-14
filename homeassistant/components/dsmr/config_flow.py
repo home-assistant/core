@@ -28,6 +28,8 @@ from .const import (
     CONF_TIME_BETWEEN_UPDATE,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
+    DSMR_VERSION_MAP,
+    DSMR_VERSIONS,
     LOGGER,
 )
 
@@ -41,7 +43,7 @@ class DSMRConnection:
         """Initialize."""
         self._host = host
         self._port = port
-        self._dsmr_version = dsmr_version
+        self._dsmr_version = DSMR_VERSION_MAP.get(dsmr_version, dsmr_version)
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
@@ -68,6 +70,10 @@ class DSMRConnection:
 
         def update_telegram(telegram: dict[str, DSMRObject]) -> None:
             if self._equipment_identifier in telegram:
+                self._telegram = telegram
+                transport.close()
+            # Swedish meters have no equipment identifier
+            if self._dsmr_version == "5S" and obis_ref.P1_MESSAGE_TIMESTAMP in telegram:
                 self._telegram = telegram
                 transport.close()
 
@@ -119,7 +125,7 @@ async def _validate_dsmr_connection(
     equipment_identifier_gas = conn.equipment_identifier_gas()
 
     # Check only for equipment identifier in case no gas meter is connected
-    if equipment_identifier is None:
+    if equipment_identifier is None and data[CONF_DSMR_VERSION] != "5S":
         raise CannotCommunicate
 
     return {
@@ -203,7 +209,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT): int,
-                vol.Required(CONF_DSMR_VERSION): vol.In(["2.2", "4", "5", "5B", "5L"]),
+                vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
             }
         )
         return self.async_show_form(
@@ -247,7 +253,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_PORT): vol.In(list_of_ports),
-                vol.Required(CONF_DSMR_VERSION): vol.In(["2.2", "4", "5", "5B", "5L"]),
+                vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
             }
         )
         return self.async_show_form(
@@ -288,8 +294,9 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             data = {**data, **info}
 
-            await self.async_set_unique_id(info[CONF_SERIAL_ID])
-            self._abort_if_unique_id_configured()
+            if info[CONF_SERIAL_ID]:
+                await self.async_set_unique_id(info[CONF_SERIAL_ID])
+                self._abort_if_unique_id_configured()
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except CannotCommunicate:
@@ -316,8 +323,9 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         name = f"{host}:{port}" if host is not None else port
         data = {**import_config, **info}
 
-        await self.async_set_unique_id(info[CONF_SERIAL_ID])
-        self._abort_if_unique_id_configured(data)
+        if info[CONF_SERIAL_ID]:
+            await self.async_set_unique_id(info[CONF_SERIAL_ID])
+            self._abort_if_unique_id_configured(data)
 
         return self.async_create_entry(title=name, data=data)
 
