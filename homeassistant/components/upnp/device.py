@@ -168,7 +168,7 @@ class Device:
         )
 
         return {
-            WANSTATUS: values[0][0],
-            UPTIME: values[0][2],
+            WANSTATUS: values[0][0] if values[0] is not None else None,
+            UPTIME: values[0][2] if values[0] is not None else None,
             WANIP: values[1],
         }
