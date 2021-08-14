@@ -83,21 +83,19 @@ class MockConfigDevice:
 
 async def _test_user(hass, config):
     """Test user config."""
-    result = await hass.config_entries.flow.async_init(
+    flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert flow_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow_result["step_id"] == "user"
 
     # test with all provided
     with patch(
         CONNECT_METHOD,
         return_value=MockConfigDevice(),
     ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER, "show_advanced_options": True},
-            data=config,
+        result = await hass.config_entries.flow.async_configure(
+            flow_result["flow_id"], user_input=config
         )
         await hass.async_block_till_done()
 
@@ -170,6 +168,7 @@ async def test_import_data(hass):
     config_data[CONF_PLATFORM] = DOMAIN
     config_data[CONF_ADBKEY] = ADBKEY
     config_data[CONF_TURN_OFF_COMMAND] = "off"
+    config_data[CONF_STATE_DETECTION_RULES] = {"a": "b"}
     platform_data = {MP_DOMAIN: config_data}
 
     with patch(
