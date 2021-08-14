@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -59,7 +58,7 @@ async def async_setup_entry(
     await coordinator.async_refresh()
 
     sensors = [
-        UpnpStatusUpnpStatusBinarySensor(coordinator, device),
+        UpnpStatusBinarySensor(coordinator, device),
     ]
     async_add_entities(sensors, True)
 
@@ -75,6 +74,14 @@ class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Initialize the base sensor."""
         super().__init__(coordinator)
         self._device = device
+        self._attr_name = f"{device.name} wan status"
+        self._attr_unique_id = f"{device.udn}_wanstatus"
+        self._attr_device_info = {
+            "connections": {(dr.CONNECTION_UPNP, device.udn)},
+            "name": device.name,
+            "manufacturer": device.manufacturer,
+            "model": device.model_name,
+        }
 
     @property
     def icon(self) -> str:
@@ -87,29 +94,9 @@ class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return super().available and self.coordinator.data.get(WANSTATUS)
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} wan status"
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_wanstatus"
-
-    @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
         return DEVICE_CLASS_CONNECTIVITY
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get device info."""
-        return {
-            "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
-            "name": self._device.name,
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.model_name,
-        }
 
     @property
     def is_on(self):
