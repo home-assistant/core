@@ -6,7 +6,7 @@ from gammu.asyncworker import GammuAsyncWorker  # pylint: disable=import-error
 
 from homeassistant.core import callback
 
-from .const import DOMAIN
+from .const import DOMAIN, SMS_STATE_UNREAD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,9 @@ class Gateway:
         @type state_machine: gammu.StateMachine
         """
         state_machine.ReadDevice()
-        self.sms_read_messages(state_machine)
+
+        _LOGGER.debug("Pulling modem")
+        self.sms_read_messages(state_machine, True)
 
     def sms_callback(self, state_machine, callback_type, callback_data):
         """Receive notification about incoming event.
@@ -58,13 +60,13 @@ class Gateway:
         )
         self.sms_read_messages(state_machine)
 
-    def sms_read_messages(self, state_machine):
+    def sms_read_messages(self, state_machine, force=False):
         """Read all received SMS messages.
 
         @param state_machine: state machine which invoked action
         @type state_machine: gammu.StateMachine
         """
-        entries = self.get_and_delete_all_sms(state_machine)
+        entries = self.get_and_delete_all_sms(state_machine, force)
         _LOGGER.debug("SMS entries:%s", entries)
         data = []
 
@@ -72,22 +74,25 @@ class Gateway:
             decoded_entry = gammu.DecodeSMS(entry)
             message = entry[0]
             _LOGGER.debug("Processing sms:%s,decoded:%s", message, decoded_entry)
-            if decoded_entry is None:
-                text = message["Text"]
-            else:
-                text = ""
-                for inner_entry in decoded_entry["Entries"]:
-                    if inner_entry["Buffer"] is not None:
-                        text = text + inner_entry["Buffer"]
+            sms_state = message["State"]
+            _LOGGER.debug("SMS state:%s", sms_state)
+            if sms_state == SMS_STATE_UNREAD:
+                if decoded_entry is None:
+                    text = message["Text"]
+                else:
+                    text = ""
+                    for inner_entry in decoded_entry["Entries"]:
+                        if inner_entry["Buffer"] is not None:
+                            text = text + inner_entry["Buffer"]
 
-            event_data = {
-                "phone": message["Number"],
-                "date": str(message["DateTime"]),
-                "message": text,
-            }
+                event_data = {
+                    "phone": message["Number"],
+                    "date": str(message["DateTime"]),
+                    "message": text,
+                }
 
-            _LOGGER.debug("Append event data:%s", event_data)
-            data.append(event_data)
+                _LOGGER.debug("Append event data:%s", event_data)
+                data.append(event_data)
 
         self._hass.add_job(self._notify_incoming_sms, data)
 
