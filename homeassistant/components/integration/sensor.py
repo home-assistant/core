@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    ATTR_NATIVE_VALUE,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
@@ -133,7 +134,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._attr_last_reset = dt_util.utcnow()
         if state:
             try:
-                self._state = Decimal(state.state)
+                self._state = Decimal(state.attributes.get(ATTR_NATIVE_VALUE))
             except (DecimalException, ValueError) as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
             else:

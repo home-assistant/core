@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
 from homeassistant.components.sensor import (
+    ATTR_NATIVE_VALUE,
     DEVICE_CLASS_ENERGY,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
@@ -158,7 +159,7 @@ class PvoutputSensor(SensorEntity, RestoreEntity):
                 self._attr_last_reset = dt_util.as_utc(
                     datetime.fromisoformat(last_state.attributes["last_reset"])
                 )
-            self._old_state = int(last_state.state)
+            self._old_state = int(last_state.attributes.get(ATTR_NATIVE_VALUE))
 
         self._async_update_from_rest_data()
 

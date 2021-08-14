@@ -4,7 +4,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_NATIVE_VALUE,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -125,8 +129,8 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         state = await self.async_get_last_state()
         if state is not None:
             try:
-                self._state = Decimal(state.state)
-            except SyntaxError as err:
+                self._state = Decimal(state.attributes.get(ATTR_NATIVE_VALUE))
+            except (DecimalException, ValueError) as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback

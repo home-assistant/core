@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_NATIVE_VALUE, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -54,7 +54,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._attr_native_value = state.state
+            self._attr_native_value = state.attributes.get(ATTR_NATIVE_VALUE)
 
     async def async_update(self, now=None):
         """Update the state of the sensor."""

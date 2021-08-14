@@ -17,6 +17,7 @@ from aioesphomeapi.model import LastResetType
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    ATTR_NATIVE_VALUE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASSES,
     STATE_CLASS_MEASUREMENT,
@@ -100,7 +101,7 @@ class EsphomeSensor(
             )
 
         with suppress(ValueError):
-            self._old_state = float(last_state.state)
+            self._old_state = float(last_state.attributes.get(ATTR_NATIVE_VALUE))  # type: ignore[arg-type]
 
     @callback
     def _on_state_update(self) -> None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_NATIVE_VALUE, SensorEntity
 from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -52,7 +52,7 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._attr_native_value = state.state
+        self._attr_native_value = state.attributes.get(ATTR_NATIVE_VALUE)
 
     def update(self) -> None:
         """Get the latest data and update the states."""

@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
+    ATTR_NATIVE_VALUE,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
@@ -281,7 +282,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
 
         state = await self.async_get_last_state()
         if state:
-            self._state = Decimal(state.state)
+            self._state = Decimal(state.attributes.get(ATTR_NATIVE_VALUE))
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
             self._last_reset = dt_util.as_utc(

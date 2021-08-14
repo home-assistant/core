@@ -1,7 +1,11 @@
 """Support for EnOcean sensors."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_NATIVE_VALUE,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ID,
@@ -148,7 +152,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
 
         state = await self.async_get_last_state()
         if state is not None:
-            self._state = state.state
+            self._state = state.attributes.get(ATTR_NATIVE_VALUE)
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""

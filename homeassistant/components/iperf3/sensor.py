@@ -1,5 +1,5 @@
 """Support for Iperf3 sensors."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_NATIVE_VALUE, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -84,7 +84,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._state = state.state
+        self._state = state.attributes.get(ATTR_NATIVE_VALUE)
 
     def update(self):
         """Get the latest data and update the states."""

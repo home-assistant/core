@@ -1,7 +1,7 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_NATIVE_VALUE, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -105,7 +105,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
 
         state = await self.async_get_last_state()
         if state:
-            self._state = state.state
+            self._state = state.attributes.get(ATTR_NATIVE_VALUE)
             self._state_attributes = state.attributes
             if "id" in self._state_attributes:
                 self._client.incident_id = self._state_attributes["id"]

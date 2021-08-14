@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    ATTR_NATIVE_VALUE,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -85,7 +89,7 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._attr_native_value = state.state
+            self._attr_native_value = state.attributes.get(ATTR_NATIVE_VALUE)
 
         @callback
         def update() -> None:

@@ -1,7 +1,7 @@
 """Support for Smart Meter Texas sensors."""
 from smart_meter_texas import Meter
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_NATIVE_VALUE, SensorEntity
 from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -92,5 +92,5 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
 
         last_state = await self.async_get_last_state()
         if last_state:
-            self._state = last_state.state
+            self._state = last_state.attributes.get(ATTR_NATIVE_VALUE)
             self._available = True

@@ -7,7 +7,7 @@ from typing import Any
 
 from aiopvpc import PVPCData
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_NATIVE_VALUE, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CURRENCY_EURO, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant, callback
@@ -67,7 +67,7 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._pvpc_data.state = state.state
+            self._pvpc_data.state = state.attributes.get(ATTR_NATIVE_VALUE)
 
         # Update 'state' value in hour changes
         self.async_on_remove(
