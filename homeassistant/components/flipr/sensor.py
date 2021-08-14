@@ -1,13 +1,13 @@
 """Sensor platform for the Flipr's pool_sensor."""
 from datetime import datetime
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import FliprEntity
 from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors_list, True)
 
 
-class FliprSensor(FliprEntity, Entity):
+class FliprSensor(FliprEntity, SensorEntity):
     """Sensor representing FliprSensor data."""
 
     @property
