@@ -44,6 +44,7 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    TIME_HOURS,
     VOLUME_CUBIC_METERS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -92,6 +93,8 @@ ATTR_CARBON_DIOXIDE = "co2"
 ATTR_CHARGING = "charging"
 ATTR_DISPLAY_CLOCK = "display_clock"
 ATTR_FILTER_LIFE_REMAINING = "filter_life_remaining"
+ATTR_FILTER_HOURS_USED = "filter_hours_used"
+ATTR_FILTER_USE = "filter_use"
 ATTR_HUMIDITY = "humidity"
 ATTR_ILLUMINANCE = "illuminance"
 ATTR_ILLUMINANCE_LUX = "illuminance_lux"
@@ -210,11 +213,16 @@ SENSOR_TYPES = {
         icon="mdi:air-filter",
         state_class=STATE_CLASS_MEASUREMENT,
         attributes=(
-            "filter_hours_used",
-            "filter_rfid_product_id",
             "filter_rfid_tag",
             "filter_type",
         ),
+    ),
+    ATTR_FILTER_USE: XiaomiMiioSensorDescription(
+        key=ATTR_FILTER_HOURS_USED,
+        name="Filter Use",
+        native_unit_of_measurement=TIME_HOURS,
+        icon="mdi:clock-outline",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_CARBON_DIOXIDE: XiaomiMiioSensorDescription(
         key=ATTR_CARBON_DIOXIDE,
@@ -245,6 +253,7 @@ HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
 PURIFIER_MIIO_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
     ATTR_HUMIDITY,
     ATTR_MOTOR_SPEED,
     ATTR_PM25,
@@ -252,6 +261,7 @@ PURIFIER_MIIO_SENSORS = (
 )
 PURIFIER_MIOT_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
     ATTR_HUMIDITY,
     ATTR_MOTOR_SPEED,
     ATTR_PM25,
@@ -260,6 +270,7 @@ PURIFIER_MIOT_SENSORS = (
 )
 PURIFIER_V2_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
     ATTR_HUMIDITY,
     ATTR_MOTOR_SPEED,
     ATTR_PM25,
@@ -268,6 +279,7 @@ PURIFIER_V2_SENSORS = (
 )
 PURIFIER_V3_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
     ATTR_ILLUMINANCE_LUX,
     ATTR_MOTOR2_SPEED,
     ATTR_MOTOR_SPEED,
@@ -276,6 +288,7 @@ PURIFIER_V3_SENSORS = (
 )
 PURIFIER_PRO_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
     ATTR_HUMIDITY,
     ATTR_ILLUMINANCE_LUX,
     ATTR_MOTOR2_SPEED,
@@ -286,6 +299,7 @@ PURIFIER_PRO_SENSORS = (
 )
 PURIFIER_PRO_V7_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
     ATTR_HUMIDITY,
     ATTR_ILLUMINANCE_LUX,
     ATTR_MOTOR2_SPEED,
@@ -296,6 +310,7 @@ PURIFIER_PRO_V7_SENSORS = (
 AIRFRESH_SENSORS = (
     ATTR_CARBON_DIOXIDE,
     ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_USE,
     ATTR_HUMIDITY,
     ATTR_ILLUMINANCE_LUX,
     ATTR_PM25,
