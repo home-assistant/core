@@ -1041,7 +1041,7 @@ python-izone==1.1.6
 python-juicenet==1.0.2
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.6
+python-miio==0.5.7
 
 # homeassistant.components.nest
 python-nest==4.1.0
