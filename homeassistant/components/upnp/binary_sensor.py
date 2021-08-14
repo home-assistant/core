@@ -84,11 +84,7 @@ class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and WANSTATUS in self.coordinator.data
-            and self.coordinator.data[WANSTATUS] is not None
-        )
+        return super().available and self.coordinator.data.get(WANSTATUS)
 
     @property
     def name(self) -> str:
