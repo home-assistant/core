@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
@@ -67,13 +66,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_HOST in entry.data
         }
 
-    async def async_step_reauth(self, user_input):
-        """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_user()
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -121,11 +113,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=self._async_generate_schema(),
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
