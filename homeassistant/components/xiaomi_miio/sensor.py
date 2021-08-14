@@ -212,10 +212,7 @@ SENSOR_TYPES = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:air-filter",
         state_class=STATE_CLASS_MEASUREMENT,
-        attributes=(
-            "filter_rfid_tag",
-            "filter_type",
-        ),
+        attributes=("filter_type",),
     ),
     ATTR_FILTER_USE: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_HOURS_USED,
