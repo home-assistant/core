@@ -536,6 +536,69 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
 
+async def test_swedish_meter(hass, dsmr_connection_fixture):
+    """Test if v5 meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
+        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL,
+    )
+    from dsmr_parser.objects import CosemObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5S",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": None,
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+            [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+            [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to update
+    await asyncio.sleep(0)
+
+    power_tariff = hass.states.get("sensor.energy_consumption_total")
+    assert power_tariff.state == "123.456"
+    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+    assert power_tariff.attributes.get(ATTR_ICON) is None
+    assert power_tariff.attributes.get(ATTR_LAST_RESET) is not None
+    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert (
+        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    )
+
+    power_tariff = hass.states.get("sensor.energy_production_total")
+    assert power_tariff.state == "654.321"
+    assert power_tariff.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+
+
 async def test_tcp(hass, dsmr_connection_fixture):
     """If proper config provided TCP connection should be made."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
