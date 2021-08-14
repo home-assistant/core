@@ -2,6 +2,8 @@
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
@@ -70,6 +72,10 @@ class TotalConnectBinarySensor(BinarySensorEntity):
             return DEVICE_CLASS_SMOKE
         if self._zone.is_type_carbon_monoxide():
             return DEVICE_CLASS_GAS
+        if self._zone.is_type_motion():
+            return DEVICE_CLASS_MOTION
+        if self._zone.is_type_medical():
+            return DEVICE_CLASS_SAFETY
         return None
 
     @property
@@ -80,5 +86,6 @@ class TotalConnectBinarySensor(BinarySensorEntity):
             "location_id": self._location_id,
             "low_battery": self._is_low_battery,
             "tampered": self._is_tampered,
+            "partition": self._zone.partition,
         }
         return attributes
