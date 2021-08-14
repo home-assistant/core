@@ -161,6 +161,12 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config=None):
         """Import a config entry."""
+        for entry in self._async_current_entries():
+            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
+                _LOGGER.warning(
+                    "Already configured. This yaml configuration has already been imported. Please remove it"
+                )
+                return self.async_abort(reason="already_configured")
         return await self.async_step_user(import_config)
 
     @staticmethod

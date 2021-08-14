@@ -21,7 +21,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Set required parameter to connect to your Android TV device",
+                "description": "Set required parameters to connect to your Android TV device",
                 "title": "Android TV"
             }
         }

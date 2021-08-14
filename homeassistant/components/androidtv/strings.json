@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Android TV",
-        "description": "Set required parameter to connect to your Android TV device",
+        "description": "Set required parameters to connect to your Android TV device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "adbkey": "Path to your ADB key file (leave empty to auto generate)",

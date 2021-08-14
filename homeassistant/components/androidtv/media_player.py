@@ -33,6 +33,11 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
@@ -403,23 +408,23 @@ class ADBDevice(MediaPlayerEntity):
     def _get_device_info(self, default_model):
         """Get device information."""
         info = self._dev_props
-        model = info.get("model")
+        model = info.get(ATTR_MODEL)
         model = f"{model} ({default_model})" if model else default_model
-        manufacturer = info.get("manufacturer")
-        sw_version = info.get("sw_version")
+        manufacturer = info.get(ATTR_MANUFACTURER)
+        sw_version = info.get(ATTR_SW_VERSION)
         mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
 
         data = {
-            "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self.name,
-            "model": model,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._dev_id)},
+            ATTR_NAME: self.name,
+            ATTR_MODEL: model,
         }
         if manufacturer:
-            data["manufacturer"] = manufacturer
+            data[ATTR_MANUFACTURER] = manufacturer
         if mac:
             data["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
         if sw_version:
-            data["sw_version"] = sw_version
+            data[ATTR_SW_VERSION] = sw_version
         return data
 
     @property
@@ -566,14 +571,11 @@ class AndroidTVDevice(ADBDevice):
 
     _attr_supported_features = SUPPORT_ANDROIDTV
 
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._get_device_info("AndroidTV")
-
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
+        self._attr_device_info = self._get_device_info("AndroidTV")
+
         # Check if device is disconnected.
         if not self.available:
             # Try to connect
@@ -643,14 +645,11 @@ class FireTVDevice(ADBDevice):
 
     _attr_supported_features = SUPPORT_FIRETV
 
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._get_device_info("FireTV")
-
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
+        self._attr_device_info = self._get_device_info("FireTV")
+
         # Check if device is disconnected.
         if not self.available:
             # Try to connect

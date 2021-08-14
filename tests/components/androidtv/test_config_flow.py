@@ -137,6 +137,18 @@ async def test_import(hass):
 
         assert len(mock_setup_entry.mock_calls) == 1
 
+    with patch(
+        CONNECT_METHOD,
+        return_value=MockConfigDevice(),
+    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_PYTHON_ADB,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 async def test_user_adbkey(hass):
     """Test user step with adbkey file."""

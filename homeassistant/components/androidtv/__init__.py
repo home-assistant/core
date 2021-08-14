@@ -118,6 +118,11 @@ async def async_connect_androidtv(
         )
         return None
 
+    if CONF_ADB_SERVER_IP in config:
+        _LOGGER.warning(
+            "Adb server is deprecated. Please consider connecting directly to your TV"
+        )
+
     return aftv
 
 
