@@ -225,14 +225,15 @@ async def async_setup_entry(
     """Set up the Android TV entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
+    device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
     device_name = entry.data.get(CONF_NAME)
     if not device_name:
-        device_name = "Android TV " if device_class == DEVICE_ANDROIDTV else "Fire TV "
-        device_name += entry.data[CONF_HOST]
+        device_name = f"{device_type} {entry.data[CONF_HOST]}"
 
     device_args = [
         aftv,
         device_name,
+        device_type,
         entry.entry_id,
         entry.unique_id,
     ]
@@ -325,6 +326,7 @@ class ADBDevice(MediaPlayerEntity):
         self,
         aftv,
         name,
+        dev_type,
         entry_id,
         unique_id,
     ):
@@ -332,7 +334,7 @@ class ADBDevice(MediaPlayerEntity):
         self.aftv = aftv
         self._entry_id = entry_id
         self._dev_id = unique_id
-        self._dev_props = aftv.device_properties
+        self._dev_type = dev_type
         self._attr_name = name
         self._attr_unique_id = unique_id
 
@@ -396,6 +398,7 @@ class ADBDevice(MediaPlayerEntity):
         """Set config parameter when add to hass."""
         await super().async_added_to_hass()
         self._process_config()
+        self._attr_device_info = self._get_device_info()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -405,11 +408,11 @@ class ADBDevice(MediaPlayerEntity):
         )
         return
 
-    def _get_device_info(self, default_model):
+    def _get_device_info(self):
         """Get device information."""
-        info = self._dev_props
+        info = self.aftv.device_properties
         model = info.get(ATTR_MODEL)
-        model = f"{model} ({default_model})" if model else default_model
+        model = f"{model} ({self._dev_type})" if model else self._dev_type
         manufacturer = info.get(ATTR_MANUFACTURER)
         sw_version = info.get(ATTR_SW_VERSION)
         mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
@@ -571,11 +574,6 @@ class AndroidTVDevice(ADBDevice):
 
     _attr_supported_features = SUPPORT_ANDROIDTV
 
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._get_device_info("AndroidTV")
-
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
@@ -647,11 +645,6 @@ class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
 
     _attr_supported_features = SUPPORT_FIRETV
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._get_device_info("FireTV")
 
     @adb_decorator(override_available=True)
     async def async_update(self):
