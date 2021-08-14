@@ -161,10 +161,14 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 interfaces.extend(
                     ipv4["address"]
                     for ipv4 in ipv4s
-                    if not ipaddress.ip_address(ipv4["address"]).is_loopback
+                    if not ipaddress.IPv4Address(ipv4["address"]).is_loopback
                 )
-            if adapter["ipv6"] and adapter["index"] not in interfaces:
-                interfaces.append(adapter["index"])
+            if ipv6s := adapter["ipv6"]:
+                for ipv6_addr in ipv6s:
+                    address = ipv6_addr["address"]
+                    v6_ip_address = ipaddress.IPv6Address(address)
+                    if not v6_ip_address.is_global and not v6_ip_address.is_loopback:
+                        interfaces.append(ipv6_addr["address"])
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
