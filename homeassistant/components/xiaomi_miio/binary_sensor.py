@@ -49,9 +49,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors = []
         if model in MODELS_HUMIDIFIER_MIIO:
             sensors = HUMIDIFIER_MIIO_BINARY_SENSORS
-        if model in MODELS_HUMIDIFIER_MIOT:
+        elif model in MODELS_HUMIDIFIER_MIOT:
             sensors = HUMIDIFIER_MIOT_BINARY_SENSORS
-        if model in MODELS_HUMIDIFIER_MJJSQ:
+        elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         for description in BINARY_SENSOR_TYPES:
             if description.key not in sensors:
