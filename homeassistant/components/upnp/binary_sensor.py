@@ -82,21 +82,12 @@ class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
             "manufacturer": device.manufacturer,
             "model": device.model_name,
         }
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
+        self._attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data.get(WANSTATUS)
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def is_on(self):
