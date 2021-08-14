@@ -269,7 +269,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                 }
                 emeter_statics = self.smartplug.get_emeter_daily()
                 last_reset = datetime.now() - get_time_offset(self.smartplug)
-                last_reset_local = as_local(last_reset.replace(microsecond=0))
+                last_reset_local = as_local(last_reset.replace(second=0, microsecond=0))
                 _LOGGER.debug(
                     "%s last reset time as local to server is %s"
                     % (
