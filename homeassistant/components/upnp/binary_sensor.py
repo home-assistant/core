@@ -59,7 +59,7 @@ async def async_setup_entry(
     await coordinator.async_refresh()
 
     sensors = [
-        UpnpStatusSensor(coordinator, device),
+        UpnpStatusUpnpStatusBinarySensor(coordinator, device),
     ]
     async_add_entities(sensors, True)
 
