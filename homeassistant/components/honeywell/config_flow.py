@@ -4,8 +4,15 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.honeywell import get_somecomfort_client
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 
-from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN
+from .const import (
+    CONF_COOL_AWAY_TEMPERATURE,
+    CONF_HEAT_AWAY_TEMPERATURE,
+    DEFAULT_COOL_AWAY_TEMPERATURE,
+    DEFAULT_HEAT_AWAY_TEMPERATURE,
+    DOMAIN,
+)
 
 
 class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,4 +59,39 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_COOL_AWAY_TEMPERATURE: import_data[CONF_COOL_AWAY_TEMPERATURE],
                 CONF_HEAT_AWAY_TEMPERATURE: import_data[CONF_HEAT_AWAY_TEMPERATURE],
             }
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Options callback for Honeywell."""
+        return HoneywellOptionsFlowHandler(config_entry)
+
+
+class HoneywellOptionsFlowHandler(config_entries.OptionsFlow):
+    """Config flow options for Honeywell."""
+
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+        """Initialize Honeywell options flow."""
+        self.config_entry = entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_COOL_AWAY_TEMPERATURE,
+                        default=DEFAULT_COOL_AWAY_TEMPERATURE,
+                    ): int,
+                    vol.Required(
+                        CONF_HEAT_AWAY_TEMPERATURE,
+                        default=DEFAULT_HEAT_AWAY_TEMPERATURE,
+                    ): int,
+                }
+            ),
         )
