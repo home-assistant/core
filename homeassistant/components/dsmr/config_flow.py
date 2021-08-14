@@ -28,7 +28,6 @@ from .const import (
     CONF_TIME_BETWEEN_UPDATE,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
-    DSMR_VERSION_MAP,
     DSMR_VERSIONS,
     LOGGER,
 )
@@ -43,7 +42,7 @@ class DSMRConnection:
         """Initialize."""
         self._host = host
         self._port = port
-        self._dsmr_version = DSMR_VERSION_MAP.get(dsmr_version, dsmr_version)
+        self._dsmr_version = dsmr_version
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":

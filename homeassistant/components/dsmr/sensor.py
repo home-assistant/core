@@ -44,7 +44,6 @@ from .const import (
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
-    DSMR_VERSION_MAP,
     DSMR_VERSIONS,
     LOGGER,
     SENSORS,
@@ -91,7 +90,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
-    _dsmr_version = DSMR_VERSION_MAP.get(dsmr_version, dsmr_version)
     entities = [
         DSMREntity(description, entry)
         for description in SENSORS
@@ -121,7 +119,7 @@ async def async_setup_entry(
             create_tcp_dsmr_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
-            _dsmr_version,
+            dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
             keep_alive_interval=60,
@@ -130,7 +128,7 @@ async def async_setup_entry(
         reader_factory = partial(
             create_dsmr_reader,
             entry.data[CONF_PORT],
-            _dsmr_version,
+            dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
         )
