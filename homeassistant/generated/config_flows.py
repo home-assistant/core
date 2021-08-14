@@ -287,6 +287,7 @@ FLOWS = [
     "velbus",
     "vera",
     "verisure",
+    "version",
     "vesync",
     "vilfo",
     "vizio",
