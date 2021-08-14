@@ -39,7 +39,7 @@ class ContecLight(LightEntity):
     def __init__(self, onOffActivation: ContecOnOffActivation):
         """Initialize an ContecLight."""
         self._onOffActivation = onOffActivation
-        self._id = f"{onOffActivation.ControllerUnit.UnitId}-{onOffActivation.StartActivationNumber}"
+        self._id = f"light_{onOffActivation.ControllerUnit.UnitId}-{onOffActivation.StartActivationNumber}"
         self._name = f"Contec Light {self._id}"
 
         def StateUpdated(isOn: bool):

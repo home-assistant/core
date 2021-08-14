@@ -46,7 +46,7 @@ class ContecCover(CoverEntity):
     def __init__(self, blindActivation: ContecBlindActivation):
         """Initialize an ContecCover."""
         self._blindActivation = blindActivation
-        self._id = f"{blindActivation.ControllerUnit.UnitId}-{blindActivation.StartActivationNumber}"
+        self._id = f"blind_{blindActivation.ControllerUnit.UnitId}-{blindActivation.StartActivationNumber}"
         self._name = f"Contec Cover {self._id}"
 
         def StateUpdated(movingDirection: BlindState, blindOpeningPercentage: int):
