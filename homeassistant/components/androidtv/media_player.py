@@ -571,11 +571,14 @@ class AndroidTVDevice(ADBDevice):
 
     _attr_supported_features = SUPPORT_ANDROIDTV
 
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._get_device_info("AndroidTV")
+
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
-        self._attr_device_info = self._get_device_info("AndroidTV")
-
         # Check if device is disconnected.
         if not self.available:
             # Try to connect
@@ -645,11 +648,14 @@ class FireTVDevice(ADBDevice):
 
     _attr_supported_features = SUPPORT_FIRETV
 
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return self._get_device_info("FireTV")
+
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
-        self._attr_device_info = self._get_device_info("FireTV")
-
         # Check if device is disconnected.
         if not self.available:
             # Try to connect

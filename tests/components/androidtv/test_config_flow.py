@@ -137,18 +137,6 @@ async def test_import(hass):
 
         assert len(mock_setup_entry.mock_calls) == 1
 
-    with patch(
-        CONNECT_METHOD,
-        return_value=MockConfigDevice(),
-    ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONFIG_PYTHON_ADB,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
 async def test_user_adbkey(hass):
     """Test user step with adbkey file."""
@@ -273,6 +261,23 @@ async def test_abort_if_host_exist(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_abort_import_if_host_exist(hass):
+    """Test we abort if component is already setup."""
+    MockConfigEntry(
+        domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
+    ).add_to_hass(hass)
+
+    # Should fail, same Host in entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=CONFIG_ADB_SERVER,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_abort_if_unique_exist(hass):
