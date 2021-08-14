@@ -7,10 +7,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-<<<<<<< HEAD
-=======
-from homeassistant.helpers import device_registry as dr
->>>>>>> Updates based on review
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity
@@ -44,25 +40,8 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
-<<<<<<< HEAD
         self._attr_name = f"{coordinator.device.name} wan status"
         self._attr_unique_id = f"{coordinator.device.udn}_wanstatus"
-=======
-        self._device = device
-        self._attr_name = f"{device.name} wan status"
-        self._attr_unique_id = f"{device.udn}_wanstatus"
-        self._attr_device_info = {
-            "connections": {(dr.CONNECTION_UPNP, device.udn)},
-            "name": device.name,
-            "manufacturer": device.manufacturer,
-            "model": device.model_name,
-        }
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
->>>>>>> Updates based on review
 
     @property
     def available(self) -> bool:
@@ -70,15 +49,6 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
         return super().available and self.coordinator.data.get(WANSTATUS)
 
     @property
-<<<<<<< HEAD
     def is_on(self) -> bool:
-=======
-    def device_class(self) -> str:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
-
-    @property
-    def is_on(self):
->>>>>>> Updates based on review
         """Return true if the binary sensor is on."""
         return self.coordinator.data[WANSTATUS] == "Connected"
