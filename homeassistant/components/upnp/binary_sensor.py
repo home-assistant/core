@@ -1,4 +1,4 @@
-"""Support for UPnP/IGD Sensors."""
+"""Support for UPnP/IGD Binary Sensors."""
 from __future__ import annotations
 
 from datetime import timedelta
