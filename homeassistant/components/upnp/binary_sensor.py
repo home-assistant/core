@@ -129,6 +129,6 @@ class UpnpStatusSensor(CoordinatorEntity, BinarySensorEntity):
         if self.coordinator.data[WANIP] is not None:
             attributes.update({"WAN IP": self.coordinator.data[WANIP]})
         if self.coordinator.data[UPTIME] is not None:
-            attributes.update({"UPTIME": self.coordinator.data[UPTIME]})
+            attributes.update({"Uptime": self.coordinator.data[UPTIME]})
 
         return attributes
