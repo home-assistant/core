@@ -49,7 +49,7 @@ async def async_setup_entry(
     LOGGER.debug("Adding sensors")
     coordinator = DataUpdateCoordinator[Mapping[str, Any]](
         hass,
-        _LOGGER,
+        LOGGER,
         name=device.name,
         update_method=device.async_get_status,
         update_interval=update_interval,
