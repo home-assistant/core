@@ -197,6 +197,7 @@ class SensorEntity(Entity):
             return self.entity_description.native_unit_of_measurement
         return None
 
+    @final
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
@@ -221,10 +222,6 @@ class SensorEntity(Entity):
     @property
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
-        # Test if _attr_state has been set in this instance
-        if "_attr_state" in self.__dict__:
-            return self._attr_state
-
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
 
