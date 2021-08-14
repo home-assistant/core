@@ -23,7 +23,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     DOMAIN_DEVICES,
-    LOGGER as _LOGGER,
+    LOGGER,
     UPTIME,
     WANIP,
     WANSTATUS,
@@ -44,11 +44,11 @@ async def async_setup_entry(
         CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
     update_interval = timedelta(seconds=update_interval_sec)
-    _LOGGER.debug("update_interval: %s", update_interval)
-    _LOGGER.debug("Adding sensors")
+    LOGGER.debug("update_interval: %s", update_interval)
+    LOGGER.debug("Adding sensors")
     coordinator = DataUpdateCoordinator[Mapping[str, Any]](
         hass,
-        _LOGGER,
+        LOGGER,
         name=device.name,
         update_method=device.async_get_status,
         update_interval=update_interval,
