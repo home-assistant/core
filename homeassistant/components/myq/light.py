@@ -11,6 +11,7 @@ from pymyq.errors import MyQError
 
 from homeassistant.components.light import LightEntity
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
@@ -39,7 +40,7 @@ class MyQDevice(CoordinatorEntity, LightEntity):
 
     @property
     def name(self):
-        """Return the name of the garage door if any."""
+        """Return the name of the light if any."""
         return self._device.name
 
     @property
@@ -81,9 +82,9 @@ class MyQDevice(CoordinatorEntity, LightEntity):
         try:
             await self._device.turnon(wait_for_state=True)
         except MyQError as err:
-            raise HomeAssistantError(f"Turning light {self._device.name} on failed with error: {err}") from err
-
-            return
+            raise HomeAssistantError(
+                f"Turning light {self._device.name} on failed with error: {err}"
+            ) from err
 
         # Write new state to HASS
         self.async_write_ha_state()
@@ -96,13 +97,9 @@ class MyQDevice(CoordinatorEntity, LightEntity):
         try:
             await self._device.turnoff(wait_for_state=True)
         except MyQError as err:
-            _LOGGER.error(
-                "Turning light %s off failed with error: %s",
-                self._device.name,
-                str(err),
-            )
-
-            return
+            raise HomeAssistantError(
+                f"Turning light {self._device.name} off failed with error: {err}"
+            ) from err
 
         # Write opening state to HASS
         self.async_write_ha_state()
