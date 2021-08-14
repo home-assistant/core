@@ -1,4 +1,6 @@
 """Camera that loads a picture from an MQTT topic."""
+from __future__ import annotations
+
 import functools
 
 import voluptuous as vol
@@ -98,6 +100,8 @@ class MqttCamera(MqttEntity, Camera):
             },
         )
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         return self._last_image

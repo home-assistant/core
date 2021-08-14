@@ -43,7 +43,6 @@ from homeassistant.helpers.system_info import async_get_system_info
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BASE_URL = "base_url"
-ATTR_CURRENCY = "currency"
 ATTR_EXTERNAL_URL = "external_url"
 ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
@@ -196,7 +195,6 @@ class APIDiscoveryView(HomeAssistantView):
             # always needs authentication
             ATTR_REQUIRES_API_PASSWORD: True,
             ATTR_VERSION: __version__,
-            ATTR_CURRENCY: None,
         }
 
         with suppress(NoURLAvailableError):

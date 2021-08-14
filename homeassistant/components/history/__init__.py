@@ -393,7 +393,7 @@ class Filters:
         if includes and not excludes:
             return or_(*includes)
 
-        if not excludes and includes:
+        if not includes and excludes:
             return not_(or_(*excludes))
 
         return or_(*includes) & not_(or_(*excludes))

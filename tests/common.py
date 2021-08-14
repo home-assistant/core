@@ -29,10 +29,9 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import recorder
+from homeassistant.components import device_automation, recorder
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
-    _async_get_device_automations as async_get_device_automations,
 )
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
@@ -67,6 +66,16 @@ _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
+
+
+async def async_get_device_automations(
+    hass: HomeAssistant, automation_type: str, device_id: str
+) -> Any:
+    """Get a device automation for a single device id."""
+    automations = await device_automation.async_get_device_automations(
+        hass, automation_type, [device_id]
+    )
+    return automations.get(device_id)
 
 
 def threadsafe_callback_factory(func):

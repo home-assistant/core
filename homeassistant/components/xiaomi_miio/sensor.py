@@ -49,6 +49,8 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRHUMIDIFIER_CA1,
+    MODEL_AIRHUMIDIFIER_CB1,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -69,13 +71,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
+ATTR_ACTUAL_SPEED = "actual_speed"
 ATTR_AIR_QUALITY = "air_quality"
 ATTR_CHARGING = "charging"
 ATTR_DISPLAY_CLOCK = "display_clock"
 ATTR_HUMIDITY = "humidity"
 ATTR_ILLUMINANCE = "illuminance"
 ATTR_LOAD_POWER = "load_power"
+ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
@@ -97,79 +100,77 @@ SENSOR_TYPES = {
     ATTR_TEMPERATURE: XiaomiMiioSensorDescription(
         key=ATTR_TEMPERATURE,
         name="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_HUMIDITY: XiaomiMiioSensorDescription(
         key=ATTR_HUMIDITY,
         name="Humidity",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_PRESSURE: XiaomiMiioSensorDescription(
         key=ATTR_PRESSURE,
         name="Pressure",
-        unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_HPA,
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_LOAD_POWER: XiaomiMiioSensorDescription(
         key=ATTR_LOAD_POWER,
         name="Load Power",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
     ATTR_WATER_LEVEL: XiaomiMiioSensorDescription(
         key=ATTR_WATER_LEVEL,
         name="Water Level",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-check",
         state_class=STATE_CLASS_MEASUREMENT,
         valid_min_value=0.0,
         valid_max_value=100.0,
     ),
-    ATTR_ACTUAL_MOTOR_SPEED: XiaomiMiioSensorDescription(
-        key=ATTR_ACTUAL_MOTOR_SPEED,
+    ATTR_ACTUAL_SPEED: XiaomiMiioSensorDescription(
+        key=ATTR_ACTUAL_SPEED,
         name="Actual Speed",
-        unit_of_measurement="rpm",
+        native_unit_of_measurement="rpm",
         icon="mdi:fast-forward",
         state_class=STATE_CLASS_MEASUREMENT,
-        valid_min_value=200.0,
-        valid_max_value=2000.0,
+    ),
+    ATTR_MOTOR_SPEED: XiaomiMiioSensorDescription(
+        key=ATTR_MOTOR_SPEED,
+        name="Motor Speed",
+        native_unit_of_measurement="rpm",
+        icon="mdi:fast-forward",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_ILLUMINANCE: XiaomiMiioSensorDescription(
         key=ATTR_ILLUMINANCE,
         name="Illuminance",
-        unit_of_measurement=UNIT_LUMEN,
+        native_unit_of_measurement=UNIT_LUMEN,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ATTR_AIR_QUALITY: XiaomiMiioSensorDescription(
         key=ATTR_AIR_QUALITY,
-        unit_of_measurement="AQI",
+        native_unit_of_measurement="AQI",
         icon="mdi:cloud",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
 
-HUMIDIFIER_MIIO_SENSORS = {
-    ATTR_HUMIDITY: "humidity",
-    ATTR_TEMPERATURE: "temperature",
-}
-
-HUMIDIFIER_MIOT_SENSORS = {
-    ATTR_HUMIDITY: "humidity",
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_WATER_LEVEL: "water_level",
-    ATTR_ACTUAL_MOTOR_SPEED: "actual_speed",
-}
-
-HUMIDIFIER_MJJSQ_SENSORS = {
-    ATTR_HUMIDITY: "humidity",
-    ATTR_TEMPERATURE: "temperature",
-}
+HUMIDIFIER_MIIO_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
+HUMIDIFIER_CA1_CB1_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_MOTOR_SPEED)
+HUMIDIFIER_MIOT_SENSORS = (
+    ATTR_HUMIDITY,
+    ATTR_TEMPERATURE,
+    ATTR_WATER_LEVEL,
+    ATTR_ACTUAL_SPEED,
+)
+HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -225,7 +226,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         device = None
         sensors = []
-        if model in MODELS_HUMIDIFIER_MIOT:
+        if model in (MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1):
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = HUMIDIFIER_CA1_CB1_SENSORS
+        elif model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             sensors = HUMIDIFIER_MIOT_SENSORS
         elif model in MODELS_HUMIDIFIER_MJJSQ:
@@ -327,7 +331,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -374,7 +378,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._sub_device.status[self.entity_description.key]
 
@@ -399,7 +403,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

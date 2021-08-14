@@ -101,12 +101,14 @@ class AuroraSensor(AuroraDevice, SensorEntity):
             if self.type == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
                 power_watts = self.client.measure(3, True)
-                self._attr_state = round(power_watts, 1)
+                self._attr_native_value = round(power_watts, 1)
             elif self.type == "temperature":
                 temperature_c = self.client.measure(21)
-                self._attr_state = round(temperature_c, 1)
+                self._attr_native_value = round(temperature_c, 1)
+
         except AuroraError as error:
             self._attr_state = None
+            self._attr_native_value = None
             self._attr_available = False
             # aurorapy does not have different exceptions (yet) for dealing
             # with timeout vs other comms errors.

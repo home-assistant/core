@@ -85,6 +85,7 @@ SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
             DEVICE_CLASS_ILLUMINANCE,
             STATE_CLASS_MEASUREMENT,
         ],
+        "S_MOISTURE": [PERCENTAGE, "mdi:water-percent", None, None],
     },
     "V_VOLTAGE": [
         ELECTRIC_POTENTIAL_VOLT,
@@ -147,8 +148,8 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
         return True
 
     @property
-    def state(self) -> str | None:
-        """Return the state of this entity."""
+    def native_value(self) -> str | None:
+        """Return the state of the device."""
         return self._values.get(self.value_type)
 
     @property
@@ -176,7 +177,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
         return self._get_sensor_type()[3]
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         if (

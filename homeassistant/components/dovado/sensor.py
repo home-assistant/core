@@ -89,7 +89,7 @@ class DovadoSensor(SensorEntity):
         return f"{self._data.name} {SENSORS[self._sensor][1]}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the sensor state."""
         return self._state
 
@@ -99,7 +99,7 @@ class DovadoSensor(SensorEntity):
         return SENSORS[self._sensor][3]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return SENSORS[self._sensor][2]
 

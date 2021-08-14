@@ -85,7 +85,7 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.isoformat()

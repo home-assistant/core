@@ -665,17 +665,18 @@ omit =
     homeassistant/components/mysensors/helpers.py
     homeassistant/components/mysensors/light.py
     homeassistant/components/mysensors/notify.py
-    homeassistant/components/mysensors/sensor.py
     homeassistant/components/mysensors/switch.py
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
     homeassistant/components/mystrom/switch.py
     homeassistant/components/myq/__init__.py
+    homeassistant/components/myq/cover.py
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
+    homeassistant/components/neato/hub.py
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
     homeassistant/components/neato/vacuum.py
@@ -1078,6 +1079,8 @@ omit =
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/traccar/const.py
     homeassistant/components/trackr/device_tracker.py
+    homeassistant/components/tractive/__init__.py
+    homeassistant/components/tractive/device_tracker.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
@@ -1111,7 +1114,6 @@ omit =
     homeassistant/components/upcloud/switch.py
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*
-    homeassistant/components/uptimerobot/binary_sensor.py
     homeassistant/components/uscis/sensor.py
     homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py
@@ -1195,6 +1197,7 @@ omit =
     homeassistant/components/xiaomi_miio/__init__.py
     homeassistant/components/xiaomi_miio/air_quality.py
     homeassistant/components/xiaomi_miio/alarm_control_panel.py
+    homeassistant/components/xiaomi_miio/binary_sensor.py
     homeassistant/components/xiaomi_miio/device.py
     homeassistant/components/xiaomi_miio/device_tracker.py
     homeassistant/components/xiaomi_miio/fan.py

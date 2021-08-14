@@ -1,0 +1,95 @@
+"""Common constants and functions for Uptime Robot tests."""
+from __future__ import annotations
+
+from enum import Enum
+from typing import Any
+from unittest.mock import patch
+
+from pyuptimerobot import (
+    APIStatus,
+    UptimeRobotAccount,
+    UptimeRobotApiError,
+    UptimeRobotApiResponse,
+    UptimeRobotMonitor,
+)
+
+from homeassistant import config_entries
+from homeassistant.components.uptimerobot.const import DOMAIN
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+MOCK_UPTIMEROBOT_API_KEY = "1234"
+MOCK_UPTIMEROBOT_UNIQUE_ID = "1234567890"
+
+MOCK_UPTIMEROBOT_ACCOUNT = {"email": "test@test.test", "user_id": 1234567890}
+MOCK_UPTIMEROBOT_ERROR = {"message": "test error from API."}
+MOCK_UPTIMEROBOT_MONITOR = {
+    "id": 1234,
+    "friendly_name": "Test monitor",
+    "status": 2,
+    "type": 1,
+    "url": "http://example.com",
+}
+
+MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
+    "domain": DOMAIN,
+    "title": "test@test.test",
+    "data": {"platform": DOMAIN, "api_key": MOCK_UPTIMEROBOT_API_KEY},
+    "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
+    "source": config_entries.SOURCE_USER,
+}
+
+UPTIMEROBOT_TEST_ENTITY = "binary_sensor.test_monitor"
+
+
+class MockApiResponseKey(str, Enum):
+    """Mock API response key."""
+
+    ACCOUNT = "account"
+    ERROR = "error"
+    MONITORS = "monitors"
+
+
+def mock_uptimerobot_api_response(
+    data: dict[str, Any]
+    | None
+    | list[UptimeRobotMonitor]
+    | UptimeRobotAccount
+    | UptimeRobotApiError = None,
+    status: APIStatus = APIStatus.OK,
+    key: MockApiResponseKey = MockApiResponseKey.MONITORS,
+) -> UptimeRobotApiResponse:
+    """Mock API response for Uptime Robot."""
+    return UptimeRobotApiResponse.from_dict(
+        {
+            "stat": {"error": APIStatus.FAIL}.get(key, status),
+            key: data
+            if data is not None
+            else {
+                "account": MOCK_UPTIMEROBOT_ACCOUNT,
+                "error": MOCK_UPTIMEROBOT_ERROR,
+                "monitors": [MOCK_UPTIMEROBOT_MONITOR],
+            }.get(key, {}),
+        }
+    )
+
+
+async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the Uptime Robot integration."""
+    mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
+    ):
+
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+    assert mock_entry.state == config_entries.ConfigEntryState.LOADED
+
+    return mock_entry

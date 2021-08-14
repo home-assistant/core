@@ -160,7 +160,9 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         self._attr_device_class = DEVICE_CLASS.get(type(self._device))
         self._attr_icon = ICON.get(type(self._device))
         self._attr_state_class = STATE_CLASS.get(type(self._device))
-        self._attr_unit_of_measurement = UNIT_OF_MEASUREMENT.get(type(self._device))
+        self._attr_native_unit_of_measurement = UNIT_OF_MEASUREMENT.get(
+            type(self._device)
+        )
 
         if device.type in Consumption.ZHATYPE:
             self._attr_last_reset = dt_util.utc_from_timestamp(0)
@@ -173,7 +175,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.state
 
@@ -217,7 +219,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     TYPE = DOMAIN
 
@@ -240,7 +242,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.secondary_temperature
 
@@ -250,7 +252,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     TYPE = DOMAIN
 
@@ -284,7 +286,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         return f"{self.serial}-battery"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the battery."""
         return self._device.battery
 
