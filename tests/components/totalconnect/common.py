@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.location import TotalConnectLocation
-from total_connect_client.zone import ZONE_STATUS_NORMAL
+from total_connect_client.partition import TotalConnectPartition
+from total_connect_client.zone import ZONE_STATUS_NORMAL, ZONE_TYPE_SECURITY
 
 from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -237,28 +238,71 @@ CONFIG_DATA = {
 CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
 
+PARTITION_DETAILS_1 = {
+    "PartitionID": 1,
+    "ArmingState": TotalConnectPartition.DISARMED,
+    "PartitionName": "Test1",
+}
+
+PARTITION_DETAILS_2 = {
+    "PartitionID": 2,
+    "ArmingState": TotalConnectPartition.DISARMED,
+    "PartitionName": "Test2",
+}
+
+PARTITION_DETAILS = [PARTITION_DETAILS_1]
+RESPONSE_PARTITION_DETAILS = {
+    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultData": "testing partition details",
+    "PartitionsInfoList": PARTITION_DETAILS,
+}
+
+ZONE_DETAILS_NORMAL = {
+    "PartitionId": "1",
+    "Batterylevel": "-1",
+    "Signalstrength": "-1",
+    "zoneAdditionalInfo": None,
+    "ZoneID": "1",
+    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
+    "ZoneFlags": None,
+}
+
+ZONE_STATUS_INFO = [ZONE_DETAILS_NORMAL]
+ZONE_DETAILS = {"ZoneStatusInfoWithPartitionId": ZONE_STATUS_INFO}
+ZONE_DETAIL_STATUS = {"Zones": ZONE_DETAILS}
+
+RESPONSE_GET_ZONE_DETAILS_SUCCESS = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "ZoneStatus": ZONE_DETAIL_STATUS,
+}
+
+
 async def setup_platform(hass, platform):
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_DATA,
-    )
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, entry_id="test")
     mock_entry.add_to_hass(hass)
 
-    responses = [RESPONSE_AUTHENTICATE, RESPONSE_DISARMED]
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
+    ]
 
     with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
-        "zeep.Client", autospec=True
-    ), patch(
         "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
-    ) as mock_request, patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.get_zone_details",
-        return_value=True,
-    ):
+    ) as mock_request:
         assert await async_setup_component(hass, DOMAIN, {})
-        assert mock_request.call_count == 2
+        assert mock_request.call_count == 1
+        if hass.data[DOMAIN][mock_entry.entry_id].locations:
+            # force total_connect_client to fetch locations
+            pass
+        assert mock_request.call_count == 4
     await hass.async_block_till_done()
 
     return mock_entry

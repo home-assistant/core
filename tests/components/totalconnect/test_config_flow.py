@@ -11,6 +11,8 @@ from .common import (
     CONFIG_DATA_NO_USERCODES,
     RESPONSE_AUTHENTICATE,
     RESPONSE_DISARMED,
+    RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+    RESPONSE_PARTITION_DETAILS,
     RESPONSE_SUCCESS,
     RESPONSE_USER_CODE_INVALID,
     USERNAME,
@@ -38,17 +40,16 @@ async def test_user_show_locations(hass):
     responses = [
         RESPONSE_AUTHENTICATE,
         RESPONSE_DISARMED,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_PARTITION_DETAILS,
         RESPONSE_USER_CODE_INVALID,
         RESPONSE_SUCCESS,
     ]
 
-    with patch("zeep.Client", autospec=True), patch(
+    with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ) as mock_request, patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.get_zone_details",
-        return_value=True,
-    ), patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):
 
@@ -61,8 +62,8 @@ async def test_user_show_locations(hass):
         # first it should show the locations form
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "locations"
-        # client should have sent two requests, authenticate and get status
-        assert mock_request.call_count == 2
+        # client should have sent four requests for init
+        assert mock_request.call_count == 4
 
         # user enters an invalid usercode
         result2 = await hass.config_entries.flow.async_configure(
@@ -71,8 +72,8 @@ async def test_user_show_locations(hass):
         )
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["step_id"] == "locations"
-        # client should have sent 3rd request to validate usercode
-        assert mock_request.call_count == 3
+        # client should have sent 5th request to validate usercode
+        assert mock_request.call_count == 5
 
         # user enters a valid usercode
         result3 = await hass.config_entries.flow.async_configure(
@@ -81,7 +82,7 @@ async def test_user_show_locations(hass):
         )
         assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         # client should have sent another request to validate usercode
-        assert mock_request.call_count == 4
+        assert mock_request.call_count == 6
 
 
 async def test_abort_if_already_setup(hass):

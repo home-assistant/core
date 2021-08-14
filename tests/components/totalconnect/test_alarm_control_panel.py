@@ -63,7 +63,7 @@ async def test_attributes(hass):
 
         entity_registry = await hass.helpers.entity_registry.async_get_registry()
         entry = entity_registry.async_get(ENTITY_ID)
-        # TotalConnect alarm device unique_id is the location_id
+        # TotalConnect partition #1 alarm device unique_id is the location_id
         assert entry.unique_id == LOCATION_ID
 
 
@@ -330,17 +330,16 @@ async def test_armed_custom(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_ALARM_ARMED_CUSTOM_BYPASS
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_CUSTOM_BYPASS
 
 
 async def test_unknown(hass):
     """Test unknown arm status."""
     responses = [RESPONSE_UNKNOWN]
+
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.request",
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == "unknown"
+        assert hass.states.get(ENTITY_ID).state == "unknown"
