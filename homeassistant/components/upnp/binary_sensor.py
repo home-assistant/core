@@ -45,8 +45,8 @@ async def async_setup_entry(
         CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
     update_interval = timedelta(seconds=update_interval_sec)
-    _LOGGER.debug("update_interval: %s", update_interval)
-    _LOGGER.debug("Adding sensors")
+    LOGGER.debug("update_interval: %s", update_interval)
+    LOGGER.debug("Adding sensors")
     coordinator = DataUpdateCoordinator[Mapping[str, Any]](
         hass,
         _LOGGER,
