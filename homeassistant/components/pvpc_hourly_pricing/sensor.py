@@ -51,9 +51,9 @@ async def async_setup_entry(
 class ElecPriceSensor(RestoreEntity, SensorEntity):
     """Class to hold the prices of electricity as a sensor."""
 
-    unit_of_measurement = UNIT
-    icon = ICON
-    should_poll = False
+    _attr_native_unit_of_measurement = UNIT
+    _attr_icon = ICON
+    _attr_should_poll = False
 
     def __init__(self, name, unique_id, pvpc_data_handler):
         """Initialize the sensor object."""
