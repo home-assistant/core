@@ -62,7 +62,7 @@ class FliprSensor(FliprEntity, Entity):
         return f"Flipr {self.flipr_id} {SENSORS[self.info_type]['name']}"
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         state = self.coordinator.data[self.info_type]
         if isinstance(state, datetime):
@@ -80,7 +80,7 @@ class FliprSensor(FliprEntity, Entity):
         return SENSORS[self.info_type]["icon"]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement."""
         return SENSORS[self.info_type]["unit"]
 

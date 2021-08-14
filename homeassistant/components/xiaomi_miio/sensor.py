@@ -280,7 +280,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         self._state = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
