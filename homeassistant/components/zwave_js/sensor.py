@@ -11,7 +11,6 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -32,13 +31,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import dt
 
 from .const import ATTR_METER_TYPE, ATTR_VALUE, DATA_CLIENT, DOMAIN, SERVICE_RESET_METER
 from .discovery import ZwaveDiscoveryInfo
@@ -235,7 +229,7 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         return str(self.info.primary_value.metadata.unit)
 
 
-class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
+class ZWaveMeterSensor(ZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
 
     def __init__(
@@ -252,48 +246,6 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         else:
             self._attr_state_class = STATE_CLASS_MEASUREMENT
-
-    @callback
-    def async_update_last_reset(
-        self, node: ZwaveNode, endpoint: int, meter_type: int | None
-    ) -> None:
-        """Update last reset."""
-        # If the signal is not for this node or is for a different endpoint,
-        # or a meter type was specified and doesn't match this entity's meter type:
-        if (
-            self.info.node != node
-            or self.info.primary_value.endpoint != endpoint
-            or meter_type is not None
-            and self.info.primary_value.metadata.cc_specific.get("meterType")
-            != meter_type
-        ):
-            return
-
-        self._attr_last_reset = dt.utcnow()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added."""
-        await super().async_added_to_hass()
-
-        # If the meter is not an accumulating meter type, do not reset.
-        if self.device_class != DEVICE_CLASS_ENERGY:
-            return
-
-        # Restore the last reset time from stored state
-        restored_state = await self.async_get_last_state()
-        if restored_state and ATTR_LAST_RESET in restored_state.attributes:
-            self._attr_last_reset = dt.parse_datetime(
-                restored_state.attributes[ATTR_LAST_RESET]
-            )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{SERVICE_RESET_METER}",
-                self.async_update_last_reset,
-            )
-        )
 
     async def async_reset_meter(
         self, meter_type: int | None = None, value: int | None = None
@@ -315,15 +267,6 @@ class ZWaveMeterSensor(ZWaveNumericSensor, RestoreEntity):
             node,
             primary_value.endpoint,
             options,
-        )
-
-        # Notify meters that may have been reset
-        async_dispatcher_send(
-            self.hass,
-            f"{DOMAIN}_{SERVICE_RESET_METER}",
-            node,
-            primary_value.endpoint,
-            options.get("type"),
         )
 
 

@@ -222,11 +222,6 @@ async def test_reset_meter(
             blocking=True,
         )
 
-    assert (
-        hass.states.get(METER_ENERGY_SENSOR).attributes[ATTR_LAST_RESET]
-        == DATETIME_LAST_RESET.isoformat()
-    )
-
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
@@ -264,21 +259,3 @@ async def test_reset_meter(
     assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
 
     client.async_send_command_no_wait.reset_mock()
-
-
-async def test_restore_last_reset(
-    hass,
-    client,
-    aeon_smart_switch_6,
-    restore_last_reset,
-    integration,
-):
-    """Test restoring last_reset on setup."""
-    assert (
-        hass.states.get(METER_ENERGY_SENSOR).attributes[ATTR_LAST_RESET]
-        == DATETIME_LAST_RESET.isoformat()
-    )
-
-    # Validate that non accumulating meter does not have a last reset attribute
-
-    assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
