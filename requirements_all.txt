@@ -1867,7 +1867,7 @@ python-juicenet==1.0.2
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.6
+python-miio==0.5.7
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -1994,7 +1994,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qnap
-qnapstats==0.3.1
+qnapstats==0.4.0
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.5
