@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from youless_api.youless_sensor import YoulessSensor
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.youless import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, DEVICE_CLASS_POWER
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -40,7 +40,7 @@ async def async_setup_entry(
     )
 
 
-class YoulessBaseSensor(CoordinatorEntity, Entity):
+class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
     """The base sensor for Youless."""
 
     def __init__(
