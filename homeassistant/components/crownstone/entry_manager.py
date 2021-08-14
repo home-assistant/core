@@ -117,6 +117,7 @@ class CrownstoneEntryManager:
                 try:
                     await self.uart.initialize_usb(port)
                 except UartException:
+                    delattr(self, ATTR_UART)
                     # remove usb path to make usb setup available from options
                     entry_data = self.config_entry.data.copy()
                     entry_data[CONF_USB_PATH] = None
