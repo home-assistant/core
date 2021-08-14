@@ -188,14 +188,13 @@ class CrownstoneEntryManager:
         return unload_ok
 
     @callback
-    def on_shutdown(self, event: Event) -> None:
+    def on_shutdown(self, _: Event) -> None:
         """Close all IO connections."""
         self.sse.close_client()
         if hasattr(self, ATTR_UART):
             self.uart.stop()
 
 
-@callback
 async def async_update_entry_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     entry_data = entry.data.copy()

@@ -80,7 +80,7 @@ def update_crwn_ability(manager: CrownstoneEntryManager, ha_event: Event) -> Non
             async_dispatcher_send(manager.hass, SIG_CROWNSTONE_STATE_UPDATE)
 
 
-def update_uart_state(manager: CrownstoneEntryManager, data: bool | None) -> None:
+def update_uart_state(manager: CrownstoneEntryManager, _: bool | None) -> None:
     """Update the uart ready state for entities that use USB."""
     # update availability of power usage entities.
     dispatcher_send(manager.hass, SIG_UART_STATE_CHANGE)
