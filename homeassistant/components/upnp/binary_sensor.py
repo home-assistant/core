@@ -60,7 +60,7 @@ async def async_setup_entry(
     sensors = [
         UpnpStatusBinarySensor(coordinator, device),
     ]
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
