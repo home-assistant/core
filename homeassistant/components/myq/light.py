@@ -81,9 +81,7 @@ class MyQDevice(CoordinatorEntity, LightEntity):
         try:
             await self._device.turnon(wait_for_state=True)
         except MyQError as err:
-            _LOGGER.error(
-                "Turning light %s on failed with error: %s", self._device.name, str(err)
-            )
+            raise HomeAssistantError(f"Turning light {self._device.name} on failed with error: {err}") from err
 
             return
 
