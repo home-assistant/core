@@ -69,7 +69,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert current_power.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
         assert current_power.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
 
-        current_power_in = hass.states.get("sensor.huisbaasje_current_power_in")
+        current_power_in = hass.states.get("sensor.huisbaasje_current_power_in_peak")
         assert current_power_in.state == "1012.0"
         assert current_power_in.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
         assert current_power_in.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
@@ -79,7 +79,9 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert current_power_in.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
 
-        current_power_in_low = hass.states.get("sensor.huisbaasje_current_power_in_low")
+        current_power_in_low = hass.states.get(
+            "sensor.huisbaasje_current_power_in_off_peak"
+        )
         assert current_power_in_low.state == "unknown"
         assert (
             current_power_in_low.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
@@ -94,7 +96,7 @@ async def test_setup_entry(hass: HomeAssistant):
             current_power_in_low.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
         )
 
-        current_power_out = hass.states.get("sensor.huisbaasje_current_power_out")
+        current_power_out = hass.states.get("sensor.huisbaasje_current_power_out_peak")
         assert current_power_out.state == "unknown"
         assert current_power_out.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
         assert current_power_out.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
@@ -106,7 +108,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert current_power_out.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
 
         current_power_out_low = hass.states.get(
-            "sensor.huisbaasje_current_power_out_low"
+            "sensor.huisbaasje_current_power_out_off_peak"
         )
         assert current_power_out_low.state == "unknown"
         assert (
@@ -139,58 +141,134 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         assert energy_today.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert energy_today.attributes.get(ATTR_LAST_RESET) is None
-        assert (
-            energy_today.attributes.get(ATTR_STATE_CLASS)
-            == STATE_CLASS_TOTAL_INCREASING
-        )
+        assert energy_today.attributes.get(ATTR_STATE_CLASS) is None
         assert (
             energy_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
         )
 
-        energy_this_week = hass.states.get("sensor.huisbaasje_energy_this_week")
-        assert energy_this_week.state == "17.5"
-        assert energy_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
-        assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_week.attributes.get(ATTR_LAST_RESET) is None
+        energy_consumption_peak_today = hass.states.get(
+            "sensor.huisbaasje_energy_consumption_peak_today"
+        )
+        assert energy_consumption_peak_today.state == "2.7"
         assert (
-            energy_this_week.attributes.get(ATTR_STATE_CLASS)
-            == STATE_CLASS_TOTAL_INCREASING
+            energy_consumption_peak_today.attributes.get(ATTR_DEVICE_CLASS)
+            == DEVICE_CLASS_ENERGY
         )
         assert (
-            energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            energy_consumption_peak_today.attributes.get(ATTR_ICON)
+            == "mdi:lightning-bolt"
+        )
+        assert energy_consumption_peak_today.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_consumption_peak_today.attributes.get(ATTR_STATE_CLASS)
+            is STATE_CLASS_TOTAL_INCREASING
+        )
+        assert (
+            energy_consumption_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
         )
 
-        energy_this_month = hass.states.get("sensor.huisbaasje_energy_this_month")
-        assert energy_this_month.state == "103.3"
-        assert (
-            energy_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+        energy_consumption_off_peak_today = hass.states.get(
+            "sensor.huisbaasje_energy_consumption_off_peak_today"
         )
-        assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_month.attributes.get(ATTR_LAST_RESET) is None
+        assert energy_consumption_off_peak_today.state == "0.6"
         assert (
-            energy_this_month.attributes.get(ATTR_STATE_CLASS)
-            == STATE_CLASS_TOTAL_INCREASING
+            energy_consumption_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
+            == DEVICE_CLASS_ENERGY
         )
         assert (
-            energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            energy_consumption_off_peak_today.attributes.get(ATTR_ICON)
+            == "mdi:lightning-bolt"
+        )
+        assert energy_consumption_off_peak_today.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_consumption_off_peak_today.attributes.get(ATTR_STATE_CLASS)
+            is STATE_CLASS_TOTAL_INCREASING
+        )
+        assert (
+            energy_consumption_off_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
         )
 
-        energy_this_year = hass.states.get("sensor.huisbaasje_energy_this_year")
-        assert energy_this_year.state == "673.0"
-        assert energy_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
-        assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_year.attributes.get(ATTR_LAST_RESET) is None
+        energy_production_peak_today = hass.states.get(
+            "sensor.huisbaasje_energy_production_peak_today"
+        )
+        assert energy_production_peak_today.state == "1.5"
         assert (
-            energy_this_year.attributes.get(ATTR_STATE_CLASS)
-            == STATE_CLASS_TOTAL_INCREASING
+            energy_production_peak_today.attributes.get(ATTR_DEVICE_CLASS)
+            == DEVICE_CLASS_ENERGY
         )
         assert (
-            energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            energy_production_peak_today.attributes.get(ATTR_ICON)
+            == "mdi:lightning-bolt"
+        )
+        assert energy_production_peak_today.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_production_peak_today.attributes.get(ATTR_STATE_CLASS)
+            is STATE_CLASS_TOTAL_INCREASING
+        )
+        assert (
+            energy_production_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
         )
+
+        energy_production_off_peak_today = hass.states.get(
+            "sensor.huisbaasje_energy_production_off_peak_today"
+        )
+        assert energy_production_off_peak_today.state == "1.0"
+        assert (
+            energy_production_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
+            == DEVICE_CLASS_ENERGY
+        )
+        assert (
+            energy_production_off_peak_today.attributes.get(ATTR_ICON)
+            == "mdi:lightning-bolt"
+        )
+        assert energy_production_off_peak_today.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_production_off_peak_today.attributes.get(ATTR_STATE_CLASS)
+            is STATE_CLASS_TOTAL_INCREASING
+        )
+        assert (
+            energy_production_off_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            == ENERGY_KILO_WATT_HOUR
+        )
+
+        # energy_this_week = hass.states.get("sensor.huisbaasje_energy_this_week")
+        # assert energy_this_week.state == "17.5"
+        # assert energy_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+        # assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
+        # assert energy_this_week.attributes.get(ATTR_LAST_RESET) is None
+        # assert energy_this_week.attributes.get(ATTR_STATE_CLASS) is None
+        # assert (
+        #     energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        #     == ENERGY_KILO_WATT_HOUR
+        # )
+
+        # energy_this_month = hass.states.get("sensor.huisbaasje_energy_this_month")
+        # assert energy_this_month.state == "103.3"
+        # assert (
+        #     energy_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+        # )
+        # assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
+        # assert energy_this_month.attributes.get(ATTR_LAST_RESET) is None
+        # assert energy_this_month.attributes.get(ATTR_STATE_CLASS) is None
+        # assert (
+        #     energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        #     == ENERGY_KILO_WATT_HOUR
+        # )
+
+        # energy_this_year = hass.states.get("sensor.huisbaasje_energy_this_year")
+        # assert energy_this_year.state == "673.0"
+        # assert energy_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+        # assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
+        # assert energy_this_year.attributes.get(ATTR_LAST_RESET) is None
+        # assert energy_this_year.attributes.get(ATTR_STATE_CLASS) is None
+        # assert (
+        #     energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        #     == ENERGY_KILO_WATT_HOUR
+        # )
 
         gas_today = hass.states.get("sensor.huisbaasje_gas_today")
         assert gas_today.state == "1.1"
@@ -202,47 +280,38 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert gas_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
 
-        gas_this_week = hass.states.get("sensor.huisbaasje_gas_this_week")
-        assert gas_this_week.state == "5.6"
-        assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-        assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_week.attributes.get(ATTR_LAST_RESET) is None
-        assert (
-            gas_this_week.attributes.get(ATTR_STATE_CLASS)
-            == STATE_CLASS_TOTAL_INCREASING
-        )
-        assert (
-            gas_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == VOLUME_CUBIC_METERS
-        )
+        # gas_this_week = hass.states.get("sensor.huisbaasje_gas_this_week")
+        # assert gas_this_week.state == "5.6"
+        # assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+        # assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
+        # assert gas_this_week.attributes.get(ATTR_LAST_RESET) is None
+        # assert gas_this_week.attributes.get(ATTR_STATE_CLASS) is None
+        # assert (
+        #     gas_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        #     == VOLUME_CUBIC_METERS
+        # )
 
-        gas_this_month = hass.states.get("sensor.huisbaasje_gas_this_month")
-        assert gas_this_month.state == "39.1"
-        assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-        assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_month.attributes.get(ATTR_LAST_RESET) is None
-        assert (
-            gas_this_month.attributes.get(ATTR_STATE_CLASS)
-            == STATE_CLASS_TOTAL_INCREASING
-        )
-        assert (
-            gas_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == VOLUME_CUBIC_METERS
-        )
+        # gas_this_month = hass.states.get("sensor.huisbaasje_gas_this_month")
+        # assert gas_this_month.state == "39.1"
+        # assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+        # assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
+        # assert gas_this_month.attributes.get(ATTR_LAST_RESET) is None
+        # assert gas_this_month.attributes.get(ATTR_STATE_CLASS) is None
+        # assert (
+        #     gas_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        #     == VOLUME_CUBIC_METERS
+        # )
 
-        gas_this_year = hass.states.get("sensor.huisbaasje_gas_this_year")
-        assert gas_this_year.state == "116.7"
-        assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-        assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_year.attributes.get(ATTR_LAST_RESET) is None
-        assert (
-            gas_this_year.attributes.get(ATTR_STATE_CLASS)
-            == STATE_CLASS_TOTAL_INCREASING
-        )
-        assert (
-            gas_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == VOLUME_CUBIC_METERS
-        )
+        # gas_this_year = hass.states.get("sensor.huisbaasje_gas_this_year")
+        # assert gas_this_year.state == "116.7"
+        # assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+        # assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
+        # assert gas_this_year.attributes.get(ATTR_LAST_RESET) is None
+        # assert gas_this_year.attributes.get(ATTR_STATE_CLASS) is None
+        # assert (
+        #     gas_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        #     == VOLUME_CUBIC_METERS
+        # )
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
@@ -280,17 +349,40 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant):
 
         # Assert data is loaded
         assert hass.states.get("sensor.huisbaasje_current_power").state == "1012.0"
-        assert hass.states.get("sensor.huisbaasje_current_power_in").state == "unknown"
         assert (
-            hass.states.get("sensor.huisbaasje_current_power_in_low").state == "unknown"
+            hass.states.get("sensor.huisbaasje_current_power_in_peak").state
+            == "unknown"
         )
-        assert hass.states.get("sensor.huisbaasje_current_power_out").state == "unknown"
         assert (
-            hass.states.get("sensor.huisbaasje_current_power_out_low").state
+            hass.states.get("sensor.huisbaasje_current_power_in_off_peak").state
+            == "unknown"
+        )
+        assert (
+            hass.states.get("sensor.huisbaasje_current_power_out_peak").state
+            == "unknown"
+        )
+        assert (
+            hass.states.get("sensor.huisbaasje_current_power_out_off_peak").state
             == "unknown"
         )
         assert hass.states.get("sensor.huisbaasje_current_gas").state == "unknown"
         assert hass.states.get("sensor.huisbaasje_energy_today").state == "3.3"
+        assert (
+            hass.states.get("sensor.huisbaasje_energy_consumption_peak_today").state
+            == "unknown"
+        )
+        assert (
+            hass.states.get("sensor.huisbaasje_energy_consumption_off_peak_today").state
+            == "unknown"
+        )
+        assert (
+            hass.states.get("sensor.huisbaasje_energy_production_peak_today").state
+            == "unknown"
+        )
+        assert (
+            hass.states.get("sensor.huisbaasje_energy_production_off_peak_today").state
+            == "unknown"
+        )
         assert hass.states.get("sensor.huisbaasje_gas_today").state == "unknown"
 
         # Assert mocks are called
