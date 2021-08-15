@@ -1,29 +1,23 @@
 """Support for UPnP/IGD Sensors."""
 from __future__ import annotations
 
-<<<<<<< HEAD
-=======
-from typing import Mapping
-
->>>>>>> Create 1 combined data coordinator
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-<<<<<<< HEAD
+
 from . import UpnpDataUpdateCoordinator, UpnpEntity
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
-=======
-from . import UpnpEntity
+)
+
+from . import UpnpDataUpdateCoordinator, UpnpEntity
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
-    CONFIG_ENTRY_UDN,
->>>>>>> Create 1 combined data coordinator
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
     DOMAIN,
@@ -145,7 +139,7 @@ class RawUpnpSensor(UpnpSensor):
     def native_value(self) -> str | None:
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
-        value = self._device.coordinator.data[device_value_key]
+        value = self._coordinator.data[device_value_key]
         if value is None:
             return None
         return format(value, "d")
@@ -178,10 +172,10 @@ class DerivedUpnpSensor(UpnpSensor):
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]
-        current_value = self._device.coordinator.data[device_value_key]
+        current_value = self._coordinator.data[device_value_key]
         if current_value is None:
             return None
-        current_timestamp = self._device.coordinator.data[TIMESTAMP]
+        current_timestamp = self._coordinator.data[TIMESTAMP]
         if self._last_value is None or self._has_overflowed(current_value):
             self._last_value = current_value
             self._last_timestamp = current_timestamp
