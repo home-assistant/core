@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -138,8 +138,11 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_today.state == "3.3"
         assert energy_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         assert energy_today.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_today.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_today.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert energy_today.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_today.attributes.get(ATTR_STATE_CLASS)
+            == STATE_CLASS_TOTAL_INCREASING
+        )
         assert (
             energy_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -149,8 +152,11 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_this_week.state == "17.5"
         assert energy_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_week.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_this_week.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert energy_this_week.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_this_week.attributes.get(ATTR_STATE_CLASS)
+            == STATE_CLASS_TOTAL_INCREASING
+        )
         assert (
             energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -162,8 +168,11 @@ async def test_setup_entry(hass: HomeAssistant):
             energy_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         )
         assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_month.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_this_month.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert energy_this_month.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_this_month.attributes.get(ATTR_STATE_CLASS)
+            == STATE_CLASS_TOTAL_INCREASING
+        )
         assert (
             energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -173,8 +182,11 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_this_year.state == "673.0"
         assert energy_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_year.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_this_year.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert energy_this_year.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            energy_this_year.attributes.get(ATTR_STATE_CLASS)
+            == STATE_CLASS_TOTAL_INCREASING
+        )
         assert (
             energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -184,16 +196,21 @@ async def test_setup_entry(hass: HomeAssistant):
         assert gas_today.state == "1.1"
         assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_today.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_today.attributes.get(ATTR_LAST_RESET) is not None
-        assert gas_today.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert gas_today.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            gas_today.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+        )
         assert gas_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
 
         gas_this_week = hass.states.get("sensor.huisbaasje_gas_this_week")
         assert gas_this_week.state == "5.6"
         assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_week.attributes.get(ATTR_LAST_RESET) is not None
-        assert gas_this_week.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert gas_this_week.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            gas_this_week.attributes.get(ATTR_STATE_CLASS)
+            == STATE_CLASS_TOTAL_INCREASING
+        )
         assert (
             gas_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == VOLUME_CUBIC_METERS
@@ -203,8 +220,11 @@ async def test_setup_entry(hass: HomeAssistant):
         assert gas_this_month.state == "39.1"
         assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_month.attributes.get(ATTR_LAST_RESET) is not None
-        assert gas_this_month.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert gas_this_month.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            gas_this_month.attributes.get(ATTR_STATE_CLASS)
+            == STATE_CLASS_TOTAL_INCREASING
+        )
         assert (
             gas_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == VOLUME_CUBIC_METERS
@@ -214,8 +234,11 @@ async def test_setup_entry(hass: HomeAssistant):
         assert gas_this_year.state == "116.7"
         assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_year.attributes.get(ATTR_LAST_RESET) is not None
-        assert gas_this_year.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL
+        assert gas_this_year.attributes.get(ATTR_LAST_RESET) is None
+        assert (
+            gas_this_year.attributes.get(ATTR_STATE_CLASS)
+            == STATE_CLASS_TOTAL_INCREASING
+        )
         assert (
             gas_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == VOLUME_CUBIC_METERS
