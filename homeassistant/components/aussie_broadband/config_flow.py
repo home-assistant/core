@@ -64,7 +64,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             if len(self.services) == 0:
                 return self.async_abort(reason="no_devices_found")
-            elif len(self.services) == 1:
+
+            if len(self.services) == 1:
                 service = self.services[0]
                 self.data[ATTR_SERVICE_ID] = service["service_id"]
 
@@ -77,9 +78,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=service["description"], data=self.data
                 )
-            else:
-                # account has more than one service, select service to add
-                return await self.async_step_service()
+
+            # account has more than one service, select service to add
+            return await self.async_step_service()
 
         return self.async_show_form(
             step_id="user",

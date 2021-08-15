@@ -1,7 +1,8 @@
 """Support for Aussie Broadband metric sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -95,6 +96,6 @@ class CounterEntity(CoordinatorEntity, SensorEntity):
         return self.coordinator.data[self._attribute]
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return str(self._service_id) + ":" + self._attribute

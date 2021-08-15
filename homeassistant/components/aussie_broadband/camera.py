@@ -1,6 +1,7 @@
 """Support for Aussie Broadband CVC graph cameras."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 import requests
 
@@ -55,14 +56,14 @@ class CVCGraphCamera(Camera):
         self._service_id = service_id
         self._url = url
         self._name = name
-        self._last_image = None
+        self._last_image: bytes | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_image(self):
         response = requests.get(self._url, timeout=10)
         self._last_image = response.content
 
-    def camera_image(self) -> bytes:
+    def camera_image(self) -> bytes | None:
         """Return bytes of camera image."""
         self._update_image()
         return self._last_image
@@ -73,6 +74,6 @@ class CVCGraphCamera(Camera):
         return self._name
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return str(self._service_id)
