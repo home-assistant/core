@@ -161,8 +161,7 @@ class SensorEntity(Entity):
         """Return state attributes."""
         if last_reset := self.last_reset:
             if (
-                last_reset is not None
-                and self.state_class == STATE_CLASS_MEASUREMENT
+                self.state_class == STATE_CLASS_MEASUREMENT
                 and not self._last_reset_reported
             ):
                 self._last_reset_reported = True
