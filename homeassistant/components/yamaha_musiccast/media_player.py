@@ -45,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,7 +53,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
-from ...helpers import entity_platform
 from .const import (
     ATTR_MAIN_SYNC,
     ATTR_MC_LINK,

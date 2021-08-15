@@ -167,6 +167,7 @@ async def test_user_input_device_found(hass, mock_get_device_info_valid):
     assert result2["data"] == {
         "host": "127.0.0.1",
         "serial": "1234567890",
+        "upnp_description": None,
     }
 
 
@@ -214,6 +215,7 @@ async def test_import_device_successful(hass, mock_get_device_info_valid):
     assert result["data"] == {
         "host": "127.0.0.1",
         "serial": "1234567890",
+        "upnp_description": None,
     }
 
 
@@ -262,6 +264,7 @@ async def test_ssdp_discovery_successful_add_device(hass, mock_ssdp_yamaha):
     assert result2["data"] == {
         "host": "127.0.0.1",
         "serial": "1234567890",
+        "upnp_description": "http://127.0.0.1/desc.xml",
     }
 
 
@@ -285,3 +288,4 @@ async def test_ssdp_discovery_existing_device_update(hass, mock_ssdp_yamaha):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert mock_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_entry.data["upnp_description"] == "http://127.0.0.1/desc.xml"
