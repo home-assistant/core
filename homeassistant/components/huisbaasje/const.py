@@ -11,6 +11,7 @@ from huisbaasje.const import (
 from homeassistant.components.sensor import STATE_CLASS_TOTAL
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     TIME_HOURS,
@@ -119,6 +120,7 @@ SENSORS_INFO = [
     },
     {
         "name": "Huisbaasje Gas Today",
+        "device_class": DEVICE_CLASS_GAS,
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
@@ -129,6 +131,7 @@ SENSORS_INFO = [
     },
     {
         "name": "Huisbaasje Gas This Week",
+        "device_class": DEVICE_CLASS_GAS,
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
@@ -139,6 +142,7 @@ SENSORS_INFO = [
     },
     {
         "name": "Huisbaasje Gas This Month",
+        "device_class": DEVICE_CLASS_GAS,
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
@@ -149,6 +153,7 @@ SENSORS_INFO = [
     },
     {
         "name": "Huisbaasje Gas This Year",
+        "device_class": DEVICE_CLASS_GAS,
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
