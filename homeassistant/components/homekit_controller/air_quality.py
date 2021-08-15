@@ -1,4 +1,6 @@
 """Support for HomeKit Controller air quality sensors."""
+import logging
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -6,6 +8,8 @@ from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 AIR_QUALITY_TEXT = {
     0: "unknown",
@@ -19,6 +23,15 @@ AIR_QUALITY_TEXT = {
 
 class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
     """Representation of a HomeKit Controller Air Quality sensor."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialise a HomeKit air_quality acessory."""
+        super().__init__(*args, **kwargs)
+
+        _LOGGER.warning(
+            "The homekit_controller air_quality entity has been "
+            "deprecated and will be removed in 2021.12.0"
+        )
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
