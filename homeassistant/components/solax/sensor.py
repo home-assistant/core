@@ -6,11 +6,26 @@ from solax import real_time_api
 from solax.inverter import InverterError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PORT,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 DEFAULT_PORT = 80
 
@@ -34,10 +49,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
     for sensor, (idx, unit) in api.inverter.sensor_map().items():
+        state_class = STATE_CLASS_MEASUREMENT
+        if sensor.startswith("Today"):
+            last_reset = None
+        else:
+            last_reset = dt_util.utc_from_timestamp(0)
+        device_class = None
         if unit == "C":
             unit = TEMP_CELSIUS
+            device_class = DEVICE_CLASS_TEMPERATURE
+        elif unit == "kWh":
+            device_class = DEVICE_CLASS_ENERGY
+        elif unit == "V":
+            device_class = DEVICE_CLASS_VOLTAGE
+        elif unit == "A":
+            device_class = DEVICE_CLASS_CURRENT
+        elif unit == "W":
+            device_class = DEVICE_CLASS_POWER
+        elif unit == "%":
+            device_class = DEVICE_CLASS_BATTERY
         uid = f"{serial}-{idx}"
-        devices.append(Inverter(uid, serial, sensor, unit))
+        devices.append(
+            Inverter(uid, serial, sensor, unit, state_class, device_class, last_reset)
+        )
     endpoint.sensors = devices
     async_add_entities(devices)
 
@@ -75,16 +109,28 @@ class RealTimeDataEndpoint:
 class Inverter(SensorEntity):
     """Class for a sensor."""
 
-    def __init__(self, uid, serial, key, unit):
+    def __init__(
+        self,
+        uid,
+        serial,
+        key,
+        unit,
+        state_class=None,
+        device_class=None,
+        last_reset=None,
+    ):
         """Initialize an inverter sensor."""
         self.uid = uid
         self.serial = serial
         self.key = key
         self.value = None
         self.unit = unit
+        self._state_class = state_class
+        self._device_class = device_class
+        self._last_reset = last_reset
 
     @property
-    def native_value(self):
+    def state(self):
         """State of this inverter attribute."""
         return self.value
 
@@ -99,9 +145,24 @@ class Inverter(SensorEntity):
         return f"Solax {self.serial} {self.key}"
 
     @property
-    def native_unit_of_measurement(self):
+    def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.unit
+
+    @property
+    def state_class(self):
+        """Return the state class."""
+        return self._state_class
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
+
+    @property
+    def last_reset(self):
+        """Return the last reset."""
+        return self._last_reset
 
     @property
     def should_poll(self):
