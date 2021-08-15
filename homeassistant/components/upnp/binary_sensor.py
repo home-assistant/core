@@ -34,6 +34,8 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
