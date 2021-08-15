@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 from numbers import Number
-from typing import Any
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -142,12 +141,12 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize a AsusWrt sensor."""
         super().__init__(coordinator)
-        self._router = router
         self.entity_description = description
 
         self._attr_name = f"{DEFAULT_PREFIX} {description.name}"
         self._attr_unique_id = f"{DOMAIN} {self.name}"
-        self._attr_device_info = self._router.device_info
+        self._attr_device_info = router.device_info
+        self._attr_extra_state_attributes = {"hostname": router.host}
 
         if description.native_unit_of_measurement == DATA_GIGABYTES:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
@@ -159,13 +158,7 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         """Return current state."""
         descr = self.entity_description
         state = self.coordinator.data.get(descr.key)
-        if state is None:
-            return None
-        if descr.factor and isinstance(state, Number):
-            return round(state / descr.factor, descr.precision)
+        if state is not None:
+            if descr.factor and isinstance(state, Number):
+                return round(state / descr.factor, descr.precision)
         return state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the attributes."""
-        return {"hostname": self._router.host}
