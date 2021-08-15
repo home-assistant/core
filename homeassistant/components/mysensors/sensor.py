@@ -85,6 +85,7 @@ SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
             DEVICE_CLASS_ILLUMINANCE,
             STATE_CLASS_MEASUREMENT,
         ],
+        "S_MOISTURE": [PERCENTAGE, "mdi:water-percent", None, None],
     },
     "V_VOLTAGE": [
         ELECTRIC_POTENTIAL_VOLT,

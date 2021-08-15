@@ -50,12 +50,14 @@ SENSOR_TYPES = {
         ELECTRIC_POTENTIAL_VOLT,
         "mdi:current-ac",
         None,
+        None,
     ],
     "current_DC_voltage": [
         "dcvoltage",
         "DC Voltage",
         ELECTRIC_POTENTIAL_VOLT,
         "mdi:current-dc",
+        None,
         None,
     ],
     "current_frequency": [

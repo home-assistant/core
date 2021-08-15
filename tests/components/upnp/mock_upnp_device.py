@@ -1,7 +1,9 @@
 """Mock device for testing purposes."""
 
 from typing import Any, Mapping
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
@@ -12,6 +14,8 @@ from homeassistant.components.upnp.const import (
 )
 from homeassistant.components.upnp.device import Device
 from homeassistant.util import dt
+
+from .common import TEST_UDN
 
 
 class MockDevice(Device):
@@ -28,7 +32,7 @@ class MockDevice(Device):
     @classmethod
     async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
         """Return self."""
-        return cls("UDN")
+        return cls(TEST_UDN)
 
     @property
     def udn(self) -> str:
@@ -70,3 +74,18 @@ class MockDevice(Device):
             PACKETS_RECEIVED: 0,
             PACKETS_SENT: 0,
         }
+
+    async def async_start(self) -> None:
+        """Start the device updater."""
+
+    async def async_stop(self) -> None:
+        """Stop the device updater."""
+
+
+@pytest.fixture
+def mock_upnp_device():
+    """Mock upnp Device.async_create_device."""
+    with patch(
+        "homeassistant.components.upnp.Device", new=MockDevice
+    ) as mock_async_create_device:
+        yield mock_async_create_device

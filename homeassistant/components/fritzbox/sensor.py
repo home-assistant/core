@@ -136,7 +136,7 @@ class FritzBoxPowerSensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome power consumption sensors."""
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if power := self.device.power:
             return power / 1000  # type: ignore [no-any-return]
@@ -147,7 +147,7 @@ class FritzBoxEnergySensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome total energy sensors."""
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if energy := self.device.energy:
             return energy / 1000  # type: ignore [no-any-return]
