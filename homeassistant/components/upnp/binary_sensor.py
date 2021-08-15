@@ -66,6 +66,8 @@ async def async_setup_entry(
 class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Base class for UPnP/IGD binary sensors."""
 
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Mapping[str, Any]],
@@ -82,7 +84,6 @@ class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
             "manufacturer": device.manufacturer,
             "model": device.model_name,
         }
-        self._attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
     @property
     def available(self) -> bool:
