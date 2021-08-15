@@ -179,7 +179,11 @@ METADATA_TRIGGERED_CARBON_MONOXIDE["Partitions"] = PARTITIONS_TRIGGERED_CARBON_M
 METADATA_UNKNOWN = METADATA_DISARMED.copy()
 METADATA_UNKNOWN["Partitions"] = PARTITIONS_UNKNOWN
 
-RESPONSE_DISARMED = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_DISARMED}
+RESPONSE_DISARMED = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_DISARMED,
+    "ArmingState": TotalConnectLocation.DISARMED,
+}
 RESPONSE_ARMED_STAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_STAY}
 RESPONSE_ARMED_AWAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_AWAY}
 RESPONSE_ARMED_CUSTOM = {
@@ -225,18 +229,6 @@ CONFIG_DATA = {
     CONF_USERCODES: USERCODES,
 }
 CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-
-
-USERNAME = "username@me.com"
-PASSWORD = "password"
-USERCODES = {123456: "7890"}
-CONFIG_DATA = {
-    CONF_USERNAME: USERNAME,
-    CONF_PASSWORD: PASSWORD,
-    CONF_USERCODES: USERCODES,
-}
-CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-
 
 PARTITION_DETAILS_1 = {
     "PartitionID": 1,
@@ -291,6 +283,7 @@ async def setup_platform(hass, platform):
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
+        RESPONSE_DISARMED,
     ]
 
     with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
@@ -298,11 +291,7 @@ async def setup_platform(hass, platform):
         side_effect=responses,
     ) as mock_request:
         assert await async_setup_component(hass, DOMAIN, {})
-        assert mock_request.call_count == 1
-        if hass.data[DOMAIN][mock_entry.entry_id].locations:
-            # force total_connect_client to fetch locations
-            pass
-        assert mock_request.call_count == 4
+        assert mock_request.call_count == 5
     await hass.async_block_till_done()
 
     return mock_entry

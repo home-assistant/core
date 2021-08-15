@@ -1,4 +1,8 @@
 """The totalconnect component."""
+
+from datetime import timedelta
+import logging
+
 from total_connect_client.client import TotalConnectClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -6,12 +10,15 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_USERCODES, DOMAIN
 
 PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,8 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not client.is_valid_credentials():
         raise ConfigEntryAuthFailed("TotalConnect authentication failed")
 
+    coordinator = TotalConnectDataUpdateCoordinator(hass, client)
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = client
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -48,3 +58,24 @@ async def async_unload_entry(hass, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to fetch data from TotalConnect."""
+
+    def __init__(self, hass, client):
+        """Initialize."""
+        self.client = client
+
+        super().__init__(
+            hass, logger=_LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL
+        )
+
+    async def _async_update_data(self):
+        """Update data from TotalConnect."""
+        for location_id in self.client.locations:
+            self.client.locations[location_id].get_armed_status()
+
+        # TODO: connection error handling ???
+
+        return True
