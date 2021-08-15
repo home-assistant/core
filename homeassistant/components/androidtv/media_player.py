@@ -337,21 +337,19 @@ class ADBDevice(MediaPlayerEntity):
         self._entry_id = entry_id
         self._attr_name = name
         self._attr_unique_id = unique_id
+
         info = aftv.device_properties
         model = info.get(ATTR_MODEL)
+        mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
         self._attr_device_info = {
-            "connections": {
-                (
-                    CONNECTION_NETWORK_MAC,
-                    format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, "")),
-                )
-            },
             ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
             ATTR_MANUFACTURER: info.get(ATTR_MANUFACTURER),
             ATTR_MODEL: f"{model} ({dev_type})" if model else dev_type,
             ATTR_NAME: name,
             ATTR_SW_VERSION: info.get(ATTR_SW_VERSION),
         }
+        if mac:
+            self._attr_device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
 
         self._app_id_to_name = {}
         self._app_name_to_id = {}
