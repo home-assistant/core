@@ -334,9 +334,9 @@ class ADBDevice(MediaPlayerEntity):
         self.aftv = aftv
         self._entry_id = entry_id
         self._dev_id = unique_id
-        self._dev_type = dev_type
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self._attr_device_info = self._get_device_info(dev_type)
 
         self._app_id_to_name = {}
         self._app_name_to_id = {}
@@ -398,7 +398,6 @@ class ADBDevice(MediaPlayerEntity):
         """Set config parameter when add to hass."""
         await super().async_added_to_hass()
         self._process_config()
-        self._attr_device_info = self._get_device_info()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -408,11 +407,11 @@ class ADBDevice(MediaPlayerEntity):
         )
         return
 
-    def _get_device_info(self):
+    def _get_device_info(self, dev_type):
         """Get device information."""
         info = self.aftv.device_properties
         model = info.get(ATTR_MODEL)
-        model = f"{model} ({self._dev_type})" if model else self._dev_type
+        model = f"{model} ({dev_type})" if model else dev_type
         manufacturer = info.get(ATTR_MANUFACTURER)
         sw_version = info.get(ATTR_SW_VERSION)
         mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
