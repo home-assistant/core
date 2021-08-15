@@ -63,6 +63,9 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
 
+    state = hass.states.get(f"{ENTITY_ID}_humidity")
+    assert state is None
+
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power_consumption")
     assert state
     assert state.state == "5.678"
