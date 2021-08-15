@@ -45,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
 
-            if not errors and len(flipr_ids) == 0:
+            if not errors and not flipr_ids:
                 # No flipr_id found. Tell the user with an error message.
                 errors["base"] = "no_flipr_id_found"
 
