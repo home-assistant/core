@@ -10,6 +10,8 @@ import voluptuous as vol
 from .const import (
     PRESET_PERMANENT_HOLD,
     PRESET_NO_HOLD,
+    PRESET_OPEN,
+    PRESET_CLOSED,
 )
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -61,9 +63,23 @@ HA_TO_EQ_HVAC = {
     HVAC_MODE_AUTO: eq3.Mode.Auto,
 }
 
-EQ_TO_HA_PRESET = {eq3.Mode.Boost: PRESET_BOOST, eq3.Mode.Away: PRESET_AWAY, eq3.Mode.Manual: PRESET_PERMANENT_HOLD, eq3.Mode.Auto: PRESET_NO_HOLD}
+EQ_TO_HA_PRESET = {
+    eq3.Mode.Boost: PRESET_BOOST,
+    eq3.Mode.Away: PRESET_AWAY,
+    eq3.Mode.Manual: PRESET_PERMANENT_HOLD,
+    eq3.Mode.Auto: PRESET_NO_HOLD,
+    eq3.Mode.Open: PRESET_OPEN,
+    eq3.Mode.Closed: PRESET_CLOSED,
+}
 
-HA_TO_EQ_PRESET = {PRESET_BOOST: eq3.Mode.Boost, PRESET_AWAY: eq3.Mode.Away, PRESET_PERMANENT_HOLD: eq3.Mode.Manual, PRESET_NO_HOLD: eq3.Mode.Auto}
+HA_TO_EQ_PRESET = {
+    PRESET_BOOST: eq3.Mode.Boost,
+    PRESET_AWAY: eq3.Mode.Away,
+    PRESET_PERMANENT_HOLD: eq3.Mode.Manual,
+    PRESET_NO_HOLD: eq3.Mode.Auto,
+    PRESET_OPEN: eq3.Mode.Open,
+    PRESET_CLOSED: eq3.Mode.Closed,
+}
 
 
 DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_MAC): cv.string})
