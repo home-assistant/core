@@ -1,8 +1,7 @@
 """Support for UPnP/IGD Binary Sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any, Mapping
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -10,17 +9,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
+from . import UpnpEntity
 from .const import (
-    CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_UDN,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     DOMAIN_DEVICES,
     LOGGER,
@@ -40,70 +33,47 @@ async def async_setup_entry(
     udn = config_entry.data[CONFIG_ENTRY_UDN]
     device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
 
-    update_interval_sec = config_entry.options.get(
-        CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-    update_interval = timedelta(seconds=update_interval_sec)
-    LOGGER.debug("update_interval: %s", update_interval)
-    LOGGER.debug("Adding sensors")
-    coordinator = DataUpdateCoordinator[Mapping[str, Any]](
-        hass,
-        LOGGER,
-        name=device.name,
-        update_method=device.async_get_status,
-        update_interval=update_interval,
-    )
-    device.coordinator = coordinator
-
-    await coordinator.async_refresh()
+    LOGGER.debug("Adding binary sensor")
 
     sensors = [
-        UpnpStatusBinarySensor(coordinator, device),
+        UpnpStatusBinarySensor(device),
     ]
     async_add_entities(sensors)
 
 
-class UpnpStatusBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """Base class for UPnP/IGD binary sensors."""
+class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
+    """Class for UPnP/IGD binary sensors."""
 
     _attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Mapping[str, Any]],
         device: Device,
     ) -> None:
         """Initialize the base sensor."""
-        super().__init__(coordinator)
-        self._device = device
+        super().__init__(device)
         self._attr_name = f"{device.name} wan status"
         self._attr_unique_id = f"{device.udn}_wanstatus"
-        self._attr_device_info = {
-            "connections": {(dr.CONNECTION_UPNP, device.udn)},
-            "name": device.name,
-            "manufacturer": device.manufacturer,
-            "model": device.model_name,
-        }
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.coordinator.data.get(WANSTATUS)
+        return super().available and self._device.coordinator.data.get(WANSTATUS)
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[WANSTATUS] == "Connected"
+        return self._device.coordinator.data[WANSTATUS] == "Connected"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}
-        if self.coordinator.data[WANSTATUS] is not None:
-            attributes.update({"WAN Status": self.coordinator.data[WANSTATUS]})
-        if self.coordinator.data[WANIP] is not None:
-            attributes.update({"WAN IP": self.coordinator.data[WANIP]})
-        if self.coordinator.data[UPTIME] is not None:
-            attributes.update({"Uptime": self.coordinator.data[UPTIME]})
+        if self._device.coordinator.data[WANSTATUS] is not None:
+            attributes.update({"WAN Status": self._device.coordinator.data[WANSTATUS]})
+        if self._device.coordinator.data[WANIP] is not None:
+            attributes.update({"WAN IP": self._device.coordinator.data[WANIP]})
+        if self._device.coordinator.data[UPTIME] is not None:
+            attributes.update({"Uptime": self._device.coordinator.data[UPTIME]})
 
         return attributes

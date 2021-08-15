@@ -160,7 +160,7 @@ class Device:
 
     async def async_get_status(self) -> Mapping[str, Any]:
         """Get connection status, uptime, and external IP."""
-        _LOGGER.debug("Getting status for  device: %s", self)
+        _LOGGER.debug("Getting status for device: %s", self)
 
         values = await asyncio.gather(
             self._igd_device.async_get_status_info(),
