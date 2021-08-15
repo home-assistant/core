@@ -85,7 +85,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _authenticate_and_search_flipr(self) -> list[str]:
         """Validate the username and password provided and searches for a flipr id."""
-
         # Instantiates the flipr API that does not require async since it is has no network access.
         client = FliprAPIRestClient(self._username, self._password)
 
