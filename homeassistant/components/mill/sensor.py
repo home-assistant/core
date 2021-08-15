@@ -27,6 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MillHeaterEnergySensor(SensorEntity):
     """Representation of a Mill Sensor device."""
 
+    _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_state_class = STATE_CLASS_TOTAL
 
@@ -36,7 +37,6 @@ class MillHeaterEnergySensor(SensorEntity):
         self._conn = mill_data_connection
         self._sensor_type = sensor_type
 
-        self._attr_device_class = DEVICE_CLASS_ENERGY
         self._attr_name = f"{heater.name} {sensor_type.replace('_', ' ')}"
         self._attr_unique_id = f"{heater.device_id}_{sensor_type}"
         self._attr_device_info = {
