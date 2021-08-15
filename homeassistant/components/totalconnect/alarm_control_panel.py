@@ -50,7 +50,6 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
     def __init__(self, coordinator, name, location_id, partition_id):
         """Initialize the TotalConnect status."""
         super().__init__(coordinator)
-        self._client = coordinator.client
         self._location_id = location_id
         self._location = coordinator.client.locations[location_id]
         self._partition_id = partition_id

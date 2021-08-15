@@ -275,7 +275,7 @@ RESPONSE_GET_ZONE_DETAILS_SUCCESS = {
 async def setup_platform(hass, platform):
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, entry_id="test")
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)
     mock_entry.add_to_hass(hass)
 
     responses = [
