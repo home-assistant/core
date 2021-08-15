@@ -8,18 +8,17 @@ from typing import Any
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import dt as dt_util
 
 from .const import (
     DATA_ASUSWRT,
@@ -148,10 +147,12 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{DEFAULT_PREFIX} {description.name}"
         self._attr_unique_id = f"{DOMAIN} {self.name}"
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_device_info = self._router.device_info
 
         if description.native_unit_of_measurement == DATA_GIGABYTES:
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        else:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def native_value(self) -> str:
@@ -168,8 +169,3 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return {"hostname": self._router.host}
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return self._router.device_info
