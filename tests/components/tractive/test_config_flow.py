@@ -128,7 +128,7 @@ async def test_reauthentication(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "form"
+    assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
 
 
@@ -168,6 +168,44 @@ async def test_reauthentication_failure(hass):
     assert result2["step_id"] == "reauth_confirm"
     assert result["type"] == "form"
     assert result2["errors"]["base"] == "invalid_auth"
+
+
+async def test_reauthentication_unknown_failure(hass):
+    """Test Tractive reauthentication failure."""
+    old_entry = MockConfigEntry(
+        domain="tractive",
+        data=USER_INPUT,
+        unique_id="USERID",
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "aiotractive.api.API.user_id",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result["type"] == "form"
+    assert result2["errors"]["base"] == "unknown"
 
 
 async def test_reauthentication_failure_no_existing_entry(hass):
