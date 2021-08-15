@@ -30,7 +30,7 @@ ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 
 @dataclass
 class XiaomiMiioBiarySensorDescription(BinarySensorEntityDescription):
-    """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
+    """A class that describes binary sensor entities."""
 
     value: Callable | None = None
 
