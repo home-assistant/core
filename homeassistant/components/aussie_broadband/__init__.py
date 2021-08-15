@@ -1,14 +1,15 @@
 """The Aussie Broadband integration."""
 from __future__ import annotations
 
-import requests
 from aussiebb import AussieBB, AuthenticationException
+import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+
+from ...exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import ATTR_PASSWORD, ATTR_USERNAME, DOMAIN
-from ...exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 
 PLATFORMS = ["sensor", "camera"]
 
