@@ -343,10 +343,10 @@ class ADBDevice(MediaPlayerEntity):
         mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
-            ATTR_MANUFACTURER: info.get(ATTR_MANUFACTURER),
+            ATTR_MANUFACTURER: info.get(ATTR_MANUFACTURER) or None,
             ATTR_MODEL: f"{model} ({dev_type})" if model else dev_type,
             ATTR_NAME: name,
-            ATTR_SW_VERSION: info.get(ATTR_SW_VERSION),
+            ATTR_SW_VERSION: info.get(ATTR_SW_VERSION) or None,
         }
         if mac:
             self._attr_device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
