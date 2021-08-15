@@ -230,7 +230,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             # Try to reverse white + color temp to cwww
             min_ct = self._static_info.min_mireds
             max_ct = self._static_info.max_mireds
-            color_temp = self._state.color_temperature
+            color_temp = min(max(self._state.color_temperature, min_ct), max_ct)
             white = self._state.white
 
             ww_frac = (color_temp - min_ct) / (max_ct - min_ct)

@@ -36,7 +36,7 @@ class MillHeaterEnergySensor(SensorEntity):
         self._attr_device_class = DEVICE_CLASS_ENERGY
         self._attr_name = f"{heater.name} {sensor_type.replace('_', ' ')}"
         self._attr_unique_id = f"{heater.device_id}_{sensor_type}"
-        self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+        self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
         self._attr_state_class = STATE_CLASS_TOTAL
         self._attr_device_info = {
             "identifiers": {(DOMAIN, heater.device_id)},
@@ -67,7 +67,7 @@ class MillHeaterEnergySensor(SensorEntity):
         else:
             _state = None
         if _state is None:
-            self._attr_state = _state
+            self._attr_native_value = _state
             return
 
         if self.state is not None and _state < self.state:
@@ -81,4 +81,4 @@ class MillHeaterEnergySensor(SensorEntity):
                         month=1, day=1, hour=0, minute=0, second=0, microsecond=0
                     )
                 )
-        self._attr_state = _state
+        self._attr_native_value = _state
