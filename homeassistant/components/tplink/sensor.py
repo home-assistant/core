@@ -137,7 +137,7 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the sensors state."""
         return self.data[CONF_EMETER_PARAMS][self.entity_description.key]
 
