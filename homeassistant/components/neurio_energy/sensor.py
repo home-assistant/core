@@ -145,7 +145,7 @@ class NeurioEnergy(SensorEntity):
         self.update_sensor = update_call
         self._state = None
 
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self.state_class = STATE_CLASS_MEASUREMENT
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
             self._attr_device_class = DEVICE_CLASS_POWER
