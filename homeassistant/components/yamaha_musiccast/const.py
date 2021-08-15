@@ -39,5 +39,4 @@ MEDIA_CLASS_MAPPING = {
     "directory": MEDIA_CLASS_DIRECTORY,
     "categories": "categories",
 }
-SERVICE_RECALL_NETUSB_PRESET = "recall_netusb_preset"
 SERVICE_STORE_NETUSB_PRESET = "store_netusb_preset"

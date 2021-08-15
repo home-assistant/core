@@ -63,7 +63,6 @@ from .const import (
     MC_REPEAT_MODE_TO_HA_MAPPING,
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
-    SERVICE_RECALL_NETUSB_PRESET,
     SERVICE_STORE_NETUSB_PRESET,
 )
 
@@ -137,13 +136,6 @@ async def async_setup_entry(
     async_add_entities(media_players)
 
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_RECALL_NETUSB_PRESET,
-        {
-            vol.Required("preset"): int,
-        },
-        "recall_netusb_preset",
-    )
 
     platform.async_register_entity_service(
         SERVICE_STORE_NETUSB_PRESET,
@@ -373,7 +365,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 return
 
         raise HomeAssistantError(
-            "Only media from media browser and http URLs are supported"
+            "Only presets, media from media browser and http URLs are supported"
         )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
