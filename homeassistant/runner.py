@@ -105,4 +105,15 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
-    return asyncio.run(setup_and_run_hass(runtime_config))
+    while true:
+        try:
+            return asyncio.run(setup_and_run_hass(runtime_config))
+        except RuntimeError:
+            exception = context.get("exception")
+            if exception:
+                kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
+
+            logging.getLogger('asyncio').error(
+                "Error with asyncio: %s", context["message"], **kwargs  # type: ignore
+            )
+        
