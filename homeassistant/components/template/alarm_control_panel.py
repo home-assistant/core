@@ -187,8 +187,11 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
 
     @property
     def code_format(self):
-        """Return one or more digits/characters."""
-        return FORMAT_NUMBER
+        """Return one or more digits/characters if code required or None if no code required."""
+        if self.code_arm_required == True:
+          return FORMAT_NUMBER
+        else:
+          return None
 
     @property
     def code_arm_required(self):
