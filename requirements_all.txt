@@ -106,7 +106,7 @@ adafruit-circuitpython-dht==3.6.0
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.adax
-adax==0.0.1
+adax==0.1.1
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.3.4
@@ -1257,7 +1257,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.3
+py-synologydsm-api==1.0.4
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1487,7 +1487,7 @@ pyhik==0.2.8
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.73
+pyhomematic==0.1.74
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
