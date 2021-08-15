@@ -333,10 +333,9 @@ class ADBDevice(MediaPlayerEntity):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
         self._entry_id = entry_id
-        self._dev_id = unique_id
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_device_info = self._get_device_info(dev_type)
+        self._attr_device_info = self._get_device_info(dev_type, unique_id)
 
         self._app_id_to_name = {}
         self._app_name_to_id = {}
@@ -407,7 +406,7 @@ class ADBDevice(MediaPlayerEntity):
         )
         return
 
-    def _get_device_info(self, dev_type):
+    def _get_device_info(self, dev_type, dev_id):
         """Get device information."""
         info = self.aftv.device_properties
         model = info.get(ATTR_MODEL)
@@ -417,7 +416,7 @@ class ADBDevice(MediaPlayerEntity):
         mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
 
         data = {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._dev_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, dev_id)},
             ATTR_NAME: self.name,
             ATTR_MODEL: model,
         }
