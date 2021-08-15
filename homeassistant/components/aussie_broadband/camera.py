@@ -43,7 +43,7 @@ async def async_setup_entry(
     return True
 
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 
 class CVCGraphCamera(Camera):
