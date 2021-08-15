@@ -1,4 +1,6 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
+from __future__ import annotations
+
 from datetime import datetime
 import functools
 import json
@@ -335,7 +337,21 @@ class ADBDevice(MediaPlayerEntity):
         self._entry_id = entry_id
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_device_info = self._get_device_info(dev_type, unique_id)
+        info = aftv.device_properties
+        model = info.get(ATTR_MODEL)
+        self._attr_device_info = {
+            "connections": {
+                (
+                    CONNECTION_NETWORK_MAC,
+                    format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, "")),
+                )
+            },
+            ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
+            ATTR_MANUFACTURER: info.get(ATTR_MANUFACTURER),
+            ATTR_MODEL: f"{model} ({dev_type})" if model else dev_type,
+            ATTR_NAME: name,
+            ATTR_SW_VERSION: info.get(ATTR_SW_VERSION),
+        }
 
         self._app_id_to_name = {}
         self._app_name_to_id = {}
@@ -346,7 +362,7 @@ class ADBDevice(MediaPlayerEntity):
         self.turn_off_command = None
 
         # ADB exceptions to catch
-        if not self.aftv.adb_server_ip:
+        if not aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AdbTimeoutError,
@@ -406,30 +422,8 @@ class ADBDevice(MediaPlayerEntity):
         )
         return
 
-    def _get_device_info(self, dev_type, dev_id):
-        """Get device information."""
-        info = self.aftv.device_properties
-        model = info.get(ATTR_MODEL)
-        model = f"{model} ({dev_type})" if model else dev_type
-        manufacturer = info.get(ATTR_MANUFACTURER)
-        sw_version = info.get(ATTR_SW_VERSION)
-        mac = format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, ""))
-
-        data = {
-            ATTR_IDENTIFIERS: {(DOMAIN, dev_id)},
-            ATTR_NAME: self.name,
-            ATTR_MODEL: model,
-        }
-        if manufacturer:
-            data[ATTR_MANUFACTURER] = manufacturer
-        if mac:
-            data["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
-        if sw_version:
-            data[ATTR_SW_VERSION] = sw_version
-        return data
-
     @property
-    def media_image_hash(self):
+    def media_image_hash(self) -> str | None:
         """Hash value for media image."""
         return f"{datetime.now().timestamp()}" if self._screencap else None
 
