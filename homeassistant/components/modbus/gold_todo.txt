@@ -1,0 +1,41 @@
+This is a solid integration that is able to survive poor conditions and can be configured via the user interface.
+
+- Configurable via config entries.
+Not applicable to modbus.
+
+- Don't allow configuring already configured device/service (example: no 2 entries for same hub)
+Done (see validators.py)
+
+- Tests for the config flow
+Not applicable to modbus (according to Paulus).
+But all configurations are tested.
+
+- Discoverable (if available)
+Not possible.
+
+- Set unique ID in config flow (if available)
+Not applicable
+
+- Raise ConfigEntryNotReady if unable to connect during entry setup (if appropriate)
+Not applicable. We do report if an entity cannot be configured.
+
+- Entities have device info (if available) (docs)
+?
+
+- Tests for fetching data from the integration and controlling it (docs)
+Done
+
+- Has a code owner (docs)
+3
+
+- Entities only subscribe to updates inside async_added_to_hass and unsubscribe inside async_will_remove_from_hass (docs)
+There are no support for unsubscribe, because there are no config_entries.
+
+- Entities have correct device classes where appropriate (docs)
+User configurable, cannot be done automatically, because of the genetic nature of the integration
+
+- Supports entities being disabled and leverages Entity.entity_registry_enabled_default to disable less popular entities (docs)
+Not applicable, all entities are user defined and therefore popular.
+
+- If the device/service API can remove entities, the integration should make sure to clean up the entity and device registry.
+Not applicable.
