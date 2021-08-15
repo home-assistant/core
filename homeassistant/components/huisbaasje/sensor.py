@@ -1,7 +1,9 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+import logging
+
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -9,8 +11,11 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt
 
 from .const import DATA_COORDINATOR, DOMAIN, SENSOR_TYPE_RATE, SENSORS_INFO
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -40,7 +45,8 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
         precision: int = 0,
-        state_class: str | None = None,
+        state_class: str | None = STATE_CLASS_MEASUREMENT,
+        use_last_reset: bool = False,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -53,6 +59,8 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         self._icon = icon
         self._precision = precision
         self._attr_state_class = state_class
+        self._use_last_reset = use_last_reset
+        self._last_value = None
 
     @property
     def unique_id(self) -> str:
@@ -78,10 +86,23 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data[self._source_type][self._sensor_type] is not None:
-            return round(
+            current_value = round(
                 self.coordinator.data[self._source_type][self._sensor_type],
                 self._precision,
             )
+
+            if current_value is not None:
+                if (
+                    self._use_last_reset
+                    and self._last_value
+                    and (current_value < self._last_value)
+                ):
+                    self._attr_last_reset = dt.utcnow()
+                    _LOGGER.info("Energy reset detected for entity %s", self.name)
+
+                self._last_value = current_value
+
+            return current_value
         return None
 
     @property

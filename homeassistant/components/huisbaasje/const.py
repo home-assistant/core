@@ -8,7 +8,6 @@ from huisbaasje.const import (
     SOURCE_TYPE_GAS,
 )
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -49,31 +48,26 @@ SENSORS_INFO = [
         "name": "Huisbaasje Current Power",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power In",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power In Low",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN_LOW,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power Out",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power Out Low",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT_LOW,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Energy Today",
@@ -81,6 +75,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
+        "use_last_reset": True,
         "precision": 1,
     },
     {
@@ -89,6 +84,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
+        "use_last_reset": True,
         "precision": 1,
     },
     {
@@ -97,6 +93,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
+        "use_last_reset": True,
         "precision": 1,
     },
     {
@@ -105,6 +102,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
+        "use_last_reset": True,
         "precision": 1,
     },
     {
@@ -113,7 +111,6 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "icon": "mdi:fire",
         "precision": 1,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Gas Today",
@@ -121,6 +118,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
         "icon": "mdi:counter",
+        "use_last_reset": True,
         "precision": 1,
     },
     {
@@ -129,6 +127,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
         "icon": "mdi:counter",
+        "use_last_reset": True,
         "precision": 1,
     },
     {
@@ -137,6 +136,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
         "icon": "mdi:counter",
+        "use_last_reset": True,
         "precision": 1,
     },
     {
@@ -145,6 +145,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
         "icon": "mdi:counter",
+        "use_last_reset": True,
         "precision": 1,
     },
 ]
