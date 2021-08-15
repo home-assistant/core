@@ -9,9 +9,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_COUNT,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
 )
@@ -188,4 +190,36 @@ def scan_interval_validator(config: dict) -> dict:
                 minimum_scan_interval - 1,
             )
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
+    return config
+
+
+def duplicate_entity_validator(config: dict) -> dict:
+    """Control scan_interval."""
+    for hub_index, hub in enumerate(config):
+        addresses = []
+        for component, conf_key in PLATFORMS:
+            if conf_key not in hub:
+                continue
+            names = []
+            errors = []
+            for index, entry in enumerate(hub[conf_key]):
+                name = entry[CONF_NAME]
+                addr = str(entry[CONF_ADDRESS])
+                if CONF_SLAVE in entry:
+                    addr += "_" + str(entry[CONF_SLAVE])
+                if addr in addresses:
+                    err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
+                    _LOGGER.warning(err)
+                    errors.append(index)
+                elif name in names:
+                    err = f"Modbus {component}/{name}  is duplicate, second entry not loaded!"
+                    _LOGGER.warning(err)
+                    errors.append(index)
+                else:
+                    names.append(name)
+                    addresses.append(addr)
+
+            for i in reversed(errors):
+                del config[hub_index][conf_key][i]
+
     return config
