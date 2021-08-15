@@ -13,13 +13,16 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
+    CONF_EZVIZ_ACCOUNT,
     CONF_FFMPEG_ARGUMENTS,
+    CONF_RFSESSION_ID,
+    CONF_SESSION_ID,
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_FFMPEG_ARGUMENTS,
@@ -36,6 +39,26 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+
+@callback
+async def _async_save_tokens(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    access_token: str,
+    refresh_token: str,
+    ezviz_account_name: str,
+) -> None:
+    """Update config entry tokens."""
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            **entry.data,
+            CONF_SESSION_ID: access_token,
+            CONF_RFSESSION_ID: refresh_token,
+            CONF_EZVIZ_ACCOUNT: ezviz_account_name,
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -61,10 +84,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return True
 
-    try:
-        ezviz_client = await hass.async_add_executor_job(
-            _get_ezviz_client_instance, entry
+    # Get user account token if not present.
+    if not entry.data.get(CONF_SESSION_ID):
+
+        try:
+            ezviz_client = await hass.async_add_executor_job(
+                _get_ezviz_client_instance, entry
+            )
+
+        except (InvalidURL, HTTPError, PyEzvizError) as error:
+            _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
+            raise ConfigEntryNotReady from error
+
+        await _async_save_tokens(
+            hass,
+            entry,
+            ezviz_client[CONF_SESSION_ID],
+            ezviz_client[CONF_RFSESSION_ID],
+            ezviz_client[CONF_USERNAME],
         )
+
+    ezviz_client = EzvizClient(
+        token={
+            CONF_SESSION_ID: entry.data.get(CONF_SESSION_ID),
+            CONF_RFSESSION_ID: entry.data.get(CONF_RFSESSION_ID),
+            CONF_EZVIZ_ACCOUNT: entry.data.get(CONF_EZVIZ_ACCOUNT),
+            "api_url": entry.data.get(CONF_URL),
+        }
+    )
+
+    try:
+        await hass.async_add_executor_job(ezviz_client.login)
+
     except (InvalidURL, HTTPError, PyEzvizError) as error:
         _LOGGER.error("Unable to connect to EZVIZ service: %s", str(error))
         raise ConfigEntryNotReady from error
@@ -114,5 +165,5 @@ def _get_ezviz_client_instance(entry: ConfigEntry) -> EzvizClient:
         entry.data[CONF_URL],
         entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
-    ezviz_client.login()
-    return ezviz_client
+
+    return ezviz_client.login()

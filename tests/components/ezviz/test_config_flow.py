@@ -12,7 +12,6 @@ from pyezviz.exceptions import (
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
-    ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -32,8 +31,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    API_LOGIN_RETURN_VALIDATE,
     DISCOVERY_INFO,
-    USER_INPUT,
+    USER_INPUT_CAMERA,
+    USER_INPUT_CAMERA_VALIDATE,
     USER_INPUT_VALIDATE,
     _patch_async_setup_entry,
     init_integration,
@@ -59,7 +60,7 @@ async def test_user_form(hass: HomeAssistant, ezviz_config_flow) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
-    assert result["data"] == {**USER_INPUT}
+    assert result["data"] == {**API_LOGIN_RETURN_VALIDATE}
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -78,7 +79,11 @@ async def test_user_custom_url(hass: HomeAssistant, ezviz_config_flow) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass", CONF_URL: "customize"},
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_URL: "customize",
+        },
     )
 
     assert result["type"] == FlowResultType.FORM

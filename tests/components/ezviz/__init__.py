@@ -4,6 +4,8 @@ from unittest.mock import patch
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
     ATTR_TYPE_CLOUD,
+    CONF_CAMERAS,
+    CONF_EZVIZ_ACCOUNT,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -57,6 +59,16 @@ TEST = {
     CONF_USERNAME: None,
     CONF_PASSWORD: None,
     CONF_IP_ADDRESS: "127.0.0.1",
+}
+
+API_LOGIN_RETURN_VALIDATE = {
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+    CONF_URL: "apiieu.ezvizlife.com",
+    CONF_TYPE: ATTR_TYPE_CLOUD,
+    "session_id": "fake_token",
+    "rf_session_id": "fake_rf_token",
+    CONF_EZVIZ_ACCOUNT: "ezviz_username",
 }
 
 
