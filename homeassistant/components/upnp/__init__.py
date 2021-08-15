@@ -167,9 +167,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device=device,
         update_interval=update_interval,
     )
-    device.coordinator = coordinator
 
-    await coordinator.async_refresh()
+    # Save coordinator.
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    await coordinator.async_config_entry_first_refresh()
 
     # Create sensors.
     LOGGER.debug("Enabling sensors")
@@ -203,7 +205,7 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
         self, hass: HomeAssistant, device: Device, update_interval: timedelta
     ) -> None:
         """Initialize."""
-        self._device = device
+        self.device = device
 
         super().__init__(
             hass, LOGGER, name=device.name, update_interval=update_interval
@@ -212,8 +214,8 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> Mapping[str, Any]:
         """Update data."""
         update_values = await asyncio.gather(
-            self._device.async_get_traffic_data(),
-            self._device.async_get_status(),
+            self.device.async_get_traffic_data(),
+            self.device.async_get_status(),
         )
 
         data = dict(update_values[0])
@@ -227,13 +229,14 @@ class UpnpEntity(CoordinatorEntity):
 
     coordinator: UpnpDataUpdateCoordinator
 
-    def __init__(self, device: Device) -> None:
+    def __init__(self, coordinator: UpnpDataUpdateCoordinator) -> None:
         """Initialize the base sensor."""
-        super().__init__(device.coordinator)
-        self._device = device
+        super().__init__(coordinator)
+        self._coordinator = coordinator
+        self._device = coordinator.device
         self._attr_device_info = {
-            "connections": {(dr.CONNECTION_UPNP, device.udn)},
-            "name": device.name,
-            "manufacturer": device.manufacturer,
-            "model": device.model_name,
+            "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},
+            "name": coordinator.device.name,
+            "manufacturer": coordinator.device.manufacturer,
+            "model": coordinator.device.model_name,
         }

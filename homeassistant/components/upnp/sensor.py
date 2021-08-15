@@ -9,22 +9,19 @@ from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpEntity
+from . import UpnpDataUpdateCoordinator, UpnpEntity
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
-    CONFIG_ENTRY_UDN,
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
     DOMAIN,
-    DOMAIN_DEVICES,
     KIBIBYTE,
     LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     TIMESTAMP,
 )
-from .device import Device
 
 SENSOR_TYPES = {
     BYTES_RECEIVED: {
@@ -81,20 +78,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    udn = config_entry.data[CONFIG_ENTRY_UDN]
-    device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     LOGGER.debug("Adding sensors")
 
     sensors = [
-        RawUpnpSensor(device, SENSOR_TYPES[BYTES_RECEIVED]),
-        RawUpnpSensor(device, SENSOR_TYPES[BYTES_SENT]),
-        RawUpnpSensor(device, SENSOR_TYPES[PACKETS_RECEIVED]),
-        RawUpnpSensor(device, SENSOR_TYPES[PACKETS_SENT]),
-        DerivedUpnpSensor(device, SENSOR_TYPES[BYTES_RECEIVED]),
-        DerivedUpnpSensor(device, SENSOR_TYPES[BYTES_SENT]),
-        DerivedUpnpSensor(device, SENSOR_TYPES[PACKETS_RECEIVED]),
-        DerivedUpnpSensor(device, SENSOR_TYPES[PACKETS_SENT]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
     ]
     async_add_entities(sensors)
 
@@ -104,14 +100,14 @@ class UpnpSensor(UpnpEntity, SensorEntity):
 
     def __init__(
         self,
-        device: Device,
+        coordinator: UpnpDataUpdateCoordinator,
         sensor_type: Mapping[str, str],
     ) -> None:
         """Initialize the base sensor."""
-        super().__init__(device)
+        super().__init__(coordinator)
         self._sensor_type = sensor_type
-        self._attr_name = f"{device.name} {sensor_type['name']}"
-        self._attr_unique_id = f"{device.udn}_{sensor_type['unique_id']}"
+        self._attr_name = f"{coordinator.device.name} {sensor_type['name']}"
+        self._attr_unique_id = f"{coordinator.device.udn}_{sensor_type['unique_id']}"
 
     @property
     def icon(self) -> str:
@@ -121,7 +117,7 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._device.coordinator.data.get(
+        return super().available and self._coordinator.data.get(
             self._sensor_type["device_value_key"]
         )
 
@@ -138,7 +134,7 @@ class RawUpnpSensor(UpnpSensor):
     def native_value(self) -> str | None:
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
-        value = self._device.coordinator.data[device_value_key]
+        value = self._coordinator.data[device_value_key]
         if value is None:
             return None
         return format(value, "d")
@@ -147,13 +143,15 @@ class RawUpnpSensor(UpnpSensor):
 class DerivedUpnpSensor(UpnpSensor):
     """Representation of a UNIT Sent/Received per second sensor."""
 
-    def __init__(self, device, sensor_type) -> None:
+    def __init__(self, coordinator: UpnpDataUpdateCoordinator, sensor_type) -> None:
         """Initialize sensor."""
-        super().__init__(device, sensor_type)
+        super().__init__(coordinator, sensor_type)
         self._last_value = None
         self._last_timestamp = None
-        self._attr_name = f"{device.name} {sensor_type['derived_name']}"
-        self._attr_unique_id = f"{device.udn}_{sensor_type['derived_unique_id']}"
+        self._attr_name = f"{coordinator.device.name} {sensor_type['derived_name']}"
+        self._attr_unique_id = (
+            f"{coordinator.device.udn}_{sensor_type['derived_unique_id']}"
+        )
 
     @property
     def native_unit_of_measurement(self) -> str:
@@ -169,10 +167,10 @@ class DerivedUpnpSensor(UpnpSensor):
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]
-        current_value = self._device.coordinator.data[device_value_key]
+        current_value = self._coordinator.data[device_value_key]
         if current_value is None:
             return None
-        current_timestamp = self._device.coordinator.data[TIMESTAMP]
+        current_timestamp = self._coordinator.data[TIMESTAMP]
         if self._last_value is None or self._has_overflowed(current_value):
             self._last_value = current_value
             self._last_timestamp = current_timestamp
