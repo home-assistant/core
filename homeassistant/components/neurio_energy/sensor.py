@@ -137,6 +137,8 @@ class NeurioData:
 class NeurioEnergy(SensorEntity):
     """Implementation of a Neurio energy sensor."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, data, name, sensor_type, update_call):
         """Initialize the sensor."""
         self._name = name
@@ -145,7 +147,6 @@ class NeurioEnergy(SensorEntity):
         self.update_sensor = update_call
         self._state = None
 
-        self.state_class = STATE_CLASS_MEASUREMENT
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
             self._attr_device_class = DEVICE_CLASS_POWER
