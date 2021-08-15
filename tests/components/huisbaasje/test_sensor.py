@@ -235,41 +235,6 @@ async def test_setup_entry(hass: HomeAssistant):
             == ENERGY_KILO_WATT_HOUR
         )
 
-        # energy_this_week = hass.states.get("sensor.huisbaasje_energy_this_week")
-        # assert energy_this_week.state == "17.5"
-        # assert energy_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
-        # assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        # assert energy_this_week.attributes.get(ATTR_LAST_RESET) is None
-        # assert energy_this_week.attributes.get(ATTR_STATE_CLASS) is None
-        # assert (
-        #     energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        #     == ENERGY_KILO_WATT_HOUR
-        # )
-
-        # energy_this_month = hass.states.get("sensor.huisbaasje_energy_this_month")
-        # assert energy_this_month.state == "103.3"
-        # assert (
-        #     energy_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
-        # )
-        # assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        # assert energy_this_month.attributes.get(ATTR_LAST_RESET) is None
-        # assert energy_this_month.attributes.get(ATTR_STATE_CLASS) is None
-        # assert (
-        #     energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        #     == ENERGY_KILO_WATT_HOUR
-        # )
-
-        # energy_this_year = hass.states.get("sensor.huisbaasje_energy_this_year")
-        # assert energy_this_year.state == "673.0"
-        # assert energy_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
-        # assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        # assert energy_this_year.attributes.get(ATTR_LAST_RESET) is None
-        # assert energy_this_year.attributes.get(ATTR_STATE_CLASS) is None
-        # assert (
-        #     energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        #     == ENERGY_KILO_WATT_HOUR
-        # )
-
         gas_today = hass.states.get("sensor.huisbaasje_gas_today")
         assert gas_today.state == "1.1"
         assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
@@ -279,39 +244,6 @@ async def test_setup_entry(hass: HomeAssistant):
             gas_today.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
         )
         assert gas_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
-
-        # gas_this_week = hass.states.get("sensor.huisbaasje_gas_this_week")
-        # assert gas_this_week.state == "5.6"
-        # assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-        # assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
-        # assert gas_this_week.attributes.get(ATTR_LAST_RESET) is None
-        # assert gas_this_week.attributes.get(ATTR_STATE_CLASS) is None
-        # assert (
-        #     gas_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        #     == VOLUME_CUBIC_METERS
-        # )
-
-        # gas_this_month = hass.states.get("sensor.huisbaasje_gas_this_month")
-        # assert gas_this_month.state == "39.1"
-        # assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-        # assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
-        # assert gas_this_month.attributes.get(ATTR_LAST_RESET) is None
-        # assert gas_this_month.attributes.get(ATTR_STATE_CLASS) is None
-        # assert (
-        #     gas_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        #     == VOLUME_CUBIC_METERS
-        # )
-
-        # gas_this_year = hass.states.get("sensor.huisbaasje_gas_this_year")
-        # assert gas_this_year.state == "116.7"
-        # assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-        # assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
-        # assert gas_this_year.attributes.get(ATTR_LAST_RESET) is None
-        # assert gas_this_year.attributes.get(ATTR_STATE_CLASS) is None
-        # assert (
-        #     gas_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        #     == VOLUME_CUBIC_METERS
-        # )
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
