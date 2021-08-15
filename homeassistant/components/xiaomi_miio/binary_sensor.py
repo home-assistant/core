@@ -1,7 +1,12 @@
 """Support for Xiaomi Miio binary sensors."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from enum import Enum
+from typing import Callable
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -22,16 +27,26 @@ from .device import XiaomiCoordinatedMiioEntity
 ATTR_NO_WATER = "no_water"
 ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 
+
+@dataclass
+class XiaomiMiioBiarySensorDescription(BinarySensorEntityDescription):
+    """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
+
+    value: Callable | None = None
+
+
 BINARY_SENSOR_TYPES = (
-    BinarySensorEntityDescription(
+    XiaomiMiioBiarySensorDescription(
         key=ATTR_NO_WATER,
         name="Water Tank Empty",
         icon="mdi:water-off-outline",
     ),
-    BinarySensorEntityDescription(
+    XiaomiMiioBiarySensorDescription(
         key=ATTR_WATER_TANK_DETACHED,
-        name="Water Tank Detached",
+        name="Water Tank",
         icon="mdi:flask-empty-off-outline",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+        value=lambda value: not value,
     ),
 )
 
@@ -82,9 +97,13 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._extract_value_from_attribute(
+        state = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
+        if self.entity_description.value is not None and state is not None:
+            return self.entity_description.value(state)
+
+        return state
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
