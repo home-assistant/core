@@ -44,7 +44,7 @@ BINARY_SENSOR_TYPES = (
     XiaomiMiioBiarySensorDescription(
         key=ATTR_WATER_TANK_DETACHED,
         name="Water Tank",
-        icon="mdi:flask-empty-off-outline",
+        icon="mdi:car-coolant-level",
         device_class=DEVICE_CLASS_CONNECTIVITY,
         value=lambda value: not value,
     ),
