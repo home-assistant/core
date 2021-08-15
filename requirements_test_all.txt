@@ -48,7 +48,7 @@ abodepy==1.2.0
 accuweather==0.2.0
 
 # homeassistant.components.adax
-adax==0.0.1
+adax==0.1.1
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.3.4
@@ -202,7 +202,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.19.1
+async-upnp-client==0.19.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -452,7 +452,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210809.0
+home-assistant-frontend==20210813.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -839,7 +839,7 @@ pyheos==0.7.2
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.73
+pyhomematic==0.1.74
 
 # homeassistant.components.ialarm
 pyialarm==1.9.0
@@ -1041,7 +1041,7 @@ python-izone==1.1.6
 python-juicenet==1.0.2
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.6
+python-miio==0.5.7
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -1347,7 +1347,7 @@ youless-api==0.10
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.34.3
+zeroconf==0.35.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.59

@@ -499,21 +499,26 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
+    async def async_unseen(
+        self, callback_timestamp: datetime.datetime | None = None
+    ) -> None:
         """Make this player unavailable when it was not seen recently."""
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
 
-        hostname = uid_to_short_hostname(self.soco.uid)
-        zcname = f"{hostname}.{MDNS_SERVICE}"
-        aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
-        if await aiozeroconf.async_get_service_info(MDNS_SERVICE, zcname):
-            # We can still see the speaker via zeroconf check again later.
-            self._seen_timer = self.hass.helpers.event.async_call_later(
-                SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
-            )
-            return
+        if callback_timestamp:
+            # Called by a _seen_timer timeout, check mDNS one more time
+            # This should not be checked in an "active" unseen scenario
+            hostname = uid_to_short_hostname(self.soco.uid)
+            zcname = f"{hostname}.{MDNS_SERVICE}"
+            aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
+            if await aiozeroconf.async_get_service_info(MDNS_SERVICE, zcname):
+                # We can still see the speaker via zeroconf check again later.
+                self._seen_timer = self.hass.helpers.event.async_call_later(
+                    SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+                )
+                return
 
         _LOGGER.debug(
             "No activity and could not locate %s on the network. Marking unavailable",
@@ -636,8 +641,8 @@ class SonosSpeaker:
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
         if not hasattr(event, "zone_player_uui_ds_in_group"):
-            return None
-        self.hass.async_add_job(self.create_update_groups_coro(event))
+            return
+        self.hass.async_create_task(self.create_update_groups_coro(event))
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
