@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "cloud_credentials_incomplete": "Las credenciales de la nube est\u00e1n incompletas, por favor, rellene el nombre de usuario, la contrase\u00f1a y el pa\u00eds",
-            "cloud_login_error": "No se ha podido iniciar sesi\u00f3n en Xioami Miio Cloud, comprueba las credenciales.",
+            "cloud_login_error": "No se ha podido iniciar sesi\u00f3n en Xiaomi Miio Cloud, comprueba las credenciales.",
             "cloud_no_devices": "No se han encontrado dispositivos en esta cuenta de Xiaomi Miio.",
             "no_device_selected": "No se ha seleccionado ning\u00fan dispositivo, por favor, seleccione un dispositivo.",
             "unknown_device": "No se conoce el modelo del dispositivo, no se puede configurar el dispositivo mediante el flujo de configuraci\u00f3n."
