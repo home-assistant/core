@@ -7,10 +7,10 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
-from homeassistant.util.dt import utc_from_timestamp
 
 DOMAIN = "discovergy"
 MANUFACTURER = "Discovergy"
@@ -59,15 +59,13 @@ ELECTRICITY_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="Total consumption",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energyOut",
         name="Total production",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )
