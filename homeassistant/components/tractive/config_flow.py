@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+USER_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
 )
 
@@ -49,9 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+            return self.async_show_form(step_id="user", data_schema=USER_DATA_SCHEMA)
 
         errors = {}
 
@@ -68,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=USER_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_reauth(self, _: dict[str, Any]) -> FlowResult:
@@ -91,14 +89,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                entry = await self.async_set_unique_id(info["user_id"])
-                if entry is not None:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+                existing_entry = await self.async_set_unique_id(info["user_id"])
+                if existing_entry:
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
+                return self.async_abort(reason="reauth_failed_existing")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=USER_DATA_SCHEMA,
             errors=errors,
         )
 
