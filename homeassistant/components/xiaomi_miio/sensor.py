@@ -116,8 +116,6 @@ ATTR_WATER_LEVEL = "water_level"
 class XiaomiMiioSensorDescription(SensorEntityDescription):
     """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
-    valid_min_value: float | None = None
-    valid_max_value: float | None = None
     attributes: tuple = ()
 
 
@@ -155,8 +153,6 @@ SENSOR_TYPES = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-check",
         state_class=STATE_CLASS_MEASUREMENT,
-        valid_min_value=0.0,
-        valid_max_value=100.0,
     ),
     ATTR_ACTUAL_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_ACTUAL_SPEED,
@@ -434,18 +430,9 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        self._state = self._extract_value_from_attribute(
+        return self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
-        if (
-            self.entity_description.valid_min_value
-            and self._state < self.entity_description.valid_min_value
-        ) or (
-            self.entity_description.valid_max_value
-            and self._state > self.entity_description.valid_max_value
-        ):
-            return None
-        return self._state
 
     @property
     def extra_state_attributes(self):
