@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_COLUMN_NAME = "column"
 CONF_QUERIES = "queries"
 CONF_QUERY = "query"
+CONF_QUERY_TEMPLATE = "query_template"
 
 DB_URL_RE = re.compile("//.*:.*@")
 
@@ -34,15 +35,35 @@ def validate_sql_select(value):
     return value
 
 
-_QUERY_SCHEME = vol.Schema(
+def has_at_least_one(keys):
+    """Validate that one of query and query_template is defined."""
+
+    def f(obj):
+        for k in obj.keys():
+            if k in keys:
+                return obj
+        raise vol.Invalid(f"One of {keys} must be defined")
+
+    return f
+
+
+# Defined separate schema to validate that one of query and query_template is defined
+_AT_LEAST_SCHEMA = has_at_least_one([CONF_QUERY, CONF_QUERY_TEMPLATE])
+_QUERY_SCHEME_OTHERS = vol.Schema(
     {
+        vol.Exclusive(CONF_QUERY, "queries"): vol.All(
+            cv.string
+        ),  # Moved validate_sql_select to setup_platform to validate template
+        vol.Exclusive(CONF_QUERY_TEMPLATE, "queries"): cv.template,
         vol.Required(CONF_COLUMN_NAME): cv.string,
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    }
+    },
+    required=True,
 )
+
+_QUERY_SCHEME = vol.All(_AT_LEAST_SCHEMA, _QUERY_SCHEME_OTHERS)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_QUERIES): [_QUERY_SCHEME], vol.Optional(CONF_DB_URL): cv.string}
@@ -83,6 +104,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         unit = query.get(CONF_UNIT_OF_MEASUREMENT)
         value_template = query.get(CONF_VALUE_TEMPLATE)
         column_name = query.get(CONF_COLUMN_NAME)
+        query_template = query.get(CONF_QUERY_TEMPLATE)
+
+        if query_template is not None:
+            query_template.hass = hass
+            query_str = query_template.async_render(parse_result=False)
+        _LOGGER.debug(query_str)
+
+        # Moved here from voluptous to check template
+        validate_sql_select(query_str)
 
         if value_template is not None:
             value_template.hass = hass
@@ -96,7 +126,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
         sensor = SQLSensor(
-            name, sessmaker, query_str, column_name, unit, value_template
+            name,
+            sessmaker,
+            query_str,
+            query_template,
+            column_name,
+            unit,
+            value_template,
         )
         queries.append(sensor)
 
@@ -106,10 +142,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
-    def __init__(self, name, sessmaker, query, column, unit, value_template):
+    def __init__(
+        self, name, sessmaker, query, query_template, column, unit, value_template
+    ):
         """Initialize the SQL sensor."""
         self._name = name
         self._query = query
+        self._query_template = query_template
         self._unit_of_measurement = unit
         self._template = value_template
         self._column_name = column
@@ -142,9 +181,17 @@ class SQLSensor(SensorEntity):
 
         data = None
         try:
+
+            if self._query_template is not None:
+                self._query = self._query_template.async_render(parse_result=False)
+
             sess = self.sessionmaker()
             result = sess.execute(self._query)
             self._attributes = {}
+
+            if self._query_template is not None:
+                _LOGGER.debug(self._query_template)
+            _LOGGER.debug(self._query)
 
             if not result.returns_rows or result.rowcount == 0:
                 _LOGGER.warning("%s returned no results", self._query)
