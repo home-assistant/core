@@ -88,10 +88,10 @@ class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity, SensorEntity):
     """Battery autonomy sensor."""
 
     _attr_icon = "mdi:ev-station"
-    _attr_unit_of_measurement = LENGTH_KILOMETERS
+    _attr_native_unit_of_measurement = LENGTH_KILOMETERS
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of this entity."""
         return self.data.batteryAutonomy if self.data else None
 
@@ -100,10 +100,10 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity, SensorEntity):
     """Battery Level sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of this entity."""
         return self.data.batteryLevel if self.data else None
 
@@ -128,10 +128,10 @@ class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity, SensorEntity):
     """Battery Temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of this entity."""
         return self.data.batteryTemperature if self.data else None
 
@@ -142,7 +142,7 @@ class RenaultChargeModeSensor(RenaultChargeModeDataEntity, SensorEntity):
     _attr_device_class = DEVICE_CLASS_CHARGE_MODE
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of this entity."""
         return self.data.chargeMode if self.data else None
 
@@ -160,7 +160,7 @@ class RenaultChargeStateSensor(RenaultBatteryDataEntity, SensorEntity):
     _attr_device_class = DEVICE_CLASS_CHARGE_STATE
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of this entity."""
         charging_status = self.data.get_charging_status() if self.data else None
         return slugify(charging_status.name) if charging_status is not None else None
@@ -175,10 +175,10 @@ class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity, SensorEntity)
     """Charging Remaining Time sensor."""
 
     _attr_icon = "mdi:timer"
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of this entity."""
         return self.data.chargingRemainingTime if self.data else None
 
@@ -187,10 +187,10 @@ class RenaultChargingPowerSensor(RenaultBatteryDataEntity, SensorEntity):
     """Charging Power sensor."""
 
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_unit_of_measurement = POWER_KILO_WATT
+    _attr_native_unit_of_measurement = POWER_KILO_WATT
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of this entity."""
         if not self.data or self.data.chargingInstantaneousPower is None:
             return None
@@ -204,10 +204,10 @@ class RenaultFuelAutonomySensor(RenaultCockpitDataEntity, SensorEntity):
     """Fuel autonomy sensor."""
 
     _attr_icon = "mdi:gas-station"
-    _attr_unit_of_measurement = LENGTH_KILOMETERS
+    _attr_native_unit_of_measurement = LENGTH_KILOMETERS
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of this entity."""
         return (
             round(self.data.fuelAutonomy)
@@ -220,10 +220,10 @@ class RenaultFuelQuantitySensor(RenaultCockpitDataEntity, SensorEntity):
     """Fuel quantity sensor."""
 
     _attr_icon = "mdi:fuel"
-    _attr_unit_of_measurement = VOLUME_LITERS
+    _attr_native_unit_of_measurement = VOLUME_LITERS
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of this entity."""
         return (
             round(self.data.fuelQuantity)
@@ -236,10 +236,10 @@ class RenaultMileageSensor(RenaultCockpitDataEntity, SensorEntity):
     """Mileage sensor."""
 
     _attr_icon = "mdi:sign-direction"
-    _attr_unit_of_measurement = LENGTH_KILOMETERS
+    _attr_native_unit_of_measurement = LENGTH_KILOMETERS
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of this entity."""
         return (
             round(self.data.totalMileage)
@@ -252,10 +252,10 @@ class RenaultOutsideTemperatureSensor(RenaultHVACDataEntity, SensorEntity):
     """HVAC Outside Temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of this entity."""
         return self.data.externalTemperature if self.data else None
 
@@ -266,7 +266,7 @@ class RenaultPlugStateSensor(RenaultBatteryDataEntity, SensorEntity):
     _attr_device_class = DEVICE_CLASS_PLUG_STATE
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of this entity."""
         plug_status = self.data.get_plug_status() if self.data else None
         return slugify(plug_status.name) if plug_status is not None else None
