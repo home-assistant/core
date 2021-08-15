@@ -85,11 +85,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _authenticate_and_search_flipr(self) -> list[str]:
         """Validate the username and password provided and searches for a flipr id."""
-        client = await self.hass.async_add_executor_job(
-            FliprAPIRestClient, self._username, self._password
-        )
 
-        flipr_ids = await self.hass.async_add_executor_job(client.search_flipr_ids)
+        def create_api_client_and_search_flipr_ids(
+            username: str, password: str
+        ) -> list[str]:
+            """Instantiate the flipr client api and execute a simple search."""
+            client = FliprAPIRestClient(username, password)
+            return client.search_flipr_ids()
+
+        flipr_ids = await self.hass.async_add_executor_job(
+            create_api_client_and_search_flipr_ids, self._username, self._password
+        )
 
         return flipr_ids
 
