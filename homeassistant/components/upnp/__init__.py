@@ -225,12 +225,12 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
 
 
 class UpnpEntity(CoordinatorEntity):
-    """Base class for UPnP/IGD sensors."""
+    """Base class for UPnP/IGD entities."""
 
     coordinator: UpnpDataUpdateCoordinator
 
     def __init__(self, coordinator: UpnpDataUpdateCoordinator) -> None:
-        """Initialize the base sensor."""
+        """Initialize the base entities."""
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._device = coordinator.device
