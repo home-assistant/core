@@ -72,9 +72,9 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (ppm)
     DEVICE_CLASS_NITROGEN_OXIDE,  # Amount of NO (ppm)
     DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (ppm)
-    DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm
-    DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm
-    DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm
+    DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm (µg/m³)
+    DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
+    DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm (µg/m³)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
