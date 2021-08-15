@@ -29,7 +29,7 @@ async def async_setup_entry(hass, config, async_add_entities):
 class SpiderPowerPlugEnergy(SensorEntity):
     """Representation of a Spider Power Plug (energy)."""
 
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
@@ -59,7 +59,7 @@ class SpiderPowerPlugEnergy(SensorEntity):
         return f"{self.power_plug.name} Total Energy Today"
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return todays energy usage in Kwh."""
         return round(self.power_plug.today_energy_consumption / 1000, 2)
 
@@ -80,7 +80,7 @@ class SpiderPowerPlugPower(SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = POWER_WATT
 
     def __init__(self, api, power_plug) -> None:
         """Initialize the Spider Power Plug."""
@@ -108,7 +108,7 @@ class SpiderPowerPlugPower(SensorEntity):
         return f"{self.power_plug.name} Power Consumption"
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the current power usage in W."""
         return round(self.power_plug.current_energy_consumption)
 
