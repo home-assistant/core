@@ -106,7 +106,7 @@ adafruit-circuitpython-dht==3.6.0
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.adax
-adax==0.0.1
+adax==0.1.1
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.3.4
@@ -1494,7 +1494,7 @@ pyhik==0.2.8
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.73
+pyhomematic==0.1.74
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
