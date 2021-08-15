@@ -21,7 +21,7 @@ from .const import (
     SOURCE_TIMEOUT,
     TARGET_PART_DURATION,
 )
-from .core import Part, Segment, StreamOutput
+from .core import Part, Resolution, Segment, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,7 @@ class SegmentBuffer:
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
         self._input_audio_stream: av.audio.stream.AudioStream | None = None
+        self._resolution: Resolution | None = None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream: av.audio.stream.AudioStream | None = None
         self._segment: Segment | None = None
@@ -88,6 +89,10 @@ class SegmentBuffer:
         """Initialize output buffer with streams from container."""
         self._input_video_stream = video_stream
         self._input_audio_stream = audio_stream
+        if video_stream.width and video_stream.height:
+            self._resolution = Resolution(
+                width=video_stream.width, height=video_stream.height
+            )
 
     def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
@@ -111,6 +116,10 @@ class SegmentBuffer:
             self._output_audio_stream = self._av_output.add_stream(
                 template=self._input_audio_stream
             )
+        # StreamOutput setup only needs to happen once, however the worker does
+        # not currently track StreamOutput lifecycles so invoke every reset.
+        for stream_output in self._outputs_callback().values():
+            stream_output.setup(self._resolution)
 
     def mux_packet(self, packet: av.Packet) -> None:
         """Mux a packet to the appropriate output stream."""

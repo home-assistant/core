@@ -140,6 +140,32 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
+async def test_hls_stream_master_playlist(hass, hls_stream, stream_worker_sync):
+    """Exercise the master playlist details."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream_worker_sync.pause()
+
+    # Setup demo HLS track
+    source = generate_h264_video()
+    stream = create_stream(hass, source, {})
+
+    # Request stream
+    stream.add_provider(HLS_PROVIDER)
+    stream.start()
+
+    hls_client = await hls_stream(stream)
+
+    # Fetch playlist
+    playlist_response = await hls_client.get()
+    assert playlist_response.status == 200
+    assert await playlist_response.text() == (
+        "#EXTM3U\n"
+        '#EXT-X-STREAM-INF:BANDWIDTH=77844,CODECS="avc1.640015",RESOLUTION=480x320\n'
+        "playlist.m3u8\n"
+    )
+
+
 async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     """Test hls stream timeout."""
     await async_setup_component(hass, "stream", {"stream": {}})

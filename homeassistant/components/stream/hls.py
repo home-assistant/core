@@ -53,9 +53,12 @@ class HlsMasterPlaylistView(StreamView):
             * 1.2
         )
         codecs = get_codec_string(segment.init)
+        attributes = f'BANDWIDTH={bandwidth},CODECS="{codecs}"'
+        if resolution := track.resolution:
+            attributes += f",RESOLUTION={resolution.width}x{resolution.height}"
         lines = [
             "#EXTM3U",
-            f'#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},CODECS="{codecs}"',
+            f"#EXT-X-STREAM-INF:{attributes}",
             "playlist.m3u8",
         ]
         return "\n".join(lines) + "\n"

@@ -55,11 +55,15 @@ TIMEOUT = 15
 class FakePyAvStream:
     """A fake pyav Stream."""
 
-    def __init__(self, name, rate):
+    def __init__(
+        self, name: str, rate: fractions.Fraction, width: int = None, height: int = None
+    ):
         """Initialize the stream."""
         self.name = name
         self.time_base = fractions.Fraction(1, rate)
         self.profile = "ignored-profile"
+        self.width = width
+        self.height = height
 
         class FakeCodec:
             name = "aac"

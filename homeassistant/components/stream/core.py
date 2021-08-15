@@ -55,6 +55,14 @@ class Segment:
         return b"".join([part.data for part in self.parts])
 
 
+@attr.s
+class Resolution:
+    """Represents the resolution of the stream."""
+
+    width: int = attr.ib()
+    height: int = attr.ib()
+
+
 class IdleTimer:
     """Invoke a callback after an inactivity timeout.
 
@@ -111,6 +119,7 @@ class StreamOutput:
         self.idle_timer = idle_timer
         self._event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
+        self._resolution: Resolution | None = None
 
     @property
     def name(self) -> str | None:
@@ -148,6 +157,11 @@ class StreamOutput:
             return TARGET_SEGMENT_DURATION
         return max(durations)
 
+    @property
+    def resolution(self) -> Resolution | None:
+        """Return the resolution of the video stream."""
+        return self._resolution
+
     def get_segment(self, sequence: int) -> Segment | None:
         """Retrieve a specific segment."""
         # Most hits will come in the most recent segments, so iterate reversed
@@ -164,6 +178,10 @@ class StreamOutput:
         """Wait for and retrieve the latest segment."""
         await self._event.wait()
         return self.last_segment is not None
+
+    def setup(self, resolution: Resolution | None) -> None:
+        """Initialize properties determined at stream start."""
+        self._resolution = resolution
 
     def put(self, segment: Segment) -> None:
         """Store output."""
