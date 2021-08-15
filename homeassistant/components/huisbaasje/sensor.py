@@ -60,6 +60,8 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         self._precision = precision
         self._attr_state_class = state_class
         self._use_last_reset = use_last_reset
+        if self._use_last_reset:
+            self._attr_last_reset = dt.utc_from_timestamp(0)
         self._last_value = None
 
     @property
