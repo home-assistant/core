@@ -33,6 +33,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
@@ -76,6 +77,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
     DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm (µg/m³)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
+    DEVICE_CLASS_SULPHUR_DIOXIDE,  # Amount of SO2 (µg/m³)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
