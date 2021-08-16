@@ -1,6 +1,8 @@
 """Test the Z-Wave JS number platform."""
 from zwave_js_server.event import Event
 
+from homeassistant.const import STATE_UNKNOWN
+
 NUMBER_ENTITY = "number.thermostat_hvac_valve_control"
 VOLUME_NUMBER_ENTITY = "number.indoor_siren_6_default_volume_2"
 
@@ -137,3 +139,26 @@ async def test_volume_number(hass, client, aeotec_zw164_siren, integration):
 
     state = hass.states.get(VOLUME_NUMBER_ENTITY)
     assert state.state == "0.3"
+
+    # Test null value
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 4,
+            "args": {
+                "commandClassName": "Sound Switch",
+                "commandClass": 121,
+                "endpoint": 2,
+                "property": "defaultVolume",
+                "newValue": None,
+                "prevValue": 30,
+                "propertyName": "defaultVolume",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(VOLUME_NUMBER_ENTITY)
+    assert state.state == STATE_UNKNOWN
