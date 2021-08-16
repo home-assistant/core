@@ -4,8 +4,12 @@ from unittest.mock import patch
 import somecomfort
 
 from homeassistant import data_entry_flow
-from homeassistant.components.honeywell.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.honeywell.const import (
+    CONF_COOL_AWAY_TEMPERATURE,
+    CONF_HEAT_AWAY_TEMPERATURE,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 FAKE_CONFIG = {
@@ -61,3 +65,38 @@ async def test_async_step_import(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
+
+
+async def test_show_option_form(hass: HomeAssistant, config_entry) -> None:
+    """Test that the option form is shown."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+
+async def test_create_option_entry(hass: HomeAssistant, config_entry) -> None:
+    """Test that the config entry is created."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    options_form = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        options_form["flow_id"],
+        user_input={CONF_COOL_AWAY_TEMPERATURE: 1, CONF_HEAT_AWAY_TEMPERATURE: 2},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_COOL_AWAY_TEMPERATURE: 1,
+        CONF_HEAT_AWAY_TEMPERATURE: 2,
+    }

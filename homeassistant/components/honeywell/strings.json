@@ -18,7 +18,7 @@
     "step": {
       "init": {
         "title": "Honeywell Options",
-        "description": "Additional Honeywell config options.",
+        "description": "Additional Honeywell config options. Temperatures are set in Fahrenheit.",
         "data": {
           "away_cool_temperature": "Away cool temperature",
           "away_heat_temperature": "Away heat temperature"
