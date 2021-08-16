@@ -449,12 +449,11 @@ class LIFXLight(LightEntity):
         self.bulb = bulb
         self.effects_conductor = effects_conductor
         self.registered = True
-        self._attr_available = True
         self.postponed_update = None
         self.lock = asyncio.Lock()
         self._attr_unique_id = self.bulb.mac_addr
         self._attr_name = self.bulb.label
-        """set the coldest/warmest color_temp that this light supports."""
+        # set the coldest/warmest color_temp that this light supports.
         bulb_features = lifx_features(self.bulb)
         kelvin = bulb_features["max_kelvin"]
         self._attr_min_mireds = math.floor(
