@@ -89,7 +89,7 @@
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on",
             "unsafe": "{entity_name} became unsafe",
-            "update": "{entity_name} got update available",
+            "update": "{entity_name} got an update available",
             "vibration": "{entity_name} started detecting vibration"
         }
     },
@@ -183,7 +183,7 @@
             "on": "Detected"
         },
         "update": {
-            "off": "up-to-date",
+            "off": "Up-to-date",
             "on": "Update available"
         },
         "vibration": {

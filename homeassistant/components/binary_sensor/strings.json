@@ -84,7 +84,7 @@
       "no_smoke": "{entity_name} stopped detecting smoke",
       "sound": "{entity_name} started detecting sound",
       "no_sound": "{entity_name} stopped detecting sound",
-      "update": "{entity_name} got update available",
+      "update": "{entity_name} got an update available",
       "no_update": "{entity_name} became up-to-date",
       "vibration": "{entity_name} started detecting vibration",
       "no_vibration": "{entity_name} stopped detecting vibration",
@@ -180,7 +180,7 @@
       "on": "[%key:component::binary_sensor::state::gas::on%]"
     },
     "update": {
-      "off": "up-to-date",
+      "off": "Up-to-date",
       "on": "Update available"
     },
     "vibration": {
