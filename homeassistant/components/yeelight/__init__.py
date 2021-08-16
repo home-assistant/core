@@ -199,10 +199,11 @@ async def _async_initialize(
 
     if not device:
         device = await _async_get_device(hass, host, entry)
-    entry_data[DATA_DEVICE] = device
+        # start listening for local pushes
+        await device.bulb.async_listen(device.async_update_callback)
 
-    # start listening for local pushes
-    await device.bulb.async_listen(device.async_update_callback)
+    await device.async_setup()
+    entry_data[DATA_DEVICE] = device
 
     # register stop callback to shutdown listening for local pushes
     async def async_stop_listen_task(event):
@@ -256,7 +257,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.data.get(CONF_HOST):
         try:
             device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
-        except OSError as ex:
+        except BulbException as ex:
             # If CONF_ID is not valid we cannot fallback to discovery
             # so we must retry by raising ConfigEntryNotReady
             if not entry.data.get(CONF_ID):
@@ -694,8 +695,9 @@ async def _async_get_device(
 
     # Set up device
     bulb = AsyncBulb(host, model=model or None)
-    await bulb.async_get_properties()
 
     device = YeelightDevice(hass, host, entry.options, bulb)
-    await device.async_setup()
+    # start listening for local pushes
+    await device.bulb.async_listen(device.async_update_callback)
+
     return device
