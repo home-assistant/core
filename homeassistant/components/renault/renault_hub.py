@@ -1,10 +1,12 @@
 """Proxy to handle account communication with Renault servers."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
 from renault_api.gigya.exceptions import InvalidCredentialsException
+from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
@@ -23,7 +25,6 @@ class RenaultHub:
 
     def __init__(self, hass: HomeAssistant, locale: str) -> None:
         """Initialise proxy."""
-        LOGGER.debug("Creating RenaultHub")
         self._hass = hass
         self._client = RenaultClient(
             websession=async_get_clientsession(self._hass), locale=locale
@@ -49,17 +50,33 @@ class RenaultHub:
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
         if vehicles.vehicleLinks:
-            for vehicle_link in vehicles.vehicleLinks:
-                if vehicle_link.vin and vehicle_link.vehicleDetails:
-                    # Generate vehicle proxy
-                    vehicle = RenaultVehicleProxy(
-                        hass=self._hass,
-                        vehicle=await self._account.get_api_vehicle(vehicle_link.vin),
-                        details=vehicle_link.vehicleDetails,
-                        scan_interval=scan_interval,
+            await asyncio.gather(
+                *(
+                    self.async_initialise_vehicle(
+                        vehicle_link, self._account, scan_interval
                     )
-                    await vehicle.async_initialise()
-                    self._vehicles[vehicle_link.vin] = vehicle
+                    for vehicle_link in vehicles.vehicleLinks
+                )
+            )
+
+    async def async_initialise_vehicle(
+        self,
+        vehicle_link: KamereonVehiclesLink,
+        renault_account: RenaultAccount,
+        scan_interval: timedelta,
+    ) -> None:
+        """Set up proxy."""
+        assert vehicle_link.vin is not None
+        assert vehicle_link.vehicleDetails is not None
+        # Generate vehicle proxy
+        vehicle = RenaultVehicleProxy(
+            hass=self._hass,
+            vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
+            details=vehicle_link.vehicleDetails,
+            scan_interval=scan_interval,
+        )
+        await vehicle.async_initialise()
+        self._vehicles[vehicle_link.vin] = vehicle
 
     async def get_account_ids(self) -> list[str]:
         """Get Kamereon account ids."""

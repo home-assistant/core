@@ -17,13 +17,13 @@ async def test_setup_unload_entry(hass):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.unique_id in hass.data[DOMAIN]
+    assert config_entry.entry_id in hass.data[DOMAIN]
 
     # Unload the entry and verify that the data has been removed
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert config_entry.unique_id not in hass.data[DOMAIN]
+    assert config_entry.entry_id not in hass.data[DOMAIN]
 
 
 async def test_setup_entry_bad_password(hass):

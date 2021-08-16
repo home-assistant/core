@@ -5,11 +5,12 @@ import pytest
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 from . import (
     setup_renault_integration_vehicle,
+    setup_renault_integration_vehicle_with_no_data,
     setup_renault_integration_vehicle_with_side_effect,
 )
 from .const import MOCK_VEHICLES
@@ -60,7 +61,7 @@ async def test_sensor_empty(hass, vehicle_type):
     device_registry = mock_device_registry(hass)
 
     with patch("homeassistant.components.renault.PLATFORMS", [SENSOR_DOMAIN]):
-        await setup_renault_integration_vehicle_with_side_effect(hass, vehicle_type, {})
+        await setup_renault_integration_vehicle_with_no_data(hass, vehicle_type)
         await hass.async_block_till_done()
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -84,7 +85,7 @@ async def test_sensor_empty(hass, vehicle_type):
         assert registry_entry.unit_of_measurement == expected_entity.get("unit")
         assert registry_entry.device_class == expected_entity.get("class")
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
