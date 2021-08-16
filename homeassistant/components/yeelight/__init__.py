@@ -268,9 +268,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryNotReady from ex
             return True
 
-    # discovery
-    scanner = YeelightScanner.async_get(hass)
-
     async def _async_from_discovery(capabilities: dict[str, str]) -> None:
         host = urlparse(capabilities["location"]).hostname
         try:
@@ -278,6 +275,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except BulbException:
             _LOGGER.exception("Failed to connect to bulb at %s", host)
 
+    # discovery
+    scanner = YeelightScanner.async_get(hass)
     scanner.async_register_callback(entry.data[CONF_ID], _async_from_discovery)
     return True
 
@@ -296,10 +295,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
 
-    device = entry_data[DATA_DEVICE]
-    _LOGGER.debug("Shutting down Yeelight Listener")
-    await device.bulb.async_stop_listening()
-    _LOGGER.debug("Yeelight Listener stopped")
+    if DATA_DEVICE in entry_data:
+        device = entry_data[DATA_DEVICE]
+        _LOGGER.debug("Shutting down Yeelight Listener")
+        await device.bulb.async_stop_listening()
+        _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
 
@@ -309,9 +309,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_unique_name(capabilities: dict) -> str:
     """Generate name from capabilities."""
-    model = capabilities["model"]
-    unique_id = capabilities["id"]
-    return f"yeelight_{model}_{unique_id}"
+    model = str(capabilities["model"]).title()
+    short_id = hex(int(capabilities["id"], 16))
+    return f"Yeelight {model} {short_id}"
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
