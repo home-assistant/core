@@ -71,7 +71,7 @@ class CounterEntity(CoordinatorEntity, SensorEntity):
         name: str,
         attribute: str,
         unit_of_measurement: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 

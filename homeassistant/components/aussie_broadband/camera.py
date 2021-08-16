@@ -49,7 +49,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 class CVCGraphCamera(Camera):
     """Representation of a Aussie Broadband CVC graph camera."""
 
-    def __init__(self, service_id: int, name: str, url: str):
+    def __init__(self, service_id: int, name: str, url: str) -> None:
         """Initialize the camera."""
         super().__init__()
 
