@@ -82,7 +82,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         if not self.unique_id:
-            _LOGGER.debug("Failed to get unique id")
             return self.async_abort(reason="cannot_connect")
 
         self._abort_if_unique_id_configured(
