@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant import data_entry_flow
 from homeassistant.components.velbus import config_flow
@@ -16,7 +17,7 @@ PORT_TCP = "127.0.1.0.1:3788"
 @pytest.fixture(name="controller_assert")
 def mock_controller_assert():
     """Mock the velbus controller with an assert."""
-    with patch("velbusaio.controller.Velbus", side_effect=Exception()):
+    with patch("velbusaio.controller.Velbus", side_effect=VelbusConnectionFailed()):
         yield
 
 
