@@ -1,6 +1,7 @@
 """Tests for the Yeelight integration."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from async_upnp_client.search import SSDPListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
@@ -13,6 +14,7 @@ from homeassistant.components.yeelight import (
     YeelightScanner,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
+from homeassistant.core import callback
 
 IP_ADDRESS = "192.168.1.239"
 MODEL = "color"
@@ -23,6 +25,7 @@ CAPABILITIES = {
     "id": ID,
     "model": MODEL,
     "fw_ver": FW_VER,
+    "location": f"yeelight://{IP_ADDRESS}",
     "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
     " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
     "name": "",
@@ -81,9 +84,6 @@ CONFIG_ENTRY_DATA = {CONF_ID: ID}
 
 def _mocked_bulb(cannot_connect=False):
     bulb = MagicMock()
-    type(bulb).get_capabilities = MagicMock(
-        return_value=None if cannot_connect else CAPABILITIES
-    )
     type(bulb).async_get_properties = AsyncMock(
         side_effect=BulbException if cannot_connect else None
     )
@@ -116,12 +116,33 @@ def _mocked_bulb(cannot_connect=False):
     return bulb
 
 
+def _patched_ssdp_listener(info, *args, **kwargs):
+    listener = SSDPListener(*args, **kwargs)
+
+    async def _async_callback(*_):
+        await listener.async_callback(info)
+
+    @callback
+    def _async_search(*_):
+        # Prevent an actual scan.
+        pass
+
+    listener.async_start = _async_callback
+    listener.async_search = _async_search
+    return listener
+
+
 def _patch_discovery(prefix, no_device=False):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
-    def _mocked_discovery(timeout=2, interface=False):
-        if no_device:
-            return []
-        return [{"ip": IP_ADDRESS, "port": 55443, "capabilities": CAPABILITIES}]
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        return _patched_ssdp_listener(
+            CAPABILITIES,
+            *args,
+            **kwargs,
+        )
 
-    return patch(f"{prefix}.discover_bulbs", side_effect=_mocked_discovery)
+    return patch(
+        "homeassistant.components.yeelight.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    )

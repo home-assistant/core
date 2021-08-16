@@ -202,6 +202,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
+# homeassistant.components.yeelight
 async-upnp-client==0.19.2
 
 # homeassistant.components.aurora
