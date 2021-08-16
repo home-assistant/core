@@ -195,7 +195,9 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
-# But "strict=true" is applied globally, so we need to list all checks manually.
+# "strict=false" in config files does not turn strict settings off if they've been
+# set in a more general section (it instead means as if strict was not specified at
+# all), so we need to list all checks manually to be able to flip them wholesale.
 STRICT_SETTINGS: Final[list[str]] = [
     "check_untyped_defs",
     "disallow_incomplete_defs",
