@@ -31,27 +31,27 @@ def get_mock_config_entry():
 
 def get_fixtures(vehicle_type: str) -> dict[str, Any]:
     """Create a vehicle proxy for testing."""
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    mock_vehicle = MOCK_VEHICLES.get(vehicle_type, {"endpoints": {}})
     return {
         "battery_status": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['battery_status']}")
             if "battery_status" in mock_vehicle["endpoints"]
-            else "{}"
+            else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleBatteryStatusDataSchema),
         "charge_mode": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['charge_mode']}")
             if "charge_mode" in mock_vehicle["endpoints"]
-            else "{}"
+            else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleChargeModeDataSchema),
         "cockpit": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['cockpit']}")
             if "cockpit" in mock_vehicle["endpoints"]
-            else "{}"
+            else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleCockpitDataSchema),
         "hvac_status": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['hvac_status']}")
             if "hvac_status" in mock_vehicle["endpoints"]
-            else "{}"
+            else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleHvacStatusDataSchema),
     }
 
@@ -87,6 +87,55 @@ async def setup_renault_integration_vehicle(hass: HomeAssistant, vehicle_type: s
     )
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     mock_fixtures = get_fixtures(vehicle_type)
+
+    with patch("renault_api.renault_session.RenaultSession.login"), patch(
+        "renault_api.renault_client.RenaultClient.get_api_account",
+        return_value=renault_account,
+    ), patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        return_value=(
+            schemas.KamereonVehiclesResponseSchema.loads(
+                load_fixture(f"renault/vehicle_{vehicle_type}.json")
+            )
+        ),
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.supports_endpoint",
+        side_effect=mock_vehicle["endpoints_available"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.has_contract_for_endpoint",
+        return_value=True,
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
+        return_value=mock_fixtures["battery_status"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
+        return_value=mock_fixtures["charge_mode"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
+        return_value=mock_fixtures["cockpit"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
+        return_value=mock_fixtures["hvac_status"],
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return config_entry
+
+
+async def setup_renault_integration_vehicle_with_no_data(
+    hass: HomeAssistant, vehicle_type: str
+):
+    """Create the Renault integration."""
+    config_entry = get_mock_config_entry()
+    config_entry.add_to_hass(hass)
+
+    renault_account = RenaultAccount(
+        config_entry.unique_id,
+        websession=aiohttp_client.async_get_clientsession(hass),
+    )
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    mock_fixtures = get_fixtures("")
 
     with patch("renault_api.renault_session.RenaultSession.login"), patch(
         "renault_api.renault_client.RenaultClient.get_api_account",
