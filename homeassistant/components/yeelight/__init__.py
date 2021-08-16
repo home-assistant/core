@@ -343,11 +343,6 @@ class YeelightScanner:
         self._track_interval = None
         self._listener = None
 
-    @property
-    def has_callbacks(self):
-        """Check if any callbacks are registered."""
-        return bool(self._callbacks)
-
     @callback
     def async_start(self):
         """Start the scanner."""
@@ -395,7 +390,7 @@ class YeelightScanner:
     def async_scan(self):
         """Send discovery packets."""
         _LOGGER.debug("Yeelight scanning")
-        if not self.has_callbacks:
+        if not self._callbacks:
             return
         self._listener.async_search()
 
@@ -445,7 +440,7 @@ class YeelightScanner:
         if unique_id in self._callbacks:
             self._hass.async_create_task(self._callbacks[unique_id](response))
             self._callbacks.pop(unique_id)
-        if not self.has_callbacks:
+        if not self._callbacks:
             self._async_stop_scan()
 
     @callback
@@ -476,7 +471,7 @@ class YeelightScanner:
     def async_unregister_callback(self, unique_id):
         """Unregister callback function."""
         self._callbacks.pop(unique_id, None)
-        if not self.has_callbacks:
+        if not self._callbacks:
             self._async_stop_scan()
 
 
