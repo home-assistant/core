@@ -73,7 +73,7 @@ class CounterEntity(CoordinatorEntity, SensorEntity):
         unit_of_measurement: str,
     ):
         """Initialize the sensor."""
-        super(CounterEntity, self).__init__(coordinator)
+        super().__init__(coordinator)
 
         self._service_id = service_id
         self._name = name

@@ -51,7 +51,7 @@ class CVCGraphCamera(Camera):
 
     def __init__(self, service_id: int, name: str, url: str):
         """Initialize the camera."""
-        super(CVCGraphCamera, self).__init__()
+        super().__init__()
 
         self._service_id = service_id
         self._url = url
