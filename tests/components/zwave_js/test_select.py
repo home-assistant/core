@@ -1,6 +1,8 @@
 """Test the Z-Wave JS number platform."""
 from zwave_js_server.event import Event
 
+from homeassistant.helpers import entity_registry as er
+
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
 PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
 
@@ -105,6 +107,21 @@ async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration
 async def test_protection_select(hass, client, inovelli_lzw36, integration):
     """Test the default tone select entity."""
     node = inovelli_lzw36
+
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(PROTECTION_SELECT_ENTITY)
+
+    # Entity should be disabled by default
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+
+    # Enable entity
+    ent_reg.async_update_entity(PROTECTION_SELECT_ENTITY, disabled_by=None)
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
     state = hass.states.get(PROTECTION_SELECT_ENTITY)
 
     assert state

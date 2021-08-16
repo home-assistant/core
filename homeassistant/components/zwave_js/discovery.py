@@ -675,6 +675,7 @@ DISCOVERY_SCHEMAS = [
             property={"local", "rf"},
             type={"number"},
         ),
+        entity_registry_enabled_default=False,
     ),
 ]
 
