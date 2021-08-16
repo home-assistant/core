@@ -229,7 +229,6 @@ class UpnpEntity(CoordinatorEntity):
     def __init__(self, coordinator: UpnpDataUpdateCoordinator) -> None:
         """Initialize the base entities."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
         self._device = coordinator.device
         self._attr_device_info = {
             "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},

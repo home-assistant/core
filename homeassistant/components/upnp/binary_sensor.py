@@ -48,22 +48,22 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._coordinator.data.get(WANSTATUS)
+        return super().available and self.coordinator.data.get(WANSTATUS)
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._coordinator.data[WANSTATUS] == "Connected"
+        return self.coordinator.data[WANSTATUS] == "Connected"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}
-        if self._coordinator.data[WANSTATUS] is not None:
-            attributes.update({"WAN Status": self._coordinator.data[WANSTATUS]})
-        if self._coordinator.data[WANIP] is not None:
-            attributes.update({"WAN IP": self._coordinator.data[WANIP]})
-        if self._coordinator.data[UPTIME] is not None:
-            attributes.update({"Uptime": self._coordinator.data[UPTIME]})
+        if self.coordinator.data[WANSTATUS] is not None:
+            attributes.update({"WAN Status": self.coordinator.data[WANSTATUS]})
+        if self.coordinator.data[WANIP] is not None:
+            attributes.update({"WAN IP": self.coordinator.data[WANIP]})
+        if self.coordinator.data[UPTIME] is not None:
+            attributes.update({"Uptime": self.coordinator.data[UPTIME]})
 
         return attributes
