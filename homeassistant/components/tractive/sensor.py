@@ -28,68 +28,8 @@ from .entity import TractiveEntity
 class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
-    event_type: str | None = None
     attributes: tuple = ()
-
-
-ATTR_ACTIVITY = "activity"
-ATTR_HARDWARE = "hardware"
-
-SENSOR_TYPES = (
-    TractiveSensorEntityDescription(
-        key=ATTR_BATTERY_LEVEL,
-        name="Battery Level",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
-        event_type=ATTR_HARDWARE,
-    ),
-    TractiveSensorEntityDescription(
-        key=ATTR_MINUTES_ACTIVE,
-        name="Minutes Active",
-        icon="mdi:clock-time-eight-outline",
-        native_unit_of_measurement=TIME_MINUTES,
-        event_type=ATTR_ACTIVITY,
-        attributes=(ATTR_DAILY_GOAL,),
-    ),
-)
-
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Tractive device trackers."""
-    client = hass.data[DOMAIN][entry.entry_id]
-
-    trackables = await client.trackable_objects()
-
-    entities = []
-
-    for item in trackables:
-        trackable = await item.details()
-        tracker = client.tracker(trackable["device_id"])
-        tracker_details = await tracker.details()
-        for description in SENSOR_TYPES:
-            unique_id = f"{trackable['_id']}_{description.key}"
-            if description.event_type == ATTR_HARDWARE:
-                entities.append(
-                    TractiveHardwareSensor(
-                        client.user_id,
-                        trackable,
-                        tracker_details,
-                        unique_id,
-                        description,
-                    )
-                )
-            if description.event_type == ATTR_ACTIVITY:
-                entities.append(
-                    TractiveActivitySensor(
-                        client.user_id,
-                        trackable,
-                        tracker_details,
-                        unique_id,
-                        description,
-                    )
-                )
-
-    async_add_entities(entities)
+    entity_class: type[TractiveSensor] | None = None
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
@@ -182,3 +122,49 @@ class TractiveActivitySensor(TractiveSensor):
                 self.handle_server_unavailable,
             )
         )
+
+
+SENSOR_TYPES = (
+    TractiveSensorEntityDescription(
+        key=ATTR_BATTERY_LEVEL,
+        name="Battery Level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        entity_class=TractiveHardwareSensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_MINUTES_ACTIVE,
+        name="Minutes Active",
+        icon="mdi:clock-time-eight-outline",
+        native_unit_of_measurement=TIME_MINUTES,
+        attributes=(ATTR_DAILY_GOAL,),
+        entity_class=TractiveActivitySensor,
+    ),
+)
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Tractive device trackers."""
+    client = hass.data[DOMAIN][entry.entry_id]
+
+    trackables = await client.trackable_objects()
+
+    entities = []
+
+    for item in trackables:
+        trackable = await item.details()
+        tracker = client.tracker(trackable["device_id"])
+        tracker_details = await tracker.details()
+        for description in SENSOR_TYPES:
+            unique_id = f"{trackable['_id']}_{description.key}"
+            entities.append(
+                description.entity_class(
+                    client.user_id,
+                    trackable,
+                    tracker_details,
+                    unique_id,
+                    description,
+                )
+            )
+
+    async_add_entities(entities)
