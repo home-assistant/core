@@ -22,6 +22,8 @@ from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
 from ..models import Credentials, RefreshToken, User, UserMeta
 
+# mypy: disallow-any-generics
+
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
 
@@ -96,7 +98,7 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return the data flow for logging in with auth provider.
 
         Auth provider should extend LoginFlow and return an instance.
