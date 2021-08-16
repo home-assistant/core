@@ -28,7 +28,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
-    BASIC_SENSOR,
     CURRENT_SENSOR,
     DATETIME_LAST_RESET,
     DATETIME_ZERO,
@@ -125,16 +124,6 @@ async def test_disabled_indcator_sensor(
     """Test sensor is created from Indicator CC and is disabled."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(INDICATOR_SENSOR)
-
-    assert entity_entry
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-
-
-async def test_disabled_basic_sensor(hass, ge_in_wall_dimmer_switch, integration):
-    """Test sensor is created from Basic CC and is disabled."""
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(BASIC_SENSOR)
 
     assert entity_entry
     assert entity_entry.disabled
