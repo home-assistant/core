@@ -55,7 +55,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
+    with _patch_discovery():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2["type"] == "form"
     assert result2["step_id"] == "pick_device"
@@ -82,7 +82,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
+    with _patch_discovery():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
@@ -94,7 +94,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight", no_device=True):
+    with _patch_discovery(no_device=True):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result2["type"] == "abort"

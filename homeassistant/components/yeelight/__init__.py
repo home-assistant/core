@@ -167,9 +167,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DATA_CONFIG_ENTRIES: {},
     }
 
-    scanner = YeelightScanner.async_get(hass)
-    await scanner.async_setup()
-
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
         _LOGGER.debug("Importing configured %s", host)
@@ -361,6 +358,9 @@ class YeelightScanner:
 
     async def async_setup(self):
         """Set up the scanner."""
+        if self._listener:
+            return
+
         connected_event = asyncio.Event()
 
         async def _async_connected():
