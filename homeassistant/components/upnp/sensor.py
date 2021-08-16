@@ -1,8 +1,6 @@
 """Support for UPnP/IGD Sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
@@ -101,7 +99,7 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
-        sensor_type: Mapping[str, str],
+        sensor_type: dict[str, str],
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
