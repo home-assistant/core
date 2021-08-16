@@ -1,7 +1,7 @@
 """Support for UPnP/IGD Sensors."""
 from __future__ import annotations
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
