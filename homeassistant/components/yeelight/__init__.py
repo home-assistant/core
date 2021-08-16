@@ -423,7 +423,7 @@ class YeelightScanner:
             # set instead
             await asyncio.sleep(2)
 
-        self._listener.async_search((host, SSDP_TARGET[1]))
+        # self._listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
             await asyncio.wait_for(host_event.wait(), timeout=2)
