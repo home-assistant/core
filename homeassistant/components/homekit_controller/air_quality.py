@@ -33,6 +33,12 @@ class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
             "deprecated and will be removed in 2021.12.0"
         )
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Whether or not to enable this entity by default."""
+        # This entity is deprecated, so don't enable by default
+        return False
+
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
