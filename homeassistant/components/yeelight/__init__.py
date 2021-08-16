@@ -295,10 +295,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
 
-    device = entry_data[DATA_DEVICE]
-    _LOGGER.debug("Shutting down Yeelight Listener")
-    await device.bulb.async_stop_listening()
-    _LOGGER.debug("Yeelight Listener stopped")
+    if DATA_DEVICE in entry_data:
+        device = entry_data[DATA_DEVICE]
+        _LOGGER.debug("Shutting down Yeelight Listener")
+        await device.bulb.async_stop_listening()
+        _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
 
