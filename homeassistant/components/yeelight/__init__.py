@@ -268,9 +268,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryNotReady from ex
             return True
 
-    # discovery
-    scanner = YeelightScanner.async_get(hass)
-
     async def _async_from_discovery(capabilities: dict[str, str]) -> None:
         host = urlparse(capabilities["location"]).hostname
         try:
@@ -278,6 +275,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except BulbException:
             _LOGGER.exception("Failed to connect to bulb at %s", host)
 
+    # discovery
+    scanner = YeelightScanner.async_get(hass)
     scanner.async_register_callback(entry.data[CONF_ID], _async_from_discovery)
     return True
 
