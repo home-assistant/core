@@ -50,8 +50,8 @@ class LogiSensor(SensorEntity):
         """Initialize a sensor for Logi Circle camera."""
         self.entity_description = description
         self._camera = camera
-        self._attr_unique_id = f"{self._camera.mac_address}-{description.key}"
-        self._attr_name = f"{self._camera.name} {description.name}"
+        self._attr_unique_id = f"{camera.mac_address}-{description.key}"
+        self._attr_name = f"{camera.name} {description.name}"
         self._activity: dict[Any, Any] = {}
         self._tz = time_zone
 
@@ -116,4 +116,5 @@ class LogiSensor(SensorEntity):
             state = getattr(self._camera, self.entity_description.key, None)
             if isinstance(state, bool):
                 self._attr_native_value = STATE_ON if state is True else STATE_OFF
-            self._attr_native_value = state
+            else:
+                self._attr_native_value = state
