@@ -29,19 +29,19 @@ ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 
 
 @dataclass
-class XiaomiMiioBiarySensorDescription(BinarySensorEntityDescription):
+class XiaomiMiioBinarySensorDescription(BinarySensorEntityDescription):
     """A class that describes binary sensor entities."""
 
     value: Callable | None = None
 
 
 BINARY_SENSOR_TYPES = (
-    XiaomiMiioBiarySensorDescription(
+    XiaomiMiioBinarySensorDescription(
         key=ATTR_NO_WATER,
         name="Water Tank Empty",
         icon="mdi:water-off-outline",
     ),
-    XiaomiMiioBiarySensorDescription(
+    XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_TANK_DETACHED,
         name="Water Tank",
         icon="mdi:car-coolant-level",
