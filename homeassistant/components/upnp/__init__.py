@@ -184,12 +184,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
 
-    udn = config_entry.data.get(CONFIG_ENTRY_UDN)
-    if udn in hass.data[DOMAIN][DOMAIN_DEVICES]:
-        device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
-        await device.async_stop()
-
-        del hass.data[DOMAIN][DOMAIN_DEVICES][udn]
+    if coordinator := hass.data[DOMAIN].pop(config_entry.entry_id, None):
+        await coordinator.device.async_stop()
 
     LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
