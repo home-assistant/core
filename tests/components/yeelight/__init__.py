@@ -1,4 +1,5 @@
 """Tests for the Yeelight integration."""
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SSDPListener
@@ -32,7 +33,8 @@ CAPABILITIES = {
 }
 
 NAME = "name"
-UNIQUE_NAME = f"yeelight_{MODEL}_{ID}"
+SHORT_ID = hex(int("0x000000000015243f", 16))
+UNIQUE_NAME = f"yeelight_{MODEL}_{SHORT_ID}"
 
 MODULE = "homeassistant.components.yeelight"
 MODULE_CONFIG_FLOW = f"{MODULE}.config_flow"
@@ -120,12 +122,12 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     listener = SSDPListener(*args, **kwargs)
 
     async def _async_callback(*_):
+        await listener.async_connect_callback()
         await listener.async_callback(info)
 
     @callback
     def _async_search(*_):
-        # Prevent an actual scan.
-        pass
+        asyncio.create_task(_async_callback())
 
     listener.async_start = _async_callback
     listener.async_search = _async_search

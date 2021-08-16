@@ -186,7 +186,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up with options."""
         self._async_abort_entries_match({CONF_HOST: host})
 
-        bulb = AsyncBulb(host)
         scanner = YeelightScanner.async_get(self.hass)
         capabilities = await scanner.async_get_capabilities(host)
         if capabilities is None:  # timeout
@@ -196,6 +195,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(capabilities["id"])
             return capabilities["model"]
         # Fallback to get properties
+        bulb = AsyncBulb(host)
         try:
             await bulb.async_listen(lambda _: True)
             await bulb.async_get_properties()

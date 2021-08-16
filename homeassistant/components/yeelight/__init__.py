@@ -417,12 +417,15 @@ class YeelightScanner:
         host = urlparse(response["location"]).hostname
         if unique_id not in self._unique_id_capabilities:
             _LOGGER.debug("Yeelight discovered with %s", response)
-            self._hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=response
+            self._hass.async_create_task(
+                self._hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_SSDP},
+                    data=response,
+                )
             )
-        self._host_capabilities[host] = self._unique_id_capabilities[
-            unique_id
-        ] = response
+        self._host_capabilities[host] = response
+        self._unique_id_capabilities[unique_id] = response
         for event in self._host_discovered_events.get(host, []):
             event.set()
         if unique_id in self._callbacks:
