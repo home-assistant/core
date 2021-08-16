@@ -313,7 +313,7 @@ class AmcrestCam(Camera):
     @property
     def unique_id(self) -> str:
         """Return a unique id for this instance."""
-        return self._serial
+        return self._serial if self._serial != "unknown" else None
 
     async def stream_source(self):
         """Return the source of the stream."""
