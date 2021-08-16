@@ -22,6 +22,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
@@ -31,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 
     for location_id, location in coordinator.client.locations.items():
         location_name = location.location_name
-        for partition_id in location.partitions.items():
+        for partition_id in location.partitions:
             alarms.append(
                 TotalConnectAlarm(
                     coordinator=coordinator,
@@ -116,7 +118,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Carbon Monoxide"
         else:
-            logging.info("Total Connect Client returned unknown status")
+            _LOGGER.info("Total Connect Client returned unknown status")
             state = None
 
         self._state = state
