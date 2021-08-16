@@ -211,7 +211,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_HOSTS: "192.168.1.0/24",
         CONF_SCAN_INTERVAL: 120,
-        CONF_OPTIONS: "-F --host-timeout 5s",
+        CONF_OPTIONS: "-F -T4 --min-rate 10 --host-timeout 5s",
         CONF_TRACK_NEW: True,
     }
 

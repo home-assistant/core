@@ -5,6 +5,7 @@ import asyncio
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 
 import aiohttp
@@ -354,7 +355,11 @@ class NmapDeviceScanner:
                 self._async_increment_device_offline(ipv4, reason)
                 continue
             # Mac address only returned if nmap ran as root
-            mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
+            mac = info["addresses"].get(
+                "mac"
+            ) or await self._hass.async_add_executor_job(
+                partial(get_mac_address, ip=ipv4)
+            )
             if mac is None:
                 self._async_increment_device_offline(ipv4, "No MAC address found")
                 _LOGGER.info("No MAC address found for %s", ipv4)
