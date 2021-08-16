@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from datetime import timedelta
 import logging
+from urllib.parse import urlparse
 
+from async_upnp_client.search import SSDPListener
 import voluptuous as vol
 from yeelight import BulbException, discover_bulbs
 from yeelight.aio import KEY_CONNECTED, AsyncBulb
@@ -68,6 +71,8 @@ ACTIVE_COLOR_FLOWING = "1"
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
 DISCOVERY_INTERVAL = timedelta(seconds=60)
+SSDP_TARGET = ("239.255.255.250", 1982)
+SSDP_ST = "wifi_bulb"
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
 YEELIGHT_HSV_TRANSACTION = "HSVTransition"
@@ -269,7 +274,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # discovery
     scanner = YeelightScanner.async_get(hass)
 
-    async def _async_from_discovery(host: str) -> None:
+    async def _async_from_discovery(capabilities: str) -> None:
+        host = urlparse(capabilities["location"]).hostname
         try:
             await _async_initialize(hass, entry, host)
         except BulbException:
@@ -332,30 +338,39 @@ class YeelightScanner:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize class."""
         self._hass = hass
-        self._seen = {}
         self._callbacks = {}
+        self._capabilities = {}
         self._scan_task = None
+        self._listener = None
 
     async def _async_scan(self):
         _LOGGER.debug("Yeelight scanning")
-        # Run 3 times as packets can get lost
-        for _ in range(3):
-            devices = await self._hass.async_add_executor_job(discover_bulbs)
-            for device in devices:
-                unique_id = device["capabilities"]["id"]
-                if unique_id in self._seen:
-                    continue
-                host = device["ip"]
-                self._seen[unique_id] = host
-                _LOGGER.debug("Yeelight discovered at %s", host)
-                if unique_id in self._callbacks:
-                    self._hass.async_create_task(self._callbacks[unique_id](host))
-                    self._callbacks.pop(unique_id)
-                    if len(self._callbacks) == 0:
-                        self._async_stop_scan()
+        remaining = 3
+        if not self._listener:
+            self._listener = SSDPListener(
+                async_callback=self._async_process_entry,
+                service_type=SSDP_ST,
+                target=SSDP_TARGET,
+            )
+            await self._listener.async_start()
+            remaining = 2
 
-        await asyncio.sleep(DISCOVERY_INTERVAL.total_seconds())
-        self._scan_task = self._hass.loop.create_task(self._async_scan())
+        for _ in range(remaining):
+            if self._callbacks:
+                await asyncio.sleep(DISCOVERY_INTERVAL.total_seconds())
+                await self._listener.async_scan()
+
+    async def _async_process_entry(self, response):
+        unique_id = response["id"]
+        if unique_id in self._capabilities:
+            return
+        self._capabilities[unique_id] = response
+        _LOGGER.debug("Yeelight discovered with %s", response)
+        if unique_id in self._callbacks:
+            self._hass.async_create_task(self._callbacks[unique_id](response))
+            self._callbacks.pop(unique_id)
+            if len(self._callbacks) == 0:
+                self._async_stop_scan()
 
     @callback
     def _async_start_scan(self):
@@ -375,9 +390,9 @@ class YeelightScanner:
     @callback
     def async_register_callback(self, unique_id, callback_func):
         """Register callback function."""
-        host = self._seen.get(unique_id)
-        if host is not None:
-            self._hass.async_create_task(callback_func(host))
+        capabilities = self._capabilities.get(unique_id)
+        if capabilities:
+            self._hass.async_create_task(callback_func(capabilities))
         else:
             self._callbacks[unique_id] = callback_func
             if len(self._callbacks) == 1:
@@ -396,24 +411,18 @@ class YeelightScanner:
 class YeelightDevice:
     """Represents single Yeelight device."""
 
-    def __init__(self, hass, host, config, bulb, capabilities):
+    def __init__(self, hass, host, config, bulb, unique_id):
         """Initialize device."""
         self._hass = hass
         self._config = config
         self._host = host
         self._bulb_device = bulb
-        self._capabilities = capabilities or {}
+        self._unique_id = unique_id
+        self._capabilities = {}
         self._device_type = None
         self._available = False
         self._initialized = False
-
-        self._name = host  # Default name is host
-        if capabilities:
-            # Generate name from model and id when capabilities is available
-            self._name = _async_unique_name(capabilities)
-        if config.get(CONF_NAME):
-            # Override default name when name is set in config
-            self._name = config[CONF_NAME]
+        self._name = None
 
     @property
     def bulb(self):
@@ -443,7 +452,7 @@ class YeelightDevice:
     @property
     def model(self):
         """Return configured/autodetected device model."""
-        return self._bulb_device.model
+        return self._bulb_device.model or self._capabilities.get("model")
 
     @property
     def fw_version(self):
@@ -539,26 +548,23 @@ class YeelightDevice:
 
         return self._available
 
-    async def _async_get_capabilities(self):
-        """Request device capabilities."""
-        try:
-            await self._hass.async_add_executor_job(self.bulb.get_capabilities)
-            _LOGGER.debug(
-                "Device %s, %s capabilities: %s",
-                self._host,
-                self.name,
-                self.bulb.capabilities,
-            )
-        except BulbException as ex:
-            _LOGGER.error(
-                "Unable to get device capabilities %s, %s: %s",
-                self._host,
-                self.name,
-                ex,
-            )
-
     async def _async_initialize_device(self):
-        await self._async_get_capabilities()
+        if self._unique_id:
+            scanner = YeelightScanner.async_get(self._hass)
+            cap_future = asyncio.Future()
+            scanner.async_register_callback(self._unique_id, cap_future.set_result)
+            with contextlib.suppress(asyncio.TimeoutError):
+                self._capabilities = await asyncio.wait_for(
+                    cap_future.result(), timeout=3
+                )
+        if name := self._config.get(CONF_NAME):
+            # Override default name when name is set in config
+            self._name = name
+        elif self._capabilities:
+            # Generate name from model and id when capabilities is available
+            self._name = _async_unique_name(self._capabilities)
+        else:
+            self._name = self._host  # Default name is host
         self._initialized = True
         async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
 
@@ -627,6 +633,5 @@ async def _async_get_device(
 
     # Set up device
     bulb = AsyncBulb(host, model=model or None)
-    capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
 
-    return YeelightDevice(hass, host, entry.options, bulb, capabilities)
+    return YeelightDevice(hass, host, entry.options, bulb, entry.data.get(CONF_ID))
