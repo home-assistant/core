@@ -378,10 +378,7 @@ class AmcrestCam(Camera):
             if self._serial is None:
                 resp = self._api.serial_number.strip()
                 _LOGGER.debug("serial=%s", resp)
-                if resp.startswith("type="):
-                    self._serial = resp.split("=")[-1]
-                else:
-                    self._serial = "unknown"
+                self._serial = resp
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
