@@ -21,6 +21,7 @@ from .const import (
     FEATURE_SET_LED_BRIGHTNESS,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_VA2,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_V3,
@@ -76,6 +77,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity_class = XiaomiAirPurifierSelector
     elif model in MODELS_PURIFIER_MIOT:
         entity_class = XiaomiAirPurifierMiotSelector
+    elif model == MODEL_AIRFRESH_VA2:
+        entity_class = XiaomiAirFreshSelector
     else:
         return
 
