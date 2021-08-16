@@ -21,9 +21,7 @@ ENTITY_BINARY_SENSOR = f"binary_sensor.{NAME}_nightlight"
 async def test_nightlight(hass: HomeAssistant):
     """Test nightlight sensor."""
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
-    ), patch(f"{MODULE}.config_flow.yeelight.Bulb", return_value=mocked_bulb):
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         await async_setup_component(hass, DOMAIN, YAML_CONFIGURATION)
         await hass.async_block_till_done()
 
