@@ -1,4 +1,6 @@
 """Support for Abode Security System cameras."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import abodepy.helpers.constants as CONST
@@ -73,7 +75,9 @@ class AbodeCamera(AbodeDevice, Camera):
         else:
             self._response = None
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Get a camera image."""
         self.refresh_image()
 

@@ -59,6 +59,7 @@ class EDL21:
         "1-0:0.0.9*255": "Electricity ID",
         # D=2: Program entries
         "1-0:0.2.0*0": "Configuration program version number",
+        "1-0:0.2.0*1": "Firmware version number",
         # C=1: Active power +
         # D=8: Time integral 1
         # E=0: Total
@@ -94,6 +95,10 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:31.7.0*255": "L1 active instantaneous amperage",
+        # C=32: Active voltage L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:32.7.0*255": "L1 active instantaneous voltage",
         # C=36: Active power L1
         # D=7: Instantaneous value
         # E=0: Total
@@ -102,6 +107,10 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:51.7.0*255": "L2 active instantaneous amperage",
+        # C=52: Active voltage L2
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:52.7.0*255": "L2 active instantaneous voltage",
         # C=56: Active power L2
         # D=7: Instantaneous value
         # E=0: Total
@@ -110,13 +119,21 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:71.7.0*255": "L3 active instantaneous amperage",
+        # C=72: Active voltage L3
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:72.7.0*255": "L3 active instantaneous voltage",
         # C=76: Active power L3
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:76.7.0*255": "L3 active instantaneous power",
         # C=81: Angles
         # D=7: Instantaneous value
+        # E=4:  U(L1) x I(L1)
+        # E=15: U(L2) x I(L2)
         # E=26: U(L3) x I(L3)
+        "1-0:81.7.4*255": "U(L1)/I(L1) phase angle",
+        "1-0:81.7.15*255": "U(L2)/I(L2) phase angle",
         "1-0:81.7.26*255": "U(L3)/I(L3) phase angle",
         # C=96: Electricity-related service entries
         "1-0:96.1.0*255": "Metering point ID 1",
@@ -126,6 +143,7 @@ class EDL21:
         # C=96: Electricity-related service entries
         "1-0:96.50.1*1",  # Manufacturer specific
         "1-0:96.90.2*1",  # Manufacturer specific
+        "1-0:96.90.2*2",  # Manufacturer specific
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
@@ -283,7 +301,7 @@ class EDL21Entity(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
 
@@ -297,7 +315,7 @@ class EDL21Entity(SensorEntity):
         }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._telegram.get("unit")
 

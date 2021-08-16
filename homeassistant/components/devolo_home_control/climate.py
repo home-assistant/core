@@ -31,11 +31,11 @@ async def async_setup_entry(
     for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
         for device in gateway.multi_level_switch_devices:
             for multi_level_switch in device.multi_level_switch_property:
-                if device.device_model_uid in [
+                if device.device_model_uid in (
                     "devolo.model.Thermostat:Valve",
                     "devolo.model.Room:Thermostat",
                     "devolo.model.Eurotronic:Spirit:Device",
-                ]:
+                ):
                     entities.append(
                         DevoloClimateDeviceEntity(
                             homecontrol=gateway,

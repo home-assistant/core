@@ -215,6 +215,19 @@ def test_core_config_schema():
     )
 
 
+def test_core_config_schema_internal_external_warning(caplog):
+    """Test that we warn for internal/external URL with path."""
+    config_util.CORE_CONFIG_SCHEMA(
+        {
+            "external_url": "https://www.example.com/bla",
+            "internal_url": "http://example.local/yo",
+        }
+    )
+
+    assert "Invalid external_url set" in caplog.text
+    assert "Invalid internal_url set" in caplog.text
+
+
 def test_customize_dict_schema():
     """Test basic customize config validation."""
     values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
@@ -650,19 +663,30 @@ async def test_merge(merge_log_err, hass):
         "pack_list": {"light": {"platform": "test"}},
         "pack_list2": {"light": [{"platform": "test"}]},
         "pack_none": {"wake_on_lan": None},
+        "pack_special": {
+            "automation": [{"some": "yay"}],
+            "script": {"a_script": "yay"},
+            "template": [{"some": "yay"}],
+        },
     }
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "light": {"platform": "test"},
+        "automation": [],
+        "script": {},
+        "template": [],
     }
     await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
-    assert len(config) == 5
+    assert len(config) == 8
     assert len(config["input_boolean"]) == 2
     assert len(config["input_select"]) == 1
     assert len(config["light"]) == 3
+    assert len(config["automation"]) == 1
+    assert len(config["script"]) == 1
+    assert len(config["template"]) == 1
     assert isinstance(config["wake_on_lan"], OrderedDict)
 
 

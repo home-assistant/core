@@ -1,11 +1,13 @@
 """Support led_brightness for Mi Air Humidifier."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 
 from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
 from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import callback
 
 from .const import (
@@ -16,12 +18,8 @@ from .const import (
     FEATURE_SET_LED_BRIGHTNESS,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_MIGRATE_ENTITY_NAME,
-    MODEL_AIRHUMIDIFIER_CA1,
-    MODEL_AIRHUMIDIFIER_CA4,
-    MODEL_AIRHUMIDIFIER_CB1,
-    MODELS_HUMIDIFIER,
-    SERVICE_SET_LED_BRIGHTNESS,
+    MODELS_HUMIDIFIER_MIIO,
+    MODELS_HUMIDIFIER_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -37,23 +35,19 @@ LED_BRIGHTNESS_REVERSE_MAP_MIOT = {
 
 
 @dataclass
-class SelectorType:
-    """Class that holds device specific info for a xiaomi aqara or humidifier selectors."""
+class XiaomiMiioSelectDescription(SelectEntityDescription):
+    """A class that describes select entities."""
 
-    name: str = None
-    icon: str = None
-    short_name: str = None
-    options: list = None
-    service: str = None
+    options: tuple = ()
 
 
 SELECTOR_TYPES = {
-    FEATURE_SET_LED_BRIGHTNESS: SelectorType(
-        name="Led brightness",
+    FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioSelectDescription(
+        key=ATTR_LED_BRIGHTNESS,
+        name="Led Brightness",
         icon="mdi:brightness-6",
-        short_name=ATTR_LED_BRIGHTNESS,
-        options=["Bright", "Dim", "Off"],
-        service=SERVICE_SET_LED_BRIGHTNESS,
+        device_class="xiaomi_miio__led_brightness",
+        options=("bright", "dim", "off"),
     ),
 }
 
@@ -66,32 +60,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
-        name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
-    else:
-        name = config_entry.title
 
-    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+    if model in MODELS_HUMIDIFIER_MIIO:
         entity_class = XiaomiAirHumidifierSelector
-    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
+    elif model in MODELS_HUMIDIFIER_MIOT:
         entity_class = XiaomiAirHumidifierMiotSelector
-    elif model in MODELS_HUMIDIFIER:
-        entity_class = XiaomiAirHumidifierSelector
     else:
         return
 
-    for selector in SELECTOR_TYPES.values():
-        entities.append(
-            entity_class(
-                f"{name} {selector.name}",
-                device,
-                config_entry,
-                f"{selector.short_name}_{config_entry.unique_id}",
-                selector,
-                coordinator,
-            )
+    description = SELECTOR_TYPES[FEATURE_SET_LED_BRIGHTNESS]
+    entities.append(
+        entity_class(
+            f"{config_entry.title} {description.name}",
+            device,
+            config_entry,
+            f"{description.key}_{config_entry.unique_id}",
+            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+            description,
         )
+    )
 
     async_add_entities(entities)
 
@@ -99,12 +86,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, name, device, entry, unique_id, selector, coordinator):
+    def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(name, device, entry, unique_id, coordinator)
-        self._attr_icon = selector.icon
-        self._controller = selector
-        self._attr_options = self._controller.options
+        self._attr_options = list(description.options)
+        self.entity_description = description
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
@@ -118,33 +104,29 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
 class XiaomiAirHumidifierSelector(XiaomiSelector):
     """Representation of a Xiaomi Air Humidifier selector."""
 
-    def __init__(self, name, device, entry, unique_id, controller, coordinator):
+    def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, controller, coordinator)
+        super().__init__(name, device, entry, unique_id, coordinator, description)
         self._current_led_brightness = self._extract_value_from_attribute(
-            self.coordinator.data, self._controller.short_name
+            self.coordinator.data, self.entity_description.key
         )
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._current_led_brightness = self._extract_value_from_attribute(
-            self.coordinator.data, self._controller.short_name
+            self.coordinator.data, self.entity_description.key
         )
         self.async_write_ha_state()
 
     @property
     def current_option(self):
         """Return the current option."""
-        return self.led_brightness
+        return self.led_brightness.lower()
 
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
-        if option not in self.options:
-            raise ValueError(
-                f"Selection '{option}' is not a valid {self._controller.name}"
-            )
-        await self.async_set_led_brightness(option)
+        await self.async_set_led_brightness(option.title())
 
     @property
     def led_brightness(self):

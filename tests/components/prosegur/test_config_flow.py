@@ -26,7 +26,7 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.prosegur.config_flow.Installation.retrieve",
         return_value=install,
-    ), patch(
+    ) as mock_retrieve, patch(
         "homeassistant.components.prosegur.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -50,6 +50,8 @@ async def test_form(hass):
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
+    assert len(mock_retrieve.mock_calls) == 1
+
 
 async def test_form_invalid_auth(hass):
     """Test we handle invalid auth."""
@@ -58,7 +60,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "pyprosegur.auth.Auth",
+        "pyprosegur.installation.Installation",
         side_effect=ConnectionRefusedError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -118,28 +120,6 @@ async def test_form_unknown_exception(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_form_validate_input(hass):
-    """Test we retrieve data from Installation."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "pyprosegur.installation.Installation.retrieve",
-        return_value=MagicMock,
-    ) as mock_retrieve:
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-                "country": "PT",
-            },
-        )
-
-    assert len(mock_retrieve.mock_calls) == 1
 
 
 async def test_reauth_flow(hass):

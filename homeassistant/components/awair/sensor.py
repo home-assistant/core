@@ -144,7 +144,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return False
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state, rounding off to reasonable values."""
         state: float
 
@@ -175,7 +175,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return SENSOR_TYPES[self._kind][ATTR_DEVICE_CLASS]
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         return SENSOR_TYPES[self._kind][ATTR_UNIT]
 

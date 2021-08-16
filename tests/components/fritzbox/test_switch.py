@@ -76,7 +76,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_LAST_RESET] == "1970-01-01T00:00:00+00:00"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Total Energy"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
-    assert ATTR_STATE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
 
 
 async def test_turn_on(hass: HomeAssistant, fritz: Mock):

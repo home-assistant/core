@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Error desconocido"
+        },
+        "step": {
+            "flipr_id": {
+                "description": "Elija su ID de Flipr en la lista",
+                "title": "Elige tu Flipr"
+            },
+            "user": {
+                "data": {
+                    "email": "Correo-e",
+                    "password": "Clave"
+                },
+                "description": "Con\u00e9ctese usando su cuenta Flipr.",
+                "title": "Conectarse a Flipr"
+            }
+        }
+    }
+}

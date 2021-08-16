@@ -5,7 +5,13 @@ import os
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -113,10 +119,10 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireBaseEntity]:
         if family not in DEVICE_BINARY_SENSORS:
             continue
         device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, device_id)},
-            "manufacturer": "Maxim Integrated",
-            "model": device_type,
-            "name": device_id,
+            ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
+            ATTR_MANUFACTURER: "Maxim Integrated",
+            ATTR_MODEL: device_type,
+            ATTR_NAME: device_id,
         }
         for entity_specs in DEVICE_BINARY_SENSORS[family]:
             entity_path = os.path.join(

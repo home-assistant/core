@@ -37,6 +37,7 @@ homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/ambee/* @frenck
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
+homeassistant/components/amcrest/* @flacjacket
 homeassistant/components/analytics/* @home-assistant/core @ludeeus
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
@@ -56,7 +57,6 @@ homeassistant/components/august/* @bdraco
 homeassistant/components/aurora/* @djtimca
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
-homeassistant/components/automate/* @sillyfrog
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
 homeassistant/components/awair/* @ahayworth @danielsjf
@@ -187,6 +187,7 @@ homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/geonetnz_volcano/* @exxamalte
 homeassistant/components/gios/* @bieniu
+homeassistant/components/github/* @timmo001
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/goalzero/* @tkdrob
@@ -320,7 +321,7 @@ homeassistant/components/msteams/* @peroyvind
 homeassistant/components/mullvad/* @meichthys
 homeassistant/components/mutesync/* @currentoor
 homeassistant/components/my/* @home-assistant/core
-homeassistant/components/myq/* @bdraco
+homeassistant/components/myq/* @bdraco @ehendrix23
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/nam/* @bieniu
@@ -411,6 +412,7 @@ homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/recollect_waste/* @bachya
 homeassistant/components/rejseplanen/* @DarkFox
+homeassistant/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rflink/* @javicalle
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
@@ -525,6 +527,8 @@ homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/trace/* @home-assistant/core
+homeassistant/components/tractive/* @Danielhiversen @zhulik
+homeassistant/components/tradfri/* @janiversen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
@@ -582,7 +586,7 @@ homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yale_smart_alarm/* @gjohansson-ST
 homeassistant/components/yamaha_musiccast/* @vigonotion @micha91
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
-homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn
+homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn @starkillerOG
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yi/* @bachya
 homeassistant/components/youless/* @gjong

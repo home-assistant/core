@@ -8,6 +8,9 @@
                 "data": {
                     "otp_code": "Koodi"
                 }
+            },
+            "reauth": {
+                "description": "Syy: {details}"
             }
         }
     },

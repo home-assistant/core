@@ -1,0 +1,161 @@
+{
+  "country": "GB",
+  "vehicleLinks": [
+    {
+      "preferredDealer": {
+        "brand": "RENAULT",
+        "createdDate": "2019-05-23T20:42:01.086661Z",
+        "lastModifiedDate": "2019-05-23T20:42:01.086662Z",
+        "dealerId": "dealer-id-1"
+      },
+      "garageBrand": "RENAULT",
+      "vehicleDetails": {
+        "assets": [
+          {
+            "assetType": "PICTURE",
+            "renditions": [
+              {
+                "resolutionType": "ONE_MYRENAULT_LARGE",
+                "url": "https://3dv2.renault.com/ImageFromBookmark?configuration=DLIGM2%2FKITPOU%2FDANGMO%2FITPK4%2FVOLNCH%2FREACTI%2FSSAEBS%2FPRAHL%2FRRCAM%2FX10%2FB10%2FEA3%2FDG%2FCAREG%2FVSTLAR%2FRET03%2FPROJAB%2FRALU16%2FDRAP13%2F3ATRPH%2FTELNJ%2FALEVA%2FVLCUIR%2FRETRCR%2FRETC%2FLVAREL%2FSGSCHA%2FNA418%2FRDIF01%2FTL01A%2FNBT022&databaseId=a864e752-b1b9-405e-9c3e-880073e36cc9&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_LARGE"
+              },
+              {
+                "resolutionType": "ONE_MYRENAULT_SMALL",
+                "url": "https://3dv2.renault.com/ImageFromBookmark?configuration=DLIGM2%2FKITPOU%2FDANGMO%2FITPK4%2FVOLNCH%2FREACTI%2FSSAEBS%2FPRAHL%2FRRCAM%2FX10%2FB10%2FEA3%2FDG%2FCAREG%2FVSTLAR%2FRET03%2FPROJAB%2FRALU16%2FDRAP13%2F3ATRPH%2FTELNJ%2FALEVA%2FVLCUIR%2FRETRCR%2FRETC%2FLVAREL%2FSGSCHA%2FNA418%2FRDIF01%2FTL01A%2FNBT022&databaseId=a864e752-b1b9-405e-9c3e-880073e36cc9&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_SMALL_V2"
+              }
+            ]
+          },
+          {
+            "title": "PDF Guide",
+            "description": "",
+            "assetType": "PDF",
+            "assetRole": "GUIDE",
+            "renditions": [
+              {
+                "url": "https://cdn.group.renault.com/ren/gb/myr/assets/x102ve/manual.pdf.asset.pdf/1558696740707.pdf"
+              }
+            ]
+          },
+          {
+            "title": "e-guide",
+            "description": "",
+            "assetType": "URL",
+            "assetRole": "GUIDE",
+            "renditions": [
+              {
+                "url": "https://gb.e-guide.renault.com/eng/Zoe-ph2"
+              }
+            ]
+          },
+          {
+            "title": "All-New ZOE: Welcome to your new car",
+            "description": "",
+            "assetType": "VIDEO",
+            "assetRole": "CAR",
+            "renditions": [
+              {
+                "url": "1OGwwmWHB6o"
+              }
+            ]
+          },
+          {
+            "title": "Renault ZOE: All you need to know",
+            "description": "",
+            "assetType": "VIDEO",
+            "assetRole": "CAR",
+            "renditions": [
+              {
+                "url": "_BVH-Rd6e5I"
+              }
+            ]
+          }
+        ],
+        "engineType": "5AQ",
+        "registrationCountry": {
+          "code": "FR"
+        },
+        "radioType": {
+          "group": "425",
+          "code": "NA418",
+          "label": "  FULL NAV DAB ETH - AUDI"
+        },
+        "tcu": {
+          "group": "E70",
+          "code": "AIVCT",
+          "label": "AVEC BOITIER CONNECT AIVC"
+        },
+        "brand": {
+          "label": "RENAULT"
+        },
+        "deliveryDate": "2020-01-22",
+        "engineEnergyType": "ELEC",
+        "registrationDate": "2020-01-13",
+        "gearbox": {
+          "group": "427",
+          "code": "BVEL",
+          "label": "BOITE A VARIATEUR ELECTRIQUE"
+        },
+        "model": {
+          "group": "971",
+          "code": "X102VE",
+          "label": "ZOE"
+        },
+        "electrical": true,
+        "energy": {
+          "group": "019",
+          "code": "ELEC",
+          "label": "ELECTRIQUE"
+        },
+        "navigationAssistanceLevel": {
+          "group": "408",
+          "code": "SAN408",
+          "label": "CRITERE DE CONTEXTE"
+        },
+        "yearsOfMaintenance": 12,
+        "rlinkStore": false,
+        "radioCode": "1234",
+        "registrationNumber": "REG-NUMBER",
+        "modelSCR": "ZOE",
+        "easyConnectStore": false,
+        "engineRatio": "605",
+        "battery": {
+          "group": "968",
+          "code": "BT4AR1",
+          "label": "BATTERIE BT4AR1"
+        },
+        "vin": "VF1AAAAA555777999",
+        "retrievedFromDhs": false,
+        "vcd": "ASCOD0/DLIGM2/SSTINC/KITPOU/SKTPGR/SSCCPC/SDPSEC/FDIU2/SSMAP/SSCALL/FACBA1/DANGMO/SSRCAR/SSCABD/AIVCT/AVGSI/ITPK4/VOLNCH/REACTI/AVOSP1/SWALBO/SSDWGE/1234Y/SSAEBS/PRAHL/RRCAM/STANDA/X10/B10/EA3/MD/ELEC/DG/TEMP/TR4X2/AFURGE/RV/ABS/CAREG/LAC/VSTLAR/CPETIR/RET03/PROJAB/RALU16/CEAVRH/ADAC/AIRBA2/SERIE/DRA/DRAP13/HARM02/3ATRPH/SGAV01/BARRAB/TELNJ/SFBANA/KM/DPRPN/AVREPL/SSDECA/ABLAV/ASRESP/ALEVA/SCACBA/SOP02C/STHPLG/SKTGRV/VLCUIR/RETRCR/TRSEV1/RETC/LVAVIP/LVAREL/SASURV/KTGREP/SGSCHA/FRA01/APL03/FSTPO/ALOUC5/CMAR3P/SAN408/NA418/BVEL/AUTAUG/SPREST/RDIF01/ISOFIX/EQPEUR/HRGM01/SDPCLV/CHASTD/TL01A/SPRODI/SAN613/AIRBDE/PSMREC/ELC1/SSPTLP/SANCML/SEXTIN/PE2019/PHAS2/SAN913/THABT2/SSTYAD/SSHYB/052KWH/BT4AR1/VEC018/X102VE/NBT022/5AQ",
+        "firstRegistrationDate": "2020-01-13",
+        "deliveryCountry": {
+          "code": "FR",
+          "label": "FRANCE"
+        },
+        "connectivityTechnology": "RLINK1",
+        "family": {
+          "group": "007",
+          "code": "X10",
+          "label": "FAMILLE X10"
+        },
+        "version": {
+          "code": "INT A MD 1L"
+        }
+      },
+      "status": "ACTIVE",
+      "createdDate": "2020-08-21T16:48:00.243967Z",
+      "cancellationReason": {},
+      "linkType": "OWNER",
+      "connectedDriver": {
+        "role": "MAIN_DRIVER",
+        "lastModifiedDate": "2020-08-22T09:41:53.477398Z",
+        "createdDate": "2020-08-22T09:41:53.477398Z"
+      },
+      "vin": "VF1AAAAA555777999",
+      "lastModifiedDate": "2020-11-29T22:01:21.162572Z",
+      "brand": "RENAULT",
+      "startDate": "2020-08-21",
+      "ownershipStartDate": "2020-01-13",
+      "ownershipEndDate": "2020-08-21"
+    }
+  ],
+  "accountId": "account-id-1"
+}

@@ -16,7 +16,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,6 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
     }
 )
+
+UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
 
 
 async def async_setup_platform(
@@ -157,7 +164,9 @@ async def async_setup_entry(
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                await asyncio.sleep(entry.data[CONF_RECONNECT_INTERVAL])
+                await asyncio.sleep(
+                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
+                )
 
             except (serial.serialutil.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
@@ -165,6 +174,11 @@ async def async_setup_entry(
                 LOGGER.exception("Error connecting to DSMR")
                 transport = None
                 protocol = None
+
+                # throttle reconnect attempts
+                await asyncio.sleep(
+                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
+                )
             except CancelledError:
                 if stop_listener:
                     stop_listener()  # pylint: disable=not-callable
@@ -231,7 +245,7 @@ class DSMREntity(SensorEntity):
         return attr
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value = self.get_dsmr_object_attr("value")
         if value is None:
@@ -251,9 +265,12 @@ class DSMREntity(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self.get_dsmr_object_attr("unit")
+        unit_of_measurement = self.get_dsmr_object_attr("unit")
+        if unit_of_measurement in UNIT_CONVERSION:
+            return UNIT_CONVERSION[unit_of_measurement]
+        return unit_of_measurement
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:

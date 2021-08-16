@@ -8,8 +8,6 @@ import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
-from systembridge.objects.os import Os
-from systembridge.objects.system import System
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -47,10 +45,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     hostname = data[CONF_HOST]
     try:
         async with async_timeout.timeout(30):
-            bridge_os: Os = await bridge.async_get_os()
-            if bridge_os.hostname is not None:
-                hostname = bridge_os.hostname
-            bridge_system: System = await bridge.async_get_system()
+            await bridge.async_get_information()
+            if (
+                bridge.information is not None
+                and bridge.information.host is not None
+                and bridge.information.uuid is not None
+            ):
+                hostname = bridge.information.host
+                uuid = bridge.information.uuid
     except BridgeAuthenticationException as exception:
         _LOGGER.info(exception)
         raise InvalidAuth from exception
@@ -58,7 +60,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         _LOGGER.info(exception)
         raise CannotConnect from exception
 
-    return {"hostname": hostname, "uuid": bridge_system.uuid.os}
+    return {"hostname": hostname, "uuid": uuid}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

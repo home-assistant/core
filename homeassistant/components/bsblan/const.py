@@ -7,10 +7,6 @@ DATA_BSBLAN_CLIENT: Final = "bsblan_client"
 DATA_BSBLAN_TIMER: Final = "bsblan_timer"
 DATA_BSBLAN_UPDATED: Final = "bsblan_updated"
 
-ATTR_IDENTIFIERS: Final = "identifiers"
-ATTR_MODEL: Final = "model"
-ATTR_MANUFACTURER: Final = "manufacturer"
-
 ATTR_TARGET_TEMPERATURE: Final = "target_temperature"
 ATTR_INSIDE_TEMPERATURE: Final = "inside_temperature"
 ATTR_OUTSIDE_TEMPERATURE: Final = "outside_temperature"

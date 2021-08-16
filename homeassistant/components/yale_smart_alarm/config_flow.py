@@ -31,7 +31,6 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     entry: config_entries.ConfigEntry
 

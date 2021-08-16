@@ -86,7 +86,7 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
-    _attr_unit_of_measurement = DATA_MEGABYTES
+    _attr_native_unit_of_measurement = DATA_MEGABYTES
 
     @property
     def name(self) -> str:
@@ -105,7 +105,7 @@ class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = RX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_rx_bytes / 1000000
@@ -118,7 +118,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = TX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
@@ -167,7 +167,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
         return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
-    def state(self) -> datetime:
+    def native_value(self) -> datetime:
         """Return the uptime of the client."""
         if self.client.uptime < 1000000000:
             return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()

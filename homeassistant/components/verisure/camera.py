@@ -79,7 +79,9 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
             "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
         }
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.check_imagelist()
         if not self._image:

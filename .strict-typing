@@ -63,6 +63,7 @@ homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
+homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
@@ -81,6 +82,7 @@ homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
+homeassistant.components.renault.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
@@ -102,6 +104,7 @@ homeassistant.components.tile.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
+homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*

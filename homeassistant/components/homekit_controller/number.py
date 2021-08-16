@@ -15,7 +15,11 @@ NUMBER_ENTITIES = {
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: {
         "name": "Spray Quantity",
         "icon": "mdi:water",
-    }
+    },
+    CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: {
+        "name": "Elevation",
+        "icon": "mdi:elevation-rise",
+    },
 }
 
 
@@ -53,9 +57,8 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         self._device_class = device_class
         self._icon = icon
         self._name = name
-        self._char = char
 
-        super().__init__(conn, info)
+        super().__init__(conn, info, char)
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""

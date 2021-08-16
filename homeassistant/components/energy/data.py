@@ -79,7 +79,34 @@ class SolarSourceType(TypedDict):
     config_entry_solar_forecast: list[str] | None
 
 
-SourceType = Union[GridSourceType, SolarSourceType]
+class BatterySourceType(TypedDict):
+    """Dictionary holding the source of battery storage."""
+
+    type: Literal["battery"]
+
+    stat_energy_from: str
+    stat_energy_to: str
+
+
+class GasSourceType(TypedDict):
+    """Dictionary holding the source of gas storage."""
+
+    type: Literal["gas"]
+
+    stat_energy_from: str
+
+    # statistic_id of costs ($) incurred from the energy meter
+    # If set to None and entity_energy_from and entity_energy_price are configured,
+    # an EnergyCostSensor will be automatically created
+    stat_cost: str | None
+
+    # Used to generate costs if stat_cost is set to None
+    entity_energy_from: str | None  # entity_id of an gas meter (m³), entity_id of the gas meter for stat_energy_from
+    entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
+    number_energy_price: float | None  # Price for energy ($/m³)
+
+
+SourceType = Union[GridSourceType, SolarSourceType, BatterySourceType, GasSourceType]
 
 
 class DeviceConsumption(TypedDict):
@@ -92,7 +119,6 @@ class DeviceConsumption(TypedDict):
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
 
-    currency: str
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
 
@@ -178,6 +204,23 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
+BATTERY_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "battery",
+        vol.Required("stat_energy_from"): str,
+        vol.Required("stat_energy_to"): str,
+    }
+)
+GAS_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "gas",
+        vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_cost"): vol.Any(str, None),
+        vol.Optional("entity_energy_from"): vol.Any(str, None),
+        vol.Optional("entity_energy_price"): vol.Any(str, None),
+        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+    }
+)
 
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
@@ -198,6 +241,8 @@ ENERGY_SOURCE_SCHEMA = vol.All(
                 {
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
+                    "battery": BATTERY_SOURCE_SCHEMA,
+                    "gas": GAS_SOURCE_SCHEMA,
                 },
             )
         ]
@@ -230,7 +275,6 @@ class EnergyManager:
     def default_preferences() -> EnergyPreferences:
         """Return default preferences."""
         return {
-            "currency": "€",
             "energy_sources": [],
             "device_consumption": [],
         }
@@ -243,7 +287,6 @@ class EnergyManager:
             data = self.data.copy()
 
         for key in (
-            "currency",
             "energy_sources",
             "device_consumption",
         ):

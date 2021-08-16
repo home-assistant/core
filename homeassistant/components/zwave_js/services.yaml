@@ -229,3 +229,26 @@ ping:
   target:
     entity:
       integration: zwave_js
+
+reset_meter:
+  name: Reset meter(s) on a node
+  description: Resets the meter(s) on a node.
+  target:
+    entity:
+      domain: sensor
+      integration: zwave_js
+  fields:
+    meter_type:
+      name: Meter Type
+      description: The type of meter to reset. Not all meters support the ability to pick a meter type to reset.
+      example: 1
+      required: false
+      selector:
+        text:
+    value:
+      name: Target Value
+      description: The value that meter(s) should be reset to. Not all meters support the ability to be reset to a specific value.
+      example: 5
+      required: false
+      selector:
+        text:

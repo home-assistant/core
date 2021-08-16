@@ -69,37 +69,39 @@ RT_SENSORS: tuple[TibberSensorEntityDescription, ...] = (
         key="averagePower",
         name="average power",
         device_class=DEVICE_CLASS_POWER,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     TibberSensorEntityDescription(
         key="power",
         name="power",
         device_class=DEVICE_CLASS_POWER,
-        unit_of_measurement=POWER_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     TibberSensorEntityDescription(
         key="powerProduction",
         name="power production",
         device_class=DEVICE_CLASS_POWER,
-        unit_of_measurement=POWER_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     TibberSensorEntityDescription(
         key="minPower",
         name="min power",
         device_class=DEVICE_CLASS_POWER,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     TibberSensorEntityDescription(
         key="maxPower",
         name="max power",
         device_class=DEVICE_CLASS_POWER,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     TibberSensorEntityDescription(
         key="accumulatedConsumption",
         name="accumulated consumption",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
         reset_type=ResetType.DAILY,
     ),
@@ -107,7 +109,7 @@ RT_SENSORS: tuple[TibberSensorEntityDescription, ...] = (
         key="accumulatedConsumptionLastHour",
         name="accumulated consumption current hour",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
         reset_type=ResetType.HOURLY,
     ),
@@ -115,7 +117,7 @@ RT_SENSORS: tuple[TibberSensorEntityDescription, ...] = (
         key="accumulatedProduction",
         name="accumulated production",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
         reset_type=ResetType.DAILY,
     ),
@@ -123,7 +125,7 @@ RT_SENSORS: tuple[TibberSensorEntityDescription, ...] = (
         key="accumulatedProductionLastHour",
         name="accumulated production current hour",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
         reset_type=ResetType.HOURLY,
     ),
@@ -131,63 +133,65 @@ RT_SENSORS: tuple[TibberSensorEntityDescription, ...] = (
         key="lastMeterConsumption",
         name="last meter consumption",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.NEVER,
     ),
     TibberSensorEntityDescription(
         key="lastMeterProduction",
         name="last meter production",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.NEVER,
     ),
     TibberSensorEntityDescription(
         key="voltagePhase1",
         name="voltage phase1",
         device_class=DEVICE_CLASS_VOLTAGE,
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     TibberSensorEntityDescription(
         key="voltagePhase2",
         name="voltage phase2",
         device_class=DEVICE_CLASS_VOLTAGE,
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     TibberSensorEntityDescription(
         key="voltagePhase3",
         name="voltage phase3",
         device_class=DEVICE_CLASS_VOLTAGE,
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     TibberSensorEntityDescription(
         key="currentL1",
         name="current L1",
         device_class=DEVICE_CLASS_CURRENT,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     TibberSensorEntityDescription(
         key="currentL2",
         name="current L2",
         device_class=DEVICE_CLASS_CURRENT,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     TibberSensorEntityDescription(
         key="currentL3",
         name="current L3",
         device_class=DEVICE_CLASS_CURRENT,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     TibberSensorEntityDescription(
         key="signalStrength",
         name="signal strength",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     TibberSensorEntityDescription(
@@ -208,7 +212,7 @@ RT_SENSORS: tuple[TibberSensorEntityDescription, ...] = (
         key="powerFactor",
         name="power factor",
         device_class=DEVICE_CLASS_POWER_FACTOR,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
@@ -343,13 +347,13 @@ class TibberSensorElPrice(TibberSensor):
             return
 
         res = self._tibber_home.current_price_data()
-        self._attr_state, price_level, self._last_updated = res
+        self._attr_native_value, price_level, self._last_updated = res
         self._attr_extra_state_attributes["price_level"] = price_level
 
         attrs = self._tibber_home.current_attributes()
         self._attr_extra_state_attributes.update(attrs)
-        self._attr_available = self._attr_state is not None
-        self._attr_unit_of_measurement = self._tibber_home.price_unit
+        self._attr_available = self._attr_native_value is not None
+        self._attr_native_unit_of_measurement = self._tibber_home.price_unit
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
@@ -388,11 +392,11 @@ class TibberSensorRT(update_coordinator.CoordinatorEntity, TibberSensor):
         self._device_name = f"{self._model} {self._home_name}"
 
         self._attr_name = f"{description.name} {self._home_name}"
-        self._attr_state = initial_state
+        self._attr_native_value = initial_state
         self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{description.name}"
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
-            self._attr_unit_of_measurement = tibber_home.currency
+            self._attr_native_unit_of_measurement = tibber_home.currency
         if description.reset_type == ResetType.NEVER:
             self._attr_last_reset = dt_util.utc_from_timestamp(0)
         elif description.reset_type == ResetType.DAILY:
@@ -430,7 +434,7 @@ class TibberSensorRT(update_coordinator.CoordinatorEntity, TibberSensor):
                 )
         if self.entity_description.key == "powerFactor":
             state *= 100.0
-        self._attr_state = state
+        self._attr_native_value = state
         self.async_write_ha_state()
 
 
