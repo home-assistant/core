@@ -66,8 +66,8 @@ class RenaultHub:
         scan_interval: timedelta,
     ) -> None:
         """Set up proxy."""
-        if not vehicle_link.vin or not vehicle_link.vehicleDetails:
-            return
+        assert vehicle_link.vin is not None
+        assert vehicle_link.vehicleDetails is not None
         # Generate vehicle proxy
         vehicle = RenaultVehicleProxy(
             hass=self._hass,
