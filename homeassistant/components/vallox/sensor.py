@@ -5,6 +5,8 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -91,6 +93,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             unit_of_measurement=None,
             icon="mdi:filter",
         ),
+        ValloxSensor(
+            name=f"{name} Efficiency",
+            state_proxy=state_proxy,
+            metric_key="A_CYC_EXTRACT_EFFICIENCY",
+            device_class=None,
+            unit_of_measurement=PERCENTAGE,
+            icon="mdi:gauge",
+        ),
+        ValloxSensor(
+            name=f"{name} CO2",
+            state_proxy=state_proxy,
+            metric_key="A_CYC_CO2_VALUE",
+            device_class=DEVICE_CLASS_CO2,
+            unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            icon=None,
+        ),
     ]
 
     async_add_entities(sensors, update_before_add=False)
@@ -123,7 +141,7 @@ class ValloxSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
@@ -143,7 +161,7 @@ class ValloxSensor(SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 

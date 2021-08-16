@@ -66,34 +66,6 @@ async def test_config_flow_already_configured_weather(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_import_camera(hass):
-    """Test import of camera."""
-    with patch(
-        "homeassistant.components.buienradar.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == f"{TEST_LATITUDE},{TEST_LONGITUDE}"
-    assert result["data"] == {
-        CONF_LATITUDE: TEST_LATITUDE,
-        CONF_LONGITUDE: TEST_LONGITUDE,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
 async def test_options_flow(hass):
     """Test options flow."""
     entry = MockConfigEntry(

@@ -19,19 +19,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
 
     for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams"):
-        for sensor_type in SENSOR_TYPES:
-            if device_type not in SENSOR_TYPES[sensor_type][1]:
+        for sensor_type, sensor in SENSOR_TYPES.items():
+            if device_type not in sensor[1]:
                 continue
 
             for device in devices[device_type]:
                 if device_type == "battery" and device.battery_life is None:
                     continue
 
-                sensors.append(
-                    SENSOR_TYPES[sensor_type][6](
-                        config_entry.entry_id, device, sensor_type
-                    )
-                )
+                sensors.append(sensor[6](config_entry.entry_id, device, sensor_type))
 
     async_add_entities(sensors)
 
@@ -60,7 +56,7 @@ class RingSensor(RingEntityMixin, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._sensor_type == "volume":
             return self._device.volume
@@ -88,7 +84,7 @@ class RingSensor(RingEntityMixin, SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return SENSOR_TYPES.get(self._sensor_type)[2]
 
@@ -124,7 +120,7 @@ class HealthDataRingSensor(RingSensor):
         return False
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._sensor_type == "wifi_signal_category":
             return self._device.wifi_signal_category
@@ -176,7 +172,7 @@ class HistoryRingSensor(RingSensor):
         self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._latest_event is None:
             return None

@@ -23,7 +23,7 @@
                     "url": "URL",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta seadmele juurdep\u00e4\u00e4su \u00fcksikasjad. Kasutajanime ja salas\u00f5na m\u00e4\u00e4ramine on valikuline kuid v\u00f5imaldab rohkemate sidumisfunktsioonide toetamist. Teisest k\u00fcljest v\u00f5ib volitatud \u00fchenduse kasutamine p\u00f5hjustada probleeme seadme veebiliidese ligip\u00e4\u00e4suga v\u00e4ljastpoolt Home assistant'i kui sidumine on aktiivne ja vastupidi.",
+                "description": "Sisesta seadmele juurdep\u00e4\u00e4su \u00fcksikasjad.",
                 "title": "Huawei LTE seadistamine"
             }
         }
@@ -35,7 +35,8 @@
                     "name": "Teavitusteenuse nimi (muudatus n\u00f5uab taask\u00e4ivitamist)",
                     "recipient": "SMS teavituse saajad",
                     "track_new_devices": "Uute seadmete j\u00e4lgimine",
-                    "track_wired_clients": "J\u00e4lgi juhtmega v\u00f5rgukliente"
+                    "track_wired_clients": "J\u00e4lgi juhtmega v\u00f5rgukliente",
+                    "unauthenticated_mode": "Tuvastuseta re\u017eiim (muutmine n\u00f5uab taaslaadimist)"
                 }
             }
         }

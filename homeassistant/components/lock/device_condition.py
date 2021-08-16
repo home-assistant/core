@@ -10,8 +10,11 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
@@ -20,7 +23,13 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
 
-CONDITION_TYPES = {"is_locked", "is_unlocked"}
+CONDITION_TYPES = {
+    "is_locked",
+    "is_unlocked",
+    "is_locking",
+    "is_unlocking",
+    "is_jammed",
+}
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
@@ -60,7 +69,13 @@ def async_condition_from_config(
     """Create a function to test a device condition."""
     if config_validation:
         config = CONDITION_SCHEMA(config)
-    if config[CONF_TYPE] == "is_locked":
+    if config[CONF_TYPE] == "is_jammed":
+        state = STATE_JAMMED
+    elif config[CONF_TYPE] == "is_locking":
+        state = STATE_LOCKING
+    elif config[CONF_TYPE] == "is_unlocking":
+        state = STATE_UNLOCKING
+    elif config[CONF_TYPE] == "is_locked":
         state = STATE_LOCKED
     else:
         state = STATE_UNLOCKED

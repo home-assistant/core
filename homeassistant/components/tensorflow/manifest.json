@@ -6,7 +6,7 @@
     "tensorflow==2.3.0",
     "tf-models-official==2.3.0",
     "pycocotools==2.0.1",
-    "numpy==1.21.0",
+    "numpy==1.21.1",
     "pillow==8.2.0"
   ],
   "codeowners": [],

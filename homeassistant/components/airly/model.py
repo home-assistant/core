@@ -1,15 +1,14 @@
 """Type definitions for Airly integration."""
 from __future__ import annotations
 
-from typing import Callable, TypedDict
+from dataclasses import dataclass
+from typing import Callable
+
+from homeassistant.components.sensor import SensorEntityDescription
 
 
-class SensorDescription(TypedDict, total=False):
-    """Sensor description class."""
+@dataclass
+class AirlySensorEntityDescription(SensorEntityDescription):
+    """Class describing Airly sensor entities."""
 
-    device_class: str | None
-    icon: str | None
-    label: str
-    unit: str
-    state_class: str | None
-    value: Callable
+    value: Callable = round

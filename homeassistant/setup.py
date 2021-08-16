@@ -39,14 +39,17 @@ BASE_PLATFORMS = {
     "lock",
     "media_player",
     "notify",
+    "number",
     "remote",
     "scene",
     "select",
     "sensor",
+    "siren",
     "switch",
     "tts",
     "vacuum",
     "water_heater",
+    "weather",
 }
 
 DATA_SETUP_DONE = "setup_done"
@@ -280,10 +283,10 @@ async def _async_setup_component(
         await hass.config_entries.flow.async_wait_init_flow_finish(domain)
 
         await asyncio.gather(
-            *[
+            *(
                 entry.async_setup(hass, integration=integration)
                 for entry in hass.config_entries.async_entries(domain)
-            ]
+            )
         )
 
         hass.config.components.add(domain)

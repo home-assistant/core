@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """
 
 
-async def async_setup_legacy_entry(hass, entry, async_add_entities):
+async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
     """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 

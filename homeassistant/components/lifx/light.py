@@ -275,12 +275,12 @@ class LIFXManager:
         for discovery in self.discoveries:
             discovery.cleanup()
 
-        for service in [
+        for service in (
             SERVICE_LIFX_SET_STATE,
             SERVICE_EFFECT_STOP,
             SERVICE_EFFECT_PULSE,
             SERVICE_EFFECT_COLORLOOP,
-        ]:
+        ):
             self.hass.services.async_remove(LIFX_DOMAIN, service)
 
     def register_set_state(self):

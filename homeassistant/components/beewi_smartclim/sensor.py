@@ -61,44 +61,19 @@ class BeewiSmartclimSensor(SensorEntity):
     def __init__(self, poller, name, mac, device, unit):
         """Initialize the sensor."""
         self._poller = poller
-        self._name = name
-        self._mac = mac
+        self._attr_name = name
         self._device = device
-        self._unit = unit
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor. State is returned in Celsius."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Device class of this entity."""
-        return self._device
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._mac}_{self._device}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
+        self._attr_native_unit_of_measurement = unit
+        self._attr_device_class = self._device
+        self._attr_unique_id = f"{mac}_{device}"
 
     def update(self):
         """Fetch new state data from the poller."""
         self._poller.update_sensor()
-        self._state = None
+        self._attr_native_value = None
         if self._device == DEVICE_CLASS_TEMPERATURE:
-            self._state = self._poller.get_temperature()
+            self._attr_native_value = self._poller.get_temperature()
         if self._device == DEVICE_CLASS_HUMIDITY:
-            self._state = self._poller.get_humidity()
+            self._attr_native_value = self._poller.get_humidity()
         if self._device == DEVICE_CLASS_BATTERY:
-            self._state = self._poller.get_battery()
+            self._attr_native_value = self._poller.get_battery()

@@ -1,4 +1,5 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
+from datetime import datetime
 import logging
 
 import hdate
@@ -49,8 +50,10 @@ class JewishCalendarSensor(SensorEntity):
         self._holiday_attrs = {}
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
+        if isinstance(self._state, datetime):
+            return self._state.isoformat()
         return self._state
 
     async def async_update(self):
@@ -131,9 +134,11 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        return dt_util.as_utc(self._state) if self._state is not None else None
+        if self._state is None:
+            return None
+        return dt_util.as_utc(self._state).isoformat()
 
     @property
     def extra_state_attributes(self):

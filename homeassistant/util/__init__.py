@@ -79,9 +79,9 @@ def sanitize_path(path: str) -> str:
     return path
 
 
-def slugify(text: str, *, separator: str = "_") -> str:
+def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    if text == "":
+    if text == "" or text is None:
         return ""
     slug = unicode_slug.slugify(text, separator=separator)
     return "unknown" if slug == "" else slug
@@ -160,9 +160,6 @@ def get_random_string(length: int = 10) -> str:
 
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
-
-    # https://github.com/PyCQA/pylint/issues/2306
-    # pylint: disable=comparison-with-callable
 
     def __ge__(self, other: ENUM_T) -> bool:
         """Return the greater than element."""

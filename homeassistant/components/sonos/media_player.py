@@ -6,8 +6,8 @@ import logging
 from typing import Any
 import urllib.parse
 
-from pysonos import alarms
-from pysonos.core import (
+from soco import alarms
+from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
     PLAY_MODE_BY_MEANING,
@@ -120,6 +120,7 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
 ATTR_BUTTONS_ENABLED = "buttons_enabled"
+ATTR_CROSSFADE = "crossfade"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
@@ -231,6 +232,7 @@ async def async_setup_entry(
         SERVICE_SET_OPTION,
         {
             vol.Optional(ATTR_BUTTONS_ENABLED): cv.boolean,
+            vol.Optional(ATTR_CROSSFADE): cv.boolean,
             vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
             vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
@@ -609,6 +611,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def set_option(
         self,
         buttons_enabled: bool | None = None,
+        crossfade: bool | None = None,
         night_sound: bool | None = None,
         speech_enhance: bool | None = None,
         status_light: bool | None = None,
@@ -616,6 +619,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Modify playback options."""
         if buttons_enabled is not None:
             self.soco.buttons_enabled = buttons_enabled
+
+        if crossfade is not None:
+            self.soco.cross_fade = crossfade
 
         if night_sound is not None and self.speaker.night_mode is not None:
             self.soco.night_mode = night_sound

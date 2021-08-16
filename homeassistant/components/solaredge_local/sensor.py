@@ -13,13 +13,14 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
-    ELECTRICAL_CURRENT_AMPERE,
+    DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -43,13 +44,28 @@ INVERTER_MODES = (
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_AC_voltage": ["gridvoltage", "Grid Voltage", VOLT, "mdi:current-ac", None],
-    "current_DC_voltage": ["dcvoltage", "DC Voltage", VOLT, "mdi:current-dc", None],
+    "current_AC_voltage": [
+        "gridvoltage",
+        "Grid Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        "mdi:current-ac",
+        None,
+        None,
+    ],
+    "current_DC_voltage": [
+        "dcvoltage",
+        "DC Voltage",
+        ELECTRIC_POTENTIAL_VOLT,
+        "mdi:current-dc",
+        None,
+        None,
+    ],
     "current_frequency": [
         "gridfrequency",
         "Grid Frequency",
         FREQUENCY_HERTZ,
         "mdi:current-ac",
+        None,
         None,
     ],
     "current_power": [
@@ -58,12 +74,14 @@ SENSOR_TYPES = {
         POWER_WATT,
         "mdi:solar-power",
         None,
+        None,
     ],
     "energy_this_month": [
         "energyThisMonth",
         "Energy This Month",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
         None,
     ],
     "energy_this_year": [
@@ -72,6 +90,7 @@ SENSOR_TYPES = {
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
         None,
+        None,
     ],
     "energy_today": [
         "energyToday",
@@ -79,19 +98,22 @@ SENSOR_TYPES = {
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
         None,
+        None,
     ],
     "inverter_temperature": [
         "invertertemperature",
         "Inverter Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         "operating_mode",
+        DEVICE_CLASS_TEMPERATURE,
     ],
     "lifetime_energy": [
         "energyTotal",
         "Lifetime Energy",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
         None,
     ],
     "optimizer_connected": [
@@ -100,12 +122,14 @@ SENSOR_TYPES = {
         "optimizers",
         "mdi:solar-panel",
         "optimizers_connected",
+        None,
     ],
     "optimizer_current": [
         "optimizercurrent",
         "Average Optimizer Current",
-        ELECTRICAL_CURRENT_AMPERE,
+        ELECTRIC_CURRENT_AMPERE,
         "mdi:solar-panel",
+        None,
         None,
     ],
     "optimizer_power": [
@@ -114,6 +138,7 @@ SENSOR_TYPES = {
         POWER_WATT,
         "mdi:solar-panel",
         None,
+        None,
     ],
     "optimizer_temperature": [
         "optimizertemperature",
@@ -121,12 +146,14 @@ SENSOR_TYPES = {
         TEMP_CELSIUS,
         "mdi:solar-panel",
         None,
+        DEVICE_CLASS_TEMPERATURE,
     ],
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
-        VOLT,
+        ELECTRIC_POTENTIAL_VOLT,
         "mdi:solar-panel",
+        None,
         None,
     ],
 }
@@ -170,7 +197,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             TEMP_FAHRENHEIT,
             "mdi:thermometer",
             "operating_mode",
-            None,
+            DEVICE_CLASS_TEMPERATURE,
         ]
 
     try:
@@ -181,12 +208,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 POWER_WATT,
                 "mdi:arrow-collapse-down",
                 None,
+                None,
             ]
             sensors["import_meter_reading"] = [
                 "totalEnergyimport",
                 "total import Energy",
                 ENERGY_WATT_HOUR,
                 "mdi:counter",
+                None,
                 None,
             ]
     except IndexError:
@@ -200,12 +229,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 POWER_WATT,
                 "mdi:arrow-expand-up",
                 None,
+                None,
             ]
             sensors["export_meter_reading"] = [
                 "totalEnergyexport",
                 "total export Energy",
                 ENERGY_WATT_HOUR,
                 "mdi:counter",
+                None,
                 None,
             ]
     except IndexError:
@@ -225,6 +256,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensor_info[2],
             sensor_info[3],
             sensor_info[4],
+            sensor_info[5],
         )
         entities.append(sensor)
 
@@ -234,7 +266,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(SensorEntity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, platform_name, data, json_key, name, unit, icon, attr):
+    def __init__(
+        self, platform_name, data, json_key, name, unit, icon, attr, device_class
+    ):
         """Initialize the sensor."""
         self._platform_name = platform_name
         self._data = data
@@ -245,6 +279,7 @@ class SolarEdgeSensor(SensorEntity):
         self._unit_of_measurement = unit
         self._icon = icon
         self._attr = attr
+        self._attr_device_class = device_class
 
     @property
     def name(self):
@@ -252,7 +287,7 @@ class SolarEdgeSensor(SensorEntity):
         return f"{self._platform_name} ({self._name})"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
@@ -272,7 +307,7 @@ class SolarEdgeSensor(SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

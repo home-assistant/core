@@ -4,6 +4,7 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "not_supported": "Csatlakoztatva az AVM FRITZ! Boxhoz, de nem tudja vez\u00e9relni az intelligens otthoni eszk\u00f6z\u00f6ket.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
         },
         "error": {
@@ -22,14 +23,16 @@
                 "data": {
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                }
+                },
+                "description": "Friss\u00edtse a(z) {name} bejelentkez\u00e9si adatait."
             },
             "user": {
                 "data": {
                     "host": "Hoszt",
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                }
+                },
+                "description": "Adja meg az AVM FRITZ! Box adatait."
             }
         }
     }

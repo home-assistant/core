@@ -55,6 +55,7 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_PLAY_PAUSE,
+    MAX_NAME_LENGTH,
     SERV_SWITCH,
     SERV_TELEVISION_SPEAKER,
 )
@@ -134,7 +135,7 @@ class MediaPlayer(HomeAccessory):
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
-        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"
+        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"[:MAX_NAME_LENGTH]
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -179,8 +180,7 @@ class MediaPlayer(HomeAccessory):
             _LOGGER.debug(
                 '%s: Set current state for "on_off" to %s', self.entity_id, hk_state
             )
-            if self.chars[FEATURE_ON_OFF].value != hk_state:
-                self.chars[FEATURE_ON_OFF].set_value(hk_state)
+            self.chars[FEATURE_ON_OFF].set_value(hk_state)
 
         if self.chars[FEATURE_PLAY_PAUSE]:
             hk_state = current_state == STATE_PLAYING
@@ -189,8 +189,7 @@ class MediaPlayer(HomeAccessory):
                 self.entity_id,
                 hk_state,
             )
-            if self.chars[FEATURE_PLAY_PAUSE].value != hk_state:
-                self.chars[FEATURE_PLAY_PAUSE].set_value(hk_state)
+            self.chars[FEATURE_PLAY_PAUSE].set_value(hk_state)
 
         if self.chars[FEATURE_PLAY_STOP]:
             hk_state = current_state == STATE_PLAYING
@@ -199,8 +198,7 @@ class MediaPlayer(HomeAccessory):
                 self.entity_id,
                 hk_state,
             )
-            if self.chars[FEATURE_PLAY_STOP].value != hk_state:
-                self.chars[FEATURE_PLAY_STOP].set_value(hk_state)
+            self.chars[FEATURE_PLAY_STOP].set_value(hk_state)
 
         if self.chars[FEATURE_TOGGLE_MUTE]:
             current_state = bool(new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED))
@@ -209,8 +207,7 @@ class MediaPlayer(HomeAccessory):
                 self.entity_id,
                 current_state,
             )
-            if self.chars[FEATURE_TOGGLE_MUTE].value != current_state:
-                self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
+            self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
 
 
 @TYPES.register("TelevisionMediaPlayer")
@@ -340,8 +337,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         if current_state not in MEDIA_PLAYER_OFF_STATES:
             hk_state = 1
         _LOGGER.debug("%s: Set current active state to %s", self.entity_id, hk_state)
-        if self.char_active.value != hk_state:
-            self.char_active.set_value(hk_state)
+        self.char_active.set_value(hk_state)
 
         # Set mute state
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
@@ -351,7 +347,6 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
                 self.entity_id,
                 current_mute_state,
             )
-            if self.char_mute.value != current_mute_state:
-                self.char_mute.set_value(current_mute_state)
+            self.char_mute.set_value(current_mute_state)
 
         self._async_update_input_state(hk_state, new_state)

@@ -245,7 +245,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await knx_module.xknx.stop()
 
         await asyncio.gather(
-            *[platform.async_reset() for platform in async_get_platforms(hass, DOMAIN)]
+            *(platform.async_reset() for platform in async_get_platforms(hass, DOMAIN))
         )
 
         await async_setup(hass, config)

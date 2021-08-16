@@ -31,6 +31,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Rahakoti saldod teavitamine.",
+                    "exchange_base": "Vahetuskursiandurite baasvaluuta.",
                     "exchange_rate_currencies": "Vahetuskursside aruanne."
                 },
                 "description": "Kohanda Coinbase'i valikuid"

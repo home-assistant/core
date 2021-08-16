@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast, final
@@ -15,6 +17,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_MONETARY,
@@ -25,15 +28,17 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -61,14 +66,23 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_POWER,  # power (W/kW)
     DEVICE_CLASS_POWER_FACTOR,  # power factor (%)
     DEVICE_CLASS_VOLTAGE,  # voltage (V)
+    DEVICE_CLASS_GAS,  # gas (m³ or ft³)
 ]
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
+# The state represents a total amount, e.g. a value of a stock portfolio
+STATE_CLASS_TOTAL: Final = "total"
+# The state represents a monotonically increasing total, e.g. an amount of consumed gas
+STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
-STATE_CLASSES: Final[list[str]] = [STATE_CLASS_MEASUREMENT]
+STATE_CLASSES: Final[list[str]] = [
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+]
 
 STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(STATE_CLASSES))
 
@@ -95,21 +109,43 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class SensorEntityDescription(EntityDescription):
+    """A class that describes sensor entities."""
+
+    state_class: str | None = None
+    last_reset: datetime | None = None
+    native_unit_of_measurement: str | None = None
+
+
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
-    _attr_state_class: str | None = None
-    _attr_last_reset: datetime | None = None
+    entity_description: SensorEntityDescription
+    _attr_last_reset: datetime | None
+    _attr_native_unit_of_measurement: str | None
+    _attr_native_value: StateType = None
+    _attr_state_class: str | None
+    _last_reset_reported = False
+    _temperature_conversion_reported = False
 
     @property
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return self._attr_state_class
+        if hasattr(self, "_attr_state_class"):
+            return self._attr_state_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.state_class
+        return None
 
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        return self._attr_last_reset
+        if hasattr(self, "_attr_last_reset"):
+            return self._attr_last_reset
+        if hasattr(self, "entity_description"):
+            return self.entity_description.last_reset
+        return None
 
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
@@ -124,6 +160,116 @@ class SensorEntity(Entity):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
+            if (
+                last_reset is not None
+                and self.state_class == STATE_CLASS_MEASUREMENT
+                and not self._last_reset_reported
+            ):
+                self._last_reset_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) with state_class %s has set last_reset. Setting "
+                    "last_reset for entities with state_class other than 'total' is "
+                    "deprecated and will be removed from Home Assistant Core 2021.10. "
+                    "Please update your configuration if state_class is manually "
+                    "configured, otherwise %s",
+                    self.entity_id,
+                    type(self),
+                    self.state_class,
+                    report_issue,
+                )
+
             return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self._attr_native_value
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if hasattr(self, "_attr_native_unit_of_measurement"):
+            return self._attr_native_unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.native_unit_of_measurement
+        return None
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the entity, after unit conversion."""
+        if (
+            hasattr(self, "_attr_unit_of_measurement")
+            and self._attr_unit_of_measurement is not None
+        ):
+            return self._attr_unit_of_measurement
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.unit_of_measurement is not None
+        ):
+            return self.entity_description.unit_of_measurement
+
+        native_unit_of_measurement = self.native_unit_of_measurement
+
+        if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+            return self.hass.config.units.temperature_unit
+
+        return native_unit_of_measurement
+
+    @property
+    def state(self) -> Any:
+        """Return the state of the sensor and perform unit conversions, if needed."""
+        # Test if _attr_state has been set in this instance
+        if "_attr_state" in self.__dict__:
+            return self._attr_state
+
+        unit_of_measurement = self.native_unit_of_measurement
+        value = self.native_value
+
+        units = self.hass.config.units
+        if (
+            value is not None
+            and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and unit_of_measurement != units.temperature_unit
+        ):
+            if (
+                self.device_class != DEVICE_CLASS_TEMPERATURE
+                and not self._temperature_conversion_reported
+            ):
+                self._temperature_conversion_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) with device_class %s reports a temperature in "
+                    "%s which will be converted to %s. Temperature conversion for "
+                    "entities without correct device_class is deprecated and will"
+                    " be removed from Home Assistant Core 2022.3. Please update "
+                    "your configuration if device_class is manually configured, "
+                    "otherwise %s",
+                    self.entity_id,
+                    type(self),
+                    self.device_class,
+                    unit_of_measurement,
+                    units.temperature_unit,
+                    report_issue,
+                )
+            value_s = str(value)
+            prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+            # Suppress ValueError (Could not convert sensor_value to float)
+            with suppress(ValueError):
+                temp = units.temperature(float(value), unit_of_measurement)
+                value = str(round(temp) if prec == 0 else round(temp, prec))
+
+        return value
+
+    def __repr__(self) -> str:
+        """Return the representation.
+
+        Entity.__repr__ includes the state in the generated string, this fails if we're
+        called before self.hass is set.
+        """
+        if not self.hass:
+            return f"<Entity {self.name}>"
+
+        return super().__repr__()

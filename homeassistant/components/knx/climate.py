@@ -185,7 +185,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
             f"{self._device.temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
+            f"{self._device._setpoint_shift.group_address}"
         )
 
     async def async_update(self) -> None:

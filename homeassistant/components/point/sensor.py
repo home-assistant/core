@@ -8,6 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_HPA,
+    SOUND_PRESSURE_WEIGHTED_DBA,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -24,7 +25,7 @@ SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: (None, 1, TEMP_CELSIUS),
     DEVICE_CLASS_PRESSURE: (None, 0, PRESSURE_HPA),
     DEVICE_CLASS_HUMIDITY: (None, 1, PERCENTAGE),
-    DEVICE_CLASS_SOUND: ("mdi:ear-hearing", 1, "dBa"),
+    DEVICE_CLASS_SOUND: ("mdi:ear-hearing", 1, SOUND_PRESSURE_WEIGHTED_DBA),
 }
 
 
@@ -69,13 +70,13 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         return self._device_prop[0]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.value is None:
             return None
         return round(self.value, self._device_prop[1])
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._device_prop[2]
