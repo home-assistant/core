@@ -184,28 +184,56 @@ RESPONSE_DISARMED = {
     "PanelMetadataAndStatus": METADATA_DISARMED,
     "ArmingState": TotalConnectLocation.DISARMED,
 }
-RESPONSE_ARMED_STAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_STAY}
-RESPONSE_ARMED_AWAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_AWAY}
+RESPONSE_ARMED_STAY = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_ARMED_STAY,
+    "ArmingState": TotalConnectLocation.ARMED_STAY,
+}
+RESPONSE_ARMED_AWAY = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_ARMED_AWAY,
+    "ArmingState": TotalConnectLocation.ARMED_AWAY,
+}
 RESPONSE_ARMED_CUSTOM = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_CUSTOM,
+    "ArmingState": TotalConnectLocation.ARMED_CUSTOM_BYPASS,
 }
-RESPONSE_ARMED_NIGHT = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_NIGHT}
-RESPONSE_ARMING = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMING}
-RESPONSE_DISARMING = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_DISARMING}
+RESPONSE_ARMED_NIGHT = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_ARMED_NIGHT,
+    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
+}
+RESPONSE_ARMING = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_ARMING,
+    "ArmingState": TotalConnectLocation.ARMING,
+}
+RESPONSE_DISARMING = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_DISARMING,
+    "ArmingState": TotalConnectLocation.DISARMING,
+}
 RESPONSE_TRIGGERED_POLICE = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_TRIGGERED_POLICE,
+    "ArmingState": TotalConnectLocation.ALARMING,
 }
 RESPONSE_TRIGGERED_FIRE = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_TRIGGERED_FIRE,
+    "ArmingState": TotalConnectLocation.ALARMING_FIRE_SMOKE,
 }
 RESPONSE_TRIGGERED_CARBON_MONOXIDE = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_TRIGGERED_CARBON_MONOXIDE,
+    "ArmingState": TotalConnectLocation.ALARMING_CARBON_MONOXIDE,
 }
-RESPONSE_UNKNOWN = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_UNKNOWN}
+RESPONSE_UNKNOWN = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_UNKNOWN,
+    "ArmingState": TotalConnectLocation.DISARMED,
+}
 
 RESPONSE_ARM_SUCCESS = {"ResultCode": TotalConnectClient.ARM_SUCCESS}
 RESPONSE_ARM_FAILURE = {"ResultCode": TotalConnectClient.COMMAND_FAILED}
@@ -242,7 +270,7 @@ PARTITION_DETAILS_2 = {
     "PartitionName": "Test2",
 }
 
-PARTITION_DETAILS = [PARTITION_DETAILS_1]
+PARTITION_DETAILS = {"PartitionDetails": [PARTITION_DETAILS_1]}
 RESPONSE_PARTITION_DETAILS = {
     "ResultCode": TotalConnectClient.SUCCESS,
     "ResultData": "testing partition details",
