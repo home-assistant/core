@@ -10,9 +10,9 @@ from homeassistant.components.upnp.const import (
     BYTES_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
-    UPTIME,
-    WANIP,
     WANSTATUS,
 )
 from homeassistant.components.upnp.device import Device
@@ -84,8 +84,8 @@ class MockDevice(Device):
         self.status_times_polled += 1
         return {
             WANSTATUS: "Connected",
-            UPTIME: 0,
-            WANIP: "192.168.0.1",
+            ROUTER_UPTIME: 0,
+            ROUTER_IP: "192.168.0.1",
         }
 
     async def async_start(self) -> None:

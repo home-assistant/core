@@ -25,7 +25,10 @@ from .const import (
     LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
+    WANSTATUS,
 )
 
 SENSOR_TYPES = {
@@ -34,6 +37,7 @@ SENSOR_TYPES = {
         "name": f"{DATA_BYTES} received",
         "unit": DATA_BYTES,
         "unique_id": BYTES_RECEIVED,
+        "format": "d",
         "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
         "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
         "derived_unique_id": "KiB/sec_received",
@@ -43,6 +47,7 @@ SENSOR_TYPES = {
         "name": f"{DATA_BYTES} sent",
         "unit": DATA_BYTES,
         "unique_id": BYTES_SENT,
+        "format": "d",
         "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
         "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
         "derived_unique_id": "KiB/sec_sent",
@@ -52,6 +57,7 @@ SENSOR_TYPES = {
         "name": f"{DATA_PACKETS} received",
         "unit": DATA_PACKETS,
         "unique_id": PACKETS_RECEIVED,
+        "format": "d",
         "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} received",
         "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
         "derived_unique_id": "packets/sec_received",
@@ -61,9 +67,29 @@ SENSOR_TYPES = {
         "name": f"{DATA_PACKETS} sent",
         "unit": DATA_PACKETS,
         "unique_id": PACKETS_SENT,
+        "format": "d",
         "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} sent",
         "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
         "derived_unique_id": "packets/sec_sent",
+    },
+    ROUTER_IP: {
+        "device_value_key": ROUTER_IP,
+        "name": "IP",
+        "unit": None,
+        "unique_id": ROUTER_IP,
+    },
+    ROUTER_UPTIME: {
+        "device_value_key": ROUTER_UPTIME,
+        "name": "Uptime",
+        "unit": None,
+        "unique_id": ROUTER_UPTIME,
+        "format": "d",
+    },
+    WANSTATUS: {
+        "device_value_key": WANSTATUS,
+        "name": "wan status",
+        "unit": None,
+        "unique_id": "wanstatus",
     },
 }
 
@@ -92,11 +118,17 @@ async def async_setup_entry(
         RawUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
         RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
         RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[ROUTER_IP]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[WANSTATUS]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
     ]
+
+    if coordinator.data.get(SENSOR_TYPES[ROUTER_UPTIME]["device_value_key"]):
+        sensors.append(RawUpnpSensor(coordinator, SENSOR_TYPES[ROUTER_UPTIME]))
+
     async_add_entities(sensors)
 
 
@@ -142,7 +174,11 @@ class RawUpnpSensor(UpnpSensor):
         value = self.coordinator.data[device_value_key]
         if value is None:
             return None
-        return format(value, "d")
+        return (
+            format(value, self._sensor_type["format"])
+            if self._sensor_type.get("format")
+            else value
+        )
 
 
 class DerivedUpnpSensor(UpnpSensor):
