@@ -5,6 +5,7 @@ import asyncio
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 
 import aiohttp
@@ -96,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -204,7 +205,6 @@ class NmapDeviceScanner:
     @callback
     def _async_get_vendor(self, mac_address):
         """Lookup the vendor."""
-        _LOGGER.warning("_async_get_vendor: %s", mac_address)
         oui = self._mac_vendor_lookup.sanitise(mac_address)[:6]
         return self._mac_vendor_lookup.prefixes.get(oui)
 
@@ -225,7 +225,7 @@ class NmapDeviceScanner:
         )
         self._mac_vendor_lookup = AsyncMacLookup()
         with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
-            # We don't care of this fails since its only
+            # We don't care if this fails since it only
             # improves the data when we don't have it from nmap
             await self._mac_vendor_lookup.load_vendors()
         self._hass.async_create_task(self._async_scan_devices())
@@ -355,7 +355,11 @@ class NmapDeviceScanner:
                 self._async_increment_device_offline(ipv4, reason)
                 continue
             # Mac address only returned if nmap ran as root
-            mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
+            mac = info["addresses"].get(
+                "mac"
+            ) or await self._hass.async_add_executor_job(
+                partial(get_mac_address, ip=ipv4)
+            )
             if mac is None:
                 self._async_increment_device_offline(ipv4, "No MAC address found")
                 _LOGGER.info("No MAC address found for %s", ipv4)
@@ -379,7 +383,6 @@ class NmapDeviceScanner:
 
             hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
-            _LOGGER.warning("vendor for: %s == %s", mac, vendor)
             name = human_readable_name(hostname, vendor, mac)
             device = NmapDevice(
                 formatted_mac, hostname, name, ipv4, vendor, reason, now, 0
