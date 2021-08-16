@@ -343,6 +343,7 @@ class YeelightScanner:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize class."""
         self._hass = hass
+        self._connected_event = None
         self._callbacks = {}
         self._host_discovered_events = {}
         self._unique_id_capabilities = {}
@@ -367,10 +368,15 @@ class YeelightScanner:
             return
         asyncio.create_task(self.async_setup())
 
+    async def _async_connected(self):
+        self._connected_event.set()
+
     async def async_setup(self):
         """Set up the scanner."""
+        self._connected_event = asyncio.Event()
         self._listener = SSDPListener(
             async_callback=self._async_process_entry,
+            async_connected_callback=self._async_connected,
             service_type=SSDP_ST,
             target=SSDP_TARGET,
         )
@@ -408,9 +414,7 @@ class YeelightScanner:
         self._host_discovered_events.setdefault(host, []).append(host_event)
         if not self._listener:
             await self.async_setup()
-            # TODO: fix this so it waits for the transport to be
-            # set instead
-            await asyncio.sleep(5)
+            await self._connected_event.set()
 
         self._listener.async_search((host, SSDP_TARGET[1]))
 
