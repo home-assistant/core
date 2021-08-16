@@ -45,9 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
     return True
 
 
@@ -65,17 +63,20 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, client):
         """Initialize."""
+        self.hass = hass
         self.client = client
-
         super().__init__(
             hass, logger=_LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL
         )
 
     async def _async_update_data(self):
-        """Update data from TotalConnect."""
+        """Update data."""
+        return await self.hass.async_add_executor_job(self.sync_update_data)
+
+    def sync_update_data(self):
+        """Fetch synchronous data from TotalConnect."""
         for location_id in self.client.locations:
             self.client.locations[location_id].get_armed_status()
 
         # TODO: connection error handling ???
-
         return True
