@@ -12,8 +12,8 @@ from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN, device_trigger
 from homeassistant.components.zwave_js.const import DATA_DEVICE_TRIGGER_TRACKERS
 from homeassistant.components.zwave_js.device_trigger import (
-    DeviceTracker,
-    ValueTracker,
+    ValueUpdatesDeviceTracker,
+    ValueUpdatesValueTracker,
     async_attach_trigger,
     async_get_trigger_capabilities,
 )
@@ -1426,12 +1426,12 @@ async def test_device_and_value_tracker(
         device.id
         in hass.data[DOMAIN][integration.entry_id][DATA_DEVICE_TRIGGER_TRACKERS]
     )
-    device_tracker: DeviceTracker = hass.data[DOMAIN][integration.entry_id][
+    device_tracker: ValueUpdatesDeviceTracker = hass.data[DOMAIN][integration.entry_id][
         DATA_DEVICE_TRIGGER_TRACKERS
     ][device.id]
     # Assert that the value gets added to the tracker
     assert value_id in device_tracker.values
-    value_tracker: ValueTracker = device_tracker.values[value_id]
+    value_tracker: ValueUpdatesValueTracker = device_tracker.values[value_id]
     # Assert that there are two automations in the tracker for this value
     assert len(value_tracker.automations) == 2
 
@@ -1505,12 +1505,12 @@ async def test_device_and_value_tracker(
             device.id
             in hass.data[DOMAIN][integration.entry_id][DATA_DEVICE_TRIGGER_TRACKERS]
         )
-        device_tracker: DeviceTracker = hass.data[DOMAIN][integration.entry_id][
-            DATA_DEVICE_TRIGGER_TRACKERS
-        ][device.id]
+        device_tracker: ValueUpdatesDeviceTracker = hass.data[DOMAIN][
+            integration.entry_id
+        ][DATA_DEVICE_TRIGGER_TRACKERS][device.id]
         # Assert that the value gets added to the tracker
         assert value_id in device_tracker.values
-        value_tracker: ValueTracker = device_tracker.values[value_id]
+        value_tracker: ValueUpdatesValueTracker = device_tracker.values[value_id]
         # Assert that there is one automation in the tracker for this value
         assert len(value_tracker.automations) == 1
 
