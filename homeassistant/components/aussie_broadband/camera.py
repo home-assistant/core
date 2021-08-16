@@ -63,7 +63,9 @@ class CVCGraphCamera(Camera):
         response = requests.get(self._url, timeout=10)
         self._last_image = response.content
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         self._update_image()
         return self._last_image
