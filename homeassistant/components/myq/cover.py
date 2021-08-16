@@ -44,12 +44,13 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         """Initialize with API object, device id."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_device_class = (
-            DEVICE_CLASS_GATE
-            if device.device_type is not None
+        if (
+            device.device_type is not None
             and device.device_type == MYQ_DEVICE_TYPE_GATE
-            else DEVICE_CLASS_GARAGE
-        )
+        ):
+            self._attr_device_class = DEVICE_CLASS_GATE
+        else:
+            self._attr_device_class = DEVICE_CLASS_GARAGE
         self._attr_unique_id = device.device_id
 
     @property
