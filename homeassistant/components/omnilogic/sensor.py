@@ -86,7 +86,7 @@ class OmnilogicSensor(OmniLogicEntity, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the right unit of measure."""
         return self._unit
 
@@ -95,7 +95,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
     """Define an OmniLogic Temperature (Air/Water) Sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state for the temperature sensor."""
         sensor_data = self.coordinator.data[self._item_id][self._state_key]
 
@@ -123,7 +123,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
     """Define an OmniLogic Pump Speed Sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state for the pump speed sensor."""
 
         pump_type = PUMP_TYPES[
@@ -158,7 +158,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
     """Define an OmniLogic Salt Level Sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state for the salt level sensor."""
 
         salt_return = self.coordinator.data[self._item_id][self._state_key]
@@ -177,7 +177,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
     """Define an OmniLogic Chlorinator Sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state for the chlorinator sensor."""
         state = self.coordinator.data[self._item_id][self._state_key]
 
@@ -188,7 +188,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
     """Define an OmniLogic pH Sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state for the pH sensor."""
 
         ph_state = self.coordinator.data[self._item_id][self._state_key]
@@ -232,7 +232,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state for the ORP sensor."""
 
         orp_state = int(self.coordinator.data[self._item_id][self._state_key])
