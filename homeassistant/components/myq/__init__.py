@@ -83,7 +83,7 @@ class MyQEntity(CoordinatorEntity):
         """Initialize class."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_unique_id = self._device.device_id
+        self._attr_unique_id = device.device_id
 
     @property
     def name(self):
