@@ -60,21 +60,43 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "V_DIMMER": SensorEntityDescription(
-        key="V_DIMMER", native_unit_of_measurement=PERCENTAGE, icon="mdi:percent"
+        key="V_DIMMER",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
     ),
     "V_PERCENTAGE": SensorEntityDescription(
-        key="V_PERCENTAGE", native_unit_of_measurement=PERCENTAGE, icon="mdi:percent"
+        key="V_PERCENTAGE",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
     ),
-    "V_PRESSURE": SensorEntityDescription(key="V_PRESSURE", icon="mdi:gauge"),
+    "V_PRESSURE": SensorEntityDescription(
+        key="V_PRESSURE",
+        icon="mdi:gauge",
+    ),
     "V_FORECAST": SensorEntityDescription(
-        key="V_FORECAST", icon="mdi:weather-partly-cloudy"
+        key="V_FORECAST",
+        icon="mdi:weather-partly-cloudy",
     ),
-    "V_RAIN": SensorEntityDescription(key="V_RAIN", icon="mdi:weather-rainy"),
-    "V_RAINRATE": SensorEntityDescription(key="V_RAINRATE", icon="mdi:weather-rainy"),
-    "V_WIND": SensorEntityDescription(key="V_WIND", icon="mdi:weather-windy"),
-    "V_GUST": SensorEntityDescription(key="V_GUST", icon="mdi:weather-windy"),
+    "V_RAIN": SensorEntityDescription(
+        key="V_RAIN",
+        icon="mdi:weather-rainy",
+    ),
+    "V_RAINRATE": SensorEntityDescription(
+        key="V_RAINRATE",
+        icon="mdi:weather-rainy",
+    ),
+    "V_WIND": SensorEntityDescription(
+        key="V_WIND",
+        icon="mdi:weather-windy",
+    ),
+    "V_GUST": SensorEntityDescription(
+        key="V_GUST",
+        icon="mdi:weather-windy",
+    ),
     "V_DIRECTION": SensorEntityDescription(
-        key="V_DIRECTION", native_unit_of_measurement=DEGREE, icon="mdi:compass"
+        key="V_DIRECTION",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:compass",
     ),
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
@@ -82,10 +104,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         icon="mdi:weight-kilogram",
     ),
     "V_DISTANCE": SensorEntityDescription(
-        key="V_DISTANCE", native_unit_of_measurement=LENGTH_METERS, icon="mdi:ruler"
+        key="V_DISTANCE",
+        native_unit_of_measurement=LENGTH_METERS,
+        icon="mdi:ruler",
     ),
     "V_IMPEDANCE": SensorEntityDescription(
-        key="V_IMPEDANCE", native_unit_of_measurement="ohm"
+        key="V_IMPEDANCE",
+        native_unit_of_measurement="ohm",
     ),
     "V_WATT": SensorEntityDescription(
         key="V_WATT",
@@ -106,10 +131,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         icon="mdi:white-balance-sunny",
     ),
     "V_FLOW": SensorEntityDescription(
-        key="V_FLOW", native_unit_of_measurement=LENGTH_METERS, icon="mdi:gauge"
+        key="V_FLOW",
+        native_unit_of_measurement=LENGTH_METERS,
+        icon="mdi:gauge",
     ),
     "V_VOLUME": SensorEntityDescription(
-        key="V_VOLUME", native_unit_of_measurement=VOLUME_CUBIC_METERS
+        key="V_VOLUME",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
     ),
     "V_LEVEL_S_SOUND": SensorEntityDescription(
         key="V_LEVEL_S_SOUND",
@@ -117,7 +145,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
         icon="mdi:volume-high",
     ),
     "V_LEVEL_S_VIBRATION": SensorEntityDescription(
-        key="V_LEVEL_S_VIBRATION", native_unit_of_measurement=FREQUENCY_HERTZ
+        key="V_LEVEL_S_VIBRATION",
+        native_unit_of_measurement=FREQUENCY_HERTZ,
     ),
     "V_LEVEL_S_LIGHT_LEVEL": SensorEntityDescription(
         key="V_LEVEL_S_LIGHT_LEVEL",
@@ -142,16 +171,25 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    "V_PH": SensorEntityDescription(key="V_PH", native_unit_of_measurement="pH"),
+    "V_PH": SensorEntityDescription(
+        key="V_PH",
+        native_unit_of_measurement="pH",
+    ),
     "V_ORP": SensorEntityDescription(
-        key="V_ORP", native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT
+        key="V_ORP",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
     ),
     "V_EC": SensorEntityDescription(
-        key="V_EC", native_unit_of_measurement=CONDUCTIVITY
+        key="V_EC",
+        native_unit_of_measurement=CONDUCTIVITY,
     ),
-    "V_VAR": SensorEntityDescription(key="V_VAR", native_unit_of_measurement="var"),
+    "V_VAR": SensorEntityDescription(
+        key="V_VAR",
+        native_unit_of_measurement="var",
+    ),
     "V_VA": SensorEntityDescription(
-        key="V_VA", native_unit_of_measurement=POWER_VOLT_AMPERE
+        key="V_VA",
+        native_unit_of_measurement=POWER_VOLT_AMPERE,
     ),
 }
 
