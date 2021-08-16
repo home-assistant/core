@@ -24,7 +24,7 @@ from homeassistant.const import (
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_NITROGEN_DIOXIDE,
     DEVICE_CLASS_NITROGEN_MONOXIDE,
-    DEVICE_CLASS_NITROGEN_OXIDE,
+    DEVICE_CLASS_NITROUS_OXIDE,
     DEVICE_CLASS_OZONE,
     DEVICE_CLASS_PM1,
     DEVICE_CLASS_PM10,
@@ -70,7 +70,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
     DEVICE_CLASS_OZONE,  # Amount of O3 (µg/m³)
     DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (µg/m³)
-    DEVICE_CLASS_NITROGEN_OXIDE,  # Amount of NO  (µg/m³)
+    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of NO  (µg/m³)
     DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (µg/m³)
     DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm (µg/m³)
     DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
