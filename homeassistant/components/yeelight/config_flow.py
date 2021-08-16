@@ -197,7 +197,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return capabilities["model"]
         # Fallback to get properties
         try:
+            await bulb.async_listen(lambda _: True)
             await bulb.async_get_properties()
+            await bulb.async_stop_listening()
         except yeelight.BulbException as err:
             _LOGGER.error("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
