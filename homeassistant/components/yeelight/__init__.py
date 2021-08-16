@@ -397,9 +397,6 @@ class YeelightScanner:
 
     async def async_get_capabilities(self, host):
         """Get capabilities via SSDP."""
-        import pprint
-
-        pprint.pprint(["_async_get_capabilities", host, self._host_capabilities])
         if host in self._host_capabilities:
             return self._host_capabilities[host]
 
@@ -416,9 +413,6 @@ class YeelightScanner:
         return self._host_capabilities.get(host)
 
     async def _async_process_entry(self, response):
-        import pprint
-
-        pprint.pprint(response)
         unique_id = response["id"]
         host = urlparse(response["location"]).hostname
         if unique_id not in self._unique_id_capabilities:
