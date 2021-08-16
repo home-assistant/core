@@ -63,21 +63,21 @@ async def async_setup_entry(
                     ain,
                 )
             )
-            # Only some temperature devices are also humidity sensors
-            if device.rel_humidity is not None:
-                entities.append(
-                    FritzBoxHumiditySensor(
-                        {
-                            ATTR_NAME: f"{device.name} Humidity",
-                            ATTR_ENTITY_ID: f"{device.ain}_humidity",
-                            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
-                            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-                            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-                        },
-                        coordinator,
-                        ain,
-                    )
+
+        if device.rel_humidity is not None:
+            entities.append(
+                FritzBoxHumiditySensor(
+                    {
+                        ATTR_NAME: f"{device.name} Humidity",
+                        ATTR_ENTITY_ID: f"{device.ain}_humidity",
+                        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    },
+                    coordinator,
+                    ain,
                 )
+            )
 
         if device.battery_level is not None:
             entities.append(
