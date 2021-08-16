@@ -83,13 +83,12 @@ class MyQEntity(CoordinatorEntity):
         """Initialize class."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_unique_id = device.device_id
+        self._attr_unique_id = self._device.device_id
 
     @property
     def name(self):
         """Return the name if any, name can change if user changes it within MyQ."""
-        self._attr_unique_id = self._device.device_id
-        self._attr_name = self._device.name
+        return self._device.name
 
     @property
     def device_info(self):
