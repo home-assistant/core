@@ -13,10 +13,7 @@ from getmac import get_mac_address
 from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
-from homeassistant.components.device_tracker.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_TRACK_NEW,
-)
+from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -30,7 +27,6 @@ import homeassistant.util.dt as dt_util
 from .const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
-    DEFAULT_TRACK_NEW_DEVICES,
     DOMAIN,
     NMAP_TRACKED_DEVICES,
     PLATFORMS,
@@ -153,7 +149,6 @@ class NmapDeviceScanner:
         self._options = None
         self._exclude = None
         self._scan_interval = None
-        self._track_new_devices = None
 
         self._known_mac_addresses = {}
         self._finished_first_scan = False
@@ -163,7 +158,6 @@ class NmapDeviceScanner:
     async def async_setup(self):
         """Set up the tracker."""
         config = self._entry.options
-        self._track_new_devices = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES)
         self._scan_interval = timedelta(
             seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
         )
@@ -369,7 +363,6 @@ class NmapDeviceScanner:
             new = formatted_mac not in devices.tracked
             if (
                 new
-                and not self._track_new_devices
                 and formatted_mac not in devices.tracked
                 and formatted_mac not in self._known_mac_addresses
             ):

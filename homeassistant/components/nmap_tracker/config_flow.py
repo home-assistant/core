@@ -8,10 +8,7 @@ import ifaddr
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_TRACK_NEW,
-)
+from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -22,7 +19,6 @@ from .const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
-    DEFAULT_TRACK_NEW_DEVICES,
     DOMAIN,
     TRACKER_SCAN_INTERVAL,
 )
@@ -121,10 +117,6 @@ async def _async_build_schema_with_user_input(hass, user_input, include_options)
     if include_options:
         schema.update(
             {
-                vol.Optional(
-                    CONF_TRACK_NEW,
-                    default=user_input.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES),
-                ): bool,
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
