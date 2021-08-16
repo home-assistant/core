@@ -53,11 +53,7 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
 
         # Entity class attributes
         self._attr_name = self.generate_name(include_value_name=True)
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return list(self.info.primary_value.metadata.states.values())
+        self._attr_options = list(self.info.primary_value.metadata.states.values())
 
     @property
     def current_option(self) -> str | None:
