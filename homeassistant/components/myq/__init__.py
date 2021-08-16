@@ -87,7 +87,8 @@ class MyQEntity(CoordinatorEntity):
     @property
     def name(self):
         """Return the name if any, name can change if user changes it within MyQ."""
-        return self._device.name
+        self._attr_unique_id = self._device.device_id
+        self._attr_name = self._device.name
 
     @property
     def device_info(self):
