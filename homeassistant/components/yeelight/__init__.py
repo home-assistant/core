@@ -309,7 +309,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_unique_name(capabilities: dict) -> str:
     """Generate name from capabilities."""
-    model = str(capabilities["model"]).title()
+    model = str(capabilities["model"]).replace("_", " ").title()
     short_id = hex(int(capabilities["id"], 16))
     return f"Yeelight {model} {short_id}"
 
