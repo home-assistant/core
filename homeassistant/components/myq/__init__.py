@@ -9,6 +9,7 @@ from pymyq.const import (
     KNOWN_MODELS,
     MANUFACTURER,
 )
+from pymyq.device import MyQDevice
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant.config_entries import ConfigEntry
@@ -78,7 +79,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class MyQEntity(CoordinatorEntity):
     """Base class for MyQ Entities."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, device: MyQDevice) -> None:
         """Initialize class."""
         super().__init__(coordinator)
         self._device = device
@@ -99,7 +100,11 @@ class MyQEntity(CoordinatorEntity):
             "manufacturer": MANUFACTURER,
             "sw_version": self._device.firmware_version,
         }
-        model = KNOWN_MODELS.get(self._device.device_id[2:4])
+        model = (
+            KNOWN_MODELS.get(self._device.device_id[2:4])
+            if self._device.device_id is not None
+            else None
+        )
         if model:
             device_info["model"] = model
         if self._device.parent_device_id:
