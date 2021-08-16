@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
@@ -49,7 +48,6 @@ from . import DOMAIN
 
 DEVICE_CLASS_NONE = "none"
 
-CONF_IS_AQI = "is_aqi"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
@@ -74,7 +72,6 @@ CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VALUE = "is_value"
 
 ENTITY_CONDITIONS = {
-    DEVICE_CLASS_AQI: [{CONF_TYPE: CONF_IS_AQI}],
     DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
     DEVICE_CLASS_CO: [{CONF_TYPE: CONF_IS_CO}],
     DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_IS_CO2}],
@@ -105,7 +102,6 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): vol.In(
                 [
-                    CONF_IS_AQI,
                     CONF_IS_BATTERY_LEVEL,
                     CONF_IS_CO,
                     CONF_IS_CO2,
