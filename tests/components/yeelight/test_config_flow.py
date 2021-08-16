@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
+    CAPABILITIES,
     ID,
     IP_ADDRESS,
     MODULE,
@@ -429,3 +430,45 @@ async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data
         )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_discovered_ssdp(hass):
+    """Test we can setup when discovered from ssdp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=CAPABILITIES
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_ID: "0x000000000015243f"}
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=CAPABILITIES
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
