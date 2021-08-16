@@ -123,8 +123,8 @@ class Inverter(SensorEntity):
         self.key = key
         self.value = None
         self.unit = unit
-        self._state_class = state_class
-        self._device_class = device_class
+        self._attr_state_class = state_class
+        self._attr_device_class = device_class
 
     @property
     def native_value(self):
