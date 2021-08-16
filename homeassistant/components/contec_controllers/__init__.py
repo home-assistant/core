@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     controllerManager.Init()
-    if not await controllerManager.IsConnected(timedelta(seconds=700)):
+    if not await controllerManager.IsConnected(timedelta(seconds=7)):
         _LOGGER.warning(
             f"Failed to connect to Contec Controllers at address {controllersIp},{controllersPort}"
         )
