@@ -147,16 +147,6 @@ class Inverter(SensorEntity):
         return self.unit
 
     @property
-    def state_class(self):
-        """Return the state class."""
-        return self._state_class
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
     def should_poll(self):
         """No polling needed."""
         return False
