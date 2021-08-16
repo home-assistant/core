@@ -99,8 +99,6 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         try:
             wait_task = await self._device.close(wait_for_state=False)
         except MyQError as err:
-            # Write current state which would be Open to HASS
-            self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Closing of cover {self._device.name} failed with error: {err}"
             ) from err
@@ -124,8 +122,6 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         try:
             wait_task = await self._device.open(wait_for_state=False)
         except MyQError as err:
-            # Write current state which would be closed to HASS
-            self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Opening of cover {self._device.name} failed with error: {err}"
             ) from err
