@@ -492,7 +492,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         return f"{self._device.device_id}.{self._attribute}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.status.attributes[self._attribute].value
 
@@ -502,7 +502,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         unit = self._device.status.attributes[self._attribute].unit
         return UNITS.get(unit, unit) if unit else self._default_unit
@@ -534,7 +534,7 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
         return f"{self._device.device_id}.{THREE_AXIS_NAMES[self._index]}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         three_axis = self._device.status.attributes[Attribute.three_axis].value
         try:
@@ -568,7 +568,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         return f"{self._device.device_id}.{self.report_name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         value = self._device.status.attributes[Attribute.power_consumption].value
         if value is None or value.get(self.report_name) is None:
@@ -585,7 +585,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         return DEVICE_CLASS_ENERGY
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         if self.report_name == "power":
             return POWER_WATT

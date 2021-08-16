@@ -54,6 +54,6 @@ class FirmataSensor(FirmataPinEntity, SensorEntity):
         await self._api.stop_pin()
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return sensor state."""
         return self._api.state

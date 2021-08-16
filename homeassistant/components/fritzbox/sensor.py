@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from pyfritzhome import FritzhomeDevice
+
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
@@ -25,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxEntity
@@ -34,7 +37,7 @@ from .const import (
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
-from .model import SensorExtraAttributes
+from .model import EntityInfo, SensorExtraAttributes
 
 
 async def async_setup_entry(
@@ -106,31 +109,45 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
+class FritzBoxSensor(FritzBoxEntity, SensorEntity):
+    """The entity class for FRITZ!SmartHome sensors."""
+
+    def __init__(
+        self,
+        entity_info: EntityInfo,
+        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        ain: str,
+    ) -> None:
+        """Initialize the FritzBox entity."""
+        FritzBoxEntity.__init__(self, entity_info, coordinator, ain)
+        self._attr_native_unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
+
+
+class FritzBoxBatterySensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome battery sensors."""
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.device.battery_level  # type: ignore [no-any-return]
 
 
-class FritzBoxPowerSensor(FritzBoxEntity, SensorEntity):
+class FritzBoxPowerSensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome power consumption sensors."""
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if power := self.device.power:
             return power / 1000  # type: ignore [no-any-return]
         return 0.0
 
 
-class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
+class FritzBoxEnergySensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome total energy sensors."""
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if energy := self.device.energy:
             return energy / 1000  # type: ignore [no-any-return]
@@ -143,11 +160,11 @@ class FritzBoxEnergySensor(FritzBoxEntity, SensorEntity):
         return utc_from_timestamp(0)
 
 
-class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
+class FritzBoxTempSensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome temperature sensors."""
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.device.temperature  # type: ignore [no-any-return]
 

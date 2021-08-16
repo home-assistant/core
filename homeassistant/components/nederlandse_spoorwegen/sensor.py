@@ -118,7 +118,7 @@ class NSDepartureSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 

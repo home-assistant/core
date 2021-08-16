@@ -105,8 +105,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             color_bri = max(rgb)
             # normalize rgb
             data["rgb"] = tuple(x / (color_bri or 1) for x in rgb)
+            data["color_brightness"] = color_bri
             if self._supports_color_mode:
-                data["color_brightness"] = color_bri
                 data["color_mode"] = LightColorMode.RGB
 
         if (rgbw_ha := kwargs.get(ATTR_RGBW_COLOR)) is not None:
@@ -116,8 +116,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             # normalize rgb
             data["rgb"] = tuple(x / (color_bri or 1) for x in rgb)
             data["white"] = w
+            data["color_brightness"] = color_bri
             if self._supports_color_mode:
-                data["color_brightness"] = color_bri
                 data["color_mode"] = LightColorMode.RGB_WHITE
 
         if (rgbww_ha := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
@@ -144,8 +144,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                     data["color_temperature"] = min_ct + ct_ratio * (max_ct - min_ct)
                 target_mode = LightColorMode.RGB_COLOR_TEMPERATURE
 
+            data["color_brightness"] = color_bri
             if self._supports_color_mode:
-                data["color_brightness"] = color_bri
                 data["color_mode"] = target_mode
 
         if (flash := kwargs.get(ATTR_FLASH)) is not None:
@@ -230,7 +230,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             # Try to reverse white + color temp to cwww
             min_ct = self._static_info.min_mireds
             max_ct = self._static_info.max_mireds
-            color_temp = self._state.color_temperature
+            color_temp = min(max(self._state.color_temperature, min_ct), max_ct)
             white = self._state.white
 
             ww_frac = (color_temp - min_ct) / (max_ct - min_ct)

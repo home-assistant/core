@@ -31,7 +31,6 @@ from .const import (
     KEY_DEVICE,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
-    MODELS_FAN_MIIO,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -47,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan"]
+FAN_PLATFORMS = ["fan", "sensor"]
 HUMIDIFIER_PLATFORMS = [
     "binary_sensor",
     "humidifier",
@@ -120,11 +119,7 @@ async def async_create_miio_device_and_coordinator(
     device = None
     migrate = False
 
-    if (
-        model not in MODELS_HUMIDIFIER
-        and model not in MODELS_PURIFIER_MIOT
-        and model not in MODELS_FAN_MIIO
-    ):
+    if model not in MODELS_HUMIDIFIER and model not in MODELS_FAN:
         return
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])

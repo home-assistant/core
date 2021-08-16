@@ -154,6 +154,6 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current value of the measured temperature."""
         return self._zone["measuredTemp"]
