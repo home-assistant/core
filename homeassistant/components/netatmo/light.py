@@ -19,7 +19,6 @@ from .const import (
     EVENT_TYPE_LIGHT_MODE,
     MANUFACTURER,
     SIGNAL_NAME,
-    UNKNOWN,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_PUSH_TYPE,
 )
@@ -89,7 +88,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._id = camera_id
         self._home_id = home_id
         self._model = camera_type
-        self._device_name: str = self._data.get_camera(camera_id).get("name", UNKNOWN)
+        self._device_name: str = self._data.get_camera(camera_id)["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._is_on = False
         self._attr_unique_id = f"{self._id}-light"

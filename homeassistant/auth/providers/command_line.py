@@ -1,7 +1,7 @@
 """Auth provider that validates credentials via an external command."""
 from __future__ import annotations
 
-import asyncio.subprocess
+import asyncio
 import collections
 from collections.abc import Mapping
 import logging
@@ -64,7 +64,7 @@ class CommandLineAuthProvider(AuthProvider):
         """Validate a username and password."""
         env = {"username": username, "password": password}
         try:
-            process = await asyncio.subprocess.create_subprocess_exec(  # pylint: disable=no-member
+            process = await asyncio.create_subprocess_exec(
                 self.config[CONF_COMMAND],
                 *self.config[CONF_ARGS],
                 env=env,

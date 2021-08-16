@@ -7,7 +7,7 @@ from homeassistant import config_entries, core, setup
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 
 
-@patch("homeassistant.components.sonos.config_flow.pysonos.discover", return_value=True)
+@patch("homeassistant.components.sonos.config_flow.soco.discover", return_value=True)
 async def test_user_form(discover_mock: MagicMock, hass: core.HomeAssistant):
     """Test we get the user initiated form."""
     await setup.async_setup_component(hass, "persistent_notification", {})

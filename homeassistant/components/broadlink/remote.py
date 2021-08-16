@@ -119,7 +119,6 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
         super().__init__(device)
-        self._coordinator = device.update_manager.coordinator
         self._code_storage = codes
         self._flag_storage = flags
         self._storage_loaded = False
@@ -189,14 +188,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is None or state.state != STATE_OFF
-
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the remote."""
-        await self._coordinator.async_request_refresh()
+        await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs):
         """Turn on the remote."""

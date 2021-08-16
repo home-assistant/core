@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
+            "no_udn": "Les informations de d\u00e9couverte SSDP n'ont pas d'UDN",
+            "not_keenetic_ndms2": "L'\u00e9l\u00e9ment d\u00e9couvert n'est pas un routeur Keenetic"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

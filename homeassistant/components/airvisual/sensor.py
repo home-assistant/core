@@ -156,10 +156,10 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
     sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
-    if config_entry.data[CONF_INTEGRATION_TYPE] in [
+    if config_entry.data[CONF_INTEGRATION_TYPE] in (
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
-    ]:
+    ):
         sensors = [
             AirVisualGeographySensor(
                 coordinator,
@@ -212,7 +212,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         self._attr_icon = icon
         self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {name}"
         self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{kind}"
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._config_entry = config_entry
         self._kind = kind
         self._locale = locale
@@ -232,16 +232,16 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            [(self._attr_state, self._attr_icon)] = [
+            [(self._attr_native_value, self._attr_icon)] = [
                 (name, icon)
                 for (floor, ceiling), (name, icon) in POLLUTANT_LEVELS.items()
                 if floor <= aqi <= ceiling
             ]
         elif self._kind == SENSOR_KIND_AQI:
-            self._attr_state = data[f"aqi{self._locale}"]
+            self._attr_native_value = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._attr_state = symbol
+            self._attr_native_value = symbol
             self._attr_extra_state_attributes.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
@@ -298,7 +298,7 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
             f"{coordinator.data['settings']['node_name']} Node/Pro: {name}"
         )
         self._attr_unique_id = f"{coordinator.data['serial_number']}_{kind}"
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._kind = kind
 
     @property
@@ -320,24 +320,30 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         """Update the entity from the latest data."""
         if self._kind == SENSOR_KIND_AQI:
             if self.coordinator.data["settings"]["is_aqi_usa"]:
-                self._attr_state = self.coordinator.data["measurements"]["aqi_us"]
+                self._attr_native_value = self.coordinator.data["measurements"][
+                    "aqi_us"
+                ]
             else:
-                self._attr_state = self.coordinator.data["measurements"]["aqi_cn"]
+                self._attr_native_value = self.coordinator.data["measurements"][
+                    "aqi_cn"
+                ]
         elif self._kind == SENSOR_KIND_BATTERY_LEVEL:
-            self._attr_state = self.coordinator.data["status"]["battery"]
+            self._attr_native_value = self.coordinator.data["status"]["battery"]
         elif self._kind == SENSOR_KIND_CO2:
-            self._attr_state = self.coordinator.data["measurements"].get("co2")
+            self._attr_native_value = self.coordinator.data["measurements"].get("co2")
         elif self._kind == SENSOR_KIND_HUMIDITY:
-            self._attr_state = self.coordinator.data["measurements"].get("humidity")
+            self._attr_native_value = self.coordinator.data["measurements"].get(
+                "humidity"
+            )
         elif self._kind == SENSOR_KIND_PM_0_1:
-            self._attr_state = self.coordinator.data["measurements"].get("pm0_1")
+            self._attr_native_value = self.coordinator.data["measurements"].get("pm0_1")
         elif self._kind == SENSOR_KIND_PM_1_0:
-            self._attr_state = self.coordinator.data["measurements"].get("pm1_0")
+            self._attr_native_value = self.coordinator.data["measurements"].get("pm1_0")
         elif self._kind == SENSOR_KIND_PM_2_5:
-            self._attr_state = self.coordinator.data["measurements"].get("pm2_5")
+            self._attr_native_value = self.coordinator.data["measurements"].get("pm2_5")
         elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._attr_state = self.coordinator.data["measurements"].get(
+            self._attr_native_value = self.coordinator.data["measurements"].get(
                 "temperature_C"
             )
         elif self._kind == SENSOR_KIND_VOC:
-            self._attr_state = self.coordinator.data["measurements"].get("voc")
+            self._attr_native_value = self.coordinator.data["measurements"].get("voc")

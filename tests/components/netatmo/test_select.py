@@ -19,10 +19,6 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
     select_entity = "select.netatmo_myhome"
 
     assert hass.states.get(select_entity).state == "Default"
-    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == [
-        "Default",
-        "Winter",
-    ]
 
     # Fake backend response changing schedule
     response = {
@@ -32,8 +28,13 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
         "push_type": "home_event_changed",
     }
     await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
 
     assert hass.states.get(select_entity).state == "Winter"
+    assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == [
+        "Default",
+        "Winter",
+    ]
 
     # Test setting a different schedule
     with patch(

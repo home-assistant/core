@@ -8,10 +8,12 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
+
+from .conftest import KNXTestKit
 
 
-async def test_switch_simple(hass, knx):
+async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
     """Test simple KNX switch."""
     await knx.setup_integration(
         {
@@ -50,7 +52,7 @@ async def test_switch_simple(hass, knx):
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_state(hass, knx):
+async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX switch with state_address."""
     _ADDRESS = "1/1/1"
     _STATE_ADDRESS = "2/2/2"

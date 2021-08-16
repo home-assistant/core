@@ -136,7 +136,7 @@ class FlumeSensor(CoordinatorEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         sensor_key = self._flume_query_sensor[0]
         if sensor_key not in self._flume_device.values:
@@ -145,7 +145,7 @@ class FlumeSensor(CoordinatorEntity, SensorEntity):
         return _format_state_value(self._flume_device.values[sensor_key])
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         # This is in gallons per SCAN_INTERVAL
         return self._flume_query_sensor[1]["unit_of_measurement"]

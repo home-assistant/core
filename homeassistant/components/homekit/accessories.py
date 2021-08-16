@@ -18,8 +18,11 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
@@ -43,9 +46,6 @@ from homeassistant.util.decorator import Registry
 from .const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -64,6 +64,11 @@ from .const import (
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
+    MAX_MANUFACTURER_LENGTH,
+    MAX_MODEL_LENGTH,
+    MAX_NAME_LENGTH,
+    MAX_SERIAL_LENGTH,
+    MAX_VERSION_LENGTH,
     SERV_BATTERY_SERVICE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
@@ -217,30 +222,33 @@ class HomeAccessory(Accessory):
         **kwargs,
     ):
         """Initialize a Accessory object."""
-        super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
+        super().__init__(
+            driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
+        )
         self.config = config or {}
         domain = split_entity_id(entity_id)[0].replace("_", " ")
 
-        if ATTR_MANUFACTURER in self.config:
+        if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
-        elif ATTR_INTEGRATION in self.config:
+        elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
         else:
             manufacturer = f"{MANUFACTURER} {domain}".title()
-        if ATTR_MODEL in self.config:
+        if self.config.get(ATTR_MODEL) is not None:
             model = self.config[ATTR_MODEL]
         else:
             model = domain.title()
-        if ATTR_SOFTWARE_VERSION in self.config:
-            sw_version = format_sw_version(self.config[ATTR_SOFTWARE_VERSION])
-        else:
+        sw_version = None
+        if self.config.get(ATTR_SW_VERSION) is not None:
+            sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
+        if sw_version is None:
             sw_version = __version__
 
         self.set_info_service(
-            manufacturer=manufacturer,
-            model=model,
-            serial_number=entity_id,
-            firmware_revision=sw_version,
+            manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
+            model=model[:MAX_MODEL_LENGTH],
+            serial_number=entity_id[:MAX_SERIAL_LENGTH],
+            firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
         self.category = category

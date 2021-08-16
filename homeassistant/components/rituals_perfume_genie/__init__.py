@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hublot = device.hublot
 
         coordinator = RitualsDataUpdateCoordinator(hass, device)
-        await coordinator.async_refresh()
+        await coordinator.async_config_entry_first_refresh()
 
         hass.data[DOMAIN][entry.entry_id][DEVICES][hublot] = device
         hass.data[DOMAIN][entry.entry_id][COORDINATORS][hublot] = coordinator
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

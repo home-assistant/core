@@ -1,7 +1,15 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from datetime import datetime
+
+from pyfritzhome import FritzhomeDevice
+
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -9,12 +17,18 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxEntity
 from .const import (
@@ -23,7 +37,7 @@ from .const import (
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
-from .model import SensorExtraAttributes
+from .model import EntityInfo, SensorExtraAttributes
 
 
 async def async_setup_entry(
@@ -34,18 +48,15 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        if (
-            device.has_temperature_sensor
-            and not device.has_switch
-            and not device.has_thermostat
-        ):
+        if device.has_temperature_sensor and not device.has_thermostat:
             entities.append(
                 FritzBoxTempSensor(
                     {
-                        ATTR_NAME: f"{device.name}",
-                        ATTR_ENTITY_ID: f"{device.ain}",
+                        ATTR_NAME: f"{device.name} Temperature",
+                        ATTR_ENTITY_ID: f"{device.ain}_temperature",
                         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
                         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                     },
                     coordinator,
                     ain,
@@ -60,6 +71,35 @@ async def async_setup_entry(
                         ATTR_ENTITY_ID: f"{device.ain}_battery",
                         ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                         ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+                        ATTR_STATE_CLASS: None,
+                    },
+                    coordinator,
+                    ain,
+                )
+            )
+
+        if device.has_powermeter:
+            entities.append(
+                FritzBoxPowerSensor(
+                    {
+                        ATTR_NAME: f"{device.name} Power Consumption",
+                        ATTR_ENTITY_ID: f"{device.ain}_power_consumption",
+                        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    },
+                    coordinator,
+                    ain,
+                )
+            )
+            entities.append(
+                FritzBoxEnergySensor(
+                    {
+                        ATTR_NAME: f"{device.name} Total Energy",
+                        ATTR_ENTITY_ID: f"{device.ain}_total_energy",
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                     },
                     coordinator,
                     ain,
@@ -69,20 +109,62 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
+class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     """The entity class for FRITZ!SmartHome sensors."""
 
+    def __init__(
+        self,
+        entity_info: EntityInfo,
+        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        ain: str,
+    ) -> None:
+        """Initialize the FritzBox entity."""
+        FritzBoxEntity.__init__(self, entity_info, coordinator, ain)
+        self._attr_native_unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
+
+
+class FritzBoxBatterySensor(FritzBoxSensor):
+    """The entity class for FRITZ!SmartHome battery sensors."""
+
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.device.battery_level  # type: ignore [no-any-return]
 
 
-class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
+class FritzBoxPowerSensor(FritzBoxSensor):
+    """The entity class for FRITZ!SmartHome power consumption sensors."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        if power := self.device.power:
+            return power / 1000  # type: ignore [no-any-return]
+        return 0.0
+
+
+class FritzBoxEnergySensor(FritzBoxSensor):
+    """The entity class for FRITZ!SmartHome total energy sensors."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        if energy := self.device.energy:
+            return energy / 1000  # type: ignore [no-any-return]
+        return 0.0
+
+    @property
+    def last_reset(self) -> datetime:
+        """Return the time when the sensor was last reset, if any."""
+        # device does not provide timestamp of initialization
+        return utc_from_timestamp(0)
+
+
+class FritzBoxTempSensor(FritzBoxSensor):
     """The entity class for FRITZ!SmartHome temperature sensors."""
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.device.temperature  # type: ignore [no-any-return]
 

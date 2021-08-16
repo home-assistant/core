@@ -1,9 +1,7 @@
 """Support for UK Met Office weather service."""
 from __future__ import annotations
 
-from typing import NamedTuple
-
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
@@ -39,102 +37,104 @@ ATTR_SITE_ID = "site_id"
 ATTR_SITE_NAME = "site_name"
 
 
-class MetOfficeSensorMetadata(NamedTuple):
-    """Sensor metadata for an individual NWS sensor."""
-
-    title: str
-    device_class: str | None
-    unit_of_measurement: str | None
-    icon: str | None
-    enabled_by_default: bool
-
-
-SENSOR_TYPES = {
-    "name": MetOfficeSensorMetadata(
-        "Station Name",
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="name",
+        name="Station Name",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:label-outline",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
-    "weather": MetOfficeSensorMetadata(
-        "Weather",
+    SensorEntityDescription(
+        key="weather",
+        name="Weather",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:weather-sunny",  # but will adapt to current conditions
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
     ),
-    "temperature": MetOfficeSensorMetadata(
-        "Temperature",
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
     ),
-    "feels_like_temperature": MetOfficeSensorMetadata(
-        "Feels Like Temperature",
+    SensorEntityDescription(
+        key="feels_like_temperature",
+        name="Feels Like Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
-    "wind_speed": MetOfficeSensorMetadata(
-        "Wind Speed",
+    SensorEntityDescription(
+        key="wind_speed",
+        name="Wind Speed",
         device_class=None,
-        unit_of_measurement=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         icon="mdi:weather-windy",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
     ),
-    "wind_direction": MetOfficeSensorMetadata(
-        "Wind Direction",
+    SensorEntityDescription(
+        key="wind_direction",
+        name="Wind Direction",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:compass-outline",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
-    "wind_gust": MetOfficeSensorMetadata(
-        "Wind Gust",
+    SensorEntityDescription(
+        key="wind_gust",
+        name="Wind Gust",
         device_class=None,
-        unit_of_measurement=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         icon="mdi:weather-windy",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
-    "visibility": MetOfficeSensorMetadata(
-        "Visibility",
+    SensorEntityDescription(
+        key="visibility",
+        name="Visibility",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:eye",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
-    "visibility_distance": MetOfficeSensorMetadata(
-        "Visibility Distance",
+    SensorEntityDescription(
+        key="visibility_distance",
+        name="Visibility Distance",
         device_class=None,
-        unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=LENGTH_KILOMETERS,
         icon="mdi:eye",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
-    "uv": MetOfficeSensorMetadata(
-        "UV Index",
+    SensorEntityDescription(
+        key="uv",
+        name="UV Index",
         device_class=None,
-        unit_of_measurement=UV_INDEX,
+        native_unit_of_measurement=UV_INDEX,
         icon="mdi:weather-sunny-alert",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
     ),
-    "precipitation": MetOfficeSensorMetadata(
-        "Probability of Precipitation",
+    SensorEntityDescription(
+        key="precipitation",
+        name="Probability of Precipitation",
         device_class=None,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
     ),
-    "humidity": MetOfficeSensorMetadata(
-        "Humidity",
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon=None,
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -149,20 +149,18 @@ async def async_setup_entry(
                 hass_data[METOFFICE_HOURLY_COORDINATOR],
                 hass_data,
                 True,
-                sensor_type,
-                metadata,
+                description,
             )
-            for sensor_type, metadata in SENSOR_TYPES.items()
+            for description in SENSOR_TYPES
         ]
         + [
             MetOfficeCurrentSensor(
                 hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data,
                 False,
-                sensor_type,
-                metadata,
+                description,
             )
-            for sensor_type, metadata in SENSOR_TYPES.items()
+            for description in SENSOR_TYPES
         ],
         False,
     )
@@ -176,52 +174,50 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         coordinator,
         hass_data,
         use_3hourly,
-        sensor_type,
-        metadata: MetOfficeSensorMetadata,
+        description: SensorEntityDescription,
     ):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        self._type = sensor_type
-        self._metadata = metadata
+        self.entity_description = description
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._attr_name = f"{hass_data[METOFFICE_NAME]} {metadata.title} {mode_label}"
-        self._attr_unique_id = f"{metadata.title}_{hass_data[METOFFICE_COORDINATES]}"
+        self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
+        self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
-        self._attr_device_class = metadata.device_class
-        self._attr_unit_of_measurement = metadata.unit_of_measurement
 
         self.use_3hourly = use_3hourly
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         value = None
 
-        if self._type == "visibility_distance" and hasattr(
+        if self.entity_description.key == "visibility_distance" and hasattr(
             self.coordinator.data.now, "visibility"
         ):
             value = VISIBILITY_DISTANCE_CLASSES.get(
                 self.coordinator.data.now.visibility.value
             )
 
-        if self._type == "visibility" and hasattr(
+        if self.entity_description.key == "visibility" and hasattr(
             self.coordinator.data.now, "visibility"
         ):
             value = VISIBILITY_CLASSES.get(self.coordinator.data.now.visibility.value)
 
-        elif self._type == "weather" and hasattr(self.coordinator.data.now, self._type):
+        elif self.entity_description.key == "weather" and hasattr(
+            self.coordinator.data.now, self.entity_description.key
+        ):
             value = [
                 k
                 for k, v in CONDITION_CLASSES.items()
                 if self.coordinator.data.now.weather.value in v
             ][0]
 
-        elif hasattr(self.coordinator.data.now, self._type):
-            value = getattr(self.coordinator.data.now, self._type)
+        elif hasattr(self.coordinator.data.now, self.entity_description.key):
+            value = getattr(self.coordinator.data.now, self.entity_description.key)
 
-            if not isinstance(value, int):
+            if hasattr(value, "value"):
                 value = value.value
 
         return value
@@ -229,8 +225,8 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self):
         """Return the icon for the entity card."""
-        value = self._metadata.icon
-        if self._type == "weather":
+        value = self.entity_description.icon
+        if self.entity_description.key == "weather":
             value = self.state
             if value is None:
                 value = "sunny"
@@ -246,7 +242,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_LAST_UPDATE: self.coordinator.data.now.date,
-            ATTR_SENSOR_ID: self._type,
+            ATTR_SENSOR_ID: self.entity_description.key,
             ATTR_SITE_ID: self.coordinator.data.site.id,
             ATTR_SITE_NAME: self.coordinator.data.site.name,
         }
@@ -254,4 +250,6 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._metadata.enabled_by_default and self.use_3hourly
+        return (
+            self.entity_description.entity_registry_enabled_default and self.use_3hourly
+        )

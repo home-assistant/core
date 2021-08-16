@@ -51,29 +51,24 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             element_uid=element_uid,
         )
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
-            self._unique_id
+            self._attr_unique_id
         )
-        self._is_on: bool = self._binary_switch_property.state
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state."""
-        return self._is_on
+        self._attr_is_on = self._binary_switch_property.state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Switch on the device."""
-        self._is_on = True
         self._binary_switch_property.set(state=True)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Switch off the device."""
-        self._is_on = False
         self._binary_switch_property.set(state=False)
 
     def _sync(self, message: tuple) -> None:
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
-            self._is_on = self._device_instance.binary_switch_property[message[0]].state
+            self._attr_is_on = self._device_instance.binary_switch_property[
+                message[0]
+            ].state
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()

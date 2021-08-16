@@ -13,6 +13,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_VALUE,
     ATTR_OPTIONS,
     ATTR_PROPERTY,
+    ATTR_PROPERTY_KEY,
     ATTR_REFRESH_ALL_VALUES,
     ATTR_VALUE,
     ATTR_WAIT_FOR_RESULT,
@@ -34,6 +35,7 @@ from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
     AIR_TEMPERATURE_SENSOR,
+    BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     CLIMATE_DANFOSS_LC13_ENTITY,
     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
@@ -819,8 +821,9 @@ async def test_multicast_set_value(
                 CLIMATE_DANFOSS_LC13_ENTITY,
                 CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_PROPERTY: "setpoint",
+            ATTR_PROPERTY_KEY: 1,
             ATTR_VALUE: 2,
         },
         blocking=True,
@@ -834,8 +837,9 @@ async def test_multicast_set_value(
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
-        "commandClass": 117,
-        "property": "local",
+        "commandClass": 67,
+        "property": "setpoint",
+        "propertyKey": 1,
     }
     assert args["value"] == 2
 
@@ -850,8 +854,9 @@ async def test_multicast_set_value(
                 CLIMATE_DANFOSS_LC13_ENTITY,
                 CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
             ],
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_PROPERTY: "setpoint",
+            ATTR_PROPERTY_KEY: 1,
             ATTR_VALUE: "0x2",
         },
         blocking=True,
@@ -865,8 +870,9 @@ async def test_multicast_set_value(
         climate_danfoss_lc_13.node_id,
     ]
     assert args["valueId"] == {
-        "commandClass": 117,
-        "property": "local",
+        "commandClass": 67,
+        "property": "setpoint",
+        "propertyKey": 1,
     }
     assert args["value"] == 2
 
@@ -878,8 +884,9 @@ async def test_multicast_set_value(
         SERVICE_MULTICAST_SET_VALUE,
         {
             ATTR_BROADCAST: True,
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_PROPERTY: "setpoint",
+            ATTR_PROPERTY_KEY: 1,
             ATTR_VALUE: 2,
         },
         blocking=True,
@@ -889,8 +896,9 @@ async def test_multicast_set_value(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "broadcast_node.set_value"
     assert args["valueId"] == {
-        "commandClass": 117,
-        "property": "local",
+        "commandClass": 67,
+        "property": "setpoint",
+        "propertyKey": 1,
     }
     assert args["value"] == 2
 
@@ -902,8 +910,9 @@ async def test_multicast_set_value(
         SERVICE_MULTICAST_SET_VALUE,
         {
             ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_PROPERTY: "setpoint",
+            ATTR_PROPERTY_KEY: 1,
             ATTR_VALUE: 2,
         },
         blocking=True,
@@ -921,8 +930,9 @@ async def test_multicast_set_value(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
             {
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
                 ATTR_VALUE: 2,
             },
             blocking=True,
@@ -940,8 +950,9 @@ async def test_multicast_set_value(
                     CLIMATE_DANFOSS_LC13_ENTITY,
                     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
                 ],
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
                 ATTR_VALUE: 2,
             },
             blocking=True,
@@ -965,8 +976,9 @@ async def test_multicast_set_value(
                     CLIMATE_DANFOSS_LC13_ENTITY,
                 ],
                 ATTR_DEVICE_ID: "fake_device_id",
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
                 ATTR_VALUE: 2,
             },
             blocking=True,
@@ -982,12 +994,57 @@ async def test_multicast_set_value(
             SERVICE_MULTICAST_SET_VALUE,
             {
                 ATTR_BROADCAST: True,
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
                 ATTR_VALUE: 2,
             },
             blocking=True,
         )
+
+
+async def test_multicast_set_value_options(
+    hass,
+    client,
+    bulb_6_multi_color,
+    light_color_null_values,
+    integration,
+):
+    """Test multicast_set_value service with options."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: [
+                BULB_6_MULTI_COLOR_LIGHT_ENTITY,
+                "light.repeater",
+            ],
+            ATTR_COMMAND_CLASS: 51,
+            ATTR_PROPERTY: "targetColor",
+            ATTR_VALUE: '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }',
+            ATTR_OPTIONS: {"transitionDuration": 1},
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "multicast_group.set_value"
+    assert args["nodeIDs"] == [
+        bulb_6_multi_color.node_id,
+        light_color_null_values.node_id,
+    ]
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "property": "targetColor",
+    }
+    assert (
+        args["value"]
+        == '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }'
+    )
+    assert args["options"] == {"transitionDuration": 1}
+
+    client.async_send_command.reset_mock()
 
 
 async def test_ping(

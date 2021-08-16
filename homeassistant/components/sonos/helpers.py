@@ -5,7 +5,7 @@ import functools as ft
 import logging
 from typing import Any, Callable
 
-from pysonos.exceptions import SoCoException, SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.exceptions import HomeAssistantError
 

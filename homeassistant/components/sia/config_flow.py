@@ -19,7 +19,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ACCOUNT,
@@ -62,7 +61,7 @@ ACCOUNT_SCHEMA = vol.Schema(
 DEFAULT_OPTIONS = {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: None}
 
 
-def validate_input(data: ConfigType) -> dict[str, str] | None:
+def validate_input(data: dict[str, Any]) -> dict[str, str] | None:
     """Validate the input by the user."""
     try:
         SIAAccount.validate_account(data[CONF_ACCOUNT], data.get(CONF_ENCRYPTION_KEY))
@@ -82,7 +81,7 @@ def validate_input(data: ConfigType) -> dict[str, str] | None:
     return validate_zones(data)
 
 
-def validate_zones(data: ConfigType) -> dict[str, str] | None:
+def validate_zones(data: dict[str, Any]) -> dict[str, str] | None:
     """Validate the zones field."""
     if data[CONF_ZONES] == 0:
         return {"base": "invalid_zones"}
@@ -102,10 +101,10 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._data: ConfigType = {}
+        self._data: dict[str, Any] = {}
         self._options: Mapping[str, Any] = {CONF_ACCOUNTS: {}}
 
-    async def async_step_user(self, user_input: ConfigType = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial user step."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -116,7 +115,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_handle_data_and_route(user_input)
 
-    async def async_step_add_account(self, user_input: ConfigType = None) -> FlowResult:
+    async def async_step_add_account(
+        self, user_input: dict[str, Any] = None
+    ) -> FlowResult:
         """Handle the additional accounts steps."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -127,7 +128,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_handle_data_and_route(user_input)
 
-    async def async_handle_data_and_route(self, user_input: ConfigType) -> FlowResult:
+    async def async_handle_data_and_route(
+        self, user_input: dict[str, Any]
+    ) -> FlowResult:
         """Handle the user_input, check if configured and route to the right next step or create entry."""
         self._update_data(user_input)
 
@@ -141,7 +144,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options=self._options,
         )
 
-    def _update_data(self, user_input: ConfigType) -> None:
+    def _update_data(self, user_input: dict[str, Any]) -> None:
         """Parse the user_input and store in data and options attributes.
 
         If there is a port in the input or no data, assume it is fully new and overwrite.
@@ -175,7 +178,7 @@ class SIAOptionsFlowHandler(config_entries.OptionsFlow):
         self.hub: SIAHub | None = None
         self.accounts_todo: list = []
 
-    async def async_step_init(self, user_input: ConfigType = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Manage the SIA options."""
         self.hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
         assert self.hub is not None
@@ -183,7 +186,7 @@ class SIAOptionsFlowHandler(config_entries.OptionsFlow):
         self.accounts_todo = [a.account_id for a in self.hub.sia_accounts]
         return await self.async_step_options()
 
-    async def async_step_options(self, user_input: ConfigType = None) -> FlowResult:
+    async def async_step_options(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Create the options step for a account."""
         errors: dict[str, str] | None = None
         if user_input is not None:

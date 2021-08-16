@@ -2,6 +2,9 @@
 from zwave_js_server.event import Event
 
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
+
+from .common import BASIC_NUMBER_ENTITY
 
 NUMBER_ENTITY = "number.thermostat_hvac_valve_control"
 VOLUME_NUMBER_ENTITY = "number.indoor_siren_6_default_volume_2"
@@ -162,3 +165,13 @@ async def test_volume_number(hass, client, aeotec_zw164_siren, integration):
 
     state = hass.states.get(VOLUME_NUMBER_ENTITY)
     assert state.state == STATE_UNKNOWN
+
+
+async def test_disabled_basic_number(hass, ge_in_wall_dimmer_switch, integration):
+    """Test number is created from Basic CC and is disabled."""
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BASIC_NUMBER_ENTITY)
+
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION

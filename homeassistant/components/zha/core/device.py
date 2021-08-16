@@ -503,7 +503,7 @@ class ZHADevice(LogMixin):
                 names.append(
                     {
                         ATTR_NAME: f"unknown {endpoint.device_type} device_type "
-                        "of 0x{endpoint.profile_id:04x} profile id"
+                        f"of 0x{endpoint.profile_id:04x} profile id"
                     }
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names

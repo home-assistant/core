@@ -1,4 +1,6 @@
 """Support for the Environment Canada radar imagery."""
+from __future__ import annotations
+
 import datetime
 
 from env_canada import ECRadar
@@ -68,7 +70,9 @@ class ECCamera(Camera):
         self.image = None
         self.timestamp = None
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         self.update()
         return self.image

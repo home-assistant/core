@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple
 
 from pyrainbird import RainbirdController
 import voluptuous as vol
 
 from homeassistant.components import binary_sensor, sensor, switch
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_HOST,
@@ -31,24 +32,31 @@ SENSOR_TYPE_RAINDELAY = "raindelay"
 SENSOR_TYPE_RAINSENSOR = "rainsensor"
 
 
-class RainBirdSensorMetadata(NamedTuple):
-    """Metadata for an individual RainBird sensor."""
-
-    name: str
-    icon: str
-    unit_of_measurement: str | None = None
-
-
-SENSOR_TYPES: dict[str, RainBirdSensorMetadata] = {
-    SENSOR_TYPE_RAINSENSOR: RainBirdSensorMetadata(
-        "Rainsensor",
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINSENSOR,
+        name="Rainsensor",
         icon="mdi:water",
     ),
-    SENSOR_TYPE_RAINDELAY: RainBirdSensorMetadata(
-        "Raindelay",
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINDELAY,
+        name="Raindelay",
         icon="mdi:water-off",
     ),
-}
+)
+
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key=SENSOR_TYPE_RAINSENSOR,
+        name="Rainsensor",
+        icon="mdi:water",
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_TYPE_RAINDELAY,
+        name="Raindelay",
+        icon="mdi:water-off",
+    ),
+)
 
 TRIGGER_TIME_SCHEMA = vol.All(
     cv.time_period, cv.positive_timedelta, lambda td: (td.total_seconds() // 60)

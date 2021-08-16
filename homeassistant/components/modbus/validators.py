@@ -1,6 +1,7 @@
 """Validate Modbus configuration."""
 from __future__ import annotations
 
+from collections import namedtuple
 import logging
 import struct
 from typing import Any
@@ -29,12 +30,12 @@ from .const import (
     DATA_TYPE_INT16,
     DATA_TYPE_INT32,
     DATA_TYPE_INT64,
+    DATA_TYPE_STRING,
     DATA_TYPE_UINT,
     DATA_TYPE_UINT16,
     DATA_TYPE_UINT32,
     DATA_TYPE_UINT64,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_STRUCT_FORMAT,
     PLATFORMS,
 )
 
@@ -57,6 +58,19 @@ OLD_DATA_TYPES = {
         4: DATA_TYPE_FLOAT64,
     },
 }
+ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
+DEFAULT_STRUCT_FORMAT = {
+    DATA_TYPE_INT16: ENTRY("h", 1),
+    DATA_TYPE_INT32: ENTRY("i", 2),
+    DATA_TYPE_INT64: ENTRY("q", 4),
+    DATA_TYPE_UINT16: ENTRY("H", 1),
+    DATA_TYPE_UINT32: ENTRY("I", 2),
+    DATA_TYPE_UINT64: ENTRY("Q", 4),
+    DATA_TYPE_FLOAT16: ENTRY("e", 1),
+    DATA_TYPE_FLOAT32: ENTRY("f", 2),
+    DATA_TYPE_FLOAT64: ENTRY("d", 4),
+    DATA_TYPE_STRING: ENTRY("s", 1),
+}
 
 
 def struct_validator(config):
@@ -67,11 +81,12 @@ def struct_validator(config):
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     swap_type = config.get(CONF_SWAP)
-    if data_type in [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]:
+    if data_type in (DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT):
         error = f"{name}  with {data_type} is not valid, trying to convert"
         _LOGGER.warning(error)
         try:
             data_type = OLD_DATA_TYPES[data_type][config.get(CONF_COUNT, 1)]
+            config[CONF_DATA_TYPE] = data_type
         except KeyError as exp:
             error = f"{name}  cannot convert automatically {data_type}"
             raise vol.Invalid(error) from exp
@@ -79,9 +94,9 @@ def struct_validator(config):
         if structure:
             error = f"{name}  structure: cannot be mixed with {data_type}"
             raise vol.Invalid(error)
-        structure = f">{DEFAULT_STRUCT_FORMAT[data_type][0]}"
+        structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
         if CONF_COUNT not in config:
-            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type][1]
+            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
     else:
         if not structure:
             error = (

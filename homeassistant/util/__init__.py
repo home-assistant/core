@@ -79,9 +79,9 @@ def sanitize_path(path: str) -> str:
     return path
 
 
-def slugify(text: str, *, separator: str = "_") -> str:
+def slugify(text: str | None, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    if text == "":
+    if text == "" or text is None:
         return ""
     slug = unicode_slug.slugify(text, separator=separator)
     return "unknown" if slug == "" else slug
