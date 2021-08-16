@@ -1,8 +1,6 @@
 """Support for UPnP/IGD Binary Sensors."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
@@ -12,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity
-from .const import DOMAIN, LOGGER, UPTIME, WANIP, WANSTATUS
+from .const import DOMAIN, LOGGER, WANSTATUS
 
 
 async def async_setup_entry(
@@ -54,16 +52,3 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.coordinator.data[WANSTATUS] == "Connected"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        attributes = {}
-        if self.coordinator.data[WANSTATUS] is not None:
-            attributes.update({"WAN Status": self.coordinator.data[WANSTATUS]})
-        if self.coordinator.data[WANIP] is not None:
-            attributes.update({"WAN IP": self.coordinator.data[WANIP]})
-        if self.coordinator.data[UPTIME] is not None:
-            attributes.update({"Uptime": self.coordinator.data[UPTIME]})
-
-        return attributes
