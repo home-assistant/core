@@ -133,8 +133,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             capabilities = self._discovered_devices[unique_id]
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
+            host = urlparse(capabilities["location"]).hostname
             return self.async_create_entry(
-                title=_async_unique_name(capabilities), data={CONF_ID: unique_id}
+                title=_async_unique_name(capabilities),
+                data={CONF_ID: unique_id, CONF_HOST: host},
             )
 
         configured_devices = {
