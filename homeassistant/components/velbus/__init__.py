@@ -106,11 +106,12 @@ class VelbusEntity(Entity):
     @property
     def unique_id(self):
         """Get unique ID."""
-        return "{}.{}.{}".format(
-            self._channel.get_module_type(),
-            self._channel.get_module_address(),
-            self._channel.get_channel_number(),
-        )
+        serial = 0
+        if self._channel.get_module_serial() == 0:
+            serial = self._channel.get_module_address()
+        else:
+            serial = self._channel.get_module_serial()
+        return f"{serial}-{self._channel.get_channel_number()}"
 
     @property
     def name(self):
