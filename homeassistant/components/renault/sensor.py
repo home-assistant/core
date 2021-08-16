@@ -101,10 +101,10 @@ class RenaultBatteryAvailableEnergySensor(RenaultBatteryDataEntity, SensorEntity
     """Battery available energy sensor."""
 
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of this entity."""
         return self.data.batteryAvailableEnergy if self.data else None
 
