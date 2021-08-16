@@ -9,7 +9,7 @@ import aiotractive
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -38,6 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         creds = await client.authenticate()
+    except aiotractive.exceptions.UnauthorizedError as error:
+        await client.close()
+        raise ConfigEntryAuthFailed from error
     except aiotractive.exceptions.TractiveError as error:
         await client.close()
         raise ConfigEntryNotReady from error
