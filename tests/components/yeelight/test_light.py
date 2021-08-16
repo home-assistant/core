@@ -102,7 +102,7 @@ from . import (
     MODULE,
     NAME,
     PROPERTIES,
-    UNIQUE_NAME,
+    UNIQUE_FRIENDLY_NAME,
     _mocked_bulb,
     _patch_discovery,
     _patch_discovery_interval,
@@ -560,7 +560,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         model,
         target_properties,
         nightlight_properties=None,
-        name=UNIQUE_NAME,
+        name=UNIQUE_FRIENDLY_NAME,
         entity_id=ENTITY_LIGHT,
     ):
         config_entry = MockConfigEntry(
@@ -599,7 +599,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         assert hass.states.get(entity_id).state == "off"
         state = hass.states.get(f"{entity_id}_nightlight")
         assert state.state == "on"
-        nightlight_properties["friendly_name"] = f"{name} nightlight"
+        nightlight_properties["friendly_name"] = f"{name} Nightlight"
         nightlight_properties["icon"] = "mdi:weather-night"
         nightlight_properties["flowing"] = False
         nightlight_properties["night_light"] = True
@@ -894,7 +894,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        name=f"{UNIQUE_NAME} ambilight",
+        name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
@@ -915,7 +915,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        name=f"{UNIQUE_NAME} ambilight",
+        name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
@@ -936,7 +936,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        name=f"{UNIQUE_NAME} ambilight",
+        name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
