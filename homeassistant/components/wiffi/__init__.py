@@ -224,7 +224,8 @@ class WiffiEntity(Entity):
             self.async_write_ha_state()
 
     def _is_measurement_entity(self):
-        return not self._name.endswith("_gestern")
+        """Measurement entities have a value in present time."""
+        return not self._name.endswith("_gestern") and not self._is_metered_entity()
 
     def _is_metered_entity(self):
         """Metered entities have a value that keeps increasing until reset."""
