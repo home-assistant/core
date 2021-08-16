@@ -208,15 +208,6 @@ async def _async_initialize(
     await device.async_setup()
     entry_data[DATA_DEVICE] = device
 
-    # register stop callback to shutdown listening for local pushes
-    async def async_stop_listen_task(event):
-        """Stop listen thread."""
-        _LOGGER.debug("Shutting down Yeelight Listener")
-        await device.bulb.async_stop_listening()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_listen_task)
-    )
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, DEVICE_INITIALIZED.format(host), _async_load_platforms
@@ -700,5 +691,15 @@ async def _async_get_device(
     device = YeelightDevice(hass, host, entry.options, bulb)
     # start listening for local pushes
     await device.bulb.async_listen(device.async_update_callback)
+
+    # register stop callback to shutdown listening for local pushes
+    async def async_stop_listen_task(event):
+        """Stop listen thread."""
+        _LOGGER.debug("Shutting down Yeelight Listener")
+        await device.bulb.async_stop_listening()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_listen_task)
+    )
 
     return device
