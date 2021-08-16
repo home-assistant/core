@@ -50,7 +50,7 @@ import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
-from .models import Base, Events, RecorderRuns, States
+from .models import Base, Events, RecorderRuns, States, StatisticsRuns
 from .pool import RecorderPool
 from .util import (
     dburl_to_path,
@@ -560,6 +560,18 @@ class Recorder(threading.Thread):
         async_track_time_change(
             self.hass, self.async_hourly_statistics, minute=12, second=0
         )
+        # Add tasks for missing statistics runs
+        now = dt_util.utcnow()
+        start = now - timedelta(days=self.keep_days)
+        start = start.replace(minute=0, second=0, microsecond=0)
+
+        with session_scope(session=self.get_session()) as session:
+            while start < now:
+                if not session.query(StatisticsRuns).filter_by(start=start):
+                    end = start + timedelta(hours=1)
+                    _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
+                    self.queue.put(StatisticsTask(start))
+                start = start + timedelta(hours=1)
 
     def run(self):
         """Start processing events to save."""

@@ -51,6 +51,7 @@ TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
+TABLE_STATISTICS_RUNS = "statistics_runs"
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -59,6 +60,7 @@ ALL_TABLES = [
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
+    TABLE_STATISTICS_RUNS,
 ]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
@@ -359,6 +361,26 @@ class SchemaChanges(Base):  # type: ignore
             f"changed='{self.changed.isoformat(sep=' ', timespec='seconds')}'"
             f")>"
         )
+
+
+class StatisticsRuns(Base):  # type: ignore
+    """Representation of statistics run."""
+
+    __tablename__ = TABLE_STATISTICS_RUNS
+    run_id = Column(Integer, primary_key=True)
+    start = Column(DateTime(timezone=True))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.StatisticsRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f")>"
+        )
+
+    def to_native(self, validate_entity_id=True):
+        """Return self, native format is this model."""
+        return self
 
 
 def process_timestamp(ts):
