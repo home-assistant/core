@@ -148,6 +148,7 @@ class AmcrestCam(Camera):
         self._motion_detection_enabled = None
         self._brand = None
         self._model = None
+        self._serial = None
         self._audio_enabled = None
         self._motion_recording_enabled = None
         self._color_bw = None
@@ -309,6 +310,11 @@ class AmcrestCam(Camera):
         """Return the camera model."""
         return self._model
 
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id for this instance."""
+        return self._serial
+
     async def stream_source(self):
         """Return the source of the stream."""
         return self._rtsp_url
@@ -355,7 +361,6 @@ class AmcrestCam(Camera):
             if not self.available:
                 self._update_succeeded = False
             return
-        _LOGGER.debug("Updating %s camera", self.name)
         try:
             if self._brand is None:
                 resp = self._api.vendor_information.strip()
@@ -365,10 +370,18 @@ class AmcrestCam(Camera):
                     self._brand = "unknown"
             if self._model is None:
                 resp = self._api.device_type.strip()
+                _LOGGER.debug("Device_type=%s", resp)
                 if resp.startswith("type="):
                     self._model = resp.split("=")[-1]
                 else:
                     self._model = "unknown"
+            if self._serial is None:
+                resp = self._api.serial_number.strip()
+                _LOGGER.debug("serial=%s", resp)
+                if resp.startswith("type="):
+                    self._serial = resp.split("=")[-1]
+                else:
+                    self._serial = "unknown"
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
