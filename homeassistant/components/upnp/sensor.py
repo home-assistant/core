@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
+from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -81,7 +81,7 @@ SENSOR_TYPES = {
     ROUTER_UPTIME: {
         "device_value_key": ROUTER_UPTIME,
         "name": "Uptime",
-        "unit": None,
+        "unit": TIME_SECONDS,
         "unique_id": ROUTER_UPTIME,
         "format": "d",
     },
