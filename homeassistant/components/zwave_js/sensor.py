@@ -198,22 +198,6 @@ class ZWaveStringSensor(ZwaveSensorBase):
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
 
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
-    ) -> None:
-        """Initialize a ZWaveNumericSensor entity."""
-        super().__init__(config_entry, client, info)
-
-        # Entity class attributes
-        if self.info.primary_value.command_class == CommandClass.BASIC:
-            self._attr_name = self.generate_name(
-                include_value_name=True,
-                alternate_value_name=self.info.primary_value.command_class_name,
-            )
-
     @property
     def native_value(self) -> float:
         """Return state of the sensor."""
