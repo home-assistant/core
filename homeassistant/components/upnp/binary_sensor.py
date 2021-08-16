@@ -49,6 +49,6 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
         return super().available and self.coordinator.data.get(WANSTATUS)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.data[WANSTATUS] == "Connected"
