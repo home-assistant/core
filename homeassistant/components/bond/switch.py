@@ -32,7 +32,13 @@ async def async_setup_entry(
         if DeviceType.is_generic(device.type)
     ]
 
-    async_add_entities(switches, True)
+    switches_belief_states: list[Entity] = [
+        BondSwitchBeliefState(hub, device, bpup_subs, "state_belief")
+        for device in hub.devices
+        if DeviceType.is_generic(device.type)
+    ]
+
+    async_add_entities(switches_belief_states + switches, True)
 
 
 class BondSwitch(BondEntity, SwitchEntity):
@@ -48,3 +54,22 @@ class BondSwitch(BondEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
+
+
+class BondSwitchBeliefState(BondEntity, SwitchEntity):
+    """Representation of a Bond generic device."""
+
+    def _apply_state(self, state: dict) -> None:
+        self._attr_is_on = state.get("power") == 1
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_power_state_belief(True)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_power_state_belief(False)
+        )
