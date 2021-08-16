@@ -89,6 +89,9 @@ CONFIG_ENTRY_DATA = {CONF_ID: ID}
 
 def _mocked_bulb(cannot_connect=False):
     bulb = MagicMock()
+    type(bulb).async_listen = AsyncMock(
+        side_effect=BulbException if cannot_connect else None
+    )
     type(bulb).async_get_properties = AsyncMock(
         side_effect=BulbException if cannot_connect else None
     )
@@ -103,7 +106,6 @@ def _mocked_bulb(cannot_connect=False):
     bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
     bulb.async_get_properties = AsyncMock()
-    bulb.async_listen = AsyncMock()
     bulb.async_stop_listening = AsyncMock()
     bulb.async_update = AsyncMock()
     bulb.async_turn_on = AsyncMock()
@@ -155,4 +157,10 @@ def _patch_discovery(no_device=False):
 
 
 def _patch_discovery_interval():
-    return patch.object(hass_yeelight, "DISCOVER_SEARCH_INTERVAL", timedelta(seconds=0))
+    return patch.object(
+        hass_yeelight, "DISCOVERY_SEARCH_INTERVAL", timedelta(seconds=0)
+    )
+
+
+def _patch_discovery_timeout():
+    return patch.object(hass_yeelight, "DISCOVERY_TIMEOUT", 0.0001)

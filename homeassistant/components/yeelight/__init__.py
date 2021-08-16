@@ -76,7 +76,9 @@ DISCOVERY_INTERVAL = timedelta(seconds=60)
 SSDP_TARGET = ("239.255.255.250", 1982)
 SSDP_ST = "wifi_bulb"
 DISCOVERY_ATTEMPTS = 2
-DISCOVER_SEARCH_INTERVAL = timedelta(seconds=2)
+DISCOVERY_SEARCH_INTERVAL = timedelta(seconds=2)
+DISCOVERY_TIMEOUT = 2
+
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
 YEELIGHT_HSV_TRANSACTION = "HSVTransition"
@@ -381,11 +383,11 @@ class YeelightScanner:
         """Discover bulbs."""
         if not self._listener:
             await self.async_setup()
-            await asyncio.sleep(DISCOVER_SEARCH_INTERVAL.total_seconds())
+            await asyncio.sleep(DISCOVERY_SEARCH_INTERVAL.total_seconds())
 
         for _ in range(DISCOVERY_ATTEMPTS):
             self._listener.async_search()
-            await asyncio.sleep(DISCOVER_SEARCH_INTERVAL.total_seconds())
+            await asyncio.sleep(DISCOVERY_SEARCH_INTERVAL.total_seconds())
 
         return self._unique_id_capabilities.values()
 
@@ -410,7 +412,8 @@ class YeelightScanner:
         self._listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
-            await asyncio.wait_for(host_event.wait(), timeout=2)
+            await asyncio.wait_for(host_event.wait(), timeout=DISCOVERY_TIMEOUT)
+
         self._host_discovered_events[host].remove(host_event)
         return self._host_capabilities.get(host)
 
