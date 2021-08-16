@@ -121,9 +121,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
     device = await Device.async_create_device(hass, location)
 
-    # Save device.
-    hass.data[DOMAIN][DOMAIN_DEVICES][udn] = device
-
     # Ensure entry has a unique_id.
     if not entry.unique_id:
         LOGGER.debug(
