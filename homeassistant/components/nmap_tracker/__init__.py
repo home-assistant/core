@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -225,7 +225,7 @@ class NmapDeviceScanner:
         )
         self._mac_vendor_lookup = AsyncMacLookup()
         with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
-            # We don't care of this fails since its only
+            # We don't care if this fails since it only
             # improves the data when we don't have it from nmap
             await self._mac_vendor_lookup.load_vendors()
         self._hass.async_create_task(self._async_scan_devices())
