@@ -48,7 +48,7 @@ abodepy==1.2.0
 accuweather==0.2.0
 
 # homeassistant.components.adax
-adax==0.0.1
+adax==0.1.1
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.3.4
@@ -579,7 +579,7 @@ nettigo-air-monitor==1.0.0
 nexia==0.9.11
 
 # homeassistant.components.nfandroidtv
-notifications-android-tv==0.1.2
+notifications-android-tv==0.1.3
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
@@ -702,7 +702,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.3
+py-synologydsm-api==1.0.4
 
 # homeassistant.components.seventeentrack
 py17track==3.2.1
@@ -917,7 +917,7 @@ pymodbus==2.5.2
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==3.0.4
+pymyq==3.1.2
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0
@@ -1341,7 +1341,7 @@ youless-api==0.10
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.34.3
+zeroconf==0.35.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.59

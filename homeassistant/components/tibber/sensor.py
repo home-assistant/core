@@ -137,6 +137,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.NEVER,
     ),
     "lastMeterProduction": TibberSensorEntityDescription(
         key="lastMeterProduction",
@@ -144,6 +145,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         device_class=DEVICE_CLASS_ENERGY,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_MEASUREMENT,
+        reset_type=ResetType.NEVER,
     ),
     "voltagePhase1": TibberSensorEntityDescription(
         key="voltagePhase1",
