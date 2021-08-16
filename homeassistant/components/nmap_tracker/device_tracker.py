@@ -11,11 +11,7 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import (
-    CONF_NEW_DEVICE_DEFAULTS,
-    CONF_SCAN_INTERVAL,
-    CONF_TRACK_NEW,
-)
+from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
@@ -28,7 +24,6 @@ from .const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
-    DEFAULT_TRACK_NEW_DEVICES,
     DOMAIN,
     TRACKER_SCAN_INTERVAL,
 )
@@ -60,9 +55,6 @@ async def async_get_scanner(hass, config):
         CONF_EXCLUDE: ",".join(validated_config[CONF_EXCLUDE]),
         CONF_OPTIONS: validated_config[CONF_OPTIONS],
         CONF_SCAN_INTERVAL: scan_interval,
-        CONF_TRACK_NEW: validated_config.get(CONF_NEW_DEVICE_DEFAULTS, {}).get(
-            CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES
-        ),
     }
 
     hass.async_create_task(
