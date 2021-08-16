@@ -20,33 +20,32 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up mysq covers."""
+    """Set up myq lights."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     myq = data[MYQ_GATEWAY]
     coordinator = data[MYQ_COORDINATOR]
 
     async_add_entities(
-        [MyQDevice(coordinator, device) for device in myq.lamps.values()], True
+        [MyQLight(coordinator, device) for device in myq.lamps.values()], True
     )
 
 
-class MyQDevice(CoordinatorEntity, LightEntity):
+class MyQLight(CoordinatorEntity, LightEntity):
     """Representation of a MyQ light."""
+
+    _attr_supported_features = 0
 
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
         super().__init__(coordinator)
         self._device = device
-
-    @property
-    def name(self):
-        """Return the name of the light if any."""
-        return self._device.name
+        self._attr_unique_id = device.device_id
+        self._attr_name = device.name
 
     @property
     def available(self):
         """Return if the device is online."""
-        if not self.coordinator.last_update_success:
+        if not super().available:
             return False
 
         # Not all devices report online so assume True if its missing
@@ -63,16 +62,6 @@ class MyQDevice(CoordinatorEntity, LightEntity):
     def is_off(self):
         """Return true if the light is off, else False."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_OFF
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return 0
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._device.device_id
 
     async def async_turn_on(self, **kwargs):
         """Issue on command to light."""
@@ -114,7 +103,7 @@ class MyQDevice(CoordinatorEntity, LightEntity):
             "sw_version": self._device.firmware_version,
         }
         model = KNOWN_MODELS.get(self._device.device_id[2:4])
-        if model:
+        if model := KNOWN_MODELS.get(self._device.device_id[2:4]):
             device_info["model"] = model
         if self._device.parent_device_id:
             device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
