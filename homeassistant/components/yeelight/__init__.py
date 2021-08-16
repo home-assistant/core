@@ -309,7 +309,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_unique_name(capabilities: dict) -> str:
     """Generate name from capabilities."""
-    model = str(capabilities["model"]).title()
+    model = str(capabilities["model"]).replace("_", " ").title()
     short_id = hex(int(capabilities["id"], 16))
     return f"Yeelight {model} {short_id}"
 
@@ -397,9 +397,6 @@ class YeelightScanner:
 
     async def async_get_capabilities(self, host):
         """Get capabilities via SSDP."""
-        import pprint
-
-        pprint.pprint(["_async_get_capabilities", host, self._host_capabilities])
         if host in self._host_capabilities:
             return self._host_capabilities[host]
 
@@ -416,9 +413,6 @@ class YeelightScanner:
         return self._host_capabilities.get(host)
 
     async def _async_process_entry(self, response):
-        import pprint
-
-        pprint.pprint(response)
         unique_id = response["id"]
         host = urlparse(response["location"]).hostname
         if unique_id not in self._unique_id_capabilities:
