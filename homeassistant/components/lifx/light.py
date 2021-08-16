@@ -625,14 +625,17 @@ class LIFXLight(LightEntity):
 class LIFXWhite(LIFXLight):
     """Representation of a white-only LIFX light."""
 
-    @property
-    def effect_list(self):
-        """Return the list of supported effects for this light."""
-        return [SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
+    _attr_effect_list = [SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
 
 
 class LIFXColor(LIFXLight):
     """Representation of a color LIFX light."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_STOP,
+    ]
 
     @property
     def supported_features(self):
@@ -640,11 +643,6 @@ class LIFXColor(LIFXLight):
         support = super().supported_features
         support |= SUPPORT_COLOR
         return support
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects for this light."""
-        return [SERVICE_EFFECT_COLORLOOP, SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
 
     @property
     def hs_color(self):
