@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -53,8 +53,6 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
         username = entry.data[CONF_EMAIL]
         password = entry.data[CONF_PASSWORD]
         self.flipr_id = entry.data[CONF_FLIPR_ID]
-
-        _LOGGER.debug("Config entry values : %s, %s", username, self.flipr_id)
 
         # Establishes the connection.
         self.client = FliprAPIRestClient(username, password)

@@ -6,6 +6,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     TEMP_CELSIUS,
 )
 
@@ -14,7 +15,7 @@ from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
 
 SENSORS = {
     "chlorine": {
-        "unit": "mV",
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
         "icon": "mdi:pool",
         "name": "Chlorine",
         "device_class": None,
@@ -33,7 +34,7 @@ SENSORS = {
         "device_class": DEVICE_CLASS_TIMESTAMP,
     },
     "red_ox": {
-        "unit": "mV",
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
         "icon": "mdi:pool",
         "name": "Red OX",
         "device_class": None,

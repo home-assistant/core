@@ -30,7 +30,7 @@ new_task:
           min: 1
           max: 4
     due_date_string:
-      name: Dure date string
+      name: Due date string
       description: The day this task is due, in natural language.
       example: Tomorrow
       selector:

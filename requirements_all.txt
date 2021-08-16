@@ -109,7 +109,7 @@ adafruit-circuitpython-mcp230xx==2.2.2
 adax==0.1.1
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.3.4
+adb-shell[async]==0.4.0
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -1257,7 +1257,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.3
+py-synologydsm-api==1.0.4
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1275,7 +1275,7 @@ pyControl4==0.0.6
 pyHS100==0.3.5.2
 
 # homeassistant.components.met_eireann
-pyMetEireann==0.2
+pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
@@ -1803,7 +1803,7 @@ pysyncthru==0.7.3
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
-pytautulli==0.5.0
+pytautulli==21.8.1
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -2439,7 +2439,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.35.0
+zeroconf==0.35.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.59

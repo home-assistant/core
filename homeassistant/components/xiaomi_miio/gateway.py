@@ -117,7 +117,7 @@ class ConnectXiaomiGateway:
                 miio_cloud = MiCloud(self._cloud_username, self._cloud_password)
                 if not miio_cloud.login():
                     raise ConfigEntryAuthFailed(
-                        "Could not login to Xioami Miio Cloud, check the credentials"
+                        "Could not login to Xiaomi Miio Cloud, check the credentials"
                     )
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)

@@ -39,14 +39,17 @@ BASE_PLATFORMS = {
     "lock",
     "media_player",
     "notify",
+    "number",
     "remote",
     "scene",
     "select",
     "sensor",
+    "siren",
     "switch",
     "tts",
     "vacuum",
     "water_heater",
+    "weather",
 }
 
 DATA_SETUP_DONE = "setup_done"
