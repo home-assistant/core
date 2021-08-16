@@ -365,8 +365,8 @@ class YeelightScanner:
             )
         if self._listener:
             self.async_scan()
-            return
-        asyncio.create_task(self.async_setup())
+        else:
+            asyncio.create_task(self.async_setup())
 
     async def async_setup(self):
         """Set up the scanner."""
@@ -391,7 +391,7 @@ class YeelightScanner:
             await asyncio.sleep(2)
 
         for _ in range(2):
-            self.async_scan()
+            self._listener.async_search()
             await asyncio.sleep(2)
 
         return self._unique_id_capabilities.values()
