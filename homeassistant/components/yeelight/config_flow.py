@@ -74,11 +74,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_in_progress")
 
         try:
-            self._discovered_model = await self._async_try_connect(self._discovered_ip)
+            self._discovered_model = await self._async_try_connect(
+                self._discovered_ip, raise_on_progress=True
+            )
         except CannotConnect:
+            _LOGGER.debug("_async_try_connect could not get the model")
             return self.async_abort(reason="cannot_connect")
 
         if not self.unique_id:
+            _LOGGER.debug("Failed to get unique id")
             return self.async_abort(reason="cannot_connect")
 
         self._abort_if_unique_id_configured(
@@ -108,7 +112,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not user_input.get(CONF_HOST):
                 return await self.async_step_pick_device()
             try:
-                model = await self._async_try_connect(user_input[CONF_HOST])
+                model = await self._async_try_connect(
+                    user_input[CONF_HOST], raise_on_progress=False
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
@@ -131,7 +137,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             unique_id = user_input[CONF_DEVICE]
             capabilities = self._discovered_devices[unique_id]
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             host = urlparse(capabilities["location"]).hostname
             return self.async_create_entry(
@@ -170,7 +176,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import step."""
         host = user_input[CONF_HOST]
         try:
-            await self._async_try_connect(host)
+            await self._async_try_connect(host, raise_on_progress=False)
         except CannotConnect:
             _LOGGER.error("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
@@ -182,7 +188,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-    async def _async_try_connect(self, host):
+    async def _async_try_connect(self, host, raise_on_progress=True):
         """Set up with options."""
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -192,7 +198,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
         else:
             _LOGGER.debug("Get capabilities: %s", capabilities)
-            await self.async_set_unique_id(capabilities["id"])
+            await self.async_set_unique_id(
+                capabilities["id"], raise_on_progress=raise_on_progress
+            )
             return capabilities["model"]
         # Fallback to get properties
         bulb = AsyncBulb(host)

@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +75,10 @@ NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 SSDP_TARGET = ("239.255.255.250", 1982)
 SSDP_ST = "wifi_bulb"
+DISCOVERY_ATTEMPTS = 2
+DISCOVERY_SEARCH_INTERVAL = timedelta(seconds=2)
+DISCOVERY_TIMEOUT = 2
+
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
 YEELIGHT_HSV_TRANSACTION = "HSVTransition"
@@ -379,11 +383,11 @@ class YeelightScanner:
         """Discover bulbs."""
         if not self._listener:
             await self.async_setup()
-            await asyncio.sleep(2)
+            await asyncio.sleep(DISCOVERY_SEARCH_INTERVAL.total_seconds())
 
-        for _ in range(2):
+        for _ in range(DISCOVERY_ATTEMPTS):
             self._listener.async_search()
-            await asyncio.sleep(2)
+            await asyncio.sleep(DISCOVERY_SEARCH_INTERVAL.total_seconds())
 
         return self._unique_id_capabilities.values()
 
@@ -408,22 +412,32 @@ class YeelightScanner:
         self._listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
-            await asyncio.wait_for(host_event.wait(), timeout=2)
+            await asyncio.wait_for(host_event.wait(), timeout=DISCOVERY_TIMEOUT)
+
         self._host_discovered_events[host].remove(host_event)
         return self._host_capabilities.get(host)
 
-    async def _async_process_entry(self, response):
-        unique_id = response["id"]
-        host = urlparse(response["location"]).hostname
-        if unique_id not in self._unique_id_capabilities:
-            _LOGGER.debug("Yeelight discovered with %s", response)
-            self._hass.async_create_task(
+    def _async_discovered_by_ssdp(self, response):
+        @callback
+        def _async_start_flow(*_):
+            asyncio.create_task(
                 self._hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": config_entries.SOURCE_SSDP},
                     data=response,
                 )
             )
+
+        # Delay starting the flow in case the discovery is the result
+        # of another discovery
+        async_call_later(self._hass, 1, _async_start_flow)
+
+    async def _async_process_entry(self, response):
+        unique_id = response["id"]
+        host = urlparse(response["location"]).hostname
+        if unique_id not in self._unique_id_capabilities:
+            _LOGGER.debug("Yeelight discovered with %s", response)
+            self._async_discovered_by_ssdp(response)
         self._host_capabilities[host] = response
         self._unique_id_capabilities[unique_id] = response
         for event in self._host_discovered_events.get(host, []):
