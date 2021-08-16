@@ -376,9 +376,9 @@ class YeelightScanner:
         self._connected_event = asyncio.Event()
         self._listener = SSDPListener(
             async_callback=self._async_process_entry,
-            async_connected_callback=self._async_connected,
             service_type=SSDP_ST,
             target=SSDP_TARGET,
+            async_connect_callback=self._async_connected,
         )
         await self._listener.async_start()
 
