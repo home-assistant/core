@@ -134,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_ID]
         }
         devices_name = {}
-        scanner = YeelightScanner.async_get(self._hass)
+        scanner = YeelightScanner.async_get(self.hass)
         devices = await scanner.async_discover()
         # Run 3 times as packets can get lost
         for capabilities in devices:
