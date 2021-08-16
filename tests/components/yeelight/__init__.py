@@ -1,11 +1,13 @@
 """Tests for the Yeelight integration."""
 import asyncio
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SSDPListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
+from homeassistant.components import yeelight as hass_yeelight
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -35,6 +37,7 @@ CAPABILITIES = {
 NAME = "name"
 SHORT_ID = hex(int("0x000000000015243f", 16))
 UNIQUE_NAME = f"yeelight_{MODEL}_{SHORT_ID}"
+UNIQUE_FRIENDLY_NAME = f"Yeelight {MODEL.title()} {SHORT_ID}"
 
 MODULE = "homeassistant.components.yeelight"
 MODULE_CONFIG_FLOW = f"{MODULE}.config_flow"
@@ -123,7 +126,8 @@ def _patched_ssdp_listener(info, *args, **kwargs):
 
     async def _async_callback(*_):
         await listener.async_connect_callback()
-        await listener.async_callback(info)
+        if info:
+            await listener.async_callback(info)
 
     @callback
     def _async_search(*_):
@@ -148,3 +152,7 @@ def _patch_discovery(no_device=False):
         "homeassistant.components.yeelight.SSDPListener",
         new=_generate_fake_ssdp_listener,
     )
+
+
+def _patch_discovery_interval():
+    return patch.object(hass_yeelight, "DISCOVER_SEARCH_INTERVAL", timedelta(seconds=0))

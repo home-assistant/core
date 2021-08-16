@@ -78,6 +78,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
+        for progress in self._async_in_progress():
+            if progress["context"].get("unique_id") == self.unique_id:
+                return self.async_abort(reason="already_in_progress")
+
         if not self.unique_id:
             return self.async_abort(reason="cannot_connect")
 
@@ -131,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             unique_id = user_input[CONF_DEVICE]
             capabilities = self._discovered_devices[unique_id]
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             host = urlparse(capabilities["location"]).hostname
             return self.async_create_entry(
@@ -192,7 +196,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
         else:
             _LOGGER.debug("Get capabilities: %s", capabilities)
-            await self.async_set_unique_id(capabilities["id"])
+            await self.async_set_unique_id(capabilities["id"], raise_on_progress=False)
             return capabilities["model"]
         # Fallback to get properties
         bulb = AsyncBulb(host)
