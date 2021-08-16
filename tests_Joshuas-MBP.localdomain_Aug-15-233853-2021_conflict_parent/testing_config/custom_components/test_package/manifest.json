@@ -1,0 +1,8 @@
+{
+  "domain": "test_package",
+  "name": "Test Package",
+  "documentation": "http://test-package.io",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
