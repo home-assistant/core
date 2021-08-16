@@ -59,13 +59,21 @@ class RestData:
                 if value is not None:
                     rendered_headers[header_name] = value
 
+        rendered_params = None
+        if self._params:
+            rendered_params = {}
+            for param_name, template_param in self._params.items():
+                value = template_param.async_render()
+                if value is not None:
+                    rendered_params[param_name] = value
+
         _LOGGER.debug("Updating from %s", self._resource)
         try:
             response = await self._async_client.request(
                 self._method,
                 self._resource,
                 headers=rendered_headers,
-                params=self._params,
+                params=rendered_params,
                 auth=self._auth,
                 data=self._request_data,
                 timeout=self._timeout,

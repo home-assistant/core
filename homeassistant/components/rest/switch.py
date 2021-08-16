@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_STATE_RESOURCE): cv.url,
         vol.Optional(CONF_HEADERS): {cv.string: cv.template},
-        vol.Optional(CONF_PARAMS): {cv.string: cv.string},
+        vol.Optional(CONF_PARAMS): {cv.string: cv.template},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
         vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
@@ -93,6 +93,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if headers is not None:
         for template_header in headers.values():
             template_header.hass = hass
+    if params is not None:
+        for template_param in params.values():
+            template_param.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
     try:
@@ -215,13 +218,21 @@ class RestSwitch(SwitchEntity):
                 if value is not None:
                     rendered_headers[header_name] = value
 
+        rendered_params = None
+        if self._params:
+            rendered_params = {}
+            for param_name, template_param in self._params.items():
+                value = template_param.async_render()
+                if value is not None:
+                    rendered_params[param_name] = value
+
         with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
                 data=bytes(body, "utf-8"),
                 headers=rendered_headers,
-                params=self._params,
+                params=rendered_params,
             )
             return req
 
@@ -246,12 +257,20 @@ class RestSwitch(SwitchEntity):
                 if value is not None:
                     rendered_headers[header_name] = value
 
+        rendered_params = None
+        if self._params:
+            rendered_params = {}
+            for param_name, template_param in self._params.items():
+                value = template_param.async_render()
+                if value is not None:
+                    rendered_params[param_name] = value
+
         with async_timeout.timeout(self._timeout):
             req = await websession.get(
                 self._state_resource,
                 auth=self._auth,
                 headers=rendered_headers,
-                params=self._params,
+                params=rendered_params,
             )
             text = await req.text()
 

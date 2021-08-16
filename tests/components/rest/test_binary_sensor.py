@@ -180,7 +180,7 @@ async def test_setup_get(hass):
 
 
 @respx.mock
-async def test_setup_get_template_headers(hass):
+async def test_setup_get_template_headers_params(hass):
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
@@ -199,6 +199,10 @@ async def test_setup_get_template_headers(hass):
                     "Accept": CONTENT_TYPE_JSON,
                     "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
                 },
+                "params": {
+                    "start": 0,
+                    "end": "{{ 3 + 2 }}",
+                },
             }
         },
     )
@@ -206,6 +210,7 @@ async def test_setup_get_template_headers(hass):
 
     assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
     assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
+    assert respx.calls.last.request.url.query == b"start=0&end=5"
 
 
 @respx.mock

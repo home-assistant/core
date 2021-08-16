@@ -150,7 +150,7 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
-async def test_setup_with_template_headers(hass, aioclient_mock):
+async def test_setup_with_templated_headers_params(hass, aioclient_mock):
     """Test setup with valid configuration."""
     aioclient_mock.get("http://localhost", status=HTTP_OK)
     assert await async_setup_component(
@@ -165,6 +165,10 @@ async def test_setup_with_template_headers(hass, aioclient_mock):
                     "Accept": CONTENT_TYPE_JSON,
                     "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
                 },
+                CONF_PARAMS: {
+                    "start": 0,
+                    "end": "{{ 3 + 2 }}",
+                },
             }
         },
     )
@@ -172,6 +176,8 @@ async def test_setup_with_template_headers(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[-1][3].get("Accept") == CONTENT_TYPE_JSON
     assert aioclient_mock.mock_calls[-1][3].get("User-Agent") == "Mozilla/5.0"
+    assert aioclient_mock.mock_calls[-1][1].query["start"] == "0"
+    assert aioclient_mock.mock_calls[-1][1].query["end"] == "5"
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
