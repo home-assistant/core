@@ -57,6 +57,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_ip = discovery_info[IP_ADDRESS]
         return await self._async_handle_discovery()
 
+    async def async_step_ssdp(self, discovery_info):
+        """Handle discovery from ssdp."""
+        self._discovered_ip = urlparse(discovery_info["location"]).hostname
+        await self.async_set_unique_id(discovery_info["id"])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
+        )
+        return await self._async_handle_discovery()
+
     async def _async_handle_discovery(self):
         """Handle any discovery."""
         self.context[CONF_HOST] = self._discovered_ip
@@ -134,7 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_ID]
         }
         devices_name = {}
-        scanner = YeelightScanner.async_get(self._hass)
+        scanner = YeelightScanner.async_get(self.hass)
         devices = await scanner.async_discover()
         # Run 3 times as packets can get lost
         for capabilities in devices:

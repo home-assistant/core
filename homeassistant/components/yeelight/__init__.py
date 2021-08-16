@@ -12,6 +12,7 @@ import voluptuous as vol
 from yeelight import BulbException
 from yeelight.aio import KEY_CONNECTED, AsyncBulb
 
+from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_DEVICES,
@@ -343,7 +344,6 @@ class YeelightScanner:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize class."""
         self._hass = hass
-        self._connected_event = None
         self._callbacks = {}
         self._host_discovered_events = {}
         self._unique_id_capabilities = {}
@@ -368,19 +368,21 @@ class YeelightScanner:
             return
         asyncio.create_task(self.async_setup())
 
-    async def _async_connected(self):
-        self._connected_event.set()
-
     async def async_setup(self):
         """Set up the scanner."""
-        self._connected_event = asyncio.Event()
+        connected_event = asyncio.Event()
+
+        async def _async_connected():
+            connected_event.set()
+
         self._listener = SSDPListener(
             async_callback=self._async_process_entry,
             service_type=SSDP_ST,
             target=SSDP_TARGET,
-            async_connect_callback=self._async_connected,
+            async_connect_callback=_async_connected,
         )
         await self._listener.async_start()
+        await connected_event.wait()
 
     async def async_discover(self):
         """Discover bulbs."""
@@ -414,7 +416,6 @@ class YeelightScanner:
         self._host_discovered_events.setdefault(host, []).append(host_event)
         if not self._listener:
             await self.async_setup()
-            await self._connected_event.set()
 
         self._listener.async_search((host, SSDP_TARGET[1]))
 
@@ -431,6 +432,9 @@ class YeelightScanner:
         host = urlparse(response["location"]).hostname
         if unique_id not in self._unique_id_capabilities:
             _LOGGER.debug("Yeelight discovered with %s", response)
+            self._hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=response
+            )
         self._host_capabilities[host] = self._unique_id_capabilities[
             unique_id
         ] = response
