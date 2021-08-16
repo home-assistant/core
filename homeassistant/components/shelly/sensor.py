@@ -280,7 +280,7 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
             ).replace(second=0, microsecond=0)
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         if (
             self.description.last_reset == LAST_RESET_UPTIME
@@ -302,7 +302,7 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)
 
@@ -311,7 +311,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
@@ -321,7 +321,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return self.description.unit
 
@@ -330,7 +330,7 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
             return self.attribute_value
@@ -343,6 +343,6 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)

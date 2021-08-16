@@ -5,7 +5,10 @@ import logging
 
 from dsmr_parser import obis_references
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -13,7 +16,6 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
 )
-from homeassistant.util import dt
 
 from .models import DSMRSensorEntityDescription
 
@@ -67,32 +69,28 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         name="Energy Consumption (tarif 1)",
         device_class=DEVICE_CLASS_ENERGY,
         force_update=True,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_USED_TARIFF_2,
         name="Energy Consumption (tarif 2)",
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_DELIVERED_TARIFF_1,
         name="Energy Production (tarif 1)",
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_DELIVERED_TARIFF_2,
         name="Energy Production (tarif 2)",
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
@@ -229,8 +227,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"5L"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
@@ -238,8 +235,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"5L"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
@@ -247,8 +243,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.HOURLY_GAS_METER_READING,
@@ -258,8 +253,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         icon="mdi:fire",
         device_class=DEVICE_CLASS_GAS,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.BELGIUM_HOURLY_GAS_METER_READING,
@@ -269,8 +263,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         icon="mdi:fire",
         device_class=DEVICE_CLASS_GAS,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.GAS_METER_READING,
@@ -280,7 +273,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         icon="mdi:fire",
         device_class=DEVICE_CLASS_GAS,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )

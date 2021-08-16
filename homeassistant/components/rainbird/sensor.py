@@ -45,6 +45,6 @@ class RainBirdSensor(SensorEntity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self.name)
         if self.entity_description.key == SENSOR_TYPE_RAINSENSOR:
-            self._attr_state = self._controller.get_rain_sensor_state()
+            self._attr_native_value = self._controller.get_rain_sensor_state()
         elif self.entity_description.key == SENSOR_TYPE_RAINDELAY:
-            self._attr_state = self._controller.get_rain_delay()
+            self._attr_native_value = self._controller.get_rain_delay()

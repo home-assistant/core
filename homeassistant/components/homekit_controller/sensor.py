@@ -79,7 +79,7 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit humidity sensor."""
 
     _attr_device_class = DEVICE_CLASS_HUMIDITY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -96,7 +96,7 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
         return HUMIDITY_ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
@@ -105,7 +105,7 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -122,7 +122,7 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
         return TEMP_C_ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current temperature in Celsius."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
@@ -131,7 +131,7 @@ class HomeKitLightSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit light level sensor."""
 
     _attr_device_class = DEVICE_CLASS_ILLUMINANCE
-    _attr_unit_of_measurement = LIGHT_LUX
+    _attr_native_unit_of_measurement = LIGHT_LUX
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -148,7 +148,7 @@ class HomeKitLightSensor(HomeKitEntity, SensorEntity):
         return BRIGHTNESS_ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current light level in lux."""
         return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
@@ -157,7 +157,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
     _attr_icon = CO2_ICON
-    _attr_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -169,7 +169,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
         return f"{super().name} CO2"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current CO2 level in ppm."""
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
@@ -178,7 +178,7 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit battery sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -229,7 +229,7 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.CHARGING_STATE) == 1
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current battery level percentage."""
         return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
@@ -281,7 +281,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         return self._state_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return units for the sensor."""
         return self._unit
 
@@ -296,7 +296,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         return f"{super().name} - {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current sensor value."""
         return self._char.value
 

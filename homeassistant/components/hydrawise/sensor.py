@@ -40,12 +40,12 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return DEVICE_MAP[self._sensor_type][
             DEVICE_MAP_INDEX.index("UNIT_OF_MEASURE_INDEX")
