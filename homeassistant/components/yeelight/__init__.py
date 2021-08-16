@@ -166,6 +166,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DATA_CONFIG_ENTRIES: {},
     }
 
+    scanner = YeelightScanner.async_get(hass)
+    await scanner.async_setup()
+
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
         _LOGGER.debug("Importing configured %s", host)
@@ -337,20 +340,6 @@ class YeelightScanner:
             cls._scanner = cls(hass)
         return cls._scanner
 
-    @classmethod
-    async def async_get_capabilities(
-        cls, hass: HomeAssistant, host: str
-    ) -> dict[str, str] | None:
-        """Get scanner instance and get capabilities."""
-        scanner = cls.async_get(hass)
-        return await scanner._async_get_capabilities(host)
-
-    @classmethod
-    async def async_discover(cls, hass: HomeAssistant) -> dict[str, str] | None:
-        """Get scanner instance and get discovered."""
-        scanner = cls.async_get(hass)
-        return await scanner._async_discover()
-
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize class."""
         self._hass = hass
@@ -387,7 +376,7 @@ class YeelightScanner:
         )
         await self._listener.async_start()
 
-    async def _async_discover(self):
+    async def async_discover(self):
         """Discover bulbs."""
         if not self._listener:
             await self.async_setup()
@@ -407,7 +396,8 @@ class YeelightScanner:
             return
         self._listener.async_search()
 
-    async def _async_get_capabilities(self, host):
+    async def async_get_capabilities(self, host):
+        """Get capabilities via SSDP."""
         import pprint
 
         pprint.pprint(["_async_get_capabilities", host, self._host_capabilities])
@@ -418,12 +408,11 @@ class YeelightScanner:
         self._host_discovered_events.setdefault(host, []).append(host_event)
         if not self._listener:
             await self.async_setup()
-
             # TODO: fix this so it waits for the transport to be
             # set instead
-            await asyncio.sleep(2)
+            await asyncio.sleep(5)
 
-        # self._listener.async_search((host, SSDP_TARGET[1]))
+        self._listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
             await asyncio.wait_for(host_event.wait(), timeout=2)
@@ -623,8 +612,9 @@ class YeelightDevice:
 
     async def async_setup(self):
         """Fetch capabilities and setup name if available."""
+        scanner = YeelightScanner.async_get(self._hass)
         self._capabilities = (
-            await YeelightScanner.async_get_capabilities(self._hass, self._host) or {}
+            await scanner.async_get_capabilities(self._hass, self._host) or {}
         )
         if name := self._config.get(CONF_NAME):
             # Override default name when name is set in config
