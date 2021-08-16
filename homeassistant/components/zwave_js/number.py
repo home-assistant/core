@@ -103,6 +103,9 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
         self.correction_factor = int(
             self.info.primary_value.metadata.max - self.info.primary_value.metadata.min
         )
+        # Fallback in case we can't properly calculate correction factor
+        if self.correction_factor == 0:
+            self.correction_factor = 1
 
         # Entity class attributes
         self._attr_min_value = 0
@@ -113,6 +116,8 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
     @property
     def value(self) -> float | None:
         """Return the entity value."""
+        if self.info.primary_value.value is None:
+            return None
         return float(self.info.primary_value.value) / self.correction_factor
 
     async def async_set_value(self, value: float) -> None:
