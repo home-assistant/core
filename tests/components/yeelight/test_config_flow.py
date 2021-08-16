@@ -307,34 +307,45 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data={"host": "1.2.3.4", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+            data={"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
+    import pprint
+
+    pprint.pprint(result)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": "1.2.3.4", "macaddress": "aa:bb:cc:dd:ee:ff"},
+            data={"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
         )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_in_progress"
 
-    with patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": "1.2.3.4", "macaddress": "00:00:00:00:00:00"},
+            data={"ip": IP_ADDRESS, "macaddress": "00:00:00:00:00:00"},
         )
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"
 
-    with patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect):
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect
+    ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -362,14 +373,21 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
+    import pprint
+
+    pprint.pprint(result)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup, patch(
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_async_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
