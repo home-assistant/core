@@ -165,9 +165,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DATA_CONFIG_ENTRIES: {},
     }
 
-    scanner = YeelightScanner.async_get(hass)
-    await scanner.async_start()
-
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
         _LOGGER.debug("Importing configured %s", host)
@@ -423,7 +420,7 @@ class YeelightScanner:
     async def _async_process_entry(self, response):
         unique_id = response["id"]
         host = urlparse(response["location"]).hostname
-        if unique_id in self._capabilities or host in self._capabilities:
+        if unique_id in self._unique_id_capabilities or host in self._host_capabilities:
             return
 
         self._host_capabilities[host] = self._unique_id_capabilities[
