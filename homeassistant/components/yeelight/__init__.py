@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 from datetime import timedelta
 import logging
 from urllib.parse import urlparse
 
 from async_upnp_client.search import SSDPListener
 import voluptuous as vol
-from yeelight import BulbException, discover_bulbs
+from yeelight import BulbException
 from yeelight.aio import KEY_CONNECTED, AsyncBulb
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
@@ -27,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,6 +165,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DATA_CONFIG_ENTRIES: {},
     }
 
+    scanner = YeelightScanner.async_get(hass)
+    await scanner.async_start()
+
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
         _LOGGER.debug("Importing configured %s", host)
@@ -274,14 +277,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # discovery
     scanner = YeelightScanner.async_get(hass)
 
-    async def _async_from_discovery(capabilities: str) -> None:
+    async def _async_from_discovery(capabilities: dict[str, str]) -> None:
         host = urlparse(capabilities["location"]).hostname
         try:
             await _async_initialize(hass, entry, host)
         except BulbException:
             _LOGGER.exception("Failed to connect to bulb at %s", host)
 
-    scanner.async_register_callback(entry.data[CONF_ID], _async_from_discovery)
+    scanner.async_register_unique_id_callback(
+        entry.data[CONF_ID], _async_from_discovery
+    )
     return True
 
 
@@ -335,77 +340,151 @@ class YeelightScanner:
             cls._scanner = cls(hass)
         return cls._scanner
 
+    @classmethod
+    async def async_get_capabilities(
+        cls, hass: HomeAssistant, host: str
+    ) -> dict[str, str] | None:
+        """Get scanner instance and get capabilities."""
+        return await cls.async_get(hass)._async_get_capabilities(host)
+
+    @classmethod
+    async def async_discover(cls, hass: HomeAssistant) -> dict[str, str] | None:
+        """Get scanner instance and get discovered."""
+        return await cls.async_get(hass)._async_discover()
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize class."""
         self._hass = hass
-        self._callbacks = {}
-        self._capabilities = {}
-        self._scan_task = None
+        self._unique_id_callbacks = {}
+        self._host_callbacks = {}
+        self._unique_id_capabilities = {}
+        self._host_capabilities = {}
+        self._track_interval = None
         self._listener = None
 
-    async def _async_scan(self):
-        _LOGGER.debug("Yeelight scanning")
-        remaining = 3
-        if not self._listener:
-            self._listener = SSDPListener(
-                async_callback=self._async_process_entry,
-                service_type=SSDP_ST,
-                target=SSDP_TARGET,
-            )
-            await self._listener.async_start()
-            remaining = 2
+    @property
+    def has_callbacks(self):
+        """Check if any callbacks are registered."""
+        return bool(self._unique_id_callbacks or self._host_callbacks)
 
-        for _ in range(remaining):
-            if self._callbacks:
-                await asyncio.sleep(DISCOVERY_INTERVAL.total_seconds())
-                await self._listener.async_scan()
+    async def async_start(self):
+        """Start the scanner."""
+        if not self._track_interval:
+            self._track_interval = async_track_time_interval(
+                self._hass, self.async_scan, DISCOVERY_INTERVAL
+            )
+        if self._listener:
+            self.async_scan()
+            return
+        await self.async_setup()
+
+    async def async_setup(self):
+        """Set up the scanner."""
+        self._listener = SSDPListener(
+            async_callback=self._async_process_entry,
+            service_type=SSDP_ST,
+            target=SSDP_TARGET,
+        )
+        await self._listener.async_start()
+
+    async def _async_discover(self):
+        """Discover bulbs."""
+        if not self._listener:
+            await self.async_setup()
+            await asyncio.sleep(2)
+
+        for _ in range(2):
+            self.async_scan()
+            await asyncio.sleep(2)
+
+        return self._unique_id_capabilities.values()
+
+    @callback
+    def async_scan(self):
+        """Send discovery packets."""
+        _LOGGER.debug("Yeelight scanning")
+        if not self.has_callbacks:
+            return
+        self._listener.async_search()
+
+    async def _async_get_capabilities(self, host):
+        if not self._listener:
+            await self.async_setup()
+        self._listener.async_search(host, SSDP_TARGET[1])
+        cap_future = asyncio.Future()
+        cancel = self.async_register_host_callback(host, cap_future.set_result)
+        try:
+            return await asyncio.wait_for(cap_future.result(), timeout=2)
+        except asyncio.CancelledError:
+            return None
+        finally:
+            cancel()
 
     async def _async_process_entry(self, response):
         unique_id = response["id"]
-        if unique_id in self._capabilities:
+        host = urlparse(response["location"]).hostname
+        if unique_id in self._capabilities or host in self._capabilities:
             return
-        self._capabilities[unique_id] = response
+
+        self._host_capabilities[host] = self._unique_id_capabilities[
+            unique_id
+        ] = response
         _LOGGER.debug("Yeelight discovered with %s", response)
-        if unique_id in self._callbacks:
-            self._hass.async_create_task(self._callbacks[unique_id](response))
-            self._callbacks.pop(unique_id)
-            if len(self._callbacks) == 0:
-                self._async_stop_scan()
+        if unique_id in self._unique_id_callbacks:
+            self._hass.async_create_task(self._unique_id_callbacks[unique_id](response))
+            self._unique_id_callbacks.pop(unique_id)
+        if host in self._host_callbacks:
+            self._hass.async_create_task(self._host_callbacks[unique_id](response))
+            self._host_callbacks.pop(host)
+        if not self.has_callbacks:
+            self._async_stop_scan()
 
     @callback
     def _async_start_scan(self):
         """Start scanning for Yeelight devices."""
         _LOGGER.debug("Start scanning")
-        # Use loop directly to avoid home assistant track this task
-        self._scan_task = self._hass.loop.create_task(self._async_scan())
+        if self._track_interval is None:
+            self._track_interval = asyncio.create_task(self.async_start())
 
     @callback
     def _async_stop_scan(self):
         """Stop scanning."""
         _LOGGER.debug("Stop scanning")
-        if self._scan_task is not None:
-            self._scan_task.cancel()
-            self._scan_task = None
+        if self._track_interval is not None:
+            self._track_interval()
+            self._track_interval = None
 
     @callback
-    def async_register_callback(self, unique_id, callback_func):
+    def async_register_unique_id_callback(self, unique_id, callback_func):
         """Register callback function."""
-        capabilities = self._capabilities.get(unique_id)
-        if capabilities:
+        if capabilities := self._unique_id_capabilities.get(unique_id):
             self._hass.async_create_task(callback_func(capabilities))
-        else:
-            self._callbacks[unique_id] = callback_func
-            if len(self._callbacks) == 1:
-                self._async_start_scan()
+            return
+        self._unique_id_callbacks[unique_id] = callback_func
+        self._async_start_scan()
+
+        def _unregister_unique_id_callback():
+            self._unique_id_callbacks.pop(unique_id, None)
+            if not self.has_callbacks:
+                self._async_stop_scan()
+
+        return _unregister_unique_id_callback
 
     @callback
-    def async_unregister_callback(self, unique_id):
-        """Unregister callback function."""
-        if unique_id not in self._callbacks:
+    def async_register_host_callback(self, host, callback_func):
+        """Register callback function."""
+        if capabilities := self._host_capabilities.get(host):
+            self._hass.async_create_task(callback_func(capabilities))
             return
-        self._callbacks.pop(unique_id)
-        if len(self._callbacks) == 0:
-            self._async_stop_scan()
+        self._host_callbacks[host] = callback_func
+        self._async_start_scan()
+
+        def _unregister_host_callback():
+            self._host_callbacks.pop(host, None)
+            if not self.has_callbacks:
+                self._async_stop_scan()
+
+        return _unregister_host_callback
 
 
 class YeelightDevice:
@@ -549,14 +628,9 @@ class YeelightDevice:
         return self._available
 
     async def _async_initialize_device(self):
-        if self._unique_id:
-            scanner = YeelightScanner.async_get(self._hass)
-            cap_future = asyncio.Future()
-            scanner.async_register_callback(self._unique_id, cap_future.set_result)
-            with contextlib.suppress(asyncio.TimeoutError):
-                self._capabilities = await asyncio.wait_for(
-                    cap_future.result(), timeout=3
-                )
+        self._capabilities = YeelightScanner.async_get_capabilities(
+            self._hass, self._host
+        )
         if name := self._config.get(CONF_NAME):
             # Override default name when name is set in config
             self._name = name

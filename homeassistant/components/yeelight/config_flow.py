@@ -1,5 +1,6 @@
 """Config flow for Yeelight integration."""
 import logging
+from urllib.parse import urlparse
 
 import voluptuous as vol
 import yeelight
@@ -19,6 +20,7 @@ from . import (
     CONF_TRANSITION,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    YeelightScanner,
     _async_unique_name,
 )
 
@@ -131,19 +133,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_ID]
         }
         devices_name = {}
+        devices = await YeelightScanner.async_discover(self.hass)
         # Run 3 times as packets can get lost
-        for _ in range(3):
-            devices = await self.hass.async_add_executor_job(yeelight.discover_bulbs)
-            for device in devices:
-                capabilities = device["capabilities"]
-                unique_id = capabilities["id"]
-                if unique_id in configured_devices:
-                    continue  # ignore configured devices
-                model = capabilities["model"]
-                host = device["ip"]
-                name = f"{host} {model} {unique_id}"
-                self._discovered_devices[unique_id] = capabilities
-                devices_name[unique_id] = name
+        for capabilities in devices:
+            unique_id = capabilities["id"]
+            if unique_id in configured_devices:
+                continue  # ignore configured devices
+            model = capabilities["model"]
+            host = urlparse(capabilities["location"]).hostname
+            name = f"{host} {model} {unique_id}"
+            self._discovered_devices[unique_id] = capabilities
+            devices_name[unique_id] = name
 
         # Check if there is at least one device
         if not devices_name:
@@ -173,23 +173,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up with options."""
         self._async_abort_entries_match({CONF_HOST: host})
 
-        bulb = yeelight.Bulb(host)
-        try:
-            capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
-            if capabilities is None:  # timeout
-                _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
-            else:
-                _LOGGER.debug("Get capabilities: %s", capabilities)
-                await self.async_set_unique_id(capabilities["id"])
-                return capabilities["model"]
-        except OSError as err:
-            _LOGGER.debug("Failed to get capabilities from %s: %s", host, err)
-            # Ignore the error since get_capabilities uses UDP discovery packet
-            # which does not work in all network environments
-
+        bulb = yeelight.AsyncBulb(host)
+        capabilities = await YeelightScanner.async_get_capabilities(self.hass, host)
+        if capabilities is None:  # timeout
+            _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
+        else:
+            _LOGGER.debug("Get capabilities: %s", capabilities)
+            await self.async_set_unique_id(capabilities["id"])
+            return capabilities["model"]
         # Fallback to get properties
         try:
-            await self.hass.async_add_executor_job(bulb.get_properties)
+            await bulb.async_get_properties()
         except yeelight.BulbException as err:
             _LOGGER.error("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
