@@ -52,14 +52,13 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    mocked_bulb.async_get_properties = AsyncMock(
-        side_effect=[OSError, PROPERTIES, PROPERTIES]
-    )
+    mocked_bulb.async_listen = AsyncMock(side_effect=[BulbException, None, None, None])
 
     with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery(
         MODULE
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
@@ -85,9 +84,7 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    mocked_bulb.async_get_properties = AsyncMock(
-        side_effect=[OSError, PROPERTIES, PROPERTIES]
-    )
+    mocked_bulb.async_listen = AsyncMock(side_effect=[BulbException, None, None, None])
 
     with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
