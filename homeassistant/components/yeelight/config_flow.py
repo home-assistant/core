@@ -78,7 +78,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_ip, raise_on_progress=True
             )
         except CannotConnect:
-            _LOGGER.debug("_async_try_connect could not get the model")
             return self.async_abort(reason="cannot_connect")
 
         if not self.unique_id:
