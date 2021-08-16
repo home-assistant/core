@@ -25,7 +25,7 @@ CAPABILITIES = {
     "id": ID,
     "model": MODEL,
     "fw_ver": FW_VER,
-    "location": "yeelight://{IP_ADDRESS}",
+    "location": f"yeelight://{IP_ADDRESS}",
     "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
     " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
     "name": "",
@@ -143,6 +143,6 @@ def _patch_discovery(prefix, no_device=False):
         )
 
     return patch(
-        "homeassistant.components.ssdp.SSDPListener",
+        "homeassistant.components.yeelight.SSDPListener",
         new=_generate_fake_ssdp_listener,
     )

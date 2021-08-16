@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 import yeelight
+from yeelight.aio import AsyncBulb
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.dhcp import IP_ADDRESS
@@ -173,7 +174,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up with options."""
         self._async_abort_entries_match({CONF_HOST: host})
 
-        bulb = yeelight.AsyncBulb(host)
+        bulb = AsyncBulb(host)
         capabilities = await YeelightScanner.async_get_capabilities(self.hass, host)
         if capabilities is None:  # timeout
             _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
