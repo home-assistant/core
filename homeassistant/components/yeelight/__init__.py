@@ -418,7 +418,11 @@ class YeelightScanner:
         self._host_discovered_events.setdefault(host, []).append(host_event)
         if not self._listener:
             await self.async_setup()
-            await asyncio.sleep(0)
+
+            # TODO: fix this so it waits for the transport to be
+            # set instead
+            await asyncio.sleep(2)
+
         self._listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
