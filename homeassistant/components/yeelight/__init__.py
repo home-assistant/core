@@ -76,7 +76,7 @@ NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 SSDP_TARGET = ("239.255.255.250", 1982)
 SSDP_ST = "wifi_bulb"
-DISCOVERY_ATTEMPTS = 2
+DISCOVERY_ATTEMPTS = 3
 DISCOVERY_SEARCH_INTERVAL = timedelta(seconds=2)
 DISCOVERY_TIMEOUT = 2
 
@@ -369,7 +369,6 @@ class YeelightScanner:
         """Discover bulbs."""
         if not self._connected_event:
             await self.async_setup()
-            await asyncio.sleep(DISCOVERY_SEARCH_INTERVAL.total_seconds())
 
         for _ in range(DISCOVERY_ATTEMPTS):
             self._listener.async_search()
