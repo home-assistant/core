@@ -16,9 +16,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     PLATFORM_FORMAT,
 )
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ensure_unique_string
+
+# mypy: disallow-any-generics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -422,7 +425,7 @@ def _async_when_setup(
         hass.async_create_task(when_setup())
         return
 
-    listeners: list[Callable] = []
+    listeners: list[CALLBACK_TYPE] = []
 
     async def _matched_event(event: core.Event) -> None:
         """Call the callback when we matched an event."""
@@ -443,7 +446,7 @@ def _async_when_setup(
 
 
 @core.callback
-def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
+def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
     """Return the complete list of loaded integrations."""
     integrations = set()
     for component in hass.config.components:
@@ -457,7 +460,9 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
 
 
 @contextlib.contextmanager
-def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generator:
+def async_start_setup(
+    hass: core.HomeAssistant, components: Iterable[str]
+) -> Generator[None, None, None]:
     """Keep track of when setup starts and finishes."""
     setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()
