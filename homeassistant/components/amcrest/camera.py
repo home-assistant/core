@@ -311,7 +311,7 @@ class AmcrestCam(Camera):
         return self._model
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Return a unique id for this instance."""
         return self._serial if self._serial != "unknown" else None
 
