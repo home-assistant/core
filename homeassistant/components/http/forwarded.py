@@ -65,6 +65,11 @@ def async_setup_forwarded(
 
     try:
         from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
+
+        # venv users might have already loaded it before it got upgraded so guard for this
+        # This can only happen when people upgrade from before 2021.8.5.
+        if not hasattr(remote, "is_cloud_request"):
+            remote = None
     except ImportError:
         remote = None
 
