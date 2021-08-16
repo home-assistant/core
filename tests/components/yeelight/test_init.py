@@ -1,5 +1,5 @@
 """Test Yeelight."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from yeelight import BulbException, BulbType
 
@@ -24,7 +24,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
-    CAPABILITIES,
     CONFIG_ENTRY_DATA,
     ENTITY_AMBILIGHT,
     ENTITY_BINARY_SENSOR,
@@ -34,9 +33,11 @@ from . import (
     ID,
     IP_ADDRESS,
     MODULE,
-    MODULE_CONFIG_FLOW,
+    SHORT_ID,
     _mocked_bulb,
     _patch_discovery,
+    _patch_discovery_interval,
+    _patch_discovery_timeout,
 )
 
 from tests.common import MockConfigEntry
@@ -51,19 +52,17 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    mocked_bulb.get_capabilities = MagicMock(
-        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
-    )
+    mocked_bulb.async_listen = AsyncMock(side_effect=[BulbException, None, None, None])
 
-    _discovered_devices = [{"capabilities": CAPABILITIES, "ip": IP_ADDRESS}]
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), patch(
-        f"{MODULE}.discover_bulbs", return_value=_discovered_devices
-    ):
+    with patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ), _patch_discovery(), _patch_discovery_interval():
         assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
-        f"yeelight_color_{ID}"
+        f"yeelight_color_{SHORT_ID}"
     )
 
     type(mocked_bulb).async_get_properties = AsyncMock(None)
@@ -85,9 +84,7 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    mocked_bulb.get_capabilities = MagicMock(
-        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
-    )
+    mocked_bulb.async_listen = AsyncMock(side_effect=[BulbException, None, None, None])
 
     with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -102,7 +99,7 @@ async def test_setup_discovery(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(MODULE), patch(
+    with _patch_discovery(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -127,9 +124,9 @@ async def test_setup_import(hass: HomeAssistant):
     """Test import from yaml."""
     mocked_bulb = _mocked_bulb()
     name = "yeelight"
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), patch(
-        f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb
-    ):
+    with patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ), _patch_discovery(), _patch_discovery_interval():
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -162,7 +159,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb()
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    with _patch_discovery(MODULE), patch(
+    with _patch_discovery(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -188,7 +185,7 @@ async def test_unique_ids_entry(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb()
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
 
-    with _patch_discovery(MODULE), patch(
+    with _patch_discovery(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -220,30 +217,13 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
 
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), patch(
-        f"{MODULE}.config_flow.yeelight.Bulb", return_value=mocked_bulb
-    ):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval():
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
-        IP_ADDRESS.replace(".", "_")
-    )
-
-    type(mocked_bulb).get_capabilities = MagicMock(CAPABILITIES)
-    type(mocked_bulb).get_properties = MagicMock(None)
-
-    await hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
-        DATA_DEVICE
-    ].async_update()
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
-        DATA_DEVICE
-    ].async_update_callback({})
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(binary_sensor_entity_id) is not None
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_async_listen_error_late_discovery(hass, caplog):
@@ -251,10 +231,9 @@ async def test_async_listen_error_late_discovery(hass, caplog):
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    mocked_bulb = _mocked_bulb()
-    mocked_bulb.async_listen = AsyncMock(side_effect=BulbException)
+    mocked_bulb = _mocked_bulb(cannot_connect=True)
 
-    with _patch_discovery(MODULE), patch(
+    with _patch_discovery(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -274,7 +253,11 @@ async def test_async_listen_error_has_host(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb()
     mocked_bulb.async_listen = AsyncMock(side_effect=BulbException)
 
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.LOADED
