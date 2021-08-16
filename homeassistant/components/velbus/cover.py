@@ -38,9 +38,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self._channel.get_position() == 100:
-            return True
-        return False
+        return self._channel.is_closed()
 
     @property
     def current_cover_position(self):
