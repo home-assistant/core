@@ -26,9 +26,9 @@ from .const import (
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
-    UPTIME,
-    WANIP,
     WANSTATUS,
 )
 
@@ -169,6 +169,6 @@ class Device:
 
         return {
             WANSTATUS: values[0][0] if values[0] is not None else None,
-            UPTIME: values[0][2] if values[0] is not None else None,
-            WANIP: values[1],
+            ROUTER_UPTIME: values[0][2] if values[0] is not None else None,
+            ROUTER_IP: values[1],
         }
