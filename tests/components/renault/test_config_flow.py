@@ -176,13 +176,8 @@ async def test_config_flow_duplicate(hass: HomeAssistant):
         "homeassistant.components.renault.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        config_entry = get_mock_config_entry()
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
+        get_mock_config_entry().add_to_hass(hass)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -211,4 +206,4 @@ async def test_config_flow_duplicate(hass: HomeAssistant):
         assert result["reason"] == "already_configured"
         await hass.async_block_till_done()
 
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
