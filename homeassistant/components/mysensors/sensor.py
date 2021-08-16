@@ -230,8 +230,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up the instance."""
         super().__init__(*args, **kwargs)
-        entity_description = self._get_entity_description()
-        if entity_description:
+        if entity_description := self._get_entity_description():
             self.entity_description = entity_description
 
     @property
