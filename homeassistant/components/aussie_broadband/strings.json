@@ -8,9 +8,9 @@
         }
       },
       "service": {
-        "title": "[%key:common::config_flow::title%]",
+        "title": "Select Service",
         "data": {
-          "service_id": "[%key:common::config_flow::data::service_id%]"
+          "service_id": "Service"
         }
       }
     },
@@ -18,8 +18,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured%]",
-      "no_services_found": "[%key:common::config_flow::abort::no_services_found%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "no_services_found": "No services were found for this account"
     }
   }
 }
