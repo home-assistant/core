@@ -51,7 +51,7 @@ accuweather==0.2.0
 adax==0.1.1
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.3.4
+adb-shell[async]==0.4.0
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -725,7 +725,7 @@ pyControl4==0.0.6
 pyHS100==0.3.5.2
 
 # homeassistant.components.met_eireann
-pyMetEireann==0.2
+pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
@@ -1173,7 +1173,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.3
+simplisafe-python==11.0.4
 
 # homeassistant.components.slack
 slackclient==2.5.0

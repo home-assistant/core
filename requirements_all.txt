@@ -109,7 +109,7 @@ adafruit-circuitpython-mcp230xx==2.2.2
 adax==0.1.1
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.3.4
+adb-shell[async]==0.4.0
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -1283,7 +1283,7 @@ pyControl4==0.0.6
 pyHS100==0.3.5.2
 
 # homeassistant.components.met_eireann
-pyMetEireann==0.2
+pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
@@ -1811,7 +1811,7 @@ pysyncthru==0.7.3
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
-pytautulli==0.5.0
+pytautulli==21.8.1
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -2119,7 +2119,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.3
+simplisafe-python==11.0.4
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0

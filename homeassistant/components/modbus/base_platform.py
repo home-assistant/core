@@ -187,9 +187,9 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._verify_address = config[CONF_VERIFY].get(
                 CONF_ADDRESS, config[CONF_ADDRESS]
             )
-            self._verify_type = config[CONF_VERIFY].get(
-                CONF_INPUT_TYPE, convert[config[CONF_WRITE_TYPE]][0]
-            )
+            self._verify_type = convert[
+                config[CONF_VERIFY].get(CONF_INPUT_TYPE, config[CONF_WRITE_TYPE])
+            ][0]
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self.command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
         else:
