@@ -101,11 +101,10 @@ class TemperatureSensor(HomeAccessory):
         temperature = convert_to_float(new_state.state)
         if temperature:
             temperature = temperature_to_homekit(temperature, unit)
-            if self.char_temp.value != temperature:
-                self.char_temp.set_value(temperature)
-                _LOGGER.debug(
-                    "%s: Current temperature set to %.1f°C", self.entity_id, temperature
-                )
+            self.char_temp.set_value(temperature)
+            _LOGGER.debug(
+                "%s: Current temperature set to %.1f°C", self.entity_id, temperature
+            )
 
 
 @TYPES.register("HumiditySensor")
@@ -128,7 +127,7 @@ class HumiditySensor(HomeAccessory):
     def async_update_state(self, new_state):
         """Update accessory after state change."""
         humidity = convert_to_float(new_state.state)
-        if humidity and self.char_humidity.value != humidity:
+        if humidity:
             self.char_humidity.set_value(humidity)
             _LOGGER.debug("%s: Percent set to %d%%", self.entity_id, humidity)
 
@@ -161,9 +160,8 @@ class AirQualitySensor(HomeAccessory):
                 self.char_density.set_value(density)
                 _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
             air_quality = density_to_air_quality(density)
-            if self.char_quality.value != air_quality:
-                self.char_quality.set_value(air_quality)
-                _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
 
 
 @TYPES.register("CarbonMonoxideSensor")
@@ -194,14 +192,12 @@ class CarbonMonoxideSensor(HomeAccessory):
         """Update accessory after state change."""
         value = convert_to_float(new_state.state)
         if value:
-            if self.char_level.value != value:
-                self.char_level.set_value(value)
+            self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
             co_detected = value > THRESHOLD_CO
-            if self.char_detected.value is not co_detected:
-                self.char_detected.set_value(co_detected)
-                _LOGGER.debug("%s: Set to %d", self.entity_id, value)
+            self.char_detected.set_value(co_detected)
+            _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 
 
 @TYPES.register("CarbonDioxideSensor")
@@ -232,14 +228,12 @@ class CarbonDioxideSensor(HomeAccessory):
         """Update accessory after state change."""
         value = convert_to_float(new_state.state)
         if value:
-            if self.char_level.value != value:
-                self.char_level.set_value(value)
+            self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
             co2_detected = value > THRESHOLD_CO2
-            if self.char_detected.value is not co2_detected:
-                self.char_detected.set_value(co2_detected)
-                _LOGGER.debug("%s: Set to %d", self.entity_id, value)
+            self.char_detected.set_value(co2_detected)
+            _LOGGER.debug("%s: Set to %d", self.entity_id, value)
 
 
 @TYPES.register("LightSensor")
@@ -262,7 +256,7 @@ class LightSensor(HomeAccessory):
     def async_update_state(self, new_state):
         """Update accessory after state change."""
         luminance = convert_to_float(new_state.state)
-        if luminance and self.char_light.value != luminance:
+        if luminance:
             self.char_light.set_value(luminance)
             _LOGGER.debug("%s: Set to %d", self.entity_id, luminance)
 
@@ -297,6 +291,5 @@ class BinarySensor(HomeAccessory):
         """Update accessory after state change."""
         state = new_state.state
         detected = self.format(state in (STATE_ON, STATE_HOME))
-        if self.char_detected.value != detected:
-            self.char_detected.set_value(detected)
-            _LOGGER.debug("%s: Set to %d", self.entity_id, detected)
+        self.char_detected.set_value(detected)
+        _LOGGER.debug("%s: Set to %d", self.entity_id, detected)

@@ -15,11 +15,6 @@ class JuiceNetDevice(CoordinatorEntity):
         self.type = sensor_type
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device.name
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
         return f"{self.device.id}-{self.type}"

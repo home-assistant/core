@@ -40,6 +40,7 @@ from homeassistant.components.modbus.const import (
     CONF_BYTESIZE,
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_STOPBITS,
     CONF_SWAP,
@@ -245,6 +246,7 @@ async def test_exception_struct_validator(do_config):
             CONF_PORT: "usb01",
             CONF_PARITY: "E",
             CONF_STOPBITS: 1,
+            CONF_MSG_WAIT: 100,
         },
         {
             CONF_TYPE: "serial",

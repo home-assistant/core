@@ -1,5 +1,4 @@
 """Support for Efergy sensors."""
-from datetime import datetime, timedelta
 import logging
 
 import requests
@@ -8,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -47,13 +46,13 @@ SENSOR_TYPES = {
         ATTR_NAME: "Energy Usage",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
     },
     CONF_AMOUNT: {
         ATTR_NAME: "Energy Consumed",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
     },
     CONF_BUDGET: {ATTR_NAME: "Energy Budget"},
     CONF_COST: {ATTR_NAME: "Energy Cost"},
@@ -61,7 +60,7 @@ SENSOR_TYPES = {
         ATTR_NAME: "Per-Device Usage",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
     },
 }
 
@@ -135,9 +134,9 @@ class EfergySensor(SensorEntity):
         self.utc_offset = utc_offset
         self.period = period
         if sensor_type == "cost":
-            self._attr_unit_of_measurement = f"{currency}/{period}"
+            self._attr_native_unit_of_measurement = f"{currency}/{period}"
         else:
-            self._attr_unit_of_measurement = sensor.get(ATTR_UNIT_OF_MEASUREMENT)
+            self._attr_native_unit_of_measurement = sensor.get(ATTR_UNIT_OF_MEASUREMENT)
         self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
         self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
 
@@ -147,27 +146,19 @@ class EfergySensor(SensorEntity):
             if self.type == "instant_readings":
                 url_string = f"{_RESOURCE}getInstant?token={self.app_token}"
                 response = requests.get(url_string, timeout=10)
-                self._attr_state = response.json()["reading"]
+                self._attr_native_value = response.json()["reading"]
             elif self.type == "amount":
                 url_string = f"{_RESOURCE}getEnergy?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
-                self._attr_state = response.json()["sum"]
-                last_reset = datetime.now() - timedelta(
-                    seconds=int(response.json()["duration"])
-                )
-                last_reset -= timedelta(
-                    seconds=last_reset.second, microseconds=last_reset.microsecond
-                )
-                self._attr_last_reset = last_reset
-
+                self._attr_native_value = response.json()["sum"]
             elif self.type == "budget":
                 url_string = f"{_RESOURCE}getBudget?token={self.app_token}"
                 response = requests.get(url_string, timeout=10)
-                self._attr_state = response.json()["status"]
+                self._attr_native_value = response.json()["status"]
             elif self.type == "cost":
                 url_string = f"{_RESOURCE}getCost?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
-                self._attr_state = response.json()["sum"]
+                self._attr_native_value = response.json()["sum"]
             elif self.type == "current_values":
                 url_string = (
                     f"{_RESOURCE}getCurrentValuesSummary?token={self.app_token}"
@@ -176,8 +167,8 @@ class EfergySensor(SensorEntity):
                 for sensor in response.json():
                     if self.sid == sensor["sid"]:
                         measurement = next(iter(sensor["data"][0].values()))
-                        self._attr_state = measurement
+                        self._attr_native_value = measurement
             else:
-                self._attr_state = None
+                self._attr_native_value = None
         except (requests.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
