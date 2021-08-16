@@ -106,7 +106,7 @@ adafruit-circuitpython-dht==3.6.0
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.adax
-adax==0.0.1
+adax==0.1.1
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.3.4
@@ -1038,7 +1038,7 @@ niluclient==0.1.2
 noaa-coops==0.1.8
 
 # homeassistant.components.nfandroidtv
-notifications-android-tv==0.1.2
+notifications-android-tv==0.1.3
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
@@ -1254,7 +1254,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.3
+py-synologydsm-api==1.0.4
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1342,7 +1342,7 @@ pyblackbird==0.5
 pybotvac==0.0.21
 
 # homeassistant.components.nissan_leaf
-pycarwings2==2.10
+pycarwings2==2.11
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.1
@@ -1610,7 +1610,7 @@ pymonoprice==0.3
 pymsteams==0.1.12
 
 # homeassistant.components.myq
-pymyq==3.0.4
+pymyq==3.1.2
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0
@@ -1990,7 +1990,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qnap
-qnapstats==0.3.1
+qnapstats==0.4.0
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.5
@@ -2439,7 +2439,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.34.3
+zeroconf==0.35.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.59
