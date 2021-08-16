@@ -148,7 +148,6 @@ class AmcrestCam(Camera):
         self._motion_detection_enabled = None
         self._brand = None
         self._model = None
-        self._serial = None
         self._audio_enabled = None
         self._motion_recording_enabled = None
         self._color_bw = None
@@ -313,7 +312,7 @@ class AmcrestCam(Camera):
     @property
     def unique_id(self) -> str | None:
         """Return a unique id for this instance."""
-        return self._serial if self._serial != "unknown" else None
+        return self._attr_unique_id
 
     async def stream_source(self):
         """Return the source of the stream."""
@@ -375,10 +374,9 @@ class AmcrestCam(Camera):
                     self._model = resp.split("=")[-1]
                 else:
                     self._model = "unknown"
-            if self._serial is None:
-                resp = self._api.serial_number.strip()
-                _LOGGER.debug("serial=%s", resp)
-                self._serial = resp or "unknown"
+            if self.self._attr_unique_id is None:
+                self._attr_unique_id = self._api.serial_number.strip()
+                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
