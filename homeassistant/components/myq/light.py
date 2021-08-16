@@ -102,7 +102,6 @@ class MyQLight(CoordinatorEntity, LightEntity):
             "manufacturer": MANUFACTURER,
             "sw_version": self._device.firmware_version,
         }
-        model = KNOWN_MODELS.get(self._device.device_id[2:4])
         if model := KNOWN_MODELS.get(self._device.device_id[2:4]):
             device_info["model"] = model
         if self._device.parent_device_id:
