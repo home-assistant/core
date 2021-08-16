@@ -34,7 +34,6 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.components.mqtt.models import ReceiveMessage
-from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -889,8 +888,7 @@ async def async_init_recorder_component(hass, add_config=None):
         assert await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
-    assert recorder.DOMAIN in hass.config.components
-    await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
+        assert recorder.DOMAIN in hass.config.components
     _LOGGER.info("In-memory recorder successfully started")
 
 

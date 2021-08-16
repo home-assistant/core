@@ -556,15 +556,19 @@ class Recorder(threading.Thread):
         async_track_time_change(
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
+
         # Compile hourly statistics every hour at *:12
         async_track_time_change(
             self.hass, self.async_hourly_statistics, minute=12, second=0
         )
+
         # Add tasks for missing statistics runs
         now = dt_util.utcnow()
         start = now - timedelta(days=self.keep_days)
         start = start.replace(minute=0, second=0, microsecond=0)
-
+        if not self.get_session:
+            # Home Assistant is shutting down
+            return
         with session_scope(session=self.get_session()) as session:
             while start < now:
                 if not session.query(StatisticsRuns).filter_by(start=start):
