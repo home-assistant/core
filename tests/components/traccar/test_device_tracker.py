@@ -1,7 +1,6 @@
+"""The tests for the Traccar device tracker platform."""
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
-
-import pytest
 
 from homeassistant.components.device_tracker.const import DOMAIN
 from homeassistant.components.traccar.device_tracker import (
