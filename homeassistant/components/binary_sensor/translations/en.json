@@ -43,7 +43,7 @@
             "is_smoke": "{entity_name} is detecting smoke",
             "is_sound": "{entity_name} is detecting sound",
             "is_unsafe": "{entity_name} is unsafe",
-            "is_update": "{entity_name} has update available",
+            "is_update": "{entity_name} has an update available",
             "is_vibration": "{entity_name} is detecting vibration"
         },
         "trigger_type": {
@@ -89,7 +89,7 @@
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on",
             "unsafe": "{entity_name} became unsafe",
-            "update": "{entity_name} get update available",
+            "update": "{entity_name} got update available",
             "vibration": "{entity_name} started detecting vibration"
         }
     },
