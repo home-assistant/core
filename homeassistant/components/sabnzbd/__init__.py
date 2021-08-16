@@ -1,4 +1,6 @@
 """Support for monitoring an SABnzbd NZB client."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -31,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "sabnzbd"
 DATA_SABNZBD = "sabznbd"
 
-_CONFIGURING = {}
+_CONFIGURING: dict[str, str] = {}
 
 ATTR_SPEED = "speed"
 BASE_URL_FORMAT = "{}://{}:{}/"
