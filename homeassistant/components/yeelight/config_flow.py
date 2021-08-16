@@ -134,7 +134,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_ID]
         }
         devices_name = {}
-        devices = await YeelightScanner.async_discover(self.hass)
+        scanner = YeelightScanner.async_get(self._hass)
+        devices = await scanner.async_discover(self.hass)
         # Run 3 times as packets can get lost
         for capabilities in devices:
             unique_id = capabilities["id"]
@@ -175,7 +176,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: host})
 
         bulb = AsyncBulb(host)
-        capabilities = await YeelightScanner.async_get_capabilities(self.hass, host)
+        scanner = YeelightScanner.async_get(self._hass)
+        capabilities = await scanner.async_get_capabilities(self.hass, host)
         if capabilities is None:  # timeout
             _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
         else:
