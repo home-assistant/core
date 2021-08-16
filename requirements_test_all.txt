@@ -202,6 +202,9 @@ aprslib==0.6.46
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.7.0
 
+# homeassistant.components.yeelight
+async-upnp-client==0.19.2
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
