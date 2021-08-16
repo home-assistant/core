@@ -2,7 +2,7 @@
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
-    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     SensorEntity,
 )
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
@@ -29,6 +29,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
     """Representation of a Mill Sensor device."""
 
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_state_class = STATE_CLASS_TOTAL
+
     def __init__(self, coordinator, sensor_type, heater):
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -36,11 +40,8 @@ class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._id = heater.device_id
         self._sensor_type = sensor_type
 
-        self._attr_device_class = DEVICE_CLASS_ENERGY
         self._attr_name = f"{heater.name} {sensor_type.replace('_', ' ')}"
         self._attr_unique_id = f"{heater.device_id}_{sensor_type}"
-        self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_device_info = {
             "identifiers": {(DOMAIN, heater.device_id)},
             "name": self.name,
@@ -71,7 +72,7 @@ class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         else:
             _state = None
         if _state is None:
-            self._attr_state = _state
+            self._attr_native_value = _state
             self.async_write_ha_state()
             return
 
@@ -86,5 +87,5 @@ class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
                         month=1, day=1, hour=0, minute=0, second=0, microsecond=0
                     )
                 )
-        self._attr_state = _state
+        self._attr_native_value = _state
         self.async_write_ha_state()

@@ -106,10 +106,10 @@ adafruit-circuitpython-dht==3.6.0
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.adax
-adax==0.0.1
+adax==0.1.1
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.3.4
+adb-shell[async]==0.4.0
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -1257,7 +1257,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.3
+py-synologydsm-api==1.0.4
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1275,7 +1275,7 @@ pyControl4==0.0.6
 pyHS100==0.3.5.2
 
 # homeassistant.components.met_eireann
-pyMetEireann==0.2
+pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
@@ -1487,7 +1487,7 @@ pyhik==0.2.8
 pyhiveapi==0.4.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.73
+pyhomematic==0.1.74
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1803,7 +1803,7 @@ pysyncthru==0.7.3
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
-pytautulli==0.5.0
+pytautulli==21.8.1
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -1860,7 +1860,7 @@ python-juicenet==1.0.2
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.6
+python-miio==0.5.7
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -1990,7 +1990,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qnap
-qnapstats==0.3.1
+qnapstats==0.4.0
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.5
@@ -2114,7 +2114,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.3
+simplisafe-python==11.0.4
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2439,7 +2439,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.34.3
+zeroconf==0.35.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.59
