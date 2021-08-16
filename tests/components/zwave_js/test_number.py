@@ -1,6 +1,10 @@
 """Test the Z-Wave JS number platform."""
 from zwave_js_server.event import Event
 
+from homeassistant.helpers import entity_registry as er
+
+from .common import BASIC_NUMBER_ENTITY
+
 NUMBER_ENTITY = "number.thermostat_hvac_valve_control"
 
 
@@ -67,3 +71,13 @@ async def test_number(hass, client, aeotec_radiator_thermostat, integration):
 
     state = hass.states.get(NUMBER_ENTITY)
     assert state.state == "99.0"
+
+
+async def test_disabled_basic_number(hass, ge_in_wall_dimmer_switch, integration):
+    """Test number is created from Basic CC and is disabled."""
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BASIC_NUMBER_ENTITY)
+
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
