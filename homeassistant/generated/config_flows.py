@@ -180,6 +180,7 @@ FLOWS = [
     "nexia",
     "nfandroidtv",
     "nightscout",
+    "nmap_tracker",
     "notion",
     "nuheat",
     "nuki",
