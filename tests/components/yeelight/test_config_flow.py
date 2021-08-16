@@ -243,7 +243,7 @@ async def test_options(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -265,7 +265,7 @@ async def test_options(hass: HomeAssistant):
     config[CONF_NIGHTLIGHT_SWITCH] = True
     user_input = {**config}
     user_input.pop(CONF_NAME)
-    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input
         )
@@ -315,9 +315,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             context={"source": config_entries.SOURCE_HOMEKIT},
             data={"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
-    import pprint
-
-    pprint.pprint(result)
+        await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
@@ -329,6 +327,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             context={"source": config_entries.SOURCE_DHCP},
             data={"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
         )
+        await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_in_progress"
 
@@ -340,10 +339,13 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             context={"source": config_entries.SOURCE_DHCP},
             data={"ip": IP_ADDRESS, "macaddress": "00:00:00:00:00:00"},
         )
+        await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"
 
-    with _patch_discovery(), _patch_discovery_interval(), patch(
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", side_effect=CannotConnect
     ):
         result3 = await hass.config_entries.flow.async_init(
@@ -351,6 +353,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             context={"source": config_entries.SOURCE_DHCP},
             data={"ip": "1.2.3.5", "macaddress": "00:00:00:00:00:01"},
         )
+        await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "cannot_connect"
 
@@ -379,9 +382,8 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
-    import pprint
+        await hass.async_block_till_done()
 
-    pprint.pprint(result)
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
@@ -391,6 +393,8 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_async_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
     assert result2["type"] == "create_entry"
     assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_ID: "0x000000000015243f"}
     assert mock_async_setup.called
