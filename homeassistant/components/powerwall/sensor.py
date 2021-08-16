@@ -87,7 +87,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
     _attr_name = "Powerwall Charge"
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = DEVICE_CLASS_BATTERY
 
     @property
@@ -96,7 +96,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
         return f"{self.base_unique_id}_charge"
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in percentage."""
         return round(self.coordinator.data[POWERWALL_API_CHARGE])
 
@@ -105,7 +105,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = POWER_KILO_WATT
+    _attr_native_unit_of_measurement = POWER_KILO_WATT
     _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
@@ -128,7 +128,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in kW."""
         return (
             self.coordinator.data[POWERWALL_API_METERS]
@@ -152,7 +152,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_last_reset = dt_util.utc_from_timestamp(0)
 
@@ -180,7 +180,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in kWh."""
         meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         if self._meter_direction == _METER_DIRECTION_EXPORT:

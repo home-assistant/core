@@ -306,10 +306,10 @@ class FroniusTemplateSensor(SensorEntity):
     async def async_update(self):
         """Update the internal state."""
         state = self._parent.data.get(self._key)
-        self._attr_state = state.get("value")
-        if isinstance(self._attr_state, float):
-            self._attr_state = round(self._attr_state, 2)
-        self._attr_unit_of_measurement = state.get("unit")
+        self._attr_native_value = state.get("value")
+        if isinstance(self._attr_native_value, float):
+            self._attr_native_value = round(self._attr_native_value, 2)
+        self._attr_native_unit_of_measurement = state.get("unit")
 
     @property
     def last_reset(self) -> dt.dt.datetime | None:
