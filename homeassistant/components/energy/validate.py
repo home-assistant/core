@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import Any
 
 from homeassistant.components import recorder
 from homeassistant.const import (
@@ -17,27 +18,24 @@ from .const import DOMAIN
 
 
 @dataclasses.dataclass
-class ValidationMessage:
+class ValidationIssue:
     """Error or warning message."""
 
-    message: str
-    link: str | None = None
+    type: str
+    identifier: str
+    value: Any | None = None
 
 
 @dataclasses.dataclass
-class ValidationResult:
-    """Result of validation."""
-
-    errors: list[ValidationMessage] = dataclasses.field(default_factory=list)
-    warnings: list[ValidationMessage] = dataclasses.field(default_factory=list)
-
-
-@dataclasses.dataclass
-class EnergyPreferencesValidation(ValidationResult):
+class EnergyPreferencesValidation:
     """Dictionary holding validation information."""
 
-    energy_sources: list[ValidationResult] = dataclasses.field(default_factory=list)
-    device_consumption: list[ValidationResult] = dataclasses.field(default_factory=list)
+    energy_sources: list[list[ValidationIssue]] = dataclasses.field(
+        default_factory=list
+    )
+    device_consumption: list[list[ValidationIssue]] = dataclasses.field(
+        default_factory=list
+    )
 
     def as_dict(self) -> dict:
         """Return dictionary version."""
@@ -46,7 +44,7 @@ class EnergyPreferencesValidation(ValidationResult):
 
 @callback
 def _async_validate_energy_stat(
-    hass: HomeAssistant, stat_value: str, result: ValidationResult
+    hass: HomeAssistant, stat_value: str, result: list[ValidationIssue]
 ) -> None:
     """Validate a statistic."""
     has_entity_source = valid_entity_id(stat_value)
@@ -55,10 +53,10 @@ def _async_validate_energy_stat(
         return
 
     if not recorder.is_entity_recorded(hass, stat_value):
-        result.errors.append(
-            ValidationMessage(
-                f"Entity {stat_value} needs to be tracked by the recorder",
-                "https://www.home-assistant.io/integrations/recorder#configure-filter",
+        result.append(
+            ValidationIssue(
+                "recorder_untracked",
+                stat_value,
             )
         )
         return
@@ -66,92 +64,76 @@ def _async_validate_energy_stat(
     state = hass.states.get(stat_value)
 
     if state is None:
-        result.warnings.append(
-            ValidationMessage(f"Entity {stat_value} is not currently defined")
+        result.append(
+            ValidationIssue(
+                "entity_not_defined",
+                stat_value,
+            )
         )
         return
 
     if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        result.warnings.append(
-            ValidationMessage(
-                f"Entity {stat_value} is currently unavailable ({state.state})"
-            )
-        )
+        result.append(ValidationIssue("entity_unavailable", stat_value, state.state))
         return
 
     try:
         current_value: float | None = float(state.state)
     except ValueError:
-        result.errors.append(
-            ValidationMessage(
-                f"Entity {stat_value} has non-numeric value {state.state}"
-            )
+        result.append(
+            ValidationIssue("entity_state_non_numeric", stat_value, state.state)
         )
         current_value = None
 
     if current_value is not None and current_value < 0:
-        result.errors.append(
-            ValidationMessage(f"Entity {stat_value} has negative value {current_value}")
+        result.append(
+            ValidationIssue("entity_negative_state", stat_value, current_value)
         )
 
     unit = state.attributes.get("unit_of_measurement")
 
-    if unit is None:
-        result.warnings.append(
-            ValidationMessage(f"Entity {stat_value} has no unit of measurement")
-        )
-
-    elif unit not in (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR):
-        result.errors.append(
-            ValidationMessage(
-                f"Entity {stat_value} has an unexpected unit. Expected {ENERGY_KILO_WATT_HOUR} or {ENERGY_WATT_HOUR}"
-            )
-        )
+    if unit not in (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR):
+        result.append(ValidationIssue("entity_unexpected_unit", stat_value, unit))
 
 
 @callback
 def _async_validate_price_entity(
-    hass: HomeAssistant, entity_id: str, result: ValidationResult
+    hass: HomeAssistant, entity_id: str, result: list[ValidationIssue]
 ) -> None:
     """Validate that the price entity is correct."""
     state = hass.states.get(entity_id)
 
     if state is None:
-        result.errors.append(ValidationMessage(f"Unable to find entity {entity_id}"))
+        result.append(
+            ValidationIssue(
+                "entity_not_defined",
+                entity_id,
+            )
+        )
         return
 
     try:
         value: float | None = float(state.state)
     except ValueError:
-        result.errors.append(
-            ValidationMessage(f"Entity {entity_id} has non-numeric value {state.state}")
+        result.append(
+            ValidationIssue("entity_state_non_numeric", entity_id, state.state)
         )
         value = None
         return
 
     if value is not None and value < 0:
-        result.errors.append(
-            ValidationMessage(f"Entity {entity_id} has negative value {value}")
-        )
+        result.append(ValidationIssue("entity_negative_state", entity_id, value))
 
     unit = state.attributes.get("unit_of_measurement")
 
-    if unit is None:
-        result.warnings.append(
-            ValidationMessage(f"Entity {entity_id} has no unit of measurement")
-        )
-
-    elif not unit.endswith((f"/{ENERGY_KILO_WATT_HOUR}", f"/{ENERGY_WATT_HOUR}")):
-        result.errors.append(
-            ValidationMessage(
-                f"Entity {entity_id} has a unit that is not per kilowatt or watt hour"
-            )
-        )
+    if unit is None or not unit.endswith(
+        (f"/{ENERGY_KILO_WATT_HOUR}", f"/{ENERGY_WATT_HOUR}")
+    ):
+        result.append(ValidationIssue("entity_unexpected_unit", entity_id, unit))
 
 
 @callback
 def _async_validate_cost_stat(
-    hass: HomeAssistant, stat_id: str, result: ValidationResult
+    hass: HomeAssistant, stat_id: str, result: list[ValidationIssue]
 ) -> None:
     """Validate that the cost stat is correct."""
     has_entity = valid_entity_id(stat_id)
@@ -160,24 +142,24 @@ def _async_validate_cost_stat(
         return
 
     if not recorder.is_entity_recorded(hass, stat_id):
-        result.errors.append(
-            ValidationMessage(
-                f"Entity {stat_id} needs to be tracked by the recorder",
-                "https://www.home-assistant.io/integrations/recorder#configure-filter",
+        result.append(
+            ValidationIssue(
+                "recorder_untracked",
+                stat_id,
             )
         )
 
 
 @callback
 def _async_validate_cost_entity(
-    hass: HomeAssistant, entity_id: str, result: ValidationResult
+    hass: HomeAssistant, entity_id: str, result: list[ValidationIssue]
 ) -> None:
     """Validate that the cost entity is correct."""
     if not recorder.is_entity_recorded(hass, entity_id):
-        result.errors.append(
-            ValidationMessage(
-                f"Entity {entity_id} needs to be tracked by the recorder",
-                "https://www.home-assistant.io/integrations/recorder#configure-filter",
+        result.append(
+            ValidationIssue(
+                "recorder_untracked",
+                entity_id,
             )
         )
 
@@ -192,7 +174,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
         return result
 
     for source in manager.data["energy_sources"]:
-        source_result = ValidationResult()
+        source_result: list[ValidationIssue] = []
         result.energy_sources.append(source_result)
 
         if source["type"] == "grid":
@@ -256,9 +238,8 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             _async_validate_energy_stat(hass, source["stat_energy_to"], source_result)
 
     for device in manager.data["device_consumption"]:
-        result.device_consumption.append(ValidationResult())
-        _async_validate_energy_stat(
-            hass, device["stat_consumption"], result.device_consumption[-1]
-        )
+        device_result: list[ValidationIssue] = []
+        result.device_consumption.append(device_result)
+        _async_validate_energy_stat(hass, device["stat_consumption"], device_result)
 
     return result
