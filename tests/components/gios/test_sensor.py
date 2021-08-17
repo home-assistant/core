@@ -167,9 +167,9 @@ async def test_sensor(hass):
     assert state.state == "dobry"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AQI
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AQI
 
     entry = registry.async_get("sensor.home_aqi")
     assert entry
