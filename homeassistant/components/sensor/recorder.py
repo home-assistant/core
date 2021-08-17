@@ -313,12 +313,6 @@ def compile_statistics(
                 else:
                     new_state = fstate
 
-            # Deprecated, will be removed in Home Assistant 2021.10
-            if last_reset is None and state_class == STATE_CLASS_MEASUREMENT:
-                # No valid updates
-                result.pop(entity_id)
-                continue
-
             if new_state is None or old_state is None:
                 # No valid updates
                 result.pop(entity_id)
