@@ -9,7 +9,6 @@ from huisbaasje.const import (
 )
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 )
@@ -54,31 +53,26 @@ SENSORS_INFO = [
         "name": "Huisbaasje Current Power",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power In Peak",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power In Off Peak",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN_LOW,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power Out Peak",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Current Power Out Off Peak",
         "device_class": DEVICE_CLASS_POWER,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT_LOW,
-        "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
         "name": "Huisbaasje Energy Consumption Peak Today",
@@ -156,7 +150,6 @@ SENSORS_INFO = [
         "name": "Huisbaasje Current Gas",
         "unit_of_measurement": FLOW_CUBIC_METERS_PER_HOUR,
         "source_type": SOURCE_TYPE_GAS,
-        "state_class": STATE_CLASS_MEASUREMENT,
         "icon": "mdi:fire",
         "precision": 1,
     },
