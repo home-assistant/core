@@ -39,6 +39,30 @@ async def test_validation_empty_config(hass):
     }
 
 
+async def test_validation(hass, mock_energy_manager):
+    """Test validating an empty config."""
+    for key in ("device_cons", "battery_import", "battery_export", "solar_production"):
+        hass.states.async_set(f"sensor.{key}", "123", {"unit_of_measurement": "kWh"})
+
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_import",
+                    "stat_energy_to": "sensor.battery_export",
+                },
+                {"type": "solar", "stat_energy_from": "sensor.solar_production"},
+            ],
+            "device_consumption": [{"stat_consumption": "sensor.device_cons"}],
+        }
+    )
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [[], []],
+        "device_consumption": [[]],
+    }
+
+
 async def test_validation_device_consumption_entity_missing(hass, mock_energy_manager):
     """Test validating missing stat for device."""
     await mock_energy_manager.async_update(
