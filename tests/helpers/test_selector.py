@@ -191,7 +191,13 @@ def test_object_selector_schema(schema):
 
 @pytest.mark.parametrize(
     "schema",
-    ({}, {"multiline": True}, {"multiline": False}),
+    (
+        {},
+        {"multiline": True},
+        {"multiline": False},
+        {"placeholder": "hh:mm:ss"},
+        {"pattern": "([0-9]+:)*[0-9]+"},
+    ),
 )
 def test_text_selector_schema(schema):
     """Test text selector."""

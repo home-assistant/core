@@ -182,7 +182,13 @@ class ObjectSelector(Selector):
 class StringSelector(Selector):
     """Selector for a multi-line text string."""
 
-    CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiline", default=False): bool,
+            vol.Optional("pattern"): str,
+            vol.Optional("placeholder"): str,
+        }
+    )
 
 
 @SELECTORS.register("select")
