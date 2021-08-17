@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .renault_entities import RenaultBatteryDataEntity, RenaultDataEntity
 from .renault_hub import RenaultHub
-from .renault_vehicle import RenaultVehicleProxy
 
 
 async def async_setup_entry(
@@ -25,25 +24,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
-    entities = get_entities(proxy)
-    async_add_entities(entities)
-
-
-def get_entities(proxy: RenaultHub) -> list[RenaultDataEntity]:
-    """Create Renault entities for all vehicles."""
-    entities = []
-    for vehicle in proxy.vehicles.values():
-        entities.extend(get_vehicle_entities(vehicle))
-    return entities
-
-
-def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultDataEntity]:
-    """Create Renault entities for single vehicle."""
     entities: list[RenaultDataEntity] = []
-    if "battery" in vehicle.coordinators:
-        entities.append(RenaultPluggedInSensor(vehicle, "Plugged In"))
-        entities.append(RenaultChargingSensor(vehicle, "Charging"))
-    return entities
+    for vehicle in proxy.vehicles.values():
+        if "battery" in vehicle.coordinators:
+            entities.append(RenaultPluggedInSensor(vehicle, "Plugged In"))
+            entities.append(RenaultChargingSensor(vehicle, "Charging"))
+    async_add_entities(entities)
 
 
 class RenaultPluggedInSensor(RenaultBatteryDataEntity, BinarySensorEntity):
@@ -58,13 +44,6 @@ class RenaultPluggedInSensor(RenaultBatteryDataEntity, BinarySensorEntity):
             return None
         return self.data.get_plug_status() == PlugState.PLUGGED
 
-    @property
-    def icon(self) -> str:
-        """Icon handling."""
-        if self.is_on:
-            return "mdi:power-plug"
-        return "mdi:power-plug-off"
-
 
 class RenaultChargingSensor(RenaultBatteryDataEntity, BinarySensorEntity):
     """Charging sensor."""
@@ -77,10 +56,3 @@ class RenaultChargingSensor(RenaultBatteryDataEntity, BinarySensorEntity):
         if (not self.data) or (self.data.chargingStatus is None):
             return None
         return self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
-
-    @property
-    def icon(self) -> str:
-        """Icon handling."""
-        if self.is_on:
-            return "mdi:flash"
-        return "mdi:flash-off"
