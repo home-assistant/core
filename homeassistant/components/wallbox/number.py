@@ -6,9 +6,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_CONNECTIONS, CONF_NAME, CONF_SENSOR_TYPES, DOMAIN
 
-CONF_STATION = "station"
-UPDATE_INTERVAL = 30
-
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
@@ -25,13 +22,8 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         super().__init__(coordinator)
         _properties = CONF_SENSOR_TYPES["max_charging_current"]
         self._coordinator = coordinator
-        self._name = f"{config.title} {_properties[CONF_NAME]}"
+        self._attr_name = f"{config.title} {_properties[CONF_NAME]}"
         self._device_class = _properties[CONF_DEVICE_CLASS]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def min_value(self):
@@ -41,12 +33,12 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
     @property
     def max_value(self):
         """Return the maximum available current."""
-        return self.coordinator.data["max_available_power"]
+        return self._coordinator.data["max_available_power"]
 
     @property
     def value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data["max_charging_current"]
+        return self._coordinator.data["max_charging_current"]
 
     @property
     def device_class(self):
