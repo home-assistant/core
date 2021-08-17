@@ -349,7 +349,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: self._last_period,
-            ATTR_LAST_RESET: self._last_reset,
+            ATTR_LAST_RESET: self._last_reset.isoformat(),
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
