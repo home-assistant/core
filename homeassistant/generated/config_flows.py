@@ -196,6 +196,7 @@ FLOWS = [
     "ovo_energy",
     "owntracks",
     "ozw",
+    "p1_monitor",
     "panasonic_viera",
     "philips_js",
     "pi_hole",
