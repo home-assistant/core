@@ -11,6 +11,7 @@ from miio import (
     AirPurifier,
     AirPurifierMiot,
     DeviceException,
+    Vacuum,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -56,7 +57,7 @@ HUMIDIFIER_PLATFORMS = [
     "switch",
 ]
 LIGHT_PLATFORMS = ["light"]
-VACUUM_PLATFORMS = ["vacuum"]
+VACUUM_PLATFORMS = ["vacuum", "sensor"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
 
@@ -119,7 +120,11 @@ async def async_create_miio_device_and_coordinator(
     device = None
     migrate = False
 
-    if model not in MODELS_HUMIDIFIER and model not in MODELS_FAN:
+    if (
+        model not in MODELS_HUMIDIFIER
+        and model not in MODELS_FAN
+        and model not in MODELS_VACUUM
+    ):
         return
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
@@ -141,13 +146,10 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
+    elif model in MODELS_VACUUM:
+        device = Vacuum(host, token)
     else:
-        _LOGGER.error(
-            "Unsupported device found! Please create an issue at "
-            "https://github.com/syssi/xiaomi_airpurifier/issues "
-            "and provide the following data: %s",
-            model,
-        )
+        _LOGGER.error(f"Failed to determine xiaomi device for model: {model}")
         return
 
     if migrate:

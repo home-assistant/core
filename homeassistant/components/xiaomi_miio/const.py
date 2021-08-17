@@ -135,7 +135,7 @@ MODELS_LIGHT = (
     + MODELS_LIGHT_BULB
     + MODELS_LIGHT_MONO
 )
-MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
+MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum", "roborock.vacuum.a15"]
 MODELS_AIR_MONITOR = [
     MODEL_AIRQUALITYMONITOR_V1,
     MODEL_AIRQUALITYMONITOR_B1,
