@@ -355,6 +355,7 @@ class AmcrestCam(Camera):
             if not self.available:
                 self._update_succeeded = False
             return
+        _LOGGER.debug("Updating %s camera", self.name)
         try:
             if self._brand is None:
                 resp = self._api.vendor_information.strip()
