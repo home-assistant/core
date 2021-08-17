@@ -27,10 +27,6 @@ class MyQBinarySensorEntity(MyQEntity, BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
-    def __init__(self, coordinator, device):
-        """Initialize with API object, device id."""
-        super().__init__(coordinator, device)
-
     @property
     def name(self):
         """Return the name of the garage door if any."""

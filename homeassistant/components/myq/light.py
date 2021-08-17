@@ -29,10 +29,6 @@ class MyQLight(MyQEntity, LightEntity):
 
     _attr_supported_features = 0
 
-    def __init__(self, coordinator, device):
-        """Initialize with API object, device id."""
-        super().__init__(coordinator, device)
-
     @property
     def is_on(self):
         """Return true if the light is on, else False."""
