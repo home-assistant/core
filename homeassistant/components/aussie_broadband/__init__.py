@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from ...exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from .const import ATTR_PASSWORD, ATTR_USERNAME, DOMAIN
+from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def create_client():
         try:
-            return AussieBB(entry.data[ATTR_USERNAME], entry.data[ATTR_PASSWORD])
+            return AussieBB(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
         except AuthenticationException as e:
             raise ConfigEntryAuthFailed() from e
         except (

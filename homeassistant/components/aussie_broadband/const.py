@@ -2,6 +2,6 @@
 
 DOMAIN = "aussie_broadband"
 
-ATTR_USERNAME = "username"
-ATTR_PASSWORD = "password"
-ATTR_SERVICE_ID = "service_id"
+CONF_USERNAME = "username"
+CONF_PASSWORD = "password"
+CONF_SERVICE_ID = "service_id"

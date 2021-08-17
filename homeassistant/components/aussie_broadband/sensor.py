@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import (
 from . import DOMAIN
 from ...core import HomeAssistant
 from ..sensor import SensorEntity
-from .const import ATTR_SERVICE_ID
+from .const import CONF_SERVICE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ async def async_setup_entry(
 ):
     """Set up Aussie Broadband sensor from a config entry."""
     client = hass.data[DOMAIN][entry.entry_id]
-    service_id = entry.data[ATTR_SERVICE_ID]
+    service_id = entry.data[CONF_SERVICE_ID]
 
     async def async_update_data():
         return await hass.async_add_executor_job(client.get_usage, service_id)

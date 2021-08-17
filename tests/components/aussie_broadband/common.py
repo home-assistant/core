@@ -2,11 +2,11 @@
 from unittest.mock import patch
 
 from homeassistant.components.aussie_broadband import (
-    ATTR_PASSWORD,
-    ATTR_USERNAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     DOMAIN as AUSSIE_BROADBAND_DOMAIN,
 )
-from homeassistant.components.aussie_broadband.const import ATTR_SERVICE_ID
+from homeassistant.components.aussie_broadband.const import CONF_SERVICE_ID
 
 from tests.common import MockConfigEntry
 
@@ -16,9 +16,9 @@ async def setup_platform(hass, platform):
     mock_entry = MockConfigEntry(
         domain=AUSSIE_BROADBAND_DOMAIN,
         data={
-            ATTR_USERNAME: "user@email.com",
-            ATTR_PASSWORD: "password",
-            ATTR_SERVICE_ID: "12345678",
+            CONF_USERNAME: "user@email.com",
+            CONF_PASSWORD: "password",
+            CONF_SERVICE_ID: "12345678",
         },
     )
     mock_entry.add_to_hass(hass)

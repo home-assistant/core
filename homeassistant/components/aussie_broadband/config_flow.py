@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import ATTR_PASSWORD, ATTR_SERVICE_ID, ATTR_USERNAME, DOMAIN
+from .const import CONF_PASSWORD, CONF_SERVICE_ID, CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         try:
             self.client = await self.hass.async_add_executor_job(
-                AussieBB, user_input[ATTR_USERNAME], user_input[ATTR_PASSWORD]
+                AussieBB, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
         except AuthenticationException:
             errors["base"] = "invalid_credentials"
@@ -67,10 +67,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if len(self.services) == 1:
                 service = self.services[0]
-                self.data[ATTR_SERVICE_ID] = service["service_id"]
+                self.data[CONF_SERVICE_ID] = service["service_id"]
 
                 existing_entry = await self.async_set_unique_id(
-                    self.data[ATTR_SERVICE_ID]
+                    self.data[CONF_SERVICE_ID]
                 )
                 if existing_entry is not None:
                     return self.async_abort(reason="already_configured")
@@ -97,18 +97,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             service = next(
                 s
                 for s in self.services
-                if s["service_id"] == user_input[ATTR_SERVICE_ID]
+                if s["service_id"] == user_input[CONF_SERVICE_ID]
             )
-            self.data[ATTR_SERVICE_ID] = service["service_id"]
+            self.data[CONF_SERVICE_ID] = service["service_id"]
 
-            existing_entry = await self.async_set_unique_id(self.data[ATTR_SERVICE_ID])
+            existing_entry = await self.async_set_unique_id(self.data[CONF_SERVICE_ID])
             if existing_entry is not None:
                 return self.async_abort(reason="already_configured")
 
             return self.async_create_entry(title=service["description"], data=self.data)
 
         service_options = {s["service_id"]: s["description"] for s in self.services}
-        schema = vol.Schema({vol.Required(ATTR_SERVICE_ID): vol.In(service_options)})
+        schema = vol.Schema({vol.Required(CONF_SERVICE_ID): vol.In(service_options)})
         return self.async_show_form(
             step_id="service",
             data_schema=schema,
