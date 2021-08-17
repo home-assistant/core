@@ -4,7 +4,7 @@ aiodiscover==1.4.2
 aiohttp==3.7.4.post0
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.19.2
+async-upnp-client==0.20.0
 async_timeout==3.0.1
 attrs==21.2.0
 awesomeversion==21.4.0
@@ -33,7 +33,7 @@ sqlalchemy==1.4.17
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
 yarl==1.6.3
-zeroconf==0.35.1
+zeroconf==0.36.0
 
 pycryptodome>=3.6.6
 

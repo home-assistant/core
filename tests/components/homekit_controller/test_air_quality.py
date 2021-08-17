@@ -2,6 +2,8 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.helpers import entity_registry as er
+
 from tests.components.homekit_controller.common import setup_test_component
 
 
@@ -34,6 +36,12 @@ def create_air_quality_sensor_service(accessory):
 async def test_air_quality_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit temperature sensor accessory."""
     helper = await setup_test_component(hass, create_air_quality_sensor_service)
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        entity_id="air_quality.testdevice", disabled_by=None
+    )
+    await hass.async_block_till_done()
 
     state = await helper.poll_and_get_state()
     assert state.state == "4444"

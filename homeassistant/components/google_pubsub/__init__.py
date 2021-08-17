@@ -41,13 +41,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     """Activate Google Pub/Sub component."""
-
     config = yaml_config[DOMAIN]
     project_id = config[CONF_PROJECT_ID]
     topic_name = config[CONF_TOPIC_NAME]
-    service_principal_path = os.path.join(
-        hass.config.config_dir, config[CONF_SERVICE_PRINCIPAL]
-    )
+    service_principal_path = hass.config.path(config[CONF_SERVICE_PRINCIPAL])
 
     if not os.path.isfile(service_principal_path):
         _LOGGER.error("Path to credentials file cannot be found")
