@@ -7,13 +7,6 @@ from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-
-from . import UpnpDataUpdateCoordinator, UpnpEntity
-from .const import (
-    BYTES_RECEIVED,
-    BYTES_SENT,
-)
-
 from . import UpnpDataUpdateCoordinator, UpnpEntity
 from .const import (
     BYTES_RECEIVED,
