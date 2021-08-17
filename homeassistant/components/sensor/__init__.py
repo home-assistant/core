@@ -175,7 +175,25 @@ class SensorEntity(Entity):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
-            return {ATTR_LAST_RESET: last_reset.isoformat()}
+            if (
+                last_reset is not None
+                and self.state_class == STATE_CLASS_MEASUREMENT
+                and not self._last_reset_reported
+            ):
+                self._last_reset_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) with state_class %s has set last_reset. Setting "
+                    "last_reset is deprecated and will be unsupported from Home "
+                    "Assistant Core 2021.11. Please update your configuration if "
+                    "state_class is manually configured, otherwise %s",
+                    self.entity_id,
+                    type(self),
+                    self.state_class,
+                    report_issue,
+                )
+
+                return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
 
