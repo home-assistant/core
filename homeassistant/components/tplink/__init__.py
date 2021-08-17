@@ -220,7 +220,6 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
         alias: str,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
-        self.hass = hass
         self.smartplug = smartplug
 
         update_interval = timedelta(seconds=30)
