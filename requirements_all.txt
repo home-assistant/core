@@ -2434,7 +2434,7 @@ yeelight==0.7.2
 yeelightsunflower==0.0.10
 
 # homeassistant.components.youless
-youless-api==0.10
+youless-api==0.12
 
 # homeassistant.components.media_extractor
 youtube_dl==2021.04.26
