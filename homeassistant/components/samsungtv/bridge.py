@@ -123,6 +123,8 @@ class SamsungTVBridge(ABC):
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
+        if self._remote is None:
+            return
         try:
             # recreate connection if connection was dead
             retry_count = 1
@@ -142,7 +144,7 @@ class SamsungTVBridge(ABC):
             # We got a response so it's on.
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
         except OSError:
-            # Different reasons, e.g. hostname not resolveable
+            # Different reasons, e.g. hostname not resolveable, device powered down
             pass
 
     @abstractmethod
