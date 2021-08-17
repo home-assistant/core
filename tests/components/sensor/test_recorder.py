@@ -383,7 +383,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "min": None,
                 "last_reset": None,
                 "state": approx(factor * seq[5]),
-                "sum": approx(factor * 40.0),
+                "sum": approx(factor * 50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -393,7 +393,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "min": None,
                 "last_reset": None,
                 "state": approx(factor * seq[8]),
-                "sum": approx(factor * 70.0),
+                "sum": approx(factor * 80.0),
             },
         ]
     }
