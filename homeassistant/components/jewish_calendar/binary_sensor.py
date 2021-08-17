@@ -16,7 +16,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
-from .const import BINARY_SENSORS
+
+BINARY_SENSORS = BinarySensorEntityDescription(
+    key="issur_melacha_in_effect",
+    name="Issur Melacha in Effect",
+    icon="mdi:power-plug-off",
+)
 
 
 async def async_setup_platform(
@@ -40,8 +45,8 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     def __init__(self, data, entity_description: BinarySensorEntityDescription) -> None:
         """Initialize the binary sensor."""
         self.entity_description = entity_description
-        self._prefix = data["prefix"]
-        self._attr_unique_id = f"{self._prefix}_{entity_description.key}"
+        self._attr_unique_id = f"{data['prefix']}_{entity_description.key}"
+        self._attr_name = f"{data['name']}_{entity_description.name}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
