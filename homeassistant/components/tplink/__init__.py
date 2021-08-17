@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         for device in unavailable_devices:
             try:
-                device.get_sysinfo()
+                await hass.async_add_executor_job(device.get_sysinfo)
             except SmartDeviceException:
                 continue
             _LOGGER.debug(
@@ -170,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for switch in switches:
 
         try:
-            await hass.async_add_executor_job(switch.get_sysinfo)
+            info = await hass.async_add_executor_job(switch.get_sysinfo)
         except SmartDeviceException:
             _LOGGER.warning(
                 "Device at '%s' not reachable during setup, will retry later",
@@ -181,7 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass_data[COORDINATORS][
             switch.context or switch.mac
-        ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch)
+        ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch, info["alias"])
         await coordinator.async_config_entry_first_refresh()
 
     if unavailable_devices:
@@ -217,6 +217,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         smartplug: SmartPlug,
+        alias: str,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.hass = hass
@@ -226,7 +227,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"tplink plug {smartplug.host}",
+            name=alias,
             update_interval=update_interval,
         )
 
