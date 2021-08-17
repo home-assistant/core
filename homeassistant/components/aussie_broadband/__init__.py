@@ -26,13 +26,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def create_client():
         try:
             return AussieBB(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
-        except AuthenticationException as e:
-            raise ConfigEntryAuthFailed() from e
+        except AuthenticationException as exc:
+            raise ConfigEntryAuthFailed() from exc
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,
-        ) as e:
-            raise ConfigEntryNotReady() from e
+        ) as exc:
+            raise ConfigEntryNotReady() from exc
 
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(create_client)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
