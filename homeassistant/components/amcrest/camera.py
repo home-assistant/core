@@ -374,7 +374,7 @@ class AmcrestCam(Camera):
                     self._model = resp.split("=")[-1]
                 else:
                     self._model = "unknown"
-            if self.self._attr_unique_id is None:
+            if self._attr_unique_id is None:
                 self._attr_unique_id = self._api.serial_number.strip()
                 _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             self.is_streaming = self._get_video()
