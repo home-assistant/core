@@ -9,7 +9,7 @@ from homeassistant.helpers import event
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
-from .const import SENSOR_TYPES
+from .const import BINARY_SENSORS
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -20,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             JewishCalendarBinarySensor(hass.data[DOMAIN], sensor, sensor_info)
-            for sensor, sensor_info in SENSOR_TYPES["binary"].items()
+            for sensor, sensor_info in BINARY_SENSORS.items()
         ]
     )
 

@@ -10,7 +10,7 @@ from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
-from .const import SENSOR_TYPES
+from .const import DATA_SENSORS, TIME_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,11 +22,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     sensors = [
         JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)
-        for sensor, sensor_info in SENSOR_TYPES["data"].items()
+        for sensor, sensor_info in DATA_SENSORS.items()
     ]
     sensors.extend(
         JewishCalendarTimeSensor(hass.data[DOMAIN], sensor, sensor_info)
-        for sensor, sensor_info in SENSOR_TYPES["time"].items()
+        for sensor, sensor_info in TIME_SENSORS.items()
     )
 
     async_add_entities(sensors)
