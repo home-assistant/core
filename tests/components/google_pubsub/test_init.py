@@ -51,13 +51,12 @@ def mock_client_fixture():
         yield client
 
 
-@pytest.fixture(autouse=True, name="mock_os")
-def mock_os_fixture():
-    """Mock the OS cli."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.os") as os_cli:
-        os_cli.path = mock.MagicMock()
-        setattr(os_cli.path, "join", mock.MagicMock(return_value="path"))
-        yield os_cli
+@pytest.fixture(autouse=True, name="mock_is_file")
+def mock_is_file_fixture():
+    """Mock os.path.isfile."""
+    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.os.path.isfile") as is_file:
+        is_file.return_value = True
+        yield is_file
 
 
 @pytest.fixture(autouse=True)
