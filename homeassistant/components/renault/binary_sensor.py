@@ -1,4 +1,4 @@
-"""Support for Renault sensors."""
+"""Support for Renault binary sensors."""
 from __future__ import annotations
 
 from renault_api.kamereon.enums import ChargeState, PlugState
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
 
 class RenaultPluggedInSensor(RenaultBatteryDataEntity, BinarySensorEntity):
-    """Plugged In sensor."""
+    """Plugged In binary sensor."""
 
     _attr_device_class = DEVICE_CLASS_PLUG
 
@@ -46,7 +46,7 @@ class RenaultPluggedInSensor(RenaultBatteryDataEntity, BinarySensorEntity):
 
 
 class RenaultChargingSensor(RenaultBatteryDataEntity, BinarySensorEntity):
-    """Charging sensor."""
+    """Charging binary sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY_CHARGING
 
