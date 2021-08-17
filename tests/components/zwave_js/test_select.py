@@ -1,6 +1,8 @@
 """Test the Z-Wave JS number platform."""
 from zwave_js_server.event import Event
 
+from homeassistant.const import STATE_UNKNOWN
+
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
 PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
 
@@ -174,3 +176,26 @@ async def test_protection_select(hass, client, inovelli_lzw36, integration):
 
     state = hass.states.get(PROTECTION_SELECT_ENTITY)
     assert state.state == "ProtectedBySequence"
+
+    # Test null value
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Protection",
+                "commandClass": 117,
+                "endpoint": 0,
+                "property": "local",
+                "newValue": None,
+                "prevValue": 1,
+                "propertyName": "local",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(PROTECTION_SELECT_ENTITY)
+    assert state.state == STATE_UNKNOWN

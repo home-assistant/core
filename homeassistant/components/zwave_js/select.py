@@ -58,6 +58,8 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
+        if self.info.primary_value.value is None:
+            return None
         return str(
             self.info.primary_value.metadata.states.get(
                 str(self.info.primary_value.value), self.info.primary_value.value
