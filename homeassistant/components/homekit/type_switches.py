@@ -281,5 +281,5 @@ class SelectSwitch(HomeAccessory):
         """Update switch state after state changed."""
         current_option = new_state.state
         for option, char in self.select_chars.items():
-            hk_value = 1 if option == current_option else 0
+            hk_value = option == current_option
             char.set_value(hk_value)
