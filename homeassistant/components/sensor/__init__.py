@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, final
 
 import voluptuous as vol
 
@@ -51,6 +51,7 @@ from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER: Final = logging.getLogger(__name__)
 
+ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -128,6 +129,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     state_class: str | None = None
+    last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
 
 
@@ -135,6 +137,7 @@ class SensorEntity(Entity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
+    _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType = None
     _attr_state_class: str | None
@@ -151,10 +154,28 @@ class SensorEntity(Entity):
         return None
 
     @property
+    def last_reset(self) -> datetime | None:  # Deprecated, to be removed in 2021.11
+        """Return the time when the sensor was last reset, if any."""
+        if hasattr(self, "_attr_last_reset"):
+            return self._attr_last_reset
+        if hasattr(self, "entity_description"):
+            return self.entity_description.last_reset
+        return None
+
+    @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes."""
         if state_class := self.state_class:
             return {ATTR_STATE_CLASS: state_class}
+
+        return None
+
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any] | None:
+        """Return state attributes."""
+        if last_reset := self.last_reset:
+            return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
 

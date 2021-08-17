@@ -46,7 +46,7 @@ import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 import homeassistant.util.volume as volume_util
 
-from . import DOMAIN
+from . import ATTR_LAST_RESET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,11 +54,14 @@ DEVICE_CLASS_OR_UNIT_STATISTICS = {
     STATE_CLASS_MEASUREMENT: {
         DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
         DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
-        DEVICE_CLASS_MONETARY: {"sum"},
         DEVICE_CLASS_POWER: {"mean", "min", "max"},
         DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
         DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
         PERCENTAGE: {"mean", "min", "max"},
+        # Deprecated, support will be removed in Home Assistant 2021.11
+        DEVICE_CLASS_ENERGY: {"sum"},
+        DEVICE_CLASS_GAS: {"sum"},
+        DEVICE_CLASS_MONETARY: {"sum"},
     },
     STATE_CLASS_TOTAL_INCREASING: {
         DEVICE_CLASS_ENERGY: {"sum"},
@@ -280,6 +283,13 @@ def compile_statistics(
 
             for fstate, state in fstates:
 
+                # Deprecated, will be removed in Home Assistant 2021.10
+                if (
+                    "last_reset" not in state.attributes
+                    and state_class == STATE_CLASS_MEASUREMENT
+                ):
+                    continue
+
                 reset = False
                 if old_state is None:
                     reset = True
@@ -332,6 +342,13 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
 
         state = hass.states.get(entity_id)
         assert state
+
+        if (
+            "sum" in provided_statistics
+            and ATTR_LAST_RESET not in state.attributes
+            and state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        ):
+            continue
 
         native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
