@@ -308,7 +308,7 @@ def compile_statistics(
                 elif old_state is None and last_reset is None:
                     reset = True
                 elif state_class == STATE_CLASS_TOTAL_INCREASING and (
-                    old_state is None or fstate < old_state
+                    old_state is None or fstate < new_state
                 ):
                     reset = True
 
