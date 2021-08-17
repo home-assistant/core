@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 from ...exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import ATTR_PASSWORD, ATTR_USERNAME, DOMAIN
 
-PLATFORMS = ["sensor", "camera"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
