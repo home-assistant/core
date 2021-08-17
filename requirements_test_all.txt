@@ -179,7 +179,7 @@ aioymaps==1.1.0
 airly==1.1.0
 
 # homeassistant.components.airtouch4
-airtouch4pyapi==1.0.2
+airtouch4pyapi==1.0.5
 
 # homeassistant.components.ambee
 ambee==0.3.0

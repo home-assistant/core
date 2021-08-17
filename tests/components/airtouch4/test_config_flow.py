@@ -1,7 +1,7 @@
 """Test the AirTouch 4 config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from airtouch4pyapi.airtouch import AirTouch, AirTouchAc, AirTouchGroup
+from airtouch4pyapi.airtouch import AirTouch, AirTouchAc, AirTouchGroup, AirTouchStatus
 
 from homeassistant import config_entries
 from homeassistant.components.airtouch4.const import DOMAIN
@@ -16,16 +16,15 @@ async def test_form(hass):
     assert result["errors"] is None
     mock_ac = AirTouchAc()
     mock_groups = AirTouchGroup()
+    mock_airtouch = AirTouch("")
+    mock_airtouch.UpdateInfo = AsyncMock()
+    mock_airtouch.Status = AirTouchStatus.OK
+    mock_airtouch.GetAcs = Mock(return_value=[mock_ac])
+    mock_airtouch.GetGroups = Mock(return_value=[mock_groups])
 
     with patch(
-        "homeassistant.components.airtouch4.config_flow.AirTouch.GetAcs",
-        return_value=[mock_ac],
-    ), patch(
-        "homeassistant.components.airtouch4.config_flow.AirTouch.UpdateInfo",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.airtouch4.config_flow.AirTouch.GetGroups",
-        return_value=[mock_groups],
+        "homeassistant.components.airtouch4.config_flow.AirTouch",
+        return_value=mock_airtouch,
     ), patch(
         "homeassistant.components.airtouch4.async_setup_entry",
         return_value=True,
@@ -50,7 +49,7 @@ async def test_form_timeout(hass):
     )
     mock_airtouch = AirTouch("")
     mock_airtouch.UpdateInfo = AsyncMock()
-    mock_airtouch.error = TimeoutError()
+    mock_airtouch.status = AirTouchStatus.CONNECTION_INTERRUPTED
     with patch(
         "homeassistant.components.airtouch4.config_flow.AirTouch",
         return_value=mock_airtouch,
@@ -69,7 +68,7 @@ async def test_form_library_error_message(hass):
     )
     mock_airtouch = AirTouch("")
     mock_airtouch.UpdateInfo = AsyncMock()
-    mock_airtouch.error = "example error message"
+    mock_airtouch.status = AirTouchStatus.ERROR
     with patch(
         "homeassistant.components.airtouch4.config_flow.AirTouch",
         return_value=mock_airtouch,
@@ -88,7 +87,7 @@ async def test_form_connection_refused(hass):
     )
     mock_airtouch = AirTouch("")
     mock_airtouch.UpdateInfo = AsyncMock()
-    mock_airtouch.error = ConnectionRefusedError()
+    mock_airtouch.status = AirTouchStatus.NOT_CONNECTED
     with patch(
         "homeassistant.components.airtouch4.config_flow.AirTouch",
         return_value=mock_airtouch,
@@ -105,17 +104,16 @@ async def test_form_no_units(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     mock_ac = AirTouchAc()
+    mock_airtouch = AirTouch("")
+    mock_airtouch.UpdateInfo = AsyncMock()
+    mock_airtouch.Status = AirTouchStatus.OK
+    mock_airtouch.GetAcs = Mock(return_value=[mock_ac])
+    mock_airtouch.GetGroups = Mock(return_value=[])
+
     with patch(
-        "homeassistant.components.airtouch4.config_flow.AirTouch.GetAcs",
-        return_value=[mock_ac],
-    ), patch(
-        "homeassistant.components.airtouch4.config_flow.AirTouch.UpdateInfo",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.airtouch4.config_flow.AirTouch.GetGroups",
-        return_value=[],
+        "homeassistant.components.airtouch4.config_flow.AirTouch",
+        return_value=mock_airtouch,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "0.0.0.1"}

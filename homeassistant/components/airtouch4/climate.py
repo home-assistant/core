@@ -29,15 +29,21 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 AT_TO_HA_STATE = {
     "Heat": HVAC_MODE_HEAT,
     "Cool": HVAC_MODE_COOL,
-    "AutoHeat": HVAC_MODE_AUTO,
+    "AutoHeat": HVAC_MODE_AUTO,  # airtouch reports either autoheat or autocool
     "AutoCool": HVAC_MODE_AUTO,
     "Auto": HVAC_MODE_AUTO,
     "Dry": HVAC_MODE_DRY,
     "Fan": HVAC_MODE_FAN_ONLY,
-    "Off": HVAC_MODE_OFF,
 }
 
-HA_STATE_TO_AT = {value: key for key, value in AT_TO_HA_STATE.items()}
+HA_STATE_TO_AT = {
+    HVAC_MODE_HEAT: "Heat",
+    HVAC_MODE_COOL: "Cool",
+    HVAC_MODE_AUTO: "Auto",
+    HVAC_MODE_DRY: "Dry",
+    HVAC_MODE_FAN_ONLY: "Fan",
+    HVAC_MODE_OFF: "Off",
+}
 
 AT_TO_HA_FAN_SPEED = {
     "Quiet": FAN_DIFFUSE,
@@ -49,21 +55,11 @@ AT_TO_HA_FAN_SPEED = {
     "Turbo": "turbo",
 }
 
+AT_GROUP_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
+
 HA_FAN_SPEED_TO_AT = {value: key for key, value in AT_TO_HA_FAN_SPEED.items()}
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _build_entity(coordinator, group_number, info):
-    group = AirtouchGroup(coordinator, group_number, info)
-    _LOGGER.debug("Found device %s", group)
-    return group
-
-
-def _build_entity_ac(coordinator, ac_number, info):
-    air_conditioner = AirtouchAC(coordinator, ac_number, info)
-    _LOGGER.debug("Found ac %s", air_conditioner)
-    return air_conditioner
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -71,15 +67,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     info = coordinator.data
     entities = [
-        _build_entity(coordinator, group["group_number"], info)
+        AirtouchGroup(coordinator, group["group_number"], info)
         for group in info["groups"]
-    ] + [_build_entity_ac(coordinator, ac["ac_number"], info) for ac in info["acs"]]
+    ] + [AirtouchAC(coordinator, ac["ac_number"], info) for ac in info["acs"]]
+
+    _LOGGER.debug(" Found entities %s", entities)
 
     async_add_entities(entities)
 
 
 class AirtouchAC(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 ac."""
+
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, ac_number, info):
         """Initialize the climate device."""
@@ -110,11 +111,6 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         return f"ac_{self._ac_number}"
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FAN_MODE
-
-    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self._unit.Temperature
@@ -123,11 +119,6 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
     def name(self):
         """Return the name of the climate device."""
         return f"AC {self._ac_number}"
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def fan_mode(self):
@@ -188,7 +179,8 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
     async def async_turn_on(self):
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
-        # in case ac is not on. Airtouch turns itself off if no groups are turned on (even if groups turned back on)
+        # in case ac is not on. Airtouch turns itself off if no groups are turned on
+        # (even if groups turned back on)
         await self._airtouch.TurnAcOn(self._ac_number)
 
     async def async_turn_off(self):
@@ -200,6 +192,9 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
 
 class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 group."""
+
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator, group_number, info):
         """Initialize the climate device."""
@@ -240,19 +235,9 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         return self._airtouch.acs[self._unit.BelongsToAc].MaxSetpoint
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
-
-    @property
     def name(self):
         """Return the name of the climate device."""
         return self._unit.GroupName
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -277,7 +262,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
+        return AT_GROUP_MODES
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
@@ -333,11 +318,13 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         _LOGGER.debug("Turning %s on", self.unique_id)
         await self._airtouch.TurnGroupOn(self._group_number)
 
-        # in case ac is not on. Airtouch turns itself off if no groups are turned on (even if groups turned back on)
+        # in case ac is not on. Airtouch turns itself off if no groups are turned on
+        # (even if groups turned back on)
         await self._airtouch.TurnAcOn(
             self._airtouch.GetGroupByGroupNumber(self._group_number).BelongsToAc
         )
-        # this might cause the ac object to be wrong, so force the shared data store to update
+        # this might cause the ac object to be wrong, so force the shared data
+        # store to update
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 
@@ -345,6 +332,8 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         await self._airtouch.TurnGroupOff(self._group_number)
-        # this will cause the ac object to be wrong (ac turns off automatically if no groups are running), so force the shared data store to update
+        # this will cause the ac object to be wrong
+        # (ac turns off automatically if no groups are running)
+        # so force the shared data store to update
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()

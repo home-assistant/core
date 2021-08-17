@@ -2,6 +2,7 @@
 import logging
 
 from airtouch4pyapi import AirTouch
+from airtouch4pyapi.airtouch import AirTouchStatus
 
 from homeassistant.components.climate import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
@@ -66,21 +67,20 @@ class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from Airtouch."""
-        try:
-            await self.airtouch.UpdateInfo()
-            return {
-                "acs": [
-                    {"ac_number": ac.AcNumber, "is_on": ac.IsOn}
-                    for ac in self.airtouch.GetAcs()
-                ],
-                "groups": [
-                    {
-                        "group_number": group.GroupNumber,
-                        "group_name": group.GroupName,
-                        "is_on": group.IsOn,
-                    }
-                    for group in self.airtouch.GetGroups()
-                ],
-            }
-        except OSError as error:
-            raise UpdateFailed from error
+        await self.airtouch.UpdateInfo()
+        if self.airtouch.Status != AirTouchStatus.OK:
+            raise UpdateFailed("Airtouch connection issue")
+        return {
+            "acs": [
+                {"ac_number": ac.AcNumber, "is_on": ac.IsOn}
+                for ac in self.airtouch.GetAcs()
+            ],
+            "groups": [
+                {
+                    "group_number": group.GroupNumber,
+                    "group_name": group.GroupName,
+                    "is_on": group.IsOn,
+                }
+                for group in self.airtouch.GetGroups()
+            ],
+        }

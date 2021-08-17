@@ -1,8 +1,8 @@
 """Config flow for AirTouch4."""
-from airtouch4pyapi import AirTouch
+from airtouch4pyapi import AirTouch, AirTouchStatus
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN
@@ -10,22 +10,10 @@ from .const import DOMAIN
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
-async def _validate_connection(hass: core.HomeAssistant, host):
-    airtouch = AirTouch(host)
-    await airtouch.UpdateInfo()
-
-    if hasattr(airtouch, "error"):
-        if isinstance(airtouch.error, Exception):
-            raise airtouch.error
-        raise ConnectionError()
-    return bool(airtouch.GetGroups())
-
-
 class AirtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an Airtouch config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -35,13 +23,19 @@ class AirtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         host = user_input[CONF_HOST]
+        self._async_abort_entries_match({CONF_HOST: host})
 
-        try:
-            result = await _validate_connection(self.hass, host)
-            if not result:
-                errors["base"] = "no_units"
-        except (OSError, ConnectionError):
+        airtouch = AirTouch(host)
+        await airtouch.UpdateInfo()
+        airtouch_status = airtouch.Status
+        airtouch_has_groups = bool(
+            airtouch.Status == AirTouchStatus.OK and airtouch.GetGroups()
+        )
+
+        if airtouch_status != AirTouchStatus.OK:
             errors["base"] = "cannot_connect"
+        elif airtouch_has_groups is False:
+            errors["base"] = "no_units"
 
         if errors:
             return self.async_show_form(
