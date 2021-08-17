@@ -246,7 +246,7 @@ aioswitcher==2.0.4
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.1
+aiotractive==0.5.2
 
 # homeassistant.components.unifi
 aiounifi==26
