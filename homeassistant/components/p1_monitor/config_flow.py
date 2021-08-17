@@ -90,7 +90,7 @@ class P1MonitorOptionFlowHandler(OptionsFlow):
                         default=self.entry.options.get(
                             CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=5)),
                 }
             ),
         )
