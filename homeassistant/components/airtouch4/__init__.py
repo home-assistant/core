@@ -25,11 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     airtouch = AirTouch(host)
     await airtouch.UpdateInfo()
     info = airtouch.GetAcs()
-    try:
-        if not info:
-            raise ConfigEntryNotReady
-    except OSError as error:
-        raise ConfigEntryNotReady() from error
+    if not info:
+        raise ConfigEntryNotReady
     coordinator = AirtouchDataUpdateCoordinator(hass, airtouch)
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = {

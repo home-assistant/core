@@ -195,6 +195,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
 
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_hvac_modes = AT_GROUP_MODES
 
     def __init__(self, coordinator, group_number, info):
         """Initialize the climate device."""
@@ -258,11 +259,6 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
             return HVAC_MODE_OFF
 
         return HVAC_MODE_FAN_ONLY
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return AT_GROUP_MODES
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""

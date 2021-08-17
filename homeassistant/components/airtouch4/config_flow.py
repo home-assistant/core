@@ -34,7 +34,7 @@ class AirtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if airtouch_status != AirTouchStatus.OK:
             errors["base"] = "cannot_connect"
-        elif airtouch_has_groups is False:
+        elif not airtouch_has_groups:
             errors["base"] = "no_units"
 
         if errors:
