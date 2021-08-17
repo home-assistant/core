@@ -37,7 +37,7 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
         self.name_to_number = {ADVANTAGE_AIR_INACTIVE: 0}
         for zone_key in instance["coordinator"].data["aircons"][ac_key]["zones"]:
             zone = instance["coordinator"].data["aircons"][ac_key]["zones"][zone_key]
-            if zone.type > 0:
+            if zone["type"] > 0:
                 self.name_to_number[zone["name"]] = zone["number"]
                 self.number_to_name[zone["number"]] = zone["name"]
                 self._attr_options.append(zone["name"])
