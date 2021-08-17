@@ -646,6 +646,16 @@ DISCOVERY_SCHEMAS = [
         ),
         required_values=[SIREN_TONE_SCHEMA],
     ),
+    # select
+    # protection CC
+    ZWaveDiscoverySchema(
+        platform="select",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.PROTECTION},
+            property={"local", "rf"},
+            type={"number"},
+        ),
+    ),
 ]
 
 
