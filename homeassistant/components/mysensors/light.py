@@ -163,6 +163,8 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
 
         if self.assumed_state:
             # optimistically assume that light has changed state
+            # pylint: disable=no-value-for-parameter
+            # https://github.com/PyCQA/pylint/issues/4546
             self._hs = color_util.color_RGB_to_hs(*rgb)  # type: ignore[assignment]
             self._white = white
             self._values[self.value_type] = hex_color

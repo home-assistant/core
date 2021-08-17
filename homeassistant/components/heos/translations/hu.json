@@ -10,7 +10,9 @@
             "user": {
                 "data": {
                     "host": "Hoszt"
-                }
+                },
+                "description": "K\u00e9rj\u00fck, adja meg egy Heos-eszk\u00f6z gazdag\u00e9pnev\u00e9t vagy IP-c\u00edm\u00e9t (lehet\u0151leg egy vezet\u00e9kkel a h\u00e1l\u00f3zathoz csatlakoztatott eszk\u00f6zt).",
+                "title": "Csatlakoz\u00e1s a Heos-hoz"
             }
         }
     }

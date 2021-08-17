@@ -1,4 +1,6 @@
 """Support for Nest Cameras."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -23,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """
 
 
-async def async_setup_legacy_entry(hass, entry, async_add_entities):
+async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
     """Set up a Nest sensor based on a config entry."""
     camera_devices = await hass.async_add_executor_job(hass.data[DATA_NEST].cameras)
     cameras = [NestCamera(structure, device) for structure, device in camera_devices]
@@ -131,7 +133,9 @@ class NestCamera(Camera):
     def _ready_for_snapshot(self, now):
         return self._next_snapshot_at is None or now > self._next_snapshot_at
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         now = utcnow()
         if self._ready_for_snapshot(now):

@@ -16,7 +16,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,7 +47,7 @@ from .const import (
     LOGGER,
     SENSORS,
 )
-from .models import DSMRSensor
+from .models import DSMRSensorEntityDescription
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -55,6 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
     }
 )
+
+UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
 
 
 async def async_setup_platform(
@@ -83,10 +90,13 @@ async def async_setup_entry(
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     entities = [
-        DSMREntity(sensor, entry)
-        for sensor in SENSORS
-        if (sensor.dsmr_versions is None or dsmr_version in sensor.dsmr_versions)
-        and (not sensor.is_gas or CONF_SERIAL_ID_GAS in entry.data)
+        DSMREntity(description, entry)
+        for description in SENSORS
+        if (
+            description.dsmr_versions is None
+            or dsmr_version in description.dsmr_versions
+        )
+        and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
     ]
     async_add_entities(entities)
 
@@ -154,7 +164,9 @@ async def async_setup_entry(
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                await asyncio.sleep(entry.data[CONF_RECONNECT_INTERVAL])
+                await asyncio.sleep(
+                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
+                )
 
             except (serial.serialutil.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
@@ -162,6 +174,11 @@ async def async_setup_entry(
                 LOGGER.exception("Error connecting to DSMR")
                 transport = None
                 protocol = None
+
+                # throttle reconnect attempts
+                await asyncio.sleep(
+                    entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
+                )
             except CancelledError:
                 if stop_listener:
                     stop_listener()  # pylint: disable=not-callable
@@ -184,61 +201,57 @@ async def async_setup_entry(
 class DSMREntity(SensorEntity):
     """Entity reading values from DSMR telegram."""
 
+    entity_description: DSMRSensorEntityDescription
     _attr_should_poll = False
 
-    def __init__(self, sensor: DSMRSensor, entry: ConfigEntry) -> None:
+    def __init__(
+        self, entity_description: DSMRSensorEntityDescription, entry: ConfigEntry
+    ) -> None:
         """Initialize entity."""
-        self._sensor = sensor
+        self.entity_description = entity_description
         self._entry = entry
         self.telegram: dict[str, DSMRObject] = {}
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ENERGY
-        if sensor.is_gas:
+        if entity_description.is_gas:
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
 
-        self._attr_device_class = sensor.device_class
         self._attr_device_info = {
             "identifiers": {(DOMAIN, device_serial)},
             "name": device_name,
         }
-        self._attr_entity_registry_enabled_default = (
-            sensor.entity_registry_enabled_default
+        self._attr_unique_id = f"{device_serial}_{entity_description.name}".replace(
+            " ", "_"
         )
-        self._attr_force_update = sensor.force_update
-        self._attr_icon = sensor.icon
-        self._attr_last_reset = sensor.last_reset
-        self._attr_name = sensor.name
-        self._attr_state_class = sensor.state_class
-        self._attr_unique_id = f"{device_serial}_{sensor.name}".replace(" ", "_")
 
     @callback
     def update_data(self, telegram: dict[str, DSMRObject]) -> None:
         """Update data."""
         self.telegram = telegram
-        if self.hass and self._sensor.obis_reference in self.telegram:
+        if self.hass and self.entity_description.key in self.telegram:
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute: str) -> str | None:
         """Read attribute from last received telegram for this DSMR object."""
         # Make sure telegram contains an object for this entities obis
-        if self._sensor.obis_reference not in self.telegram:
+        if self.entity_description.key not in self.telegram:
             return None
 
         # Get the attribute value if the object has it
-        dsmr_object = self.telegram[self._sensor.obis_reference]
+        dsmr_object = self.telegram[self.entity_description.key]
         attr: str | None = getattr(dsmr_object, attribute)
         return attr
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value = self.get_dsmr_object_attr("value")
         if value is None:
             return None
 
-        if self._sensor.obis_reference == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
+        if self.entity_description.key == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):
@@ -252,9 +265,12 @@ class DSMREntity(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self.get_dsmr_object_attr("unit")
+        unit_of_measurement = self.get_dsmr_object_attr("unit")
+        if unit_of_measurement in UNIT_CONVERSION:
+            return UNIT_CONVERSION[unit_of_measurement]
+        return unit_of_measurement
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:

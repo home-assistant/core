@@ -18,6 +18,11 @@ DHCP = [
     },
     {
         "domain": "august",
+        "hostname": "connect",
+        "macaddress": "2C9FFB*"
+    },
+    {
+        "domain": "august",
         "hostname": "august*",
         "macaddress": "E076D0*"
     },
@@ -174,6 +179,22 @@ DHCP = [
     {
         "domain": "samsungtv",
         "hostname": "tizen*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "8CC8CD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "606BBD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "F47B5E*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "4844F7*"
     },
     {
         "domain": "screenlogic",

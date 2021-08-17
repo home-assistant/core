@@ -25,7 +25,8 @@
         "description": "Adjust Coinbase Options",
         "data": {
           "account_balance_currencies": "Wallet balances to report.",
-          "exchange_rate_currencies": "Exchange rates to report."
+          "exchange_rate_currencies": "Exchange rates to report.",
+          "exchange_base": "Base currency for exchange rate sensors."
         }
       }
     },

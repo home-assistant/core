@@ -25,6 +25,8 @@ _FALLBACK_SCAN_INTERVAL = timedelta(seconds=10)
 class BondEntity(Entity):
     """Generic Bond entity encapsulating common features of any Bond controlled device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hub: BondHub,
@@ -37,31 +39,17 @@ class BondEntity(Entity):
         self._device = device
         self._device_id = device.device_id
         self._sub_device = sub_device
-        self._available = True
+        self._attr_available = True
         self._bpup_subs = bpup_subs
         self._update_lock: Lock | None = None
         self._initialized = False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Get unique ID for the entity."""
-        hub_id = self._hub.bond_id
-        device_id = self._device_id
-        sub_device_id: str = f"_{self._sub_device}" if self._sub_device else ""
-        return f"{hub_id}_{device_id}{sub_device_id}"
-
-    @property
-    def name(self) -> str | None:
-        """Get entity name."""
-        if self._sub_device:
-            sub_device_name = self._sub_device.replace("_", " ").title()
-            return f"{self._device.name} {sub_device_name}"
-        return self._device.name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
+        sub_device_id: str = f"_{sub_device}" if sub_device else ""
+        self._attr_unique_id = f"{hub.bond_id}_{device.device_id}{sub_device_id}"
+        if sub_device:
+            sub_device_name = sub_device.replace("_", " ").title()
+            self._attr_name = f"{device.name} {sub_device_name}"
+        else:
+            self._attr_name = device.name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -93,16 +81,6 @@ class BondEntity(Entity):
 
         return device_info
 
-    @property
-    def assumed_state(self) -> bool:
-        """Let HA know this entity relies on an assumed state tracked by Bond."""
-        return self._hub.is_bridge and not self._device.trust_state
-
-    @property
-    def available(self) -> bool:
-        """Report availability of this entity based on last API call results."""
-        return self._available
-
     async def async_update(self) -> None:
         """Fetch assumed state of the cover from the hub using API."""
         await self._async_update_from_api()
@@ -113,7 +91,7 @@ class BondEntity(Entity):
             self.hass.is_stopping
             or self._bpup_subs.alive
             and self._initialized
-            and self._available
+            and self.available
         ):
             return
 
@@ -135,13 +113,14 @@ class BondEntity(Entity):
         try:
             state: dict = await self._hub.bond.device_state(self._device_id)
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
-            if self._available:
+            if self.available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error
                 )
-            self._available = False
+            self._attr_available = False
         else:
             self._async_state_callback(state)
+        self._attr_assumed_state = self._hub.is_bridge and not self._device.trust_state
 
     @abstractmethod
     def _apply_state(self, state: dict) -> None:
@@ -151,9 +130,9 @@ class BondEntity(Entity):
     def _async_state_callback(self, state: dict) -> None:
         """Process a state change."""
         self._initialized = True
-        if not self._available:
+        if not self.available:
             _LOGGER.info("Entity %s has come back", self.entity_id)
-        self._available = True
+        self._attr_available = True
         _LOGGER.debug(
             "Device state for %s (%s) is:\n%s", self.name, self.entity_id, state
         )

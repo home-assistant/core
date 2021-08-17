@@ -26,6 +26,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.color import color_hs_to_xy
 
 from .const import (
     COVER_TYPES,
@@ -189,8 +190,11 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["ct"] = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_HS_COLOR in kwargs:
-            data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-            data["sat"] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            if COLOR_MODE_XY in self._attr_supported_color_modes:
+                data["xy"] = color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+            else:
+                data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                data["sat"] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
 
         if ATTR_XY_COLOR in kwargs:
             data["xy"] = kwargs[ATTR_XY_COLOR]

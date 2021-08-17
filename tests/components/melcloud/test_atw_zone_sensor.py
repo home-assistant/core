@@ -37,15 +37,13 @@ def test_zone_unique_ids(mock_device, mock_zone_1, mock_zone_2):
     sensor_1 = AtwZoneSensor(
         mock_device,
         mock_zone_1,
-        "room_temperature",
-        ATW_ZONE_SENSORS["room_temperature"],
+        ATW_ZONE_SENSORS[0],  # room_temperature
     )
     assert sensor_1.unique_id == "1234-11:11:11:11:11:11-room_temperature"
 
     sensor_2 = AtwZoneSensor(
         mock_device,
         mock_zone_2,
-        "room_temperature",
-        ATW_ZONE_SENSORS["flow_temperature"],
+        ATW_ZONE_SENSORS[0],  # room_temperature
     )
     assert sensor_2.unique_id == "1234-11:11:11:11:11:11-room_temperature-zone-2"

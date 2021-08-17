@@ -3,7 +3,7 @@
   "name": "IQVIA",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iqvia",
-  "requirements": ["numpy==1.21.0", "pyiqvia==1.0.0"],
+  "requirements": ["numpy==1.21.1", "pyiqvia==1.0.0"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling"
 }

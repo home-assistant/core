@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Fritz integration."""
 
-    for service in [SERVICE_REBOOT, SERVICE_RECONNECT]:
+    for service in (SERVICE_REBOOT, SERVICE_RECONNECT):
         if hass.services.has_service(DOMAIN, service):
             return
 
@@ -34,7 +34,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             fritz_tools = hass.data[DOMAIN][entry]
             await fritz_tools.service_fritzbox(service_call.service)
 
-    for service in [SERVICE_REBOOT, SERVICE_RECONNECT]:
+    for service in (SERVICE_REBOOT, SERVICE_RECONNECT):
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
 
 

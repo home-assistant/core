@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "address_already_configured": "Egy BleBox-eszk\u00f6z m\u00e1r konfigur\u00e1lva van a(z) {address} c\u00edmen.",
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
@@ -14,7 +15,9 @@
                 "data": {
                     "host": "IP c\u00edm",
                     "port": "Port"
-                }
+                },
+                "description": "\u00c1ll\u00edtsa be a BleBox k\u00e9sz\u00fcl\u00e9ket a Homeassistantba val\u00f3 integr\u00e1ci\u00f3hoz.",
+                "title": "\u00c1ll\u00edtsa be a BleBox eszk\u00f6zt"
             }
         }
     }

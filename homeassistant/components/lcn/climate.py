@@ -18,9 +18,12 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
@@ -36,7 +39,7 @@ PARALLEL_UPDATES = 0
 
 
 def create_lcn_climate_entity(
-    hass: HomeAssistantType, entity_config: ConfigType, config_entry: ConfigEntry
+    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
 ) -> LcnEntity:
     """Set up an entity for this domain."""
     device_connection = get_device_connection(
@@ -47,7 +50,7 @@ def create_lcn_climate_entity(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -109,7 +112,10 @@ class LcnClimate(LcnEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return cast(str, self.unit.value)
+        # Config schema only allows for: TEMP_CELSIUS and TEMP_FAHRENHEIT
+        if self.unit == pypck.lcn_defs.VarUnit.FAHRENHEIT:
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self) -> float | None:

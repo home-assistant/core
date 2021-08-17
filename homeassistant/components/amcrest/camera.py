@@ -1,4 +1,6 @@
 """Support for Amcrest IP cameras."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from functools import partial
@@ -181,7 +183,9 @@ class AmcrestCam(Camera):
         finally:
             self._snapshot_task = None
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         _LOGGER.debug("Take snapshot from %s", self._name)
         try:
@@ -571,7 +575,7 @@ class AmcrestCam(Camera):
     def _goto_preset(self, preset):
         """Move camera position and zoom to preset."""
         try:
-            self._api.go_to_preset(action="start", preset_point_number=preset)
+            self._api.go_to_preset(preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error

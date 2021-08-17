@@ -217,20 +217,20 @@ class ZHAGateway:
 
         _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=True)
                 for dev in self.devices.values()
                 if not dev.is_mains_powered
-            ]
+            )
         )
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=False)
                 for dev in self.devices.values()
                 if dev.is_mains_powered
-            ]
+            )
         )
 
     def device_joined(self, device):

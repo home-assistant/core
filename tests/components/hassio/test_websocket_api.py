@@ -61,7 +61,7 @@ async def test_websocket_supervisor_api(
     assert await async_setup_component(hass, "hassio", {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.post(
-        "http://127.0.0.1/snapshots/new/partial",
+        "http://127.0.0.1/backups/new/partial",
         json={"result": "ok", "data": {"slug": "sn_slug"}},
     )
 
@@ -69,7 +69,7 @@ async def test_websocket_supervisor_api(
         {
             WS_ID: 1,
             WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/snapshots/new/partial",
+            ATTR_ENDPOINT: "/backups/new/partial",
             ATTR_METHOD: "post",
         }
     )

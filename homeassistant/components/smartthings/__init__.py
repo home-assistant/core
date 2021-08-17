@@ -9,6 +9,7 @@ import logging
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
 from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings.device import DeviceEntity
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -412,7 +413,7 @@ class DeviceBroker:
 class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
 
-    def __init__(self, device):
+    def __init__(self, device: DeviceEntity) -> None:
         """Initialize the instance."""
         self._device = device
         self._dispatcher_remove = None

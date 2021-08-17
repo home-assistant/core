@@ -16,10 +16,10 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Einrichten Ihres Modern Forms Ventilator f\u00fcr die Integration in Home Assistant."
+                "description": "Einrichten deines Modern Forms Ventilator f\u00fcr die Integration in Home Assistant."
             },
             "zeroconf_confirm": {
-                "description": "M\u00f6chten Sie den Modern Forms Ventilator mit dem Namen `{name}` zu Home Assistant hinzuf\u00fcgen?",
+                "description": "M\u00f6chtest du den Modern Forms Ventilator mit dem Namen `{name}` zu Home Assistant hinzuf\u00fcgen?",
                 "title": "Erkannter Modern Forms Ventilator"
             }
         }

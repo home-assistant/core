@@ -29,7 +29,13 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     async def _async_callback(*_):
         await listener.async_callback(info)
 
+    @callback
+    def _async_search(*_):
+        # Prevent an actual scan.
+        pass
+
     listener.async_start = _async_callback
+    listener.async_search = _async_search
     return listener
 
 
@@ -287,7 +293,10 @@ async def test_invalid_characters(hass, aioclient_mock):
 
 @patch("homeassistant.components.ssdp.SSDPListener.async_start")
 @patch("homeassistant.components.ssdp.SSDPListener.async_search")
-async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
+@patch("homeassistant.components.ssdp.SSDPListener.async_stop")
+async def test_start_stop_scanner(
+    async_stop_mock, async_search_mock, async_start_mock, hass
+):
     """Test we start and stop the scanner."""
     assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
 
@@ -296,14 +305,17 @@ async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 1
-    assert async_search_mock.call_count == 1
+    # Next is 3, as async_upnp_client triggers 1 SSDPListener._async_on_connect
+    assert async_search_mock.call_count == 3
+    assert async_stop_mock.call_count == 0
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 1
-    assert async_search_mock.call_count == 1
+    assert async_search_mock.call_count == 3
+    assert async_stop_mock.call_count == 1
 
 
 async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog):
@@ -459,11 +471,11 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         await hass.async_block_till_done()
         assert hass.state == CoreState.running
 
-    assert len(integration_callbacks) == 3
-    assert len(integration_callbacks_from_cache) == 3
-    assert len(integration_match_all_callbacks) == 3
+    assert len(integration_callbacks) == 5
+    assert len(integration_callbacks_from_cache) == 5
+    assert len(integration_match_all_callbacks) == 5
     assert len(integration_match_all_not_present_callbacks) == 0
-    assert len(match_any_callbacks) == 3
+    assert len(match_any_callbacks) == 5
     assert len(not_matching_integration_callbacks) == 0
     assert integration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
@@ -546,7 +558,7 @@ async def test_unsolicited_ssdp_registered_callback(hass, aioclient_mock, caplog
         assert hass.state == CoreState.running
 
     assert (
-        len(integration_callbacks) == 2
+        len(integration_callbacks) == 4
     )  # unsolicited callbacks without st are not cached
     assert integration_callbacks[0] == {
         "UDN": "uuid:RINCON_1111BB963FD801400",
@@ -635,7 +647,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
         await hass.async_block_till_done()
 
-    assert len(integration_callbacks) == 2
+    assert len(integration_callbacks) == 4
     assert integration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_EXT: "",
@@ -781,7 +793,136 @@ async def test_async_detect_interfaces_setting_empty_route(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert {create_args[0][1]["source_ip"], create_args[1][1]["source_ip"]} == {
-        IPv4Address("192.168.1.5"),
-        IPv6Address("2001:db8::"),
+    argset = set()
+    for argmap in create_args:
+        argset.add((argmap[1].get("source_ip"), argmap[1].get("target_ip")))
+
+    assert argset == {
+        (IPv6Address("2001:db8::"), None),
+        (IPv4Address("192.168.1.5"), None),
+    }
+
+
+async def test_bind_failure_skips_adapter(hass, caplog):
+    """Test that an adapter with a bind failure is skipped."""
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
+    create_args = []
+    search_args = []
+
+    @callback
+    def _callback(*args):
+        nonlocal search_args
+        search_args.append(args)
+        pass
+
+    def _generate_failing_ssdp_listener(*args, **kwargs):
+        create_args.append([args, kwargs])
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            if kwargs["source_ip"] == IPv6Address("2001:db8::"):
+                raise OSError
+            pass
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_failing_ssdp_listener,
+    ), patch(
+        "homeassistant.components.ssdp.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    argset = set()
+    for argmap in create_args:
+        argset.add((argmap[1].get("source_ip"), argmap[1].get("target_ip")))
+
+    assert argset == {
+        (IPv6Address("2001:db8::"), None),
+        (IPv4Address("192.168.1.5"), None),
+    }
+    assert "Failed to setup listener for" in caplog.text
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
+    assert set(search_args) == {
+        (),
+        (
+            (
+                "255.255.255.255",
+                1900,
+            ),
+        ),
+    }
+
+
+async def test_ipv4_does_additional_search_for_sonos(hass, caplog):
+    """Test that only ipv4 does an additional search for Sonos."""
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
+    search_args = []
+
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            pass
+
+        @callback
+        def _callback(*args):
+            nonlocal search_args
+            search_args.append(args)
+            pass
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    ), patch(
+        "homeassistant.components.ssdp.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+
+    assert set(search_args) == {
+        (),
+        (
+            (
+                "255.255.255.255",
+                1900,
+            ),
+        ),
     }

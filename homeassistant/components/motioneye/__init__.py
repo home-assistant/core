@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from types import MappingProxyType
 from typing import Any, Callable
 from urllib.parse import urlencode, urljoin
 
@@ -28,6 +29,7 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.webhook import (
     async_generate_id,
     async_generate_path,
@@ -45,12 +47,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.network import get_url
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -78,7 +86,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = [CAMERA_DOMAIN]
+PLATFORMS = [CAMERA_DOMAIN, SWITCH_DOMAIN]
 
 
 def create_motioneye_client(
@@ -137,12 +145,21 @@ def listen_for_new_cameras(
 
 
 @callback
-def async_generate_motioneye_webhook(hass: HomeAssistant, webhook_id: str) -> str:
+def async_generate_motioneye_webhook(
+    hass: HomeAssistant, webhook_id: str
+) -> str | None:
     """Generate the full local URL for a webhook_id."""
-    return "{}{}".format(
-        get_url(hass, allow_cloud=False),
-        async_generate_path(webhook_id),
-    )
+    try:
+        return "{}{}".format(
+            get_url(hass, allow_cloud=False),
+            async_generate_path(webhook_id),
+        )
+    except NoURLAvailableError:
+        _LOGGER.warning(
+            "Unable to get Home Assistant URL. Have you set the internal and/or "
+            "external URLs in Configuration -> General?"
+        )
+        return None
 
 
 @callback
@@ -220,30 +237,34 @@ def _add_camera(
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
         url = async_generate_motioneye_webhook(hass, entry.data[CONF_WEBHOOK_ID])
 
-        if _set_webhook(
-            _build_url(
-                device,
-                url,
-                EVENT_MOTION_DETECTED,
-                EVENT_MOTION_DETECTED_KEYS,
-            ),
-            KEY_WEB_HOOK_NOTIFICATIONS_URL,
-            KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
-            KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
-            camera,
-        ) | _set_webhook(
-            _build_url(
-                device,
-                url,
-                EVENT_FILE_STORED,
-                EVENT_FILE_STORED_KEYS,
-            ),
-            KEY_WEB_HOOK_STORAGE_URL,
-            KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
-            KEY_WEB_HOOK_STORAGE_ENABLED,
-            camera,
-        ):
-            hass.async_create_task(client.async_set_camera(camera_id, camera))
+        if url:
+            set_motion_event = _set_webhook(
+                _build_url(
+                    device,
+                    url,
+                    EVENT_MOTION_DETECTED,
+                    EVENT_MOTION_DETECTED_KEYS,
+                ),
+                KEY_WEB_HOOK_NOTIFICATIONS_URL,
+                KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
+                KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
+                camera,
+            )
+
+            set_storage_event = _set_webhook(
+                _build_url(
+                    device,
+                    url,
+                    EVENT_FILE_STORED,
+                    EVENT_FILE_STORED_KEYS,
+                ),
+                KEY_WEB_HOOK_STORAGE_URL,
+                KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
+                KEY_WEB_HOOK_STORAGE_ENABLED,
+                camera,
+            )
+            if set_motion_event or set_storage_event:
+                hass.async_create_task(client.async_set_camera(camera_id, camera))
 
     async_dispatcher_send(
         hass,
@@ -267,6 +288,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         admin_password=entry.data.get(CONF_ADMIN_PASSWORD),
         surveillance_username=entry.data.get(CONF_SURVEILLANCE_USERNAME),
         surveillance_password=entry.data.get(CONF_SURVEILLANCE_PASSWORD),
+        session=async_get_clientsession(hass),
     )
 
     try:
@@ -352,10 +374,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def setup_then_listen() -> None:
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         entry.async_on_unload(
             coordinator.async_add_listener(_async_process_motioneye_cameras)
@@ -420,3 +442,44 @@ async def handle_webhook(
         },
     )
     return None
+
+
+class MotionEyeEntity(CoordinatorEntity):
+    """Base class for motionEye entities."""
+
+    def __init__(
+        self,
+        config_entry_id: str,
+        type_name: str,
+        camera: dict[str, Any],
+        client: MotionEyeClient,
+        coordinator: DataUpdateCoordinator,
+        options: MappingProxyType[str, Any],
+        entity_description: EntityDescription = None,
+    ) -> None:
+        """Initialize a motionEye entity."""
+        self._camera_id = camera[KEY_ID]
+        self._device_identifier = get_motioneye_device_identifier(
+            config_entry_id, self._camera_id
+        )
+        self._unique_id = get_motioneye_entity_unique_id(
+            config_entry_id,
+            self._camera_id,
+            type_name,
+        )
+        self._client = client
+        self._camera: dict[str, Any] | None = camera
+        self._options = options
+        if entity_description is not None:
+            self.entity_description = entity_description
+        super().__init__(coordinator)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id for this instance."""
+        return self._unique_id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return {"identifiers": {self._device_identifier}}

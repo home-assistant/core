@@ -15,11 +15,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PairedSensorEntity, ValveControllerEntity
 from .const import (
-    API_SENSOR_PAIRED_SENSOR_STATUS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_WIFI_STATUS,
     CONF_UID,
     DATA_COORDINATOR,
+    DATA_COORDINATOR_PAIRED_SENSOR,
     DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
@@ -49,9 +49,9 @@ async def async_setup_entry(
     @callback
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            API_SENSOR_PAIRED_SENSOR_STATUS
-        ][uid]
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id][
+            uid
+        ]
 
         entities = []
         for kind in PAIRED_SENSOR_SENSORS:
@@ -78,7 +78,7 @@ async def async_setup_entry(
         )
     )
 
-    sensors = []
+    sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = []
 
     # Add all valve controller-specific binary sensors:
     for kind in VALVE_CONTROLLER_SENSORS:
@@ -95,8 +95,8 @@ async def async_setup_entry(
         )
 
     # Add all paired sensor-specific binary sensors:
-    for coordinator in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-        API_SENSOR_PAIRED_SENSOR_STATUS
+    for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
+        entry.entry_id
     ].values():
         for kind in PAIRED_SENSOR_SENSORS:
             name, device_class = SENSOR_ATTRS_MAP[kind]

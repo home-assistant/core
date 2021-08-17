@@ -39,7 +39,7 @@ class IslamicPrayerTimeSensor(CoordinatorEntity, SensorEntity):
         self.sensor_type = sensor_type
         self._attr_name = f"{self.sensor_type} {SENSOR_TYPES[self.sensor_type]}"
         self._attr_unique_id = self.sensor_type
-        self._attr_state = (
+        self._attr_native_value = (
             self.coordinator.data.get(self.sensor_type)
             .astimezone(dt_util.UTC)
             .isoformat()

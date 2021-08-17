@@ -7,7 +7,16 @@ DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
     REMOTE_DOMAIN: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
-    SENSOR_DOMAIN: {"A1", "RM4MINI", "RM4PRO", "RMPRO"},
+    SENSOR_DOMAIN: {
+        "A1",
+        "RM4MINI",
+        "RM4PRO",
+        "RMPRO",
+        "SP2S",
+        "SP3S",
+        "SP4",
+        "SP4B",
+    },
     SWITCH_DOMAIN: {
         "BG1",
         "MP1",

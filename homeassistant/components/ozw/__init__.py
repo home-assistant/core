@@ -150,7 +150,7 @@ async def async_setup_entry(  # noqa: C901
         # The actual removal action of a Z-Wave node is reported as instance event
         # Only when this event is detected we cleanup the device and entities from hass
         # Note: Find a more elegant way of doing this, e.g. a notification of this event from OZW
-        if event in ["removenode", "removefailednode"] and "Node" in event_data:
+        if event in ("removenode", "removefailednode") and "Node" in event_data:
             removed_nodes.append(event_data["Node"])
 
     @callback
@@ -160,9 +160,7 @@ async def async_setup_entry(  # noqa: C901
         node_id = value.node.node_id
 
         # Filter out CommandClasses we're definitely not interested in.
-        if value.command_class in [
-            CommandClass.MANUFACTURER_SPECIFIC,
-        ]:
+        if value.command_class in (CommandClass.MANUFACTURER_SPECIFIC,):
             return
 
         _LOGGER.debug(
@@ -213,10 +211,10 @@ async def async_setup_entry(  # noqa: C901
             value.command_class,
         )
         # Handle a scene activation message
-        if value.command_class in [
+        if value.command_class in (
             CommandClass.SCENE_ACTIVATION,
             CommandClass.CENTRAL_SCENE,
-        ]:
+        ):
             async_handle_scene_activated(hass, value)
             return
 
@@ -264,10 +262,10 @@ async def async_setup_entry(  # noqa: C901
 
     async def start_platforms():
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         if entry.data.get(CONF_USE_ADDON):
             mqtt_client_task = asyncio.create_task(mqtt_client.start_client(manager))

@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_TYPE,
     STATE_OFF,
@@ -32,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from .conftest import ReadResult, base_test, prepare_service_update
+from .conftest import ReadResult, base_test
 
 FAN_NAME = "test_fan"
 ENTITY_ID = f"{FAN_DOMAIN}.{FAN_NAME}"
@@ -195,6 +196,7 @@ async def test_all_fan(hass, call_type, regs, verify, expected):
                 {
                     CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
+                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },
@@ -219,11 +221,13 @@ async def test_fan_service_turn(hass, caplog, mock_pymodbus):
                     CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
                 },
                 {
                     CONF_NAME: f"{FAN_NAME}2",
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {},
                 },
             ],
@@ -273,30 +277,29 @@ async def test_fan_service_turn(hass, caplog, mock_pymodbus):
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_service_fan_update(hass, mock_pymodbus):
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_FANS: [
+                {
+                    CONF_NAME: FAN_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {},
+                }
+            ]
+        },
+    ],
+)
+async def test_service_fan_update(hass, mock_modbus, mock_ha):
     """Run test for service homeassistant.update_entity."""
-
-    config = {
-        CONF_FANS: [
-            {
-                CONF_NAME: FAN_NAME,
-                CONF_ADDRESS: 1234,
-                CONF_WRITE_TYPE: CALL_TYPE_COIL,
-                CONF_VERIFY: {},
-            }
-        ]
-    }
-    mock_pymodbus.read_discrete_inputs.return_value = ReadResult([0x01])
-    await prepare_service_update(
-        hass,
-        config,
-    )
-    await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
-    )
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
-    mock_pymodbus.read_coils.return_value = ReadResult([0x00])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_ON

@@ -9,6 +9,7 @@ import logging
 from typing import Any, Callable
 
 from async_upnp_client.search import SSDPListener
+from async_upnp_client.ssdp import SSDP_PORT
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
@@ -28,6 +29,8 @@ from .flow import FlowDispatcher, SSDPFlow
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
+
+IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
@@ -226,6 +229,21 @@ class Scanner:
         for listener in self._ssdp_listeners:
             listener.async_search()
 
+        self.async_scan_broadcast()
+
+    @core_callback
+    def async_scan_broadcast(self, *_: Any) -> None:
+        """Scan for new entries using broadcast target."""
+        # Some sonos devices only seem to respond if we send to the broadcast
+        # address. This matches pysonos' behavior
+        # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+        for listener in self._ssdp_listeners:
+            try:
+                IPv4Address(listener.source_ip)
+            except ValueError:
+                continue
+            listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
+
     async def async_start(self) -> None:
         """Start the scanner."""
         self.description_manager = DescriptionManager(self.hass)
@@ -236,17 +254,32 @@ class Scanner:
                     async_callback=self._async_process_entry, source_ip=source_ip
                 )
             )
-
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
         )
-        await asyncio.gather(
-            *[listener.async_start() for listener in self._ssdp_listeners]
+        results = await asyncio.gather(
+            *(listener.async_start() for listener in self._ssdp_listeners),
+            return_exceptions=True,
         )
+        failed_listeners = []
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                _LOGGER.warning(
+                    "Failed to setup listener for %s: %s",
+                    self._ssdp_listeners[idx].source_ip,
+                    result,
+                )
+                failed_listeners.append(self._ssdp_listeners[idx])
+        for listener in failed_listeners:
+            self._ssdp_listeners.remove(listener)
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL
         )
+
+        # Trigger a broadcast-scan. Regular scan is implicitly triggered
+        # by SSDPListener.
+        self.async_scan_broadcast()
 
     @core_callback
     def _async_get_matching_callbacks(
