@@ -22,7 +22,6 @@ from homeassistant.const import (
     POWER_WATT,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.util import dt
 
 DOMAIN: Final = "p1_monitor"
 LOGGER = logging.getLogger(__package__)
@@ -48,12 +47,10 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
         SensorEntityDescription(
             key="gas_consumption",
             name="Gas Consumption",
-            icon="mdi:fire",
             entity_registry_enabled_default=False,
             native_unit_of_measurement=VOLUME_CUBIC_METERS,
             device_class=DEVICE_CLASS_GAS,
             state_class=STATE_CLASS_TOTAL_INCREASING,
-            last_reset=dt.utc_from_timestamp(0),
         ),
         SensorEntityDescription(
             key="power_consumption",
@@ -68,7 +65,6 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_TOTAL_INCREASING,
-            last_reset=dt.utc_from_timestamp(0),
         ),
         SensorEntityDescription(
             key="energy_consumption_low",
@@ -76,7 +72,6 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_TOTAL_INCREASING,
-            last_reset=dt.utc_from_timestamp(0),
         ),
         SensorEntityDescription(
             key="power_production",
@@ -91,7 +86,6 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_TOTAL_INCREASING,
-            last_reset=dt.utc_from_timestamp(0),
         ),
         SensorEntityDescription(
             key="energy_production_low",
@@ -99,7 +93,6 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_TOTAL_INCREASING,
-            last_reset=dt.utc_from_timestamp(0),
         ),
         SensorEntityDescription(
             key="energy_tariff_period",
