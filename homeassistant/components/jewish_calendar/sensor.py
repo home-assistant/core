@@ -9,7 +9,8 @@ from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, SENSOR_TYPES
+from . import DOMAIN
+from .const import SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 

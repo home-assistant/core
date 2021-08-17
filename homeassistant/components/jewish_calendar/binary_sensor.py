@@ -8,7 +8,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import event
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, SENSOR_TYPES
+from . import DOMAIN
+from .const import SENSOR_TYPES
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
