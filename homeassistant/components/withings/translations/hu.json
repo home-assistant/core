@@ -25,6 +25,7 @@
                 "title": "Felhaszn\u00e1l\u00f3i profil."
             },
             "reauth": {
+                "description": "A \u201e{profile}\u201d profilt \u00fajra hiteles\u00edteni kell, hogy tov\u00e1bbra is fogadni tudja a Withings adatokat.",
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             }
         }

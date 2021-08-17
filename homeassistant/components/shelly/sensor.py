@@ -1,8 +1,11 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import timedelta
+import logging
 from typing import Final, cast
+
+import aioshelly
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import SensorEntity
@@ -23,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt
 
+from . import ShellyDeviceWrapper
 from .const import LAST_RESET_NEVER, LAST_RESET_UPTIME, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
@@ -34,6 +38,8 @@ from .entity import (
     async_setup_entry_rest,
 )
 from .utils import get_device_uptime, temperature_unit
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 SENSORS: Final = {
     ("device", "battery"): BlockAttributeDescription(
@@ -255,9 +261,39 @@ async def async_setup_entry(
 class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
 
+    def __init__(
+        self,
+        wrapper: ShellyDeviceWrapper,
+        block: aioshelly.Block,
+        attribute: str,
+        description: BlockAttributeDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(wrapper, block, attribute, description)
+        self._last_value: float | None = None
+
+        if description.last_reset == LAST_RESET_NEVER:
+            self._attr_last_reset = dt.utc_from_timestamp(0)
+        elif description.last_reset == LAST_RESET_UPTIME:
+            self._attr_last_reset = (
+                dt.utcnow() - timedelta(seconds=wrapper.device.status["uptime"])
+            ).replace(second=0, microsecond=0)
+
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
+        if (
+            self.description.last_reset == LAST_RESET_UPTIME
+            and self.attribute_value is not None
+        ):
+            value = cast(float, self.attribute_value)
+
+            if self._last_value and self._last_value > value:
+                self._attr_last_reset = dt.utcnow().replace(second=0, microsecond=0)
+                _LOGGER.info("Energy reset detected for entity %s", self.name)
+
+            self._last_value = value
+
         return self.attribute_value
 
     @property
@@ -266,21 +302,7 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def last_reset(self) -> datetime | None:
-        """State class of sensor."""
-        if self.description.last_reset == LAST_RESET_UPTIME:
-            self._last_value = get_device_uptime(
-                self.wrapper.device.status, self._last_value
-            )
-            return dt.parse_datetime(self._last_value)
-
-        if self.description.last_reset == LAST_RESET_NEVER:
-            return dt.utc_from_timestamp(0)
-
-        return None
-
-    @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)
 
@@ -289,7 +311,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
@@ -299,7 +321,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return self.description.unit
 
@@ -308,7 +330,7 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
             return self.attribute_value
@@ -321,6 +343,6 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)

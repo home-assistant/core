@@ -1,8 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning"
+        },
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "area_id": "Omr\u00e5de -ID",
                     "name": "Navn",
                     "password": "Passord",
                     "username": "Brukernavn"
@@ -10,6 +17,7 @@
             },
             "user": {
                 "data": {
+                    "area_id": "Omr\u00e5de -ID",
                     "name": "Navn",
                     "password": "Passord",
                     "username": "Brukernavn"

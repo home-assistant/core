@@ -138,6 +138,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a Sonos config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+    hass.data.pop(DATA_SONOS)
+    hass.data.pop(DATA_SONOS_DISCOVERY_MANAGER)
+    return unload_ok
+
+
 class SonosDiscoveryManager:
     """Manage sonos discovery."""
 
@@ -150,6 +159,11 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = hosts
         self.discovery_lock = asyncio.Lock()
+
+    async def async_shutdown(self):
+        """Stop all running tasks."""
+        await self._async_stop_event_listener()
+        self._stop_manual_heartbeat()
 
     def _create_soco(self, ip_address: str, source: SoCoCreationSource) -> SoCo | None:
         """Create a soco instance and return if successful."""
@@ -171,15 +185,14 @@ class SonosDiscoveryManager:
             )
         return None
 
-    async def _async_stop_event_listener(self, event: Event) -> None:
+    async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         await asyncio.gather(
-            *(speaker.async_unsubscribe() for speaker in self.data.discovered.values()),
-            return_exceptions=True,
+            *(speaker.async_unsubscribe() for speaker in self.data.discovered.values())
         )
         if events_asyncio.event_listener:
             await events_asyncio.event_listener.async_stop()
 
-    def _stop_manual_heartbeat(self, event: Event) -> None:
+    def _stop_manual_heartbeat(self, event: Event | None = None) -> None:
         if self.data.hosts_heartbeat:
             self.data.hosts_heartbeat()
             self.data.hosts_heartbeat = None

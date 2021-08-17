@@ -18,12 +18,14 @@ from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     STATE_UNKNOWN,
@@ -104,7 +106,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
         GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+                {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
     }
@@ -164,10 +166,11 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert gas_consumption.attributes.get(ATTR_ICON) == "mdi:fire"
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is not None
-    assert gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     )
@@ -228,7 +231,7 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
         HOURLY_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+                {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
@@ -263,11 +266,12 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert gas_consumption.attributes.get(ATTR_ICON) == "mdi:fire"
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is not None
-    assert gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     )
@@ -299,7 +303,7 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
         HOURLY_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+                {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
@@ -334,10 +338,11 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert gas_consumption.attributes.get(ATTR_ICON) == "mdi:fire"
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is not None
-    assert gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     )
@@ -370,7 +375,7 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
         HOURLY_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+                {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
         LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
@@ -402,8 +407,8 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     assert power_tariff.state == "123.456"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert power_tariff.attributes.get(ATTR_ICON) is None
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is not None
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert power_tariff.attributes.get(ATTR_LAST_RESET) is None
+    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert (
         power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
@@ -415,10 +420,11 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert gas_consumption.attributes.get(ATTR_ICON) == "mdi:fire"
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is not None
-    assert gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     )
@@ -450,7 +456,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
         BELGIUM_HOURLY_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+                {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
@@ -485,10 +491,11 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert gas_consumption.attributes.get(ATTR_ICON) == "mdi:fire"
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is not None
-    assert gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     )

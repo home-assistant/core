@@ -15,5 +15,15 @@
                 "title": "Csatlakoz\u00e1s a LiteJet-hez"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Alap\u00e9rtelmezett \u00e1tmenet (m\u00e1sodperc)"
+                },
+                "title": "A LiteJet konfigur\u00e1l\u00e1sa"
+            }
+        }
     }
 }

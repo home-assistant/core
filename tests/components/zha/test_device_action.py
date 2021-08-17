@@ -8,14 +8,11 @@ import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import (
-    _async_get_device_automations as async_get_device_automations,
-)
 from homeassistant.components.zha import DOMAIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service, mock_coro
+from tests.common import async_get_device_automations, async_mock_service, mock_coro
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 SHORT_PRESS = "remote_button_short_press"
