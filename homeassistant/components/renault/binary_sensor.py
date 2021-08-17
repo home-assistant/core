@@ -26,6 +26,7 @@ from .renault_hub import RenaultHub
 class RenaultBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
+    on_key: str
     on_value: StateType
 
 
@@ -64,24 +65,27 @@ class RenaultBinarySensor(
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.data == self.entity_description.on_value
+        return (
+            self._get_data_attr(self.entity_description.on_key)
+            == self.entity_description.on_value
+        )
 
 
 BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
     RenaultBinarySensorEntityDescription(
         key="plugged_in",
         coordinator="battery",
-        data_key="plugStatus",
         device_class=DEVICE_CLASS_PLUG,
         name="Plugged In",
+        on_key="plugStatus",
         on_value=PlugState.PLUGGED.value,
     ),
     RenaultBinarySensorEntityDescription(
         key="charging",
         coordinator="battery",
-        data_key="chargingStatus",
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
         name="Charging",
+        on_key="chargingStatus",
         on_value=ChargeState.CHARGE_IN_PROGRESS.value,
     ),
 )
