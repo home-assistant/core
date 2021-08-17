@@ -414,6 +414,8 @@ class YeelightScanner:
         async_call_later(self._hass, 1, _async_start_flow)
 
     async def _async_process_entry(self, response):
+        """Process a discovery."""
+        _LOGGER.debug("Discovered via SSDP: %s", response)
         unique_id = response["id"]
         host = urlparse(response["location"]).hostname
         if unique_id not in self._unique_id_capabilities:
@@ -442,10 +444,11 @@ class YeelightScanner:
     @callback
     def _async_stop_scan(self):
         """Stop scanning."""
-        _LOGGER.debug("Stop scanning")
-        if self._track_interval is not None:
-            self._track_interval()
-            self._track_interval = None
+        if self._track_interval is None:
+            return
+        _LOGGER.debug("Stop scanning interval")
+        self._track_interval()
+        self._track_interval = None
 
     async def async_register_callback(self, unique_id, callback_func):
         """Register callback function."""
