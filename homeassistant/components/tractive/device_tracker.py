@@ -61,7 +61,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._attr_name = f"{self._tracker_id} {trackable['details']['name']}"
         self._attr_unique_id = trackable["_id"]
         self._attr_icon = "mdi:paw"
-        self._attr_device_info = self._device_info
 
     @property
     def source_type(self):

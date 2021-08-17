@@ -40,7 +40,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         super().__init__(user_id, trackable, tracker_details)
 
         self._attr_unique_id = unique_id
-        self._attr_device_info = self._device_info
         self.entity_description = description
 
     @callback

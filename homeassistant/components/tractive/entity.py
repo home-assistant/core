@@ -1,14 +1,16 @@
 """A entity class for Tractive integration."""
 
+from homeassistant.helpers.entity import Entity
+
 from .const import DOMAIN
 
 
-class TractiveEntity:
+class TractiveEntity(Entity):
     """Tractive entity class."""
 
     def __init__(self, user_id, trackable, tracker_details):
         """Initialize tracker entity."""
-        self._device_info = {
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, tracker_details["_id"])},
             "name": f"Tractive ({tracker_details['_id']})",
             "manufacturer": "Tractive GmbH",
