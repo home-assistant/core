@@ -1,4 +1,5 @@
 """Test Yeelight."""
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from yeelight import BulbException, BulbType
@@ -22,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import (
     CONFIG_ENTRY_DATA,
@@ -40,7 +42,7 @@ from . import (
     _patch_discovery_timeout,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
@@ -75,6 +77,11 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
 
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
+    # The discovery should update the ip address
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
 
 
 async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):

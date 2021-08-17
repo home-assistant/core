@@ -350,10 +350,10 @@ class YeelightScanner:
         if self._connected_event:
             await self._connected_event.wait()
             return
-
         self._connected_event = asyncio.Event()
 
         async def _async_connected():
+            self._listener.async_search()
             self._connected_event.set()
 
         self._listener = SSDPListener(
@@ -367,13 +367,10 @@ class YeelightScanner:
 
     async def async_discover(self):
         """Discover bulbs."""
-        if not self._connected_event:
-            await self.async_setup()
-
+        await self.async_setup()
         for _ in range(DISCOVERY_ATTEMPTS):
             self._listener.async_search()
             await asyncio.sleep(DISCOVERY_SEARCH_INTERVAL.total_seconds())
-
         return self._unique_id_capabilities.values()
 
     @callback
