@@ -34,8 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
 
-    """SmartMeter data."""
-
     async def update_smartmeter() -> SmartMeter:
         return await client.smartmeter()
 
@@ -49,8 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await smartmeter.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id][SERVICE_SMARTMETER] = smartmeter
 
-    """Phases data."""
-
     async def update_phases() -> Phases:
         return await client.phases()
 
@@ -63,8 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await phases.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id][SERVICE_PHASES] = phases
-
-    """Settings data."""
 
     async def update_settings() -> Settings:
         return await client.settings()
