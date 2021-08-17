@@ -309,11 +309,6 @@ class AmcrestCam(Camera):
         """Return the camera model."""
         return self._model
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique id for this instance."""
-        return self._attr_unique_id
-
     async def stream_source(self):
         """Return the source of the stream."""
         return self._rtsp_url
