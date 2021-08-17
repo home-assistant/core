@@ -245,25 +245,24 @@ class SelectSwitch(HomeAccessory):
 
         state = self.hass.states.get(self.entity_id)
         self.select_chars = {}
-        options = state.attributes.get("options", [])
-        if options:
-            for option in options:
-                serv_option = self.add_preload_service(
-                    SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
-                )
-                serv_option.configure_char(
-                    CHAR_NAME,
-                    value=f"{option}"[:MAX_NAME_LENGTH],
-                )
-                serv_option.configure_char(CHAR_IN_USE, value=False)
-                self.select_chars[option] = serv_option.configure_char(
-                    CHAR_ON,
-                    value=False,
-                    setter_callback=lambda value, option=option: self.select_option(
-                        option
-                    ),
-                )
-            self.set_primary_service(self.select_chars[options[0]])
+        options = state.attributes["options"]
+        for option in options:
+            serv_option = self.add_preload_service(
+                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
+            )
+            serv_option.configure_char(
+                CHAR_NAME,
+                value=f"{option}"[:MAX_NAME_LENGTH],
+            )
+            serv_option.configure_char(CHAR_IN_USE, value=False)
+            self.select_chars[option] = serv_option.configure_char(
+                CHAR_ON,
+                value=False,
+                setter_callback=lambda value, option=option: self.select_option(
+                    option
+                ),
+            )
+        self.set_primary_service(self.select_chars[options[0]])
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
