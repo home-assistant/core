@@ -282,5 +282,4 @@ class SelectSwitch(HomeAccessory):
         current_option = new_state.state
         for option, char in self.select_chars.items():
             hk_value = 1 if option == current_option else 0
-            if char.value != hk_value:
-                char.set_value(hk_value)
+            char.set_value(hk_value)
