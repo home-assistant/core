@@ -1,4 +1,4 @@
-"""Support for Renault sensors."""
+"""Support for Renault device trackers."""
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
 
 class RenaultLocationSensor(RenaultLocationDataEntity, TrackerEntity):
-    """Location sensor."""
+    """Vehicle location tracker."""
 
     _attr_icon = "mdi:car"
 
