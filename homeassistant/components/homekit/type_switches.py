@@ -234,6 +234,7 @@ class Valve(HomeAccessory):
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
 
+
 @TYPES.register("SelectSwitch")
 class SelectSwitch(HomeAccessory):
     """Generate a Switch accessory that contains multiple switches."""
