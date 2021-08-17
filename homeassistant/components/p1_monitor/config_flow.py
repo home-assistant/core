@@ -44,6 +44,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                 await client.smartmeter()
             except P1MonitorError:
                 errors["base"] = "cannot_connect"
+                await client.close()
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
