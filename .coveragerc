@@ -375,6 +375,7 @@ omit =
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
+    homeassistant/components/google_pubsub/__init__.py
     homeassistant/components/google_travel_time/__init__.py
     homeassistant/components/google_travel_time/helpers.py
     homeassistant/components/google_travel_time/sensor.py
