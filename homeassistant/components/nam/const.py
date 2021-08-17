@@ -126,7 +126,6 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name=f"{DEFAULT_NAME} SDS011 Particulate Matter 10",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM10,
-        icon="mdi:blur",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -134,7 +133,6 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name=f"{DEFAULT_NAME} SDS011 Particulate Matter 2.5",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
-        icon="mdi:blur",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -156,7 +154,6 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name=f"{DEFAULT_NAME} SPS30 Particulate Matter 1.0",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM1,
-        icon="mdi:blur",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -164,7 +161,6 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name=f"{DEFAULT_NAME} SPS30 Particulate Matter 10",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM10,
-        icon="mdi:blur",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -172,14 +168,13 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name=f"{DEFAULT_NAME} SPS30 Particulate Matter 2.5",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
-        icon="mdi:blur",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_SPS30_P4,
         name=f"{DEFAULT_NAME} SPS30 Particulate Matter 4.0",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:blur",
+        icon="mdi:molecule",
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
