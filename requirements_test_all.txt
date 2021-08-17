@@ -167,7 +167,7 @@ aioswitcher==2.0.4
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.1
+aiotractive==0.5.2
 
 # homeassistant.components.unifi
 aiounifi==26
@@ -177,6 +177,9 @@ aioymaps==1.1.0
 
 # homeassistant.components.airly
 airly==1.1.0
+
+# homeassistant.components.airtouch4
+airtouch4pyapi==1.0.5
 
 # homeassistant.components.ambee
 ambee==0.3.0
@@ -1348,7 +1351,7 @@ yalexs==1.1.13
 yeelight==0.7.2
 
 # homeassistant.components.youless
-youless-api==0.10
+youless-api==0.12
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0

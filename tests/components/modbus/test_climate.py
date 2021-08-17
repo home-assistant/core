@@ -22,10 +22,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_test
+from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
 
-CLIMATE_NAME = "test_climate"
-ENTITY_ID = f"{CLIMATE_DOMAIN}.{CLIMATE_NAME}"
+ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -34,7 +33,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{CLIMATE_NAME}"
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: CLIMATE_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -44,7 +43,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{CLIMATE_NAME}"
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: CLIMATE_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -71,18 +70,17 @@ async def test_config_climate(hass, mock_modbus):
 )
 async def test_temperature_climate(hass, regs, expected):
     """Run test for given config."""
-    CLIMATE_NAME = "modbus_test_climate"
     return
     state = await base_test(
         hass,
         {
-            CONF_NAME: CLIMATE_NAME,
+            CONF_NAME: TEST_ENTITY_NAME,
             CONF_SLAVE: 1,
             CONF_TARGET_TEMP: 117,
             CONF_ADDRESS: 117,
             CONF_COUNT: 2,
         },
-        CLIMATE_NAME,
+        TEST_ENTITY_NAME,
         CLIMATE_DOMAIN,
         CONF_CLIMATES,
         None,
@@ -100,7 +98,7 @@ async def test_temperature_climate(hass, regs, expected):
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: CLIMATE_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -127,7 +125,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
             {
                 CONF_CLIMATES: [
                     {
-                        CONF_NAME: CLIMATE_NAME,
+                        CONF_NAME: TEST_ENTITY_NAME,
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
@@ -142,7 +140,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
             {
                 CONF_CLIMATES: [
                     {
-                        CONF_NAME: CLIMATE_NAME,
+                        CONF_NAME: TEST_ENTITY_NAME,
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
@@ -157,7 +155,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
             {
                 CONF_CLIMATES: [
                     {
-                        CONF_NAME: CLIMATE_NAME,
+                        CONF_NAME: TEST_ENTITY_NAME,
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
@@ -172,7 +170,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
             {
                 CONF_CLIMATES: [
                     {
-                        CONF_NAME: CLIMATE_NAME,
+                        CONF_NAME: TEST_ENTITY_NAME,
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
@@ -214,7 +212,7 @@ test_value.attributes = {ATTR_TEMPERATURE: 37}
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: CLIMATE_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SCAN_INTERVAL: 0,
