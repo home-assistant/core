@@ -21,12 +21,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_SELECT_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("service_id"): str,
-    }
-)
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aussie Broadband."""
