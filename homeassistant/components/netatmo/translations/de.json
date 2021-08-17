@@ -7,11 +7,11 @@
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "create_entry": {
-            "default": "Erfolgreich authentifiziert."
+            "default": "Erfolgreich authentifiziert"
         },
         "step": {
             "pick_implementation": {
-                "title": "W\u00e4hle Authentifizierungs-Methode"
+                "title": "W\u00e4hle die Authentifizierungsmethode"
             }
         }
     },
@@ -49,7 +49,7 @@
                     "mode": "Berechnung",
                     "show_on_map": "Auf Karte anzeigen"
                 },
-                "description": "Konfigurieren Sie einen \u00f6ffentlichen Wettersensor f\u00fcr einen Bereich.",
+                "description": "Konfiguriere einen \u00f6ffentlichen Wettersensor f\u00fcr einen Bereich.",
                 "title": "\u00d6ffentlicher Netatmo Wettersensor"
             },
             "public_weather_areas": {

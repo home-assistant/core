@@ -21,7 +21,12 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
-from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    UndefinedType,
+)
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
 import homeassistant.util.uuid as uuid_util
@@ -598,7 +603,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     """Manage all the config entry flows that are in progress."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entries: ConfigEntries, hass_config: dict
+        self,
+        hass: HomeAssistant,
+        config_entries: ConfigEntries,
+        hass_config: ConfigType,
     ) -> None:
         """Initialize the config entry flow manager."""
         super().__init__(hass)
@@ -748,7 +756,7 @@ class ConfigEntries:
     An instance of this object is available via `hass.config_entries`.
     """
 
-    def __init__(self, hass: HomeAssistant, hass_config: dict) -> None:
+    def __init__(self, hass: HomeAssistant, hass_config: ConfigType) -> None:
         """Initialize the entry manager."""
         self.hass = hass
         self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
@@ -850,7 +858,7 @@ class ConfigEntries:
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
         await asyncio.gather(
-            *[entry.async_shutdown() for entry in self._entries.values()]
+            *(entry.async_shutdown() for entry in self._entries.values())
         )
         await self.flow.async_shutdown()
 
@@ -1082,10 +1090,10 @@ class ConfigEntries:
         """Forward the unloading of an entry to platforms."""
         return all(
             await asyncio.gather(
-                *[
+                *(
                     self.async_forward_entry_unload(entry, platform)
                     for platform in platforms
-                ]
+                )
             )
         )
 
@@ -1506,7 +1514,7 @@ class EntityRegistryDisabledHandler:
         )
 
         await asyncio.gather(
-            *[self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload]
+            *(self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload)
         )
 
 

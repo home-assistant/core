@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -26,10 +26,13 @@ async def async_setup_entry(
     def async_add_number(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave number entity."""
         entities: list[ZWaveBaseEntity] = []
-        entities.append(ZwaveNumberEntity(config_entry, client, info))
+        if info.platform_hint == "volume":
+            entities.append(ZwaveVolumeNumberEntity(config_entry, client, info))
+        else:
+            entities.append(ZwaveNumberEntity(config_entry, client, info))
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{NUMBER_DOMAIN}",
@@ -87,3 +90,38 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         await self.info.node.async_set_value(self._target_value, value)
+
+
+class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
+    """Representation of a volume number entity."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZwaveVolumeNumberEntity entity."""
+        super().__init__(config_entry, client, info)
+        self.correction_factor = int(
+            self.info.primary_value.metadata.max - self.info.primary_value.metadata.min
+        )
+        # Fallback in case we can't properly calculate correction factor
+        if self.correction_factor == 0:
+            self.correction_factor = 1
+
+        # Entity class attributes
+        self._attr_min_value = 0
+        self._attr_max_value = 1
+        self._attr_step = 0.01
+        self._attr_name = self.generate_name(include_value_name=True)
+
+    @property
+    def value(self) -> float | None:
+        """Return the entity value."""
+        if self.info.primary_value.value is None:
+            return None
+        return float(self.info.primary_value.value) / self.correction_factor
+
+    async def async_set_value(self, value: float) -> None:
+        """Set new value."""
+        await self.info.node.async_set_value(
+            self.info.primary_value, round(value * self.correction_factor)
+        )

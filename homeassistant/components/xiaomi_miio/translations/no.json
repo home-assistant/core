@@ -10,7 +10,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "cloud_credentials_incomplete": "Utskriftsinformasjon for skyen er fullstendig. Fyll ut brukernavn, passord og land",
-            "cloud_login_error": "Kunne ikke logge p\u00e5 Xioami Miio Cloud, sjekk legitimasjonen.",
+            "cloud_login_error": "Kunne ikke logge inn p\u00e5 Xiaomi Miio Cloud, sjekk legitimasjonen.",
             "cloud_no_devices": "Ingen enheter funnet i denne Xiaomi Miio-skykontoen.",
             "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet.",
             "unknown_device": "Enhetsmodellen er ikke kjent, kan ikke konfigurere enheten ved hjelp av konfigurasjonsflyt."

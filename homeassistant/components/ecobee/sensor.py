@@ -12,8 +12,8 @@ from homeassistant.const import (
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_FAHRENHEIT],
-    "humidity": ["Humidity", PERCENTAGE],
+    "temperature": ["Temperature", TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE],
+    "humidity": ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
 }
 
 
@@ -44,6 +44,7 @@ class EcobeeSensor(SensorEntity):
         self.index = sensor_index
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):
@@ -106,13 +107,13 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        if self._state in [
+        if self._state in (
             ECOBEE_STATE_CALIBRATING,
             ECOBEE_STATE_UNKNOWN,
             "unknown",
-        ]:
+        ):
             return None
 
         if self.type == "temperature":
@@ -121,7 +122,7 @@ class EcobeeSensor(SensorEntity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 

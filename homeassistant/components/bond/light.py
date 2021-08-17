@@ -81,26 +81,7 @@ async def async_setup_entry(
 class BondBaseLight(BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def __init__(
-        self,
-        hub: BondHub,
-        device: BondDevice,
-        bpup_subs: BPUPSubscriptions,
-        sub_device: str | None = None,
-    ) -> None:
-        """Create HA entity representing Bond light."""
-        super().__init__(hub, device, bpup_subs, sub_device)
-        self._light: int | None = None
-
-    @property
-    def is_on(self) -> bool:
-        """Return if light is currently on."""
-        return self._light == 1
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0
+    _attr_supported_features = 0
 
 
 class BondLight(BondBaseLight, BondEntity, LightEntity):
@@ -115,26 +96,13 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
     ) -> None:
         """Create HA entity representing Bond light."""
         super().__init__(hub, device, bpup_subs, sub_device)
-        self._brightness: int | None = None
+        if device.supports_set_brightness():
+            self._attr_supported_features = SUPPORT_BRIGHTNESS
 
     def _apply_state(self, state: dict) -> None:
-        self._light = state.get("light")
-        self._brightness = state.get("brightness")
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        if self._device.supports_set_brightness():
-            return SUPPORT_BRIGHTNESS
-        return 0
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 1..255."""
-        brightness_value = (
-            round(self._brightness * 255 / 100) if self._brightness else None
-        )
-        return brightness_value
+        self._attr_is_on = state.get("light") == 1
+        brightness = state.get("brightness")
+        self._attr_brightness = round(brightness * 255 / 100) if brightness else None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -156,7 +124,7 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
     def _apply_state(self, state: dict) -> None:
-        self._light = state.get("down_light") and state.get("light")
+        self._attr_is_on = bool(state.get("down_light") and state.get("light"))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -175,7 +143,7 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
     def _apply_state(self, state: dict) -> None:
-        self._light = state.get("up_light") and state.get("light")
+        self._attr_is_on = bool(state.get("up_light") and state.get("light"))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -193,29 +161,14 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
 class BondFireplace(BondEntity, LightEntity):
     """Representation of a Bond-controlled fireplace."""
 
-    def __init__(
-        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
-    ) -> None:
-        """Create HA entity representing Bond fireplace."""
-        super().__init__(hub, device, bpup_subs)
-
-        self._power: bool | None = None
-        # Bond flame level, 0-100
-        self._flame: int | None = None
+    _attr_supported_features = SUPPORT_BRIGHTNESS
 
     def _apply_state(self, state: dict) -> None:
-        self._power = state.get("power")
-        self._flame = state.get("flame")
-
-    @property
-    def supported_features(self) -> int:
-        """Flag brightness as supported feature to represent flame level."""
-        return SUPPORT_BRIGHTNESS
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if power is on."""
-        return self._power == 1
+        power = state.get("power")
+        flame = state.get("flame")
+        self._attr_is_on = power == 1
+        self._attr_brightness = round(flame * 255 / 100) if flame else None
+        self._attr_icon = "mdi:fireplace" if power == 1 else "mdi:fireplace-off"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
@@ -233,13 +186,3 @@ class BondFireplace(BondEntity, LightEntity):
         _LOGGER.debug("Fireplace async_turn_off called with: %s", kwargs)
 
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the flame of this fireplace converted to HA brightness between 0..255."""
-        return round(self._flame * 255 / 100) if self._flame else None
-
-    @property
-    def icon(self) -> str | None:
-        """Show fireplace icon for the entity."""
-        return "mdi:fireplace" if self._power == 1 else "mdi:fireplace-off"

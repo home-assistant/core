@@ -9,7 +9,11 @@ from homeassistant.components.fritzbox.const import (
     ATTR_STATE_LOCKED,
     DOMAIN as FB_DOMAIN,
 )
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -20,11 +24,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import MOCK_CONFIG, FritzDeviceSensorMock, setup_config_entry
+from . import FritzDeviceSensorMock, setup_config_entry
+from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.fake_name"
+ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock):
@@ -33,20 +38,23 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
+    await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(f"{ENTITY_ID}_temperature")
     assert state
     assert state.state == "1.23"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Temperature"
     assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"
     assert state.attributes[ATTR_STATE_LOCKED] == "fake_locked"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
 
     state = hass.states.get(f"{ENTITY_ID}_battery")
     assert state
     assert state.state == "23"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name Battery"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Battery"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ATTR_STATE_CLASS not in state.attributes
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock):

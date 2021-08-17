@@ -23,7 +23,8 @@ from homeassistant.const import (
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
 BLIND_COVER_ENTITY = "cover.window_blind_controller"
-SHUTTER_COVER_ENTITY = "cover.flush_shutter_dc"
+SHUTTER_COVER_ENTITY = "cover.flush_shutter"
+AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
 
 
 async def test_window_cover(hass, client, chain_actuator_zws12, integration):
@@ -304,6 +305,215 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state.state == "closed"
+
+
+async def test_aeotec_nano_shutter_cover(
+    hass, client, aeotec_nano_shutter, integration
+):
+    """Test movement of an Aeotec Nano Shutter cover entity. Useful to make sure the stop command logic is handled properly."""
+    node = aeotec_nano_shutter
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_WINDOW
+
+    assert state.state == "closed"
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    # Test opening
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 3
+    assert args["valueId"] == {
+        "ccVersion": 4,
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "value": 0,
+        "metadata": {
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
+            "valueChangeOptions": ["transitionDuration"],
+            "readable": True,
+            "writeable": True,
+            "label": "Target value",
+        },
+    }
+    assert args["value"]
+
+    client.async_send_command.reset_mock()
+    # Test stop after opening
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    open_args = client.async_send_command.call_args_list[0][0][0]
+    assert open_args["command"] == "node.set_value"
+    assert open_args["nodeId"] == 3
+    assert open_args["valueId"] == {
+        "ccVersion": 4,
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "On",
+        "propertyName": "On",
+        "value": False,
+        "metadata": {
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+            "label": "Perform a level change (On)",
+            "ccSpecific": {"switchType": 1},
+        },
+    }
+    assert not open_args["value"]
+
+    close_args = client.async_send_command.call_args_list[1][0][0]
+    assert close_args["command"] == "node.set_value"
+    assert close_args["nodeId"] == 3
+    assert close_args["valueId"] == {
+        "ccVersion": 4,
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "Off",
+        "propertyName": "Off",
+        "value": False,
+        "metadata": {
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+            "label": "Perform a level change (Off)",
+            "ccSpecific": {"switchType": 1},
+        },
+    }
+    assert not close_args["value"]
+
+    # Test position update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 6,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    client.async_send_command.reset_mock()
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == "open"
+
+    # Test closing
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 3
+    assert args["valueId"] == {
+        "ccVersion": 4,
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "value": 0,
+        "metadata": {
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "valueChangeOptions": ["transitionDuration"],
+            "label": "Target value",
+        },
+    }
+    assert args["value"] == 0
+
+    client.async_send_command.reset_mock()
+
+    # Test stop after closing
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    open_args = client.async_send_command.call_args_list[0][0][0]
+    assert open_args["command"] == "node.set_value"
+    assert open_args["nodeId"] == 3
+    assert open_args["valueId"] == {
+        "ccVersion": 4,
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "On",
+        "propertyName": "On",
+        "value": False,
+        "metadata": {
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+            "label": "Perform a level change (On)",
+            "ccSpecific": {"switchType": 1},
+        },
+    }
+    assert not open_args["value"]
+
+    close_args = client.async_send_command.call_args_list[1][0][0]
+    assert close_args["command"] == "node.set_value"
+    assert close_args["nodeId"] == 3
+    assert close_args["valueId"] == {
+        "ccVersion": 4,
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "Off",
+        "propertyName": "Off",
+        "value": False,
+        "metadata": {
+            "type": "boolean",
+            "readable": True,
+            "writeable": True,
+            "label": "Perform a level change (Off)",
+            "ccSpecific": {"switchType": 1},
+        },
+    }
+    assert not close_args["value"]
 
 
 async def test_blind_cover(hass, client, iblinds_v2, integration):

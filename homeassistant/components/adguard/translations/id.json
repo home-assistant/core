@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
             "existing_instance_updated": "Memperbarui konfigurasi yang ada."
         },
         "error": {

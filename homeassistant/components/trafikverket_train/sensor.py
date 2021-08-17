@@ -189,7 +189,7 @@ class TrainSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the departure state."""
         state = self._state
         if state is not None:

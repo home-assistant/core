@@ -15,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -55,10 +56,10 @@ def async_get_pickup_type_names(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: dict,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict = None,
-):
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import Recollect Waste configuration from YAML."""
     LOGGER.warning(
         "Loading ReCollect Waste via platform setup is deprecated; "
@@ -126,4 +127,4 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date).isoformat(),
             }
         )
-        self._attr_state = as_utc(pickup_event.date).isoformat()
+        self._attr_native_value = as_utc(pickup_event.date).isoformat()

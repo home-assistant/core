@@ -3,7 +3,15 @@ import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.climate.const import HVAC_MODE_AUTO
-from homeassistant.components.modbus.const import CONF_CLIMATES, CONF_TARGET_TEMP
+from homeassistant.components.modbus.const import (
+    CONF_CLIMATES,
+    CONF_DATA_TYPE,
+    CONF_TARGET_TEMP,
+    DATA_TYPE_FLOAT32,
+    DATA_TYPE_FLOAT64,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
@@ -14,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_test, prepare_service_update
+from .conftest import ReadResult, base_test
 
 CLIMATE_NAME = "test_climate"
 ENTITY_ID = f"{CLIMATE_DOMAIN}.{CLIMATE_NAME}"
@@ -86,28 +94,109 @@ async def test_temperature_climate(hass, regs, expected):
     assert state == expected
 
 
-async def test_service_climate_update(hass, mock_pymodbus):
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: CLIMATE_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ]
+        },
+    ],
+)
+async def test_service_climate_update(hass, mock_modbus, mock_ha):
     """Run test for service homeassistant.update_entity."""
-
-    config = {
-        CONF_CLIMATES: [
-            {
-                CONF_NAME: CLIMATE_NAME,
-                CONF_TARGET_TEMP: 117,
-                CONF_ADDRESS: 117,
-                CONF_SLAVE: 10,
-            }
-        ]
-    }
-    mock_pymodbus.read_input_registers.return_value = ReadResult([0x00])
-    await prepare_service_update(
-        hass,
-        config,
-    )
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "auto"
+
+
+@pytest.mark.parametrize(
+    "temperature, result, do_config",
+    [
+        (
+            35,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: CLIMATE_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_DATA_TYPE: DATA_TYPE_INT16,
+                    }
+                ]
+            },
+        ),
+        (
+            36,
+            [0x00, 0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: CLIMATE_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_DATA_TYPE: DATA_TYPE_INT32,
+                    }
+                ]
+            },
+        ),
+        (
+            37.5,
+            [0x00, 0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: CLIMATE_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_DATA_TYPE: DATA_TYPE_FLOAT32,
+                    }
+                ]
+            },
+        ),
+        (
+            "39",
+            [0x00, 0x00, 0x00, 0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: CLIMATE_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_DATA_TYPE: DATA_TYPE_FLOAT64,
+                    }
+                ]
+            },
+        ),
+    ],
+)
+async def test_service_climate_set_temperature(
+    hass, temperature, result, mock_modbus, mock_ha
+):
+    """Test set_temperature."""
+    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_temperature",
+        {
+            "entity_id": ENTITY_ID,
+            ATTR_TEMPERATURE: temperature,
+        },
+        blocking=True,
+    )
 
 
 test_value = State(ENTITY_ID, 35)
@@ -128,6 +217,7 @@ test_value.attributes = {ATTR_TEMPERATURE: 37}
                     CONF_NAME: CLIMATE_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
+                    CONF_SCAN_INTERVAL: 0,
                 }
             ],
         },

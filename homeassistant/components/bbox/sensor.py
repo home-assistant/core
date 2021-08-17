@@ -88,40 +88,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(self, bbox_data, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = name
-        self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_icon = SENSOR_TYPES[sensor_type][2]
         self.bbox_data = bbox_data
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Get the latest data from Bbox and update the state."""
@@ -129,60 +104,45 @@ class BboxUptimeSensor(SensorEntity):
         uptime = utcnow() - timedelta(
             seconds=self.bbox_data.router_infos["device"]["uptime"]
         )
-        self._state = uptime.replace(microsecond=0).isoformat()
+        self._attr_native_value = uptime.replace(microsecond=0).isoformat()
 
 
 class BboxSensor(SensorEntity):
     """Implementation of a Bbox sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(self, bbox_data, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = name
         self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_icon = SENSOR_TYPES[sensor_type][2]
         self.bbox_data = bbox_data
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
         if self.type == "down_max_bandwidth":
-            self._state = round(self.bbox_data.data["rx"]["maxBandwidth"] / 1000, 2)
+            self._attr_native_value = round(
+                self.bbox_data.data["rx"]["maxBandwidth"] / 1000, 2
+            )
         elif self.type == "up_max_bandwidth":
-            self._state = round(self.bbox_data.data["tx"]["maxBandwidth"] / 1000, 2)
+            self._attr_native_value = round(
+                self.bbox_data.data["tx"]["maxBandwidth"] / 1000, 2
+            )
         elif self.type == "current_down_bandwidth":
-            self._state = round(self.bbox_data.data["rx"]["bandwidth"] / 1000, 2)
+            self._attr_native_value = round(
+                self.bbox_data.data["rx"]["bandwidth"] / 1000, 2
+            )
         elif self.type == "current_up_bandwidth":
-            self._state = round(self.bbox_data.data["tx"]["bandwidth"] / 1000, 2)
+            self._attr_native_value = round(
+                self.bbox_data.data["tx"]["bandwidth"] / 1000, 2
+            )
         elif self.type == "number_of_reboots":
-            self._state = self.bbox_data.router_infos["device"]["numberofboots"]
+            self._attr_native_value = self.bbox_data.router_infos["device"][
+                "numberofboots"
+            ]
 
 
 class BboxData:

@@ -9,7 +9,6 @@ from homeassistant.util import utcnow
 
 from . import NewDateTime
 from .const import (
-    DATETIME_FORMAT,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
@@ -74,11 +73,11 @@ async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity = hass.states.get("weather.met_office_wavertree_3_hourly")
-    assert entity
+    weather = hass.states.get("weather.met_office_wavertree_3_hourly")
+    assert weather
 
-    entity = hass.states.get("weather.met_office_wavertree_daily")
-    assert entity
+    weather = hass.states.get("weather.met_office_wavertree_daily")
+    assert weather
 
     requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
     requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=daily", text="")
@@ -87,11 +86,11 @@ async def test_site_cannot_update(hass, requests_mock, legacy_patchable_time):
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    entity = hass.states.get("weather.met_office_wavertree_3_hourly")
-    assert entity.state == STATE_UNAVAILABLE
+    weather = hass.states.get("weather.met_office_wavertree_3_hourly")
+    assert weather.state == STATE_UNAVAILABLE
 
-    entity = hass.states.get("weather.met_office_wavertree_daily")
-    assert entity.state == STATE_UNAVAILABLE
+    weather = hass.states.get("weather.met_office_wavertree_daily")
+    assert weather.state == STATE_UNAVAILABLE
 
 
 @patch(
@@ -126,50 +125,49 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
     await hass.async_block_till_done()
 
     # Wavertree 3-hourly weather platform expected results
-    entity = hass.states.get("weather.met_office_wavertree_3_hourly")
-    assert entity
+    weather = hass.states.get("weather.met_office_wavertree_3_hourly")
+    assert weather
 
-    assert entity.state == "sunny"
-    assert entity.attributes.get("temperature") == 17
-    assert entity.attributes.get("wind_speed") == 9
-    assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good - 10-20"
-    assert entity.attributes.get("humidity") == 50
+    assert weather.state == "sunny"
+    assert weather.attributes.get("temperature") == 17
+    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_bearing") == "SSE"
+    assert weather.attributes.get("visibility") == "Good - 10-20"
+    assert weather.attributes.get("humidity") == 50
 
     # Forecasts added - just pick out 1 entry to check
-    assert len(entity.attributes.get("forecast")) == 35
+    assert len(weather.attributes.get("forecast")) == 35
 
     assert (
-        entity.attributes.get("forecast")[26]["datetime"].strftime(DATETIME_FORMAT)
-        == "2020-04-28 21:00:00+0000"
+        weather.attributes.get("forecast")[26]["datetime"]
+        == "2020-04-28T21:00:00+00:00"
     )
-    assert entity.attributes.get("forecast")[26]["condition"] == "cloudy"
-    assert entity.attributes.get("forecast")[26]["temperature"] == 10
-    assert entity.attributes.get("forecast")[26]["wind_speed"] == 4
-    assert entity.attributes.get("forecast")[26]["wind_bearing"] == "NNE"
+    assert weather.attributes.get("forecast")[26]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[26]["temperature"] == 10
+    assert weather.attributes.get("forecast")[26]["wind_speed"] == 4
+    assert weather.attributes.get("forecast")[26]["wind_bearing"] == "NNE"
 
     # Wavertree daily weather platform expected results
-    entity = hass.states.get("weather.met_office_wavertree_daily")
-    assert entity
+    weather = hass.states.get("weather.met_office_wavertree_daily")
+    assert weather
 
-    assert entity.state == "sunny"
-    assert entity.attributes.get("temperature") == 19
-    assert entity.attributes.get("wind_speed") == 9
-    assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good - 10-20"
-    assert entity.attributes.get("humidity") == 50
+    assert weather.state == "sunny"
+    assert weather.attributes.get("temperature") == 19
+    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_bearing") == "SSE"
+    assert weather.attributes.get("visibility") == "Good - 10-20"
+    assert weather.attributes.get("humidity") == 50
 
     # Also has Forecasts added - again, just pick out 1 entry to check
-    assert len(entity.attributes.get("forecast")) == 8
+    assert len(weather.attributes.get("forecast")) == 8
 
     assert (
-        entity.attributes.get("forecast")[7]["datetime"].strftime(DATETIME_FORMAT)
-        == "2020-04-29 12:00:00+0000"
+        weather.attributes.get("forecast")[7]["datetime"] == "2020-04-29T12:00:00+00:00"
     )
-    assert entity.attributes.get("forecast")[7]["condition"] == "rainy"
-    assert entity.attributes.get("forecast")[7]["temperature"] == 13
-    assert entity.attributes.get("forecast")[7]["wind_speed"] == 13
-    assert entity.attributes.get("forecast")[7]["wind_bearing"] == "SE"
+    assert weather.attributes.get("forecast")[7]["condition"] == "rainy"
+    assert weather.attributes.get("forecast")[7]["temperature"] == 13
+    assert weather.attributes.get("forecast")[7]["wind_speed"] == 13
+    assert weather.attributes.get("forecast")[7]["wind_bearing"] == "SE"
 
 
 @patch(
@@ -216,93 +214,91 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     await hass.async_block_till_done()
 
     # Wavertree 3-hourly weather platform expected results
-    entity = hass.states.get("weather.met_office_wavertree_3_hourly")
-    assert entity
+    weather = hass.states.get("weather.met_office_wavertree_3_hourly")
+    assert weather
 
-    assert entity.state == "sunny"
-    assert entity.attributes.get("temperature") == 17
-    assert entity.attributes.get("wind_speed") == 9
-    assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good - 10-20"
-    assert entity.attributes.get("humidity") == 50
+    assert weather.state == "sunny"
+    assert weather.attributes.get("temperature") == 17
+    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_bearing") == "SSE"
+    assert weather.attributes.get("visibility") == "Good - 10-20"
+    assert weather.attributes.get("humidity") == 50
 
     # Forecasts added - just pick out 1 entry to check
-    assert len(entity.attributes.get("forecast")) == 35
+    assert len(weather.attributes.get("forecast")) == 35
 
     assert (
-        entity.attributes.get("forecast")[18]["datetime"].strftime(DATETIME_FORMAT)
-        == "2020-04-27 21:00:00+0000"
+        weather.attributes.get("forecast")[18]["datetime"]
+        == "2020-04-27T21:00:00+00:00"
     )
-    assert entity.attributes.get("forecast")[18]["condition"] == "sunny"
-    assert entity.attributes.get("forecast")[18]["temperature"] == 9
-    assert entity.attributes.get("forecast")[18]["wind_speed"] == 4
-    assert entity.attributes.get("forecast")[18]["wind_bearing"] == "NW"
+    assert weather.attributes.get("forecast")[18]["condition"] == "sunny"
+    assert weather.attributes.get("forecast")[18]["temperature"] == 9
+    assert weather.attributes.get("forecast")[18]["wind_speed"] == 4
+    assert weather.attributes.get("forecast")[18]["wind_bearing"] == "NW"
 
     # Wavertree daily weather platform expected results
-    entity = hass.states.get("weather.met_office_wavertree_daily")
-    assert entity
+    weather = hass.states.get("weather.met_office_wavertree_daily")
+    assert weather
 
-    assert entity.state == "sunny"
-    assert entity.attributes.get("temperature") == 19
-    assert entity.attributes.get("wind_speed") == 9
-    assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good - 10-20"
-    assert entity.attributes.get("humidity") == 50
+    assert weather.state == "sunny"
+    assert weather.attributes.get("temperature") == 19
+    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_bearing") == "SSE"
+    assert weather.attributes.get("visibility") == "Good - 10-20"
+    assert weather.attributes.get("humidity") == 50
 
     # Also has Forecasts added - again, just pick out 1 entry to check
-    assert len(entity.attributes.get("forecast")) == 8
+    assert len(weather.attributes.get("forecast")) == 8
 
     assert (
-        entity.attributes.get("forecast")[7]["datetime"].strftime(DATETIME_FORMAT)
-        == "2020-04-29 12:00:00+0000"
+        weather.attributes.get("forecast")[7]["datetime"] == "2020-04-29T12:00:00+00:00"
     )
-    assert entity.attributes.get("forecast")[7]["condition"] == "rainy"
-    assert entity.attributes.get("forecast")[7]["temperature"] == 13
-    assert entity.attributes.get("forecast")[7]["wind_speed"] == 13
-    assert entity.attributes.get("forecast")[7]["wind_bearing"] == "SE"
+    assert weather.attributes.get("forecast")[7]["condition"] == "rainy"
+    assert weather.attributes.get("forecast")[7]["temperature"] == 13
+    assert weather.attributes.get("forecast")[7]["wind_speed"] == 13
+    assert weather.attributes.get("forecast")[7]["wind_bearing"] == "SE"
 
     # King's Lynn 3-hourly weather platform expected results
-    entity = hass.states.get("weather.met_office_king_s_lynn_3_hourly")
-    assert entity
+    weather = hass.states.get("weather.met_office_king_s_lynn_3_hourly")
+    assert weather
 
-    assert entity.state == "sunny"
-    assert entity.attributes.get("temperature") == 14
-    assert entity.attributes.get("wind_speed") == 2
-    assert entity.attributes.get("wind_bearing") == "E"
-    assert entity.attributes.get("visibility") == "Very Good - 20-40"
-    assert entity.attributes.get("humidity") == 60
+    assert weather.state == "sunny"
+    assert weather.attributes.get("temperature") == 14
+    assert weather.attributes.get("wind_speed") == 2
+    assert weather.attributes.get("wind_bearing") == "E"
+    assert weather.attributes.get("visibility") == "Very Good - 20-40"
+    assert weather.attributes.get("humidity") == 60
 
     # Also has Forecast added - just pick out 1 entry to check
-    assert len(entity.attributes.get("forecast")) == 35
+    assert len(weather.attributes.get("forecast")) == 35
 
     assert (
-        entity.attributes.get("forecast")[18]["datetime"].strftime(DATETIME_FORMAT)
-        == "2020-04-27 21:00:00+0000"
+        weather.attributes.get("forecast")[18]["datetime"]
+        == "2020-04-27T21:00:00+00:00"
     )
-    assert entity.attributes.get("forecast")[18]["condition"] == "cloudy"
-    assert entity.attributes.get("forecast")[18]["temperature"] == 10
-    assert entity.attributes.get("forecast")[18]["wind_speed"] == 7
-    assert entity.attributes.get("forecast")[18]["wind_bearing"] == "SE"
+    assert weather.attributes.get("forecast")[18]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[18]["temperature"] == 10
+    assert weather.attributes.get("forecast")[18]["wind_speed"] == 7
+    assert weather.attributes.get("forecast")[18]["wind_bearing"] == "SE"
 
     # King's Lynn daily weather platform expected results
-    entity = hass.states.get("weather.met_office_king_s_lynn_daily")
-    assert entity
+    weather = hass.states.get("weather.met_office_king_s_lynn_daily")
+    assert weather
 
-    assert entity.state == "cloudy"
-    assert entity.attributes.get("temperature") == 9
-    assert entity.attributes.get("wind_speed") == 4
-    assert entity.attributes.get("wind_bearing") == "ESE"
-    assert entity.attributes.get("visibility") == "Very Good - 20-40"
-    assert entity.attributes.get("humidity") == 75
+    assert weather.state == "cloudy"
+    assert weather.attributes.get("temperature") == 9
+    assert weather.attributes.get("wind_speed") == 4
+    assert weather.attributes.get("wind_bearing") == "ESE"
+    assert weather.attributes.get("visibility") == "Very Good - 20-40"
+    assert weather.attributes.get("humidity") == 75
 
     # All should have Forecast added - again, just picking out 1 entry to check
-    assert len(entity.attributes.get("forecast")) == 8
+    assert len(weather.attributes.get("forecast")) == 8
 
     assert (
-        entity.attributes.get("forecast")[5]["datetime"].strftime(DATETIME_FORMAT)
-        == "2020-04-28 12:00:00+0000"
+        weather.attributes.get("forecast")[5]["datetime"] == "2020-04-28T12:00:00+00:00"
     )
-    assert entity.attributes.get("forecast")[5]["condition"] == "cloudy"
-    assert entity.attributes.get("forecast")[5]["temperature"] == 11
-    assert entity.attributes.get("forecast")[5]["wind_speed"] == 7
-    assert entity.attributes.get("forecast")[5]["wind_bearing"] == "ESE"
+    assert weather.attributes.get("forecast")[5]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[5]["temperature"] == 11
+    assert weather.attributes.get("forecast")[5]["wind_speed"] == 7
+    assert weather.attributes.get("forecast")[5]["wind_bearing"] == "ESE"

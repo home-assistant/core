@@ -266,6 +266,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             "manufacturer": "Spotify AB",
             "model": model,
             "name": self._name,
+            "entry_type": "service",
         }
 
     @property
@@ -490,7 +491,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             )
             raise NotImplementedError
 
-        if media_content_type in [None, "library"]:
+        if media_content_type in (None, "library"):
             return await self.hass.async_add_executor_job(library_payload)
 
         payload = {

@@ -227,7 +227,7 @@ def async_prepare_call_from_config(
 
     service_data = {}
 
-    for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
+    for conf in (CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE):
         if conf not in config:
             continue
         try:

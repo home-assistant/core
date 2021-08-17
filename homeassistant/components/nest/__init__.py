@@ -33,7 +33,6 @@ from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_T
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
@@ -70,7 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["sensor", "camera", "climate"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
 
@@ -110,7 +109,7 @@ class SignalUpdateCallback:
         """Initialize EventCallback."""
         self._hass = hass
 
-    async def async_handle_event(self, event_message: EventMessage):
+    async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
         if not event_message.resource_update_name:
             return
@@ -195,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if DATA_SDM not in entry.data:
         # Legacy API

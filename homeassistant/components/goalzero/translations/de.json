@@ -7,12 +7,12 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "invalid_host": "Ung\u00fcltiger Hostname oder IP Adresse",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "confirm_discovery": {
-                "description": "Eine DHCP-Reservierung auf Ihrem Router wird empfohlen. Wenn sie nicht eingerichtet ist, ist das Ger\u00e4t m\u00f6glicherweise nicht mehr verf\u00fcgbar, bis Home Assistant die neue IP-Adresse erkennt. Schlagen Sie im Benutzerhandbuch Ihres Routers nach.",
+                "description": "Eine DHCP-Reservierung auf deinem Router wird empfohlen. Wenn sie nicht eingerichtet ist, ist das Ger\u00e4t m\u00f6glicherweise nicht mehr verf\u00fcgbar, bis Home Assistant die neue IP-Adresse erkennt. Schlage im Benutzerhandbuch deines Routers nach.",
                 "title": "Goal Zero Yeti"
             },
             "user": {

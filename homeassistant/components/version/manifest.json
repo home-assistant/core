@@ -3,7 +3,7 @@
   "name": "Version",
   "documentation": "https://www.home-assistant.io/integrations/version",
   "requirements": [
-    "pyhaversion==21.5.0"
+    "pyhaversion==21.7.0"
   ],
   "codeowners": [
     "@fabaff",
