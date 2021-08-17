@@ -128,12 +128,11 @@ def _patched_ssdp_listener(info, *args, **kwargs):
 
     async def _async_callback(*_):
         await listener.async_connect_callback()
-        if info:
-            await listener.async_callback(info)
 
     @callback
     def _async_search(*_):
-        asyncio.create_task(_async_callback())
+        if info:
+            asyncio.create_task(listener.async_callback(info))
 
     listener.async_start = _async_callback
     listener.async_search = _async_search
