@@ -34,9 +34,9 @@ class SimplisafeFreezeSensor(SimpliSafeBaseSensor, SensorEntity):
     """Define a SimpliSafe freeze sensor entity."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_FAHRENHEIT
+    _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
 
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        self._attr_state = self._sensor.temperature
+        self._attr_native_value = self._sensor.temperature

@@ -57,6 +57,8 @@ VALVE_TYPE = {
 
 ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
 
+ACTIVATE_ONLY_RESET_SECONDS = 10
+
 
 @TYPES.register("Outlet")
 class Outlet(HomeAccessory):
@@ -89,9 +91,8 @@ class Outlet(HomeAccessory):
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state == STATE_ON
-        if self.char_on.value is not current_state:
-            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
-            self.char_on.set_value(current_state)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
 
 
 @TYPES.register("Switch")
@@ -121,8 +122,7 @@ class Switch(HomeAccessory):
     def reset_switch(self, *args):
         """Reset switch to emulate activate click."""
         _LOGGER.debug("%s: Reset switch to off", self.entity_id)
-        if self.char_on.value is not False:
-            self.char_on.set_value(False)
+        self.char_on.set_value(False)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -141,7 +141,7 @@ class Switch(HomeAccessory):
         self.async_call_service(self._domain, service, params)
 
         if self.activate_only:
-            async_call_later(self.hass, 1, self.reset_switch)
+            async_call_later(self.hass, ACTIVATE_ONLY_RESET_SECONDS, self.reset_switch)
 
     @callback
     def async_update_state(self, new_state):
@@ -154,9 +154,8 @@ class Switch(HomeAccessory):
             return
 
         current_state = new_state.state == STATE_ON
-        if self.char_on.value is not current_state:
-            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
-            self.char_on.set_value(current_state)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
 
 
 @TYPES.register("Vacuum")
@@ -184,9 +183,8 @@ class Vacuum(Switch):
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state in (STATE_CLEANING, STATE_ON)
-        if self.char_on.value is not current_state:
-            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
-            self.char_on.set_value(current_state)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
 
 
 @TYPES.register("Valve")
@@ -224,9 +222,7 @@ class Valve(HomeAccessory):
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = 1 if new_state.state == STATE_ON else 0
-        if self.char_active.value != current_state:
-            _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
-            self.char_active.set_value(current_state)
-        if self.char_in_use.value != current_state:
-            _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
-            self.char_in_use.set_value(current_state)
+        _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
+        self.char_active.set_value(current_state)
+        _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
+        self.char_in_use.set_value(current_state)

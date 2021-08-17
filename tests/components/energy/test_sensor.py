@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_MONETARY,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -295,3 +296,49 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
 
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "5.0"
+
+
+async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
+    """Test gas cost price from sensor entity."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "entity_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+    last_reset = dt_util.utc_from_timestamp(0).isoformat()
+
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        100,
+        {"last_reset": last_reset, "unit_of_measurement": VOLUME_CUBIC_METERS},
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+
+    # gas use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        200,
+        {"last_reset": last_reset, "unit_of_measurement": VOLUME_CUBIC_METERS},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "50.0"

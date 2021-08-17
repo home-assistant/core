@@ -1,7 +1,10 @@
 """Binary sensor platform for Hass.io addons."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_UPDATE,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,6 +38,8 @@ async def async_setup_entry(
 class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
     """Binary sensor to track whether an update is available for a Hass.io add-on."""
 
+    _attr_device_class = DEVICE_CLASS_UPDATE
+
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
@@ -43,6 +48,8 @@ class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
 
 class HassioOSBinarySensor(HassioOSEntity, BinarySensorEntity):
     """Binary sensor to track whether an update is available for Hass.io OS."""
+
+    _attr_device_class = DEVICE_CLASS_UPDATE
 
     @property
     def is_on(self) -> bool:
