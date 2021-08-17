@@ -1,33 +1,113 @@
 """Constants for the Jewish calendar integration."""
+from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 
-DATA_SENSORS = {
-    "date": ("Date", "mdi:judaism"),
-    "weekly_portion": ("Parshat Hashavua", "mdi:book-open-variant"),
-    "holiday": ("Holiday", "mdi:calendar-star"),
-    "omer_count": ("Day of the Omer", "mdi:counter"),
-    "daf_yomi": ("Daf Yomi", "mdi:book-open-variant"),
-}
-
-TIME_SENSORS = {
-    "first_light": ("Alot Hashachar", "mdi:weather-sunset-up"),
-    "talit": ("Talit and Tefillin", "mdi:calendar-clock"),
-    "gra_end_shma": ('Latest time for Shma Gr"a', "mdi:calendar-clock"),
-    "mga_end_shma": ('Latest time for Shma MG"A', "mdi:calendar-clock"),
-    "gra_end_tfila": ('Latest time for Tefilla Gr"a', "mdi:calendar-clock"),
-    "mga_end_tfila": ('Latest time for Tefilla MG"A', "mdi:calendar-clock"),
-    "big_mincha": ("Mincha Gedola", "mdi:calendar-clock"),
-    "small_mincha": ("Mincha Ketana", "mdi:calendar-clock"),
-    "plag_mincha": ("Plag Hamincha", "mdi:weather-sunset-down"),
-    "sunset": ("Shkia", "mdi:weather-sunset"),
-    "first_stars": ("T'set Hakochavim", "mdi:weather-night"),
-    "upcoming_shabbat_candle_lighting": (
-        "Upcoming Shabbat Candle Lighting",
-        "mdi:candle",
+DATA_SENSORS = (
+    SensorEntityDescription(key="date", name="Date", icon="mdi:judaism"),
+    SensorEntityDescription(
+        key="weekly_portion", name="Parshat Hashavua", icon="mdi:book-open-variant"
     ),
-    "upcoming_shabbat_havdalah": ("Upcoming Shabbat Havdalah", "mdi:weather-night"),
-    "upcoming_candle_lighting": ("Upcoming Candle Lighting", "mdi:candle"),
-    "upcoming_havdalah": ("Upcoming Havdalah", "mdi:weather-night"),
-}
+    SensorEntityDescription(key="holiday", name="Holiday", icon="mdi:calendar-star"),
+    SensorEntityDescription(
+        key="omer_count", name="Day of the Omer", icon="mdi:counter"
+    ),
+    SensorEntityDescription(
+        key="daf_yomi", name="Daf Yomi", icon="mdi:book-open-variant"
+    ),
+)
+
+TIME_SENSORS = (
+    SensorEntityDescription(
+        key="first_light",
+        name="Alot Hashachar",
+        icon="mdi:weather-sunset-up",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="talit",
+        name="Talit and Tefillin",
+        icon="mdi:calendar-clock",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="gra_end_shma",
+        name='Latest time for Shma Gr"a',
+        icon="mdi:calendar-clock",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="mga_end_shma",
+        name='Latest time for Shma MG"A',
+        icon="mdi:calendar-clock",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="gra_end_tfila",
+        name='Latest time for Tefilla Gr"a',
+        icon="mdi:calendar-clock",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="mga_end_tfila",
+        name='Latest time for Tefilla MG"A',
+        icon="mdi:calendar-clock",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="big_mincha",
+        name="Mincha Gedola",
+        icon="mdi:calendar-clock",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="small_mincha",
+        name="Mincha Ketana",
+        icon="mdi:calendar-clock",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="plag_mincha",
+        name="Plag Hamincha",
+        icon="mdi:weather-sunset-down",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="sunset",
+        name="Shkia",
+        icon="mdi:weather-sunset",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="first_stars",
+        name="T'set Hakochavim",
+        icon="mdi:weather-night",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="upcoming_shabbat_candle_lighting",
+        name="Upcoming Shabbat Candle Lighting",
+        icon="mdi:candle",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="upcoming_shabbat_havdalah",
+        name="Upcoming Shabbat Havdalah",
+        icon="mdi:weather-night",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="upcoming_candle_lighting",
+        name="Upcoming Candle Lighting",
+        icon="mdi:candle",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="upcoming_havdalah",
+        name="Upcoming Havdalah",
+        icon="mdi:weather-night",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+)
 
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"

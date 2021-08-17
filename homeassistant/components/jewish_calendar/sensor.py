@@ -5,7 +5,7 @@ import logging
 import hdate
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
+from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
@@ -21,12 +21,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     sensors = [
-        JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)
-        for sensor, sensor_info in DATA_SENSORS.items()
+        JewishCalendarSensor(hass.data[DOMAIN], description)
+        for description in DATA_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(hass.data[DOMAIN], sensor, sensor_info)
-        for sensor, sensor_info in TIME_SENSORS.items()
+        JewishCalendarTimeSensor(hass.data[DOMAIN], description)
+        for description in TIME_SENSORS
     )
 
     async_add_entities(sensors)
@@ -35,13 +35,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
-    def __init__(self, data, sensor, sensor_info):
+    def __init__(self, data, entity_description):
         """Initialize the Jewish calendar sensor."""
-        self._type = sensor
-        self._prefix = data["prefix"]
-        self._attr_name = f"{data['name']} {sensor_info[0]}"
-        self._attr_unique_id = f"{self._prefix}_{self._type}"
-        self._attr_icon = sensor_info[1]
+        self.entity_description = entity_description
+        self._attr_name = f"{data['name']} {entity_description.name}"
+        self._attr_unique_id = f"{data['prefix']}_{entity_description.key}"
+        self._type = entity_description.key
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
@@ -131,8 +130,6 @@ class JewishCalendarSensor(SensorEntity):
 
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
-
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def native_value(self):
