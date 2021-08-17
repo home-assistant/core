@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import DOMAIN
+from ...const import DATA_MEGABYTES
 from ...core import HomeAssistant
 from ..sensor import SensorEntity
 from .const import CONF_SERVICE_ID
@@ -42,9 +43,15 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            CounterEntity(coordinator, service_id, "Total Usage", "usedMb", "MB"),
-            CounterEntity(coordinator, service_id, "Downloaded", "downloadedMb", "MB"),
-            CounterEntity(coordinator, service_id, "Uploaded", "uploadedMb", "MB"),
+            CounterEntity(
+                coordinator, service_id, "Total Usage", "usedMb", DATA_MEGABYTES
+            ),
+            CounterEntity(
+                coordinator, service_id, "Downloaded", "downloadedMb", DATA_MEGABYTES
+            ),
+            CounterEntity(
+                coordinator, service_id, "Uploaded", "uploadedMb", DATA_MEGABYTES
+            ),
             CounterEntity(
                 coordinator, service_id, "Billing Cycle Length", "daysTotal", "days"
             ),
@@ -76,26 +83,12 @@ class CounterEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._service_id = service_id
-        self._name = name
+        self._attr_name = name
         self._attribute = attribute
-        self._unit_of_measurement = unit_of_measurement
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return self._unit_of_measurement
+        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_unique_id = f"{service_id}:{attribute}"
 
     @property
     def state(self):
         """Return the state of the device."""
         return self.coordinator.data[self._attribute]
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return str(self._service_id) + ":" + self._attribute
