@@ -192,6 +192,9 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"
+        
+    elif state.domain == "input_select":
+        a_type = "SelectSwitch"
 
     elif state.domain == "water_heater":
         a_type = "WaterHeater"

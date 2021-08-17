@@ -81,6 +81,7 @@ SUPPORTED_DOMAINS = [
     "fan",
     "humidifier",
     "input_boolean",
+    "input_select",
     "light",
     "lock",
     MEDIA_PLAYER_DOMAIN,
