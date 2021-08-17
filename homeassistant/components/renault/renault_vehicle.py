@@ -134,6 +134,11 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         update_method=lambda x: x.get_hvac_status,
     ),
     RenaultCoordinatorDescription(
+        endpoint="location",
+        key="location",
+        update_method=lambda x: x.get_location,
+    ),
+    RenaultCoordinatorDescription(
         endpoint="battery-status",
         key="battery",
         requires_electricity=True,

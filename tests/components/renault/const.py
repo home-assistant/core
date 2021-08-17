@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PLUG,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
@@ -33,6 +34,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     PERCENTAGE,
     POWER_KILO_WATT,
+    STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -77,6 +79,7 @@ MOCK_VEHICLES = {
         "endpoints_available": [
             True,  # cockpit
             True,  # hvac-status
+            False,  # location
             True,  # battery-status
             True,  # charge-mode
         ],
@@ -102,6 +105,7 @@ MOCK_VEHICLES = {
                 ATTR_LAST_UPDATE: "2020-01-12T21:40:16Z",
             },
         ],
+        DEVICE_TRACKER_DOMAIN: [],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.battery_autonomy",
@@ -209,6 +213,7 @@ MOCK_VEHICLES = {
         "endpoints_available": [
             True,  # cockpit
             False,  # hvac-status
+            True,  # location
             True,  # battery-status
             True,  # charge-mode
         ],
@@ -216,6 +221,7 @@ MOCK_VEHICLES = {
             "battery_status": "battery_status_not_charging.json",
             "charge_mode": "charge_mode_schedule.json",
             "cockpit": "cockpit_ev.json",
+            "location": "location.json",
         },
         BINARY_SENSOR_DOMAIN: [
             {
@@ -232,6 +238,13 @@ MOCK_VEHICLES = {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
                 ATTR_LAST_UPDATE: "2020-11-17T09:06:48+01:00",
             },
+        ],
+        DEVICE_TRACKER_DOMAIN: [
+            {
+                "entity_id": "device_tracker.location",
+                "unique_id": "vf1aaaaa555777999_location",
+                "result": STATE_NOT_HOME,
+            }
         ],
         SENSOR_DOMAIN: [
             {
@@ -332,6 +345,7 @@ MOCK_VEHICLES = {
         "endpoints_available": [
             True,  # cockpit
             False,  # hvac-status
+            True,  # location
             True,  # battery-status
             True,  # charge-mode
         ],
@@ -339,6 +353,7 @@ MOCK_VEHICLES = {
             "battery_status": "battery_status_charging.json",
             "charge_mode": "charge_mode_always.json",
             "cockpit": "cockpit_fuel.json",
+            "location": "location.json",
         },
         BINARY_SENSOR_DOMAIN: [
             {
@@ -355,6 +370,13 @@ MOCK_VEHICLES = {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
                 ATTR_LAST_UPDATE: "2020-01-12T21:40:16Z",
             },
+        ],
+        DEVICE_TRACKER_DOMAIN: [
+            {
+                "entity_id": "device_tracker.location",
+                "unique_id": "vf1aaaaa555777123_location",
+                "result": STATE_NOT_HOME,
+            }
         ],
         SENSOR_DOMAIN: [
             {
@@ -471,10 +493,21 @@ MOCK_VEHICLES = {
         "endpoints_available": [
             True,  # cockpit
             False,  # hvac-status
+            True,  # location
             # Ignore,  # battery-status
             # Ignore,  # charge-mode
         ],
-        "endpoints": {"cockpit": "cockpit_fuel.json"},
+        "endpoints": {
+            "cockpit": "cockpit_fuel.json",
+            "location": "location.json",
+        },
+        DEVICE_TRACKER_DOMAIN: [
+            {
+                "entity_id": "device_tracker.location",
+                "unique_id": "vf1aaaaa555777123_location",
+                "result": STATE_NOT_HOME,
+            }
+        ],
         BINARY_SENSOR_DOMAIN: [],
         SENSOR_DOMAIN: [
             {
