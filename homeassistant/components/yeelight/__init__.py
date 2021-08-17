@@ -374,11 +374,9 @@ class YeelightScanner:
         return self._unique_id_capabilities.values()
 
     @callback
-    def async_scan(self):
+    def async_scan(self, *_):
         """Send discovery packets."""
         _LOGGER.debug("Yeelight scanning")
-        if not self._callbacks:
-            return
         self._listener.async_search()
 
     async def async_get_capabilities(self, host):
