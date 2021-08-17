@@ -446,7 +446,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
         self._async_add_entities = async_add_entities
         self._tibber_home = tibber_home
         self.hass = hass
-        self._all_sensors = list(RT_SENSORS)
+        self._added_sensors = set()
         super().__init__(
             hass,
             _LOGGER,
@@ -472,7 +472,9 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
             return
 
         new_entities = []
-        for sensor_description in self._all_sensors.copy():
+        for sensor_description in RT_SENSORS:
+            if sensor_description.key in self._added_sensors:
+                continue
             state = live_measurement.get(sensor_description.key)
             if state is None:
                 continue
@@ -483,7 +485,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
                 self,
             )
             new_entities.append(entity)
-            self._all_sensors.remove(sensor_description)
+            self._added_sensors.add(sensor_description.key)
         if new_entities:
             self._async_add_entities(new_entities)
 
