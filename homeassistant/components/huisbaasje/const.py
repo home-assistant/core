@@ -10,6 +10,7 @@ from huisbaasje.const import (
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.const import (
@@ -80,14 +81,6 @@ SENSORS_INFO = [
         "state_class": STATE_CLASS_MEASUREMENT,
     },
     {
-        "name": "Huisbaasje Energy Today",
-        "device_class": DEVICE_CLASS_ENERGY,
-        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
-        "source_type": SOURCE_TYPE_ELECTRICITY,
-        "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "precision": 1,
-    },
-    {
         "name": "Huisbaasje Energy Consumption Peak Today",
         "device_class": DEVICE_CLASS_ENERGY,
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
@@ -124,12 +117,21 @@ SENSORS_INFO = [
         "precision": 1,
     },
     {
+        "name": "Huisbaasje Energy Today",
+        "device_class": DEVICE_CLASS_ENERGY,
+        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
+        "source_type": SOURCE_TYPE_ELECTRICITY,
+        "sensor_type": SENSOR_TYPE_THIS_DAY,
+        "state_class": STATE_CLASS_TOTAL,
+        "precision": 1,
+    },
+    {
         "name": "Huisbaasje Energy This Week",
         "device_class": DEVICE_CLASS_ENERGY,
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
-        "entity_registry_enabled_default": False,
+        "state_class": STATE_CLASS_TOTAL,
         "precision": 1,
     },
     {
@@ -138,7 +140,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
-        "entity_registry_enabled_default": False,
+        "state_class": STATE_CLASS_TOTAL,
         "precision": 1,
     },
     {
@@ -147,7 +149,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
-        "entity_registry_enabled_default": False,
+        "state_class": STATE_CLASS_TOTAL,
         "precision": 1,
     },
     {
@@ -174,7 +176,7 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
-        "entity_registry_enabled_default": False,
+        "state_class": STATE_CLASS_TOTAL_INCREASING,
         "icon": "mdi:counter",
         "precision": 1,
     },
@@ -184,7 +186,7 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
-        "entity_registry_enabled_default": False,
+        "state_class": STATE_CLASS_TOTAL_INCREASING,
         "icon": "mdi:counter",
         "precision": 1,
     },
@@ -194,7 +196,7 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
-        "entity_registry_enabled_default": False,
+        "state_class": STATE_CLASS_TOTAL_INCREASING,
         "icon": "mdi:counter",
         "precision": 1,
     },
