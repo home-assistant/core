@@ -1,41 +1,47 @@
 """Support for Jewish Calendar binary sensors."""
+from __future__ import annotations
+
 import datetime as dt
 
 import hdate
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
 from .const import BINARY_SENSORS
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+):
     """Set up the Jewish Calendar binary sensor devices."""
     if discovery_info is None:
         return
 
-    async_add_entities(
-        [
-            JewishCalendarBinarySensor(hass.data[DOMAIN], sensor, sensor_info)
-            for sensor, sensor_info in BINARY_SENSORS.items()
-        ]
-    )
+    async_add_entities([JewishCalendarBinarySensor(hass.data[DOMAIN], BINARY_SENSORS)])
 
 
 class JewishCalendarBinarySensor(BinarySensorEntity):
     """Representation of an Jewish Calendar binary sensor."""
 
-    def __init__(self, data, sensor, sensor_info):
+    _attr_should_poll = False
+
+    def __init__(self, data, entity_description: BinarySensorEntityDescription) -> None:
         """Initialize the binary sensor."""
-        self._type = sensor
+        self.entity_description = entity_description
         self._prefix = data["prefix"]
-        self._attr_name = f"{data['name']} {sensor_info[0]}"
-        self._attr_unique_id = f"{self._prefix}_{self._type}"
-        self._attr_icon = sensor_info[1]
-        self._attr_should_poll = False
+        self._attr_unique_id = f"{self._prefix}_{entity_description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
@@ -43,7 +49,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._update_unsub = None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._get_zmanim().issur_melacha_in_effect
 
@@ -57,13 +63,13 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
             hebrew=self._hebrew,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self._schedule_update()
 
     @callback
-    def _update(self, now=None):
+    def _update(self):
         """Update the state of the sensor."""
         self._update_unsub = None
         self._schedule_update()

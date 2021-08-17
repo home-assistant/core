@@ -1,8 +1,11 @@
 """Constants for the Jewish calendar integration."""
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 
-BINARY_SENSORS = {
-    "issur_melacha_in_effect": ("Issur Melacha in Effect", "mdi:power-plug-off")
-}
+BINARY_SENSORS = BinarySensorEntityDescription(
+    key="issur_melacha_in_effect",
+    name="Issur Melacha in Effect",
+    icon="mdi:power-plug-off",
+)
 
 DATA_SENSORS = {
     "date": ("Date", "mdi:judaism"),
