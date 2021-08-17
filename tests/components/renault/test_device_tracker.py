@@ -39,18 +39,20 @@ async def test_device_trackers(hass, vehicle_type):
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
-    if len(expected_entities) > 0:
-        assert len(device_registry.devices) == 1
-        expected_device = mock_vehicle["expected_device"]
-        registry_entry = device_registry.async_get_device(
-            expected_device[ATTR_IDENTIFIERS]
-        )
-        assert registry_entry is not None
-        assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
-        assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
-        assert registry_entry.name == expected_device[ATTR_NAME]
-        assert registry_entry.model == expected_device[ATTR_MODEL]
-        assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+    if len(expected_entities) == 0:
+        assert len(device_registry.devices) == 0
+        assert len(entity_registry.entities) == 0
+        return
+
+    assert len(device_registry.devices) == 1
+    expected_device = mock_vehicle["expected_device"]
+    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
+    assert registry_entry is not None
+    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
+    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
+    assert registry_entry.name == expected_device[ATTR_NAME]
+    assert registry_entry.model == expected_device[ATTR_MODEL]
+    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
 
     assert len(entity_registry.entities) == len(expected_entities)
     for expected_entity in expected_entities:
@@ -77,18 +79,20 @@ async def test_device_tracker_empty(hass, vehicle_type):
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
-    if len(expected_entities) > 0:
-        assert len(device_registry.devices) == 1
-        expected_device = mock_vehicle["expected_device"]
-        registry_entry = device_registry.async_get_device(
-            expected_device[ATTR_IDENTIFIERS]
-        )
-        assert registry_entry is not None
-        assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
-        assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
-        assert registry_entry.name == expected_device[ATTR_NAME]
-        assert registry_entry.model == expected_device[ATTR_MODEL]
-        assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+    if len(expected_entities) == 0:
+        assert len(device_registry.devices) == 0
+        assert len(entity_registry.entities) == 0
+        return
+
+    assert len(device_registry.devices) == 1
+    expected_device = mock_vehicle["expected_device"]
+    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
+    assert registry_entry is not None
+    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
+    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
+    assert registry_entry.name == expected_device[ATTR_NAME]
+    assert registry_entry.model == expected_device[ATTR_MODEL]
+    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
 
     assert len(entity_registry.entities) == len(expected_entities)
     for expected_entity in expected_entities:
@@ -122,18 +126,20 @@ async def test_device_tracker_errors(hass, vehicle_type):
 
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
-    if len(expected_entities) > 0:
-        assert len(device_registry.devices) == 1
-        expected_device = mock_vehicle["expected_device"]
-        registry_entry = device_registry.async_get_device(
-            expected_device[ATTR_IDENTIFIERS]
-        )
-        assert registry_entry is not None
-        assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
-        assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
-        assert registry_entry.name == expected_device[ATTR_NAME]
-        assert registry_entry.model == expected_device[ATTR_MODEL]
-        assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+    if len(expected_entities) == 0:
+        assert len(device_registry.devices) == 0
+        assert len(entity_registry.entities) == 0
+        return
+
+    assert len(device_registry.devices) == 1
+    expected_device = mock_vehicle["expected_device"]
+    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
+    assert registry_entry is not None
+    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
+    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
+    assert registry_entry.name == expected_device[ATTR_NAME]
+    assert registry_entry.model == expected_device[ATTR_MODEL]
+    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
 
     assert len(entity_registry.entities) == len(expected_entities)
     for expected_entity in expected_entities:
