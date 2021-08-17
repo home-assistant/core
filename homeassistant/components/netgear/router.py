@@ -1,5 +1,6 @@
 """Represent the Netgear router and its devices."""
 from datetime import timedelta
+from typing import Dict
 import logging
 
 from pynetgear import Netgear
@@ -96,12 +97,11 @@ class NetgearRouter:
         self._consider_home = timedelta(seconds=consider_home_int)
 
         self._api: Netgear = None
-        self._attrs = {}
+        self._attrs: Dict[str, any] = {}
 
-        self.devices = {}
+        self.devices: Dict[str, any] = {}
 
         self._unsub_dispatcher = None
-        self.listeners = []
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
