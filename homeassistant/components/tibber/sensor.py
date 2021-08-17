@@ -372,7 +372,7 @@ class TibberSensorElPrice(TibberSensor):
         ]["estimatedAnnualConsumption"]
 
 
-class TibberSensorRT(update_coordinator.CoordinatorEntity, TibberSensor):
+class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
     """Representation of a Tibber sensor for real time consumption."""
 
     entity_description: TibberSensorEntityDescription
@@ -423,7 +423,7 @@ class TibberSensorRT(update_coordinator.CoordinatorEntity, TibberSensor):
         if state is None:
             return
         timestamp = dt_util.parse_datetime(live_measurement["timestamp"])
-        if timestamp is not None and state < self._attr_state:
+        if timestamp is not None and state < self.state:
             if self.entity_description.reset_type == ResetType.DAILY:
                 self._attr_last_reset = dt_util.as_utc(
                     timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -472,7 +472,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
             return
 
         new_entities = []
-        for sensor_description in self._all_sensors:
+        for sensor_description in self._all_sensors.copy():
             state = live_measurement.get(sensor_description.key)
             if state is None:
                 continue
