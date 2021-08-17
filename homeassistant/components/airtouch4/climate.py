@@ -145,7 +145,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         """Return the list of available operation modes."""
         airtouch_modes = self._airtouch.GetSupportedCoolingModesForAc(self._ac_number)
         modes = [AT_TO_HA_STATE[mode] for mode in airtouch_modes]
-        modes.extend([HVAC_MODE_OFF])
+        modes.append(HVAC_MODE_OFF)
         return modes
 
     async def async_set_hvac_mode(self, hvac_mode):
