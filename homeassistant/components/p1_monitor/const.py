@@ -1,6 +1,7 @@
 """Constants for the P1 Monitor integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -25,12 +26,10 @@ from homeassistant.const import (
 
 DOMAIN: Final = "p1_monitor"
 LOGGER = logging.getLogger(__package__)
-DEFAULT_TIME_BETWEEN_UPDATE = 5
+SCAN_INTERVAL = timedelta(seconds=5)
 
 ATTR_ENTRY_TYPE: Final = "entry_type"
 ENTRY_TYPE_SERVICE: Final = "service"
-
-CONF_TIME_BETWEEN_UPDATE = "time_between_update"
 
 SERVICE_SMARTMETER: Final = "smartmeter"
 SERVICE_PHASES: Final = "phases"

@@ -6,13 +6,12 @@ from typing import Any
 from p1monitor import P1Monitor, P1MonitorError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE, DOMAIN
+from .const import DOMAIN
 
 
 class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -21,14 +20,6 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     entry: ConfigEntry | None = None
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> P1MonitorOptionFlowHandler:
-        """Get the options flow for this handler."""
-        return P1MonitorOptionFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,33 +54,4 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-
-class P1MonitorOptionFlowHandler(OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.entry = entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_TIME_BETWEEN_UPDATE,
-                        default=self.entry.options.get(
-                            CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=5)),
-                }
-            ),
         )

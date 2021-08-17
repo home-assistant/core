@@ -1,8 +1,6 @@
 """The P1 Monitor integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from p1monitor import P1Monitor, Phases, Settings, SmartMeter
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -12,10 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_TIME_BETWEEN_UPDATE,
-    DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
     LOGGER,
+    SCAN_INTERVAL,
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
@@ -30,10 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = P1Monitor(host=entry.data[CONF_HOST])
 
-    min_time_between_updates = timedelta(
-        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
-    )
-
     async def update_smartmeter() -> SmartMeter:
         return await client.smartmeter()
 
@@ -41,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         LOGGER,
         name=f"{DOMAIN}_{SERVICE_SMARTMETER}",
-        update_interval=min_time_between_updates,
+        update_interval=SCAN_INTERVAL,
         update_method=update_smartmeter,
     )
     await smartmeter.async_config_entry_first_refresh()
@@ -54,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         LOGGER,
         name=f"{DOMAIN}_{SERVICE_PHASES}",
-        update_interval=min_time_between_updates,
+        update_interval=SCAN_INTERVAL,
         update_method=update_phases,
     )
     await phases.async_config_entry_first_refresh()
@@ -67,14 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         LOGGER,
         name=f"{DOMAIN}_{SERVICE_SETTINGS}",
-        update_interval=min_time_between_updates,
+        update_interval=SCAN_INTERVAL,
         update_method=update_settings,
     )
     await settings.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id][SERVICE_SETTINGS] = settings
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
     return True
 
 
@@ -84,8 +76,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
-
-
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update options."""
-    await hass.config_entries.async_reload(entry.entry_id)

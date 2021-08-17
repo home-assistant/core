@@ -13,15 +13,5 @@
                 "description": "Set up P1 Monitor to integrate with Home Assistant."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "title": "P1 Monitor Options",
-                "data": {
-                    "time_between_update": "Minimum time between entity updates [s]"
-                }
-            }
-        }
     }
 }
