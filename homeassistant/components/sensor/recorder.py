@@ -311,6 +311,7 @@ def compile_statistics(
                     old_state is None or fstate < old_state
                 ):
                     reset = True
+                    fstate = 0  # Force the new cycle to start at 0
 
                 if reset:
                     # The sensor has been reset, update the sum
