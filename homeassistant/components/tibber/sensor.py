@@ -417,7 +417,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not (live_measurement := self.coordinator.get_live_measurement()):  # type: ignore [attr-defined]
+        if not (live_measurement := self.coordinator.get_live_measurement()):  # type: ignore[attr-defined]
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
