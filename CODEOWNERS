@@ -133,7 +133,7 @@ homeassistant/components/econet/* @vangorra @w1ll1am23
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edl21/* @mtdcr
 homeassistant/components/egardia/* @jeroenterheerdt
-homeassistant/components/eight_sleep/* @mezz64
+homeassistant/components/eight_sleep/* @mezz64 @raman325
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elkm1/* @gwww @bdraco
 homeassistant/components/elv/* @majuss
