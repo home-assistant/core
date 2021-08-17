@@ -1,6 +1,6 @@
 """Tests for the islamic_prayer_times component."""
 
-from datetime import datetime
+import datetime as dt
 
 PRAYER_TIMES = {
     "Imsak": "06:00",
@@ -14,14 +14,14 @@ PRAYER_TIMES = {
 }
 
 PRAYER_TIMES_TIMESTAMPS = {
-    "Imsak": datetime(2020, 1, 1, 6, 0, 0),
-    "Fajr": datetime(2020, 1, 1, 6, 10, 0),
-    "Sunrise": datetime(2020, 1, 1, 7, 25, 0),
-    "Dhuhr": datetime(2020, 1, 1, 12, 30, 0),
-    "Asr": datetime(2020, 1, 1, 15, 32, 0),
-    "Maghrib": datetime(2020, 1, 1, 17, 35, 0),
-    "Isha": datetime(2020, 1, 1, 18, 53, 0),
-    "Midnight": datetime(2020, 1, 1, 00, 45, 0),
+    "Imsak": dt.datetime(2020, 1, 1, 6, 0, 0, tzinfo=dt.timezone.utc),
+    "Fajr": dt.datetime(2020, 1, 1, 6, 10, 0, tzinfo=dt.timezone.utc),
+    "Sunrise": dt.datetime(2020, 1, 1, 7, 25, 0, tzinfo=dt.timezone.utc),
+    "Dhuhr": dt.datetime(2020, 1, 1, 12, 30, 0, tzinfo=dt.timezone.utc),
+    "Asr": dt.datetime(2020, 1, 1, 15, 32, 0, tzinfo=dt.timezone.utc),
+    "Maghrib": dt.datetime(2020, 1, 1, 17, 35, 0, tzinfo=dt.timezone.utc),
+    "Isha": dt.datetime(2020, 1, 1, 18, 53, 0, tzinfo=dt.timezone.utc),
+    "Midnight": dt.datetime(2020, 1, 1, 00, 45, 0, tzinfo=dt.timezone.utc),
 }
 
 NEW_PRAYER_TIMES = {
@@ -36,14 +36,14 @@ NEW_PRAYER_TIMES = {
 }
 
 NEW_PRAYER_TIMES_TIMESTAMPS = {
-    "Imsak": datetime(2020, 1, 1, 5, 50, 0),
-    "Fajr": datetime(2020, 1, 1, 6, 00, 0),
-    "Sunrise": datetime(2020, 1, 1, 7, 25, 0),
-    "Dhuhr": datetime(2020, 1, 1, 12, 30, 0),
-    "Asr": datetime(2020, 1, 1, 15, 32, 0),
-    "Maghrib": datetime(2020, 1, 1, 17, 45, 0),
-    "Isha": datetime(2020, 1, 1, 18, 53, 0),
-    "Midnight": datetime(2020, 1, 1, 00, 43, 0),
+    "Imsak": dt.datetime(2020, 1, 1, 5, 50, 0, tzinfo=dt.timezone.utc),
+    "Fajr": dt.datetime(2020, 1, 1, 6, 00, 0, tzinfo=dt.timezone.utc),
+    "Sunrise": dt.datetime(2020, 1, 1, 7, 25, 0, tzinfo=dt.timezone.utc),
+    "Dhuhr": dt.datetime(2020, 1, 1, 12, 30, 0, tzinfo=dt.timezone.utc),
+    "Asr": dt.datetime(2020, 1, 1, 15, 32, 0, tzinfo=dt.timezone.utc),
+    "Maghrib": dt.datetime(2020, 1, 1, 17, 45, 0, tzinfo=dt.timezone.utc),
+    "Isha": dt.datetime(2020, 1, 1, 18, 53, 0, tzinfo=dt.timezone.utc),
+    "Midnight": dt.datetime(2020, 1, 1, 00, 43, 0, tzinfo=dt.timezone.utc),
 }
 
-NOW = datetime(2020, 1, 1, 00, 00, 0).astimezone()
+NOW = dt.datetime(2020, 1, 1, 00, 00, 0).astimezone()

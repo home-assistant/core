@@ -1,5 +1,7 @@
 """The islamic_prayer_times component."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
 
 from prayer_times_calculator import PrayerTimesCalculator, exceptions
@@ -7,7 +9,6 @@ from requests.exceptions import ConnectionError as ConnError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -23,11 +24,10 @@ from .const import (
     DEFAULT_MIDNIGHT_MODE,
     DEFAULT_SCHOOL,
     DOMAIN,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -74,21 +74,20 @@ class IslamicPrayerDataCoordinator(DataUpdateCoordinator):
     @property
     def extra_params(self) -> dict:
         """Return the calculation params."""
-        _params = {}
-        _params[CONF_SCHOOL] = self.config_entry.options.get(
-            CONF_SCHOOL, DEFAULT_SCHOOL
-        )
-        _params[CONF_MIDNIGHT_MODE] = self.config_entry.options.get(
-            CONF_MIDNIGHT_MODE, DEFAULT_MIDNIGHT_MODE
-        )
-        _params[CONF_LAT_ADJ_METHOD] = self.config_entry.options.get(
-            CONF_LAT_ADJ_METHOD, DEFAULT_LAT_ADJ_METHOD
-        )
+        params = {
+            CONF_SCHOOL: self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL),
+            CONF_MIDNIGHT_MODE: self.config_entry.options.get(
+                CONF_MIDNIGHT_MODE, DEFAULT_MIDNIGHT_MODE
+            ),
+            CONF_LAT_ADJ_METHOD: self.config_entry.options.get(
+                CONF_LAT_ADJ_METHOD, DEFAULT_LAT_ADJ_METHOD
+            ),
+        }
         if self.config_entry.options.get(CONF_TUNE):
-            _params[CONF_TUNE] = True
+            params[CONF_TUNE] = True
             for sensor_tune, offset in self.config_entry.options[CONF_TUNE].items():
-                _params[sensor_tune] = offset
-        return _params
+                params[sensor_tune] = offset
+        return params
 
     def get_new_prayer_times(self) -> dict:
         """Fetch prayer times for today."""
@@ -165,20 +164,18 @@ class IslamicPrayerDataCoordinator(DataUpdateCoordinator):
             self.hass.helpers.event.async_call_later(60, self.async_request_update)
             raise UpdateFailed from err
 
-        prayer_times_info = {}
+        prayer_times_info: dict[str, datetime | None] = {}
         for prayer, time in prayer_times.items():
-            prayer_times_info[prayer] = dt_util.parse_datetime(
-                f"{dt_util.now().date()} {time}"
-            )
+            prayer_time = dt_util.parse_datetime(f"{dt_util.now().date()} {time}")
+            if prayer_time is not None:
+                prayer_times_info[prayer] = prayer_time.replace(
+                    tzinfo=dt_util.DEFAULT_TIME_ZONE
+                )
         await self.async_schedule_future_update(prayer_times_info["Midnight"])
         return prayer_times_info
 
     async def async_setup(self) -> None:
         """Set up the Islamic prayer client."""
-        try:
-            await self.hass.async_add_executor_job(self.get_new_prayer_times)
-        except (exceptions.InvalidResponseError, ConnError) as err:
-            raise ConfigEntryNotReady from err
 
         await self.async_update_options()
 

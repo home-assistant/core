@@ -1,20 +1,25 @@
 """Constants for the Islamic Prayer component."""
+from __future__ import annotations
+
 from typing import Final
+
+from homeassistant.components.sensor import SensorEntityDescription
 
 DOMAIN: Final = "islamic_prayer_times"
 NAME: Final = "Islamic Prayer Times"
 PRAYER_TIMES_ICON: Final = "mdi:calendar-clock"
 
-SENSOR_TYPES: Final = {
-    "Fajr": "prayer",
-    "Sunrise": "time",
-    "Dhuhr": "prayer",
-    "Asr": "prayer",
-    "Maghrib": "prayer",
-    "Isha": "prayer",
-    "Imsak": "time",
-    "Midnight": "time",
-}
+
+SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(key="Fajr", name="Fajer prayer"),
+    SensorEntityDescription(key="Dhuhr", name="Dhuhur prayer"),
+    SensorEntityDescription(key="Asr", name="Asr prayer"),
+    SensorEntityDescription(key="Maghrib", name="Maghrib prayer"),
+    SensorEntityDescription(key="Isha", name="Isha prayer"),
+    SensorEntityDescription(key="Sunrise", name="Sunrise time"),
+    SensorEntityDescription(key="Imsak", name="Imsak time"),
+    SensorEntityDescription(key="Midnight", name="Midnight time"),
+)
 
 CONF_CALC_METHOD: Final = "calculation_method"
 CONF_SCHOOL: Final = "school"
@@ -32,6 +37,7 @@ CONF_ISHA_TUNE: Final = "isha_tune"
 CONF_MIDNIGHT_TUNE: Final = "midnight_tune"
 
 CALC_METHODS: Final = [
+    "Jafari",
     "ISNA",
     "Makkah",
     "MWL",
@@ -51,7 +57,7 @@ SCHOOLS: Final = ["Shafi", "Hanafi"]
 LAT_ADJ_METHODS: Final = ["Middle of the Night", "One Seventh", "Angle Based"]
 MIDNIGHT_MODES: Final = ["Standard", "Jafari"]
 
-TIMES_TUNE = [
+TIMES_TUNE: Final = [
     CONF_IMSAK_TUNE,
     CONF_FARJ_TUNE,
     CONF_SUNRISE_TUNE,
@@ -63,10 +69,11 @@ TIMES_TUNE = [
     CONF_MIDNIGHT_TUNE,
 ]
 
-DEFAULT_CALC_METHOD = "ISNA"
-DEFAULT_SCHOOL = "Shafi"
-DEFAULT_MIDNIGHT_MODE = "Standard"
-DEFAULT_LAT_ADJ_METHOD = "Angle Based"
+DEFAULT_CALC_METHOD: Final = "ISNA"
+DEFAULT_SCHOOL: Final = "Shafi"
+DEFAULT_MIDNIGHT_MODE: Final = "Standard"
+DEFAULT_LAT_ADJ_METHOD: Final = "Angle Based"
 
+PLATFORMS: Final = ["sensor"]
 
 # DATA_UPDATED = "Islamic_prayer_data_updated"
