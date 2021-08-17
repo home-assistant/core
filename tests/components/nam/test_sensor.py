@@ -221,7 +221,6 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sds011_particulate_matter_10"
@@ -238,7 +237,6 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sds011_particulate_matter_2_5"
@@ -255,7 +253,6 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sps30_particulate_matter_1_0"
@@ -272,7 +269,6 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sps30_particulate_matter_10")
     assert entry
@@ -287,7 +283,6 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sps30_particulate_matter_2_5"
@@ -303,7 +298,7 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
+    assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sps30_particulate_matter_4_0"
