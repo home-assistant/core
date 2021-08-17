@@ -16,10 +16,10 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
@@ -203,10 +203,10 @@ class EnergyCostSensor(SensorEntity):
         self._attr_device_class = DEVICE_CLASS_MONETARY
         self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         self._config = config
-        self._last_energy_sensor_state: State | None = None
+        self._last_energy_sensor_state: StateType | None = None
         self._cur_value = 0.0
 
-    def _reset(self, energy_state: State) -> None:
+    def _reset(self, energy_state: StateType) -> None:
         """Reset the cost sensor."""
         self._attr_native_value = 0.0
         self._cur_value = 0.0
@@ -256,7 +256,7 @@ class EnergyCostSensor(SensorEntity):
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
-            self._reset(energy_state)
+            self._reset(energy_state.state)
             return
 
         energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -277,16 +277,15 @@ class EnergyCostSensor(SensorEntity):
             )
             return
 
-        if energy < float(self._last_energy_sensor_state.state):
+        if energy < float(self._last_energy_sensor_state):
             # Energy meter was reset, reset cost sensor too
-            self._reset(energy_state)
-        else:
-            # Update with newly incurred cost
-            old_energy_value = float(self._last_energy_sensor_state.state)
-            self._cur_value += (energy - old_energy_value) * energy_price
-            self._attr_native_value = round(self._cur_value, 2)
+            self._reset(0)
+        # Update with newly incurred cost
+        old_energy_value = float(self._last_energy_sensor_state)
+        self._cur_value += (energy - old_energy_value) * energy_price
+        self._attr_native_value = round(self._cur_value, 2)
 
-        self._last_energy_sensor_state = energy_state
+        self._last_energy_sensor_state = energy_state.state
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
