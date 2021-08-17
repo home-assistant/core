@@ -276,12 +276,6 @@ class SelectSwitch(HomeAccessory):
             params["option"] = option
             self.async_call_service(INPUT_SELECT_DOMAIN, SERVICE_SELECT_OPTION, params)
 
-    def reset_switch(self, *args):
-        """Reset switch to emulate activate click."""
-        _LOGGER.debug("%s: Reset switch to off", self.entity_id)
-        if self.char_on.value is not False:
-            self.char_on.set_value(False)
-
     @callback
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
