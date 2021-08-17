@@ -1,5 +1,9 @@
 """Support for monitoring a Smappee energy sensor."""
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -9,7 +13,6 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
-from homeassistant.util.dt import as_utc, now, start_of_local_day
 
 from .const import DOMAIN
 
@@ -317,28 +320,25 @@ class SmappeeSensor(SensorEntity):
     @property
     def state_class(self):
         """Return the state class of this device."""
-        return STATE_CLASS_MEASUREMENT
+        scm = STATE_CLASS_MEASUREMENT
+
+        if self._sensor in (
+            "power_today",
+            "power_current_hour",
+            "power_last_5_minutes",
+            "solar_today",
+            "solar_current_hour",
+            "alwayson_today",
+            "switch",
+        ):
+            scm = STATE_CLASS_TOTAL_INCREASING
+
+        return scm
 
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def last_reset(self):
-        """Return the time when the sensor was last reset, if any."""
-        if self._sensor in ("power_today", "solar_today", "alwayson_today", "switch"):
-            return start_of_local_day()
-
-        if self._sensor in ("power_current_hour", "solar_current_hour"):
-            datetime_now = now()
-            datetime_now = datetime_now.replace(minute=0)
-            return as_utc(datetime_now)
-
-        if self._sensor in ("power_last_5_minutes"):
-            datetime_now = now()
-            datetime_now = datetime_now.replace(minute=int(datetime_now.minute / 5) * 5)
-            return as_utc(datetime_now)
 
     @property
     def unique_id(
