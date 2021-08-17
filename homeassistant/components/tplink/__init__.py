@@ -219,15 +219,18 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
         smartplug: SmartPlug,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
+        self.hass = hass
         self.smartplug = smartplug
-        self.has_emeter = self.smartplug.has_emeter
 
         update_interval = timedelta(seconds=30)
         super().__init__(
-            hass, _LOGGER, name=smartplug.alias, update_interval=update_interval
+            hass,
+            _LOGGER,
+            name=f"tplink plug {smartplug.host}",
+            update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> dict:
+    def _update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
         try:
             info = self.smartplug.sys_info
@@ -250,7 +253,9 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                 data[CONF_ALIAS] = plug_from_context["alias"]
                 data[CONF_DEVICE_ID] = self.smartplug.context
                 data[CONF_STATE] = plug_from_context["state"] == 1
-            if self.has_emeter:
+
+            # Check if the device has emeter
+            if "ENE" in info["feature"]:
                 emeter_readings = self.smartplug.get_emeter_realtime()
                 data[CONF_EMETER_PARAMS] = {
                     ATTR_CURRENT_POWER_W: round(float(emeter_readings["power"]), 2),
@@ -275,3 +280,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.name = data[CONF_ALIAS]
         return data
+
+    async def _async_update_data(self) -> dict:
+        """Fetch all device and sensor data from api."""
+        return await self.hass.async_add_executor_job(self._update_data)
