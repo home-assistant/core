@@ -273,8 +273,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TibberSensor(SensorEntity):
     """Representation of a generic Tibber sensor."""
 
-    def __init__(self, tibber_home):
+    def __init__(self, *args, tibber_home, **kwargs):
         """Initialize the sensor."""
+        super().__init__(*args, **kwargs)
         self._tibber_home = tibber_home
         self._home_name = tibber_home.info["viewer"]["home"]["appNickname"]
         if self._home_name is None:
@@ -302,7 +303,7 @@ class TibberSensorElPrice(TibberSensor):
 
     def __init__(self, tibber_home):
         """Initialize the sensor."""
-        super().__init__(tibber_home)
+        super().__init__(tibber_home=tibber_home)
         self._last_updated = None
         self._spread_load_constant = randrange(5000)
 
@@ -385,8 +386,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
         coordinator: TibberRtDataCoordinator,
     ):
         """Initialize the sensor."""
-        update_coordinator.CoordinatorEntity.__init__(self, coordinator)
-        TibberSensor.__init__(self, tibber_home)
+        super().__init__(coordinator=coordinator, tibber_home=tibber_home)
         self.entity_description = description
         self._model = "Tibber Pulse"
         self._device_name = f"{self._model} {self._home_name}"
@@ -417,7 +417,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not (live_measurement := self.coordinator.get_live_measurement()):  # type: ignore
+        if not (live_measurement := self.coordinator.get_live_measurement()):  # type: ignore [attr-defined]
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
