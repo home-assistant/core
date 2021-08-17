@@ -33,7 +33,7 @@ class WallboxHub(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="wallbox",
+            name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
