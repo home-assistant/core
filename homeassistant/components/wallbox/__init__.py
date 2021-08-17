@@ -23,7 +23,7 @@ class WallboxHub(DataUpdateCoordinator):
     """Wallbox Hub class."""
 
     def __init__(
-        self, station, username: str, password: str, hass: HomeAssistant
+        self, station: str, username: str, password: str, hass: HomeAssistant
     ) -> None:
         """Initialize."""
         self._station = station
