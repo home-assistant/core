@@ -32,13 +32,13 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     HTTP_BASIC_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
-from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
 
 from .binary_sensor import BINARY_POLLED_SENSORS, BINARY_SENSORS, check_binary_sensors
 from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
@@ -124,7 +124,7 @@ class AmcrestChecker(ApiWrapper):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         name: str,
         host: str,
         port: int,
@@ -211,7 +211,7 @@ class AmcrestChecker(ApiWrapper):
 
 
 def _monitor_events(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     name: str,
     api: AmcrestChecker,
     event_codes: list[str],
@@ -238,7 +238,7 @@ def _monitor_events(
 
 
 def _start_event_monitor(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     name: str,
     api: AmcrestChecker,
     event_codes: list[str],
@@ -252,7 +252,7 @@ def _start_event_monitor(
     thread.start()
 
 
-def setup(hass: HomeAssistantType, config: Any) -> bool:
+def setup(hass: HomeAssistant, config: Any) -> bool:
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
 
@@ -321,7 +321,7 @@ def setup(hass: HomeAssistantType, config: Any) -> bool:
     def have_permission(user: User | None, entity_id: str) -> bool:
         return not user or user.permissions.check_entity(entity_id, POLICY_CONTROL)
 
-    async def async_extract_from_service(call: ServiceCallType) -> list[str]:
+    async def async_extract_from_service(call: ServiceCall) -> list[str]:
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:
@@ -352,7 +352,7 @@ def setup(hass: HomeAssistantType, config: Any) -> bool:
             entity_ids.append(entity_id)
         return entity_ids
 
-    async def async_service_handler(call: ServiceCallType) -> None:
+    async def async_service_handler(call: ServiceCall) -> None:
         args = []
         for arg in CAMERA_SERVICES[call.service][2]:
             args.append(call.data[arg])

@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -23,11 +24,7 @@ from homeassistant.helpers.aiohttp_client import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CAMERA_WEB_SESSION_TIMEOUT,
@@ -124,7 +121,7 @@ _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
