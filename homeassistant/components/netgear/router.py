@@ -84,6 +84,9 @@ class NetgearRouter:
         self._ssl = entry.data.get(CONF_SSL)
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
+        
+        self._info = None
+        self.model = None
 
         self._method_version = entry.options.get(
             CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION
@@ -103,10 +106,9 @@ class NetgearRouter:
 
         self._unsub_dispatcher = None
 
-    async def async_setup(self) -> None:
-        """Set up a Netgear router."""
-        self._api = await self.hass.async_add_executor_job(
-            get_api,
+    def _setup(self) -> None:
+        """Set up a Netgear router sync portion."""
+        self._api = get_api(
             self._password,
             self._host,
             self._username,
@@ -114,6 +116,13 @@ class NetgearRouter:
             self._ssl,
             self._url,
         )
+        
+        self._info = self._api.get_info()
+        self.model = self._info["ModelName"]
+
+    async def async_setup(self) -> None:
+        """Set up a Netgear router."""
+        self._api = await self.hass.async_add_executor_job(self._setup)
 
         # set already known devices to away instead of unavailable
         entity_registry = er.async_get(self.hass)
