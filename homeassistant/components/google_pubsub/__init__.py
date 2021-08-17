@@ -45,9 +45,12 @@ def setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     config = yaml_config[DOMAIN]
     project_id = config[CONF_PROJECT_ID]
     topic_name = config[CONF_TOPIC_NAME]
-    service_principal_path = os.path.join(
-        hass.config.config_dir, config[CONF_SERVICE_PRINCIPAL]
-    )
+    if hass.config.config_dir:
+        service_principal_path = os.path.join(
+            hass.config.config_dir, config[CONF_SERVICE_PRINCIPAL]
+        )
+    else:
+        service_principal_path = config[CONF_SERVICE_PRINCIPAL]
 
     if not os.path.isfile(service_principal_path):
         _LOGGER.error("Path to credentials file cannot be found")
