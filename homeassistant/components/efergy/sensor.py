@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -22,7 +23,10 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://engage.efergy.com/mobile_proxy/"
@@ -92,7 +96,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Efergy sensor."""
     app_token = config.get(CONF_APPTOKEN)
     utc_offset = str(config.get(CONF_UTC_OFFSET))
@@ -137,52 +146,44 @@ class EfergySensor(SensorEntity):
 
     def __init__(
         self,
-        app_token,
-        utc_offset,
-        period,
-        currency,
+        app_token: Any,
+        utc_offset: str,
+        period: str,
+        currency: str,
         description: SensorEntityDescription,
-        sid=None,
-    ):
+        sid: str = None,
+    ) -> None:
         """Initialize the sensor."""
         self.sid = sid
+        self.entity_description = description
         if sid:
             self._attr_name = f"efergy_{sid}"
-        else:
-            self._attr_name = description.name
-        self.type = description.key
         self.app_token = app_token
         self.utc_offset = utc_offset
         self.period = period
         if description.key == CONF_COST:
             self._attr_native_unit_of_measurement = f"{currency}/{period}"
-        else:
-            self._attr_native_unit_of_measurement = (
-                description.native_unit_of_measurement
-            )
-        self._attr_device_class = description.device_class
-        self._attr_state_class = description.state_class
 
-    def update(self):
+    def update(self) -> None:
         """Get the Efergy monitor data from the web service."""
         try:
-            if self.type == CONF_INSTANT:
+            if self.entity_description.key == CONF_INSTANT:
                 url_string = f"{_RESOURCE}getInstant?token={self.app_token}"
                 response = requests.get(url_string, timeout=10)
                 self._attr_native_value = response.json()["reading"]
-            elif self.type == CONF_AMOUNT:
+            elif self.entity_description.key == CONF_AMOUNT:
                 url_string = f"{_RESOURCE}getEnergy?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
                 self._attr_native_value = response.json()["sum"]
-            elif self.type == CONF_BUDGET:
+            elif self.entity_description.key == CONF_BUDGET:
                 url_string = f"{_RESOURCE}getBudget?token={self.app_token}"
                 response = requests.get(url_string, timeout=10)
                 self._attr_native_value = response.json()["status"]
-            elif self.type == CONF_COST:
+            elif self.entity_description.key == CONF_COST:
                 url_string = f"{_RESOURCE}getCost?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
                 response = requests.get(url_string, timeout=10)
                 self._attr_native_value = response.json()["sum"]
-            elif self.type == CONF_CURRENT_VALUES:
+            elif self.entity_description.key == CONF_CURRENT_VALUES:
                 url_string = (
                     f"{_RESOURCE}getCurrentValuesSummary?token={self.app_token}"
                 )
