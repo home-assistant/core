@@ -87,52 +87,52 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         """Return the battery level of the device."""
         return self._battery_level
 
+    @callback
+    def _handle_hardware_status_update(self, event):
+        self._battery_level = event["battery_level"]
+        self._attr_available = True
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_position_update(self, event):
+        self._latitude = event["latitude"]
+        self._longitude = event["longitude"]
+        self._accuracy = event["accuracy"]
+        self._attr_available = True
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_server_unavailable(self):
+        self._latitude = None
+        self._longitude = None
+        self._accuracy = None
+        self._battery_level = None
+        self._attr_available = False
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-
-        @callback
-        def handle_hardware_status_update(event):
-            self._battery_level = event["battery_level"]
-            self._attr_available = True
-            self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
-                handle_hardware_status_update,
+                self._handle_hardware_status_update,
             )
         )
-
-        @callback
-        def handle_position_update(event):
-            self._latitude = event["latitude"]
-            self._longitude = event["longitude"]
-            self._accuracy = event["accuracy"]
-            self._attr_available = True
-            self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{TRACKER_POSITION_UPDATED}-{self._tracker_id}",
-                handle_position_update,
+                self._handle_position_update,
             )
         )
-
-        @callback
-        def handle_server_unavailable():
-            self._latitude = None
-            self._longitude = None
-            self._accuracy = None
-            self._battery_level = None
-            self._attr_available = False
-            self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                handle_server_unavailable,
+                self._handle_server_unavailable,
             )
         )

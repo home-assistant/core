@@ -16,7 +16,7 @@ NOTIFICATION_MOTION_BINARY_SENSOR = (
 )
 NOTIFICATION_MOTION_SENSOR = "sensor.multisensor_6_home_security_motion_sensor_status"
 INDICATOR_SENSOR = "sensor.z_wave_thermostat_indicator_value"
-BASIC_SENSOR = "sensor.livingroomlight_basic"
+BASIC_NUMBER_ENTITY = "number.livingroomlight_basic"
 PROPERTY_DOOR_STATUS_BINARY_SENSOR = (
     "binary_sensor.august_smart_lock_pro_3rd_gen_the_current_status_of_the_door"
 )
