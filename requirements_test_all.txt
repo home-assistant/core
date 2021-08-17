@@ -6,9 +6,6 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.2.1
 
-# homeassistant.components.contec_controllers
-ContecControllers==0.0.4
-
 # homeassistant.components.homekit
 HAP-python==3.5.0
 
