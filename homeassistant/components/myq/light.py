@@ -90,7 +90,7 @@ class MyQLight(CoordinatorEntity, LightEntity):
                 f"Turning light {self._device.name} off failed with error: {err}"
             ) from err
 
-        # Write opening state to HASS
+        # Write new state to HASS
         self.async_write_ha_state()
 
     @property
