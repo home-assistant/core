@@ -1193,3 +1193,127 @@ async def test_verify_group_supported_features(hass, aioclient_mock):
         hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES]
         == SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
     )
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (  # Light with colormode = "ct", .ct is None, but brightness is set -> fallback to COLOR_MODE_BRIGHTNESS
+            {
+                "colorcapabilities": 31,
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "055485a82553e654f156d41c9301b7cf",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:25Z",
+                "manufacturername": "Philips",
+                "modelid": "LLC020",
+                "name": "Hue Go",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "ct",
+                    "ct": None,
+                    "effect": "none",
+                    "hue": None,
+                    "on": True,
+                    "reachable": True,
+                    "sat": None,
+                    "xy": [None, None],
+                },
+                "swversion": "5.127.1.26420",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:01:23:45:67-00",
+            },
+            {
+                "entity_id": "light.hue_go",
+                "attributes": {
+                    ATTR_COLOR_MODE: COLOR_MODE_BRIGHTNESS,
+                },
+            },
+        ),
+        (  # Light with colormode = "hs", .hue/.sat is None, but brightness is set -> fallback to COLOR_MODE_BRIGHTNESS
+            {
+                "colorcapabilities": 31,
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "055485a82553e654f156d41c9301b7cf",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:25Z",
+                "manufacturername": "Philips",
+                "modelid": "LLC020",
+                "name": "Hue Go",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "hs",
+                    "ct": None,
+                    "effect": "none",
+                    "hue": None,
+                    "on": True,
+                    "reachable": True,
+                    "sat": None,
+                    "xy": [None, None],
+                },
+                "swversion": "5.127.1.26420",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:01:23:45:67-00",
+            },
+            {
+                "entity_id": "light.hue_go",
+                "attributes": {
+                    ATTR_COLOR_MODE: COLOR_MODE_BRIGHTNESS,
+                },
+            },
+        ),
+        (  # Light with colormode = "xy", .xy is None, but brightness is set -> fallback to COLOR_MODE_BRIGHTNESS
+            {
+                "colorcapabilities": 31,
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "055485a82553e654f156d41c9301b7cf",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:25Z",
+                "manufacturername": "Philips",
+                "modelid": "LLC020",
+                "name": "Hue Go",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "xy",
+                    "ct": None,
+                    "effect": "none",
+                    "hue": None,
+                    "on": True,
+                    "reachable": True,
+                    "sat": None,
+                    "xy": [None, None],
+                },
+                "swversion": "5.127.1.26420",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:01:23:45:67-00",
+            },
+            {
+                "entity_id": "light.hue_go",
+                "attributes": {
+                    ATTR_COLOR_MODE: COLOR_MODE_BRIGHTNESS,
+                },
+            },
+        ),
+    ],
+)
+async def test_colormode_property_checks_supported_modes(
+    hass, aioclient_mock, input, expected
+):
+    """Test that different light entities with faulty colormode are created with expected values."""
+    data = {"lights": {"0": input}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 1
+
+    light = hass.states.get(expected["entity_id"])
+    assert light.attributes[ATTR_COLOR_MODE] == expected["attributes"][ATTR_COLOR_MODE]

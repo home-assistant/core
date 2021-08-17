@@ -137,13 +137,25 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        if self._device.colormode == "ct":
+        if (
+            self._device.colormode == "ct"
+            and COLOR_MODE_COLOR_TEMP in self._attr_supported_color_modes
+        ):
             color_mode = COLOR_MODE_COLOR_TEMP
-        elif self._device.colormode == "hs":
+        elif (
+            self._device.colormode == "hs"
+            and COLOR_MODE_HS in self._attr_supported_color_modes
+        ):
             color_mode = COLOR_MODE_HS
-        elif self._device.colormode == "xy":
+        elif (
+            self._device.colormode == "xy"
+            and COLOR_MODE_XY in self._attr_supported_color_modes
+        ):
             color_mode = COLOR_MODE_XY
-        elif self._device.brightness is not None:
+        elif (
+            self._device.brightness is not None
+            and COLOR_MODE_BRIGHTNESS in self._attr_supported_color_modes
+        ):
             color_mode = COLOR_MODE_BRIGHTNESS
         else:
             color_mode = COLOR_MODE_ONOFF
