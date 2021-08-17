@@ -7,7 +7,11 @@ from unittest import mock
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus.const import DEFAULT_HUB, MODBUS_DOMAIN as DOMAIN
+from homeassistant.components.modbus.const import (
+    CONF_TCP,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN as DOMAIN,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -22,6 +26,11 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
+TEST_ENTITY_NAME = "test_entity"
+TEST_MODBUS_HOST = "modbusHost"
+TEST_PORT_TCP = 5501
+TEST_PORT_SERIAL = "usb01"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -62,9 +71,9 @@ async def mock_modbus(hass, caplog, request, do_config):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: "tcp",
-                CONF_HOST: "modbusTestHost",
-                CONF_PORT: 5501,
+                CONF_TYPE: CONF_TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
                 **do_config,
             }
@@ -122,9 +131,9 @@ async def base_test(
         config_modbus = {
             DOMAIN: {
                 CONF_NAME: DEFAULT_HUB,
-                CONF_TYPE: "tcp",
-                CONF_HOST: "modbusTest",
-                CONF_PORT: 5001,
+                CONF_TYPE: CONF_TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
             },
         }
 
