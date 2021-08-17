@@ -1,0 +1,17 @@
+{
+    "config": {
+
+      "error": {
+        "cannot_connect": "Failed to connect",
+        "no_units": "Could not find any AirTouch 4 Groups."
+      },
+      "step": {
+        "user": {
+          "title": "Setup your AirTouch 4.",
+          "data": {
+            "host": "Host"
+          }
+        }
+      }
+    }
+  }
