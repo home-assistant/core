@@ -270,10 +270,8 @@ class SelectSwitch(HomeAccessory):
     def select_option(self, option):
         """Set preset_mode if call came from HomeKit."""
         _LOGGER.debug("%s: Set option to %d", self.entity_id, option)
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        if option:
-            params["option"] = option
-            self.async_call_service(INPUT_SELECT_DOMAIN, SERVICE_SELECT_OPTION, params)
+        params = {ATTR_ENTITY_ID: self.entity_id, "option": option}
+        self.async_call_service(INPUT_SELECT_DOMAIN, SERVICE_SELECT_OPTION, params)
 
     @callback
     def async_update_state(self, new_state):
