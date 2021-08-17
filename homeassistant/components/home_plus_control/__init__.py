@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     dispatcher,
 )
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import config_flow, helpers
@@ -50,7 +51,7 @@ PLATFORMS = ["switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Legrand Home+ Control component from configuration.yaml."""
     hass.data[DOMAIN] = {}
 

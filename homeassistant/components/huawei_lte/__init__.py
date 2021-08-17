@@ -298,7 +298,7 @@ class Router:
 class HuaweiLteData:
     """Shared state."""
 
-    hass_config: dict = attr.ib()
+    hass_config: ConfigType = attr.ib()
     # Our YAML config, keyed by router URL
     config: dict[str, dict[str, Any]] = attr.ib()
     routers: dict[str, Router] = attr.ib(init=False, factory=dict)
