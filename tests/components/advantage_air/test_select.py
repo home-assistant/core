@@ -1,11 +1,12 @@
 """Test the Advantage Air Select Platform."""
 from json import loads
 
-from homeassistant.components.const import (
+from homeassistant.components.select.const import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import entity_registry as er
 
 from tests.components.advantage_air import (
@@ -17,7 +18,7 @@ from tests.components.advantage_air import (
 )
 
 
-async def test_cover_async_setup_entry(hass, aioclient_mock):
+async def test_select_async_setup_entry(hass, aioclient_mock):
     """Test climate setup without sensors."""
 
     aioclient_mock.get(
@@ -36,10 +37,10 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test Select Entity
-    entity_id = "switch.ac_one_myzone"
+    entity_id = "select.ac_one_myzone"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "Zone open without sensor"
+    assert state.state == "Zone open with Sensor"
 
     entry = registry.async_get(entity_id)
     assert entry
@@ -48,13 +49,13 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "Zone closed without sensor"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Zone 3"},
         blocking=True,
     )
     assert len(aioclient_mock.mock_calls) == 3
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["myZone"] == 2
+    assert data["ac1"]["info"]["myZone"] == 3
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"

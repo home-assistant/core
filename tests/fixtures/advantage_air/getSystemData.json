@@ -83,7 +83,7 @@
                     "motion": 5,
                     "motionConfig": 1,
                     "name": "Zone 5",
-                    "number": 1,
+                    "number": 5,
                     "rssi": 100,
                     "setTemp": 24,
                     "state": "close",
