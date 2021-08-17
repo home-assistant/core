@@ -29,7 +29,7 @@
   split it into multiple PRs. This makes things easier and faster to code review.
 -->
 
-- [ ] Dependency upgrade
+- [ ] Dependency upgrade (please include link to diff between library versions if possible)
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New integration (thank you!)
 - [ ] New feature (which adds functionality to an existing integration)
