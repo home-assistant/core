@@ -33,35 +33,15 @@ class WallboxSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, idx, ent, config):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
-        _properties = CONF_SENSOR_TYPES[ent]
-
-        self._name = f"{config.title} {_properties[CONF_NAME]}"
-        self._icon = _properties[CONF_ICON]
-        self._unit = _properties[CONF_UNIT_OF_MEASUREMENT]
-        self._device_class = _properties[CONF_DEVICE_CLASS]
+        self._attr_name = f"{config.title} {CONF_SENSOR_TYPES[ent][CONF_NAME]}"
+        self._attr_icon = CONF_SENSOR_TYPES[ent][CONF_ICON]
+        self._attr_native_unit_of_measurement = CONF_SENSOR_TYPES[ent][
+            CONF_UNIT_OF_MEASUREMENT
+        ]
+        self._attr_device_class = CONF_SENSOR_TYPES[ent][CONF_DEVICE_CLASS]
         self._ent = ent
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data[self._ent]
-
-    @property
-    def device_class(self):
-        """Return the state of the sensor."""
-        return self._device_class
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of the sensor."""
-        return self._unit
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
