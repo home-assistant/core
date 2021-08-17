@@ -42,8 +42,8 @@ SERVICES: dict[str, str] = {
     SERVICE_SETTINGS: "Settings",
 }
 
-SENSORS: dict[str, list[SensorEntityDescription]] = {
-    SERVICE_SMARTMETER: [
+SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
+    SERVICE_SMARTMETER: (
         SensorEntityDescription(
             key="gas_consumption",
             name="Gas Consumption",
@@ -99,8 +99,8 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
             name="Energy Tariff Period",
             icon="mdi:calendar-clock",
         ),
-    ],
-    SERVICE_PHASES: [
+    ),
+    SERVICE_PHASES: (
         SensorEntityDescription(
             key="voltage_phase_l1",
             name="Voltage Phase L1",
@@ -185,8 +185,8 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-    ],
-    SERVICE_SETTINGS: [
+    ),
+    SERVICE_SETTINGS: (
         SensorEntityDescription(
             key="gas_consumption_tariff",
             name="Gas Consumption - Tariff",
@@ -218,5 +218,5 @@ SENSORS: dict[str, list[SensorEntityDescription]] = {
             icon="mdi:cash",
             native_unit_of_measurement=CURRENCY_EURO,
         ),
-    ],
+    ),
 }
