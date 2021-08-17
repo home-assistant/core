@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
 )
@@ -53,22 +52,16 @@ from . import ATTR_LAST_RESET, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_OR_UNIT_STATISTICS = {
-    STATE_CLASS_TOTAL: {
-        DEVICE_CLASS_ENERGY: {"sum"},
-        DEVICE_CLASS_GAS: {"sum"},
-        DEVICE_CLASS_MONETARY: {"sum"},
-    },
     STATE_CLASS_MEASUREMENT: {
         DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
+        DEVICE_CLASS_ENERGY: {"sum"},
+        DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
+        DEVICE_CLASS_MONETARY: {"sum"},
         DEVICE_CLASS_POWER: {"mean", "min", "max"},
         DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
         DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
         PERCENTAGE: {"mean", "min", "max"},
-        # Deprecated, support will be removed in Home Assistant 2021.10
-        DEVICE_CLASS_ENERGY: {"sum"},
-        DEVICE_CLASS_GAS: {"sum"},
-        DEVICE_CLASS_MONETARY: {"sum"},
     },
     STATE_CLASS_TOTAL_INCREASING: {
         DEVICE_CLASS_ENERGY: {"sum"},
@@ -290,13 +283,6 @@ def compile_statistics(
                 _sum = last_stats[entity_id][0]["sum"]
 
             for fstate, state in fstates:
-
-                # Deprecated, will be removed in Home Assistant 2021.10
-                if (
-                    "last_reset" not in state.attributes
-                    and state_class == STATE_CLASS_MEASUREMENT
-                ):
-                    continue
 
                 reset = False
                 if (
