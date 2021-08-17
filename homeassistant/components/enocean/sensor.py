@@ -31,6 +31,7 @@ CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_RANGE_FROM = "range_from"
 CONF_RANGE_TO = "range_to"
+CONF_DATA_BYTE = "data_byte"
 
 DEFAULT_NAME = "EnOcean sensor"
 
@@ -82,6 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
         vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
         vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
+        vol.Optional(CONF_DATA_BYTE, default=3): cv.positive_int,
     }
 )
 
@@ -98,6 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         temp_max = config[CONF_MAX_TEMP]
         range_from = config[CONF_RANGE_FROM]
         range_to = config[CONF_RANGE_TO]
+        data_byte = config.get(CONF_DATA_BYTE)
         entities = [
             EnOceanTemperatureSensor(
                 dev_id,
@@ -107,6 +110,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 scale_max=temp_max,
                 range_from=range_from,
                 range_to=range_to,
+                data_byte=data_byte
             )
         ]
 
@@ -194,6 +198,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         scale_max,
         range_from,
         range_to,
+        data_byte
     ):
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, description)
@@ -201,6 +206,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self._scale_max = scale_max
         self.range_from = range_from
         self.range_to = range_to
+        self.data_byte = data_byte
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
@@ -208,7 +214,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
             return
         temp_scale = self._scale_max - self._scale_min
         temp_range = self.range_to - self.range_from
-        raw_val = packet.data[3]
+        raw_val = packet.data[self.data_byte]
         temperature = temp_scale / temp_range * (raw_val - self.range_from)
         temperature += self._scale_min
         self._attr_native_value = round(temperature, 1)
