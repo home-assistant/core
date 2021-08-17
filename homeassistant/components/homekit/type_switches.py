@@ -258,9 +258,7 @@ class SelectSwitch(HomeAccessory):
             self.select_chars[option] = serv_option.configure_char(
                 CHAR_ON,
                 value=False,
-                setter_callback=lambda value, option=option: self.select_option(
-                    option
-                ),
+                setter_callback=lambda value, option=option: self.select_option(option),
             )
         self.set_primary_service(self.select_chars[options[0]])
         # Set the state so it is in sync on initial
