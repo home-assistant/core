@@ -10,7 +10,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .renault_entities import RenaultDataEntity, RenaultLocationDataEntity
 from .renault_hub import RenaultHub
-from .renault_vehicle import RenaultVehicleProxy
 
 
 async def async_setup_entry(
@@ -20,24 +19,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
-    entities = get_entities(proxy)
-    async_add_entities(entities)
-
-
-def get_entities(proxy: RenaultHub) -> list[RenaultDataEntity]:
-    """Create Renault entities for all vehicles."""
-    entities = []
-    for vehicle in proxy.vehicles.values():
-        entities.extend(get_vehicle_entities(vehicle))
-    return entities
-
-
-def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultDataEntity]:
-    """Create Renault entities for single vehicle."""
     entities: list[RenaultDataEntity] = []
-    if "location" in vehicle.coordinators:
-        entities.append(RenaultLocationSensor(vehicle, "Location"))
-    return entities
+    for vehicle in proxy.vehicles.values():
+        if "location" in vehicle.coordinators:
+            entities.append(RenaultLocationSensor(vehicle, "Location"))
+    async_add_entities(entities)
 
 
 class RenaultLocationSensor(RenaultLocationDataEntity, TrackerEntity):
