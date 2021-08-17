@@ -104,7 +104,7 @@
                 "myAutoModeCurrentSetMode": "cool",
                 "myAutoModeEnabled": true,
                 "myAutoModeIsRunning": true,
-                "myZone": 1,
+                "myZone": 0,
                 "name": "AC Two",
                 "setTemp": 24,
                 "state": "off"
