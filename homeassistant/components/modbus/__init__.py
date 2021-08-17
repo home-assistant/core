@@ -63,13 +63,17 @@ from .const import (
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
+    CONF_ENOCEAN,
+    CONF_ESP_VERSION,
     CONF_FANS,
+    CONF_INPUT_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_SECONDS_TO_COMPLETE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_MSG_WAIT,
+    CONF_OUTPUT_ADDRESS,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_RETRIES,
@@ -318,6 +322,14 @@ MODBUS_SCHEMA = vol.Schema(
                     }
                 )
             ],
+        ),
+        vol.Optional(CONF_ENOCEAN): vol.Maybe(
+            {
+                vol.Required(CONF_INPUT_ADDRESS): cv.positive_int,
+                vol.Required(CONF_OUTPUT_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_SLAVE, 0): cv.positive_int,
+                vol.Optional(CONF_ESP_VERSION, 3): vol.In([2, 3]),
+            }
         ),
     }
 )

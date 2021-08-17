@@ -594,7 +594,7 @@ emoji==1.5.0
 emulated_roku==0.2.1
 
 # homeassistant.components.enocean
-enocean==0.50
+enocean==0.60.2
 
 # homeassistant.components.entur_public_transport
 enturclient==0.2.2

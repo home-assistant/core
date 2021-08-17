@@ -4,14 +4,27 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
 
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, TYPE_IMPLICIT, TYPE_SERIAL
 from .dongle import EnOceanDongle
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_DEVICE): cv.string,
+                vol.Optional(CONF_TYPE, default=TYPE_SERIAL): vol.In(
+                    [
+                        TYPE_SERIAL,
+                        TYPE_IMPLICIT,
+                    ]
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -40,18 +53,20 @@ async def async_setup_entry(
 ):
     """Set up an EnOcean dongle for the given entry."""
     enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
-    usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
-    await usb_dongle.async_setup()
-    enocean_data[ENOCEAN_DONGLE] = usb_dongle
+    if config_entry.data[CONF_TYPE] == TYPE_SERIAL:
+        usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
+        await usb_dongle.async_setup()
+        enocean_data[ENOCEAN_DONGLE] = usb_dongle
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
-    """Unload ENOcean config entry."""
+    """Unload EnOcean config entry."""
 
     enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
-    enocean_dongle.unload()
+    if enocean_dongle:
+        enocean_dongle.unload()
     hass.data.pop(DATA_ENOCEAN)
 
     return True
