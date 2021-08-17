@@ -10,6 +10,6 @@
     "hostname": "yeelink-*"
   }],
   "homekit": {
-    "models": ["YLDP*"]
+    "models": ["YLD*"]
   }
 }
