@@ -134,7 +134,7 @@ async def test_import(hass: HomeAssistant):
 
     # Success
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
+    with _patch_discovery(), patch(
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ), patch(f"{MODULE}.async_setup", return_value=True) as mock_setup, patch(
         f"{MODULE}.async_setup_entry", return_value=True
@@ -158,7 +158,7 @@ async def test_import(hass: HomeAssistant):
 
     # Duplicate
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_interval(), patch(
+    with _patch_discovery(), patch(
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ):
         result = await hass.config_entries.flow.async_init(
@@ -204,11 +204,9 @@ async def test_manual(hass: HomeAssistant):
 
     # Success
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+    with _patch_discovery(), _patch_discovery_timeout(), patch(
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
-    ), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ), patch(
+    ), patch(f"{MODULE}.async_setup", return_value=True), patch(
         f"{MODULE}.async_setup_entry", return_value=True
     ):
         result4 = await hass.config_entries.flow.async_configure(
