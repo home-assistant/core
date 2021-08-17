@@ -63,6 +63,7 @@ DEVICE_CLASS_OR_UNIT_STATISTICS = {
     STATE_CLASS_TOTAL_INCREASING: {
         DEVICE_CLASS_ENERGY: {"sum"},
         DEVICE_CLASS_GAS: {"sum"},
+        DEVICE_CLASS_MONETARY: {"sum"},
     },
 }
 
