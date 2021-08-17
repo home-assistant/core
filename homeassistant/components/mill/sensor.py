@@ -2,11 +2,10 @@
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
-    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import ENERGY_KILO_WATT_HOUR
-from homeassistant.util import dt as dt_util
 
 from .const import CONSUMPTION_TODAY, CONSUMPTION_YEAR, DOMAIN, MANUFACTURER
 
@@ -29,7 +28,7 @@ class MillHeaterEnergySensor(SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_state_class = STATE_CLASS_TOTAL
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(self, heater, mill_data_connection, sensor_type):
         """Initialize the sensor."""
@@ -45,16 +44,6 @@ class MillHeaterEnergySensor(SensorEntity):
             "manufacturer": MANUFACTURER,
             "model": f"generation {1 if heater.is_gen1 else 2}",
         }
-        if self._sensor_type == CONSUMPTION_TODAY:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            )
-        elif self._sensor_type == CONSUMPTION_YEAR:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(
-                    month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-                )
-            )
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -71,15 +60,4 @@ class MillHeaterEnergySensor(SensorEntity):
             self._attr_native_value = _state
             return
 
-        if self.state is not None and _state < self.state:
-            if self._sensor_type == CONSUMPTION_TODAY:
-                self._attr_last_reset = dt_util.as_utc(
-                    dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                )
-            elif self._sensor_type == CONSUMPTION_YEAR:
-                self._attr_last_reset = dt_util.as_utc(
-                    dt_util.now().replace(
-                        month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-                    )
-                )
         self._attr_native_value = _state
