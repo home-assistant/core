@@ -115,7 +115,7 @@ class MagicSeaweedSensor(SensorEntity):
         return f"{self.hour} {self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -125,7 +125,7 @@ class MagicSeaweedSensor(SensorEntity):
         return self._unit_system
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

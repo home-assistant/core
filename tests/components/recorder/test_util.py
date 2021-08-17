@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.sql.elements import TextClause
 
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
@@ -253,6 +254,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
 def test_perodic_db_cleanups(hass_recorder):
     """Test perodic db cleanups."""
     hass = hass_recorder()
-    with patch.object(hass.data[DATA_INSTANCE].engine, "execute") as execute_mock:
+    with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
         util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
-    assert execute_mock.call_args[0][0] == "PRAGMA wal_checkpoint(TRUNCATE);"
+
+    text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
+        1
+    ][0]
+    assert isinstance(text_obj, TextClause)
+    assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
