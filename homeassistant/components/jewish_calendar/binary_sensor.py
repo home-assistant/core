@@ -69,7 +69,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._schedule_update()
 
     @callback
-    def _update(self):
+    def _update(self, now=None):
         """Update the state of the sensor."""
         self._update_unsub = None
         self._schedule_update()
