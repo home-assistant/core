@@ -24,14 +24,13 @@ AIR_QUALITY_TEXT = {
 class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
     """Representation of a HomeKit Controller Air Quality sensor."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialise a HomeKit air_quality acessory."""
-        super().__init__(*args, **kwargs)
-
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
         _LOGGER.warning(
             "The homekit_controller air_quality entity has been "
             "deprecated and will be removed in 2021.12.0"
         )
+        await super().async_added_to_hass()
 
     @property
     def entity_registry_enabled_default(self) -> bool:
