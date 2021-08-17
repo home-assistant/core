@@ -3,10 +3,20 @@ from __future__ import annotations
 
 from youless_api.youless_sensor import YoulessSensor
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.components.youless import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, DEVICE_CLASS_POWER
+from homeassistant.const import (
+    CONF_DEVICE,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_POWER,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -14,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt
 
 
 async def async_setup_entry(
@@ -95,6 +106,11 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
 class GasSensor(YoulessBaseSensor):
     """The Youless gas sensor."""
 
+    _attr_unit_of_measurement = VOLUME_CUBIC_METERS
+    _attr_device_class = DEVICE_CLASS_GAS
+    _attr_last_reset = dt.utc_from_timestamp(0)
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
         """Instantiate a gas sensor."""
         super().__init__(coordinator, device, "gas", "Gas meter", "gas")
@@ -111,6 +127,7 @@ class CurrentPowerSensor(YoulessBaseSensor):
     """The current power usage sensor."""
 
     _attr_device_class = DEVICE_CLASS_POWER
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
         """Instantiate the usage meter."""
@@ -127,7 +144,9 @@ class CurrentPowerSensor(YoulessBaseSensor):
 class DeliveryMeterSensor(YoulessBaseSensor):
     """The Youless delivery meter value sensor."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_last_reset = dt.utc_from_timestamp(0)
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
@@ -151,7 +170,9 @@ class DeliveryMeterSensor(YoulessBaseSensor):
 class PowerMeterSensor(YoulessBaseSensor):
     """The Youless low meter value sensor."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_last_reset = dt.utc_from_timestamp(0)
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
