@@ -320,7 +320,7 @@ class SmappeeSensor(SensorEntity):
         return STATE_CLASS_MEASUREMENT
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
