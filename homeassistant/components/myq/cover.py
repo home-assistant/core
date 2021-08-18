@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
@@ -43,14 +44,11 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         """Initialize with API object, device id."""
         super().__init__(coordinator)
         self._device = device
-
-    @property
-    def device_class(self):
-        """Define this cover as a garage door."""
-        device_type = self._device.device_type
-        if device_type is not None and device_type == MYQ_DEVICE_TYPE_GATE:
-            return DEVICE_CLASS_GATE
-        return DEVICE_CLASS_GARAGE
+        if device.device_type == MYQ_DEVICE_TYPE_GATE:
+            self._attr_device_class = DEVICE_CLASS_GATE
+        else:
+            self._attr_device_class = DEVICE_CLASS_GARAGE
+        self._attr_unique_id = device.device_id
 
     @property
     def name(self):
@@ -60,11 +58,8 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
     @property
     def available(self):
         """Return if the device is online."""
-        if not self.coordinator.last_update_success:
-            return False
-
         # Not all devices report online so assume True if its missing
-        return self._device.device_json[MYQ_DEVICE_STATE].get(
+        return super().available and self._device.device_json[MYQ_DEVICE_STATE].get(
             MYQ_DEVICE_STATE_ONLINE, True
         )
 
@@ -93,11 +88,6 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._device.device_id
-
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
         if self.is_closing or self.is_closed:
@@ -106,22 +96,20 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         try:
             wait_task = await self._device.close(wait_for_state=False)
         except MyQError as err:
-            _LOGGER.error(
-                "Closing of cover %s failed with error: %s", self._device.name, str(err)
-            )
-
-            return
+            raise HomeAssistantError(
+                f"Closing of cover {self._device.name} failed with error: {err}"
+            ) from err
 
         # Write closing state to HASS
         self.async_write_ha_state()
 
         result = wait_task if isinstance(wait_task, bool) else await wait_task
 
-        if not result:
-            _LOGGER.error("Closing of cover %s failed", self._device.name)
-
         # Write final state to HASS
         self.async_write_ha_state()
+
+        if not result:
+            raise HomeAssistantError(f"Closing of cover {self._device.name} failed")
 
     async def async_open_cover(self, **kwargs):
         """Issue open command to cover."""
@@ -131,21 +119,20 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         try:
             wait_task = await self._device.open(wait_for_state=False)
         except MyQError as err:
-            _LOGGER.error(
-                "Opening of cover %s failed with error: %s", self._device.name, str(err)
-            )
-            return
+            raise HomeAssistantError(
+                f"Opening of cover {self._device.name} failed with error: {err}"
+            ) from err
 
         # Write opening state to HASS
         self.async_write_ha_state()
 
         result = wait_task if isinstance(wait_task, bool) else await wait_task
 
-        if not result:
-            _LOGGER.error("Opening of cover %s failed", self._device.name)
-
         # Write final state to HASS
         self.async_write_ha_state()
+
+        if not result:
+            raise HomeAssistantError(f"Opening of cover {self._device.name} failed")
 
     @property
     def device_info(self):
