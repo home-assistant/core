@@ -1,12 +1,15 @@
 """The P1 Monitor integration."""
 from __future__ import annotations
 
-from p1monitor import P1Monitor
+from typing import TypedDict
+
+from p1monitor import P1Monitor, Phases, Settings, SmartMeter
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -17,7 +20,6 @@ from .const import (
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
-    SERVICES,
 )
 
 PLATFORMS = (SENSOR_DOMAIN,)
@@ -25,26 +27,15 @@ PLATFORMS = (SENSOR_DOMAIN,)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up P1 Monitor from a config entry."""
+
+    coordinator = P1MonitorDataUpdateCoordinator(hass, entry=entry)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        coordinator.p1monitor.close()
+        raise
+
     hass.data.setdefault(DOMAIN, {})
-
-    session = async_get_clientsession(hass)
-    client = P1Monitor(host=entry.data[CONF_HOST], session=session)
-
-    async def _coordinator_update():
-        data = {}
-        data[SERVICE_SMARTMETER] = await client.smartmeter()
-        data[SERVICE_PHASES] = await client.phases()
-        data[SERVICE_SETTINGS] = await client.settings()
-        return data
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{DOMAIN}",
-        update_interval=SCAN_INTERVAL,
-        update_method=_coordinator_update,
-    )
-    await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -55,7 +46,45 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload P1 Monitor config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        client = hass.data[DOMAIN][entry.entry_id][SERVICES]
-        client.close()
-        del hass.data[DOMAIN][entry.entry_id]
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator.p1monitor.close()
     return unload_ok
+
+
+class P1MonitorData(TypedDict):
+    """Class for defining data in dict."""
+
+    SERVICE_SMARTMETER: SmartMeter
+    SERVICE_PHASES: Phases
+    SERVICE_SETTINGS: Settings
+
+
+class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
+    """Class to manage fetching P1 Monitor data from single endpoint."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize global P1 Monitor data updater."""
+        self.p1monitor = P1Monitor(
+            entry.data[CONF_HOST], session=async_get_clientsession(hass)
+        )
+
+        super().__init__(
+            hass,
+            LOGGER,
+            name=f"{DOMAIN}",
+            update_interval=SCAN_INTERVAL,
+        )
+
+    async def _async_update_data(self) -> P1MonitorData:
+        """Fetch data from P1 Monitor."""
+        data: P1Monitor = {}
+        data[SERVICE_SMARTMETER] = await self.p1monitor.smartmeter()
+        data[SERVICE_PHASES] = await self.p1monitor.phases()
+        data[SERVICE_SETTINGS] = await self.p1monitor.settings()
+
+        return data
