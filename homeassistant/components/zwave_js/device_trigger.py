@@ -656,7 +656,7 @@ async def async_get_trigger_capabilities(
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
                             CommandClass(cc.id).value: CommandClass(cc.id).name
-                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore
+                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
                         }
                     ),
                     vol.Required(ATTR_PROPERTY): cv.string,
