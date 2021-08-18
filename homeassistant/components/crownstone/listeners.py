@@ -92,11 +92,11 @@ def update_crwn_state_uart(
     """Update the state of a Crownstone when switched externally."""
     if data.type != AdvType.EXTERNAL_STATE:
         return
-    updated_crownstone = None
-    for sphere in manager.cloud.cloud_data:
-        if sphere.cloud_id == manager.usb_sphere_id:
-            updated_crownstone = sphere.crownstones.find_by_uid(data.crownstoneId)
-    if updated_crownstone is None:
+    try:
+        updated_crownstone = manager.cloud.get_crownstone_by_uid(
+            data.crownstoneId, manager.usb_sphere_id
+        )
+    except KeyError:
         return
 
     # only update on change

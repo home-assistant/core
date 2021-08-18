@@ -4,8 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/crownstone",
   "requirements": [
-    "crownstone-cloud==1.4.6",
-    "crownstone-sse==2.0.1",
+    "crownstone-cloud==1.4.7",
+    "crownstone-sse==2.0.2",
     "crownstone-uart==2.1.0",
     "pyserial==3.5"
   ],

@@ -286,10 +286,10 @@ coronavirus==1.1.1
 croniter==1.0.6
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.6
+crownstone-cloud==1.4.7
 
 # homeassistant.components.crownstone
-crownstone-sse==2.0.1
+crownstone-sse==2.0.2
 
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
