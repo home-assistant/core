@@ -1,0 +1,183 @@
+"""The tests for the Template select platform."""
+import pytest
+
+from homeassistant import setup
+from homeassistant.components.input_select import (
+    ATTR_OPTION as INPUT_SELECT_ATTR_OPTION,
+    ATTR_OPTIONS as INPUT_SELECT_ATTR_OPTIONS,
+    DOMAIN as INPUT_SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION as INPUT_SELECT_SERVICE_SELECT_OPTION,
+    SERVICE_SET_OPTIONS,
+)
+from homeassistant.components.select.const import (
+    ATTR_OPTION as SELECT_ATTR_OPTION,
+    ATTR_OPTIONS as SELECT_ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
+)
+from homeassistant.const import CONF_ENTITY_ID
+
+from tests.common import assert_setup_component, async_mock_service
+
+_TEST_SELECT = "select.template_select"
+# Represent for select's current_option
+_OPTION_INPUT_SELECT = "input_select.option"
+
+
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
+
+
+async def test_missing_optional_config(hass, calls):
+    """Test: missing optional template is ok."""
+    with assert_setup_component(1, "select"):
+        assert await setup.async_setup_component(
+            hass,
+            "select",
+            {
+                "select": {
+                    "platform": "template",
+                    "value_template": "{{ 'a' }}",
+                    "select_option": {"service": "script.select_option"},
+                    "options_template": "{{ ['a', 'b'] }}",
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, "a", ["a", "b"])
+
+
+async def test_missing_required_keys(hass, calls):
+    """Test: missing required fields will fail."""
+    with assert_setup_component(0, "number"):
+        assert await setup.async_setup_component(
+            hass,
+            "number",
+            {
+                "number": {
+                    "platform": "template",
+                    "select_option": {"service": "script.select_option"},
+                    "options_template": "{{ ['a', 'b'] }}",
+                }
+            },
+        )
+
+    with assert_setup_component(0, "number"):
+        assert await setup.async_setup_component(
+            hass,
+            "number",
+            {
+                "number": {
+                    "platform": "template",
+                    "value_template": "{{ 'a' }}",
+                    "select_option": {"service": "script.select_option"},
+                }
+            },
+        )
+
+    with assert_setup_component(0, "number"):
+        assert await setup.async_setup_component(
+            hass,
+            "number",
+            {
+                "number": {
+                    "platform": "template",
+                    "value_template": "{{ 'a' }}",
+                    "options_template": "{{ ['a', 'b'] }}",
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.async_all() == []
+
+
+async def test_templates_with_entities(hass, calls):
+    """Test tempalates with values from other entities."""
+    with assert_setup_component(1, "input_select"):
+        assert await setup.async_setup_component(
+            hass,
+            "input_select",
+            {
+                "input_select": {
+                    "option": {
+                        "options": ["a", "b"],
+                        "initial": "a",
+                        "name": "Option",
+                    },
+                }
+            },
+        )
+
+    with assert_setup_component(1, "select"):
+        assert await setup.async_setup_component(
+            hass,
+            "select",
+            {
+                "select": {
+                    "platform": "template",
+                    "value_template": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
+                    "options_template": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
+                    "select_option": {
+                        "service": "input_select.select_option",
+                        "data_template": {
+                            "entity_id": _OPTION_INPUT_SELECT,
+                            "option": "{{ option }}",
+                        },
+                    },
+                    "optimistic": True,
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, "a", ["a", "b"])
+
+    await hass.services.async_call(
+        INPUT_SELECT_DOMAIN,
+        INPUT_SELECT_SERVICE_SELECT_OPTION,
+        {CONF_ENTITY_ID: _OPTION_INPUT_SELECT, INPUT_SELECT_ATTR_OPTION: "b"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    _verify(hass, "b", ["a", "b"])
+
+    await hass.services.async_call(
+        INPUT_SELECT_DOMAIN,
+        SERVICE_SET_OPTIONS,
+        {
+            CONF_ENTITY_ID: _OPTION_INPUT_SELECT,
+            INPUT_SELECT_ATTR_OPTIONS: ["a", "b", "c"],
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    _verify(hass, "a", ["a", "b", "c"])
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SELECT_SERVICE_SELECT_OPTION,
+        {CONF_ENTITY_ID: _TEST_SELECT, SELECT_ATTR_OPTION: "c"},
+        blocking=True,
+    )
+    _verify(hass, "c", ["a", "b", "c"])
+
+
+def _verify(hass, expected_current_option, expected_options):
+    """Verify fan's state, speed and osc."""
+    state = hass.states.get(_TEST_SELECT)
+    attributes = state.attributes
+    assert state.state == str(expected_current_option)
+    assert attributes.get(SELECT_ATTR_OPTIONS) == expected_options
