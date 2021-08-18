@@ -5,10 +5,10 @@ from unittest.mock import PropertyMock, patch
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 
-async def test_duplicate_error(hass: HomeAssistantType):
+async def test_duplicate_error(hass: HomeAssistant):
     """Test that errors are shown when duplicates are added."""
     Alpha2Base.name = PropertyMock(return_value="fake_base_name")
     with patch("moehlenhoff_alpha2.Alpha2Base._fetch_static_data", return_value=True):
@@ -26,7 +26,7 @@ async def test_duplicate_error(hass: HomeAssistantType):
         assert result["reason"] == "already_configured"
 
 
-async def test_user(hass: HomeAssistantType):
+async def test_user(hass: HomeAssistant):
     """Test starting a flow by user."""
 
     with patch("moehlenhoff_alpha2.Alpha2Base._fetch_static_data", return_value=True):
@@ -44,7 +44,7 @@ async def test_user(hass: HomeAssistantType):
         assert result["data"]["host"] == "fake_host_user"
 
 
-async def test_connection_error(hass: HomeAssistantType):
+async def test_connection_error(hass: HomeAssistant):
     """Test connection error."""
     with patch(
         "moehlenhoff_alpha2.Alpha2Base._fetch_static_data",
@@ -63,7 +63,7 @@ async def test_connection_error(hass: HomeAssistantType):
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_unexpected_error(hass: HomeAssistantType):
+async def test_unexpected_error(hass: HomeAssistant):
     """Test unexpected error."""
 
     with patch(
