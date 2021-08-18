@@ -314,6 +314,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
+# homeassistant.components.yeelight
 async-upnp-client==0.20.0
 
 # homeassistant.components.supla
@@ -371,7 +372,7 @@ beautifulsoup4==4.9.3
 bellows==0.26.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.18
+bimmer_connected==0.7.19
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
