@@ -29,7 +29,7 @@ from .const import (
     ROUTER_IP,
     ROUTER_UPTIME,
     TIMESTAMP,
-    WANSTATUS,
+    WAN_STATUS,
 )
 
 
@@ -168,7 +168,7 @@ class Device:
         )
 
         return {
-            WANSTATUS: values[0][0] if values[0] is not None else None,
+            WAN_STATUS: values[0][0] if values[0] is not None else None,
             ROUTER_UPTIME: values[0][2] if values[0] is not None else None,
             ROUTER_IP: values[1],
         }

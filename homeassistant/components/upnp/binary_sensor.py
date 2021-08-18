@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity
-from .const import DOMAIN, LOGGER, WANSTATUS
+from .const import DOMAIN, LOGGER, WAN_STATUS
 
 
 async def async_setup_entry(
@@ -46,9 +46,9 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.coordinator.data.get(WANSTATUS)
+        return super().available and self.coordinator.data[WAN_STATUS]
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[WANSTATUS] == "Connected"
+        return self.coordinator.data[WAN_STATUS] == "Connected"

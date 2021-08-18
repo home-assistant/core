@@ -21,7 +21,7 @@ from .const import (
     ROUTER_IP,
     ROUTER_UPTIME,
     TIMESTAMP,
-    WANSTATUS,
+    WAN_STATUS,
 )
 
 SENSOR_TYPES = {
@@ -78,11 +78,11 @@ SENSOR_TYPES = {
         "unique_id": ROUTER_UPTIME,
         "format": "d",
     },
-    WANSTATUS: {
-        "device_value_key": WANSTATUS,
+    WAN_STATUS: {
+        "device_value_key": WAN_STATUS,
         "name": "wan status",
         "unit": None,
-        "unique_id": "wanstatus",
+        "unique_id": "wan_status",
     },
 }
 
@@ -112,7 +112,7 @@ async def async_setup_entry(
         RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
         RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
         RawUpnpSensor(coordinator, SENSOR_TYPES[ROUTER_IP]),
-        RawUpnpSensor(coordinator, SENSOR_TYPES[WANSTATUS]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[WAN_STATUS]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
