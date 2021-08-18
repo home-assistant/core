@@ -39,7 +39,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ,
-    FEATURE_FLAGS_AIRPURIFIER,
+    FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_SET_BUZZER,
     FEATURE_SET_CHILD_LOCK,
@@ -254,7 +254,7 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     elif model in MODELS_HUMIDIFIER:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
     elif model in MODELS_PURIFIER_MIIO:
-        device_features = FEATURE_FLAGS_AIRPURIFIER
+        device_features = FEATURE_FLAGS_AIRPURIFIER_MIIO
     elif model in MODELS_PURIFIER_MIOT:
         device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
 
