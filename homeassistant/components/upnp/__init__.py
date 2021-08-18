@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up UPnP component."""
     LOGGER.debug("async_setup, config: %s", config)
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]

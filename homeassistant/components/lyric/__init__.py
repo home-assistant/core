@@ -23,6 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -50,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Honeywell Lyric component."""
     hass.data[DOMAIN] = {}
 
