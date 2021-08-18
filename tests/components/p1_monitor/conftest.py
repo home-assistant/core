@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, load_fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Home Sweet Home",
+        title="monitor",
         domain=DOMAIN,
         data={CONF_HOST: "example"},
         unique_id="unique_thingy",

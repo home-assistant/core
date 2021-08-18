@@ -17,6 +17,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
@@ -191,32 +192,32 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         SensorEntityDescription(
             key="gas_consumption_tariff",
             name="Gas Consumption - Tariff",
-            icon="mdi:cash",
             entity_registry_enabled_default=False,
+            device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_consumption_low_tariff",
             name="Energy Consumption - Low Tariff",
-            icon="mdi:cash",
+            device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_consumption_high_tariff",
             name="Energy Consumption - High Tariff",
-            icon="mdi:cash",
+            device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_production_low_tariff",
             name="Energy Production - Low Tariff",
-            icon="mdi:cash",
+            device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_production_high_tariff",
             name="Energy Production - High Tariff",
-            icon="mdi:cash",
+            device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
     ),
@@ -233,6 +234,7 @@ async def async_setup_entry(
             entry_id=entry.entry_id,
             description=description,
             service_key=service_key,
+            name=entry.title,
             service=SERVICES[service_key],
         )
         for service_key, service_sensors in SENSORS.items()
@@ -250,15 +252,16 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
         entry_id: str,
         description: SensorEntityDescription,
         service_key: str,
+        name: str,
         service: str,
     ) -> None:
         """Initialize P1 Monitor sensor."""
         super().__init__(coordinator=coordinator)
         self._service_key = service_key
 
-        self.entity_id = f"{SENSOR_DOMAIN}.{service_key}_{description.key}"
+        self.entity_id = f"{SENSOR_DOMAIN}.{name}_{description.key}"
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{service_key}_{description.key}"
+        self._attr_unique_id = f"{entry_id}_{name}_{description.key}"
 
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, f"{entry_id}_{service_key}")},

@@ -15,6 +15,7 @@ from homeassistant.const import (
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
@@ -37,11 +38,11 @@ async def test_smartmeter(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.smartmeter_power_consumption")
-    entry = entity_registry.async_get("sensor.smartmeter_power_consumption")
+    state = hass.states.get("sensor.monitor_power_consumption")
+    entry = entity_registry.async_get("sensor.monitor_power_consumption")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_smartmeter_power_consumption"
+    assert entry.unique_id == f"{entry_id}_monitor_power_consumption"
     assert state.state == "877"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumption"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -49,11 +50,11 @@ async def test_smartmeter(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.smartmeter_energy_consumption_high")
-    entry = entity_registry.async_get("sensor.smartmeter_energy_consumption_high")
+    state = hass.states.get("sensor.monitor_energy_consumption_high")
+    entry = entity_registry.async_get("sensor.monitor_energy_consumption_high")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_smartmeter_energy_consumption_high"
+    assert entry.unique_id == f"{entry_id}_monitor_energy_consumption_high"
     assert state.state == "2770.133"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - High Tariff"
@@ -63,11 +64,11 @@ async def test_smartmeter(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.smartmeter_energy_tariff_period")
-    entry = entity_registry.async_get("sensor.smartmeter_energy_tariff_period")
+    state = hass.states.get("sensor.monitor_energy_tariff_period")
+    entry = entity_registry.async_get("sensor.monitor_energy_tariff_period")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_smartmeter_energy_tariff_period"
+    assert entry.unique_id == f"{entry_id}_monitor_energy_tariff_period"
     assert state.state == "high"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Tariff Period"
     assert state.attributes.get(ATTR_ICON) == "mdi:calendar-clock"
@@ -94,11 +95,11 @@ async def test_phases(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.phases_voltage_phase_l1")
-    entry = entity_registry.async_get("sensor.phases_voltage_phase_l1")
+    state = hass.states.get("sensor.monitor_voltage_phase_l1")
+    entry = entity_registry.async_get("sensor.monitor_voltage_phase_l1")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_phases_voltage_phase_l1"
+    assert entry.unique_id == f"{entry_id}_monitor_voltage_phase_l1"
     assert state.state == "233.6"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Voltage Phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -106,11 +107,11 @@ async def test_phases(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_VOLTAGE
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.phases_current_phase_l1")
-    entry = entity_registry.async_get("sensor.phases_current_phase_l1")
+    state = hass.states.get("sensor.monitor_current_phase_l1")
+    entry = entity_registry.async_get("sensor.monitor_current_phase_l1")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_phases_current_phase_l1"
+    assert entry.unique_id == f"{entry_id}_monitor_current_phase_l1"
     assert state.state == "1.6"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Current Phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -118,11 +119,11 @@ async def test_phases(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CURRENT
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.phases_power_consumed_phase_l1")
-    entry = entity_registry.async_get("sensor.phases_power_consumed_phase_l1")
+    state = hass.states.get("sensor.monitor_power_consumed_phase_l1")
+    entry = entity_registry.async_get("sensor.monitor_power_consumed_phase_l1")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_phases_power_consumed_phase_l1"
+    assert entry.unique_id == f"{entry_id}_monitor_power_consumed_phase_l1"
     assert state.state == "315"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumed Phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -150,27 +151,25 @@ async def test_settings(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.settings_energy_consumption_low_tariff")
-    entry = entity_registry.async_get("sensor.settings_energy_consumption_low_tariff")
+    state = hass.states.get("sensor.monitor_energy_consumption_low_tariff")
+    entry = entity_registry.async_get("sensor.monitor_energy_consumption_low_tariff")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_settings_energy_consumption_low_tariff"
+    assert entry.unique_id == f"{entry_id}_monitor_energy_consumption_low_tariff"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - Low Tariff"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
-    assert state.attributes.get(ATTR_ICON) == "mdi:cash"
-    assert ATTR_DEVICE_CLASS not in state.attributes
 
-    state = hass.states.get("sensor.settings_energy_production_low_tariff")
-    entry = entity_registry.async_get("sensor.settings_energy_production_low_tariff")
+    state = hass.states.get("sensor.monitor_energy_production_low_tariff")
+    entry = entity_registry.async_get("sensor.monitor_energy_production_low_tariff")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_settings_energy_production_low_tariff"
+    assert entry.unique_id == f"{entry_id}_monitor_energy_production_low_tariff"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production - Low Tariff"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
-    assert state.attributes.get(ATTR_ICON) == "mdi:cash"
-    assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
@@ -185,7 +184,7 @@ async def test_settings(
 
 @pytest.mark.parametrize(
     "entity_id",
-    ("sensor.smartmeter_gas_consumption",),
+    ("sensor.monitor_gas_consumption",),
 )
 async def test_smartmeter_disabled_by_default(
     hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
