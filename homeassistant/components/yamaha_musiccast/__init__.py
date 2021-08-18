@@ -7,6 +7,7 @@ import logging
 from aiomusiccast import MusicCastConnectionException
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -41,13 +42,33 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             data={
                 CONF_HOST: config_entry.data[CONF_HOST],
                 "serial": config_entry.data["serial"],
-                "upnp_description": None,
+                "upnp_description": await get_upnp_desc(
+                    hass, config_entry.data[CONF_HOST]
+                ),
             },
         )
 
     _LOGGER.info("Migration to version %s successful", version)
 
     return True
+
+
+async def get_upnp_desc(hass: HomeAssistant, host: str):
+    """Get the upnp description URL for a given host, using the SSPD scanner."""
+    ssdp_entries = ssdp.async_get_discovery_info_by_st(hass, "upnp:rootdevice")
+    matches = [w for w in ssdp_entries if w.get("_host", "") == host]
+    upnp_desc = None
+    for match in matches:
+        if match.get(ssdp.ATTR_SSDP_LOCATION):
+            upnp_desc = match[ssdp.ATTR_SSDP_LOCATION]
+            break
+
+    if not upnp_desc:
+        _LOGGER.warning(
+            "The upnp_description was not found automatically, setting a default one."
+        )
+        upnp_desc = f"http://{host}:49154/MediaRenderer/desc.xml"
+    return upnp_desc
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

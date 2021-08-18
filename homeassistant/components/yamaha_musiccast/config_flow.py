@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import get_upnp_desc
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +67,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_HOST: host,
                     "serial": serial_number,
-                    "upnp_description": self.upnp_description,
+                    "upnp_description": await get_upnp_desc(self.hass, host),
                 },
             )
 
