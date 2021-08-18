@@ -1,4 +1,6 @@
 """Support for Goal Zero Yeti Sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_CONNECTIVITY,
