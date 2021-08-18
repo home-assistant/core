@@ -1,4 +1,6 @@
 """Support for scanning a network with nmap."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
@@ -9,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PLATFORM_SCHEMA_DEVICE_TRACKER,
     DeviceScanner,
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
@@ -24,7 +26,7 @@ CONF_OPTIONS = "scan_options"
 DEFAULT_OPTIONS = "-F --host-timeout 5s"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PLATFORM_SCHEMA_DEVICE_TRACKER.extend(
     {
         vol.Required(CONF_HOSTS): cv.ensure_list,
         vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
@@ -45,7 +47,7 @@ Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 class NmapDeviceScanner(DeviceScanner):
     """This class scans for devices using nmap."""
 
-    exclude = []
+    exclude: list[str] = []
 
     def __init__(self, config):
         """Initialize the scanner."""
