@@ -63,7 +63,7 @@ async def async_setup_entry(
         ]
     )
 
-    async def _async_on_hass_stop(self):
+    async def _async_on_hass_stop(self) -> None:
         """HA is shutting down, close modem port."""
         if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
             await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
@@ -83,29 +83,31 @@ class ModemCalleridSensor(SensorEntity):
     _attr_icon = ICON
     _attr_should_poll = False
 
-    def __init__(self, api, name, device, server_unique_id):
+    def __init__(
+        self, api: PhoneModem, name: str, device: str, server_unique_id: str
+    ) -> None:
         """Initialize the sensor."""
         self.device = device
         self.api = api
         self._attr_name = name
         self._attr_unique_id = server_unique_id
-        self._attr_state = STATE_IDLE
+        self._attr_native_value = STATE_IDLE
         self._attr_extra_state_attributes = {
             CID.CID_TIME: 0,
             CID.CID_NUMBER: "",
             CID.CID_NAME: "",
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when the modem sensor is added to Home Assistant."""
         self.api.registercallback(self._async_incoming_call)
         await super().async_added_to_hass()
 
     @callback
-    def _async_incoming_call(self, new_state):
+    def _async_incoming_call(self, new_state) -> None:
         """Handle new states."""
         if new_state == PhoneModem.STATE_RING:
-            if self.state == PhoneModem.STATE_IDLE:
+            if self.native_value == PhoneModem.STATE_IDLE:
                 self._attr_extra_state_attributes = {
                     CID.CID_NUMBER: "",
                     CID.CID_NAME: "",
@@ -116,7 +118,7 @@ class ModemCalleridSensor(SensorEntity):
                 CID.CID_NAME: self.api.cid_name,
             }
         self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
-        self._attr_state = self.api.state
+        self._attr_native_value = self.api.state
         self.async_schedule_update_ha_state()
 
     async def reject_call(self) -> None:
