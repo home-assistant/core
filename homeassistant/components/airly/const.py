@@ -6,7 +6,11 @@ from typing import Final
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -49,26 +53,27 @@ NO_AIRLY_SENSORS: Final = "There are no Airly sensors in this area yet."
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
+        device_class=DEVICE_CLASS_AQI,
         name=ATTR_API_CAQI,
         native_unit_of_measurement="CAQI",
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM1,
-        icon="mdi:blur",
+        device_class=DEVICE_CLASS_PM1,
         name=ATTR_API_PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM25,
-        icon="mdi:blur",
+        device_class=DEVICE_CLASS_PM25,
         name="PM2.5",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM10,
-        icon="mdi:blur",
+        device_class=DEVICE_CLASS_PM10,
         name=ATTR_API_PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=STATE_CLASS_MEASUREMENT,

@@ -7,13 +7,14 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 PLATFORMS = [NOTIFY]
 
 
-async def async_setup(hass: HomeAssistant, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NFAndroidTV component."""
     hass.data.setdefault(DOMAIN, {})
     # Iterate all entries for notify to only get nfandroidtv

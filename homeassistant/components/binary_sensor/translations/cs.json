@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} nehl\u00e1s\u00ed probl\u00e9m",
             "is_no_smoke": "{entity_name} nedetekuje kou\u0159",
             "is_no_sound": "{entity_name} nedetekuje zvuk",
+            "is_no_update": "{entity_name} je aktu\u00e1ln\u00ed",
             "is_no_vibration": "{entity_name} nedetekuje vibrace",
             "is_not_bat_low": "{entity_name} baterie v norm\u00e1lu",
             "is_not_cold": "{entity_name} nen\u00ed studen\u00fd",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} detekuje kou\u0159",
             "is_sound": "{entity_name} detekuje zvuk",
             "is_unsafe": "{entity_name} nen\u00ed bezpe\u010dno",
+            "is_update": "{entity_name} m\u00e1 k dispozici aktualizaci",
             "is_vibration": "{entity_name} detekuje vibrace"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} p\u0159estalo detekovat probl\u00e9m",
             "no_smoke": "{entity_name} p\u0159estalo detekovat kou\u0159",
             "no_sound": "{entity_name} p\u0159estalo detekovat zvuk",
+            "no_update": "{entity_name} se stalo aktu\u00e1ln\u00ed",
             "no_vibration": "{entity_name} p\u0159estalo detekovat vibrace",
             "not_bat_low": "{entity_name} baterie v norm\u00e1lu",
             "not_cold": "{entity_name} p\u0159estal b\u00fdt studen\u00fd",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} vypnuto",
             "turned_on": "{entity_name} zapnuto",
             "unsafe": "{entity_name} hl\u00e1s\u00ed ohro\u017een\u00ed",
+            "update": "{entity_name} m\u00e1 k dispozici aktualizaci",
             "vibration": "{entity_name} za\u010dalo detekovat vibrace"
         }
     },
@@ -177,6 +181,10 @@
         "sound": {
             "off": "Ticho",
             "on": "Zachycen zvuk"
+        },
+        "update": {
+            "off": "Aktu\u00e1ln\u00ed",
+            "on": "Aktualizace k dispozici"
         },
         "vibration": {
             "off": "Klid",

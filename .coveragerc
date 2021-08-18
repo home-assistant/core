@@ -36,6 +36,9 @@ omit =
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
+    homeassistant/components/airtouch4/__init__.py
+    homeassistant/components/airtouch4/climate.py
+    homeassistant/components/airtouch4/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/*
@@ -375,6 +378,7 @@ omit =
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
+    homeassistant/components/google_pubsub/__init__.py
     homeassistant/components/google_travel_time/__init__.py
     homeassistant/components/google_travel_time/helpers.py
     homeassistant/components/google_travel_time/sensor.py
@@ -672,6 +676,7 @@ omit =
     homeassistant/components/mystrom/switch.py
     homeassistant/components/myq/__init__.py
     homeassistant/components/myq/cover.py
+    homeassistant/components/myq/light.py
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
     homeassistant/components/neato/__init__.py
@@ -696,7 +701,8 @@ omit =
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
-    homeassistant/components/nmap_tracker/*
+    homeassistant/components/nmap_tracker/__init__.py
+    homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py

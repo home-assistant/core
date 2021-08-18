@@ -14,6 +14,7 @@ from homeassistant.components.modbus.const import (
     CONF_VERIFY,
     CONF_WRITE_TYPE,
     MODBUS_DOMAIN,
+    TCP,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -33,10 +34,15 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from .conftest import ReadResult, base_test
+from .conftest import (
+    TEST_ENTITY_NAME,
+    TEST_MODBUS_HOST,
+    TEST_PORT_TCP,
+    ReadResult,
+    base_test,
+)
 
-LIGHT_NAME = "test_light"
-ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
+ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_ENTITY_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -45,7 +51,7 @@ ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                 }
             ]
@@ -53,7 +59,7 @@ ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                 }
@@ -62,7 +68,7 @@ ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -79,7 +85,7 @@ ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -96,7 +102,7 @@ ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -113,7 +119,7 @@ ENTITY_ID = f"{LIGHT_DOMAIN}.{LIGHT_NAME}"
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -165,13 +171,13 @@ async def test_all_light(hass, call_type, regs, verify, expected):
     state = await base_test(
         hass,
         {
-            CONF_NAME: LIGHT_NAME,
+            CONF_NAME: TEST_ENTITY_NAME,
             CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
             CONF_WRITE_TYPE: call_type,
             **verify,
         },
-        LIGHT_NAME,
+        TEST_ENTITY_NAME,
         LIGHT_DOMAIN,
         CONF_LIGHTS,
         None,
@@ -194,7 +200,7 @@ async def test_all_light(hass, call_type, regs, verify, expected):
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SCAN_INTERVAL: 0,
                 }
@@ -213,18 +219,18 @@ async def test_light_service_turn(hass, caplog, mock_pymodbus):
     ENTITY_ID2 = f"{ENTITY_ID}2"
     config = {
         MODBUS_DOMAIN: {
-            CONF_TYPE: "tcp",
-            CONF_HOST: "modbusTestHost",
-            CONF_PORT: 5501,
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
                 },
                 {
-                    CONF_NAME: f"{LIGHT_NAME}2",
+                    CONF_NAME: f"{TEST_ENTITY_NAME}2",
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
@@ -283,7 +289,7 @@ async def test_light_service_turn(hass, caplog, mock_pymodbus):
         {
             CONF_LIGHTS: [
                 {
-                    CONF_NAME: LIGHT_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                     CONF_VERIFY: {},

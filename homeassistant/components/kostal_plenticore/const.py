@@ -1,9 +1,9 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -304,8 +304,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -346,8 +345,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -388,8 +386,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -430,8 +427,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -472,8 +468,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -514,8 +509,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -556,8 +550,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -599,8 +592,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            ATTR_LAST_RESET: LAST_RESET_NEVER,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
