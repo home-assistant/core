@@ -11,9 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
+                    "cloud_id": "Cloud ID",
+                    "install_code": "Installation Code"
                 }
             }
         }
