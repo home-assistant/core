@@ -1,5 +1,13 @@
 """Tests for the Renault integration."""
 from __future__ import annotations
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 
 from typing import Any
 from unittest.mock import patch
@@ -218,3 +226,17 @@ async def setup_renault_integration_vehicle_with_side_effect(
         await hass.async_block_till_done()
 
     return config_entry
+
+
+def check_device_registry(
+    device_registry: DeviceRegistry, expected_device: dict[str, Any]
+) -> None:
+    """Ensure that the expected_device is correctly registered."""
+    assert len(device_registry.devices) == 1
+    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
+    assert registry_entry is not None
+    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
+    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
+    assert registry_entry.name == expected_device[ATTR_NAME]
+    assert registry_entry.model == expected_device[ATTR_MODEL]
+    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
