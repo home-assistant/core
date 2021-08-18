@@ -134,10 +134,15 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             and features & cover.SUPPORT_SET_POSITION
         ):
             a_type = "Window"
-        elif features & (cover.SUPPORT_SET_POSITION | cover.SUPPORT_SET_TILT_POSITION):
+        elif features & cover.SUPPORT_SET_POSITION:
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "WindowCoveringBasic"
+        elif features & cover.SUPPORT_SET_TILT_POSITION:
+            # WindowCovering and WindowCoveringBasic both support tilt
+            # only WindowCovering can handle the covers that are missing
+            # SUPPORT_SET_POSITION, SUPPORT_OPEN, and SUPPORT_CLOSE
+            a_type = "WindowCovering"
 
     elif state.domain == "fan":
         a_type = "Fan"
