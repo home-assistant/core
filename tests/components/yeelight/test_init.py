@@ -246,13 +246,10 @@ async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
     )
     config_entry.add_to_hass(hass)
 
-    mocked_bulb = _mocked_bulb()
-    mocked_bulb.async_listen = AsyncMock(side_effect=BulbException)
-
     with _patch_discovery(
         no_device=True
     ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -264,13 +261,10 @@ async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "127.0.0.1"})
     config_entry.add_to_hass(hass)
 
-    mocked_bulb = _mocked_bulb()
-    mocked_bulb.async_listen = AsyncMock(side_effect=BulbException)
-
     with _patch_discovery(
         no_device=True
     ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
