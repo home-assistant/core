@@ -7,6 +7,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -25,7 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up P1 Monitor from a config entry."""
     hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
-    client = P1Monitor(host=entry.data[CONF_HOST])
+    session = async_get_clientsession(hass)
+    client = P1Monitor(host=entry.data[CONF_HOST], session=session)
 
     async def update_smartmeter() -> SmartMeter:
         return await client.smartmeter()
@@ -74,5 +76,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload P1 Monitor config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        client = hass.data[DOMAIN][entry.entry_id]
+        client.close()
         del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
