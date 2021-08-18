@@ -47,23 +47,19 @@ class MillHeaterEnergySensor(CoordinatorEntity, SensorEntity):
             "manufacturer": MANUFACTURER,
             "model": f"generation {1 if heater.is_gen1 else 2}",
         }
+        self._update_attr(heater)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        heater = self.coordinator.data[self._id]
+        self._update_attr(self.coordinator.data[self._id])
+        self.async_write_ha_state()
+
+    @callback
+    def _update_attr(self, heater):
         self._attr_available = heater.available
 
         if self._sensor_type == CONSUMPTION_TODAY:
-            _state = heater.day_consumption
+            self._attr_native_value = heater.day_consumption
         elif self._sensor_type == CONSUMPTION_YEAR:
-            _state = heater.year_consumption
-        else:
-            _state = None
-        if _state is None:
-            self._attr_native_value = _state
-            self.async_write_ha_state()
-            return
-
-        self._attr_native_value = _state
-        self.async_write_ha_state()
+            self._attr_native_value = heater.year_consumption

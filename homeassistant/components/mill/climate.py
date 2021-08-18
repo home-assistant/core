@@ -48,7 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     dev = []
     for heater in mill_data_coordinator.data.values():
         dev.append(MillHeater(mill_data_coordinator, heater))
-    async_add_entities(dev, True)
+    async_add_entities(dev)
 
     async def set_room_temp(service):
         """Set room temp."""
