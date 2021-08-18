@@ -193,7 +193,7 @@ class SensorEntity(Entity):
                     report_issue,
                 )
 
-                return {ATTR_LAST_RESET: last_reset.isoformat()}
+            return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
 
