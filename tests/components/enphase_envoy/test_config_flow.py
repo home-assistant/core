@@ -4,10 +4,14 @@ from unittest.mock import MagicMock, patch
 import httpx
 
 from homeassistant import config_entries, setup
-from homeassistant.components.enphase_envoy.const import DOMAIN
+from homeassistant.components.enphase_envoy.const import DOMAIN, DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+from homeassistant.const import (
+    CONF_SCAN_INTERVAL,
+)
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -209,6 +213,7 @@ async def test_form_host_already_exists(hass: HomeAssistant) -> None:
             "password": "test-password",
         },
         title="Envoy",
+        options=None,
     )
     config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -248,6 +253,7 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
         },
         unique_id="1234",
         title="Envoy",
+        options=None,
     )
     config_entry.add_to_hass(hass)
 
@@ -276,6 +282,7 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
             "password": "test-password",
         },
         title="Envoy",
+        options=None,
     )
     config_entry.add_to_hass(hass)
 
@@ -316,6 +323,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "password": "test-password",
         },
         title="Envoy",
+        options=None,
     )
     config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -342,3 +350,40 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 350},
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {CONF_SCAN_INTERVAL: 350}
+
+
+async def test_option_flow_defaults(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+    }
