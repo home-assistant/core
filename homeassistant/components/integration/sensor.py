@@ -154,12 +154,6 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             """Handle the sensor state changes."""
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
-            if (
-                old_state is None
-                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            ):
-                return
 
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -171,6 +165,14 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 and new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
             ):
                 self._attr_device_class = DEVICE_CLASS_ENERGY
+
+            if (
+                old_state is None
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            ):
+                return
+
             try:
                 # integration as the Riemann integral of previous measures.
                 area = 0
