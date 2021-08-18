@@ -15,6 +15,9 @@ PLATFORMS = ["sensor"]
 
 COORDINATOR = "coordinator"
 NAME = "name"
+DATA_LISTENER = "listener"
+
+DEFAULT_SCAN_INTERVAL = 60
 
 SENSORS = (
     SensorEntityDescription(

@@ -24,7 +24,6 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
     DOMAIN,
-    MIN_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
 )
 
