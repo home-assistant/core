@@ -430,7 +430,18 @@ async def test_get_condition_capabilities_value(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    cc_options = [(cc.value, cc.name) for cc in CommandClass]
+    cc_options = [
+        (133, "ASSOCIATION"),
+        (128, "BATTERY"),
+        (112, "CONFIGURATION"),
+        (98, "DOOR_LOCK"),
+        (122, "FIRMWARE_UPDATE_MD"),
+        (114, "MANUFACTURER_SPECIFIC"),
+        (113, "ALARM"),
+        (152, "SECURITY"),
+        (99, "USER_CODE"),
+        (134, "VERSION"),
+    ]
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
