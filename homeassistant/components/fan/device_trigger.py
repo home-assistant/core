@@ -16,12 +16,16 @@ TRIGGER_SCHEMA = toggle_entity.TRIGGER_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers for Fan devices."""
     return await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return await toggle_entity.async_get_trigger_capabilities(hass, config)
 

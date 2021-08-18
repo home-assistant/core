@@ -287,7 +287,9 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
     triggers: list[dict] = []
 

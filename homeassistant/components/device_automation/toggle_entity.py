@@ -212,7 +212,7 @@ async def async_get_conditions(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str, domain: str
-) -> list[dict]:
+) -> list[dict[str, str]]:
     """List device triggers."""
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
 
@@ -226,7 +226,9 @@ async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) ->
     }
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

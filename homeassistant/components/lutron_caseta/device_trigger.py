@@ -225,7 +225,9 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     return schema(config)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers for lutron caseta devices."""
     triggers = []
 

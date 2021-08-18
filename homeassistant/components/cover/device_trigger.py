@@ -67,7 +67,9 @@ STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_SCHEMA = vol.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -114,7 +116,9 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     if config[CONF_TYPE] not in POSITION_TRIGGER_TYPES:
         return {
