@@ -6,12 +6,6 @@
   "requirements": [
     "pyaussiebb==0.0.3"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "codeowners": [
-    "@nickw444"
-  ],
+  "codeowners": ["@nickw444"],
   "iot_class": "cloud_polling"
 }
