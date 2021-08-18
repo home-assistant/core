@@ -7,7 +7,6 @@ from mysensors.sensor import Sensor
 import pytest
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -75,7 +74,6 @@ async def test_power_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
     assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
-    assert ATTR_LAST_RESET not in state.attributes
 
 
 async def test_energy_sensor(
