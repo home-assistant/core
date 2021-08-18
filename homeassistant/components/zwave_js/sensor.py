@@ -31,10 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_METER_TYPE, ATTR_VALUE, DATA_CLIENT, DOMAIN, SERVICE_RESET_METER
@@ -254,15 +251,6 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
             node,
             primary_value.endpoint,
             options,
-        )
-
-        # Notify meters that may have been reset
-        async_dispatcher_send(
-            self.hass,
-            f"{DOMAIN}_{SERVICE_RESET_METER}",
-            node,
-            primary_value.endpoint,
-            options.get("type"),
         )
 
 
