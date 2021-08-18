@@ -110,7 +110,7 @@ class JewishCalendarSensor(SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         if self._type != "holiday":
             return {}
@@ -149,9 +149,9 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
         return dt_util.as_utc(self._state).isoformat()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
-        attrs = {}
+        attrs: dict[str, str] = {}
 
         if self._state is None:
             return attrs
