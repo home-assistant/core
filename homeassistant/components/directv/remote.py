@@ -13,8 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DIRECTVEntity
 from .const import DOMAIN
+from .entity import DIRECTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,41 +49,24 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
         """Initialize DirecTV remote."""
         super().__init__(
             dtv=dtv,
-            name=name,
             address=address,
         )
 
-        self._available = False
-        self._is_on = True
-
-    @property
-    def available(self):
-        """Return if able to retrieve information from device or not."""
-        return self._available
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        if self._address == "0":
-            return self.dtv.device.info.receiver_id
-
-        return self._address
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._is_on
+        self._attr_unique_id = self._device_id
+        self._attr_name = name
+        self._attr_available = False
+        self._attr_is_on = True
 
     async def async_update(self) -> None:
         """Update device state."""
         status = await self.dtv.status(self._address)
 
         if status in ("active", "standby"):
-            self._available = True
-            self._is_on = status == "active"
+            self._attr_available = True
+            self._attr_is_on = status == "active"
         else:
-            self._available = False
-            self._is_on = False
+            self._attr_available = False
+            self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

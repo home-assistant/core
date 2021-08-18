@@ -115,8 +115,8 @@ def mirobo_is_got_error_fixture():
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+        mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
@@ -143,8 +143,8 @@ def mirobo_old_speeds_fixture(request):
     mock_vacuum.fan_speed_presets.return_value = request.param
     mock_vacuum.status().fanspeed = list(request.param.values())[0]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+        mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
@@ -189,8 +189,8 @@ def mirobo_is_on_fixture():
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+        mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 

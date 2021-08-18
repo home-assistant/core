@@ -41,7 +41,6 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.ACTIVE,
-            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
             CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE,
             CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE,
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD,
@@ -143,7 +142,6 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         """Define the homekit characteristics the entity cares about."""
         return [
             CharacteristicsTypes.ACTIVE,
-            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
             CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE,
             CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE,
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD,

@@ -17,7 +17,17 @@
             "user": {
                 "data": {
                     "scan_interval": "Intervalo de actualizaci\u00f3n (segundos, m\u00ednimo 30)",
+                    "unique_id": "Dispositivo",
                     "usn": "Dispositivo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalo de actualizaci\u00f3n (segundos, m\u00ednimo 30)"
                 }
             }
         }

@@ -3,7 +3,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -30,7 +30,7 @@ CONF_SENSOR_TYPES = {
         CONF_ICON: "mdi:ev-station",
         CONF_NAME: "Max Available Power",
         CONF_ROUND: 0,
-        CONF_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
+        CONF_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
         STATE_UNAVAILABLE: False,
     },
     "charging_speed": {

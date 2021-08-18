@@ -47,7 +47,8 @@ def async_setup_forwarded(
 
     Additionally:
       - If no X-Forwarded-For header is found, the processing of all headers is skipped.
-      - Log a warning when untrusted connected peer provides X-Forwarded-For headers.
+      - Throw HTTP 400 status when untrusted connected peer provides
+        X-Forwarded-For headers.
       - If multiple instances of X-Forwarded-For, X-Forwarded-Proto or
         X-Forwarded-Host are found, an HTTP 400 status code is thrown.
       - If malformed or invalid (IP) data in X-Forwarded-For header is found,
@@ -62,12 +63,24 @@ def async_setup_forwarded(
         an HTTP 400 status code is thrown.
     """
 
+    try:
+        from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
+
+        # venv users might have already loaded it before it got upgraded so guard for this
+        # This can only happen when people upgrade from before 2021.8.5.
+        if not hasattr(remote, "is_cloud_request"):
+            remote = None
+    except ImportError:
+        remote = None
+
     @middleware
     async def forwarded_middleware(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process forwarded data by a reverse proxy."""
-        overrides: dict[str, str] = {}
+        # Skip requests from Remote UI
+        if remote is not None and remote.is_cloud_request.get():
+            return await handler(request)
 
         # Handle X-Forwarded-For
         forwarded_for_headers: list[str] = request.headers.getall(X_FORWARDED_FOR, [])
@@ -87,26 +100,20 @@ def async_setup_forwarded(
 
         # We have X-Forwarded-For, but config does not agree
         if not use_x_forwarded_for:
-            _LOGGER.warning(
+            _LOGGER.error(
                 "A request from a reverse proxy was received from %s, but your "
-                "HTTP integration is not set-up for reverse proxies; "
-                "This request will be blocked in Home Assistant 2021.7 unless "
-                "you configure your HTTP integration to allow this header",
+                "HTTP integration is not set-up for reverse proxies",
                 connected_ip,
             )
-            # Block this request in the future, for now we pass.
-            return await handler(request)
+            raise HTTPBadRequest
 
         # Ensure the IP of the connected peer is trusted
         if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
-            _LOGGER.warning(
-                "Received X-Forwarded-For header from untrusted proxy %s, headers not processed; "
-                "This request will be blocked in Home Assistant 2021.7 unless you configure "
-                "your HTTP integration to allow this proxy to reverse your Home Assistant instance",
+            _LOGGER.error(
+                "Received X-Forwarded-For header from an untrusted proxy %s",
                 connected_ip,
             )
-            # Not trusted, Block this request in the future, continue as normal
-            return await handler(request)
+            raise HTTPBadRequest
 
         # Multiple X-Forwarded-For headers
         if len(forwarded_for_headers) > 1:
@@ -124,6 +131,8 @@ def async_setup_forwarded(
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
             )
             raise HTTPBadRequest from err
+
+        overrides: dict[str, str] = {}
 
         # Find the last trusted index in the X-Forwarded-For list
         forwarded_for_index = 0

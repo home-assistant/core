@@ -10,7 +10,7 @@ from homeassistant.components.humidifier.const import (
     SUPPORT_MODES,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -42,6 +42,37 @@ class EcobeeHumidifier(HumidifierEntity):
         self._last_humidifier_on_mode = MODE_MANUAL
 
         self.update_without_throttle = False
+
+    @property
+    def name(self):
+        """Return the name of the humidifier."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique_id for humidifier."""
+        return f"{self.thermostat['identifier']}"
+
+    @property
+    def device_info(self):
+        """Return device information for the ecobee humidifier."""
+        try:
+            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
+        except KeyError:
+            # Ecobee model is not in our list
+            model = None
+
+        return {
+            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": model,
+        }
+
+    @property
+    def available(self):
+        """Return if device is available."""
+        return self.thermostat["runtime"]["connected"]
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
@@ -83,11 +114,6 @@ class EcobeeHumidifier(HumidifierEntity):
     def mode(self):
         """Return the current mode, e.g., off, auto, manual."""
         return self.thermostat["settings"]["humidifierMode"]
-
-    @property
-    def name(self):
-        """Return the name of the ecobee thermostat."""
-        return self._name
 
     @property
     def supported_features(self):

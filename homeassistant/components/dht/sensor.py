@@ -12,6 +12,8 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PIN,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
@@ -33,8 +35,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ["Temperature", None],
-    SENSOR_HUMIDITY: ["Humidity", PERCENTAGE],
+    SENSOR_TEMPERATURE: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_HUMIDITY: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
 }
 
 
@@ -124,6 +126,7 @@ class DHTSensor(SensorEntity):
         self.humidity_offset = humidity_offset
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):
@@ -131,12 +134,12 @@ class DHTSensor(SensorEntity):
         return f"{self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

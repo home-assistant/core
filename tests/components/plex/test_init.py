@@ -177,6 +177,7 @@ async def test_setup_with_unknown_session(hass, entry, setup_plex_server):
 async def test_setup_when_certificate_changed(
     hass,
     requests_mock,
+    empty_library,
     empty_payload,
     plex_server_accounts,
     plex_server_default,
@@ -210,13 +211,10 @@ async def test_setup_when_certificate_changed(
 
     requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
     requests_mock.get("https://plex.tv/api/invites/requested", text=empty_payload)
-
-    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
-    requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
     requests_mock.get(old_url, exc=WrongCertHostnameException)
 
     # Test with account failure
-    requests_mock.get(f"{old_url}/accounts", status_code=401)
+    requests_mock.get("https://plex.tv/users/account", status_code=401)
     old_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(old_entry.entry_id) is False
     await hass.async_block_till_done()
@@ -225,7 +223,7 @@ async def test_setup_when_certificate_changed(
     await hass.config_entries.async_unload(old_entry.entry_id)
 
     # Test with no servers found
-    requests_mock.get(f"{old_url}/accounts", text=plex_server_accounts)
+    requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get("https://plex.tv/api/resources", text=empty_payload)
 
     assert await hass.config_entries.async_setup(old_entry.entry_id) is False
@@ -237,8 +235,11 @@ async def test_setup_when_certificate_changed(
     # Test with success
     new_url = PLEX_DIRECT_URL
     requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
-    requests_mock.get(new_url, text=plex_server_default)
+    for resource_url in [new_url, "http://1.2.3.4:32400"]:
+        requests_mock.get(resource_url, text=plex_server_default)
     requests_mock.get(f"{new_url}/accounts", text=plex_server_accounts)
+    requests_mock.get(f"{new_url}/library", text=empty_library)
+    requests_mock.get(f"{new_url}/library/sections", text=empty_payload)
 
     assert await hass.config_entries.async_setup(old_entry.entry_id)
     await hass.async_block_till_done()

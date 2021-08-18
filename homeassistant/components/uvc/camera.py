@@ -131,7 +131,7 @@ class UnifiVideoCamera(Camera):
 
         return self._caminfo["recordingSettings"][
             "fullTimeRecordEnabled"
-        ] or recording_state in ["MOTION_INPROGRESS", "MOTION_FINISHED"]
+        ] or recording_state in ("MOTION_INPROGRESS", "MOTION_FINISHED")
 
     @property
     def motion_detection_enabled(self):
@@ -194,10 +194,12 @@ class UnifiVideoCamera(Camera):
         self._caminfo = caminfo
         return True
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return the image of this camera."""
         if not self._camera and not self._login():
-            return
+            return None
 
         def _get_image(retry=True):
             try:

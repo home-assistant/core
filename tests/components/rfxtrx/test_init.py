@@ -117,7 +117,7 @@ async def test_fire_event(hass, rfxtrx):
             "type_string": "Byron SX",
             "id_string": "00:90",
             "data": "0716000100900970",
-            "values": {"Command": "Chime", "Rssi numeric": 7, "Sound": 9},
+            "values": {"Command": "Sound 9", "Rssi numeric": 7, "Sound": 9},
             "device_id": device_id_2.id,
         },
     ]

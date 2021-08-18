@@ -4,7 +4,12 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
-from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_PLATFORM,
+    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -80,8 +85,60 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
     assert conditions == expected_conditions
 
 
+async def test_get_conditions_no_state(hass, device_reg, entity_reg):
+    """Test we get the expected conditions from a sensor."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_ids = {}
+    for device_class in DEVICE_CLASSES:
+        entity_ids[device_class] = entity_reg.async_get_or_create(
+            DOMAIN,
+            "test",
+            f"5678_{device_class}",
+            device_id=device_entry.id,
+            device_class=device_class,
+            unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
+        ).entity_id
+
+    await hass.async_block_till_done()
+
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition["type"],
+            "device_id": device_entry.id,
+            "entity_id": entity_ids[device_class],
+        }
+        for device_class in DEVICE_CLASSES
+        if device_class in UNITS_OF_MEASUREMENT
+        for condition in ENTITY_CONDITIONS[device_class]
+        if device_class != "none"
+    ]
+    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    assert conditions == expected_conditions
+
+
+@pytest.mark.parametrize(
+    "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
+    [
+        (False, DEVICE_CLASS_BATTERY, None, PERCENTAGE, None),
+        (True, None, DEVICE_CLASS_BATTERY, None, PERCENTAGE),
+    ],
+)
 async def test_get_condition_capabilities(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    device_class_reg,
+    device_class_state,
+    unit_reg,
+    unit_state,
 ):
     """Test we get the expected capabilities from a sensor condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -93,15 +150,20 @@ async def test_get_condition_capabilities(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_id = entity_reg.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["battery"].unique_id,
         device_id=device_entry.id,
-    )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
+        device_class=device_class_reg,
+        unit_of_measurement=unit_reg,
+    ).entity_id
+    if set_state:
+        hass.states.async_set(
+            entity_id,
+            None,
+            {"device_class": device_class_state, "unit_of_measurement": unit_state},
+        )
 
     expected_capabilities = {
         "extra_fields": [

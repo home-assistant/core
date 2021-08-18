@@ -241,7 +241,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistant) -> None
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
 
-async def test_light_basic_properies(hass: HomeAssistant) -> None:
+async def test_light_basic_properties(hass: HomeAssistant) -> None:
     """Test the basic properties."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -1384,7 +1384,7 @@ async def test_deprecated_effect_names(caplog, hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: component},
             blocking=True,
         )
-        assert "Use of Hyperion effect '%s' is deprecated" % component in caplog.text
+        assert f"Use of Hyperion effect '{component}' is deprecated" in caplog.text
 
         # Simulate a state callback from Hyperion.
         client.visible_priority = {

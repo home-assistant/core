@@ -45,6 +45,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_ID,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -648,6 +649,16 @@ def url(value: Any) -> str:
     raise vol.Invalid("invalid url")
 
 
+def url_no_path(value: Any) -> str:
+    """Validate a url without a path."""
+    url_in = url(value)
+
+    if urlparse(url_in).path not in ("", "/"):
+        raise vol.Invalid("url it not allowed to have a path component")
+
+    return url_in
+
+
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
     regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
@@ -1026,6 +1037,14 @@ TIME_CONDITION_SCHEMA = vol.All(
     has_at_least_one_key("before", "after", "weekday"),
 )
 
+TRIGGER_CONDITION_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): "trigger",
+        vol.Required(CONF_ID): vol.All(ensure_list, [string]),
+    }
+)
+
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1090,24 +1109,29 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
         key_value_schemas(
             CONF_CONDITION,
             {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
                 "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
                 "state": STATE_CONDITION_SCHEMA,
                 "sun": SUN_CONDITION_SCHEMA,
                 "template": TEMPLATE_CONDITION_SCHEMA,
                 "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
                 "zone": ZONE_CONDITION_SCHEMA,
-                "and": AND_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
             },
         ),
         dynamic_template,
     )
 )
 
+TRIGGER_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+)
+
 TRIGGER_SCHEMA = vol.All(
-    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
+    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
@@ -1255,3 +1279,167 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
 }
+
+
+# Validate currencies adopted by countries
+currency = vol.In(
+    {
+        "AED",
+        "AFN",
+        "ALL",
+        "AMD",
+        "ANG",
+        "AOA",
+        "ARS",
+        "AUD",
+        "AWG",
+        "AZN",
+        "BAM",
+        "BBD",
+        "BDT",
+        "BGN",
+        "BHD",
+        "BIF",
+        "BMD",
+        "BND",
+        "BOB",
+        "BRL",
+        "BSD",
+        "BTN",
+        "BWP",
+        "BYR",
+        "BZD",
+        "CAD",
+        "CDF",
+        "CHF",
+        "CLP",
+        "CNY",
+        "COP",
+        "CRC",
+        "CUP",
+        "CVE",
+        "CZK",
+        "DJF",
+        "DKK",
+        "DOP",
+        "DZD",
+        "EGP",
+        "ERN",
+        "ETB",
+        "EUR",
+        "FJD",
+        "FKP",
+        "GBP",
+        "GEL",
+        "GHS",
+        "GIP",
+        "GMD",
+        "GNF",
+        "GTQ",
+        "GYD",
+        "HKD",
+        "HNL",
+        "HRK",
+        "HTG",
+        "HUF",
+        "IDR",
+        "ILS",
+        "INR",
+        "IQD",
+        "IRR",
+        "ISK",
+        "JMD",
+        "JOD",
+        "JPY",
+        "KES",
+        "KGS",
+        "KHR",
+        "KMF",
+        "KPW",
+        "KRW",
+        "KWD",
+        "KYD",
+        "KZT",
+        "LAK",
+        "LBP",
+        "LKR",
+        "LRD",
+        "LSL",
+        "LTL",
+        "LYD",
+        "MAD",
+        "MDL",
+        "MGA",
+        "MKD",
+        "MMK",
+        "MNT",
+        "MOP",
+        "MRO",
+        "MUR",
+        "MVR",
+        "MWK",
+        "MXN",
+        "MYR",
+        "MZN",
+        "NAD",
+        "NGN",
+        "NIO",
+        "NOK",
+        "NPR",
+        "NZD",
+        "OMR",
+        "PAB",
+        "PEN",
+        "PGK",
+        "PHP",
+        "PKR",
+        "PLN",
+        "PYG",
+        "QAR",
+        "RON",
+        "RSD",
+        "RUB",
+        "RWF",
+        "SAR",
+        "SBD",
+        "SCR",
+        "SDG",
+        "SEK",
+        "SGD",
+        "SHP",
+        "SLL",
+        "SOS",
+        "SRD",
+        "SSP",
+        "STD",
+        "SYP",
+        "SZL",
+        "THB",
+        "TJS",
+        "TMT",
+        "TND",
+        "TOP",
+        "TRY",
+        "TTD",
+        "TWD",
+        "TZS",
+        "UAH",
+        "UGX",
+        "USD",
+        "UYU",
+        "UZS",
+        "VEF",
+        "VND",
+        "VUV",
+        "WST",
+        "XAF",
+        "XCD",
+        "XOF",
+        "XPF",
+        "YER",
+        "ZAR",
+        "ZMK",
+        "ZWL",
+    },
+    msg="invalid ISO 4217 formatted currency",
+)

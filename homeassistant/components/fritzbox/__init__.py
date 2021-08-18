@@ -6,20 +6,22 @@ from datetime import timedelta
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 import requests
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -81,6 +83,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
+    def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        if (
+            entry.unit_of_measurement == TEMP_CELSIUS
+            and "_temperature" not in entry.unique_id
+        ):
+            new_unique_id = f"{entry.unique_id}_temperature"
+            LOGGER.info(
+                "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
+            )
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     def logout_fritzbox(event: Event) -> None:
@@ -121,8 +138,13 @@ class FritzBoxEntity(CoordinatorEntity):
         self.ain = ain
         self._name = entity_info[ATTR_NAME]
         self._unique_id = entity_info[ATTR_ENTITY_ID]
-        self._unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
         self._device_class = entity_info[ATTR_DEVICE_CLASS]
+        self._attr_state_class = entity_info[ATTR_STATE_CLASS]
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.device.present
 
     @property
     def device(self) -> FritzhomeDevice:
@@ -149,11 +171,6 @@ class FritzBoxEntity(CoordinatorEntity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
 
     @property
     def device_class(self) -> str | None:

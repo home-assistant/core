@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import (
-    TRIGGER_BASE_SCHEMA,
+    DEVICE_TRIGGER_BASE_SCHEMA,
     toggle_entity,
 )
 from homeassistant.components.homeassistant.triggers import (
@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import DOMAIN
 
 TARGET_TRIGGER_SCHEMA = vol.All(
-    TRIGGER_BASE_SCHEMA.extend(
+    DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): "target_humidity_changed",

@@ -1,6 +1,7 @@
 """Code to handle a Dynalite bridge."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any, Callable
 
 from dynalite_devices_lib.dynalite_devices import (
@@ -27,9 +28,8 @@ class DynaliteBridge:
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the system based on host parameter."""
         self.hass = hass
-        self.area = {}
-        self.async_add_devices = {}
-        self.waiting_devices = {}
+        self.async_add_devices: dict[str, Callable] = {}
+        self.waiting_devices: dict[str, list[str]] = {}
         self.host = config[CONF_HOST]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
@@ -37,7 +37,7 @@ class DynaliteBridge:
             update_device_func=self.update_device,
             notification_func=self.handle_notification,
         )
-        self.dynalite_devices.configure(convert_config(config))
+        self.dynalite_devices.configure(config)
 
     async def async_setup(self) -> bool:
         """Set up a Dynalite bridge."""
@@ -45,7 +45,7 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    def reload_config(self, config: dict[str, Any]) -> None:
+    def reload_config(self, config: MappingProxyType[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(convert_config(config))

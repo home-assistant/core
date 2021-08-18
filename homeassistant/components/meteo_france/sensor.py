@@ -56,7 +56,7 @@ async def async_setup_entry(
             if coordinator_alert:
                 entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
 
-        elif sensor_type in ["rain_chance", "freeze_chance", "snow_chance"]:
+        elif sensor_type in ("rain_chance", "freeze_chance", "snow_chance"):
             if coordinator_forecast.data.probability_forecast:
                 entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
             else:
@@ -109,7 +109,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         path = SENSOR_TYPES[self._type][ENTITY_API_DATA_PATH].split(":")
         data = getattr(self.coordinator.data, path[0])
@@ -129,13 +129,13 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
             else:
                 value = data[path[1]]
 
-        if self._type in ["wind_speed", "wind_gust"]:
+        if self._type in ("wind_speed", "wind_gust"):
             # convert API wind speed from m/s to km/h
             value = round(value * 3.6)
         return value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return SENSOR_TYPES[self._type][ENTITY_UNIT]
 
@@ -164,7 +164,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     """Representation of a Meteo-France rain sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         # search first cadran with rain
         next_rain = next(
@@ -202,7 +202,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
         self._unique_id = self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return get_warning_text_status_from_indice_color(
             self.coordinator.data.get_domain_max_color()

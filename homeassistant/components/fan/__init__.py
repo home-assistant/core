@@ -1,6 +1,7 @@
 """Provides functionality to interact with fans."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -9,18 +10,20 @@ from typing import final
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
@@ -204,14 +207,16 @@ async def async_setup(hass, config: dict):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 def _fan_native(method):
@@ -220,8 +225,15 @@ def _fan_native(method):
     return method
 
 
+@dataclass
+class FanEntityDescription(ToggleEntityDescription):
+    """A class that describes fan entities."""
+
+
 class FanEntity(ToggleEntity):
     """Base class for fan entities."""
+
+    entity_description: FanEntityDescription
 
     @_fan_native
     def set_speed(self, speed: str) -> None:
@@ -242,7 +254,7 @@ class FanEntity(ToggleEntity):
             await self.async_turn_off()
             return
 
-        if speed in self.preset_modes:
+        if self.preset_modes and speed in self.preset_modes:
             if not hasattr(self.async_set_preset_mode, _FAN_NATIVE):
                 await self.async_set_preset_mode(speed)
                 return
@@ -371,7 +383,7 @@ class FanEntity(ToggleEntity):
             _LOGGER.warning(
                 "Calling fan.turn_on with the speed argument is deprecated, use percentage or preset_mode instead"
             )
-            if speed in self.preset_modes:
+            if self.preset_modes and speed in self.preset_modes:
                 preset_mode = speed
                 percentage = None
             else:
@@ -459,9 +471,13 @@ class FanEntity(ToggleEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
-        if not self._implemented_preset_mode and self.speed in self.preset_modes:
+        if (
+            not self._implemented_preset_mode
+            and self.preset_modes
+            and self.speed in self.preset_modes
+        ):
             return None
-        if not self._implemented_percentage:
+        if self.speed is not None and not self._implemented_percentage:
             return self.speed_to_percentage(self.speed)
         return 0
 
@@ -484,7 +500,7 @@ class FanEntity(ToggleEntity):
         speeds = []
         if self._implemented_percentage:
             speeds += [SPEED_OFF, *LEGACY_SPEED_LIST]
-        if self._implemented_preset_mode:
+        if self._implemented_preset_mode and self.preset_modes:
             speeds += self.preset_modes
         return speeds
 
@@ -590,7 +606,7 @@ class FanEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
-        data = {}
+        data: dict[str, float | str | None] = {}
         supported_features = self.supported_features
 
         if supported_features & SUPPORT_DIRECTION:
@@ -624,7 +640,7 @@ class FanEntity(ToggleEntity):
         Requires SUPPORT_SET_SPEED.
         """
         speed = self.speed
-        if speed in self.preset_modes:
+        if self.preset_modes and speed in self.preset_modes:
             return speed
         return None
 

@@ -7,16 +7,16 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, HomeAssistantError, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN, const
@@ -48,9 +48,9 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
+        supported_features = get_supported_features(hass, entry.entity_id)
 
-        if state and state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_MODES:
+        if supported_features & const.SUPPORT_MODES:
             conditions.append(
                 {
                     CONF_CONDITION: "device",
@@ -87,15 +87,17 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(hass, config):
     """List condition capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
     condition_type = config[CONF_TYPE]
 
     fields = {}
 
     if condition_type == "is_mode":
-        if state:
-            modes = state.attributes.get(const.ATTR_AVAILABLE_MODES, [])
-        else:
+        try:
+            modes = (
+                get_capability(hass, config[ATTR_ENTITY_ID], const.ATTR_AVAILABLE_MODES)
+                or []
+            )
+        except HomeAssistantError:
             modes = []
 
         fields[vol.Required(ATTR_MODE)] = vol.In(modes)

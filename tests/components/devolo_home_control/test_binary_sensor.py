@@ -9,7 +9,6 @@ from homeassistant.core import HomeAssistant
 
 from . import configure_integration
 from .mocks import (
-    DeviceMock,
     HomeControlMock,
     HomeControlMockBinarySensor,
     HomeControlMockDisabledBinarySensor,
@@ -21,10 +20,11 @@ from .mocks import (
 async def test_binary_sensor(hass: HomeAssistant):
     """Test setup and state change of a binary sensor device."""
     entry = configure_integration(hass)
-    DeviceMock.available = True
+    test_gateway = HomeControlMockBinarySensor()
+    test_gateway.devices["Test"].status = 0
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[HomeControlMockBinarySensor, HomeControlMock],
+        side_effect=[test_gateway, HomeControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -34,13 +34,13 @@ async def test_binary_sensor(hass: HomeAssistant):
     assert state.state == STATE_OFF
 
     # Emulate websocket message: sensor turned on
-    HomeControlMockBinarySensor.publisher.dispatch("Test", ("Test", True))
+    test_gateway.publisher.dispatch("Test", ("Test", True))
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_ON
 
     # Emulate websocket message: device went offline
-    DeviceMock.available = False
-    HomeControlMockBinarySensor.publisher.dispatch("Test", ("Status", False, "status"))
+    test_gateway.devices["Test"].status = 1
+    test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
@@ -49,10 +49,11 @@ async def test_binary_sensor(hass: HomeAssistant):
 async def test_remote_control(hass: HomeAssistant):
     """Test setup and state change of a remote control device."""
     entry = configure_integration(hass)
-    DeviceMock.available = True
+    test_gateway = HomeControlMockRemoteControl()
+    test_gateway.devices["Test"].status = 0
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[HomeControlMockRemoteControl, HomeControlMock],
+        side_effect=[test_gateway, HomeControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -62,18 +63,18 @@ async def test_remote_control(hass: HomeAssistant):
     assert state.state == STATE_OFF
 
     # Emulate websocket message: button pressed
-    HomeControlMockRemoteControl.publisher.dispatch("Test", ("Test", 1))
+    test_gateway.publisher.dispatch("Test", ("Test", 1))
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_ON
 
     # Emulate websocket message: button released
-    HomeControlMockRemoteControl.publisher.dispatch("Test", ("Test", 0))
+    test_gateway.publisher.dispatch("Test", ("Test", 0))
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_OFF
 
     # Emulate websocket message: device went offline
-    DeviceMock.available = False
-    HomeControlMockRemoteControl.publisher.dispatch("Test", ("Status", False, "status"))
+    test_gateway.devices["Test"].status = 1
+    test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
@@ -84,7 +85,7 @@ async def test_disabled(hass: HomeAssistant):
     entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[HomeControlMockDisabledBinarySensor, HomeControlMock],
+        side_effect=[HomeControlMockDisabledBinarySensor(), HomeControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -96,9 +97,10 @@ async def test_disabled(hass: HomeAssistant):
 async def test_remove_from_hass(hass: HomeAssistant):
     """Test removing entity."""
     entry = configure_integration(hass)
+    test_gateway = HomeControlMockBinarySensor()
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
-        side_effect=[HomeControlMockBinarySensor, HomeControlMock],
+        side_effect=[test_gateway, HomeControlMock()],
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -109,4 +111,4 @@ async def test_remove_from_hass(hass: HomeAssistant):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    HomeControlMockBinarySensor.publisher.unregister.assert_called_once()
+    test_gateway.publisher.unregister.assert_called_once()

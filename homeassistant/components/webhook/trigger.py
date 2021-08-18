@@ -12,12 +12,15 @@ import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ("webhook",)
 
-TRIGGER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): "webhook", vol.Required(CONF_WEBHOOK_ID): cv.string}
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_PLATFORM): "webhook",
+        vol.Required(CONF_WEBHOOK_ID): cv.string,
+    }
 )
 
 
-async def _handle_webhook(job, trigger_id, hass, webhook_id, request):
+async def _handle_webhook(job, trigger_data, hass, webhook_id, request):
     """Handle incoming webhook."""
     result = {"platform": "webhook", "webhook_id": webhook_id}
 
@@ -28,20 +31,20 @@ async def _handle_webhook(job, trigger_id, hass, webhook_id, request):
 
     result["query"] = request.query
     result["description"] = "webhook"
-    result["id"] = trigger_id
+    result.update(**trigger_data)
     hass.async_run_hass_job(job, {"trigger": result})
 
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Trigger based on incoming webhooks."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     webhook_id = config.get(CONF_WEBHOOK_ID)
     job = HassJob(action)
     hass.components.webhook.async_register(
         automation_info["domain"],
         automation_info["name"],
         webhook_id,
-        partial(_handle_webhook, job, trigger_id),
+        partial(_handle_webhook, job, trigger_data),
     )
 
     @callback

@@ -9,11 +9,20 @@
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "name": "[%key:common::config_flow::data::name%]"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with your Ambee account.",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

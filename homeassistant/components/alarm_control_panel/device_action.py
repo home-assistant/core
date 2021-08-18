@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_CODE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -17,12 +16,14 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
@@ -30,6 +31,7 @@ from .const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
 
@@ -37,6 +39,7 @@ ACTION_TYPES: Final[set[str]] = {
     "arm_away",
     "arm_home",
     "arm_night",
+    "arm_vacation",
     "disarm",
     "trigger",
 }
@@ -62,13 +65,7 @@ async def async_get_actions(
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-
-        # We need a state or else we can't populate the HVAC and preset modes.
-        if state is None:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         base_action = {
             CONF_DEVICE_ID: device_id,
@@ -83,6 +80,8 @@ async def async_get_actions(
             actions.append({**base_action, CONF_TYPE: "arm_home"})
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
             actions.append({**base_action, CONF_TYPE: "arm_night"})
+        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+            actions.append({**base_action, CONF_TYPE: "arm_vacation"})
         actions.append({**base_action, CONF_TYPE: "disarm"})
         if supported_features & SUPPORT_ALARM_TRIGGER:
             actions.append({**base_action, CONF_TYPE: "trigger"})
@@ -104,6 +103,8 @@ async def async_call_action_from_config(
         service = SERVICE_ALARM_ARM_HOME
     elif config[CONF_TYPE] == "arm_night":
         service = SERVICE_ALARM_ARM_NIGHT
+    elif config[CONF_TYPE] == "arm_vacation":
+        service = SERVICE_ALARM_ARM_VACATION
     elif config[CONF_TYPE] == "disarm":
         service = SERVICE_ALARM_DISARM
     elif config[CONF_TYPE] == "trigger":
@@ -118,6 +119,8 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
+    # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
+    # capability attribute
     state = hass.states.get(config[CONF_ENTITY_ID])
     code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False
 
