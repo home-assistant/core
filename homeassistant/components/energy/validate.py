@@ -4,7 +4,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
-from homeassistant.components import recorder
+from homeassistant.components import recorder, sensor
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -82,7 +82,7 @@ def _async_validate_energy_stat(
         result.append(
             ValidationIssue("entity_state_non_numeric", stat_value, state.state)
         )
-        current_value = None
+        return
 
     if current_value is not None and current_value < 0:
         result.append(
@@ -92,7 +92,20 @@ def _async_validate_energy_stat(
     unit = state.attributes.get("unit_of_measurement")
 
     if unit not in (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR):
-        result.append(ValidationIssue("entity_unexpected_unit", stat_value, unit))
+        result.append(
+            ValidationIssue("entity_unexpected_unit_energy", stat_value, unit)
+        )
+
+    state_class = state.attributes.get("state_class")
+
+    if state_class != sensor.STATE_CLASS_TOTAL_INCREASING:
+        result.append(
+            ValidationIssue(
+                "entity_unexpected_state_class_total_increasing",
+                stat_value,
+                state_class,
+            )
+        )
 
 
 @callback
@@ -117,7 +130,6 @@ def _async_validate_price_entity(
         result.append(
             ValidationIssue("entity_state_non_numeric", entity_id, state.state)
         )
-        value = None
         return
 
     if value is not None and value < 0:
@@ -128,7 +140,7 @@ def _async_validate_price_entity(
     if unit is None or not unit.endswith(
         (f"/{ENERGY_KILO_WATT_HOUR}", f"/{ENERGY_WATT_HOUR}")
     ):
-        result.append(ValidationIssue("entity_unexpected_unit", entity_id, unit))
+        result.append(ValidationIssue("entity_unexpected_unit_price", entity_id, unit))
 
 
 @callback
@@ -160,6 +172,26 @@ def _async_validate_cost_entity(
             ValidationIssue(
                 "recorder_untracked",
                 entity_id,
+            )
+        )
+
+    state = hass.states.get(entity_id)
+
+    if state is None:
+        result.append(
+            ValidationIssue(
+                "entity_not_defined",
+                entity_id,
+            )
+        )
+        return
+
+    state_class = state.attributes.get("state_class")
+
+    if state_class != sensor.STATE_CLASS_TOTAL_INCREASING:
+        result.append(
+            ValidationIssue(
+                "entity_unexpected_state_class_total_increasing", entity_id, state_class
             )
         )
 

@@ -40,9 +40,13 @@ async def test_validation_empty_config(hass):
 
 
 async def test_validation(hass, mock_energy_manager):
-    """Test validating an empty config."""
+    """Test validating success."""
     for key in ("device_cons", "battery_import", "battery_export", "solar_production"):
-        hass.states.async_set(f"sensor.{key}", "123", {"unit_of_measurement": "kWh"})
+        hass.states.async_set(
+            f"sensor.{key}",
+            "123",
+            {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+        )
 
     await mock_energy_manager.async_update(
         {
@@ -112,7 +116,7 @@ async def test_validation_device_consumption_entity_non_numeric(
     await mock_energy_manager.async_update(
         {"device_consumption": [{"stat_consumption": "sensor.non_numeric"}]}
     )
-    hass.states.async_set("sensor.non_numeric", "123,123.10", {})
+    hass.states.async_set("sensor.non_numeric", "123,123.10")
 
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [],
@@ -122,11 +126,6 @@ async def test_validation_device_consumption_entity_non_numeric(
                     "type": "entity_state_non_numeric",
                     "identifier": "sensor.non_numeric",
                     "value": "123,123.10",
-                },
-                {
-                    "type": "entity_unexpected_unit",
-                    "identifier": "sensor.non_numeric",
-                    "value": None,
                 },
             ]
         ],
@@ -141,7 +140,9 @@ async def test_validation_device_consumption_entity_unexpected_unit(
         {"device_consumption": [{"stat_consumption": "sensor.unexpected_unit"}]}
     )
     hass.states.async_set(
-        "sensor.unexpected_unit", "10.10", {"unit_of_measurement": "beers"}
+        "sensor.unexpected_unit",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
@@ -149,7 +150,7 @@ async def test_validation_device_consumption_entity_unexpected_unit(
         "device_consumption": [
             [
                 {
-                    "type": "entity_unexpected_unit",
+                    "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.unexpected_unit",
                     "value": "beers",
                 }
@@ -191,14 +192,16 @@ async def test_validation_solar(hass, mock_energy_manager):
         }
     )
     hass.states.async_set(
-        "sensor.solar_production", "10.10", {"unit_of_measurement": "beers"}
+        "sensor.solar_production",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [
             [
                 {
-                    "type": "entity_unexpected_unit",
+                    "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.solar_production",
                     "value": "beers",
                 }
@@ -222,22 +225,26 @@ async def test_validation_battery(hass, mock_energy_manager):
         }
     )
     hass.states.async_set(
-        "sensor.battery_import", "10.10", {"unit_of_measurement": "beers"}
+        "sensor.battery_import",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
     )
     hass.states.async_set(
-        "sensor.battery_export", "10.10", {"unit_of_measurement": "beers"}
+        "sensor.battery_export",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [
             [
                 {
-                    "type": "entity_unexpected_unit",
+                    "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.battery_import",
                     "value": "beers",
                 },
                 {
-                    "type": "entity_unexpected_unit",
+                    "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.battery_export",
                     "value": "beers",
                 },
@@ -273,17 +280,21 @@ async def test_validation_grid(hass, mock_energy_manager, mock_is_entity_recorde
         }
     )
     hass.states.async_set(
-        "sensor.grid_consumption_1", "10.10", {"unit_of_measurement": "beers"}
+        "sensor.grid_consumption_1",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
     )
     hass.states.async_set(
-        "sensor.grid_production_1", "10.10", {"unit_of_measurement": "beers"}
+        "sensor.grid_production_1",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [
             [
                 {
-                    "type": "entity_unexpected_unit",
+                    "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.grid_consumption_1",
                     "value": "beers",
                 },
@@ -293,7 +304,7 @@ async def test_validation_grid(hass, mock_energy_manager, mock_is_entity_recorde
                     "value": None,
                 },
                 {
-                    "type": "entity_unexpected_unit",
+                    "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.grid_production_1",
                     "value": "beers",
                 },
@@ -311,10 +322,14 @@ async def test_validation_grid(hass, mock_energy_manager, mock_is_entity_recorde
 async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
     """Test validating grid with price entity that does not exist."""
     hass.states.async_set(
-        "sensor.grid_consumption_1", "10.10", {"unit_of_measurement": "kWh"}
+        "sensor.grid_consumption_1",
+        "10.10",
+        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
     )
     hass.states.async_set(
-        "sensor.grid_production_1", "10.10", {"unit_of_measurement": "kWh"}
+        "sensor.grid_production_1",
+        "10.10",
+        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
     )
     await mock_energy_manager.async_update(
         {
@@ -380,7 +395,7 @@ async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
             "123",
             "$/Ws",
             {
-                "type": "entity_unexpected_unit",
+                "type": "entity_unexpected_unit_price",
                 "identifier": "sensor.grid_price_1",
                 "value": "$/Ws",
             },
@@ -392,9 +407,15 @@ async def test_validation_grid_price_errors(
 ):
     """Test validating grid with price data that gives errors."""
     hass.states.async_set(
-        "sensor.grid_consumption_1", "10.10", {"unit_of_measurement": "kWh"}
+        "sensor.grid_consumption_1",
+        "10.10",
+        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
     )
-    hass.states.async_set("sensor.grid_price_1", state, {"unit_of_measurement": unit})
+    hass.states.async_set(
+        "sensor.grid_price_1",
+        state,
+        {"unit_of_measurement": unit, "state_class": "total_increasing"},
+    )
     await mock_energy_manager.async_update(
         {
             "energy_sources": [
