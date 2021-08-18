@@ -95,9 +95,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self.data[CONF_SERVICE_ID] = service["service_id"]
 
-            existing_entry = await self.async_set_unique_id(self.data[CONF_SERVICE_ID])
-            if existing_entry is not None:
-                return self.async_abort(reason="already_configured")
+            await self.async_set_unique_id(self.data[CONF_SERVICE_ID])
+            self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title=service["description"], data=self.data)
 
