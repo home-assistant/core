@@ -352,8 +352,6 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
     """Representation of a Tibber sensor for real time consumption."""
 
-    entity_description: SensorEntityDescription
-
     def __init__(
         self,
         tibber_home,
