@@ -1,8 +1,5 @@
 """Support for monitoring a Sense energy sensor."""
-from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntity,
-)
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_ENERGY,
