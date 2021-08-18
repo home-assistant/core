@@ -218,7 +218,6 @@ class StatisticData(TypedDict, total=False):
     mean: float
     min: float
     max: float
-    last_reset: datetime | None
     state: float
     sum: float
 
@@ -242,7 +241,6 @@ class Statistics(Base):  # type: ignore
     mean = Column(Float())
     min = Column(Float())
     max = Column(Float())
-    last_reset = Column(DATETIME_TYPE)
     state = Column(Float())
     sum = Column(Float())
 

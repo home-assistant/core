@@ -95,7 +95,6 @@ def test_compile_hourly_statistics(
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
-                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -145,7 +144,6 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "mean": approx(16.440677966101696),
                 "min": approx(10.0),
                 "max": approx(30.0),
-                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -154,7 +152,6 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-@pytest.mark.parametrize("state_class", ["measurement", "total"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
@@ -167,7 +164,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     ],
 )
 def test_compile_hourly_sum_statistics_amount(
-    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+    hass_recorder, caplog, device_class, unit, native_unit, factor
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -176,7 +173,7 @@ def test_compile_hourly_sum_statistics_amount(
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
-        "state_class": state_class,
+        "state_class": "measurement",
         "unit_of_measurement": unit,
         "last_reset": None,
     }
@@ -209,7 +206,6 @@ def test_compile_hourly_sum_statistics_amount(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
             },
@@ -219,89 +215,6 @@ def test_compile_hourly_sum_statistics_amount(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": approx(factor * seq[5]),
-                "sum": approx(factor * 10.0),
-            },
-            {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
-                "max": None,
-                "mean": None,
-                "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": approx(factor * seq[8]),
-                "sum": approx(factor * 40.0),
-            },
-        ]
-    }
-    assert "Error while processing event StatisticsTask" not in caplog.text
-
-
-@pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
-    [
-        ("energy", "kWh", "kWh", 1),
-        ("energy", "Wh", "kWh", 1 / 1000),
-        ("monetary", "EUR", "EUR", 1),
-        ("monetary", "SEK", "SEK", 1),
-        ("gas", "m³", "m³", 1),
-        ("gas", "ft³", "m³", 0.0283168466),
-    ],
-)
-def test_compile_hourly_sum_statistics_total_no_reset(
-    hass_recorder, caplog, device_class, unit, native_unit, factor
-):
-    """Test compiling hourly statistics."""
-    zero = dt_util.utcnow()
-    hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
-    setup_component(hass, "sensor", {})
-    attributes = {
-        "device_class": device_class,
-        "state_class": "total",
-        "unit_of_measurement": unit,
-    }
-    seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
-
-    four, eight, states = record_meter_states(
-        hass, zero, "sensor.test1", attributes, seq
-    )
-    hist = history.get_significant_states(
-        hass, zero - timedelta.resolution, eight + timedelta.resolution
-    )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
-
-    recorder.do_adhoc_statistics(period="hourly", start=zero)
-    wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=1))
-    wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
-    wait_recording_done(hass)
-    statistic_ids = list_statistic_ids(hass)
-    assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
-    ]
-    stats = statistics_during_period(hass, zero)
-    assert stats == {
-        "sensor.test1": [
-            {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "max": None,
-                "mean": None,
-                "min": None,
-                "last_reset": None,
-                "state": approx(factor * seq[2]),
-                "sum": approx(factor * 10.0),
-            },
-            {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
-                "max": None,
-                "mean": None,
-                "min": None,
-                "last_reset": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 30.0),
             },
@@ -311,7 +224,6 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 60.0),
             },
@@ -371,7 +283,6 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
             },
@@ -381,7 +292,6 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 50.0),
             },
@@ -391,7 +301,6 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 80.0),
             },
@@ -458,7 +367,6 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(20.0),
                 "sum": approx(10.0),
             },
@@ -468,9 +376,8 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
-                "sum": approx(10.0),
+                "sum": approx(30.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -478,9 +385,8 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
-                "sum": approx(40.0),
+                "sum": approx(60.0),
             },
         ]
     }
@@ -541,7 +447,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(20.0),
                 "sum": approx(10.0),
             },
@@ -551,9 +456,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
-                "sum": approx(10.0),
+                "sum": approx(30.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -561,9 +465,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
-                "sum": approx(40.0),
+                "sum": approx(60.0),
             },
         ],
         "sensor.test2": [
@@ -573,7 +476,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(130.0),
                 "sum": approx(20.0),
             },
@@ -583,9 +485,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(45.0),
-                "sum": approx(-95.0),
+                "sum": approx(-65.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -593,9 +494,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(75.0),
-                "sum": approx(-65.0),
+                "sum": approx(-35.0),
             },
         ],
         "sensor.test3": [
@@ -605,7 +505,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(5.0 / 1000),
                 "sum": approx(5.0 / 1000),
             },
@@ -615,9 +514,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(50.0 / 1000),
-                "sum": approx(30.0 / 1000),
+                "sum": approx(50.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -625,9 +523,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(90.0 / 1000),
-                "sum": approx(70.0 / 1000),
+                "sum": approx(90.0 / 1000),
             },
         ],
     }
@@ -678,7 +575,6 @@ def test_compile_hourly_statistics_unchanged(
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
-                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -710,7 +606,6 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
                 "mean": approx(21.1864406779661),
                 "min": approx(10.0),
                 "max": approx(25.0),
-                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -767,7 +662,6 @@ def test_compile_hourly_statistics_unavailable(
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
-                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
