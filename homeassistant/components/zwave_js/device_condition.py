@@ -21,7 +21,6 @@ from .const import (
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
-    LOGGER,
 )
 from .helpers import async_get_node_from_device_id, get_zwave_value_from_config
 
@@ -194,15 +193,15 @@ async def async_get_condition_capabilities(
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
 
     if config[CONF_TYPE] == VALUE_TYPE:
-        cc_dict = {
-            CommandClass(cc.id).value: CommandClass(cc.id).name
-            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore
-        }
-        LOGGER.error(cc_dict)
         return {
             "extra_fields": vol.Schema(
                 {
-                    vol.Required(ATTR_COMMAND_CLASS): vol.In(cc_dict),
+                    vol.Required(ATTR_COMMAND_CLASS): vol.In(
+                        {
+                            CommandClass(cc.id).value: CommandClass(cc.id).name
+                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore
+                        }
+                    ),
                     vol.Required(ATTR_PROPERTY): cv.string,
                     vol.Optional(ATTR_PROPERTY_KEY): cv.string,
                     vol.Optional(ATTR_ENDPOINT): cv.string,
