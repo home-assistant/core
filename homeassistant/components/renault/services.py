@@ -80,9 +80,8 @@ SERVICE_CHARGE_START_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+def setup_services(hass: HomeAssistant) -> None:
     """Register the Renault services."""
-    LOGGER.debug("Registering renault services")
 
     async def ac_cancel(service_call: ServiceCall) -> None:
         """Cancel A/C."""
@@ -176,7 +175,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-async def async_unload_services(hass: HomeAssistant) -> None:
+def unload_services(hass: HomeAssistant) -> None:
     """Unload Renault services."""
     for service in SERVICES:
         hass.services.async_remove(DOMAIN, service)

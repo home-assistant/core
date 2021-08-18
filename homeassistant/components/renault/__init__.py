@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_LOCALE, DOMAIN, PLATFORMS
 from .renault_hub import RenaultHub
-from .services import async_setup_services, async_unload_services
+from .services import setup_services, unload_services
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
-    await async_setup_services(hass)
+    setup_services(hass)
 
     return True
 
@@ -45,6 +45,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
         if not hass.data[DOMAIN]:
-            await async_unload_services(hass)
+            unload_services(hass)
 
     return unload_ok
