@@ -144,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         zc_args["ip_version"] = IPVersion.All
 
-    if not ipv6 and network.async_use_default_interface(adapters):
+    if not ipv6 and network.async_only_default_interface_enabled(adapters):
         zc_args["interfaces"] = InterfaceChoice.Default
     else:
         zc_args["interfaces"] = [
