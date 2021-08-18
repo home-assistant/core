@@ -976,8 +976,7 @@ class GrowattData:
                 self.data = inverter_info
             elif self.growatt_type == "tlx":
                 tlx_info = self.api.tlx_detail(self.device_id)
-                self.data = tlx_info["data"]
-                _LOGGER.debug(tlx_info["data"])
+                self.data = tlx_info
             elif self.growatt_type == "storage":
                 storage_info_detail = self.api.storage_params(self.device_id)[
                     "storageDetailBean"
@@ -1028,5 +1027,4 @@ class GrowattData:
 
     def get_data(self, variable):
         """Get the data."""
-        _LOGGER.debug("The value for %s is: %s", variable, self.data.get(variable))
         return self.data.get(variable)
