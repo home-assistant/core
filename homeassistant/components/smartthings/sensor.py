@@ -550,9 +550,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         super().__init__(device)
         self.report_name = report_name
         self._attr_state_class = STATE_CLASS_MEASUREMENT
-        if self.report_name == "power":
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
-        else:
+        if self.report_name != "power":
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     @property
