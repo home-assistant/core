@@ -45,11 +45,11 @@ from .const import (
     CONF_PARITY,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
-    CONF_RTUOVERTCP,
-    CONF_SERIAL,
     CONF_STOPBITS,
-    CONF_TCP,
-    CONF_UDP,
+    CONST_RTUOVERTCP,
+    CONST_SERIAL,
+    CONST_TCP,
+    CONST_UDP,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
@@ -203,10 +203,10 @@ class ModbusHub:
         self._config_delay = client_config[CONF_DELAY]
         self._pb_call = {}
         self._pb_class = {
-            CONF_SERIAL: ModbusSerialClient,
-            CONF_TCP: ModbusTcpClient,
-            CONF_UDP: ModbusUdpClient,
-            CONF_RTUOVERTCP: ModbusTcpClient,
+            CONST_SERIAL: ModbusSerialClient,
+            CONST_TCP: ModbusTcpClient,
+            CONST_UDP: ModbusUdpClient,
+            CONST_RTUOVERTCP: ModbusTcpClient,
         }
         self._pb_params = {
             "port": client_config[CONF_PORT],
@@ -215,7 +215,7 @@ class ModbusHub:
             "retries": client_config[CONF_RETRIES],
             "retry_on_empty": client_config[CONF_RETRY_ON_EMPTY],
         }
-        if self._config_type == CONF_SERIAL:
+        if self._config_type == CONST_SERIAL:
             # serial configuration
             self._pb_params.update(
                 {
@@ -229,13 +229,13 @@ class ModbusHub:
         else:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
-            if self._config_type == CONF_RTUOVERTCP:
+            if self._config_type == CONST_RTUOVERTCP:
                 self._pb_params["framer"] = ModbusRtuFramer
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if CONF_MSG_WAIT in client_config:
             self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
-        elif self._config_type == CONF_SERIAL:
+        elif self._config_type == CONST_SERIAL:
             self._msg_wait = 30 / 1000
         else:
             self._msg_wait = 0

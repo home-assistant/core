@@ -73,9 +73,7 @@ from .const import (
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
     CONF_REVERSE_ORDER,
-    CONF_RTUOVERTCP,
     CONF_SCALE,
-    CONF_SERIAL,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -92,10 +90,12 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    CONF_TCP,
-    CONF_UDP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    CONST_RTUOVERTCP,
+    CONST_SERIAL,
+    CONST_TCP,
+    CONST_UDP,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_FLOAT16,
@@ -304,7 +304,7 @@ MODBUS_SCHEMA = vol.Schema(
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): CONF_SERIAL,
+        vol.Required(CONF_TYPE): CONST_SERIAL,
         vol.Required(CONF_BAUDRATE): cv.positive_int,
         vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
         vol.Required(CONF_METHOD): vol.Any("rtu", "ascii"),
@@ -318,7 +318,7 @@ ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): vol.Any(CONF_TCP, CONF_UDP, CONF_RTUOVERTCP),
+        vol.Required(CONF_TYPE): vol.Any(CONST_TCP, CONST_UDP, CONST_RTUOVERTCP),
     }
 )
 
