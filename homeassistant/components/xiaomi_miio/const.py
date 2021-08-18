@@ -30,23 +30,24 @@ SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]
 DEFAULT_CLOUD_COUNTRY = "cn"
 
 # Fan Models
-MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
-MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
-MODEL_AIRPURIFIER_V3 = "zhimi.airpurifier.v3"
-MODEL_AIRPURIFIER_V5 = "zhimi.airpurifier.v5"
-MODEL_AIRPURIFIER_PRO = "zhimi.airpurifier.v6"
-MODEL_AIRPURIFIER_PRO_V7 = "zhimi.airpurifier.v7"
+MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
+MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
+MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
+MODEL_AIRPURIFIER_3C = "zhimi.airpurifier.mb4"
+MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 MODEL_AIRPURIFIER_M1 = "zhimi.airpurifier.m1"
 MODEL_AIRPURIFIER_M2 = "zhimi.airpurifier.m2"
 MODEL_AIRPURIFIER_MA1 = "zhimi.airpurifier.ma1"
 MODEL_AIRPURIFIER_MA2 = "zhimi.airpurifier.ma2"
+MODEL_AIRPURIFIER_PRO = "zhimi.airpurifier.v6"
+MODEL_AIRPURIFIER_PROH = "zhimi.airpurifier.va1"
+MODEL_AIRPURIFIER_PRO_V7 = "zhimi.airpurifier.v7"
 MODEL_AIRPURIFIER_SA1 = "zhimi.airpurifier.sa1"
 MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
-MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
-MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
-MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
-MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
-MODEL_AIRPURIFIER_PROH = "zhimi.airpurifier.va1"
+MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
+MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
+MODEL_AIRPURIFIER_V3 = "zhimi.airpurifier.v3"
+MODEL_AIRPURIFIER_V5 = "zhimi.airpurifier.v5"
 
 MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
 MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
@@ -78,6 +79,7 @@ MODELS_FAN_MIIO = [
 
 MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_3,
+    MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PROH,
 ]
@@ -247,6 +249,8 @@ FEATURE_FLAGS_AIRPURIFIER_MIOT = (
     | FEATURE_SET_FAN_LEVEL
     | FEATURE_SET_LED_BRIGHTNESS
 )
+
+FEATURE_FLAGS_AIRPURIFIER_3C = FEATURE_SET_BUZZER | FEATURE_SET_CHILD_LOCK
 
 FEATURE_FLAGS_AIRPURIFIER_PRO = (
     FEATURE_SET_CHILD_LOCK

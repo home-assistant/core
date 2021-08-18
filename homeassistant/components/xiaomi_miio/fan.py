@@ -34,6 +34,7 @@ from .const import (
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRPURIFIER_2S,
+    FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -47,6 +48,7 @@ from .const import (
     KEY_DEVICE,
     MODEL_AIRPURIFIER_2H,
     MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -417,6 +419,14 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
+            self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
+        elif self._model == MODEL_AIRPURIFIER_3C:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
+            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+            self._speed_count = 3
+            self._speed_list = OPERATION_MODES_AIRPURIFIER_3
         elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
