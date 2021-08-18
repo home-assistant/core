@@ -40,9 +40,11 @@ async def test_missing_optional_config(hass, calls):
             {
                 "template": {
                     "select": {
-                        "value_template": "{{ 'a' }}",
+                        "state": "{{ 'a' }}",
                         "select_option": {"service": "script.select_option"},
-                        "options_template": "{{ ['a', 'b'] }}",
+                        "attributes": {
+                            "options": "{{ ['a', 'b'] }}",
+                        },
                     }
                 }
             },
@@ -65,7 +67,9 @@ async def test_missing_required_keys(hass, calls):
                 "template": {
                     "select": {
                         "select_option": {"service": "script.select_option"},
-                        "options_template": "{{ ['a', 'b'] }}",
+                        "attributes": {
+                            "options": "{{ ['a', 'b'] }}",
+                        },
                     }
                 }
             },
@@ -78,7 +82,7 @@ async def test_missing_required_keys(hass, calls):
             {
                 "template": {
                     "select": {
-                        "value_template": "{{ 'a' }}",
+                        "state": "{{ 'a' }}",
                         "select_option": {"service": "script.select_option"},
                     }
                 }
@@ -92,8 +96,10 @@ async def test_missing_required_keys(hass, calls):
             {
                 "template": {
                     "select": {
-                        "value_template": "{{ 'a' }}",
-                        "options_template": "{{ ['a', 'b'] }}",
+                        "state": "{{ 'a' }}",
+                        "attributes": {
+                            "options": "{{ ['a', 'b'] }}",
+                        },
                     }
                 }
             },
@@ -131,8 +137,10 @@ async def test_templates_with_entities(hass, calls):
                 "template": {
                     "unique_id": "b",
                     "select": {
-                        "value_template": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
-                        "options_template": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
+                        "state": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
+                        "attributes": {
+                            "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
+                        },
                         "select_option": {
                             "service": "input_select.select_option",
                             "data_template": {
@@ -189,7 +197,7 @@ async def test_templates_with_entities(hass, calls):
 
 
 def _verify(hass, expected_current_option, expected_options):
-    """Verify fan's state, speed and osc."""
+    """Verify select's state."""
     state = hass.states.get(_TEST_SELECT)
     attributes = state.attributes
     assert state.state == str(expected_current_option)

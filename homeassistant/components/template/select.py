@@ -2,21 +2,15 @@
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.components.select.const import ATTR_OPTION
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY
 from .template_entity import TemplateEntity
 
 CONF_SELECT_OPTION = "select_option"
-CONF_OPTIONS_TEMPLATE = "options_template"
 
 DEFAULT_NAME = "Template Select"
 DEFAULT_OPTIMISTIC = False
@@ -24,10 +18,14 @@ DEFAULT_OPTIMISTIC = False
 SELECT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_OPTIONS_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+        vol.Required(CONF_ATTRIBUTES): vol.Schema(
+            {
+                vol.Required(ATTR_OPTIONS): cv.template,
+            }
+        ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -46,10 +44,10 @@ async def _async_create_entities(hass, entities, unique_id_prefix):
             TemplateSelect(
                 hass,
                 entity.get(CONF_NAME, DEFAULT_NAME),
-                entity[CONF_VALUE_TEMPLATE],
-                entity.get(CONF_AVAILABILITY_TEMPLATE),
+                entity[CONF_STATE],
+                entity.get(CONF_AVAILABILITY),
                 entity[CONF_SELECT_OPTION],
-                entity[CONF_OPTIONS_TEMPLATE],
+                entity[CONF_ATTRIBUTES][ATTR_OPTIONS],
                 entity.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
                 unique_id,
             )
