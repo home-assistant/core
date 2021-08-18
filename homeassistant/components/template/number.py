@@ -3,26 +3,21 @@ import voluptuous as vol
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.number.const import (
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_STEP,
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY
 from .template_entity import TemplateEntity
 
 CONF_SET_VALUE = "set_value"
-CONF_STEP_TEMPLATE = "step_template"
-CONF_MINIMUM_TEMPLATE = "minimum_template"
-CONF_MAXIMUM_TEMPLATE = "maximum_template"
 
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
@@ -30,12 +25,16 @@ DEFAULT_OPTIMISTIC = False
 NUMBER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_STEP_TEMPLATE): cv.template,
-        vol.Optional(CONF_MINIMUM_TEMPLATE): cv.template,
-        vol.Optional(CONF_MAXIMUM_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+        vol.Required(CONF_ATTRIBUTES): vol.Schema(
+            {
+                vol.Required(ATTR_STEP): cv.template,
+                vol.Optional(ATTR_MIN): cv.template,
+                vol.Optional(ATTR_MAX): cv.template,
+            }
+        ),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -53,12 +52,12 @@ async def _async_create_entities(hass, definitions, unique_id_prefix):
             TemplateNumber(
                 hass,
                 definition[CONF_NAME],
-                definition[CONF_VALUE_TEMPLATE],
-                definition.get(CONF_AVAILABILITY_TEMPLATE),
+                definition[CONF_STATE],
+                definition.get(CONF_AVAILABILITY),
                 definition[CONF_SET_VALUE],
-                definition[CONF_STEP_TEMPLATE],
-                definition.get(CONF_MINIMUM_TEMPLATE),
-                definition.get(CONF_MAXIMUM_TEMPLATE),
+                definition[CONF_ATTRIBUTES][ATTR_STEP],
+                definition[CONF_ATTRIBUTES].get(ATTR_MIN),
+                definition[CONF_ATTRIBUTES].get(ATTR_MAX),
                 definition[CONF_OPTIMISTIC],
                 unique_id,
             )

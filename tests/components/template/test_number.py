@@ -46,9 +46,11 @@ async def test_missing_optional_config(hass, calls):
             {
                 "template": {
                     "number": {
-                        "value_template": "{{ 4 }}",
+                        "state": "{{ 4 }}",
                         "set_value": {"service": "script.set_value"},
-                        "step_template": "{{ 1 }}",
+                        "attributes": {
+                            "step": "{{ 1 }}",
+                        },
                     }
                 }
             },
@@ -83,7 +85,7 @@ async def test_missing_required_keys(hass, calls):
             {
                 "template": {
                     "number": {
-                        "value_template": "{{ 4 }}",
+                        "state": "{{ 4 }}",
                     }
                 }
             },
@@ -105,11 +107,13 @@ async def test_all_optional_config(hass, calls):
             {
                 "template": {
                     "number": {
-                        "value_template": "{{ 4 }}",
+                        "state": "{{ 4 }}",
                         "set_value": {"service": "script.set_value"},
-                        "minimum_template": "{{ 3 }}",
-                        "maximum_template": "{{ 5 }}",
-                        "step_template": "{{ 1 }}",
+                        "attributes": {
+                            "min": "{{ 3 }}",
+                            "max": "{{ 5 }}",
+                            "step": "{{ 1 }}",
+                        },
                     }
                 }
             },
@@ -170,10 +174,12 @@ async def test_templates_with_entities(hass, calls):
                 "template": {
                     "unique_id": "b",
                     "number": {
-                        "value_template": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
-                        "step_template": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
-                        "minimum_template": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
-                        "maximum_template": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
+                        "state": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
+                        "attributes": {
+                            "step": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
+                            "min": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
+                            "max": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
+                        },
                         "set_value": {
                             "service": "input_number.set_value",
                             "data_template": {
