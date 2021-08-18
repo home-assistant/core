@@ -15,6 +15,8 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
@@ -24,7 +26,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import dt
 
 
 async def async_setup_entry(
@@ -108,7 +109,6 @@ class GasSensor(YoulessBaseSensor):
 
     _attr_unit_of_measurement = VOLUME_CUBIC_METERS
     _attr_device_class = DEVICE_CLASS_GAS
-    _attr_last_reset = dt.utc_from_timestamp(0)
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
@@ -126,6 +126,7 @@ class GasSensor(YoulessBaseSensor):
 class CurrentPowerSensor(YoulessBaseSensor):
     """The current power usage sensor."""
 
+    _attr_unit_of_measurement = POWER_WATT
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
@@ -144,8 +145,8 @@ class CurrentPowerSensor(YoulessBaseSensor):
 class DeliveryMeterSensor(YoulessBaseSensor):
     """The Youless delivery meter value sensor."""
 
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_last_reset = dt.utc_from_timestamp(0)
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
@@ -170,8 +171,8 @@ class DeliveryMeterSensor(YoulessBaseSensor):
 class PowerMeterSensor(YoulessBaseSensor):
     """The Youless low meter value sensor."""
 
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_last_reset = dt.utc_from_timestamp(0)
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
@@ -197,6 +198,7 @@ class PowerMeterSensor(YoulessBaseSensor):
 class ExtraMeterSensor(YoulessBaseSensor):
     """The Youless extra meter value sensor (s0)."""
 
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
