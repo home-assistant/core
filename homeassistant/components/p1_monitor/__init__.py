@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
-        coordinator.p1monitor.close()
+        await coordinator.p1monitor.close()
         raise
 
     hass.data.setdefault(DOMAIN, {})
