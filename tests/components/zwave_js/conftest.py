@@ -11,11 +11,6 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
-from homeassistant.components.sensor import ATTR_LAST_RESET
-from homeassistant.core import State
-
-from .common import DATETIME_LAST_RESET
-
 from tests.common import MockConfigEntry, load_fixture
 
 # Add-on fixtures
@@ -858,16 +853,3 @@ def lock_popp_electric_strike_lock_control_fixture(
 def firmware_file_fixture():
     """Return mock firmware file stream."""
     return io.BytesIO(bytes(10))
-
-
-@pytest.fixture(name="restore_last_reset")
-def restore_last_reset_fixture():
-    """Return mock restore last reset."""
-    state = State(
-        "sensor.test", "test", {ATTR_LAST_RESET: DATETIME_LAST_RESET.isoformat()}
-    )
-    with patch(
-        "homeassistant.components.zwave_js.sensor.ZWaveMeterSensor.async_get_last_state",
-        return_value=state,
-    ):
-        yield state

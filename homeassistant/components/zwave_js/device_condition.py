@@ -197,7 +197,10 @@ async def async_get_condition_capabilities(
             "extra_fields": vol.Schema(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
-                        {cc.value: cc.name for cc in CommandClass}
+                        {
+                            CommandClass(cc.id).value: CommandClass(cc.id).name
+                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                        }
                     ),
                     vol.Required(ATTR_PROPERTY): cv.string,
                     vol.Optional(ATTR_PROPERTY_KEY): cv.string,

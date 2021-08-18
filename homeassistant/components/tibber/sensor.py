@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
-from enum import Enum
 import logging
 from random import randrange
 
@@ -19,6 +17,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -49,166 +48,143 @@ PARALLEL_UPDATES = 0
 SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
 
 
-class ResetType(Enum):
-    """Data reset type."""
-
-    HOURLY = "hourly"
-    DAILY = "daily"
-    NEVER = "never"
-
-
-@dataclass
-class TibberSensorEntityDescription(SensorEntityDescription):
-    """Describes Tibber sensor entity."""
-
-    reset_type: ResetType | None = None
-
-
-RT_SENSORS: tuple[TibberSensorEntityDescription, ...] = (
-    TibberSensorEntityDescription(
+RT_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="averagePower",
         name="average power",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="power",
         name="power",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="powerProduction",
         name="power production",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="minPower",
         name="min power",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="maxPower",
         name="max power",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="accumulatedConsumption",
         name="accumulated consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.DAILY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
         name="accumulated consumption current hour",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.HOURLY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="accumulatedProduction",
         name="accumulated production",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.DAILY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="accumulatedProductionLastHour",
         name="accumulated production current hour",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.HOURLY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="lastMeterConsumption",
         name="last meter consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.NEVER,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="lastMeterProduction",
         name="last meter production",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.NEVER,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="voltagePhase1",
         name="voltage phase1",
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="voltagePhase2",
         name="voltage phase2",
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="voltagePhase3",
         name="voltage phase3",
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="currentL1",
         name="current L1",
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="currentL2",
         name="current L2",
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="currentL3",
         name="current L3",
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="signalStrength",
         name="signal strength",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="accumulatedReward",
         name="accumulated reward",
         device_class=DEVICE_CLASS_MONETARY,
         state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.DAILY,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="accumulatedCost",
         name="accumulated cost",
         device_class=DEVICE_CLASS_MONETARY,
         state_class=STATE_CLASS_MEASUREMENT,
-        reset_type=ResetType.DAILY,
     ),
-    TibberSensorEntityDescription(
+    SensorEntityDescription(
         key="powerFactor",
         name="power factor",
         device_class=DEVICE_CLASS_POWER_FACTOR,
@@ -376,12 +352,10 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
     """Representation of a Tibber sensor for real time consumption."""
 
-    entity_description: TibberSensorEntityDescription
-
     def __init__(
         self,
         tibber_home,
-        description: TibberSensorEntityDescription,
+        description: SensorEntityDescription,
         initial_state,
         coordinator: TibberRtDataCoordinator,
     ):
@@ -397,18 +371,6 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
             self._attr_native_unit_of_measurement = tibber_home.currency
-        if description.reset_type == ResetType.NEVER:
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
-        elif description.reset_type == ResetType.DAILY:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            )
-        elif description.reset_type == ResetType.HOURLY:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(minute=0, second=0, microsecond=0)
-            )
-        else:
-            self._attr_last_reset = None
 
     @property
     def available(self):
@@ -422,16 +384,6 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
         state = live_measurement.get(self.entity_description.key)
         if state is None:
             return
-        timestamp = dt_util.parse_datetime(live_measurement["timestamp"])
-        if timestamp is not None and state < self.state:
-            if self.entity_description.reset_type == ResetType.DAILY:
-                self._attr_last_reset = dt_util.as_utc(
-                    timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
-                )
-            elif self.entity_description.reset_type == ResetType.HOURLY:
-                self._attr_last_reset = dt_util.as_utc(
-                    timestamp.replace(minute=0, second=0, microsecond=0)
-                )
         if self.entity_description.key == "powerFactor":
             state *= 100.0
         self._attr_native_value = state

@@ -28,6 +28,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
@@ -137,7 +138,7 @@ def _async_use_default_interface(adapters: list[Adapter]) -> bool:
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
     zc_args: dict = {}
 
@@ -161,10 +162,14 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 interfaces.extend(
                     ipv4["address"]
                     for ipv4 in ipv4s
-                    if not ipaddress.ip_address(ipv4["address"]).is_loopback
+                    if not ipaddress.IPv4Address(ipv4["address"]).is_loopback
                 )
-            if adapter["ipv6"] and adapter["index"] not in interfaces:
-                interfaces.append(adapter["index"])
+            if ipv6s := adapter["ipv6"]:
+                for ipv6_addr in ipv6s:
+                    address = ipv6_addr["address"]
+                    v6_ip_address = ipaddress.IPv6Address(address)
+                    if not v6_ip_address.is_global and not v6_ip_address.is_loopback:
+                        interfaces.append(ipv6_addr["address"])
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
