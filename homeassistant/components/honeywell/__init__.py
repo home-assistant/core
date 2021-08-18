@@ -103,14 +103,18 @@ class HoneywellData:
         self.devices = devices
         return True
 
+    def _refresh_devices(self):
+        """Refresh each enabled device."""
+        for device in self.devices:
+            device.refresh()
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self) -> None:
         """Update the state."""
         retries = 3
         while retries > 0:
             try:
-                for device in self.devices:
-                    await self._hass.async_add_executor_job(device.refresh)
+                await self._hass.async_add_executor_job(self._refresh_devices)
                 break
             except (
                 somecomfort.client.APIRateLimited,
