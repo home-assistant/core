@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -50,21 +51,73 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = controller
     await controller.connect()
 
+    # add the controller as a device
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        name=f"{entry.title}-interface",
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[CONF_PORT])},
+        connections={(CONF_PORT, entry.data[CONF_PORT])},
+    )
+
+    # setup the platforms
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def scan(self, service=None):
-        await controller.scan()
+    if hass.services.has_service(DOMAIN, "scan"):
+        return True
 
-    hass.services.async_register(DOMAIN, "scan", scan)
+    async def get_entry_id(interface: str):
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(interface)
+        if device_entry is None:
+            _LOGGER.warning("Missing device: %s", device_id)
+            return None
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id in device_entry.config_entries:
+                return entry.entry_id
+        _LOGGER.warning("Can not find the entry: %s", entry.entry_id)
+        return None
 
-    async def syn_clock(self, service=None):
-        await controller.sync_clock()
+    async def scan(call):
+        entry_id = await get_entry_id(call.data["interface"])
+        if not entry_id:
+            return
+        await hass.data[DOMAIN][entry_id].scan()
 
-    hass.services.async_register(DOMAIN, "sync_clock", syn_clock)
+    hass.services.async_register(
+        DOMAIN,
+        "scan",
+        scan,
+        vol.Schema(
+            {
+                vol.Required("interface"): cv.string,
+            }
+        ),
+    )
 
-    def set_memo_text(service):
+    async def syn_clock(call):
+        entry_id = await get_entry_id(call.data["interface"])
+        if not entry_id:
+            return
+        await hass.data[DOMAIN][entry_id].sync_clock()
+
+    hass.services.async_register(
+        DOMAIN,
+        "sync_clock",
+        syn_clock,
+        vol.Schema(
+            {
+                vol.Required("interface"): cv.string,
+            }
+        ),
+    )
+
+    def set_memo_text(call):
         """Handle Memo Text service call."""
-        module_address = service.data[CONF_ADDRESS]
+        cntrl_id = await get_entry_id(call.data["interface"])
+        if not cntrl_id:
+            return
+        # TODO get the module address from call.data[CONF_ADDRESS]
         memo_text = service.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
         controller.get_module(module_address).set_memo_text(memo_text.async_render())
@@ -75,6 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         set_memo_text,
         vol.Schema(
             {
+                vol.Required("interface"): cv.string,
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
@@ -106,11 +160,8 @@ class VelbusEntity(Entity):
     @property
     def unique_id(self):
         """Get unique ID."""
-        serial = 0
-        if self._channel.get_module_serial() == 0:
+        if serial := self._channel.get_module_serial():
             serial = self._channel.get_module_address()
-        else:
-            serial = self._channel.get_module_serial()
         return f"{serial}-{self._channel.get_channel_number()}"
 
     @property
