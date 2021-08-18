@@ -359,24 +359,11 @@ DISCOVERY_SCHEMAS = [
     get_config_parameter_discovery_schema(
         property_name={"Door lock mode"},
         device_class_generic={"Entry Control"},
-        device_class_specific={
-            "Door Lock",
-            "Advanced Door Lock",
-            "Secure Keypad Door Lock",
-            "Secure Lockbox",
-        },
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     ZWaveDiscoverySchema(
         platform="lock",
-        device_class_generic={"Entry Control"},
-        device_class_specific={
-            "Door Lock",
-            "Advanced Door Lock",
-            "Secure Keypad Door Lock",
-            "Secure Lockbox",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.LOCK,
@@ -390,13 +377,6 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="binary_sensor",
         hint="property",
-        device_class_generic={"Entry Control"},
-        device_class_specific={
-            "Door Lock",
-            "Advanced Door Lock",
-            "Secure Keypad Door Lock",
-            "Secure Lockbox",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.LOCK,
@@ -665,6 +645,16 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
         required_values=[SIREN_TONE_SCHEMA],
+    ),
+    # select
+    # protection CC
+    ZWaveDiscoverySchema(
+        platform="select",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.PROTECTION},
+            property={"local", "rf"},
+            type={"number"},
+        ),
     ),
 ]
 

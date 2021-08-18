@@ -29,6 +29,7 @@ homeassistant/components/aemet/* @noltari
 homeassistant/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airnow/* @asymworks
+homeassistant/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarmdecoder/* @ajschmidt8
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
@@ -339,6 +340,7 @@ homeassistant/components/nfandroidtv/* @tkdrob
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
+homeassistant/components/nmap_tracker/* @bdraco
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/noaa_tides/* @jdelaney72
@@ -543,7 +545,7 @@ homeassistant/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
-homeassistant/components/upnp/* @StevenLooman
+homeassistant/components/upnp/* @StevenLooman @ehendrix23
 homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes

@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
@@ -58,7 +59,7 @@ DEVICE_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     hass.data.setdefault(DOMAIN, {})
 
