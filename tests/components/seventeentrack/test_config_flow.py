@@ -20,7 +20,7 @@ MOCK_CONFIG = {
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
 }
-MOCK_OPTIONS = {CONF_SCAN_INTERVAL: 10, CONF_SHOW_ARCHIVED: False}
+MOCK_OPTIONS = {CONF_SCAN_INTERVAL: 10, CONF_SHOW_ARCHIVED: True}
 
 
 async def test_flow_works(hass: HomeAssistant) -> None:

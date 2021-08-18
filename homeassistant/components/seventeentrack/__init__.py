@@ -11,15 +11,15 @@ from py17track.errors import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_DEVICE_ID, CONF_FRIENDLY_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_flow import get_client
 from .const import (
-    CONF_ACCOUNT,
     CONF_SHOW_ARCHIVED,
     CONF_TRACKING_NUMBER,
     DEFAULT_SCAN_INTERVAL,
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_PACKAGE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ACCOUNT): cv.string,
+        vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_TRACKING_NUMBER): cv.string,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     }
@@ -129,20 +129,23 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except UnknownError as err:
-            _LOGGER.error("There was an error while logging in: %s", err)
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                f"There was an error while logging in: {err}"
+            ) from err
 
         async def async_add_package(service: ServiceCall):
             """Add new package."""
-            device = self.hass.helpers.device_registry.async_get(self.hass).async_get(
-                service.data[CONF_ACCOUNT]
-            )
+            device: DeviceEntry = self.hass.helpers.device_registry.async_get(
+                self.hass
+            ).async_get(service.data[CONF_DEVICE_ID])
             if device is None:
                 _LOGGER.error("17Track device not found")
                 return
             for config_entry_id in device.config_entries:
-                client = self.hass.data[DOMAIN][config_entry_id].client
-                break
+                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+                if config_entry and config_entry.domain == DOMAIN:
+                    client: Client = self.hass.data[DOMAIN][config_entry_id].client
+                    break
             try:
                 await client.profile.add_package(
                     service.data[CONF_TRACKING_NUMBER],
