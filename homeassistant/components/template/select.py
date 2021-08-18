@@ -1,11 +1,23 @@
 """Support for selects which integrates with other components."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
+from homeassistant.components.select.const import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+)
+from homeassistant.components.template.trigger_entity import TriggerEntity
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.template import Template, TemplateError
 
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY
 from .template_entity import TemplateEntity
@@ -17,7 +29,7 @@ DEFAULT_OPTIMISTIC = False
 
 SELECT_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_ATTRIBUTES): vol.Schema(
@@ -32,7 +44,9 @@ SELECT_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(hass, entities, unique_id_prefix):
+async def _async_create_entities(
+    hass: HomeAssistant, entities: list[dict[str, Any]], unique_id_prefix: str | None
+) -> list[TemplateEntity]:
     """Create the Template select."""
     for entity in entities:
         unique_id = entity.get(CONF_UNIQUE_ID)
@@ -54,8 +68,20 @@ async def _async_create_entities(hass, entities, unique_id_prefix):
         ]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Config,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] = None,
+) -> None:
     """Set up the template select."""
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerSelectEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
+
     async_add_entities(
         await _async_create_entities(
             hass, discovery_info["entities"], discovery_info["unique_id"]
@@ -68,28 +94,36 @@ class TemplateSelect(TemplateEntity, SelectEntity):
 
     def __init__(
         self,
-        hass,
-        name,
-        value_template,
-        availability_template,
-        command_select_option,
-        options_template,
-        optimistic,
-        unique_id,
-    ):
+        hass: HomeAssistant,
+        name_template: Template | None,
+        value_template: Template,
+        availability_template: Template | None,
+        command_select_option: dict[str, Any],
+        options_template: Template,
+        optimistic: bool,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the select."""
         super().__init__(availability_template=availability_template)
-        self._attr_name = name
+        if name_template:
+            name_template.hass = hass
+            try:
+                self._attr_name = name_template.async_render(parse_result=False)
+            except TemplateError:
+                pass
+        self._name_template = name_template
         self._value_template = value_template
         domain = __name__.split(".")[-2]
-        self._command_select_option = Script(hass, command_select_option, name, domain)
+        self._command_select_option = Script(
+            hass, command_select_option, self._attr_name or DEFAULT_NAME, domain
+        )
         self._options_template = options_template
         self._attr_assumed_state = self._optimistic = optimistic
         self._attr_unique_id = unique_id
         self._attr_options = None
         self._attr_current_option = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.add_template_attribute(
             "_attr_current_option",
@@ -103,9 +137,11 @@ class TemplateSelect(TemplateEntity, SelectEntity):
             validator=vol.All(cv.ensure_list, [cv.string]),
             none_on_template_error=True,
         )
+        if self._name_template and not self._name_template.is_static:
+            self.add_template_attribute("_attr_name", self._name_template, cv.string)
         await super().async_added_to_hass()
 
-    async def async_select_option(self, option):
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if self._optimistic:
             self._attr_current_option = option
@@ -113,3 +149,25 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         await self._command_select_option.async_run(
             {ATTR_OPTION: option}, context=self._context
         )
+
+
+class TriggerSelectEntity(TriggerEntity, SelectEntity):
+    """Sensor entity based on trigger data."""
+
+    domain = SELECT_DOMAIN
+    extra_template_keys = (CONF_STATE,)
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the currently selected option."""
+        return self._rendered.get(CONF_STATE)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra attributes."""
+        return None
+
+    @property
+    def options(self) -> list[str]:
+        """Return the list of available options."""
+        return self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_OPTIONS, [])

@@ -15,7 +15,8 @@ from homeassistant.components.select.const import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component, async_mock_service
@@ -194,6 +195,52 @@ async def test_templates_with_entities(hass, calls):
         blocking=True,
     )
     _verify(hass, "c", ["a", "b", "c"])
+
+
+async def test_trigger_select(hass):
+    """Test trigger based template select."""
+    assert await setup.async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {"invalid": "config"},
+                # Config after invalid should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "select": [
+                        {
+                            "name": "Hello Name",
+                            "unique_id": "hello_name-id",
+                            "state": "{{ trigger.event.data.beer }}",
+                            "attributes": {"options": "{{ trigger.event.data.beers }}"},
+                            "select_option": {"service": "script.select_option"},
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire(
+        "test_event", {"beer": "duff", "beers": ["duff", "alamo"]}, context=context
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.hello_name")
+    assert state is not None
+    assert state.state == "duff"
+    assert state.attributes["options"] == ["duff", "alamo"]
 
 
 def _verify(hass, expected_current_option, expected_options):
