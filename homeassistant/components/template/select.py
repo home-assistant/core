@@ -1,7 +1,7 @@
 """Support for selects which integrates with other components."""
 import voluptuous as vol
 
-from homeassistant.components.select import PLATFORM_SCHEMA, SelectEntity
+from homeassistant.components.select import SelectEntity
 from homeassistant.components.select.const import ATTR_OPTION
 from homeassistant.const import (
     CONF_NAME,
@@ -21,7 +21,7 @@ CONF_OPTIONS_TEMPLATE = "options_template"
 DEFAULT_NAME = "Template Select"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+SELECT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -34,25 +34,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass, entities, unique_id_prefix):
     """Create the Template select."""
-    return [
-        TemplateSelect(
-            hass,
-            config[CONF_NAME],
-            config[CONF_VALUE_TEMPLATE],
-            config.get(CONF_AVAILABILITY_TEMPLATE),
-            config[CONF_SELECT_OPTION],
-            config[CONF_OPTIONS_TEMPLATE],
-            config[CONF_OPTIMISTIC],
-            config.get(CONF_UNIQUE_ID),
-        )
-    ]
+    for entity in entities:
+        unique_id = entity.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
+
+        return [
+            TemplateSelect(
+                hass,
+                entity.get(CONF_NAME, DEFAULT_NAME),
+                entity[CONF_VALUE_TEMPLATE],
+                entity.get(CONF_AVAILABILITY_TEMPLATE),
+                entity[CONF_SELECT_OPTION],
+                entity[CONF_OPTIONS_TEMPLATE],
+                entity.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
+                unique_id,
+            )
+        ]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template select."""
-    async_add_entities(await _async_create_entities(hass, config))
+    async_add_entities(
+        await _async_create_entities(
+            hass, discovery_info["entities"], discovery_info["unique_id"]
+        )
+    )
 
 
 class TemplateSelect(TemplateEntity, SelectEntity):

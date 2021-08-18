@@ -16,6 +16,7 @@ from homeassistant.components.select.const import (
     SERVICE_SELECT_OPTION as SELECT_SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component, async_mock_service
 
@@ -32,16 +33,17 @@ def calls(hass):
 
 async def test_missing_optional_config(hass, calls):
     """Test: missing optional template is ok."""
-    with assert_setup_component(1, "select"):
+    with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "select",
+            "template",
             {
-                "select": {
-                    "platform": "template",
-                    "value_template": "{{ 'a' }}",
-                    "select_option": {"service": "script.select_option"},
-                    "options_template": "{{ ['a', 'b'] }}",
+                "template": {
+                    "select": {
+                        "value_template": "{{ 'a' }}",
+                        "select_option": {"service": "script.select_option"},
+                        "options_template": "{{ ['a', 'b'] }}",
+                    }
                 }
             },
         )
@@ -55,41 +57,44 @@ async def test_missing_optional_config(hass, calls):
 
 async def test_missing_required_keys(hass, calls):
     """Test: missing required fields will fail."""
-    with assert_setup_component(0, "number"):
+    with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "template",
             {
-                "number": {
-                    "platform": "template",
-                    "select_option": {"service": "script.select_option"},
-                    "options_template": "{{ ['a', 'b'] }}",
+                "template": {
+                    "select": {
+                        "select_option": {"service": "script.select_option"},
+                        "options_template": "{{ ['a', 'b'] }}",
+                    }
                 }
             },
         )
 
-    with assert_setup_component(0, "number"):
+    with assert_setup_component(0, "select"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "select",
             {
-                "number": {
-                    "platform": "template",
-                    "value_template": "{{ 'a' }}",
-                    "select_option": {"service": "script.select_option"},
+                "template": {
+                    "select": {
+                        "value_template": "{{ 'a' }}",
+                        "select_option": {"service": "script.select_option"},
+                    }
                 }
             },
         )
 
-    with assert_setup_component(0, "number"):
+    with assert_setup_component(0, "select"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "select",
             {
-                "number": {
-                    "platform": "template",
-                    "value_template": "{{ 'a' }}",
-                    "options_template": "{{ ['a', 'b'] }}",
+                "template": {
+                    "select": {
+                        "value_template": "{{ 'a' }}",
+                        "options_template": "{{ ['a', 'b'] }}",
+                    }
                 }
             },
         )
@@ -118,23 +123,26 @@ async def test_templates_with_entities(hass, calls):
             },
         )
 
-    with assert_setup_component(1, "select"):
+    with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "select",
+            "template",
             {
-                "select": {
-                    "platform": "template",
-                    "value_template": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
-                    "options_template": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
-                    "select_option": {
-                        "service": "input_select.select_option",
-                        "data_template": {
-                            "entity_id": _OPTION_INPUT_SELECT,
-                            "option": "{{ option }}",
+                "template": {
+                    "unique_id": "b",
+                    "select": {
+                        "value_template": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
+                        "options_template": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
+                        "select_option": {
+                            "service": "input_select.select_option",
+                            "data_template": {
+                                "entity_id": _OPTION_INPUT_SELECT,
+                                "option": "{{ option }}",
+                            },
                         },
+                        "optimistic": True,
+                        "unique_id": "a",
                     },
-                    "optimistic": True,
                 }
             },
         )
@@ -142,6 +150,11 @@ async def test_templates_with_entities(hass, calls):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+    ent_reg = async_get(hass)
+    entry = ent_reg.async_get(_TEST_SELECT)
+    assert entry
+    assert entry.unique_id == "b-a"
 
     _verify(hass, "a", ["a", "b"])
 
