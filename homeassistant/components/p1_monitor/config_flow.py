@@ -31,8 +31,10 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             try:
-                client = P1Monitor(host=user_input[CONF_HOST], session=session)
-                await client.smartmeter()
+                async with P1Monitor(
+                    host=user_input[CONF_HOST], session=session
+                ) as client:
+                    await client.smartmeter()
             except P1MonitorError:
                 errors["base"] = "cannot_connect"
             else:
