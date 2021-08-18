@@ -26,6 +26,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aussie Broadband."""
 
     VERSION = 1
+    _reauth = False
 
     def __init__(self):
         """Initialize the config flow."""
@@ -49,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 AussieBB, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
         except AuthenticationException:
-            errors["base"] = "invalid_credentials"
+            errors["base"] = "invalid_auth"
 
         if self.client is not None:
             self.data.update(user_input)
@@ -57,21 +58,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.client.get_services
             )
             if len(self.services) == 0:
-                return self.async_abort(reason="no_devices_found")
+                return self.async_abort(reason="no_services_found")
 
             if len(self.services) == 1:
-                service = self.services[0]
-                self.data[CONF_SERVICE_ID] = service["service_id"]
-
-                existing_entry = await self.async_set_unique_id(
-                    self.data[CONF_SERVICE_ID]
-                )
-                if existing_entry is not None:
-                    return self.async_abort(reason="already_configured")
-
-                return self.async_create_entry(
-                    title=service["description"], data=self.data
-                )
+                return await self.create_entry(self.services[0])
 
             # account has more than one service, select service to add
             return await self.async_step_service()
@@ -93,16 +83,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for s in self.services
                 if s["service_id"] == user_input[CONF_SERVICE_ID]
             )
-            self.data[CONF_SERVICE_ID] = service["service_id"]
-
-            await self.async_set_unique_id(self.data[CONF_SERVICE_ID])
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(title=service["description"], data=self.data)
+            return await self.create_entry(service)
 
         service_options = {s["service_id"]: s["description"] for s in self.services}
-        schema = vol.Schema({vol.Required(CONF_SERVICE_ID): vol.In(service_options)})
         return self.async_show_form(
             step_id="service",
-            data_schema=schema,
+            data_schema=vol.Schema(
+                {vol.Required(CONF_SERVICE_ID): vol.In(service_options)}
+            ),
         )
+
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle reauth."""
+        self._reauth = True
+        return await self.async_step_user()
+
+    async def create_entry(self, service):
+        """Create entry for a service."""
+        self.data[CONF_SERVICE_ID] = service["service_id"]
+
+        entry = await self.async_set_unique_id(self.data[CONF_SERVICE_ID])
+        if self._reauth:
+            self.hass.config_entries.async_update_entry(entry, data=self.data)
+            return self.async_abort(reason="reauth_successful")
+
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=service["description"], data=self.data)

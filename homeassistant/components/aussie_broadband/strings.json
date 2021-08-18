@@ -12,6 +12,9 @@
         "data": {
           "service_id": "Service"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     },
     "error": {
@@ -19,7 +22,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "no_services_found": "No services were found for this account"
+      "no_services_found": "No services were found for this account",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

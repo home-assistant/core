@@ -2,22 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "Service is already configured",
-            "no_services_found": "No services were found for this account"
+            "no_services_found": "No services were found for this account",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "invalid_auth": "Invalid credentials"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "reauth_confirm": {
+                "title": "Reauthenticate Integration"
+            },
+            "service": {
+                "data": {
+                    "service_id": "Service"
+                },
+                "title": "Select Service"
+            },
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
-                }
-            },
-            "service": {
-                "title": "Select Service",
-                "data": {
-                    "service_id": "Service"
                 }
             }
         }
