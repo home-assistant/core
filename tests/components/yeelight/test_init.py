@@ -82,6 +82,13 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
         await hass.async_block_till_done()
         assert config_entry.data[CONF_HOST] == IP_ADDRESS
 
+    # Make sure we can still reload with the new ip right after we change it
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery():
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
 
 async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
     """Test Yeelight ip changes and we fallback to discovery."""
