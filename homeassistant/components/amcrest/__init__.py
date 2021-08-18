@@ -252,7 +252,7 @@ def _start_event_monitor(
     thread.start()
 
 
-def setup(hass: HomeAssistant, config: Any) -> bool:
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
 
