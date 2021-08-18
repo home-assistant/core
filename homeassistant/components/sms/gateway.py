@@ -19,7 +19,7 @@ class Gateway:
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
-        self._firstPull = True
+        self._first_pull = True
 
     async def init_async(self):
         """Initialize the sms gateway asynchronously."""
@@ -46,8 +46,8 @@ class Gateway:
         state_machine.ReadDevice()
 
         _LOGGER.debug("Pulling modem")
-        self.sms_read_messages(state_machine, self._firstPull)
-        self._firstPull = False
+        self.sms_read_messages(state_machine, self._first_pull)
+        self._first_pull = False
 
     def sms_callback(self, state_machine, callback_type, callback_data):
         """Receive notification about incoming event.
