@@ -239,21 +239,33 @@ async def test_async_listen_error_late_discovery(hass, caplog):
     assert "Failed to connect to bulb at" in caplog.text
 
 
-async def test_async_listen_error_has_host(hass: HomeAssistant):
+async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
     """Test the async listen error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "127.0.0.1"}
     )
     config_entry.add_to_hass(hass)
 
-    mocked_bulb = _mocked_bulb()
-    mocked_bulb.async_listen = AsyncMock(side_effect=BulbException)
-
     with _patch_discovery(
         no_device=True
     ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
-        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
+    """Test the async listen error but no id."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "127.0.0.1"})
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
