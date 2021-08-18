@@ -87,7 +87,7 @@ def setup_services(hass: HomeAssistant) -> None:
         """Cancel A/C."""
         vehicle = get_vehicle(service_call.data)
 
-        LOGGER.debug("A/C cancel attempt.")
+        LOGGER.debug("A/C cancel attempt")
         result = await vehicle.send_ac_stop()
         LOGGER.info("A/C cancel result: %s", result)
 
@@ -122,14 +122,14 @@ def setup_services(hass: HomeAssistant) -> None:
         result = await vehicle.send_set_charge_schedules(charge_schedules)
         LOGGER.info("Charge set schedules result: %s", result)
         LOGGER.info(
-            "It may take some time before these changes are reflected in your vehicle."
+            "It may take some time before these changes are reflected in your vehicle"
         )
 
     async def charge_start(service_call: ServiceCall) -> None:
         """Start charge."""
         vehicle = get_vehicle(service_call.data)
 
-        LOGGER.debug("Charge start attempt.")
+        LOGGER.debug("Charge start attempt")
         result = await vehicle.send_charge_start()
         LOGGER.info("Charge start result: %s", result)
 
