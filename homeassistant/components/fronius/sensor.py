@@ -42,6 +42,7 @@ TYPE_INVERTER = "inverter"
 TYPE_STORAGE = "storage"
 TYPE_METER = "meter"
 TYPE_POWER_FLOW = "power_flow"
+TYPE_LOGGER_INFO = "logger_info"
 SCOPE_DEVICE = "device"
 SCOPE_SYSTEM = "system"
 
@@ -50,7 +51,13 @@ DEFAULT_DEVICE = 0
 DEFAULT_INVERTER = 1
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
-SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
+SENSOR_TYPES = [
+    TYPE_INVERTER,
+    TYPE_STORAGE,
+    TYPE_METER,
+    TYPE_POWER_FLOW,
+    TYPE_LOGGER_INFO,
+]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PREFIX_DEVICE_CLASS_MAPPING = [
@@ -127,6 +134,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 adapter_cls = FroniusMeterDevice
         elif sensor_type == TYPE_POWER_FLOW:
             adapter_cls = FroniusPowerFlow
+        elif sensor_type == TYPE_LOGGER_INFO:
+            adapter_cls = FroniusLoggerInfo
         else:
             adapter_cls = FroniusStorage
 
@@ -150,7 +159,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
-    def __init__(self, bridge, name, device, add_entities):
+    def __init__(self, bridge: Fronius, name, device, add_entities):
         """Initialize the sensor."""
         self.bridge = bridge
         self._name = name
@@ -276,6 +285,14 @@ class FroniusPowerFlow(FroniusAdapter):
     async def _update(self):
         """Get the values for the current state."""
         return await self.bridge.current_power_flow()
+
+
+class FroniusLoggerInfo(FroniusAdapter):
+    """Adapter for the fronius power flow."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.bridge.current_logger_info()
 
 
 class FroniusTemplateSensor(SensorEntity):
