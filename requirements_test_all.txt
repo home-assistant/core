@@ -311,6 +311,9 @@ dsmr_parser==0.29
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
 
+# homeassistant.components.rainforest_eagle
+eagle200_reader==0.2.4
+
 # homeassistant.components.elgato
 elgato==2.1.1
 
@@ -1276,6 +1279,9 @@ twilio==6.32.0
 
 # homeassistant.components.twinkly
 twinkly-client==0.0.2
+
+# homeassistant.components.rainforest_eagle
+uEagle==0.0.2
 
 # homeassistant.components.upb
 upb_lib==0.4.12
