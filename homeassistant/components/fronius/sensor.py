@@ -164,11 +164,11 @@ class FroniusAdapter:
         self.bridge = bridge
         self._name = name
         self._device = device
-        self._fetched = {}
+        self._fetched: dict = {}
         self._available = True
 
-        self.sensors = set()
-        self._registered_sensors = set()
+        self.sensors: set = set()
+        self._registered_sensors: set = set()
         self._add_entities = add_entities
 
     @property
@@ -233,7 +233,7 @@ class FroniusAdapter:
         """Return values of interest."""
 
     @callback
-    def register(self, sensor):
+    def register(self, sensor: SensorEntity):
         """Register child sensor for update subscriptions."""
         self._registered_sensors.add(sensor)
         return lambda: self._registered_sensors.remove(sensor)
