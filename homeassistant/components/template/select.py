@@ -46,7 +46,7 @@ SELECT_SCHEMA = vol.Schema(
 
 async def _async_create_entities(
     hass: HomeAssistant, entities: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateEntity]:
+) -> list[TemplateSelect]:
     """Create the Template select."""
     for entity in entities:
         unique_id = entity.get(CONF_UNIQUE_ID)
@@ -72,7 +72,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: Config,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] = None,
+    discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the template select."""
     if "coordinator" in discovery_info:
