@@ -229,8 +229,6 @@ async def test_validate(hass, hass_ws_client) -> None:
     assert msg["id"] == 5
     assert msg["success"]
     assert msg["result"] == {
-        "errors": [],
-        "warnings": [],
         "energy_sources": [],
         "device_consumption": [],
     }
