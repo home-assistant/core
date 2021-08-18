@@ -196,7 +196,7 @@ class Scanner:
         """Build the list of ssdp sources."""
         adapters = await network.async_get_adapters(self.hass)
         sources: set[IPv4Address | IPv6Address] = set()
-        if network.async_use_default_interface(adapters):
+        if network.async_only_default_interface_enabled(adapters):
             sources.add(IPv4Address("0.0.0.0"))
             return sources
 

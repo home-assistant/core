@@ -1,7 +1,9 @@
 """Support for monitoring a Sense energy sensor."""
-import datetime
-
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_ENERGY,
@@ -12,7 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-import homeassistant.util.dt as dt_util
 
 from .const import (
     ACTIVE_NAME,
@@ -223,7 +224,7 @@ class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
@@ -257,13 +258,6 @@ class SenseTrendsSensor(SensorEntity):
     def available(self):
         """Return if entity is available."""
         return self._had_any_update and self._coordinator.last_update_success
-
-    @property
-    def last_reset(self) -> datetime.datetime:
-        """Return the time when the sensor was last reset, if any."""
-        if self._sensor_type == "DAY":
-            return dt_util.start_of_local_day()
-        return None
 
     @callback
     def _async_update(self):

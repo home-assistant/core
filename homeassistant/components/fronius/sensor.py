@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -32,7 +33,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +62,17 @@ PREFIX_DEVICE_CLASS_MAPPING = [
     ("current", DEVICE_CLASS_CURRENT),
     ("timestamp", DEVICE_CLASS_TIMESTAMP),
     ("voltage", DEVICE_CLASS_VOLTAGE),
+]
+
+PREFIX_STATE_CLASS_MAPPING = [
+    ("state_of_charge", STATE_CLASS_MEASUREMENT),
+    ("temperature", STATE_CLASS_MEASUREMENT),
+    ("power_factor", STATE_CLASS_MEASUREMENT),
+    ("power", STATE_CLASS_MEASUREMENT),
+    ("energy", STATE_CLASS_TOTAL_INCREASING),
+    ("current", STATE_CLASS_MEASUREMENT),
+    ("timestamp", STATE_CLASS_MEASUREMENT),
+    ("voltage", STATE_CLASS_MEASUREMENT),
 ]
 
 
@@ -281,8 +292,6 @@ class FroniusPowerFlow(FroniusAdapter):
 class FroniusTemplateSensor(SensorEntity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-
     def __init__(self, parent: FroniusAdapter, key: str) -> None:
         """Initialize a singular value sensor."""
         self._key = key
@@ -291,6 +300,10 @@ class FroniusTemplateSensor(SensorEntity):
         for prefix, device_class in PREFIX_DEVICE_CLASS_MAPPING:
             if self._key.startswith(prefix):
                 self._attr_device_class = device_class
+                break
+        for prefix, state_class in PREFIX_STATE_CLASS_MAPPING:
+            if self._key.startswith(prefix):
+                self._attr_state_class = state_class
                 break
 
     @property
@@ -310,17 +323,6 @@ class FroniusTemplateSensor(SensorEntity):
         if isinstance(self._attr_native_value, float):
             self._attr_native_value = round(self._attr_native_value, 2)
         self._attr_native_unit_of_measurement = state.get("unit")
-
-    @property
-    def last_reset(self) -> dt.dt.datetime | None:
-        """Return the time when the sensor was last reset, if it is a meter."""
-        if self._key.endswith("day"):
-            return dt.start_of_local_day()
-        if self._key.endswith("year"):
-            return dt.start_of_local_day(dt.dt.date(dt.now().year, 1, 1))
-        if self._key.endswith("total") or self._key.startswith("energy_real"):
-            return dt.utc_from_timestamp(0)
-        return None
 
     async def async_added_to_hass(self):
         """Register at parent component for updates."""

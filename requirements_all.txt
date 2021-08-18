@@ -372,7 +372,7 @@ beautifulsoup4==4.9.3
 bellows==0.26.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.18
+bimmer_connected==0.7.19
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -787,7 +787,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210813.0
+home-assistant-frontend==20210818.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -980,7 +980,7 @@ micloud==0.3
 miflora==0.7.0
 
 # homeassistant.components.mill
-millheater==0.5.0
+millheater==0.5.2
 
 # homeassistant.components.minio
 minio==4.0.9

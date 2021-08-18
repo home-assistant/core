@@ -68,7 +68,7 @@ async def async_get_enabled_source_ips(
 
 
 @callback
-def async_use_default_interface(adapters: list[Adapter]) -> bool:
+def async_only_default_interface_enabled(adapters: list[Adapter]) -> bool:
     """Check to see if any non-default adapter is enabled."""
     return not any(
         adapter["enabled"] and not adapter["default"] for adapter in adapters
