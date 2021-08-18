@@ -270,9 +270,13 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             _LOGGER.debug("Set temperature: %s", temp)
             try:
                 if self.hvac_mode == HVAC_MODE_COOL:
-                    await self._update_thermostat(self.location, device, coolSetpoint=temp)
+                    await self._update_thermostat(
+                        self.location, device, coolSetpoint=temp
+                    )
                 else:
-                    await self._update_thermostat(self.location, device, heatSetpoint=temp)
+                    await self._update_thermostat(
+                        self.location, device, heatSetpoint=temp
+                    )
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)
         await self.coordinator.async_refresh()
