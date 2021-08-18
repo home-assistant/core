@@ -19,8 +19,8 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
 from .renault_vehicle import RenaultVehicleProxy
@@ -57,7 +57,7 @@ class RenaultHub:
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
-        device_registry = await async_get_registry(self._hass)
+        device_registry = dr.async_get(self._hass)
         if vehicles.vehicleLinks:
             await asyncio.gather(
                 *(
@@ -78,7 +78,7 @@ class RenaultHub:
         renault_account: RenaultAccount,
         scan_interval: timedelta,
         config_entry: ConfigEntry,
-        device_registry: DeviceRegistry,
+        device_registry: dr.DeviceRegistry,
     ) -> None:
         """Set up proxy."""
         assert vehicle_link.vin is not None
