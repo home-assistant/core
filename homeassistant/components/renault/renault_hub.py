@@ -3,13 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 import logging
 
 from renault_api.gigya.exceptions import InvalidCredentialsException
@@ -18,9 +11,16 @@ from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import async_get_registry, DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
 from .renault_vehicle import RenaultVehicleProxy

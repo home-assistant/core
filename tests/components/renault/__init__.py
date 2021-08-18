@@ -1,13 +1,5 @@
 """Tests for the Renault integration."""
 from __future__ import annotations
-from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 
 from typing import Any
 from unittest.mock import patch
@@ -17,8 +9,16 @@ from renault_api.renault_account import RenaultAccount
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .const import MOCK_CONFIG, MOCK_VEHICLES
 
