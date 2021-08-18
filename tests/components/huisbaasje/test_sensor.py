@@ -1,8 +1,14 @@
 """Test cases for the sensors of the Huisbaasje integration."""
 from unittest.mock import patch
 
+from huisbaasje.const import SOURCE_TYPE_ELECTRICITY
+
 from homeassistant.components import huisbaasje
-from homeassistant.components.huisbaasje.const import FLOW_CUBIC_METERS_PER_HOUR
+from homeassistant.components.huisbaasje.const import (
+    FLOW_CUBIC_METERS_PER_HOUR,
+    SENSOR_TYPE_THIS_DAY,
+)
+from homeassistant.components.huisbaasje.sensor import HuisbaasjeSensor
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
@@ -25,6 +31,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt
 
 from tests.common import MockConfigEntry
 from tests.components.huisbaasje.test_data import (
@@ -399,3 +406,36 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant):
         assert len(mock_authenticate.mock_calls) == 1
         assert len(mock_is_authenticated.mock_calls) == 1
         assert len(mock_current_measurements.mock_calls) == 1
+
+
+async def test_sensor_last_reset(hass: HomeAssistant):
+    """Test for setting the last_reset attribute when the value resets to 0."""
+    with patch(
+        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator"
+    ) as coordinatorMock:
+        coordinator = coordinatorMock.return_value
+        sensor = HuisbaasjeSensor(
+            user_id="userId",
+            name="test",
+            coordinator=coordinator,
+            state_class=STATE_CLASS_TOTAL,
+            source_type=SOURCE_TYPE_ELECTRICITY,
+            sensor_type=SENSOR_TYPE_THIS_DAY,
+        )
+        sensor.hass = hass
+
+        coordinator.data = {SOURCE_TYPE_ELECTRICITY: {SENSOR_TYPE_THIS_DAY: 123.0}}
+        assert sensor.state == 123.0
+        assert sensor.last_reset == dt.utc_from_timestamp(0)
+
+        coordinator.data = {SOURCE_TYPE_ELECTRICITY: {SENSOR_TYPE_THIS_DAY: 0.0}}
+        assert sensor.state == 0.0
+        last_reset = sensor.last_reset
+        assert (dt.now() - last_reset).total_seconds() <= 10
+
+        assert sensor.state == 0.0
+        assert sensor.last_reset == last_reset
+
+        coordinator.data = {SOURCE_TYPE_ELECTRICITY: {SENSOR_TYPE_THIS_DAY: 1.0}}
+        assert sensor.state == 1.0
+        assert sensor.last_reset == last_reset
