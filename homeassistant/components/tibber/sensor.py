@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -104,7 +105,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         name="accumulated consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         reset_type=ResetType.DAILY,
     ),
     "accumulatedConsumptionLastHour": TibberSensorEntityDescription(
@@ -112,7 +113,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         name="accumulated consumption current hour",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         reset_type=ResetType.HOURLY,
     ),
     "accumulatedProduction": TibberSensorEntityDescription(
@@ -120,7 +121,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         name="accumulated production",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         reset_type=ResetType.DAILY,
     ),
     "accumulatedProductionLastHour": TibberSensorEntityDescription(
@@ -128,7 +129,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         name="accumulated production current hour",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         reset_type=ResetType.HOURLY,
     ),
     "lastMeterConsumption": TibberSensorEntityDescription(
@@ -136,7 +137,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         name="last meter consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         reset_type=ResetType.NEVER,
     ),
     "lastMeterProduction": TibberSensorEntityDescription(
@@ -144,7 +145,7 @@ RT_SENSOR_MAP: dict[str, TibberSensorEntityDescription] = {
         name="last meter production",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         reset_type=ResetType.NEVER,
     ),
     "voltagePhase1": TibberSensorEntityDescription(
@@ -401,18 +402,6 @@ class TibberSensorRT(TibberSensor):
 
         if description.name in ("accumulated cost", "accumulated reward"):
             self._attr_native_unit_of_measurement = tibber_home.currency
-        if description.reset_type == ResetType.NEVER:
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
-        elif description.reset_type == ResetType.DAILY:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            )
-        elif description.reset_type == ResetType.HOURLY:
-            self._attr_last_reset = dt_util.as_utc(
-                dt_util.now().replace(minute=0, second=0, microsecond=0)
-            )
-        else:
-            self._attr_last_reset = None
 
     async def async_added_to_hass(self):
         """Start listen for real time data."""
@@ -432,20 +421,6 @@ class TibberSensorRT(TibberSensor):
     @callback
     def _set_state(self, state, timestamp):
         """Set sensor state."""
-        if (
-            state < self._attr_native_value
-            and self.entity_description.reset_type == ResetType.DAILY
-        ):
-            self._attr_last_reset = dt_util.as_utc(
-                timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
-            )
-        if (
-            state < self._attr_native_value
-            and self.entity_description.reset_type == ResetType.HOURLY
-        ):
-            self._attr_last_reset = dt_util.as_utc(
-                timestamp.replace(minute=0, second=0, microsecond=0)
-            )
         self._attr_native_value = state
         self.async_write_ha_state()
 
