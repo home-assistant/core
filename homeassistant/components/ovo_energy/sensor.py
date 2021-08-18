@@ -6,12 +6,11 @@ from datetime import timedelta
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_ENERGY, DEVICE_CLASS_MONETARY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.dt import utc_from_timestamp
 
 from . import OVOEnergyDeviceEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
@@ -61,8 +60,7 @@ async def async_setup_entry(
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Defines a OVO Energy sensor."""
 
-    _attr_last_reset = utc_from_timestamp(0)
-    _attr_state_class = "measurement"
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
         self,

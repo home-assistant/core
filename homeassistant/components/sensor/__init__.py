@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
@@ -21,10 +22,18 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_NITROGEN_DIOXIDE,
+    DEVICE_CLASS_NITROGEN_MONOXIDE,
+    DEVICE_CLASS_NITROUS_OXIDE,
+    DEVICE_CLASS_OZONE,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
@@ -42,7 +51,7 @@ from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ATTR_LAST_RESET: Final = "last_reset"
+ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -51,6 +60,7 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 DEVICE_CLASSES: Final[list[str]] = [
+    DEVICE_CLASS_AQI,  # Air Quality Index
     DEVICE_CLASS_BATTERY,  # % of battery that is left
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
@@ -59,7 +69,15 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
+    DEVICE_CLASS_OZONE,  # Amount of O3 (µg/m³)
+    DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (µg/m³)
+    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of NO  (µg/m³)
+    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (µg/m³)
+    DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm (µg/m³)
+    DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
+    DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm (µg/m³)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
+    DEVICE_CLASS_SULPHUR_DIOXIDE,  # Amount of SO2 (µg/m³)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
@@ -73,14 +91,11 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
-# The state represents a total amount, e.g. a value of a stock portfolio
-STATE_CLASS_TOTAL: Final = "total"
 # The state represents a monotonically increasing total, e.g. an amount of consumed gas
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
 STATE_CLASSES: Final[list[str]] = [
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
 
@@ -114,7 +129,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     state_class: str | None = None
-    last_reset: datetime | None = None
+    last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
 
 
@@ -122,7 +137,7 @@ class SensorEntity(Entity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
-    _attr_last_reset: datetime | None
+    _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType = None
     _attr_state_class: str | None
@@ -139,7 +154,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def last_reset(self) -> datetime | None:
+    def last_reset(self) -> datetime | None:  # Deprecated, to be removed in 2021.11
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
             return self._attr_last_reset
@@ -169,10 +184,9 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset for entities with state_class other than 'total' is "
-                    "deprecated and will be removed from Home Assistant Core 2021.10. "
-                    "Please update your configuration if state_class is manually "
-                    "configured, otherwise %s",
+                    "last_reset is deprecated and will be unsupported from Home "
+                    "Assistant Core 2021.11. Please update your configuration if "
+                    "state_class is manually configured, otherwise %s",
                     self.entity_id,
                     type(self),
                     self.state_class,

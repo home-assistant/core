@@ -29,6 +29,8 @@ async def async_setup_entry(
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "Default tone":
             entities.append(ZwaveDefaultToneSelectEntity(config_entry, client, info))
+        else:
+            entities.append(ZwaveSelectEntity(config_entry, client, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -38,6 +40,40 @@ async def async_setup_entry(
             async_add_select,
         )
     )
+
+
+class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
+    """Representation of a Z-Wave select entity."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZwaveSelectEntity entity."""
+        super().__init__(config_entry, client, info)
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(include_value_name=True)
+        self._attr_options = list(self.info.primary_value.metadata.states.values())
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        if self.info.primary_value.value is None:
+            return None
+        return str(
+            self.info.primary_value.metadata.states.get(
+                str(self.info.primary_value.value), self.info.primary_value.value
+            )
+        )
+
+    async def async_select_option(self, option: str | int) -> None:
+        """Change the selected option."""
+        key = next(
+            key
+            for key, val in self.info.primary_value.metadata.states.items()
+            if val == option
+        )
+        await self.info.node.async_set_value(self.info.primary_value, int(key))
 
 
 class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):

@@ -27,6 +27,9 @@ from .const import (
     PACKETS_RECEIVED,
     PACKETS_SENT,
     TIMESTAMP,
+    UPTIME,
+    WANIP,
+    WANSTATUS,
 )
 
 
@@ -153,4 +156,19 @@ class Device:
             BYTES_SENT: values[1],
             PACKETS_RECEIVED: values[2],
             PACKETS_SENT: values[3],
+        }
+
+    async def async_get_status(self) -> Mapping[str, Any]:
+        """Get connection status, uptime, and external IP."""
+        _LOGGER.debug("Getting status for device: %s", self)
+
+        values = await asyncio.gather(
+            self._igd_device.async_get_status_info(),
+            self._igd_device.async_get_external_ip_address(),
+        )
+
+        return {
+            WANSTATUS: values[0][0] if values[0] is not None else None,
+            UPTIME: values[0][2] if values[0] is not None else None,
+            WANIP: values[1],
         }
