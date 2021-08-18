@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -20,7 +21,7 @@ from homeassistant.const import (
     POWER_WATT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,16 +89,12 @@ class AtomeData:
         self._is_connected = None
         self._day_usage = None
         self._day_price = None
-        self._day_last_reset = None
         self._week_usage = None
         self._week_price = None
-        self._week_last_reset = None
         self._month_usage = None
         self._month_price = None
-        self._month_last_reset = None
         self._year_usage = None
         self._year_price = None
-        self._year_last_reset = None
 
     @property
     def live_power(self):
@@ -142,11 +139,6 @@ class AtomeData:
         """Return latest daily usage value."""
         return self._day_price
 
-    @property
-    def day_last_reset(self):
-        """Return latest daily last reset."""
-        return self._day_last_reset
-
     @Throttle(DAILY_SCAN_INTERVAL)
     def update_day_usage(self):
         """Return current daily power usage."""
@@ -154,7 +146,6 @@ class AtomeData:
             values = self.atome_client.get_consumption(DAILY_TYPE)
             self._day_usage = values["total"] / 1000
             self._day_price = values["price"]
-            self._day_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome daily data. Got: %d", self._day_usage)
 
         except KeyError as error:
@@ -170,11 +161,6 @@ class AtomeData:
         """Return latest weekly usage value."""
         return self._week_price
 
-    @property
-    def week_last_reset(self):
-        """Return latest weekly last reset value."""
-        return self._week_last_reset
-
     @Throttle(WEEKLY_SCAN_INTERVAL)
     def update_week_usage(self):
         """Return current weekly power usage."""
@@ -182,7 +168,6 @@ class AtomeData:
             values = self.atome_client.get_consumption(WEEKLY_TYPE)
             self._week_usage = values["total"] / 1000
             self._week_price = values["price"]
-            self._week_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome weekly data. Got: %d", self._week_usage)
 
         except KeyError as error:
@@ -198,11 +183,6 @@ class AtomeData:
         """Return latest monthly usage value."""
         return self._month_price
 
-    @property
-    def month_last_reset(self):
-        """Return latest monthly last reset value."""
-        return self._month_last_reset
-
     @Throttle(MONTHLY_SCAN_INTERVAL)
     def update_month_usage(self):
         """Return current monthly power usage."""
@@ -210,7 +190,6 @@ class AtomeData:
             values = self.atome_client.get_consumption(MONTHLY_TYPE)
             self._month_usage = values["total"] / 1000
             self._month_price = values["price"]
-            self._month_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome monthly data. Got: %d", self._month_usage)
 
         except KeyError as error:
@@ -226,11 +205,6 @@ class AtomeData:
         """Return latest yearly usage value."""
         return self._year_price
 
-    @property
-    def year_last_reset(self):
-        """Return latest yearly last reset value."""
-        return self._year_last_reset
-
     @Throttle(YEARLY_SCAN_INTERVAL)
     def update_year_usage(self):
         """Return current yearly power usage."""
@@ -238,7 +212,6 @@ class AtomeData:
             values = self.atome_client.get_consumption(YEARLY_TYPE)
             self._year_usage = values["total"] / 1000
             self._year_price = values["price"]
-            self._year_last_reset = dt_util.parse_datetime(values["startPeriod"])
             _LOGGER.debug("Updating Atome yearly data. Got: %d", self._year_usage)
 
         except KeyError as error:
@@ -254,14 +227,15 @@ class AtomeSensor(SensorEntity):
         self._data = data
 
         self._sensor_type = sensor_type
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
         if sensor_type == LIVE_TYPE:
             self._attr_device_class = DEVICE_CLASS_POWER
             self._attr_native_unit_of_measurement = POWER_WATT
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
             self._attr_device_class = DEVICE_CLASS_ENERGY
             self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def update(self):
         """Update device state."""
@@ -276,9 +250,6 @@ class AtomeSensor(SensorEntity):
             }
         else:
             self._attr_native_value = getattr(self._data, f"{self._sensor_type}_usage")
-            self._attr_last_reset = dt_util.as_utc(
-                getattr(self._data, f"{self._sensor_type}_last_reset")
-            )
             self._attr_extra_state_attributes = {
                 "price": getattr(self._data, f"{self._sensor_type}_price")
             }

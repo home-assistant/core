@@ -8,9 +8,9 @@ from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import (
-    CONF_TCP,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
+    TCP,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -71,7 +71,7 @@ async def mock_modbus(hass, caplog, request, do_config):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONF_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
@@ -131,7 +131,7 @@ async def base_test(
         config_modbus = {
             DOMAIN: {
                 CONF_NAME: DEFAULT_HUB,
-                CONF_TYPE: CONF_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
             },
