@@ -28,9 +28,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import as_local, utc_from_timestamp
 
-from .common import SmartDevices, async_discover_devices, get_static_devices
+from .common import (
+    SmartDevices,
+    async_discover_devices,
+    get_static_devices,
+    get_time_offset,
+)
 from .const import (
     ATTR_CONFIG,
     ATTR_CURRENT_A,
@@ -156,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         for device in unavailable_devices:
             try:
-                device.get_sysinfo()
+                await hass.async_add_executor_job(device.get_sysinfo)
             except SmartDeviceException:
                 continue
             _LOGGER.debug(
@@ -170,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for switch in switches:
 
         try:
-            await hass.async_add_executor_job(switch.get_sysinfo)
+            info = await hass.async_add_executor_job(switch.get_sysinfo)
         except SmartDeviceException:
             _LOGGER.warning(
                 "Device at '%s' not reachable during setup, will retry later",
@@ -181,7 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass_data[COORDINATORS][
             switch.context or switch.mac
-        ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch)
+        ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch, info["alias"])
         await coordinator.async_config_entry_first_refresh()
 
     if unavailable_devices:
@@ -217,16 +222,20 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         smartplug: SmartPlug,
+        alias: str,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.smartplug = smartplug
 
         update_interval = timedelta(seconds=30)
         super().__init__(
-            hass, _LOGGER, name=smartplug.alias, update_interval=update_interval
+            hass,
+            _LOGGER,
+            name=alias,
+            update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> dict:
+    def _update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
         try:
             info = self.smartplug.sys_info
@@ -239,9 +248,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
             if self.smartplug.context is None:
                 data[CONF_ALIAS] = info["alias"]
                 data[CONF_DEVICE_ID] = info["mac"]
-                data[CONF_STATE] = (
-                    self.smartplug.state == self.smartplug.SWITCH_STATE_ON
-                )
+                data[CONF_STATE] = bool(info["relay_state"])
             else:
                 plug_from_context = next(
                     c
@@ -251,7 +258,9 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                 data[CONF_ALIAS] = plug_from_context["alias"]
                 data[CONF_DEVICE_ID] = self.smartplug.context
                 data[CONF_STATE] = plug_from_context["state"] == 1
-            if self.smartplug.has_emeter:
+
+            # Check if the device has emeter
+            if "ENE" in info["feature"]:
                 emeter_readings = self.smartplug.get_emeter_realtime()
                 data[CONF_EMETER_PARAMS] = {
                     ATTR_CURRENT_POWER_W: round(float(emeter_readings["power"]), 2),
@@ -261,9 +270,16 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_LAST_RESET: {ATTR_TOTAL_ENERGY_KWH: utc_from_timestamp(0)},
                 }
                 emeter_statics = self.smartplug.get_emeter_daily()
+                last_reset = datetime.now() - get_time_offset(self.smartplug)
+                last_reset_local = as_local(last_reset.replace(second=0, microsecond=0))
+                _LOGGER.debug(
+                    "%s last reset time as local to server is %s",
+                    self.smartplug.alias,
+                    last_reset_local.strftime("%Y/%m/%d %H:%M:%S"),
+                )
                 data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
                     ATTR_TODAY_ENERGY_KWH
-                ] = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                ] = last_reset_local
                 if emeter_statics.get(int(time.strftime("%e"))):
                     data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
                         float(emeter_statics[int(time.strftime("%e"))]), 3
@@ -276,3 +292,7 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.name = data[CONF_ALIAS]
         return data
+
+    async def _async_update_data(self) -> dict:
+        """Fetch all device and sensor data from api."""
+        return await self.hass.async_add_executor_job(self._update_data)
