@@ -24,7 +24,6 @@ from .const import (
     MODEL_AIRFRESH_VA2,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
-    MODEL_AIRPURIFIER_V3,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_PURIFIER_MIOT,
@@ -73,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity_class = XiaomiAirHumidifierSelector
     elif model in MODELS_HUMIDIFIER_MIOT:
         entity_class = XiaomiAirHumidifierMiotSelector
-    elif model in [MODEL_AIRPURIFIER_M1, MODEL_AIRPURIFIER_M2, MODEL_AIRPURIFIER_V3]:
+    elif model in [MODEL_AIRPURIFIER_M1, MODEL_AIRPURIFIER_M2]:
         entity_class = XiaomiAirPurifierSelector
     elif model in MODELS_PURIFIER_MIOT:
         entity_class = XiaomiAirPurifierMiotSelector
