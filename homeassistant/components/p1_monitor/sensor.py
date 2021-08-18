@@ -25,7 +25,7 @@ async def async_setup_entry(
     """Set up P1 Monitor Sensors based on a config entry."""
     async_add_entities(
         P1MonitorSensorEntity(
-            coordinator=hass.data[DOMAIN][entry.entry_id][service_key],
+            coordinator=hass.data[DOMAIN][entry.entry_id],
             entry_id=entry.entry_id,
             description=description,
             service_key=service_key,
@@ -67,7 +67,9 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        value = getattr(self.coordinator.data, self.entity_description.key)
+        value = getattr(
+            self.coordinator.data[self._service_key], self.entity_description.key
+        )
         if isinstance(value, str):
             return value.lower()
         return value

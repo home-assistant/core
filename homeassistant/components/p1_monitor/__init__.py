@@ -1,7 +1,7 @@
 """The P1 Monitor integration."""
 from __future__ import annotations
 
-from p1monitor import P1Monitor, Phases, Settings, SmartMeter
+from p1monitor import P1Monitor
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +17,7 @@ from .const import (
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
+    SERVICES,
 )
 
 PLATFORMS = (SENSOR_DOMAIN,)
@@ -24,49 +25,27 @@ PLATFORMS = (SENSOR_DOMAIN,)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up P1 Monitor from a config entry."""
-    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
+    hass.data.setdefault(DOMAIN, {})
 
     session = async_get_clientsession(hass)
     client = P1Monitor(host=entry.data[CONF_HOST], session=session)
 
-    async def update_smartmeter() -> SmartMeter:
-        return await client.smartmeter()
+    async def _coordinator_update():
+        data = {}
+        data[SERVICE_SMARTMETER] = await client.smartmeter()
+        data[SERVICE_PHASES] = await client.phases()
+        data[SERVICE_SETTINGS] = await client.settings()
+        return data
 
-    smartmeter: DataUpdateCoordinator[SmartMeter] = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
-        name=f"{DOMAIN}_{SERVICE_SMARTMETER}",
+        name=f"{DOMAIN}",
         update_interval=SCAN_INTERVAL,
-        update_method=update_smartmeter,
+        update_method=_coordinator_update,
     )
-    await smartmeter.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][SERVICE_SMARTMETER] = smartmeter
-
-    async def update_phases() -> Phases:
-        return await client.phases()
-
-    phases: DataUpdateCoordinator[Phases] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{DOMAIN}_{SERVICE_PHASES}",
-        update_interval=SCAN_INTERVAL,
-        update_method=update_phases,
-    )
-    await phases.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][SERVICE_PHASES] = phases
-
-    async def update_settings() -> Settings:
-        return await client.settings()
-
-    settings: DataUpdateCoordinator[Settings] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{DOMAIN}_{SERVICE_SETTINGS}",
-        update_interval=SCAN_INTERVAL,
-        update_method=update_settings,
-    )
-    await settings.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][SERVICE_SETTINGS] = settings
+    await coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -76,7 +55,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload P1 Monitor config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        client = hass.data[DOMAIN][entry.entry_id]
+        client = hass.data[DOMAIN][entry.entry_id][SERVICES]
         client.close()
         del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
