@@ -905,7 +905,7 @@ class YeelightNightLightMode(YeelightGenericLight):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return f"{self.device.name} nightlight"
+        return f"{self.device.name} Nightlight"
 
     @property
     def icon(self):
@@ -997,7 +997,7 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return f"{self.device.name} ambilight"
+        return f"{self.device.name} Ambilight"
 
     @property
     def _brightness_property(self):
