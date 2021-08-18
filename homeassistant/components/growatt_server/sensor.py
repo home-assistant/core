@@ -9,7 +9,11 @@ import re
 
 import growattServer
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -267,6 +271,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eacTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -275,6 +280,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="epv1Total",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -307,6 +313,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="epv2Total",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         precision=1,
     ),
     GrowattSensorEntityDescription(
