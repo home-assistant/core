@@ -25,8 +25,6 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_KEY_ID,
-            msg="key_id",
-            description="Spokestack API key from account dashboard.",
         ): str,
         vol.Required(
             CONF_KEY_SECRET,
@@ -48,6 +46,10 @@ class SpokestackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        # Only allow 1 instance.
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         errors = {}
         if user_input is not None:
             return self.async_create_entry(title=DOMAIN.title(), data=user_input)

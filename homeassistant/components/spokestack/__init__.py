@@ -13,14 +13,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Spokestack from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = entry.data["voice"]
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data["voice"]
 
     hass.data[DOMAIN].update(entry.data)
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                component, DOMAIN, {}, hass_config=hass.data
-            )
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
