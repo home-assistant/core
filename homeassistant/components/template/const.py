@@ -16,6 +16,7 @@ PLATFORMS = [
     "light",
     "lock",
     "number",
+    "select",
     "sensor",
     "switch",
     "vacuum",

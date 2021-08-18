@@ -7,14 +7,12 @@ from homeassistant.components.input_number import (
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.components.number import (
+from homeassistant.components.number.const import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
-    DOMAIN as NUMBER_DOMAIN,
-)
-from homeassistant.components.number.const import (
     ATTR_VALUE as NUMBER_ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.const import CONF_ENTITY_ID
@@ -119,7 +117,6 @@ async def test_all_optional_config(hass, calls):
     _verify(hass, 4, 1, 3, 5)
 
 
-# # Template tests #
 async def test_templates_with_entities(hass, calls):
     """Test tempalates with values from other entities."""
     with assert_setup_component(4, "input_number"):
