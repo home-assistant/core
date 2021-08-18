@@ -134,6 +134,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._update_attr(self.coordinator.data[self._id])
         self.async_write_ha_state()
 
+    @callback
     def _update_attr(self, heater):
         self._attr_available = heater.available
         self._attr_extra_state_attributes = {
