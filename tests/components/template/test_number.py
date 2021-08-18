@@ -16,6 +16,7 @@ from homeassistant.components.number.const import (
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component, async_mock_service
 
@@ -38,16 +39,17 @@ def calls(hass):
 
 async def test_missing_optional_config(hass, calls):
     """Test: missing optional template is ok."""
-    with assert_setup_component(1, "number"):
+    with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "template",
             {
-                "number": {
-                    "platform": "template",
-                    "value_template": "{{ 4 }}",
-                    "set_value": {"service": "script.set_value"},
-                    "step_template": "{{ 1 }}",
+                "template": {
+                    "number": {
+                        "value_template": "{{ 4 }}",
+                        "set_value": {"service": "script.set_value"},
+                        "step_template": "{{ 1 }}",
+                    }
                 }
             },
         )
@@ -61,26 +63,28 @@ async def test_missing_optional_config(hass, calls):
 
 async def test_missing_required_keys(hass, calls):
     """Test: missing required fields will fail."""
-    with assert_setup_component(0, "number"):
+    with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "template",
             {
-                "number": {
-                    "platform": "template",
-                    "set_value": {"service": "script.set_value"},
+                "template": {
+                    "number": {
+                        "set_value": {"service": "script.set_value"},
+                    }
                 }
             },
         )
 
-    with assert_setup_component(0, "number"):
+    with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "template",
             {
-                "number": {
-                    "platform": "template",
-                    "value_template": "{{ 4 }}",
+                "template": {
+                    "number": {
+                        "value_template": "{{ 4 }}",
+                    }
                 }
             },
         )
@@ -94,18 +98,19 @@ async def test_missing_required_keys(hass, calls):
 
 async def test_all_optional_config(hass, calls):
     """Test: including all optional templates is ok."""
-    with assert_setup_component(1, "number"):
+    with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "template",
             {
-                "number": {
-                    "platform": "template",
-                    "value_template": "{{ 4 }}",
-                    "set_value": {"service": "script.set_value"},
-                    "minimum_template": "{{ 3 }}",
-                    "maximum_template": "{{ 5 }}",
-                    "step_template": "{{ 1 }}",
+                "template": {
+                    "number": {
+                        "value_template": "{{ 4 }}",
+                        "set_value": {"service": "script.set_value"},
+                        "minimum_template": "{{ 3 }}",
+                        "maximum_template": "{{ 5 }}",
+                        "step_template": "{{ 1 }}",
+                    }
                 }
             },
         )
@@ -157,25 +162,28 @@ async def test_templates_with_entities(hass, calls):
             },
         )
 
-    with assert_setup_component(1, "number"):
+    with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,
-            "number",
+            "template",
             {
-                "number": {
-                    "platform": "template",
-                    "value_template": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
-                    "step_template": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
-                    "minimum_template": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
-                    "maximum_template": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
-                    "set_value": {
-                        "service": "input_number.set_value",
-                        "data_template": {
-                            "entity_id": _VALUE_INPUT_NUMBER,
-                            "value": "{{ value }}",
+                "template": {
+                    "unique_id": "b",
+                    "number": {
+                        "value_template": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
+                        "step_template": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
+                        "minimum_template": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
+                        "maximum_template": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
+                        "set_value": {
+                            "service": "input_number.set_value",
+                            "data_template": {
+                                "entity_id": _VALUE_INPUT_NUMBER,
+                                "value": "{{ value }}",
+                            },
                         },
+                        "optimistic": True,
+                        "unique_id": "a",
                     },
-                    "optimistic": True,
                 }
             },
         )
@@ -188,6 +196,11 @@ async def test_templates_with_entities(hass, calls):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+    ent_reg = async_get(hass)
+    entry = ent_reg.async_get(_TEST_NUMBER)
+    assert entry
+    assert entry.unique_id == "b-a"
 
     _verify(hass, 4, 1, 3, 5)
 

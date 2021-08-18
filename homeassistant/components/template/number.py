@@ -1,7 +1,7 @@
 """Support for numbers which integrates with other components."""
 import voluptuous as vol
 
-from homeassistant.components.number import PLATFORM_SCHEMA, NumberEntity
+from homeassistant.components.number import NumberEntity
 from homeassistant.components.number.const import (
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
@@ -27,7 +27,7 @@ CONF_MAXIMUM_TEMPLATE = "maximum_template"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+NUMBER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -42,27 +42,37 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass, definitions, unique_id_prefix):
     """Create the Template number."""
-    return [
-        TemplateNumber(
-            hass,
-            config[CONF_NAME],
-            config[CONF_VALUE_TEMPLATE],
-            config.get(CONF_AVAILABILITY_TEMPLATE),
-            config[CONF_SET_VALUE],
-            config[CONF_STEP_TEMPLATE],
-            config.get(CONF_MINIMUM_TEMPLATE),
-            config.get(CONF_MAXIMUM_TEMPLATE),
-            config[CONF_OPTIMISTIC],
-            config.get(CONF_UNIQUE_ID),
+    entities = []
+    for definition in definitions:
+        unique_id = definition.get(CONF_UNIQUE_ID)
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
+        entities.append(
+            TemplateNumber(
+                hass,
+                definition[CONF_NAME],
+                definition[CONF_VALUE_TEMPLATE],
+                definition.get(CONF_AVAILABILITY_TEMPLATE),
+                definition[CONF_SET_VALUE],
+                definition[CONF_STEP_TEMPLATE],
+                definition.get(CONF_MINIMUM_TEMPLATE),
+                definition.get(CONF_MAXIMUM_TEMPLATE),
+                definition[CONF_OPTIMISTIC],
+                unique_id,
+            )
         )
-    ]
+    return entities
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template number."""
-    async_add_entities(await _async_create_entities(hass, config))
+    async_add_entities(
+        await _async_create_entities(
+            hass, discovery_info["entities"], discovery_info["unique_id"]
+        )
+    )
 
 
 class TemplateNumber(TemplateEntity, NumberEntity):
