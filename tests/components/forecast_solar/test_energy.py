@@ -9,12 +9,12 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_load_unload_config_entry(
+async def test_energy_solar_forecast(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_forecast_solar: MagicMock,
 ) -> None:
-    """Test the Forecast.Solar configuration entry loading/unloading."""
+    """Test the Forecast.Solar energy platform solar forecast."""
     mock_forecast_solar.estimate.return_value.wh_hours = {
         datetime(2021, 6, 27, 13, 0, tzinfo=timezone.utc): 12,
         datetime(2021, 6, 27, 14, 0, tzinfo=timezone.utc): 8,
