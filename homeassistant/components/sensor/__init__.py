@@ -51,7 +51,7 @@ from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ATTR_LAST_RESET: Final = "last_reset"
+ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -91,14 +91,11 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
-# The state represents a total amount, e.g. a value of a stock portfolio
-STATE_CLASS_TOTAL: Final = "total"
 # The state represents a monotonically increasing total, e.g. an amount of consumed gas
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
 STATE_CLASSES: Final[list[str]] = [
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
 
@@ -132,7 +129,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     state_class: str | None = None
-    last_reset: datetime | None = None
+    last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
 
 
@@ -140,7 +137,7 @@ class SensorEntity(Entity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
-    _attr_last_reset: datetime | None
+    _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType = None
     _attr_state_class: str | None
@@ -157,7 +154,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def last_reset(self) -> datetime | None:
+    def last_reset(self) -> datetime | None:  # Deprecated, to be removed in 2021.11
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
             return self._attr_last_reset
@@ -187,10 +184,9 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset for entities with state_class other than 'total' is "
-                    "deprecated and will be removed from Home Assistant Core 2021.10. "
-                    "Please update your configuration if state_class is manually "
-                    "configured, otherwise %s",
+                    "last_reset is deprecated and will be unsupported from Home "
+                    "Assistant Core 2021.11. Please update your configuration if "
+                    "state_class is manually configured, otherwise %s",
                     self.entity_id,
                     type(self),
                     self.state_class,
