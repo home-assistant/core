@@ -9,7 +9,22 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import Yeti, YetiEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, SWITCH_TYPES
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
+
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="v12PortStatus",
+        name="12V Port Status",
+    ),
+    SwitchEntityDescription(
+        key="usbPortStatus",
+        name="USB Port Status",
+    ),
+    SwitchEntityDescription(
+        key="acPortStatus",
+        name="AC Port Status",
+    ),
+)
 
 
 async def async_setup_entry(

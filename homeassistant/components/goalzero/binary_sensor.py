@@ -1,5 +1,8 @@
 """Support for Goal Zero Yeti Sensors."""
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_POWER,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -10,9 +13,32 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import Yeti, YetiEntity
-from .const import BINARY_SENSOR_TYPES, DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 PARALLEL_UPDATES = 0
+
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="backlight",
+        name="Backlight",
+        icon="mdi:clock-digital",
+    ),
+    BinarySensorEntityDescription(
+        key="app_online",
+        name="App Online",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+    ),
+    BinarySensorEntityDescription(
+        key="isCharging",
+        name="Charging",
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+    ),
+    BinarySensorEntityDescription(
+        key="inputDetected",
+        name="Input Detected",
+        device_class=DEVICE_CLASS_POWER,
+    ),
+)
 
 
 async def async_setup_entry(
