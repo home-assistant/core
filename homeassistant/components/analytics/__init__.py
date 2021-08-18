@@ -5,12 +5,13 @@ from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .analytics import Analytics
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
 
 
-async def async_setup(hass: HomeAssistant, _):
+async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the analytics integration."""
     analytics = Analytics(hass)
 

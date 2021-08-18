@@ -925,7 +925,7 @@ async def async_process_component_config(  # noqa: C901
 
 
 @callback
-def config_without_domain(config: dict, domain: str) -> dict:
+def config_without_domain(config: ConfigType, domain: str) -> ConfigType:
     """Return a config with all configuration for a domain removed."""
     filter_keys = extract_domain_configs(config, domain)
     return {key: value for key, value in config.items() if key not in filter_keys}

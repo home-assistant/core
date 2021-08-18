@@ -15,6 +15,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
@@ -109,7 +110,7 @@ def async_exists(hass: HomeAssistant, notification_id: str) -> bool:
     )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
     persistent_notifications: MutableMapping[str, MutableMapping] = OrderedDict()
     hass.data[DOMAIN] = {"notifications": persistent_notifications}

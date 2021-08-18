@@ -28,6 +28,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
@@ -137,7 +138,7 @@ def _async_use_default_interface(adapters: list[Adapter]) -> bool:
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
     zc_args: dict = {}
 
