@@ -112,15 +112,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    def set_memo_text(call):
+    async def set_memo_text(call):
         """Handle Memo Text service call."""
         cntrl_id = await get_entry_id(call.data["interface"])
         if not cntrl_id:
             return
-        # TODO get the module address from call.data[CONF_ADDRESS]
         memo_text = service.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
-        controller.get_module(module_address).set_memo_text(memo_text.async_render())
+        await hass.data[DOMAIN][entry_id].get_module(
+            call.data[CONF_ADDRESS]
+        ).set_memo_text(memo_text.async_render())
 
     hass.services.async_register(
         DOMAIN,
