@@ -39,6 +39,8 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ,
+    FEATURE_FLAGS_AIRPURIFIER,
+    FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_SET_BUZZER,
     FEATURE_SET_CHILD_LOCK,
     FEATURE_SET_CLEAN,
@@ -49,8 +51,11 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
+    MODELS_FAN,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MJJSQ,
+    MODELS_PURIFIER_MIIO,
+    MODELS_PURIFIER_MIOT,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
     SERVICE_SET_WIFI_LED_OFF,
@@ -220,7 +225,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switch from a config entry."""
-    if config_entry.data[CONF_MODEL] in MODELS_HUMIDIFIER:
+    model = config_entry.data[CONF_MODEL]
+    if model in MODELS_HUMIDIFIER or model in MODELS_FAN:
         await async_setup_coordinated_entry(hass, config_entry, async_add_entities)
     else:
         await async_setup_other_entry(hass, config_entry, async_add_entities)
@@ -247,6 +253,10 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ
     elif model in MODELS_HUMIDIFIER:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
+    elif model in MODELS_PURIFIER_MIIO:
+        device_features = FEATURE_FLAGS_AIRPURIFIER
+    elif model in MODELS_PURIFIER_MIOT:
+        device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
 
     for description in SWITCH_TYPES:
         if description.feature & device_features:

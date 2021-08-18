@@ -34,10 +34,15 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
+    FEATURE_FLAGS_AIRFRESH,
+    FEATURE_FLAGS_AIRPURIFIER,
+    FEATURE_FLAGS_AIRPURIFIER_2S,
+    FEATURE_FLAGS_AIRPURIFIER_3,
+    FEATURE_FLAGS_AIRPURIFIER_PRO,
+    FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
+    FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_RESET_FILTER,
     FEATURE_SET_AUTO_DETECT,
-    FEATURE_SET_BUZZER,
-    FEATURE_SET_CHILD_LOCK,
     FEATURE_SET_EXTRA_FEATURES,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
@@ -56,10 +61,6 @@ from .const import (
     SERVICE_RESET_FILTER,
     SERVICE_SET_AUTO_DETECT_OFF,
     SERVICE_SET_AUTO_DETECT_ON,
-    SERVICE_SET_BUZZER_OFF,
-    SERVICE_SET_BUZZER_ON,
-    SERVICE_SET_CHILD_LOCK_OFF,
-    SERVICE_SET_CHILD_LOCK_ON,
     SERVICE_SET_EXTRA_FEATURES,
     SERVICE_SET_FAN_LED_OFF,
     SERVICE_SET_FAN_LED_ON,
@@ -93,8 +94,6 @@ ATTR_MODEL = "model"
 # Air Purifier
 ATTR_FILTER_LIFE = "filter_life_remaining"
 ATTR_FAVORITE_LEVEL = "favorite_level"
-ATTR_BUZZER = "buzzer"
-ATTR_CHILD_LOCK = "child_lock"
 ATTR_LED = "led"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_LEVEL = "level"
@@ -115,7 +114,6 @@ ATTR_BUTTON_PRESSED = "button_pressed"
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
     ATTR_MODE: "mode",
     ATTR_FAVORITE_LEVEL: "favorite_level",
-    ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
     ATTR_LEARN_MODE: "learn_mode",
     ATTR_EXTRA_FEATURES: "extra_features",
@@ -129,7 +127,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
     ATTR_AUTO_DETECT: "auto_detect",
     ATTR_USE_TIME: "use_time",
-    ATTR_BUZZER: "buzzer",
     ATTR_SLEEP_MODE: "sleep_mode",
 }
 
@@ -147,18 +144,13 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
     ATTR_VOLUME: "volume",
 }
 
-AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S = {
-    **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_BUZZER: "buzzer",
-}
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
     ATTR_MODE: "mode",
     ATTR_FAVORITE_LEVEL: "favorite_level",
-    ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
     ATTR_USE_TIME: "use_time",
-    ATTR_BUZZER: "buzzer",
     ATTR_FAN_LEVEL: "fan_level",
 }
 
@@ -166,8 +158,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
     ATTR_MODE: "mode",
     ATTR_LED: "led",
-    ATTR_BUZZER: "buzzer",
-    ATTR_CHILD_LOCK: "child_lock",
     ATTR_VOLUME: "volume",
     ATTR_LEARN_MODE: "learn_mode",
     ATTR_SLEEP_TIME: "sleep_time",
@@ -181,8 +171,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
 AVAILABLE_ATTRIBUTES_AIRFRESH = {
     ATTR_MODE: "mode",
     ATTR_LED: "led",
-    ATTR_BUZZER: "buzzer",
-    ATTR_CHILD_LOCK: "child_lock",
     ATTR_USE_TIME: "use_time",
     ATTR_EXTRA_FEATURES: "extra_features",
 }
@@ -217,58 +205,6 @@ PRESET_MODES_AIRPURIFIER_V3 = [
 OPERATION_MODES_AIRFRESH = ["Auto", "Silent", "Interval", "Low", "Middle", "Strong"]
 PRESET_MODES_AIRFRESH = ["Auto", "Interval"]
 
-FEATURE_FLAGS_AIRPURIFIER = (
-    FEATURE_SET_BUZZER
-    | FEATURE_SET_CHILD_LOCK
-    | FEATURE_SET_LED
-    | FEATURE_SET_FAVORITE_LEVEL
-    | FEATURE_SET_LEARN_MODE
-    | FEATURE_RESET_FILTER
-    | FEATURE_SET_EXTRA_FEATURES
-)
-
-FEATURE_FLAGS_AIRPURIFIER_PRO = (
-    FEATURE_SET_CHILD_LOCK
-    | FEATURE_SET_LED
-    | FEATURE_SET_FAVORITE_LEVEL
-    | FEATURE_SET_AUTO_DETECT
-    | FEATURE_SET_VOLUME
-)
-
-FEATURE_FLAGS_AIRPURIFIER_PRO_V7 = (
-    FEATURE_SET_CHILD_LOCK
-    | FEATURE_SET_LED
-    | FEATURE_SET_FAVORITE_LEVEL
-    | FEATURE_SET_VOLUME
-)
-
-FEATURE_FLAGS_AIRPURIFIER_2S = (
-    FEATURE_SET_BUZZER
-    | FEATURE_SET_CHILD_LOCK
-    | FEATURE_SET_LED
-    | FEATURE_SET_FAVORITE_LEVEL
-)
-
-FEATURE_FLAGS_AIRPURIFIER_3 = (
-    FEATURE_SET_BUZZER
-    | FEATURE_SET_CHILD_LOCK
-    | FEATURE_SET_LED
-    | FEATURE_SET_FAVORITE_LEVEL
-    | FEATURE_SET_FAN_LEVEL
-)
-
-FEATURE_FLAGS_AIRPURIFIER_V3 = (
-    FEATURE_SET_BUZZER | FEATURE_SET_CHILD_LOCK | FEATURE_SET_LED
-)
-
-FEATURE_FLAGS_AIRFRESH = (
-    FEATURE_SET_BUZZER
-    | FEATURE_SET_CHILD_LOCK
-    | FEATURE_SET_LED
-    | FEATURE_RESET_FILTER
-    | FEATURE_SET_EXTRA_FEATURES
-)
-
 AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 SERVICE_SCHEMA_FAVORITE_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend(
@@ -288,12 +224,8 @@ SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_BUZZER_ON: {"method": "async_set_buzzer_on"},
-    SERVICE_SET_BUZZER_OFF: {"method": "async_set_buzzer_off"},
     SERVICE_SET_FAN_LED_ON: {"method": "async_set_led_on"},
     SERVICE_SET_FAN_LED_OFF: {"method": "async_set_led_off"},
-    SERVICE_SET_CHILD_LOCK_ON: {"method": "async_set_child_lock_on"},
-    SERVICE_SET_CHILD_LOCK_OFF: {"method": "async_set_child_lock_off"},
     SERVICE_SET_AUTO_DETECT_ON: {"method": "async_set_auto_detect_on"},
     SERVICE_SET_AUTO_DETECT_OFF: {"method": "async_set_auto_detect_off"},
     SERVICE_SET_LEARN_MODE_ON: {"method": "async_set_learn_mode_on"},
@@ -416,7 +348,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._mode = None
         self._fan_level = None
         self._state_attrs = {ATTR_MODEL: self._model}
-        self._device_features = FEATURE_SET_CHILD_LOCK
+        self._device_features = 0
         self._supported_features = 0
         self._speed_count = 100
         self._preset_modes = []
@@ -527,50 +459,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         if result:
             self._state = False
             self.async_write_ha_state()
-
-    async def async_set_buzzer_on(self):
-        """Turn the buzzer on."""
-        if self._device_features & FEATURE_SET_BUZZER == 0:
-            return
-
-        await self._try_command(
-            "Turning the buzzer of the miio device on failed.",
-            self._device.set_buzzer,
-            True,
-        )
-
-    async def async_set_buzzer_off(self):
-        """Turn the buzzer off."""
-        if self._device_features & FEATURE_SET_BUZZER == 0:
-            return
-
-        await self._try_command(
-            "Turning the buzzer of the miio device off failed.",
-            self._device.set_buzzer,
-            False,
-        )
-
-    async def async_set_child_lock_on(self):
-        """Turn the child lock on."""
-        if self._device_features & FEATURE_SET_CHILD_LOCK == 0:
-            return
-
-        await self._try_command(
-            "Turning the child lock of the miio device on failed.",
-            self._device.set_child_lock,
-            True,
-        )
-
-    async def async_set_child_lock_off(self):
-        """Turn the child lock off."""
-        if self._device_features & FEATURE_SET_CHILD_LOCK == 0:
-            return
-
-        await self._try_command(
-            "Turning the child lock of the miio device off failed.",
-            self._device.set_child_lock,
-            False,
-        )
 
 
 class XiaomiAirPurifier(XiaomiGenericDevice):
