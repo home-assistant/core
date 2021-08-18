@@ -86,11 +86,13 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         self.add_template_attribute(
             "_attr_current_option",
             self._value_template,
+            validator=cv.string,
             none_on_template_error=True,
         )
         self.add_template_attribute(
             "_attr_options",
             self._options_template,
+            validator=vol.All(cv.ensure_list, cv.string),
             none_on_template_error=True,
         )
         await super().async_added_to_hass()

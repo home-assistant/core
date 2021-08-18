@@ -80,7 +80,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         maximum_template,
         optimistic,
         unique_id,
-    ):
+    ) -> None:
         """Initialize the number."""
         super().__init__(availability_template=availability_template)
         self._attr_name = name
@@ -104,27 +104,27 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self.add_template_attribute(
             "_attr_value",
             self._value_template,
-            validator=vol.Any(vol.Coerce(int), vol.Coerce(float)),
+            validator=vol.Coerce(float),
             none_on_template_error=True,
         )
         self.add_template_attribute(
             "_attr_step",
             self._step_template,
-            validator=vol.Any(vol.Coerce(int), vol.Coerce(float)),
+            validator=vol.Coerce(float),
             none_on_template_error=True,
         )
         if self._min_value_template is not None:
             self.add_template_attribute(
                 "_attr_min_value",
                 self._min_value_template,
-                validator=vol.Any(vol.Coerce(int), vol.Coerce(float)),
+                validator=vol.Coerce(float),
                 none_on_template_error=True,
             )
         if self._max_value_template is not None:
             self.add_template_attribute(
                 "_attr_max_value",
                 self._max_value_template,
-                validator=vol.Any(vol.Coerce(int), vol.Coerce(float)),
+                validator=vol.Coerce(float),
                 none_on_template_error=True,
             )
         await super().async_added_to_hass()

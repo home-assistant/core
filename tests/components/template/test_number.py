@@ -246,7 +246,7 @@ def _verify(
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_NUMBER)
     attributes = state.attributes
-    assert state.state == str(expected_value)
-    assert attributes.get(ATTR_STEP) == expected_step
-    assert attributes.get(ATTR_MAX) == expected_maximum
-    assert attributes.get(ATTR_MIN) == expected_minimum
+    assert state.state == str(float(expected_value))
+    assert attributes.get(ATTR_STEP) == float(expected_step)
+    assert attributes.get(ATTR_MAX) == float(expected_maximum)
+    assert attributes.get(ATTR_MIN) == float(expected_minimum)
