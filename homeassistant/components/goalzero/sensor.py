@@ -114,7 +114,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="timestamp",
         name="Total Run Time",
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
     ),
