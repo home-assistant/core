@@ -1,7 +1,11 @@
 """Support for Goal Zero Yeti Sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import ATTR_LAST_RESET, ATTR_STATE_CLASS
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_NAME,
@@ -36,7 +40,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class YetiSensor(YetiEntity):
+class YetiSensor(YetiEntity, SensorEntity):
     """Representation of a Goal Zero Yeti sensor."""
 
     def __init__(self, api, coordinator, name, sensor_name, server_unique_id):

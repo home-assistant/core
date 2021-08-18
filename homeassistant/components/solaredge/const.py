@@ -2,7 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -10,7 +13,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.util import dt as dt_util
 
 from .models import SolarEdgeSensorEntityDescription
 
@@ -40,8 +42,7 @@ SENSOR_TYPES = [
         json_key="lifeTimeData",
         name="Lifetime energy",
         icon="mdi:solar-power",
-        last_reset=dt_util.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
