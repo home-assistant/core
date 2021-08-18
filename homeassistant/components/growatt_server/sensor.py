@@ -983,7 +983,7 @@ class GrowattData:
                 self.data = inverter_info
             elif self.growatt_type == "tlx":
                 tlx_info = self.api.tlx_detail(self.device_id)
-                self.data = tlx_info
+                self.data = tlx_info["data"]
             elif self.growatt_type == "storage":
                 storage_info_detail = self.api.storage_params(self.device_id)[
                     "storageDetailBean"
