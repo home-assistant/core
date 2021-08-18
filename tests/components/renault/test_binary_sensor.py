@@ -37,13 +37,13 @@ async def test_binary_sensors(hass, vehicle_type):
         await setup_renault_integration_vehicle(hass, vehicle_type)
         await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
-    if len(expected_entities) == 0:
+    if vehicle_type == "captur_fuel":
+        # fuel vehicles do not have any binary sensors
         assert len(device_registry.devices) == 0
         assert len(entity_registry.entities) == 0
         return
 
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
     assert len(device_registry.devices) == 1
     expected_device = mock_vehicle["expected_device"]
     registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
@@ -54,6 +54,7 @@ async def test_binary_sensors(hass, vehicle_type):
     assert registry_entry.model == expected_device[ATTR_MODEL]
     assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
 
+    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
@@ -77,13 +78,13 @@ async def test_binary_sensor_empty(hass, vehicle_type):
         await setup_renault_integration_vehicle_with_no_data(hass, vehicle_type)
         await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
-    if len(expected_entities) == 0:
+    if vehicle_type == "captur_fuel":
+        # fuel vehicles do not have any binary sensors
         assert len(device_registry.devices) == 0
         assert len(entity_registry.entities) == 0
         return
 
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
     assert len(device_registry.devices) == 1
     expected_device = mock_vehicle["expected_device"]
     registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
@@ -94,6 +95,7 @@ async def test_binary_sensor_empty(hass, vehicle_type):
     assert registry_entry.model == expected_device[ATTR_MODEL]
     assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
 
+    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
@@ -124,13 +126,13 @@ async def test_binary_sensor_errors(hass, vehicle_type):
         )
         await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
-    if len(expected_entities) == 0:
+    if vehicle_type == "captur_fuel":
+        # fuel vehicles do not have any binary sensors
         assert len(device_registry.devices) == 0
         assert len(entity_registry.entities) == 0
         return
 
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
     assert len(device_registry.devices) == 1
     expected_device = mock_vehicle["expected_device"]
     registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
@@ -141,6 +143,7 @@ async def test_binary_sensor_errors(hass, vehicle_type):
     assert registry_entry.model == expected_device[ATTR_MODEL]
     assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
 
+    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
     for expected_entity in expected_entities:
         entity_id = expected_entity["entity_id"]
