@@ -14,7 +14,6 @@ from unittest.mock import DEFAULT, MagicMock
 from homeassistant import config_entries
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
@@ -137,7 +136,6 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     assert power_consumption.state == STATE_UNKNOWN
     assert power_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert power_consumption.attributes.get(ATTR_ICON) is None
-    assert power_consumption.attributes.get(ATTR_LAST_RESET) is None
     assert power_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert power_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
@@ -159,7 +157,6 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     assert power_tariff.state == "low"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is None
     assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -167,7 +164,6 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     )
@@ -259,7 +255,6 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     assert power_tariff.state == "low"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is None
     assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -268,7 +263,6 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     )
@@ -331,7 +325,6 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     assert power_tariff.state == "low"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is None
     assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -339,7 +332,6 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     )
@@ -407,7 +399,6 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     assert power_tariff.state == "123.456"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert power_tariff.attributes.get(ATTR_ICON) is None
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is None
     assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert (
         power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
@@ -421,7 +412,6 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     )
@@ -484,7 +474,6 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     assert power_tariff.state == "normal"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is None
     assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
@@ -492,7 +481,6 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is DEVICE_CLASS_GAS
-    assert gas_consumption.attributes.get(ATTR_LAST_RESET) is None
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     )
@@ -544,7 +532,6 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     assert power_tariff.state == "low"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is None
     assert power_tariff.attributes.get(ATTR_STATE_CLASS) is None
     assert power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
 
