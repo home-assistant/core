@@ -405,7 +405,7 @@ async def test_select_switch(hass, hk_driver, events):
     call_turn_on = async_mock_service(hass, domain, "test")
     call_turn_off = async_mock_service(hass, domain, "turn_off")
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
+    acc.char_on.client_update_value(True)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
     assert call_turn_on
