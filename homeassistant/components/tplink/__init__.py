@@ -269,11 +269,9 @@ class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
                 last_reset = datetime.now() - get_time_offset(self.smartplug)
                 last_reset_local = as_local(last_reset.replace(second=0, microsecond=0))
                 _LOGGER.debug(
-                    "%s last reset time as local to server is %s"
-                    % (
-                        self.smartplug.alias,
-                        last_reset_local.strftime("%Y/%m/%d %H:%M:%S"),
-                    )
+                    "%s last reset time as local to server is %s",
+                    self.smartplug.alias,
+                    last_reset_local.strftime("%Y/%m/%d %H:%M:%S"),
                 )
                 data[CONF_EMETER_PARAMS][ATTR_LAST_RESET][
                     ATTR_TODAY_ENERGY_KWH

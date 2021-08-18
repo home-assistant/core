@@ -192,11 +192,9 @@ def get_time_offset(device: SmartDevice) -> timedelta:
     device_time = device.time.replace(microsecond=0)
     offset = device_time - device_time.replace(hour=0, minute=0, second=0)
     _LOGGER.debug(
-        "%s local time is %s, offset from midnight is %s"
-        % (
-            device.alias,
-            device_time.strftime("%Y/%m/%d %H:%M:%S"),
-            str(offset),
-        )
+        "%s local time is %s, offset from midnight is %s",
+        device.alias,
+        device_time.strftime("%Y/%m/%d %H:%M:%S"),
+        str(offset),
     )
     return offset
