@@ -5,18 +5,11 @@ import pytest
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 from . import (
+    check_device_registry,
     setup_renault_integration_vehicle,
     setup_renault_integration_vehicle_with_no_data,
     setup_renault_integration_vehicle_with_side_effect,
@@ -37,22 +30,8 @@ async def test_device_trackers(hass, vehicle_type):
         await setup_renault_integration_vehicle(hass, vehicle_type)
         await hass.async_block_till_done()
 
-    if vehicle_type == "zoe_40":
-        # first generation electric vehicles do not publish GPS position
-        assert len(device_registry.devices) == 0
-        assert len(entity_registry.entities) == 0
-        return
-
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    assert len(device_registry.devices) == 1
-    expected_device = mock_vehicle["expected_device"]
-    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
-    assert registry_entry is not None
-    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
-    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
-    assert registry_entry.name == expected_device[ATTR_NAME]
-    assert registry_entry.model == expected_device[ATTR_MODEL]
-    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
 
     expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -78,22 +57,8 @@ async def test_device_tracker_empty(hass, vehicle_type):
         await setup_renault_integration_vehicle_with_no_data(hass, vehicle_type)
         await hass.async_block_till_done()
 
-    if vehicle_type == "zoe_40":
-        # first generation electric vehicles do not publish GPS position
-        assert len(device_registry.devices) == 0
-        assert len(entity_registry.entities) == 0
-        return
-
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    assert len(device_registry.devices) == 1
-    expected_device = mock_vehicle["expected_device"]
-    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
-    assert registry_entry is not None
-    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
-    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
-    assert registry_entry.name == expected_device[ATTR_NAME]
-    assert registry_entry.model == expected_device[ATTR_MODEL]
-    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
 
     expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -126,22 +91,8 @@ async def test_device_tracker_errors(hass, vehicle_type):
         )
         await hass.async_block_till_done()
 
-    if vehicle_type == "zoe_40":
-        # first generation electric vehicles do not publish GPS position
-        assert len(device_registry.devices) == 0
-        assert len(entity_registry.entities) == 0
-        return
-
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    assert len(device_registry.devices) == 1
-    expected_device = mock_vehicle["expected_device"]
-    registry_entry = device_registry.async_get_device(expected_device[ATTR_IDENTIFIERS])
-    assert registry_entry is not None
-    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
-    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
-    assert registry_entry.name == expected_device[ATTR_NAME]
-    assert registry_entry.model == expected_device[ATTR_MODEL]
-    assert registry_entry.sw_version == expected_device[ATTR_SW_VERSION]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
 
     expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
     assert len(entity_registry.entities) == len(expected_entities)
@@ -162,6 +113,7 @@ async def test_device_tracker_access_denied(hass):
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
+    vehicle_type = "zoe_40"
     access_denied_exception = exceptions.AccessDeniedException(
         "err.func.403",
         "Access is denied for this resource",
@@ -169,11 +121,13 @@ async def test_device_tracker_access_denied(hass):
 
     with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, "zoe_40", access_denied_exception
+            hass, vehicle_type, access_denied_exception
         )
         await hass.async_block_till_done()
 
-    assert len(device_registry.devices) == 0
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
+
     assert len(entity_registry.entities) == 0
 
 
@@ -183,6 +137,7 @@ async def test_device_tracker_not_supported(hass):
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
+    vehicle_type = "zoe_40"
     not_supported_exception = exceptions.NotSupportedException(
         "err.tech.501",
         "This feature is not technically supported by this gateway",
@@ -190,9 +145,11 @@ async def test_device_tracker_not_supported(hass):
 
     with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
         await setup_renault_integration_vehicle_with_side_effect(
-            hass, "zoe_40", not_supported_exception
+            hass, vehicle_type, not_supported_exception
         )
         await hass.async_block_till_done()
 
-    assert len(device_registry.devices) == 0
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
+
     assert len(entity_registry.entities) == 0
