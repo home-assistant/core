@@ -43,7 +43,9 @@ SERVICE_AC_START_SCHEMA = vol.Schema(
 SERVICE_CHARGE_SET_MODE_SCHEMA = vol.Schema(
     {
         vol.Required(SCHEMA_VIN): cv.matches_regex(REGEX_VIN),
-        vol.Required(SCHEMA_CHARGE_MODE): cv.string,
+        vol.Required(SCHEMA_CHARGE_MODE): vol.In(
+            ["always", "always_charging", "schedule_mode"]
+        ),
     }
 )
 SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
