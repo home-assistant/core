@@ -174,6 +174,17 @@ async def async_migration_in_progress(hass: HomeAssistant) -> bool:
     return hass.data[DATA_INSTANCE].migration_in_progress
 
 
+@bind_hass
+def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
+    """Check if an entity is being recorded.
+
+    Async friendly.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    return hass.data[DATA_INSTANCE].entity_filter(entity_id)
+
+
 def run_information(hass, point_in_time: datetime | None = None):
     """Return information about current run.
 
