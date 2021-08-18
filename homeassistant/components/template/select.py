@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import Template, TemplateError
 
+from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY
 from .template_entity import TemplateEntity
 
@@ -105,17 +106,17 @@ class TemplateSelect(TemplateEntity, SelectEntity):
     ) -> None:
         """Initialize the select."""
         super().__init__(availability_template=availability_template)
-        if name_template:
-            name_template.hass = hass
-            try:
-                self._attr_name = name_template.async_render(parse_result=False)
-            except TemplateError:
-                pass
+        self._attr_name = DEFAULT_NAME
+        name_template.hass = hass
+        try:
+            self._attr_name = name_template.async_render(parse_result=False)
+        except TemplateError:
+            pass
         self._name_template = name_template
         self._value_template = value_template
         domain = __name__.split(".")[-2]
         self._command_select_option = Script(
-            hass, command_select_option, self._attr_name or DEFAULT_NAME, domain
+            hass, command_select_option, self._attr_name, domain
         )
         self._options_template = options_template
         self._attr_assumed_state = self._optimistic = optimistic
@@ -152,10 +153,26 @@ class TemplateSelect(TemplateEntity, SelectEntity):
 
 
 class TriggerSelectEntity(TriggerEntity, SelectEntity):
-    """Sensor entity based on trigger data."""
+    """Select entity based on trigger data."""
 
     domain = SELECT_DOMAIN
     extra_template_keys = (CONF_STATE,)
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: dict,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(hass, coordinator, config)
+        domain = __name__.split(".")[-2]
+        self._command_select_option = Script(
+            hass,
+            config[CONF_SELECT_OPTION],
+            self._rendered.get(CONF_NAME, DEFAULT_NAME),
+            domain,
+        )
 
     @property
     def current_option(self) -> str | None:
@@ -171,3 +188,12 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     def options(self) -> list[str]:
         """Return the list of available options."""
         return self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_OPTIONS, [])
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        if self._config[CONF_OPTIMISTIC]:
+            self._attr_current_option = option
+            self.async_write_ha_state()
+        await self._command_select_option.async_run(
+            {ATTR_OPTION: option}, context=self._context
+        )

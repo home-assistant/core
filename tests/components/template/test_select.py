@@ -19,7 +19,11 @@ from homeassistant.const import CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
-from tests.common import assert_setup_component, async_mock_service
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_mock_service,
+)
 
 _TEST_SELECT = "select.template_select"
 # Represent for select's current_option
@@ -199,6 +203,7 @@ async def test_templates_with_entities(hass, calls):
 
 async def test_trigger_select(hass):
     """Test trigger based template select."""
+    events = async_capture_events(hass, "test_number_event")
     assert await setup.async_setup_component(
         hass,
         "template",
@@ -215,7 +220,8 @@ async def test_trigger_select(hass):
                             "unique_id": "hello_name-id",
                             "state": "{{ trigger.event.data.beer }}",
                             "attributes": {"options": "{{ trigger.event.data.beers }}"},
-                            "select_option": {"service": "script.select_option"},
+                            "select_option": {"event": "test_number_event"},
+                            "optimistic": True,
                         },
                     ],
                 },
@@ -241,6 +247,15 @@ async def test_trigger_select(hass):
     assert state is not None
     assert state.state == "duff"
     assert state.attributes["options"] == ["duff", "alamo"]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SELECT_SERVICE_SELECT_OPTION,
+        {CONF_ENTITY_ID: "select.hello_name", SELECT_ATTR_OPTION: "alamo"},
+        blocking=True,
+    )
+    assert len(events) == 1
+    assert events[0].event_type == "test_number_event"
 
 
 def _verify(hass, expected_current_option, expected_options):
