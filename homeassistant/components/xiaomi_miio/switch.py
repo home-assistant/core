@@ -267,6 +267,14 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ
     elif model in MODELS_HUMIDIFIER:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
+    if model == MODEL_AIRPURIFIER_PRO:
+        device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
+    elif model == MODEL_AIRPURIFIER_PRO_V7:
+        device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
+    elif model == MODEL_AIRPURIFIER_V3:
+        device_features = FEATURE_FLAGS_AIRPURIFIER_V3
+    elif model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
+        device_features = FEATURE_FLAGS_AIRPURIFIER_2S
     elif model in MODELS_PURIFIER_MIIO:
         device_features = FEATURE_FLAGS_AIRPURIFIER_MIIO
     elif model in MODELS_PURIFIER_MIOT:
