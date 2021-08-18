@@ -3,11 +3,28 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
+    CURRENCY_EURO,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -16,7 +33,194 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTR_ENTRY_TYPE, DOMAIN, ENTRY_TYPE_SERVICE, SENSORS, SERVICES
+from .const import (
+    ATTR_ENTRY_TYPE,
+    DOMAIN,
+    ENTRY_TYPE_SERVICE,
+    SERVICE_PHASES,
+    SERVICE_SETTINGS,
+    SERVICE_SMARTMETER,
+    SERVICES,
+)
+
+SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
+    SERVICE_SMARTMETER: (
+        SensorEntityDescription(
+            key="gas_consumption",
+            name="Gas Consumption",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=VOLUME_CUBIC_METERS,
+            device_class=DEVICE_CLASS_GAS,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
+        SensorEntityDescription(
+            key="power_consumption",
+            name="Power Consumption",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="energy_consumption_high",
+            name="Energy Consumption - High Tariff",
+            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
+        SensorEntityDescription(
+            key="energy_consumption_low",
+            name="Energy Consumption - Low Tariff",
+            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
+        SensorEntityDescription(
+            key="power_production",
+            name="Power Production",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="energy_production_high",
+            name="Energy Production - High Tariff",
+            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
+        SensorEntityDescription(
+            key="energy_production_low",
+            name="Energy Production - Low Tariff",
+            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
+        SensorEntityDescription(
+            key="energy_tariff_period",
+            name="Energy Tariff Period",
+            icon="mdi:calendar-clock",
+        ),
+    ),
+    SERVICE_PHASES: (
+        SensorEntityDescription(
+            key="voltage_phase_l1",
+            name="Voltage Phase L1",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="voltage_phase_l2",
+            name="Voltage Phase L2",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="voltage_phase_l3",
+            name="Voltage Phase L3",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="current_phase_l1",
+            name="Current Phase L1",
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="current_phase_l2",
+            name="Current Phase L2",
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="current_phase_l3",
+            name="Current Phase L3",
+            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="power_consumed_phase_l1",
+            name="Power Consumed Phase L1",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="power_consumed_phase_l2",
+            name="Power Consumed Phase L2",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="power_consumed_phase_l3",
+            name="Power Consumed Phase L3",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="power_produced_phase_l1",
+            name="Power Produced Phase L1",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="power_produced_phase_l2",
+            name="Power Produced Phase L2",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="power_produced_phase_l3",
+            name="Power Produced Phase L3",
+            native_unit_of_measurement=POWER_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+    ),
+    SERVICE_SETTINGS: (
+        SensorEntityDescription(
+            key="gas_consumption_tariff",
+            name="Gas Consumption - Tariff",
+            icon="mdi:cash",
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=CURRENCY_EURO,
+        ),
+        SensorEntityDescription(
+            key="energy_consumption_low_tariff",
+            name="Energy Consumption - Low Tariff",
+            icon="mdi:cash",
+            native_unit_of_measurement=CURRENCY_EURO,
+        ),
+        SensorEntityDescription(
+            key="energy_consumption_high_tariff",
+            name="Energy Consumption - High Tariff",
+            icon="mdi:cash",
+            native_unit_of_measurement=CURRENCY_EURO,
+        ),
+        SensorEntityDescription(
+            key="energy_production_low_tariff",
+            name="Energy Production - Low Tariff",
+            icon="mdi:cash",
+            native_unit_of_measurement=CURRENCY_EURO,
+        ),
+        SensorEntityDescription(
+            key="energy_production_high_tariff",
+            name="Energy Production - High Tariff",
+            icon="mdi:cash",
+            native_unit_of_measurement=CURRENCY_EURO,
+        ),
+    ),
+}
 
 
 async def async_setup_entry(
