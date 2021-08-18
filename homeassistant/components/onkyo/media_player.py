@@ -146,7 +146,7 @@ def determine_zones(receiver):
     try:
         _LOGGER.debug("Checking for zone 2 capability")
         response = receiver.raw("ZPWQSTN")
-        if response != "ZPWN/A": # Zone 2 Available
+        if response != "ZPWN/A":  # Zone 2 Available
             out["zone2"] = True
         else:
             _LOGGER.debug("Zone 2 not available")
