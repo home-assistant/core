@@ -1,4 +1,4 @@
-"""The tests for the Template fan platform."""
+"""The tests for the Template number platform."""
 import pytest
 
 from homeassistant import setup
@@ -262,7 +262,7 @@ def _verify(
     expected_minimum,
     expected_maximum,
 ):
-    """Verify fan's state, speed and osc."""
+    """Verify number's state."""
     state = hass.states.get(_TEST_NUMBER)
     attributes = state.attributes
     assert state.state == str(float(expected_value))
