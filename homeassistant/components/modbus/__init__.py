@@ -92,10 +92,6 @@ from .const import (
     CONF_TARGET_TEMP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    CONST_RTUOVERTCP,
-    CONST_SERIAL,
-    CONST_TCP,
-    CONST_UDP,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_FLOAT16,
@@ -114,6 +110,10 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
+    RTUOVERTCP,
+    SERIAL,
+    TCP,
+    UDP,
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import number_validator, scan_interval_validator, struct_validator
@@ -304,7 +304,7 @@ MODBUS_SCHEMA = vol.Schema(
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): CONST_SERIAL,
+        vol.Required(CONF_TYPE): SERIAL,
         vol.Required(CONF_BAUDRATE): cv.positive_int,
         vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
         vol.Required(CONF_METHOD): vol.Any("rtu", "ascii"),
@@ -318,7 +318,7 @@ ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): vol.Any(CONST_TCP, CONST_UDP, CONST_RTUOVERTCP),
+        vol.Required(CONF_TYPE): vol.Any(TCP, UDP, RTUOVERTCP),
     }
 )
 

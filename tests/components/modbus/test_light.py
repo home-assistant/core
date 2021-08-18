@@ -13,8 +13,8 @@ from homeassistant.components.modbus.const import (
     CONF_STATE_ON,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    CONST_TCP,
     MODBUS_DOMAIN,
+    TCP,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -219,7 +219,7 @@ async def test_light_service_turn(hass, caplog, mock_pymodbus):
     ENTITY_ID2 = f"{ENTITY_ID}2"
     config = {
         MODBUS_DOMAIN: {
-            CONF_TYPE: CONST_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_LIGHTS: [

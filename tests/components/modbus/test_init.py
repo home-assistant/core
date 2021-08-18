@@ -46,17 +46,17 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
-    CONST_RTUOVERTCP,
-    CONST_SERIAL,
-    CONST_TCP,
-    CONST_UDP,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
+    RTUOVERTCP,
+    SERIAL,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
+    TCP,
+    UDP,
 )
 from homeassistant.components.modbus.validators import (
     number_validator,
@@ -206,25 +206,12 @@ async def test_exception_struct_validator(do_config):
     "do_config",
     [
         {
-            CONF_TYPE: CONST_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
         },
         {
-            CONF_TYPE: CONST_TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-            CONF_NAME: TEST_MODBUS_NAME,
-            CONF_TIMEOUT: 30,
-            CONF_DELAY: 10,
-        },
-        {
-            CONF_TYPE: CONST_UDP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-        },
-        {
-            CONF_TYPE: CONST_UDP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_NAME: TEST_MODBUS_NAME,
@@ -232,12 +219,12 @@ async def test_exception_struct_validator(do_config):
             CONF_DELAY: 10,
         },
         {
-            CONF_TYPE: CONST_RTUOVERTCP,
+            CONF_TYPE: UDP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
         },
         {
-            CONF_TYPE: CONST_RTUOVERTCP,
+            CONF_TYPE: UDP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_NAME: TEST_MODBUS_NAME,
@@ -245,7 +232,20 @@ async def test_exception_struct_validator(do_config):
             CONF_DELAY: 10,
         },
         {
-            CONF_TYPE: CONST_SERIAL,
+            CONF_TYPE: RTUOVERTCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+        },
+        {
+            CONF_TYPE: RTUOVERTCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_NAME: TEST_MODBUS_NAME,
+            CONF_TIMEOUT: 30,
+            CONF_DELAY: 10,
+        },
+        {
+            CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
             CONF_METHOD: "rtu",
@@ -255,7 +255,7 @@ async def test_exception_struct_validator(do_config):
             CONF_MSG_WAIT: 100,
         },
         {
-            CONF_TYPE: CONST_SERIAL,
+            CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
             CONF_METHOD: "rtu",
@@ -267,26 +267,26 @@ async def test_exception_struct_validator(do_config):
             CONF_DELAY: 10,
         },
         {
-            CONF_TYPE: CONST_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_DELAY: 5,
         },
         [
             {
-                CONF_TYPE: CONST_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
             },
             {
-                CONF_TYPE: CONST_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: f"{TEST_MODBUS_NAME}2",
             },
             {
-                CONF_TYPE: CONST_SERIAL,
+                CONF_TYPE: SERIAL,
                 CONF_BAUDRATE: 9600,
                 CONF_BYTESIZE: 8,
                 CONF_METHOD: "rtu",
@@ -298,7 +298,7 @@ async def test_exception_struct_validator(do_config):
         ],
         {
             # Special test for scan_interval validator with scan_interval: 0
-            CONF_TYPE: CONST_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_SENSORS: [
@@ -326,7 +326,7 @@ SERVICE = "service"
     [
         {
             CONF_NAME: TEST_MODBUS_NAME,
-            CONF_TYPE: CONST_SERIAL,
+            CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
             CONF_METHOD: "rtu",
@@ -431,7 +431,7 @@ async def mock_modbus_read_pymodbus(
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONST_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
@@ -505,7 +505,7 @@ async def test_pymodbus_constructor_fail(hass, caplog):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONST_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
             }
@@ -528,7 +528,7 @@ async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONST_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
             }
@@ -553,7 +553,7 @@ async def test_delay(hass, mock_pymodbus):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONST_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,

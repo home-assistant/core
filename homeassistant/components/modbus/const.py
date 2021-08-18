@@ -61,10 +61,10 @@ CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 CONF_WRITE_TYPE = "write_type"
 
-CONST_RTUOVERTCP = "rtuovertcp"
-CONST_SERIAL = "serial"
-CONST_TCP = "tcp"
-CONST_UDP = "udp"
+RTUOVERTCP = "rtuovertcp"
+SERIAL = "serial"
+TCP = "tcp"
+UDP = "udp"
 
 # service call attributes
 ATTR_ADDRESS = "address"
