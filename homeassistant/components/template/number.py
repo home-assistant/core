@@ -1,4 +1,8 @@
 """Support for numbers which integrates with other components."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.number import NumberEntity
@@ -9,13 +13,19 @@ from homeassistant.components.number.const import (
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
 )
+from homeassistant.components.template import TriggerUpdateCoordinator
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.template import Template, TemplateError
 
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY
 from .template_entity import TemplateEntity
+from .trigger_entity import TriggerEntity
 
 CONF_SET_VALUE = "set_value"
 
@@ -24,14 +34,14 @@ DEFAULT_OPTIMISTIC = False
 
 NUMBER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_ATTRIBUTES): vol.Schema(
             {
                 vol.Required(ATTR_STEP): cv.template,
-                vol.Optional(ATTR_MIN): cv.template,
-                vol.Optional(ATTR_MAX): cv.template,
+                vol.Optional(ATTR_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+                vol.Optional(ATTR_MAX, default=DEFAULT_MAX_VALUE): cv.template,
             }
         ),
         vol.Optional(CONF_AVAILABILITY): cv.template,
@@ -41,7 +51,9 @@ NUMBER_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(hass, definitions, unique_id_prefix):
+async def _async_create_entities(
+    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
+) -> list[TemplateNumber]:
     """Create the Template number."""
     entities = []
     for definition in definitions:
@@ -56,8 +68,8 @@ async def _async_create_entities(hass, definitions, unique_id_prefix):
                 definition.get(CONF_AVAILABILITY),
                 definition[CONF_SET_VALUE],
                 definition[CONF_ATTRIBUTES][ATTR_STEP],
-                definition[CONF_ATTRIBUTES].get(ATTR_MIN),
-                definition[CONF_ATTRIBUTES].get(ATTR_MAX),
+                definition[CONF_ATTRIBUTES][ATTR_MIN],
+                definition[CONF_ATTRIBUTES][ATTR_MAX],
                 definition[CONF_OPTIMISTIC],
                 unique_id,
             )
@@ -65,8 +77,20 @@ async def _async_create_entities(hass, definitions, unique_id_prefix):
     return entities
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Config,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the template number."""
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerNumberEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
+
     async_add_entities(
         await _async_create_entities(
             hass, discovery_info["entities"], discovery_info["unique_id"]
@@ -79,37 +103,43 @@ class TemplateNumber(TemplateEntity, NumberEntity):
 
     def __init__(
         self,
-        hass,
-        name,
-        value_template,
-        availability_template,
-        command_set_value,
-        step_template,
-        minimum_template,
-        maximum_template,
-        optimistic,
-        unique_id,
+        hass: HomeAssistant,
+        name_template: Template,
+        value_template: Template,
+        availability_template: Template | None,
+        command_set_value: dict[str, Any],
+        step_template: Template,
+        minimum_template: Template | None,
+        maximum_template: Template | None,
+        optimistic: bool,
+        unique_id: str | None,
     ) -> None:
         """Initialize the number."""
         super().__init__(availability_template=availability_template)
-        self._attr_name = name
+        self._attr_name = DEFAULT_NAME
+        self._name_template = name_template
+        name_template.hass = hass
+        try:
+            self._attr_name = name_template.async_render(parse_result=False)
+        except TemplateError:
+            pass
         self._value_template = value_template
         domain = __name__.split(".")[-2]
-        self._command_set_value = Script(hass, command_set_value, name, domain)
+        self._command_set_value = Script(
+            hass, command_set_value, self._attr_name, domain
+        )
         self._step_template = step_template
         self._min_value_template = minimum_template
-        if self._min_value_template is None:
-            self._attr_min_value = DEFAULT_MIN_VALUE
         self._max_value_template = maximum_template
-        if self._max_value_template is None:
-            self._attr_max_value = DEFAULT_MAX_VALUE
         self._attr_assumed_state = self._optimistic = optimistic
         self._attr_unique_id = unique_id
         self._attr_value = None
         self._attr_step = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        if self._name_template and not self._name_template.is_static:
+            self.add_template_attribute("_attr_name", self._name_template, cv.string)
         self.add_template_attribute(
             "_attr_value",
             self._value_template,
@@ -138,9 +168,72 @@ class TemplateNumber(TemplateEntity, NumberEntity):
             )
         await super().async_added_to_hass()
 
-    async def async_set_value(self, value):
+    async def async_set_value(self, value: float) -> None:
         """Set value of the number."""
         if self._optimistic:
+            self._attr_value = value
+            self.async_write_ha_state()
+        await self._command_set_value.async_run(
+            {ATTR_VALUE: value}, context=self._context
+        )
+
+
+class TriggerNumberEntity(TriggerEntity, NumberEntity):
+    """Number entity based on trigger data."""
+
+    domain = NUMBER_DOMAIN
+    extra_template_keys = (CONF_STATE,)
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: dict,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(hass, coordinator, config)
+        domain = __name__.split(".")[-2]
+        self._command_set_value = Script(
+            hass,
+            config[CONF_SET_VALUE],
+            self._rendered.get(CONF_NAME, DEFAULT_NAME),
+            domain,
+        )
+
+    @property
+    def value(self) -> float | None:
+        """Return the currently selected option."""
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_STATE))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra attributes."""
+        return None
+
+    @property
+    def min_value(self) -> int:
+        """Return the minimum value."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_MIN, super().min_value)
+        )
+
+    @property
+    def max_value(self) -> int:
+        """Return the maximum value."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_MAX, super().max_value)
+        )
+
+    @property
+    def step(self) -> int:
+        """Return the increment/decrement step."""
+        return vol.Any(vol.Coerce(float), None)(
+            self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_STEP, super().step)
+        )
+
+    async def async_set_value(self, value: float) -> None:
+        """Set value of the number."""
+        if self._config[CONF_OPTIMISTIC]:
             self._attr_value = value
             self.async_write_ha_state()
         await self._command_set_value.async_run(

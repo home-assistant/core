@@ -15,10 +15,15 @@ from homeassistant.components.number.const import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
-from tests.common import assert_setup_component, async_mock_service
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_mock_service,
+)
 
 _TEST_NUMBER = "number.template_number"
 # Represent for number's value
@@ -253,6 +258,74 @@ async def test_templates_with_entities(hass, calls):
         blocking=True,
     )
     _verify(hass, 2, 2, 2, 6)
+
+
+async def test_trigger_number(hass):
+    """Test trigger based template number."""
+    events = async_capture_events(hass, "test_number_event")
+    assert await setup.async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {"invalid": "config"},
+                # Config after invalid should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "number": [
+                        {
+                            "name": "Hello Name",
+                            "unique_id": "hello_name-id",
+                            "state": "{{ trigger.event.data.beers_drank }}",
+                            "attributes": {
+                                "min": "{{ trigger.event.data.min_beers }}",
+                                "max": "{{ trigger.event.data.max_beers }}",
+                                "step": "{{ trigger.event.data.step }}",
+                            },
+                            "set_value": {"event": "test_number_event"},
+                            "optimistic": True,
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["min"] == 0.0
+    assert state.attributes["max"] == 100.0
+    assert state.attributes["step"] == 1.0
+
+    context = Context()
+    hass.bus.async_fire(
+        "test_event",
+        {"beers_drank": 3, "min_beers": 1.0, "max_beers": 5.0, "step": 0.5},
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.hello_name")
+    assert state is not None
+    assert state.state == "3.0"
+    assert state.attributes["min"] == 1.0
+    assert state.attributes["max"] == 5.0
+    assert state.attributes["step"] == 0.5
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NUMBER_SERVICE_SET_VALUE,
+        {CONF_ENTITY_ID: "number.hello_name", NUMBER_ATTR_VALUE: 2},
+        blocking=True,
+    )
+    assert len(events) == 1
+    assert events[0].event_type == "test_number_event"
 
 
 def _verify(
