@@ -188,7 +188,7 @@ async def test_settings(
     ("sensor.smartmeter_gas_consumption",),
 )
 async def test_smartmeter_disabled_by_default(
-    hass: HomeAssistant, entity_id: str
+    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
 ) -> None:
     """Test the P1 Monitor - SmartMeter sensors that are disabled by default."""
     entity_registry = er.async_get(hass)
