@@ -1,10 +1,7 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
-import logging
 from typing import Final, cast
-
-import aioshelly
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import SensorEntity
@@ -24,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ShellyDeviceWrapper
 from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
@@ -36,8 +32,6 @@ from .entity import (
     async_setup_entry_rest,
 )
 from .utils import get_device_uptime, temperature_unit
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 SENSORS: Final = {
     ("device", "battery"): BlockAttributeDescription(
@@ -252,16 +246,6 @@ async def async_setup_entry(
 
 class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
-
-    def __init__(
-        self,
-        wrapper: ShellyDeviceWrapper,
-        block: aioshelly.Block,
-        attribute: str,
-        description: BlockAttributeDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(wrapper, block, attribute, description)
 
     @property
     def native_value(self) -> StateType:
