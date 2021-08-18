@@ -155,6 +155,9 @@ async def test_setup_import(hass: HomeAssistant):
     assert hass.states.get(f"binary_sensor.{name}_nightlight") is not None
     assert hass.states.get(f"light.{name}") is not None
     assert hass.states.get(f"light.{name}_nightlight") is not None
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.unique_id == "0x000000000015243f"
+    assert entry.data[CONF_ID] == "0x000000000015243f"
 
 
 async def test_unique_ids_device(hass: HomeAssistant):
