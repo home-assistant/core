@@ -36,8 +36,8 @@ from .const import (
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRPURIFIER_2S,
-    FEATURE_FLAGS_AIRPURIFIER_3,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
+    FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
@@ -134,18 +134,16 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
 }
 
-AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
-    **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_VOLUME: "volume",
-}
-
-AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
-
-AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT = {
     ATTR_MODE: "mode",
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_USE_TIME: "use_time",
     ATTR_FAN_LEVEL: "fan_level",
+}
+
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
+    **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
+    ATTR_VOLUME: "volume",
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
@@ -168,6 +166,7 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
 }
 
 PRESET_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
+PRESET_MODES_AIRPURIFIER_MIOT = ["Auto", "Silent", "Favorite", "Fan"]
 OPERATION_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
@@ -175,7 +174,6 @@ PRESET_MODES_AIRPURIFIER_PRO_V7 = PRESET_MODES_AIRPURIFIER_PRO
 OPERATION_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRPURIFIER_3 = ["Auto", "Silent", "Favorite", "Fan"]
-PRESET_MODES_AIRPURIFIER_3 = ["Auto", "Silent", "Favorite", "Fan"]
 OPERATION_MODES_AIRPURIFIER_V3 = [
     "Auto",
     "Silent",
@@ -488,14 +486,14 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._speed_count = 1
         elif self._model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
-            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
         elif self._model in MODELS_PURIFIER_MIOT:
-            self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
-            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
-            self._preset_modes = PRESET_MODES_AIRPURIFIER_3
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
             self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
             self._speed_count = 3
         elif self._model == MODEL_AIRPURIFIER_V3:
