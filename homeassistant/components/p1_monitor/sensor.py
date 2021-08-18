@@ -52,8 +52,7 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator=coordinator)
         self._service_key = service_key
 
-        # self.entity_id = f"{SENSOR_DOMAIN}.{service_key}_{description.key}"
-        self.entity_id = f"{SENSOR_DOMAIN}.{description.key}"
+        self.entity_id = f"{SENSOR_DOMAIN}.{service_key}_{description.key}"
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{service_key}_{description.key}"
 

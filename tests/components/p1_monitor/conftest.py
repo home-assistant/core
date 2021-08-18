@@ -10,7 +10,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -25,7 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_p1monitor(aioclient_mock: AiohttpClientMocker):
+def mock_p1monitor():
     """Return a mocked P1 Monitor client."""
     with patch("homeassistant.components.p1_monitor.P1Monitor") as p1monitor_mock:
         client = p1monitor_mock.return_value
