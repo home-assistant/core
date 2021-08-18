@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from eagle200_reader import EagleReader
@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -22,7 +23,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle
 
 CONF_CLOUD_ID = "cloud_id"
 CONF_INSTALL_CODE = "install_code"
@@ -41,7 +42,6 @@ class SensorType:
     unit_of_measurement: str
     device_class: str | None = None
     state_class: str | None = None
-    last_reset: datetime | None = None
 
 
 SENSORS = {
@@ -54,15 +54,13 @@ SENSORS = {
         name="Eagle-200 Total Meter Energy Delivered",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     "summation_received": SensorType(
         name="Eagle-200 Total Meter Energy Received",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     "summation_total": SensorType(
         name="Eagle-200 Net Meter Energy (Delivered minus Received)",
@@ -131,15 +129,14 @@ class EagleSensor(SensorEntity):
         self._type = sensor_type
         sensor_info = SENSORS[sensor_type]
         self._attr_name = sensor_info.name
-        self._attr_unit_of_measurement = sensor_info.unit_of_measurement
+        self._attr_native_unit_of_measurement = sensor_info.unit_of_measurement
         self._attr_device_class = sensor_info.device_class
         self._attr_state_class = sensor_info.state_class
-        self._attr_last_reset = sensor_info.last_reset
 
     def update(self):
         """Get the energy information from the Rainforest Eagle."""
         self.eagle_data.update()
-        self._attr_state = self.eagle_data.get_state(self._type)
+        self._attr_native_value = self.eagle_data.get_state(self._type)
 
 
 class EagleData:

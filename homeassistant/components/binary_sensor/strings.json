@@ -38,6 +38,8 @@
       "is_no_smoke": "{entity_name} is not detecting smoke",
       "is_sound": "{entity_name} is detecting sound",
       "is_no_sound": "{entity_name} is not detecting sound",
+      "is_update": "{entity_name} has an update available",
+      "is_no_update": "{entity_name} is up-to-date",
       "is_vibration": "{entity_name} is detecting vibration",
       "is_no_vibration": "{entity_name} is not detecting vibration",
       "is_open": "{entity_name} is open",
@@ -82,6 +84,8 @@
       "no_smoke": "{entity_name} stopped detecting smoke",
       "sound": "{entity_name} started detecting sound",
       "no_sound": "{entity_name} stopped detecting sound",
+      "update": "{entity_name} got an update available",
+      "no_update": "{entity_name} became up-to-date",
       "vibration": "{entity_name} started detecting vibration",
       "no_vibration": "{entity_name} stopped detecting vibration",
       "opened": "{entity_name} opened",
@@ -174,6 +178,10 @@
     "sound": {
       "off": "[%key:component::binary_sensor::state::gas::off%]",
       "on": "[%key:component::binary_sensor::state::gas::on%]"
+    },
+    "update": {
+      "off": "Up-to-date",
+      "on": "Update available"
     },
     "vibration": {
       "off": "[%key:component::binary_sensor::state::gas::off%]",

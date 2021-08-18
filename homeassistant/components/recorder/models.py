@@ -20,8 +20,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.dialects import mysql
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
@@ -219,7 +218,6 @@ class StatisticData(TypedDict, total=False):
     mean: float
     min: float
     max: float
-    last_reset: datetime | None
     state: float
     sum: float
 
@@ -243,7 +241,6 @@ class Statistics(Base):  # type: ignore
     mean = Column(Float())
     min = Column(Float())
     max = Column(Float())
-    last_reset = Column(DATETIME_TYPE)
     state = Column(Float())
     sum = Column(Float())
 

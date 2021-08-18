@@ -9,6 +9,7 @@ import logging
 from typing import Any, Callable
 
 from async_upnp_client.search import SSDPListener
+from async_upnp_client.ssdp import SSDP_PORT
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
@@ -222,11 +223,18 @@ class Scanner:
 
         return sources
 
-    @core_callback
-    def async_scan(self, *_: Any) -> None:
-        """Scan for new entries."""
+    async def async_scan(self, *_: Any) -> None:
+        """Scan for new entries using ssdp default and broadcast target."""
         for listener in self._ssdp_listeners:
             listener.async_search()
+            try:
+                IPv4Address(listener.source_ip)
+            except ValueError:
+                continue
+            # Some sonos devices only seem to respond if we send to the broadcast
+            # address. This matches pysonos' behavior
+            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+            listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
         """Start the scanner."""
@@ -235,21 +243,9 @@ class Scanner:
         for source_ip in await self._async_build_source_set():
             self._ssdp_listeners.append(
                 SSDPListener(
-                    async_callback=self._async_process_entry, source_ip=source_ip
-                )
-            )
-            try:
-                IPv4Address(source_ip)
-            except ValueError:
-                continue
-            # Some sonos devices only seem to respond if we send to the broadcast
-            # address. This matches pysonos' behavior
-            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
-            self._ssdp_listeners.append(
-                SSDPListener(
+                    async_connect_callback=self.async_scan,
                     async_callback=self._async_process_entry,
                     source_ip=source_ip,
-                    target_ip=IPV4_BROADCAST,
                 )
             )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)

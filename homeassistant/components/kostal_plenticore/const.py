@@ -1,5 +1,10 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
 
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -11,10 +16,13 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
+from homeassistant.util.dt import utc_from_timestamp
 
 DOMAIN = "kostal_plenticore"
 
 ATTR_ENABLED_DEFAULT = "entity_registry_enabled_default"
+
+LAST_RESET_NEVER = utc_from_timestamp(0)
 
 # Defines all entities for process data.
 #
@@ -40,6 +48,7 @@ SENSOR_PROCESS_DATA = [
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
             ATTR_ENABLED_DEFAULT: True,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_round",
     ),
@@ -51,6 +60,7 @@ SENSOR_PROCESS_DATA = [
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
             ATTR_ENABLED_DEFAULT: True,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_round",
     ),
@@ -65,28 +75,44 @@ SENSOR_PROCESS_DATA = [
         "devices:local",
         "HomeGrid_P",
         "Home Power from Grid",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "HomeOwn_P",
         "Home Power from Own",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "HomePv_P",
         "Home Power from PV",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "Home_P",
         "Home Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -97,6 +123,7 @@ SENSOR_PROCESS_DATA = [
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
             ATTR_ENABLED_DEFAULT: True,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_round",
     ),
@@ -104,28 +131,44 @@ SENSOR_PROCESS_DATA = [
         "devices:local:pv1",
         "P",
         "DC1 Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local:pv2",
         "P",
         "DC2 Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local:pv3",
         "P",
         "DC3 Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
         "devices:local",
         "PV2Bat_P",
         "PV to Battery Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -139,14 +182,18 @@ SENSOR_PROCESS_DATA = [
         "devices:local:battery",
         "Cycles",
         "Battery Cycles",
-        {ATTR_ICON: "mdi:recycle"},
+        {ATTR_ICON: "mdi:recycle", ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
         "format_round",
     ),
     (
         "devices:local:battery",
         "P",
         "Battery Power",
-        {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -174,7 +221,11 @@ SENSOR_PROCESS_DATA = [
         "scb:statistic:EnergyFlow",
         "Statistic:Autarky:Total",
         "Autarky Total",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_ICON: "mdi:chart-donut",
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -202,7 +253,11 @@ SENSOR_PROCESS_DATA = [
         "scb:statistic:EnergyFlow",
         "Statistic:OwnConsumptionRate:Total",
         "Own Consumption Rate Total",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:chart-donut"},
+        {
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_ICON: "mdi:chart-donut",
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "format_round",
     ),
     (
@@ -249,6 +304,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -289,6 +345,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -329,6 +386,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -369,6 +427,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -409,6 +468,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -449,6 +509,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -489,6 +550,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -530,6 +592,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         },
         "format_energy",
     ),

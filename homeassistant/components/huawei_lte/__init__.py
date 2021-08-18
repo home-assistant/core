@@ -298,7 +298,7 @@ class Router:
 class HuaweiLteData:
     """Shared state."""
 
-    hass_config: dict = attr.ib()
+    hass_config: ConfigType = attr.ib()
     # Our YAML config, keyed by router URL
     config: dict[str, dict[str, Any]] = attr.ib()
     routers: dict[str, Router] = attr.ib(init=False, factory=dict)
@@ -665,9 +665,9 @@ class HuaweiLteBaseEntity(Entity):
             async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
         )
 
-    async def _async_maybe_update(self, url: str) -> None:
+    async def _async_maybe_update(self, config_entry_unique_id: str) -> None:
         """Update state if the update signal comes from our router."""
-        if url == self.router.url:
+        if config_entry_unique_id == self.router.config_entry.unique_id:
             self.async_schedule_update_ha_state(True)
 
     async def async_will_remove_from_hass(self) -> None:

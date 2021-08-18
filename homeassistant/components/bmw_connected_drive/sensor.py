@@ -516,7 +516,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         self._attr_device_class = attribute_info.get(
             attribute, [None, None, None, None]
         )[1]
-        self._attr_unit_of_measurement = attribute_info.get(
+        self._attr_native_unit_of_measurement = attribute_info.get(
             attribute, [None, None, None, None]
         )[2]
 
@@ -525,24 +525,24 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         _LOGGER.debug("Updating %s", self._vehicle.name)
         vehicle_state = self._vehicle.state
         if self._attribute == "charging_status":
-            self._attr_state = getattr(vehicle_state, self._attribute).value
+            self._attr_native_value = getattr(vehicle_state, self._attribute).value
         elif self.unit_of_measurement == VOLUME_GALLONS:
             value = getattr(vehicle_state, self._attribute)
             value_converted = self.hass.config.units.volume(value, VOLUME_LITERS)
-            self._attr_state = round(value_converted)
+            self._attr_native_value = round(value_converted)
         elif self.unit_of_measurement == LENGTH_MILES:
             value = getattr(vehicle_state, self._attribute)
             value_converted = self.hass.config.units.length(value, LENGTH_KILOMETERS)
-            self._attr_state = round(value_converted)
+            self._attr_native_value = round(value_converted)
         elif self._service is None:
-            self._attr_state = getattr(vehicle_state, self._attribute)
+            self._attr_native_value = getattr(vehicle_state, self._attribute)
         elif self._service == SERVICE_LAST_TRIP:
             vehicle_last_trip = self._vehicle.state.last_trip
             if self._attribute == "date_utc":
                 date_str = getattr(vehicle_last_trip, "date")
-                self._attr_state = dt_util.parse_datetime(date_str).isoformat()
+                self._attr_native_value = dt_util.parse_datetime(date_str).isoformat()
             else:
-                self._attr_state = getattr(vehicle_last_trip, self._attribute)
+                self._attr_native_value = getattr(vehicle_last_trip, self._attribute)
         elif self._service == SERVICE_ALL_TRIPS:
             vehicle_all_trips = self._vehicle.state.all_trips
             for attribute in (
@@ -555,13 +555,13 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                 if self._attribute.startswith(f"{attribute}_"):
                     attr = getattr(vehicle_all_trips, attribute)
                     sub_attr = self._attribute.replace(f"{attribute}_", "")
-                    self._attr_state = getattr(attr, sub_attr)
+                    self._attr_native_value = getattr(attr, sub_attr)
                     return
             if self._attribute == "reset_date_utc":
                 date_str = getattr(vehicle_all_trips, "reset_date")
-                self._attr_state = dt_util.parse_datetime(date_str).isoformat()
+                self._attr_native_value = dt_util.parse_datetime(date_str).isoformat()
             else:
-                self._attr_state = getattr(vehicle_all_trips, self._attribute)
+                self._attr_native_value = getattr(vehicle_all_trips, self._attribute)
 
         vehicle_state = self._vehicle.state
         charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
