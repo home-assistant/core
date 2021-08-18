@@ -467,7 +467,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._is_available = True
 
         attributes_dict = {
-            "NewInternalClient": "internal_client",
+            "NewInternalClient": "internal_ip",
             "NewInternalPort": "internal_port",
             "NewExternalPort": "external_port",
             "NewProtocol": "protocol",
