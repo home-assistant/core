@@ -302,9 +302,6 @@ devolo-home-control-api==0.17.4
 # homeassistant.components.directv
 directv==0.4.0
 
-# homeassistant.components.updater
-distro==1.5.0
-
 # homeassistant.components.doorbird
 doorbirdpy==2.1.0
 
