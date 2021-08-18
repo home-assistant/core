@@ -183,7 +183,10 @@ class AmcrestBinarySensor(BinarySensorEntity):
             return
         _LOGGER.debug(_UPDATE_MSG, self._name)
 
-        assert self._event_code is not None
+        if self._event_code is None:
+            _LOGGER.error("Binary sensor %s event code not set", self._name)
+            return
+
         try:
             self._state = len(self._api.event_channels_happened(self._event_code)) > 0
         except AmcrestError as error:
