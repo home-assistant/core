@@ -221,35 +221,43 @@ async def _async_initialize(
 
 
 @callback
-def _async_populate_entry_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Move options from data for imported entries.
 
     Initialize options with default values for other entries.
-    """
-    if entry.options:
-        return
 
-    hass.config_entries.async_update_entry(
-        entry,
-        data={CONF_HOST: entry.data.get(CONF_HOST), CONF_ID: entry.data.get(CONF_ID)},
-        options={
-            CONF_NAME: entry.data.get(CONF_NAME, ""),
-            CONF_MODEL: entry.data.get(CONF_MODEL, ""),
-            CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
-            CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
-            CONF_SAVE_ON_CHANGE: entry.data.get(
-                CONF_SAVE_ON_CHANGE, DEFAULT_SAVE_ON_CHANGE
-            ),
-            CONF_NIGHTLIGHT_SWITCH: entry.data.get(
-                CONF_NIGHTLIGHT_SWITCH, DEFAULT_NIGHTLIGHT_SWITCH
-            ),
-        },
-    )
+    Copy the unique id to CONF_ID if it is missing
+    """
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_HOST: entry.data.get(CONF_HOST),
+                CONF_ID: entry.data.get(CONF_ID, entry.unique_id),
+            },
+            options={
+                CONF_NAME: entry.data.get(CONF_NAME, ""),
+                CONF_MODEL: entry.data.get(CONF_MODEL, ""),
+                CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
+                CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
+                CONF_SAVE_ON_CHANGE: entry.data.get(
+                    CONF_SAVE_ON_CHANGE, DEFAULT_SAVE_ON_CHANGE
+                ),
+                CONF_NIGHTLIGHT_SWITCH: entry.data.get(
+                    CONF_NIGHTLIGHT_SWITCH, DEFAULT_NIGHTLIGHT_SWITCH
+                ),
+            },
+        )
+    if entry.unique_id and not entry.data.get(CONF_ID):
+        hass.config_entries.async_update_entry(
+            entry,
+            data={CONF_HOST: entry.data.get(CONF_HOST), CONF_ID: entry.unique_id},
+        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
-    _async_populate_entry_options(hass, entry)
+    _async_normalize_config_entry(hass, entry)
 
     if entry.data.get(CONF_HOST):
         try:
