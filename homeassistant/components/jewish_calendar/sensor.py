@@ -1,12 +1,17 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
 
 import hdate
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import SUN_EVENT_SUNSET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -15,7 +20,12 @@ from .const import DATA_SENSORS, TIME_SENSORS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+):
     """Set up the Jewish calendar sensor platform."""
     if discovery_info is None:
         return
@@ -35,19 +45,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
-    def __init__(self, data, entity_description):
+    def __init__(self, data, description: SensorEntityDescription) -> None:
         """Initialize the Jewish calendar sensor."""
-        self.entity_description = entity_description
-        self._attr_name = f"{data['name']} {entity_description.name}"
-        self._attr_unique_id = f"{data['prefix']}_{entity_description.key}"
-        self._type = entity_description.key
+        self._description = description
+        self._type = description.key
+        self._attr_name = f"{data['name']} {self._description.name}"
+        self._attr_unique_id = f"{data['prefix']}_{self._type}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
         self._state = None
-        self._holiday_attrs = {}
+        self._holiday_attrs: dict[str, str] = {}
 
     @property
     def native_value(self):
