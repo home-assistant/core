@@ -168,7 +168,7 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
             self._current_led_brightness
         )
 
-    async def async_set_led_brightness(self, brightness: str):
+    async def async_set_led_brightness(self, brightness: str) -> None:
         """Set the led brightness."""
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
@@ -186,7 +186,7 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
 class XiaomiAirPurifierSelector(XiaomiAirHumidifierSelector):
     """Representation of a Xiaomi Air Purifier (MIIO protocol) selector."""
 
-    async def async_set_led_brightness(self, brightness: str):
+    async def async_set_led_brightness(self, brightness: str) -> None:
         """Set the led brightness."""
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
@@ -200,7 +200,7 @@ class XiaomiAirPurifierSelector(XiaomiAirHumidifierSelector):
 class XiaomiAirPurifierMiotSelector(XiaomiAirHumidifierSelector):
     """Representation of a Xiaomi Air Purifier (MiOT protocol) selector."""
 
-    async def async_set_led_brightness(self, brightness: str):
+    async def async_set_led_brightness(self, brightness: str) -> None:
         """Set the led brightness."""
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
@@ -214,7 +214,7 @@ class XiaomiAirPurifierMiotSelector(XiaomiAirHumidifierSelector):
 class XiaomiAirFreshSelector(XiaomiAirHumidifierSelector):
     """Representation of a Xiaomi Air Fresh selector."""
 
-    async def async_set_led_brightness(self, brightness: str):
+    async def async_set_led_brightness(self, brightness: str) -> None:
         """Set the led brightness."""
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
