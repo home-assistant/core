@@ -129,7 +129,7 @@ class NetgearRouter:
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
-        self._api = await self.hass.async_add_executor_job(self._setup)
+        await self.hass.async_add_executor_job(self._setup)
 
         # set already known devices to away instead of unavailable
         entity_registry = er.async_get(self.hass)
