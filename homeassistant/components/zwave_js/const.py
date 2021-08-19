@@ -48,6 +48,11 @@ ATTR_OPTIONS = "options"
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
 
+# automation trigger attributes
+ATTR_PREVIOUS_VALUE = "previous_value"
+ATTR_CURRENT_VALUE = "current_value"
+ATTR_DESCRIPTION = "description"
+
 # service constants
 SERVICE_SET_VALUE = "set_value"
 SERVICE_RESET_METER = "reset_meter"
