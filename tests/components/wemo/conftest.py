@@ -43,9 +43,8 @@ async def async_pywemo_registry_fixture():
 @pytest.fixture(name="pywemo_discovery_responder", autouse=True)
 def pywemo_discovery_responder_fixture():
     """Fixture for the DiscoveryResponder instance."""
-    discovery_responder = create_autospec(pywemo.ssdp.DiscoveryResponder, instance=True)
-    with patch("pywemo.ssdp.DiscoveryResponder", return_value=discovery_responder):
-        yield discovery_responder
+    with patch("pywemo.ssdp.DiscoveryResponder", autospec=True):
+        yield
 
 
 @pytest.fixture(name="pywemo_device")
