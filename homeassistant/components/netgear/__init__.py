@@ -63,7 +63,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         device_registry = dr.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         for device_entry in devices:
-            device_mac = dict(device_entry.connections).get("mac")
+            device_mac = dict(device_entry.connections).get(dr.CONNECTION_NETWORK_MAC)
             if device_mac and device_mac not in tracked_list:
                 device_registry.async_update_device(
                     device_entry.id, remove_config_entry_id=entry.entry_id
