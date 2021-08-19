@@ -343,7 +343,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
             if parts[0] == "presets":
                 index = parts[1]
-                await self.recall_netusb_preset(index)
+                await self.coordinator.musiccast.recall_netusb_preset(
+                    self._zone_id, index
+                )
                 return
 
             if parts[0] == "http":
@@ -406,10 +408,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
         return overview
-
-    async def recall_netusb_preset(self, preset):
-        """Play the selected preset."""
-        await self.coordinator.musiccast.recall_netusb_preset(self._zone_id, preset)
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
