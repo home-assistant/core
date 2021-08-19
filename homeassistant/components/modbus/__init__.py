@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -66,14 +67,13 @@ from .const import (
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
     CONF_REVERSE_ORDER,
-    CONF_RTUOVERTCP,
     CONF_SCALE,
-    CONF_SERIAL,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -90,8 +90,6 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    CONF_TCP,
-    CONF_UDP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
     DATA_TYPE_CUSTOM,
@@ -112,12 +110,17 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
+    RTUOVERTCP,
+    SERIAL,
+    TCP,
+    UDP,
 )
-from .modbus import async_modbus_setup
+from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
+    duplicate_entity_validator,
     number_validator,
     scan_interval_validator,
-    sensor_schema_validator,
+    struct_validator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,7 +148,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 CALL_TYPE_REGISTER_INPUT,
             ]
         ),
-        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_COUNT): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
             [
                 DATA_TYPE_INT16,
@@ -202,6 +205,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_DISCRETE,
                         CALL_TYPE_REGISTER_INPUT,
                         CALL_TYPE_COIL,
+                        CALL_TYPE_X_COILS,
+                        CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
                 vol.Optional(CONF_STATE_OFF): cv.positive_int,
@@ -285,16 +290,17 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
         vol.Optional(CONF_RETRY_ON_EMPTY, default=False): cv.boolean,
+        vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
         vol.Optional(CONF_CLIMATES): vol.All(
-            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, sensor_schema_validator)]
+            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, struct_validator)]
         ),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, sensor_schema_validator)]
+            cv.ensure_list, [vol.All(SENSOR_SCHEMA, struct_validator)]
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
@@ -303,7 +309,7 @@ MODBUS_SCHEMA = vol.Schema(
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): CONF_SERIAL,
+        vol.Required(CONF_TYPE): SERIAL,
         vol.Required(CONF_BAUDRATE): cv.positive_int,
         vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
         vol.Required(CONF_METHOD): vol.Any("rtu", "ascii"),
@@ -317,7 +323,7 @@ ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): vol.Any(CONF_TCP, CONF_UDP, CONF_RTUOVERTCP),
+        vol.Required(CONF_TYPE): vol.Any(TCP, UDP, RTUOVERTCP),
     }
 )
 
@@ -326,6 +332,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             cv.ensure_list,
             scan_interval_validator,
+            duplicate_entity_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
@@ -355,6 +362,11 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         ),
     }
 )
+
+
+def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
+    """Return modbus hub with name."""
+    return hass.data[DOMAIN][name]
 
 
 async def async_setup(hass, config):

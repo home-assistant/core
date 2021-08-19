@@ -1,6 +1,6 @@
 """Config flow for Universal Devices ISY994 integration."""
 import logging
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from aiohttp import CookieJar
 import async_timeout
@@ -9,7 +9,7 @@ from pyisy.configuration import Configuration
 from pyisy.connection import Connection
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core, data_entry_flow, exceptions
 from homeassistant.components import ssdp
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -28,7 +28,11 @@ from .const import (
     DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
     DOMAIN,
+    HTTP_PORT,
+    HTTPS_PORT,
     ISY_URL_POSTFIX,
+    SCHEME_HTTP,
+    SCHEME_HTTPS,
     UDN_UUID_PREFIX,
 )
 
@@ -58,15 +62,15 @@ async def validate_input(hass: core.HomeAssistant, data):
     host = urlparse(data[CONF_HOST])
     tls_version = data.get(CONF_TLS_VER)
 
-    if host.scheme == "http":
+    if host.scheme == SCHEME_HTTP:
         https = False
-        port = host.port or 80
+        port = host.port or HTTP_PORT
         session = aiohttp_client.async_create_clientsession(
             hass, verify_ssl=None, cookie_jar=CookieJar(unsafe=True)
         )
-    elif host.scheme == "https":
+    elif host.scheme == SCHEME_HTTPS:
         https = True
-        port = host.port or 443
+        port = host.port or HTTPS_PORT
         session = aiohttp_client.async_get_clientsession(hass)
     else:
         _LOGGER.error("The isy994 host value in configuration is invalid")
@@ -150,6 +154,39 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(user_input)
 
+    async def _async_set_unique_id_or_update(self, isy_mac, ip_address, port) -> None:
+        """Abort and update the ip address on change."""
+        existing_entry = await self.async_set_unique_id(isy_mac)
+        if not existing_entry:
+            return
+        parsed_url = urlparse(existing_entry.data[CONF_HOST])
+        if parsed_url.hostname != ip_address:
+            new_netloc = ip_address
+            if port:
+                new_netloc = f"{ip_address}:{port}"
+            elif parsed_url.port:
+                new_netloc = f"{ip_address}:{parsed_url.port}"
+            self.hass.config_entries.async_update_entry(
+                existing_entry,
+                data={
+                    **existing_entry.data,
+                    CONF_HOST: urlunparse(
+                        (
+                            parsed_url.scheme,
+                            new_netloc,
+                            parsed_url.path,
+                            parsed_url.query,
+                            parsed_url.fragment,
+                            None,
+                        )
+                    ),
+                },
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
+        raise data_entry_flow.AbortFlow("already_configured")
+
     async def async_step_dhcp(self, discovery_info):
         """Handle a discovered isy994 via dhcp."""
         friendly_name = discovery_info[HOSTNAME]
@@ -158,8 +195,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         isy_mac = (
             f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"
         )
-        await self.async_set_unique_id(isy_mac)
-        self._abort_if_unique_id_configured()
+        await self._async_set_unique_id_or_update(
+            isy_mac, discovery_info[IP_ADDRESS], None
+        )
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,
@@ -173,14 +211,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a discovered isy994."""
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         url = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+        parsed_url = urlparse(url)
         mac = discovery_info[ssdp.ATTR_UPNP_UDN]
         if mac.startswith(UDN_UUID_PREFIX):
             mac = mac[len(UDN_UUID_PREFIX) :]
         if url.endswith(ISY_URL_POSTFIX):
             url = url[: -len(ISY_URL_POSTFIX)]
 
-        await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured()
+        port = HTTP_PORT
+        if parsed_url.port:
+            port = parsed_url.port
+        elif parsed_url.scheme == SCHEME_HTTPS:
+            port = HTTPS_PORT
+
+        await self._async_set_unique_id_or_update(mac, parsed_url.hostname, port)
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,

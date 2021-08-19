@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components import light
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_TRANSITION
+from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 
 from . import async_init_integration
@@ -31,6 +32,55 @@ async def test_on_brightness(hass, mock_litejet):
         blocking=True,
     )
     mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 39, 0)
+
+
+async def test_default_transition(hass, mock_litejet):
+    """Test turning the light on with the default transition option."""
+    entry = await async_init_integration(hass)
+
+    hass.config_entries.async_update_entry(entry, options={CONF_DEFAULT_TRANSITION: 12})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).state == "off"
+    assert hass.states.get(ENTITY_OTHER_LIGHT).state == "off"
+
+    assert not light.is_on(hass, ENTITY_LIGHT)
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 102},
+        blocking=True,
+    )
+    mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 39, 12)
+
+
+async def test_transition(hass, mock_litejet):
+    """Test turning the light on with transition."""
+    await async_init_integration(hass)
+
+    assert hass.states.get(ENTITY_LIGHT).state == "off"
+    assert hass.states.get(ENTITY_OTHER_LIGHT).state == "off"
+
+    assert not light.is_on(hass, ENTITY_LIGHT)
+
+    # On
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_TRANSITION: 5},
+        blocking=True,
+    )
+    mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 99, 5)
+
+    # Off
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_TRANSITION: 5},
+        blocking=True,
+    )
+    mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 0, 5)
 
 
 async def test_on_off(hass, mock_litejet):
@@ -91,9 +141,7 @@ async def test_activated_event(hass, mock_litejet):
     assert light.is_on(hass, ENTITY_OTHER_LIGHT)
     assert hass.states.get(ENTITY_LIGHT).state == "on"
     assert hass.states.get(ENTITY_OTHER_LIGHT).state == "on"
-    assert (
-        int(hass.states.get(ENTITY_OTHER_LIGHT).attributes.get(ATTR_BRIGHTNESS)) == 103
-    )
+    assert hass.states.get(ENTITY_OTHER_LIGHT).attributes.get(ATTR_BRIGHTNESS) == 103
 
 
 async def test_deactivated_event(hass, mock_litejet):

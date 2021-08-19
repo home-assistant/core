@@ -1,6 +1,7 @@
 """Validate Modbus configuration."""
 from __future__ import annotations
 
+from collections import namedtuple
 import logging
 import struct
 from typing import Any
@@ -8,9 +9,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_COUNT,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
 )
@@ -29,18 +32,18 @@ from .const import (
     DATA_TYPE_INT16,
     DATA_TYPE_INT32,
     DATA_TYPE_INT64,
+    DATA_TYPE_STRING,
     DATA_TYPE_UINT,
     DATA_TYPE_UINT16,
     DATA_TYPE_UINT32,
     DATA_TYPE_UINT64,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_STRUCT_FORMAT,
     PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-old_data_types = {
+OLD_DATA_TYPES = {
     DATA_TYPE_INT: {
         1: DATA_TYPE_INT16,
         2: DATA_TYPE_INT32,
@@ -57,41 +60,57 @@ old_data_types = {
         4: DATA_TYPE_FLOAT64,
     },
 }
+ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
+DEFAULT_STRUCT_FORMAT = {
+    DATA_TYPE_INT16: ENTRY("h", 1),
+    DATA_TYPE_INT32: ENTRY("i", 2),
+    DATA_TYPE_INT64: ENTRY("q", 4),
+    DATA_TYPE_UINT16: ENTRY("H", 1),
+    DATA_TYPE_UINT32: ENTRY("I", 2),
+    DATA_TYPE_UINT64: ENTRY("Q", 4),
+    DATA_TYPE_FLOAT16: ENTRY("e", 1),
+    DATA_TYPE_FLOAT32: ENTRY("f", 2),
+    DATA_TYPE_FLOAT64: ENTRY("d", 4),
+    DATA_TYPE_STRING: ENTRY("s", 1),
+}
 
 
-def sensor_schema_validator(config):
+def struct_validator(config):
     """Sensor schema validator."""
 
     data_type = config[CONF_DATA_TYPE]
-    count = config[CONF_COUNT]
+    count = config.get(CONF_COUNT, 1)
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     swap_type = config.get(CONF_SWAP)
-    if data_type in [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]:
-        error = f"{name} {name} with {data_type} is not valid, trying to convert"
+    if data_type in (DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT):
+        error = f"{name}  with {data_type} is not valid, trying to convert"
         _LOGGER.warning(error)
         try:
-            data_type = old_data_types[data_type][count]
+            data_type = OLD_DATA_TYPES[data_type][config.get(CONF_COUNT, 1)]
+            config[CONF_DATA_TYPE] = data_type
         except KeyError as exp:
-            raise vol.Invalid("cannot convert automatically") from exp
-
+            error = f"{name}  cannot convert automatically {data_type}"
+            raise vol.Invalid(error) from exp
     if config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
-        try:
-            structure = f">{DEFAULT_STRUCT_FORMAT[data_type]}"
-        except KeyError as exp:
-            raise vol.Invalid(f"Modbus error {data_type} unknown in {name}") from exp
+        if structure:
+            error = f"{name}  structure: cannot be mixed with {data_type}"
+            raise vol.Invalid(error)
+        structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
+        if CONF_COUNT not in config:
+            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
     else:
         if not structure:
-            raise vol.Invalid(
-                f"Error in sensor {config[CONF_NAME]}. The `{CONF_STRUCTURE}` field can not be empty "
-                f"if the parameter `{CONF_DATA_TYPE}` is set to the `{DATA_TYPE_CUSTOM}`"
+            error = (
+                f"Error in sensor {name}. The `{CONF_STRUCTURE}` field can not be empty"
             )
-
+            raise vol.Invalid(error)
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
             raise vol.Invalid(f"Error in {name} structure: {str(err)}") from err
 
+        count = config.get(CONF_COUNT, 1)
         bytecount = count * 2
         if bytecount != size:
             raise vol.Invalid(
@@ -171,4 +190,36 @@ def scan_interval_validator(config: dict) -> dict:
                 minimum_scan_interval - 1,
             )
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
+    return config
+
+
+def duplicate_entity_validator(config: dict) -> dict:
+    """Control scan_interval."""
+    for hub_index, hub in enumerate(config):
+        addresses: set[str] = set()
+        for component, conf_key in PLATFORMS:
+            if conf_key not in hub:
+                continue
+            names: set[str] = set()
+            errors: list[int] = []
+            for index, entry in enumerate(hub[conf_key]):
+                name = entry[CONF_NAME]
+                addr = str(entry[CONF_ADDRESS])
+                if CONF_SLAVE in entry:
+                    addr += "_" + str(entry[CONF_SLAVE])
+                if addr in addresses:
+                    err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
+                    _LOGGER.warning(err)
+                    errors.append(index)
+                elif name in names:
+                    err = f"Modbus {component}/{name}  is duplicate, second entry not loaded!"
+                    _LOGGER.warning(err)
+                    errors.append(index)
+                else:
+                    names.add(name)
+                    addresses.add(addr)
+
+            for i in reversed(errors):
+                del config[hub_index][conf_key][i]
+
     return config

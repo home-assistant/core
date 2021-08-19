@@ -92,10 +92,11 @@ class AquaLogicSensor(SensorEntity):
         panel = self._processor.panel
         if panel is not None:
             if panel.is_metric:
-                self._attr_unit_of_measurement = SENSOR_TYPES[self._type][1][0]
-                self._attr_state = getattr(panel, self._type)
-                self.async_write_ha_state()
+                self._attr_native_unit_of_measurement = SENSOR_TYPES[self._type][1][0]
             else:
-                self._attr_unit_of_measurement = SENSOR_TYPES[self._type][1][1]
+                self._attr_native_unit_of_measurement = SENSOR_TYPES[self._type][1][1]
+
+            self._attr_native_value = getattr(panel, self._type)
+            self.async_write_ha_state()
         else:
-            self._attr_unit_of_measurement = None
+            self._attr_native_unit_of_measurement = None

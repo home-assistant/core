@@ -29,8 +29,8 @@ from .const import (
     DEFAULT_CACHEDB,
     DOMAIN,
     LED_MODE_KEY,
-    LOGI_SENSORS,
     RECORDING_MODE_KEY,
+    SENSOR_TYPES,
     SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD,
     SIGNAL_LOGI_CIRCLE_SNAPSHOT,
@@ -50,10 +50,12 @@ ATTR_DURATION = "duration"
 
 PLATFORMS = ["camera", "sensor"]
 
+SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
+
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(LOGI_SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(LOGI_SENSORS)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )

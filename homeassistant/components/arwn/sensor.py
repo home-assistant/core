@@ -7,6 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_TEMPERATURE,
+    PRECIPITATION_INCHES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -44,7 +45,11 @@ def discover_sensors(topic, payload):
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
             return ArwnSensor(
-                topic, "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+                topic,
+                "Rain Since Midnight",
+                "since_midnight",
+                PRECIPITATION_INCHES,
+                "mdi:water",
             )
         return (
             ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
@@ -133,7 +138,7 @@ class ArwnSensor(SensorEntity):
         # This mqtt topic for the sensor which is its uid
         self._attr_unique_id = topic
         self._state_key = state_key
-        self._attr_unit_of_measurement = units
+        self._attr_native_unit_of_measurement = units
         self._attr_icon = icon
         self._attr_device_class = device_class
 
@@ -142,5 +147,5 @@ class ArwnSensor(SensorEntity):
         ev = {}
         ev.update(event)
         self._attr_extra_state_attributes = ev
-        self._attr_state = ev.get(self._state_key, None)
+        self._attr_native_value = ev.get(self._state_key, None)
         self.async_write_ha_state()

@@ -44,7 +44,7 @@ class ONVIFSensor(ONVIFBaseEntity, SensorEntity):
         super().__init__(device)
 
     @property
-    def state(self) -> None | str | int | float:
+    def native_value(self) -> None | str | int | float:
         """Return the state of the entity."""
         return self.device.events.get_uid(self.uid).value
 
@@ -59,7 +59,7 @@ class ONVIFSensor(ONVIFBaseEntity, SensorEntity):
         return self.device.events.get_uid(self.uid).device_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self.device.events.get_uid(self.uid).unit_of_measurement
 

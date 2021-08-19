@@ -49,28 +49,24 @@ ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"
 
 # service constants
-ATTR_NODES = "nodes"
-
+SERVICE_SET_VALUE = "set_value"
+SERVICE_RESET_METER = "reset_meter"
+SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
+SERVICE_PING = "ping"
+SERVICE_REFRESH_VALUE = "refresh_value"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 
+ATTR_NODES = "nodes"
+# config parameter
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
-
-SERVICE_REFRESH_VALUE = "refresh_value"
-
+# refresh value
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
-
-SERVICE_SET_VALUE = "set_value"
-SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
-
+# multicast
 ATTR_BROADCAST = "broadcast"
-
-SERVICE_PING = "ping"
+# meter reset
+ATTR_METER_TYPE = "meter_type"
 
 ADDON_SLUG = "core_zwave_js"
-
-# Siren constants
-TONE_ID_DEFAULT = 255
-TONE_ID_OFF = 0

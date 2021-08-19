@@ -1,4 +1,6 @@
 """Camera platform that has a Raspberry Pi camera."""
+from __future__ import annotations
+
 import logging
 import os
 import shutil
@@ -122,7 +124,9 @@ class RaspberryCamera(Camera):
         ):
             pass
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return raspistill image response."""
         with open(self._config[CONF_FILE_PATH], "rb") as file:
             return file.read()

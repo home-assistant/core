@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP/IGD ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "incomplete_discovery": "Unvollst\u00e4ndige Suche",
-            "no_devices_found": "Keine UPnP/IGD-Ger\u00e4te im Netzwerk gefunden."
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
         },
         "error": {
             "one": "Ein",

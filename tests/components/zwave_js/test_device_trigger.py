@@ -68,6 +68,7 @@ async def test_if_notification_notification_fires(
         automation.DOMAIN,
         {
             automation.DOMAIN: [
+                # event, type, label
                 {
                     "trigger": {
                         "platform": "device",
@@ -84,6 +85,27 @@ async def test_if_notification_notification_fires(
                         "data_template": {
                             "some": (
                                 "event.notification.notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+                # no type, event, label
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.notification.notification",
+                        "command_class": CommandClass.NOTIFICATION.value,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.notification.notification2 - "
                                 "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
@@ -114,10 +136,15 @@ async def test_if_notification_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].data[
         "some"
     ] == "event.notification.notification - device - zwave_js_notification - {}".format(
+        CommandClass.NOTIFICATION
+    )
+    assert calls[1].data[
+        "some"
+    ] == "event.notification.notification2 - device - zwave_js_notification - {}".format(
         CommandClass.NOTIFICATION
     )
 
@@ -166,6 +193,7 @@ async def test_if_entry_control_notification_fires(
         automation.DOMAIN,
         {
             automation.DOMAIN: [
+                # event_type and data_type
                 {
                     "trigger": {
                         "platform": "device",
@@ -181,6 +209,27 @@ async def test_if_entry_control_notification_fires(
                         "data_template": {
                             "some": (
                                 "event.notification.notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+                # no event_type and data_type
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.notification.entry_control",
+                        "command_class": CommandClass.ENTRY_CONTROL.value,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.notification.notification2 - "
                                 "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
@@ -205,10 +254,15 @@ async def test_if_entry_control_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].data[
         "some"
     ] == "event.notification.notification - device - zwave_js_notification - {}".format(
+        CommandClass.ENTRY_CONTROL
+    )
+    assert calls[1].data[
+        "some"
+    ] == "event.notification.notification2 - device - zwave_js_notification - {}".format(
         CommandClass.ENTRY_CONTROL
     )
 
@@ -285,6 +339,7 @@ async def test_if_node_status_change_fires(
         automation.DOMAIN,
         {
             automation.DOMAIN: [
+                # from
                 {
                     "trigger": {
                         "platform": "device",
@@ -305,6 +360,26 @@ async def test_if_node_status_change_fires(
                         },
                     },
                 },
+                # no from or to
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "entity_id": entity_id,
+                        "type": "state.node_status",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "state.node_status2 - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.from_state.state }}"
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -315,8 +390,9 @@ async def test_if_node_status_change_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].data["some"] == "state.node_status - device - alive"
+    assert calls[1].data["some"] == "state.node_status2 - device - alive"
 
 
 async def test_get_trigger_capabilities_node_status(
@@ -408,6 +484,7 @@ async def test_if_basic_value_notification_fires(
         automation.DOMAIN,
         {
             automation.DOMAIN: [
+                # value
                 {
                     "trigger": {
                         "platform": "device",
@@ -426,6 +503,31 @@ async def test_if_basic_value_notification_fires(
                         "data_template": {
                             "some": (
                                 "event.value_notification.basic - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+                # no value
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "type": "event.value_notification.basic",
+                        "device_id": device.id,
+                        "command_class": CommandClass.BASIC.value,
+                        "property": "event",
+                        "property_key": None,
+                        "endpoint": 0,
+                        "subtype": "Endpoint 0",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.value_notification.basic2 - "
                                 "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
@@ -465,10 +567,15 @@ async def test_if_basic_value_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].data[
         "some"
     ] == "event.value_notification.basic - device - zwave_js_value_notification - {}".format(
+        CommandClass.BASIC
+    )
+    assert calls[1].data[
+        "some"
+    ] == "event.value_notification.basic2 - device - zwave_js_value_notification - {}".format(
         CommandClass.BASIC
     )
 
@@ -500,7 +607,7 @@ async def test_get_trigger_capabilities_basic_value_notification(
     ) == [
         {
             "name": "value",
-            "required": True,
+            "optional": True,
             "type": "integer",
             "valueMin": 0,
             "valueMax": 255,
@@ -542,6 +649,7 @@ async def test_if_central_scene_value_notification_fires(
         automation.DOMAIN,
         {
             automation.DOMAIN: [
+                # value
                 {
                     "trigger": {
                         "platform": "device",
@@ -560,6 +668,31 @@ async def test_if_central_scene_value_notification_fires(
                         "data_template": {
                             "some": (
                                 "event.value_notification.central_scene - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+                # no value
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.value_notification.central_scene",
+                        "command_class": CommandClass.CENTRAL_SCENE.value,
+                        "property": "scene",
+                        "property_key": "001",
+                        "endpoint": 0,
+                        "subtype": "Endpoint 0 Scene 001",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.value_notification.central_scene2 - "
                                 "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
@@ -606,10 +739,15 @@ async def test_if_central_scene_value_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].data[
         "some"
     ] == "event.value_notification.central_scene - device - zwave_js_value_notification - {}".format(
+        CommandClass.CENTRAL_SCENE
+    )
+    assert calls[1].data[
+        "some"
+    ] == "event.value_notification.central_scene2 - device - zwave_js_value_notification - {}".format(
         CommandClass.CENTRAL_SCENE
     )
 
@@ -641,7 +779,7 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
     ) == [
         {
             "name": "value",
-            "required": True,
+            "optional": True,
             "type": "select",
             "options": [(0, "KeyPressed"), (1, "KeyReleased"), (2, "KeyHeldDown")],
         },
@@ -682,6 +820,7 @@ async def test_if_scene_activation_value_notification_fires(
         automation.DOMAIN,
         {
             automation.DOMAIN: [
+                # value
                 {
                     "trigger": {
                         "platform": "device",
@@ -700,6 +839,31 @@ async def test_if_scene_activation_value_notification_fires(
                         "data_template": {
                             "some": (
                                 "event.value_notification.scene_activation - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+                # No value
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.value_notification.scene_activation",
+                        "command_class": CommandClass.SCENE_ACTIVATION.value,
+                        "property": "sceneId",
+                        "property_key": None,
+                        "endpoint": 0,
+                        "subtype": "Endpoint 0",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.value_notification.scene_activation2 - "
                                 "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
@@ -739,10 +903,15 @@ async def test_if_scene_activation_value_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].data[
         "some"
     ] == "event.value_notification.scene_activation - device - zwave_js_value_notification - {}".format(
+        CommandClass.SCENE_ACTIVATION
+    )
+    assert calls[1].data[
+        "some"
+    ] == "event.value_notification.scene_activation2 - device - zwave_js_value_notification - {}".format(
         CommandClass.SCENE_ACTIVATION
     )
 
@@ -774,7 +943,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
     ) == [
         {
             "name": "value",
-            "required": True,
+            "optional": True,
             "type": "integer",
             "valueMin": 1,
             "valueMax": 255,

@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -58,7 +59,12 @@ MODE_EXCLUDE = "exclude"
 
 INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
 
-DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
+DOMAINS_NEED_ACCESSORY_MODE = [
+    CAMERA_DOMAIN,
+    LOCK_DOMAIN,
+    MEDIA_PLAYER_DOMAIN,
+    REMOTE_DOMAIN,
+]
 NEVER_BRIDGED_DOMAINS = [CAMERA_DOMAIN]
 
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."

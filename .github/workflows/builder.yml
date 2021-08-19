@@ -47,6 +47,19 @@ jobs:
         with:
           ignore-dev: true
 
+      - name: Generate meta info
+        shell: bash
+        run: |
+          echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > OFFICIAL_IMAGE
+
+      - name: Signing meta info file
+        uses: home-assistant/actions/helpers/codenotary@master
+        with:
+          source: file://${{ github.workspace }}/OFFICIAL_IMAGE
+          user: ${{ secrets.VCN_USER }}
+          password: ${{ secrets.VCN_PASSWORD }}
+          organisation: home-assistant.io
+
   build_python:
     name: Build PyPi package
     needs: init
@@ -101,6 +114,11 @@ jobs:
           python3 script/version_bump.py nightly
           version="$(python setup.py -V)"
 
+      - name: Write meta info file
+        shell: bash
+        run: |
+          echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
+
       - name: Login to DockerHub
         uses: docker/login-action@v1.10.0
         with:
@@ -115,7 +133,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.06.2
+        uses: home-assistant/builder@2021.07.0
         with:
           args: |
             $BUILD_ARGS \
@@ -134,6 +152,7 @@ jobs:
         machine:
           - generic-x86-64
           - intel-nuc
+          - khadas-vim3
           - odroid-c2
           - odroid-c4
           - odroid-n2
@@ -167,7 +186,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.06.2
+        uses: home-assistant/builder@2021.07.0
         with:
           args: |
             $BUILD_ARGS \
@@ -229,11 +248,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install VCN tools
+        uses: home-assistant/actions/helpers/vcn@master
+
       - name: Build Meta Image
         shell: bash
         run: |
-          bash <(curl https://getvcn.codenotary.com -L)
-
           export DOCKER_CLI_EXPERIMENTAL=enabled
 
           function create_manifest() {
