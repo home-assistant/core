@@ -25,11 +25,12 @@ def _async_process_discovered_usb_device(
     domain_data = hass.data[DOMAIN]
     seen = domain_data[SEEN]
 
+    _LOGGER.warning("Discovered USB Device: %s", device)
+
     device_tuple = _usb_device_tuple(device)
     if device_tuple in seen:
         return
     seen.add(device_tuple)
-    _LOGGER.warning("Discovered USB Device: %s", device_tuple)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -50,8 +51,8 @@ async def _async_start_scanner(hass: HomeAssistant) -> None:
     def _usb_device_from_port(port: ListPortInfo) -> USBDevice:
         return {
             "device": port.device,
-            "vid": port.vid,
-            "pid": port.pid,
+            "vid": f"{hex(port.vid)[2:]:0>4}".upper(),
+            "pid": f"{hex(port.pid)[2:]:0>4}".upper(),
             "serial_number": port.serial_number,
         }
 
@@ -105,7 +106,7 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     return True
 
 
-def _usb_device_tuple(usb_device: USBDevice) -> tuple[str, int, int, str]:
+def _usb_device_tuple(usb_device: USBDevice) -> tuple[str, str, str, str]:
     return (
         usb_device["device"],
         usb_device["vid"],

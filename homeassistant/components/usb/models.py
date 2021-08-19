@@ -8,6 +8,6 @@ class USBDevice(TypedDict):
     """A usb device."""
 
     device: str
-    vid: int
-    pid: int
+    vid: str
+    pid: str
     serial_number: str
