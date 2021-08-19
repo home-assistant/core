@@ -34,7 +34,7 @@ def _async_process_discovered_usb_device(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the USB Discovery integration."""
-    hass.data[DOMAIN] = {SEEN: {}}
+    hass.data[DOMAIN] = {SEEN: set()}
 
     if await _async_start_monitor(hass):
         return True
