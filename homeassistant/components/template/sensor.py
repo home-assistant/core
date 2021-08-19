@@ -4,7 +4,6 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -12,6 +11,7 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
+from homeassistant.components.sensor.const import CONF_STATE_CLASS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,

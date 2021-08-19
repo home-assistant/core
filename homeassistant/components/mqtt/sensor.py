@@ -9,11 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
+from homeassistant.components.sensor.const import CONF_STATE_CLASS
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
