@@ -11,7 +11,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity
-from .const import BINARYSENSOR_ENTITY_DESCRIPTIONS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, WAN_STATUS
+
+BINARYSENSOR_ENTITY_DESCRIPTIONS: list[BinarySensorEntityDescription] = [
+    BinarySensorEntityDescription(
+        key=WAN_STATUS,
+        name="wan status",
+    )
+]
 
 
 async def async_setup_entry(

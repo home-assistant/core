@@ -1,22 +1,123 @@
 """Support for UPnP/IGD Sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_BYTES
+from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity
 from .const import (
+    BYTES_RECEIVED,
+    BYTES_SENT,
+    DATA_PACKETS,
+    DATA_RATE_PACKETS_PER_SECOND,
     DERIVED_SENSOR,
     DOMAIN,
     KIBIBYTE,
     LOGGER,
+    PACKETS_RECEIVED,
+    PACKETS_SENT,
     RAW_SENSOR,
-    SENSOR_ENTITY_DESCRIPTIONS,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
+    WAN_STATUS,
 )
+
+
+@dataclass
+class UpnpSensorEntityDescription(SensorEntityDescription):
+    """A class that describes UPnP entities."""
+
+    format: str = "s"
+
+
+SENSOR_ENTITY_DESCRIPTIONS: dict[str, list[UpnpSensorEntityDescription]] = {
+    RAW_SENSOR: [
+        UpnpSensorEntityDescription(
+            key=BYTES_RECEIVED,
+            name=f"{DATA_BYTES} received",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_BYTES,
+            format="d",
+        ),
+        UpnpSensorEntityDescription(
+            key=BYTES_SENT,
+            name=f"{DATA_BYTES} sent",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_BYTES,
+            format="d",
+        ),
+        UpnpSensorEntityDescription(
+            key=PACKETS_RECEIVED,
+            name=f"{DATA_PACKETS} received",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_PACKETS,
+            format="d",
+        ),
+        UpnpSensorEntityDescription(
+            key=PACKETS_SENT,
+            name=f"{DATA_PACKETS} sent",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_PACKETS,
+            format="d",
+        ),
+        UpnpSensorEntityDescription(
+            key=ROUTER_IP,
+            name="IP",
+            icon="mdi:server-network",
+            format="s",
+        ),
+        UpnpSensorEntityDescription(
+            key=ROUTER_UPTIME,
+            name="Uptime",
+            icon="mdi:server-network",
+            native_unit_of_measurement=TIME_SECONDS,
+            entity_registry_enabled_default=False,
+            format="d",
+        ),
+        UpnpSensorEntityDescription(
+            key=WAN_STATUS,
+            name="wan status",
+            icon="mdi:server-network",
+            format="s",
+        ),
+    ],
+    DERIVED_SENSOR: [
+        UpnpSensorEntityDescription(
+            key="KiB/sec_received",
+            name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+            format=".1f",
+        ),
+        UpnpSensorEntityDescription(
+            key="KiB/sent",
+            name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+            format=".1f",
+        ),
+        UpnpSensorEntityDescription(
+            key="packets/sec_received",
+            name=f"{DATA_RATE_PACKETS_PER_SECOND} received",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+            format=".1f",
+        ),
+        UpnpSensorEntityDescription(
+            key="packets/sent",
+            name=f"{DATA_RATE_PACKETS_PER_SECOND} sent",
+            icon="mdi:server-network",
+            native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+            format=".1f",
+        ),
+    ],
+}
 
 
 async def async_setup_platform(
@@ -64,14 +165,12 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
-        sensor_entity: tuple[SensorEntityDescription, str],
+        sensor_entity: UpnpSensorEntityDescription,
     ) -> None:
         """Initialize the base sensor."""
-        super().__init__(coordinator, sensor_entity[0])
-        self._attr_native_unit_of_measurement = sensor_entity[
-            0
-        ].native_unit_of_measurement
-        self._format = sensor_entity[1]
+        super().__init__(coordinator, sensor_entity)
+        self._attr_native_unit_of_measurement = sensor_entity.native_unit_of_measurement
+        self._format = sensor_entity.format
 
 
 class RawUpnpSensor(UpnpSensor):
@@ -92,7 +191,7 @@ class DerivedUpnpSensor(UpnpSensor):
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
-        sensor_entity: tuple[SensorEntityDescription, str],
+        sensor_entity: UpnpSensorEntityDescription,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator=coordinator, sensor_entity=sensor_entity)

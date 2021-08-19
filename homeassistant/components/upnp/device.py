@@ -14,7 +14,6 @@ from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -49,7 +48,6 @@ class Device:
         """Initialize UPnP/IGD device."""
         self._igd_device = igd_device
         self._device_updater = device_updater
-        self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
     async def async_create_device(
@@ -123,7 +121,7 @@ class Device:
         """Get the hostname."""
         url = self._igd_device.device.device_url
         parsed = urlparse(url)
-        return parsed.hostname
+        return parsed.hostname or ""
 
     def __str__(self) -> str:
         """Get string representation."""
