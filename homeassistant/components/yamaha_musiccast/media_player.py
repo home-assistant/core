@@ -339,7 +339,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         if self.state == STATE_OFF:
-            await self.turn_on()
+            await self.async_turn_on()
 
         if media_id:
             parts = media_id.split(":")
