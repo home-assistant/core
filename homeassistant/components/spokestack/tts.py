@@ -1,4 +1,4 @@
-"""Support for the Spokestack speech service."""
+"""Support for the Spokestack Text to Speech Service."""
 import logging
 
 from spokestack.tts.clients.spokestack import TextToSpeechClient, TTSError
@@ -7,14 +7,13 @@ from homeassistant.components.tts import CONF_LANG, Provider
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_KEY_ID,
-    CONF_KEY_SECRET,
-    CONF_MODE,
-    CONF_PROFILE,
-    CONF_VOICE,
+    CONF_IDENTITY,
+    CONF_SECRET_KEY,
+    DEFAULT_IDENTITY,
     DEFAULT_LANG,
     DEFAULT_MODE,
     DEFAULT_PROFILE,
+    DEFAULT_SECRET_KEY,
     DEFAULT_VOICE,
     SUPPORTED_LANGUAGES,
     SUPPORTED_MODES,
@@ -24,24 +23,21 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_engine(hass, config, discovery_info=None):
+def get_engine(hass: HomeAssistant, config, discovery_info=None):
     """Set up Spokestack TTS provider."""
-    return SpokestackProvider(hass)
+    return SpokestackProvider(hass, config)
 
 
 class SpokestackProvider(Provider):
     """Spokestack TTS Provider."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, config):
         """Initialize Spokestack client."""
         self._client = TextToSpeechClient(
-            key_id=hass.data.get(CONF_KEY_ID, " "),
-            key_secret=hass.data.get(CONF_KEY_SECRET, " "),
+            key_id=config.get(CONF_IDENTITY, DEFAULT_IDENTITY),
+            key_secret=config.get(CONF_SECRET_KEY, DEFAULT_SECRET_KEY),
         )
-        self._lang = hass.data.get(CONF_LANG, DEFAULT_LANG)
-        self._mode = hass.data.get(CONF_MODE, DEFAULT_MODE)
-        self._voice = hass.data.get(CONF_VOICE, DEFAULT_VOICE)
-        self._profile = hass.data.get(CONF_PROFILE, DEFAULT_PROFILE)
+        self._lang = config.get(CONF_LANG, DEFAULT_LANG)
         self._config = hass.data
         self.name = "Spokestack"
 
@@ -67,9 +63,13 @@ class SpokestackProvider(Provider):
 
     def get_tts_audio(self, message, language=None, options=None):
         """Convert message to speech using Spokestack API."""
+        config = options or {}
         try:
             response = self._client.synthesize(
-                message, voice=self._voice, mode=self._mode, profile=self._profile
+                utterance=message,
+                voice=config.get("voice", DEFAULT_VOICE),
+                mode=config.get("mode", DEFAULT_MODE),
+                profile=config.get("profile", DEFAULT_PROFILE),
             )
         except TTSError as error:
             _LOGGER.exception("Error during processing of TTS request %s", error)

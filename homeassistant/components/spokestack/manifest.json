@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/spokestack",
   "config_flow": true,
   "requirements": ["spokestack==0.0.22"],
+  "iot_class": "cloud_polling",
   "codeowners": ["@spokestack", "@will-rice", "@space-pope"]
 }

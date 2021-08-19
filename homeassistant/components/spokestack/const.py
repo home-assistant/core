@@ -1,18 +1,18 @@
 """Constants for the spokestack integration."""
 DOMAIN = "spokestack"
 
-CONF_KEY_ID = "key_id"
-CONF_KEY_SECRET = "key_secret"
-CONF_MODE = "mode"
-CONF_VOICE = "voice"
-CONF_LANG = "lang"
-CONF_PROFILE = "profile"
+CONF_IDENTITY = "identity"
+CONF_SECRET_KEY = "secret_key"
 
 SUPPORTED_LANGUAGES = ["en-US"]
 SUPPORTED_MODES = ["markdown", "ssml", "text"]
 SUPPORTED_OPTIONS = ["voice", "mode", "profile"]
 
+DEFAULT_IDENTITY = " "
+DEFAULT_SECRET_KEY = " "
 DEFAULT_VOICE = "demo-male"
 DEFAULT_LANG = "en-US"
 DEFAULT_MODE = "text"
 DEFAULT_PROFILE = "default"
+
+PLATFORMS = ["tts"]

@@ -1,107 +1,166 @@
 """Tests for Spokestack TTS Integration."""
-import asyncio
 import os
 import shutil
 from unittest.mock import patch
+
+import pytest
+from spokestack.tts.clients.spokestack import TTSError
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.spokestack.const import (
+    CONF_IDENTITY,
+    CONF_SECRET_KEY,
+    DEFAULT_MODE,
+    DEFAULT_PROFILE,
+    DEFAULT_VOICE,
+)
 import homeassistant.components.tts as tts
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_home_assistant, mock_service
+from tests.common import async_mock_service
 
 
-class TestSpokestackPlatform:
-    """Test Spokestack TTS integration."""
+@pytest.fixture(autouse=True)
+def cleanup_cache(hass):
+    """Clean up TTS cache."""
+    yield
+    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
+    if os.path.isdir(default_tts):
+        shutil.rmtree(default_tts)
 
-    def setup_method(self):
-        """Set up things to run with start tests."""
-        self.hass = get_test_home_assistant()
 
-        asyncio.run_coroutine_threadsafe(
-            async_process_ha_core_config(
-                self.hass, {"internal_url": "http://example.local:8123"}
-            ),
-            self.hass.loop,
-        )
+@pytest.fixture
+async def calls(hass):
+    """Mock media player calls."""
+    return async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        self.host = "localhost"
-        self.port = 59125
-        self.params = {"message": "HomeAssistant"}
 
-    def teardown_method(self):
-        """Stop everything that was started."""
-        default_tts = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
-        if os.path.isdir(default_tts):
-            shutil.rmtree(default_tts)
+@pytest.fixture(autouse=True)
+async def setup_internal_url(hass):
+    """Set up internal url."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"}
+    )
 
-        self.hass.stop()
 
-    def test_setup_component(self):
-        """Test setup component."""
-        config = {tts.DOMAIN: {"platform": "spokestack"}}
+@pytest.fixture
+def mock_client():
+    """Mock TextToSpeechClient."""
+    with patch(
+        "homeassistant.components.spokestack.tts.TextToSpeechClient"
+    ) as mock_client:
+        yield mock_client
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
 
-    def test_service_say(self):
-        """Test service call say."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+async def test_service_say_default(hass, mock_client, calls):
+    """Test service call say."""
+    await async_setup_component(
+        hass,
+        tts.DOMAIN,
+        {
+            tts.DOMAIN: {
+                "platform": "spokestack",
+                CONF_IDENTITY: "test_key",
+                CONF_SECRET_KEY: "test_secret",
+            }
+        },
+    )
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "spokestack_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert len(mock_client.mock_calls) == 3
+    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
 
-        config = {tts.DOMAIN: {"platform": "spokestack"}}
+    # Confirm validation call is made.
+    assert mock_client.mock_calls[0][2] == {
+        "key_id": "test_key",
+        "key_secret": "test_secret",
+    }
+    # Confirm synthesize is called with valid arguments.
+    assert mock_client.mock_calls[1][2] == {
+        "utterance": "There is a person at the front door.",
+        "voice": DEFAULT_VOICE,
+        "mode": DEFAULT_MODE,
+        "profile": DEFAULT_PROFILE,
+    }
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
 
-        with patch(
-            "homeassistant.components.spokestack.tts.TextToSpeechClient.synthesize",
-            return_value=b"audio",
-        ) as mock_speak:
-            self.hass.services.call(
-                tts.DOMAIN,
-                "spokestack_say",
-                {
-                    "entity_id": "media_player.something",
-                    tts.ATTR_MESSAGE: "HomeAssistant",
-                },
-            )
-            self.hass.block_till_done()
+async def test_service_say_ssml(hass, mock_client, calls):
+    """Test service call say."""
+    await async_setup_component(
+        hass,
+        tts.DOMAIN,
+        {
+            tts.DOMAIN: {
+                "platform": "spokestack",
+                CONF_IDENTITY: "test_key",
+                CONF_SECRET_KEY: "test_secret",
+            }
+        },
+    )
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "spokestack_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+            tts.ATTR_OPTIONS: {"mode": "ssml"},
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert len(mock_client.mock_calls) == 3
+    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
 
-        mock_speak.assert_called_once()
-        mock_speak.assert_called_with(
-            "HomeAssistant", voice="demo-male", mode="text", profile="default"
-        )
+    # Confirm validation call is made.
+    assert mock_client.mock_calls[0][2] == {
+        "key_id": "test_key",
+        "key_secret": "test_secret",
+    }
+    # Confirm synthesize is called with valid arguments.
+    assert mock_client.mock_calls[1][2] == {
+        "utterance": "There is a person at the front door.",
+        "voice": DEFAULT_VOICE,
+        "mode": "ssml",
+        "profile": DEFAULT_PROFILE,
+    }
 
-        assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
 
-    def test_service_say_http_error(self):
-        """Test service call say."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+async def test_service_say_error(hass, mock_client, calls):
+    """Test service call say with http response 400."""
+    mock_client.synthesize.return_value = TTSError
 
-        config = {tts.DOMAIN: {"platform": "spokestack"}}
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        with patch(
-            "homeassistant.components.spokestack.tts.TextToSpeechClient.synthesize",
-            side_effect=Exception(),
-        ) as mock_speak:
-            self.hass.services.call(
-                tts.DOMAIN,
-                "spokestack_say",
-                {
-                    "entity_id": "media_player.something",
-                    tts.ATTR_MESSAGE: "HomeAssistant",
-                },
-            )
-            self.hass.block_till_done()
-
-        mock_speak.assert_called_once()
-        assert len(calls) == 0
+    await async_setup_component(
+        hass,
+        tts.DOMAIN,
+        {
+            tts.DOMAIN: {
+                "platform": "spokestack",
+                CONF_IDENTITY: "test_key",
+                CONF_SECRET_KEY: "test_secret",
+            }
+        },
+    )
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "spokestack_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+        },
+        blocking=True,
+    )
+    # 1 call due to the validate call
+    assert len(calls) == 1
