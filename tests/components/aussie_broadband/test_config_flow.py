@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from aussiebb import AuthenticationException
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.aussie_broadband.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -305,6 +305,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test reauth is handled."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
     # Setup a config entry
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
