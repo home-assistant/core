@@ -232,6 +232,14 @@ class PlenticoreDataFormatter:
             return state
 
     @staticmethod
+    def format_float(state: str) -> int | str:
+        """Return the given state value as float rounded to three decimal places."""
+        try:
+            return round(float(state), 3)
+        except (TypeError, ValueError):
+            return state
+
+    @staticmethod
     def format_energy(state: str) -> float | str:
         """Return the given state value as energy value, scaled to kWh."""
         try:
