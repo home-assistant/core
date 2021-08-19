@@ -233,7 +233,6 @@ class SystemBridgeEntity(CoordinatorEntity):
         key: str,
         name: str | None,
         icon: str | None,
-        enabled_by_default: bool,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
@@ -241,7 +240,6 @@ class SystemBridgeEntity(CoordinatorEntity):
         self._key = f"{bridge.information.host}_{key}"
         self._name = f"{bridge.information.host} {name}"
         self._icon = icon
-        self._enabled_default = enabled_by_default
         self._hostname = bridge.information.host
         self._mac = bridge.information.mac
         self._manufacturer = bridge.system.system.manufacturer
@@ -262,11 +260,6 @@ class SystemBridgeEntity(CoordinatorEntity):
     def icon(self) -> str | None:
         """Return the mdi icon of the entity."""
         return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
 
 class SystemBridgeDeviceEntity(SystemBridgeEntity):

@@ -524,7 +524,6 @@ class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
             description.key,
             description.name,
             description.icon,
-            description.entity_registry_enabled_default,
         )
         self.entity_description = description
 
