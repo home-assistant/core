@@ -22,8 +22,8 @@ def pywemo_model_fixture():
     return "LightSwitch"
 
 
-@pytest.fixture(name="pywemo_registry")
-def pywemo_registry_fixture():
+@pytest.fixture(name="pywemo_registry", autouse=True)
+async def async_pywemo_registry_fixture():
     """Fixture for SubscriptionRegistry instances."""
     registry = create_autospec(pywemo.SubscriptionRegistry, instance=True)
 
@@ -38,6 +38,13 @@ def pywemo_registry_fixture():
 
     with patch("pywemo.SubscriptionRegistry", return_value=registry):
         yield registry
+
+
+@pytest.fixture(name="pywemo_discovery_responder", autouse=True)
+def pywemo_discovery_responder_fixture():
+    """Fixture for the DiscoveryResponder instance."""
+    with patch("pywemo.ssdp.DiscoveryResponder", autospec=True):
+        yield
 
 
 @pytest.fixture(name="pywemo_device")

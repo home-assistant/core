@@ -532,7 +532,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.29
+dsmr_parser==0.30
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.4
@@ -1979,7 +1979,7 @@ pyvolumio==0.1.3
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.6.6
+pywemo==0.6.7
 
 # homeassistant.components.wilight
 pywilight==0.0.70

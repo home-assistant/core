@@ -1,13 +1,7 @@
 """Support for MyQ-Enabled Garage Doors."""
 import logging
 
-from pymyq.const import (
-    DEVICE_STATE as MYQ_DEVICE_STATE,
-    DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
-    DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE,
-    KNOWN_MODELS,
-    MANUFACTURER,
-)
+from pymyq.const import DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE
 from pymyq.errors import MyQError
 
 from homeassistant.components.cover import (
@@ -19,8 +13,8 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import MyQEntity
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,35 +27,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = data[MYQ_COORDINATOR]
 
     async_add_entities(
-        [MyQDevice(coordinator, device) for device in myq.covers.values()]
+        [MyQCover(coordinator, device) for device in myq.covers.values()]
     )
 
 
-class MyQDevice(CoordinatorEntity, CoverEntity):
+class MyQCover(MyQEntity, CoverEntity):
     """Representation of a MyQ cover."""
+
+    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
 
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, device)
         self._device = device
         if device.device_type == MYQ_DEVICE_TYPE_GATE:
             self._attr_device_class = DEVICE_CLASS_GATE
         else:
             self._attr_device_class = DEVICE_CLASS_GARAGE
         self._attr_unique_id = device.device_id
-
-    @property
-    def name(self):
-        """Return the name of the garage door if any."""
-        return self._device.name
-
-    @property
-    def available(self):
-        """Return if the device is online."""
-        # Not all devices report online so assume True if its missing
-        return super().available and self._device.device_json[MYQ_DEVICE_STATE].get(
-            MYQ_DEVICE_STATE_ONLINE, True
-        )
 
     @property
     def is_closed(self):
@@ -82,11 +65,6 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
     def is_opening(self):
         """Return if the cover is opening or not."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_OPENING
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
 
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
@@ -133,19 +111,3 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
 
         if not result:
             raise HomeAssistantError(f"Opening of cover {self._device.name} failed")
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.name,
-            "manufacturer": MANUFACTURER,
-            "sw_version": self._device.firmware_version,
-        }
-        model = KNOWN_MODELS.get(self._device.device_id[2:4])
-        if model:
-            device_info["model"] = model
-        if self._device.parent_device_id:
-            device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
-        return device_info
