@@ -234,6 +234,14 @@ class HomeAssistant:
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
 
+    def get_domain(self, domain: str) -> Any:
+        """Return domain information stored in hass.data."""
+        return self.data[domain]
+
+    def set_domain(self, domain: str, info: Any) -> None:
+        """Store domain information in hass.data."""
+        self.data[domain] = info
+
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""

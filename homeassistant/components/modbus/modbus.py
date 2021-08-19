@@ -111,7 +111,8 @@ async def async_modbus_setup(
 ):
     """Set up Modbus component."""
 
-    hass.data[DOMAIN] = hub_collect = {}
+    hub_collect = {}
+    hass.set_domain(DOMAIN, hub_collect)
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
         hub_collect[conf_hub[CONF_NAME]] = my_hub
