@@ -58,6 +58,8 @@ async def _async_start_scanner(hass: HomeAssistant) -> None:
     @callback
     def _async_process_ports(ports):
         for port in ports:
+            if port.vid is None and port.pid is None:
+                continue
             _async_process_discovered_usb_device(hass, _usb_device_from_port(port))
 
     def _scan_serial(*_):
