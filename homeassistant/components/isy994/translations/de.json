@@ -9,7 +9,7 @@
             "invalid_host": "Der Hosteintrag hatte nicht das vollst\u00e4ndige URL-Format, z. B. http://192.168.10.100:80",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Universalger\u00e4te ISY994 {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -39,7 +39,10 @@
     },
     "system_health": {
         "info": {
-            "host_reachable": "Deutsch"
+            "device_connected": "ISY verbunden",
+            "host_reachable": "Deutsch",
+            "last_heartbeat": "Letzte Heartbeat-Zeit",
+            "websocket_status": "Ereignis-Socket Status"
         }
     }
 }

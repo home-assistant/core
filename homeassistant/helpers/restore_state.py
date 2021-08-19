@@ -100,6 +100,12 @@ class RestoreStateData:
 
         return cast(RestoreStateData, await load_instance(hass))
 
+    @classmethod
+    async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
+        """Dump states now."""
+        data = await cls.async_get_instance(hass)
+        await data.async_dump_states()
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
         self.hass: HomeAssistant = hass

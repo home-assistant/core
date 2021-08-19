@@ -1,6 +1,9 @@
 """Support for IKEA Tradfri."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
@@ -14,7 +17,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json
 
 from .const import (
     ATTR_TRADFRI_GATEWAY,
@@ -26,7 +28,6 @@ from .const import (
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,
-    CONFIG_FILE,
     DEFAULT_ALLOW_TRADFRI_GROUPS,
     DEVICES,
     DOMAIN,
@@ -55,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tradfri component."""
     conf = config.get(DOMAIN)
 
@@ -66,27 +67,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
     ]
 
-    legacy_hosts = await hass.async_add_executor_job(
-        load_json, hass.config.path(CONFIG_FILE)
-    )
-
-    for host, info in legacy_hosts.items():
-        if host in configured_hosts:
-            continue
-
-        info[CONF_HOST] = host
-        info[CONF_IMPORT_GROUPS] = conf[CONF_ALLOW_TRADFRI_GROUPS]
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=info
-            )
-        )
-
     host = conf.get(CONF_HOST)
     import_groups = conf[CONF_ALLOW_TRADFRI_GROUPS]
 
-    if host is None or host in configured_hosts or host in legacy_hosts:
+    if host is None or host in configured_hosts:
         return True
 
     hass.async_create_task(
@@ -103,7 +87,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+    tradfri_data: dict[str, Any] = {}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
     listeners = tradfri_data[LISTENERS] = []
 
     factory = await APIFactory.init(

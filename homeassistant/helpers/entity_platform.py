@@ -8,9 +8,8 @@ from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
-from typing_extensions import Protocol
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -397,7 +396,7 @@ class EntityPlatform:
             raise
 
         if (
-            (self.config_entry and self.config_entry.system_options.disable_polling)
+            (self.config_entry and self.config_entry.pref_disable_polling)
             or self._async_unsub_polling is not None
             or not any(entity.should_poll for entity in self.entities.values())
         ):
@@ -508,7 +507,7 @@ class EntityPlatform:
             entity.entity_id = entry.entity_id
 
             if entry.disabled:
-                self.logger.info(
+                self.logger.debug(
                     "Not adding entity %s because it's disabled",
                     entry.name
                     or entity.name

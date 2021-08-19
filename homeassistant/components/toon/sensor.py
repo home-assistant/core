@@ -1,11 +1,7 @@
 """Support for Toon sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
-    ATTR_STATE_CLASS,
-    SensorEntity,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -89,7 +85,7 @@ async def async_setup_entry(
         sensors.extend(
             [
                 ToonSolarDeviceSensor(coordinator, key=key)
-                for key in [
+                for key in (
                     "solar_value",
                     "solar_maximum",
                     "solar_produced",
@@ -98,7 +94,7 @@ async def async_setup_entry(
                     "power_usage_day_from_grid_usage",
                     "power_usage_day_to_grid_usage",
                     "power_usage_current_covered_by_solar",
-                ]
+                )
             ]
         )
 
@@ -120,29 +116,25 @@ class ToonSensor(ToonEntity, SensorEntity):
     def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
         """Initialize the Toon sensor."""
         self.key = key
+        super().__init__(coordinator)
 
-        super().__init__(
-            coordinator,
-            enabled_default=SENSOR_ENTITIES[key][ATTR_DEFAULT_ENABLED],
-            icon=SENSOR_ENTITIES[key][ATTR_ICON],
-            name=SENSOR_ENTITIES[key][ATTR_NAME],
+        sensor = SENSOR_ENTITIES[key]
+        self._attr_entity_registry_enabled_default = sensor.get(
+            ATTR_DEFAULT_ENABLED, True
+        )
+        self._attr_icon = sensor.get(ATTR_ICON)
+        self._attr_name = sensor[ATTR_NAME]
+        self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
+        self._attr_native_unit_of_measurement = sensor[ATTR_UNIT_OF_MEASUREMENT]
+        self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
+        self._attr_unique_id = (
+            # This unique ID is a bit ugly and contains unneeded information.
+            # It is here for legacy / backward compatible reasons.
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{key}"
         )
 
-        self._attr_last_reset = SENSOR_ENTITIES[key][ATTR_LAST_RESET]
-        self._attr_state_class = SENSOR_ENTITIES[key][ATTR_STATE_CLASS]
-        self._attr_unit_of_measurement = SENSOR_ENTITIES[key][ATTR_UNIT_OF_MEASUREMENT]
-        self._sttr_device_class = SENSOR_ENTITIES[key][ATTR_DEVICE_CLASS]
-
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        agreement_id = self.coordinator.data.agreement.agreement_id
-        # This unique ID is a bit ugly and contains unneeded information.
-        # It is here for legacy / backward compatible reasons.
-        return f"{DOMAIN}_{agreement_id}_sensor_{self.key}"
-
-    @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(
             self.coordinator.data, SENSOR_ENTITIES[self.key][ATTR_SECTION]

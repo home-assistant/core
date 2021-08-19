@@ -1,4 +1,6 @@
 """Switch support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity

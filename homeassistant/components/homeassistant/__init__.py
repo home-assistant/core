@@ -14,17 +14,19 @@ from homeassistant.const import (
     RESTART_EXIT_CODE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, recorder
+from homeassistant.helpers import config_validation as cv, recorder, restore_state
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
 )
+from homeassistant.helpers.typing import ConfigType
 
 ATTR_ENTRY_ID = "entry_id"
 
@@ -50,8 +52,12 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C901
+async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
+
+    async def async_save_persistent_states(service):
+        """Handle calls to homeassistant.save_persistent_states."""
+        await restore_state.RestoreStateData.async_save_persistent_states(hass)
 
     async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
@@ -113,6 +119,10 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C9
 
         if tasks:
             await asyncio.gather(*tasks)
+
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_SAVE_PERSISTENT_STATES, async_save_persistent_states
+    )
 
     service_schema = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids}, extra=vol.ALLOW_EXTRA)
 
@@ -248,10 +258,10 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C9
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_reload(config_entry_id)
                 for config_entry_id in reload_entries
-            ]
+            )
         )
 
     hass.helpers.service.async_register_admin_service(

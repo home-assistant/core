@@ -60,9 +60,7 @@ async def test_polling_only_updates_entities_it_should_poll(hass):
 async def test_polling_disabled_by_config_entry(hass):
     """Test the polling of only updated entities."""
     entity_platform = MockEntityPlatform(hass)
-    entity_platform.config_entry = MockConfigEntry(
-        system_options={"disable_polling": True}
-    )
+    entity_platform.config_entry = MockConfigEntry(pref_disable_polling=True)
 
     poll_ent = MockEntity(should_poll=True)
 

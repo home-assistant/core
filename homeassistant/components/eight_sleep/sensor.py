@@ -2,7 +2,12 @@
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 
 from . import (
     CONF_SENSORS,
@@ -96,12 +101,12 @@ class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return PERCENTAGE
 
@@ -152,12 +157,12 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if (
             "current_sleep" in self._sensor
@@ -172,10 +177,11 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         return None
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
         if "bed_temp" in self._sensor:
-            return "mdi:thermometer"
+            return DEVICE_CLASS_TEMPERATURE
+        return None
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -310,7 +316,7 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -327,13 +333,13 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
             self._state = None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if self._units == "si":
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:thermometer"
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TEMPERATURE

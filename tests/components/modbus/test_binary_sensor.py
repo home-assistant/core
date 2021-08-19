@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     STATE_OFF,
     STATE_ON,
@@ -19,39 +20,38 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
 
-from tests.common import mock_restore_cache
+ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
 
 
 @pytest.mark.parametrize(
-    "do_options",
+    "do_config",
     [
-        {},
         {
-            CONF_SLAVE: 10,
-            CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-            CONF_DEVICE_CLASS: "door",
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                    CONF_DEVICE_CLASS: "door",
+                }
+            ]
         },
     ],
 )
-async def test_config_binary_sensor(hass, do_options):
-    """Run test for binary sensor."""
-    sensor_name = "test_sensor"
-    config_sensor = {
-        CONF_NAME: sensor_name,
-        CONF_ADDRESS: 51,
-        **do_options,
-    }
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_BINARY_SENSORS,
-        None,
-        method_discovery=True,
-    )
+async def test_config_binary_sensor(hass, mock_modbus):
+    """Run config test for binary sensor."""
+    assert SENSOR_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize("do_type", [CALL_TYPE_COIL, CALL_TYPE_DISCRETE])
@@ -86,11 +86,10 @@ async def test_config_binary_sensor(hass, do_options):
 )
 async def test_all_binary_sensor(hass, do_type, regs, expected):
     """Run test for given config."""
-    sensor_name = "modbus_test_binary_sensor"
     state = await base_test(
         hass,
-        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, CONF_INPUT_TYPE: do_type},
-        sensor_name,
+        {CONF_NAME: TEST_ENTITY_NAME, CONF_ADDRESS: 1234, CONF_INPUT_TYPE: do_type},
+        TEST_ENTITY_NAME,
         SENSOR_DOMAIN,
         CONF_BINARY_SENSORS,
         None,
@@ -102,55 +101,56 @@ async def test_all_binary_sensor(hass, do_type, regs, expected):
     assert state == expected
 
 
-async def test_service_binary_sensor_update(hass, mock_pymodbus):
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                }
+            ]
+        },
+    ],
+)
+async def test_service_binary_sensor_update(hass, mock_modbus, mock_ha):
     """Run test for service homeassistant.update_entity."""
 
-    entity_id = "binary_sensor.test"
-    config = {
-        CONF_BINARY_SENSORS: [
-            {
-                CONF_NAME: "test",
-                CONF_ADDRESS: 1234,
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            }
-        ]
-    }
-    mock_pymodbus.read_coils.return_value = ReadResult([0x00])
-    await prepare_service_update(
-        hass,
-        config,
-    )
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    mock_modbus.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == STATE_ON
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_restore_state_binary_sensor(hass):
+@pytest.mark.parametrize(
+    "mock_test_state",
+    [(State(ENTITY_ID, STATE_ON),)],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ]
+        },
+    ],
+)
+async def test_restore_state_binary_sensor(hass, mock_test_state, mock_modbus):
     """Run test for binary sensor restore state."""
-
-    sensor_name = "test_binary_sensor"
-    test_value = STATE_ON
-    config_sensor = {CONF_NAME: sensor_name, CONF_ADDRESS: 17}
-    mock_restore_cache(
-        hass,
-        (State(f"{SENSOR_DOMAIN}.{sensor_name}", test_value),),
-    )
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_BINARY_SENSORS,
-        None,
-        method_discovery=True,
-    )
-    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
-    assert hass.states.get(entity_id).state == test_value
+    assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state

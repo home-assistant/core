@@ -179,7 +179,6 @@ async def setup_bridge(hass, mock_bridge):
         "Mock Title",
         {"host": "mock-host"},
         "test",
-        system_options={},
     )
     mock_bridge.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}

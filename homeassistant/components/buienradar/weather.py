@@ -11,7 +11,6 @@ from buienradar.constants import (
     WINDAZIMUTH,
     WINDSPEED,
 )
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -35,13 +34,11 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # Reuse data and API logic from the sensor implementation
@@ -75,22 +72,6 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_WINDY_VARIANT: (),
     ATTR_CONDITION_EXCEPTIONAL: (),
 }
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_FORECAST, default=True): cv.boolean,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up buienradar weather platform."""
-    _LOGGER.warning(
-        "Platform configuration is deprecated, will be removed in a future release"
-    )
 
 
 async def async_setup_entry(
@@ -130,12 +111,17 @@ async def async_setup_entry(
 class BrWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, data, config, coordinates):
-        """Initialise the platform with a data instance and station name."""
+        """Initialize the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME, "Buienradar")
+        self._attr_name = (
+            self._stationname or f"BR {data.stationname or '(unknown station)'}"
+        )
         self._data = data
 
-        self._unique_id = "{:2.6f}{:2.6f}".format(
+        self._attr_unique_id = "{:2.6f}{:2.6f}".format(
             coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
         )
 
@@ -143,13 +129,6 @@ class BrWeather(WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         return self._data.attribution
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return (
-            self._stationname or f"BR {self._data.stationname or '(unknown station)'}"
-        )
 
     @property
     def condition(self):
@@ -196,11 +175,6 @@ class BrWeather(WeatherEntity):
         return self._data.wind_bearing
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def forecast(self):
         """Return the forecast array."""
         fcdata_out = []
@@ -226,8 +200,3 @@ class BrWeather(WeatherEntity):
             fcdata_out.append(data_out)
 
         return fcdata_out
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id

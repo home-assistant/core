@@ -10,6 +10,7 @@ from homeassistant.const import (
     DATA_BYTES,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
+    ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
@@ -17,8 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import WLEDDataUpdateCoordinator, WLEDEntity
-from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
+from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, DOMAIN
+from .coordinator import WLEDDataUpdateCoordinator
+from .models import WLEDEntity
 
 
 async def async_setup_entry(
@@ -39,14 +41,14 @@ async def async_setup_entry(
         WLEDWifiSignalSensor(coordinator),
     ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class WLEDEstimatedCurrentSensor(WLEDEntity, SensorEntity):
     """Defines a WLED estimated current sensor."""
 
     _attr_icon = "mdi:power"
-    _attr_unit_of_measurement = CURRENT_MA
+    _attr_native_unit_of_measurement = ELECTRIC_CURRENT_MILLIAMPERE
     _attr_device_class = DEVICE_CLASS_CURRENT
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -64,7 +66,7 @@ class WLEDEstimatedCurrentSensor(WLEDEntity, SensorEntity):
         }
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data.info.leds.power
 
@@ -82,7 +84,7 @@ class WLEDUptimeSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_uptime"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
         return uptime.replace(microsecond=0).isoformat()
@@ -93,7 +95,7 @@ class WLEDFreeHeapSensor(WLEDEntity, SensorEntity):
 
     _attr_icon = "mdi:memory"
     _attr_entity_registry_enabled_default = False
-    _attr_unit_of_measurement = DATA_BYTES
+    _attr_native_unit_of_measurement = DATA_BYTES
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED free heap sensor."""
@@ -102,7 +104,7 @@ class WLEDFreeHeapSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_free_heap"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data.info.free_heap
 
@@ -111,7 +113,7 @@ class WLEDWifiSignalSensor(WLEDEntity, SensorEntity):
     """Defines a WLED Wi-Fi signal sensor."""
 
     _attr_icon = "mdi:wifi"
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -121,8 +123,10 @@ class WLEDWifiSignalSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_signal"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.signal
 
 
@@ -130,7 +134,7 @@ class WLEDWifiRSSISensor(WLEDEntity, SensorEntity):
     """Defines a WLED Wi-Fi RSSI sensor."""
 
     _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
-    _attr_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -140,8 +144,10 @@ class WLEDWifiRSSISensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_rssi"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.rssi
 
 
@@ -158,8 +164,10 @@ class WLEDWifiChannelSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_channel"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.channel
 
 
@@ -176,6 +184,8 @@ class WLEDWifiBSSIDSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_bssid"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.bssid

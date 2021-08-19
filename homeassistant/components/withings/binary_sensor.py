@@ -29,12 +29,9 @@ async def async_setup_entry(
 class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
+    _attr_device_class = DEVICE_CLASS_OCCUPANCY
+
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state_data
-
-    @property
-    def device_class(self) -> str:
-        """Provide the device class."""
-        return DEVICE_CLASS_OCCUPANCY

@@ -24,15 +24,12 @@ async def async_setup_platform(
     """Set up weather entities for KNX platform."""
     if not discovery_info or not discovery_info["platform_config"]:
         return
-
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXWeather(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXWeather(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
@@ -74,21 +71,18 @@ def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
 class KNXWeather(KnxEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
+    _device: XknxWeather
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
-        self._device: XknxWeather
         super().__init__(_create_weather(xknx, config))
-        self._unique_id = f"{self._device._temperature.group_address_state}"
+        self._attr_unique_id = str(self._device._temperature.group_address_state)
 
     @property
     def temperature(self) -> float | None:
         """Return current temperature."""
         return self._device.temperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return temperature unit."""
-        return TEMP_CELSIUS
 
     @property
     def pressure(self) -> float | None:

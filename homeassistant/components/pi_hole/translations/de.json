@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service ist bereits konfiguriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
@@ -16,10 +16,10 @@
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
                     "host": "Host",
-                    "location": "Org",
+                    "location": "Standort",
                     "name": "Name",
                     "port": "Port",
-                    "ssl": "Nutzt ein SSL-Zertifikat",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "statistics_only": "Nur Statistiken",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 }

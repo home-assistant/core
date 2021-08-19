@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import IPPDataUpdateCoordinator, IPPEntity
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
@@ -24,6 +23,8 @@ from .const import (
     ATTR_URI_SUPPORTED,
     DOMAIN,
 )
+from .coordinator import IPPDataUpdateCoordinator
+from .entity import IPPEntity
 
 
 async def async_setup_entry(
@@ -69,12 +70,9 @@ class IPPSensor(IPPEntity, SensorEntity):
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize IPP sensor."""
-        self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = None
-
-        if unique_id is not None:
-            self._unique_id = f"{unique_id}_{key}"
+        self._attr_unique_id = f"{unique_id}_{key}"
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
         super().__init__(
             entry_id=entry_id,
@@ -84,16 +82,6 @@ class IPPSensor(IPPEntity, SensorEntity):
             icon=icon,
             enabled_default=enabled_default,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class IPPMarkerSensor(IPPSensor):
@@ -135,7 +123,7 @@ class IPPMarkerSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         level = self.coordinator.data.markers[self.marker_index].level
 
@@ -176,13 +164,15 @@ class IPPPrinterSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data.state.printer_state
 
 
 class IPPUptimeSensor(IPPSensor):
     """Defines a IPP uptime sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def __init__(
         self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
@@ -199,12 +189,7 @@ class IPPUptimeSensor(IPPSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
         return uptime.replace(microsecond=0).isoformat()
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP

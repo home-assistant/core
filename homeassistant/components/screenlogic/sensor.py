@@ -68,11 +68,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Pump sensors
     for pump_num, pump_data in coordinator.data[SL_DATA.KEY_PUMPS].items():
         if pump_data["data"] != 0 and "currentWatts" in pump_data:
-            entities.extend(
-                ScreenLogicPumpSensor(coordinator, pump_num, pump_key)
-                for pump_key in pump_data
-                if pump_key in SUPPORTED_PUMP_SENSORS
-            )
+            for pump_key in pump_data:
+                # Considerations for Intelliflow VF
+                if pump_data["pumpType"] == 1 and pump_key == "currentRPM":
+                    continue
+                # Considerations for Intelliflow VS
+                if pump_data["pumpType"] == 2 and pump_key == "currentGPM":
+                    continue
+                if pump_key in SUPPORTED_PUMP_SENSORS:
+                    entities.append(
+                        ScreenLogicPumpSensor(coordinator, pump_num, pump_key)
+                    )
 
     # IntelliChem sensors
     if equipment_flags & EQUIPMENT.FLAG_INTELLICHEM:
@@ -108,7 +114,7 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         return f"{self.gateway_name} {self.sensor['name']}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.sensor.get("unit")
 
@@ -119,7 +125,7 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         value = self.sensor["value"]
         return (value - 1) if "supply" in self._data_key else value
@@ -154,7 +160,7 @@ class ScreenLogicChemistrySensor(ScreenLogicSensor):
         self._key = key
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         value = self.sensor["value"]
         if "dosing_state" in self._key:

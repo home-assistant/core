@@ -3,21 +3,14 @@ from __future__ import annotations
 
 from pyrituals import Diffuser
 
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RitualsDataUpdateCoordinator
-from .const import ATTRIBUTES, DOMAIN, HUBLOT, SENSORS
+from .const import DOMAIN
 
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "The Perfume Genie"
 MODEL2 = "The Perfume Genie 2.0"
-
-ROOMNAME = "roomnamec"
-STATUS = "status"
-VERSION = "versionc"
-
-AVAILABLE_STATE = 1
 
 
 class DiffuserEntity(CoordinatorEntity):
@@ -34,32 +27,21 @@ class DiffuserEntity(CoordinatorEntity):
         """Init from config, hookup diffuser and coordinator."""
         super().__init__(coordinator)
         self._diffuser = diffuser
-        self._entity_suffix = entity_suffix
-        self._hublot = self._diffuser.hub_data[HUBLOT]
-        self._hubname = self._diffuser.hub_data[ATTRIBUTES][ROOMNAME]
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
-        return f"{self._hublot}{self._entity_suffix}"
+        hublot = self._diffuser.hublot
+        hubname = self._diffuser.name
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"{self._hubname}{self._entity_suffix}"
+        self._attr_name = f"{hubname}{entity_suffix}"
+        self._attr_unique_id = f"{hublot}{entity_suffix}"
+        self._attr_device_info = {
+            "name": hubname,
+            "identifiers": {(DOMAIN, hublot)},
+            "manufacturer": MANUFACTURER,
+            "model": MODEL if diffuser.has_battery else MODEL2,
+            "sw_version": diffuser.version,
+        }
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and self._diffuser.hub_data[STATUS] == AVAILABLE_STATE
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return {
-            "name": self._hubname,
-            "identifiers": {(DOMAIN, self._hublot)},
-            "manufacturer": MANUFACTURER,
-            "model": MODEL if self._diffuser.has_battery else MODEL2,
-            "sw_version": self._diffuser.hub_data[SENSORS][VERSION],
-        }
+        return super().available and self._diffuser.is_online

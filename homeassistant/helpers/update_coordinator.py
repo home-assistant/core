@@ -111,7 +111,7 @@ class DataUpdateCoordinator(Generic[T]):
         if self.update_interval is None:
             return
 
-        if self.config_entry and self.config_entry.system_options.disable_polling:
+        if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
         if self._unsub_refresh:

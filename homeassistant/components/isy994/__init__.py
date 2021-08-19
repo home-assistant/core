@@ -1,6 +1,7 @@
 """Support the ISY-994 controllers."""
 from __future__ import annotations
 
+import asyncio
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -171,8 +172,12 @@ async def async_setup_entry(
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(60):
             await isy.initialize()
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady(
+            f"Timed out initializing the ISY; device may be busy, trying again later: {err}"
+        ) from err
     except ISYInvalidAuthError as err:
         _LOGGER.error(
             "Invalid credentials for the ISY, please adjust settings and try again: %s",
@@ -180,16 +185,13 @@ async def async_setup_entry(
         )
         return False
     except ISYConnectionError as err:
-        _LOGGER.error(
-            "Failed to connect to the ISY, please adjust settings and try again: %s",
-            err,
-        )
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Failed to connect to the ISY, please adjust settings and try again: {err}"
+        ) from err
     except ISYResponseParseError as err:
-        _LOGGER.warning(
-            "Error processing responses from the ISY; device may be busy, trying again later"
-        )
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Invalid XML response from ISY; Ensure the ISY is running the latest firmware: {err}"
+        ) from err
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
@@ -242,11 +244,11 @@ def _async_import_options_from_data_if_missing(
 ):
     options = dict(entry.options)
     modified = False
-    for importable_option in [
+    for importable_option in (
         CONF_IGNORE_STRING,
         CONF_SENSOR_STRING,
         CONF_RESTORE_LIGHT_STATE,
-    ]:
+    ):
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
             modified = True

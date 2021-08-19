@@ -9,6 +9,7 @@ from typing import Any, Callable, cast
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
 
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -34,7 +35,7 @@ from .const import (
     SIGNAL_INSTANCE_REMOVE,
 )
 
-PLATFORMS = [LIGHT_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [LIGHT_DOMAIN, SWITCH_DOMAIN, CAMERA_DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -272,10 +273,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def setup_then_listen() -> None:
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         assert hyperion_client
         if hyperion_client.instances is not None:
@@ -305,12 +306,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
         # Disconnect the shared instance clients.
         await asyncio.gather(
-            *[
+            *(
                 config_data[CONF_INSTANCE_CLIENTS][
                     instance_num
                 ].async_client_disconnect()
                 for instance_num in config_data[CONF_INSTANCE_CLIENTS]
-            ]
+            )
         )
 
         # Disconnect the root client.

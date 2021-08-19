@@ -95,7 +95,6 @@ async def test_storage_is_removed_on_config_entry_removal(hass, utcnow):
         "TestData",
         pairing_data,
         "test",
-        system_options={},
     )
 
     assert hkid in hass.data[ENTITY_MAP].storage_data

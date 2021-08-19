@@ -46,7 +46,6 @@ def config_entry_fixture():
         title="",
         data=data,
         options={},
-        system_options={},
         source=SOURCE_USER,
         entry_id=1,
     )

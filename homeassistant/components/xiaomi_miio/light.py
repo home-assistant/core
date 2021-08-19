@@ -241,10 +241,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if update_tasks:
                 await asyncio.wait(update_tasks)
 
-        for xiaomi_miio_service in SERVICE_TO_METHOD:
-            schema = SERVICE_TO_METHOD[xiaomi_miio_service].get(
-                "schema", XIAOMI_MIIO_SERVICE_SCHEMA
-            )
+        for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
+            schema = method.get("schema", XIAOMI_MIIO_SERVICE_SCHEMA)
             hass.services.async_register(
                 DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
             )

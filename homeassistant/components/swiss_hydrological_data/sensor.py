@@ -94,14 +94,14 @@ class SwissHydrologicalDataSensor(SensorEntity):
         return f"{self._station}_{self._condition}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not None:
             return self.hydro_data.data["parameters"][self._condition]["unit"]
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if isinstance(self._state, (int, float)):
             return round(self._state, 2)

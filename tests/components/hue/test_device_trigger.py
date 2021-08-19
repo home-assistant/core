@@ -74,7 +74,7 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
     }
     expected_triggers = [
         trigger_batt,
-        *[
+        *(
             {
                 "platform": "device",
                 "domain": hue.DOMAIN,
@@ -83,7 +83,7 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
                 "subtype": t_subtype,
             }
             for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE.keys()
-        ],
+        ),
     ]
     assert_lists_same(triggers, expected_triggers)
 

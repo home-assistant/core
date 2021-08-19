@@ -3,6 +3,6 @@
   "name": "GitHub",
   "documentation": "https://www.home-assistant.io/integrations/github",
   "requirements": ["PyGithub==1.43.8"],
-  "codeowners": [],
+  "codeowners": ["@timmo001"],
   "iot_class": "cloud_polling"
 }

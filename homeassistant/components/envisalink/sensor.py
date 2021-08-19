@@ -61,7 +61,7 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the overall state."""
         return self._info["status"]["alpha"]
 

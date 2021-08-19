@@ -382,6 +382,30 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
         blocking=True,
     )
 
+    # Test setting illegal mode raises an error
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+                ATTR_HVAC_MODE: HVAC_MODE_COOL,
+            },
+            blocking=True,
+        )
+
+    # Test that setting HVAC_MODE_HEAT works. If the no-op logic didn't work, this would
+    # raise an error
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ATTR_HVAC_MODE: HVAC_MODE_HEAT,
+        },
+        blocking=True,
+    )
+
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
@@ -435,6 +459,16 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
     client.async_send_command_no_wait.reset_mock()
+
+
+async def test_thermostat_heatit_z_trm3_no_value(
+    hass, client, climate_heatit_z_trm3_no_value, integration
+):
+    """Test a heatit Z-TRM3 entity that is missing a value."""
+    # When the config parameter that specifies what sensor to use has no value, we fall
+    # back to the first temperature sensor found on the device
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
 
 
 async def test_thermostat_heatit_z_trm3(

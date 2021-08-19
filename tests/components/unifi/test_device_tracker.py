@@ -943,7 +943,6 @@ async def test_restoring_client(hass, aioclient_mock):
         title="Mock Title",
         data=ENTRY_CONFIG,
         source="test",
-        system_options={},
         options={},
         entry_id=1,
     )

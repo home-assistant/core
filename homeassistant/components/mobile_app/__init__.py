@@ -36,7 +36,7 @@ from .webhook import handle_webhook
 PLATFORMS = "sensor", "binary_sensor", "device_tracker"
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
@@ -160,7 +160,7 @@ def handle_push_notification_channel(hass, connection, msg):
     registered_channels = hass.data[DOMAIN][DATA_PUSH_CHANNEL]
 
     if webhook_id in registered_channels:
-        registered_channels.pop(webhook_id)()
+        registered_channels.pop(webhook_id)
 
     @callback
     def forward_push_notification(data):

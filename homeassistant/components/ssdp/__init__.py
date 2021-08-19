@@ -9,11 +9,16 @@ import logging
 from typing import Any, Callable
 
 from async_upnp_client.search import SSDPListener
+from async_upnp_client.ssdp import SSDP_PORT
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback as core_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -24,6 +29,8 @@ from .flow import FlowDispatcher, SSDPFlow
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
+
+IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
@@ -110,14 +117,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @core_callback
-def _async_use_default_interface(adapters: list[network.Adapter]) -> bool:
-    for adapter in adapters:
-        if adapter["enabled"] and not adapter["default"]:
-            return False
-    return True
-
-
-@core_callback
 def _async_process_callbacks(
     callbacks: list[Callable[[dict], None]], discovery_info: dict[str, str]
 ) -> None:
@@ -128,6 +127,19 @@ def _async_process_callbacks(
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 
+@core_callback
+def _async_headers_match(
+    headers: Mapping[str, str], match_dict: dict[str, str]
+) -> bool:
+    for header, val in match_dict.items():
+        if val == MATCH_ALL:
+            if header not in headers:
+                return False
+        elif headers.get(header) != val:
+            return False
+    return True
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -136,7 +148,7 @@ class Scanner:
     ) -> None:
         """Initialize class."""
         self.hass = hass
-        self.seen: set[tuple[str, str]] = set()
+        self.seen: set[tuple[str, str | None]] = set()
         self.cache: dict[tuple[str, str], Mapping[str, str]] = {}
         self._integration_matchers = integration_matchers
         self._cancel_scan: Callable[[], None] | None = None
@@ -157,7 +169,10 @@ class Scanner:
         # before the callback was registered are fired
         if self.hass.state != CoreState.running:
             for headers in self.cache.values():
-                self._async_callback_if_match(callback, headers, match_dict)
+                if _async_headers_match(headers, match_dict):
+                    _async_process_callbacks(
+                        [callback], self._async_headers_to_discovery_info(headers)
+                    )
 
         callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
@@ -167,20 +182,6 @@ class Scanner:
             self._callbacks.remove(callback_entry)
 
         return _async_remove_callback
-
-    @core_callback
-    def _async_callback_if_match(
-        self,
-        callback: Callable[[dict], None],
-        headers: Mapping[str, str],
-        match_dict: dict[str, str],
-    ) -> None:
-        """Fire a callback if info matches the match dict."""
-        if not all(headers.get(k) == v for (k, v) in match_dict.items()):
-            return
-        _async_process_callbacks(
-            [callback], self._async_headers_to_discovery_info(headers)
-        )
 
     @core_callback
     def async_stop(self, *_: Any) -> None:
@@ -195,30 +196,29 @@ class Scanner:
         """Build the list of ssdp sources."""
         adapters = await network.async_get_adapters(self.hass)
         sources: set[IPv4Address | IPv6Address] = set()
-        if _async_use_default_interface(adapters):
+        if network.async_only_default_interface_enabled(adapters):
             sources.add(IPv4Address("0.0.0.0"))
             return sources
 
-        for adapter in adapters:
-            if not adapter["enabled"]:
-                continue
-            if adapter["ipv4"]:
-                ipv4 = adapter["ipv4"][0]
-                sources.add(IPv4Address(ipv4["address"]))
-            if adapter["ipv6"]:
-                ipv6 = adapter["ipv6"][0]
-                # With python 3.9 add scope_ids can be
-                # added by enumerating adapter["ipv6"]s
-                # IPv6Address(f"::%{ipv6['scope_id']}")
-                sources.add(IPv6Address(ipv6["address"]))
+        return {
+            source_ip
+            for source_ip in await network.async_get_enabled_source_ips(self.hass)
+            if not source_ip.is_loopback
+            and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+        }
 
-        return sources
-
-    @core_callback
-    def async_scan(self, *_: Any) -> None:
-        """Scan for new entries."""
+    async def async_scan(self, *_: Any) -> None:
+        """Scan for new entries using ssdp default and broadcast target."""
         for listener in self._ssdp_listeners:
             listener.async_search()
+            try:
+                IPv4Address(listener.source_ip)
+            except ValueError:
+                continue
+            # Some sonos devices only seem to respond if we send to the broadcast
+            # address. This matches pysonos' behavior
+            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+            listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
         """Start the scanner."""
@@ -227,17 +227,30 @@ class Scanner:
         for source_ip in await self._async_build_source_set():
             self._ssdp_listeners.append(
                 SSDPListener(
-                    async_callback=self._async_process_entry, source_ip=source_ip
+                    async_connect_callback=self.async_scan,
+                    async_callback=self._async_process_entry,
+                    source_ip=source_ip,
                 )
             )
-
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
         )
-        await asyncio.gather(
-            *[listener.async_start() for listener in self._ssdp_listeners]
+        results = await asyncio.gather(
+            *(listener.async_start() for listener in self._ssdp_listeners),
+            return_exceptions=True,
         )
+        failed_listeners = []
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                _LOGGER.warning(
+                    "Failed to setup listener for %s: %s",
+                    self._ssdp_listeners[idx].source_ip,
+                    result,
+                )
+                failed_listeners.append(self._ssdp_listeners[idx])
+        for listener in failed_listeners:
+            self._ssdp_listeners.remove(listener)
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL
         )
@@ -250,7 +263,7 @@ class Scanner:
         return [
             callback
             for callback, match_dict in self._callbacks
-            if all(headers.get(k) == v for (k, v) in match_dict.items())
+            if _async_headers_match(headers, match_dict)
         ]
 
     @core_callback
@@ -262,20 +275,28 @@ class Scanner:
                     domains.add(domain)
         return domains
 
+    def _async_seen(self, header_st: str | None, header_location: str | None) -> bool:
+        """Check if we have seen a specific st and optional location."""
+        if header_st is None:
+            return True
+        return (header_st, header_location) in self.seen
+
+    def _async_see(self, header_st: str | None, header_location: str | None) -> None:
+        """Mark a specific st and optional location as seen."""
+        if header_st is not None:
+            self.seen.add((header_st, header_location))
+
     async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", headers)
-        if "st" not in headers or "location" not in headers:
-            return
-        h_st = headers["st"]
-        h_location = headers["location"]
-        key = (h_st, h_location)
+        h_st = headers.get("st")
+        h_location = headers.get("location")
 
-        if udn := _udn_from_usn(headers.get("usn")):
+        if h_st and (udn := _udn_from_usn(headers.get("usn"))):
             self.cache[(udn, h_st)] = headers
 
         callbacks = self._async_get_matching_callbacks(headers)
-        if key in self.seen and not callbacks:
+        if self._async_seen(h_st, h_location) and not callbacks:
             return
 
         assert self.description_manager is not None
@@ -284,9 +305,10 @@ class Scanner:
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
 
         _async_process_callbacks(callbacks, discovery_info)
-        if key in self.seen:
+
+        if self._async_seen(h_st, h_location):
             return
-        self.seen.add(key)
+        self._async_see(h_st, h_location)
 
         for domain in self._async_matching_domains(info_with_req):
             _LOGGER.debug("Discovered %s at %s", domain, h_location)

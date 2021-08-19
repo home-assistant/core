@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_FLAP_ID,
@@ -62,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sure Petcare integration."""
     conf = config[DOMAIN]
     hass.data.setdefault(DOMAIN, {})
@@ -90,12 +91,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     async_track_time_interval(hass, spc.async_update, SCAN_INTERVAL)
 
     # load platforms
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("binary_sensor", DOMAIN, {}, config)
-    )
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("sensor", DOMAIN, {}, config)
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
+        )
 
     async def handle_set_lock_state(call):
         """Call when setting the lock state."""
@@ -150,6 +149,7 @@ class SurePetcareAPI:
             self.states = await self.surepy.get_entities()
         except SurePetcareError as error:
             _LOGGER.error("Unable to fetch data: %s", error)
+            return
 
         async_dispatcher_send(self.hass, TOPIC_UPDATE)
 
@@ -159,10 +159,10 @@ class SurePetcareAPI:
         # https://github.com/PyCQA/pylint/issues/2062
         # pylint: disable=no-member
         if state == LockState.UNLOCKED.name.lower():
-            await self.surepy.unlock(flap_id)
+            await self.surepy.sac.unlock(flap_id)
         elif state == LockState.LOCKED_IN.name.lower():
-            await self.surepy.lock_in(flap_id)
+            await self.surepy.sac.lock_in(flap_id)
         elif state == LockState.LOCKED_OUT.name.lower():
-            await self.surepy.lock_out(flap_id)
+            await self.surepy.sac.lock_out(flap_id)
         elif state == LockState.LOCKED_ALL.name.lower():
-            await self.surepy.lock(flap_id)
+            await self.surepy.sac.lock(flap_id)

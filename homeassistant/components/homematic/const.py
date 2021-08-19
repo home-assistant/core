@@ -61,6 +61,8 @@ HM_DEVICE_TYPES = {
         "IOSwitchWireless",
         "IPWIODevice",
         "IPSwitchBattery",
+        "IPMultiIOPCB",
+        "IPGarageSwitch",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -122,6 +124,9 @@ HM_DEVICE_TYPES = {
         "IPKeyBlindTilt",
         "IPLanRouter",
         "TempModuleSTE2",
+        "IPMultiIOPCB",
+        "ValveBoxW",
+        "CO2SensorIP",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -134,6 +139,7 @@ HM_DEVICE_TYPES = {
         "ThermostatGroup",
         "IPThermostatWall230V",
         "IPThermostatWall2",
+        "IPWThermostatWall",
     ],
     DISCOVER_BINARY_SENSORS: [
         "ShutterContact",
@@ -167,6 +173,7 @@ HM_DEVICE_TYPES = {
         "IPAlarmSensor",
         "IPRainSensor",
         "IPLanRouter",
+        "IPMultiIOPCB",
     ],
     DISCOVER_COVER: [
         "Blind",

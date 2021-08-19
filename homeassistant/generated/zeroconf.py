@@ -60,6 +60,12 @@ ZEROCONF = {
             "domain": "devolo_home_control"
         }
     ],
+    "_easylink._tcp.local.": [
+        {
+            "domain": "modern_forms",
+            "name": "wac*"
+        }
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato"
@@ -180,6 +186,11 @@ ZEROCONF = {
             "name": "brother*"
         }
     ],
+    "_sonos._tcp.local.": [
+        {
+            "domain": "sonos"
+        }
+    ],
     "_spotify-connect._tcp.local.": [
         {
             "domain": "spotify"
@@ -251,7 +262,7 @@ HOMEKIT = {
     "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
-    "YLDP*": "yeelight",
+    "YLD*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

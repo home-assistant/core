@@ -518,6 +518,8 @@ def setup_platform(
 class GTFSDepartureSensor(SensorEntity):
     """Implementation of a GTFS departure sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(
         self,
         gtfs: Any,
@@ -557,7 +559,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str | None:  # type: ignore
+    def native_value(self) -> str | None:  # type: ignore
         """Return the state of the sensor."""
         return self._state
 
@@ -575,11 +577,6 @@ class GTFSDepartureSensor(SensorEntity):
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device."""
-        return DEVICE_CLASS_TIMESTAMP
 
     def update(self) -> None:
         """Get the latest data from GTFS and update the states."""

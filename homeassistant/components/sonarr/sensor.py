@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import SonarrEntity
 from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DATA_SONARR, DOMAIN
+from .entity import SonarrEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,34 +81,24 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize Sonarr sensor."""
-        self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = f"{entry_id}_{key}"
+        self._attr_name = name
+        self._attr_icon = icon
+        self._attr_unique_id = f"{entry_id}_{key}"
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_entity_registry_enabled_default = enabled_default
         self.last_update_success = False
 
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
             device_id=entry_id,
-            name=name,
-            icon=icon,
-            enabled_default=enabled_default,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def available(self) -> bool:
         """Return sensor availability."""
         return self.last_update_success
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class SonarrCommandsSensor(SonarrSensor):
@@ -144,7 +134,7 @@ class SonarrCommandsSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._commands)
 
@@ -172,7 +162,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         """Update entity."""
         app = await self.sonarr.update()
         self._disks = app.disks
-        self._total_free = sum([disk.free for disk in self._disks])
+        self._total_free = sum(disk.free for disk in self._disks)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -186,12 +176,12 @@ class SonarrDiskspaceSensor(SonarrSensor):
 
             attrs[
                 disk.path
-            ] = f"{free:.2f}/{total:.2f}{self._unit_of_measurement} ({usage:.2f}%)"
+            ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
 
         return attrs
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         free = self._total_free / 1024 ** 3
         return f"{free:.2f}"
@@ -233,7 +223,7 @@ class SonarrQueueSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._queue)
 
@@ -271,7 +261,7 @@ class SonarrSeriesSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._items)
 
@@ -314,7 +304,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._upcoming)
 
@@ -357,6 +347,6 @@ class SonarrWantedSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._total

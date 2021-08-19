@@ -34,7 +34,7 @@ incomplete_item:
         text:
 
 complete_all:
-  name: Complete call
+  name: Complete all
   description: Marks all items as completed in the shopping list. It does not remove the items.
 
 incomplete_all:

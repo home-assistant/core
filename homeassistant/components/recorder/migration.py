@@ -11,7 +11,14 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
-from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges, Statistics
+from .models import (
+    SCHEMA_VERSION,
+    TABLE_STATES,
+    Base,
+    SchemaChanges,
+    Statistics,
+    StatisticsMeta,
+)
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -280,10 +287,10 @@ def _update_states_table_with_foreign_key_options(connection, engine):
     for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
         if foreign_key["name"] and (
             # MySQL/MariaDB will have empty options
-            not foreign_key["options"]
+            not foreign_key.get("options")
             or
             # Postgres will have ondelete set to None
-            foreign_key["options"].get("ondelete") is None
+            foreign_key.get("options", {}).get("ondelete") is None
         ):
             alters.append(
                 {
@@ -297,7 +304,7 @@ def _update_states_table_with_foreign_key_options(connection, engine):
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
     old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
-        TABLE_STATES, MetaData(), *[alter["old_fk"] for alter in alters]
+        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)
     )
 
     for alter in alters:
@@ -319,7 +326,7 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
     for foreign_key in inspector.get_foreign_keys(table):
         if (
             foreign_key["name"]
-            and foreign_key["options"].get("ondelete")
+            and foreign_key.get("options", {}).get("ondelete")
             and foreign_key["constrained_columns"] == columns
         ):
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
@@ -444,14 +451,30 @@ def _apply_update(engine, session, new_version, old_version):
     elif new_version == 14:
         _modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
     elif new_version == 15:
-        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
-            # Recreate the statistics table
-            Statistics.__table__.drop(engine)
-            Statistics.__table__.create(engine)
+        # This dropped the statistics table, done again in version 18.
+        pass
     elif new_version == 16:
         _drop_foreign_key_constraints(
             connection, engine, TABLE_STATES, ["old_state_id"]
         )
+    elif new_version == 17:
+        # This dropped the statistics table, done again in version 18.
+        pass
+    elif new_version == 18:
+        # Recreate the statistics and statistics meta tables.
+        #
+        # Order matters! Statistics has a relation with StatisticsMeta,
+        # so statistics need to be deleted before meta (or in pair depending
+        # on the SQL backend); and meta needs to be created before statistics.
+        if sqlalchemy.inspect(engine).has_table(
+            StatisticsMeta.__tablename__
+        ) or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
+            Base.metadata.drop_all(
+                bind=engine, tables=[Statistics.__table__, StatisticsMeta.__table__]
+            )
+
+        StatisticsMeta.__table__.create(engine)
+        Statistics.__table__.create(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

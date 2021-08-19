@@ -125,7 +125,7 @@ def add_test_config_entry(
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
-    config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
+    config_entry: MockConfigEntry = MockConfigEntry(
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
         data=data
@@ -137,7 +137,7 @@ def add_test_config_entry(
         unique_id=TEST_SYSINFO_ID,
         options=options or TEST_CONFIG_ENTRY_OPTIONS,
     )
-    config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
+    config_entry.add_to_hass(hass)
     return config_entry
 
 
@@ -187,3 +187,12 @@ def register_test_entity(
         suggested_object_id=entity_id,
         disabled_by=None,
     )
+
+
+async def async_call_registered_callback(
+    client: AsyncMock, key: str, *args: Any, **kwargs: Any
+) -> None:
+    """Call Hyperion entity callbacks that were registered with the client."""
+    for call in client.add_callbacks.call_args_list:
+        if key in call[0][0]:
+            await call[0][0][key](*args, **kwargs)

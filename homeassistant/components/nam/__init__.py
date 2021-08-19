@@ -9,24 +9,33 @@ from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
 from nettigo_air_monitor import (
     ApiError,
-    DictToObj,
     InvalidSensorData,
+    NAMSensors,
     NettigoAirMonitor,
 )
 
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_NAME, DEFAULT_UPDATE_INTERVAL, DOMAIN, MANUFACTURER
+from .const import (
+    ATTR_SDS011,
+    ATTR_SPS30,
+    DEFAULT_NAME,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["air_quality", "sensor"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -42,6 +51,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    # Remove air_quality entities from registry if they exist
+    ent_reg = entity_registry.async_get(hass)
+    for sensor_type in ("sds", ATTR_SDS011, ATTR_SPS30):
+        unique_id = f"{coordinator.unique_id}-{sensor_type}"
+        if entity_id := ent_reg.async_get_entity_id(
+            AIR_QUALITY_PLATFORM, DOMAIN, unique_id
+        ):
+            _LOGGER.debug("Removing deprecated air_quality entity %s", entity_id)
+            ent_reg.async_remove(entity_id)
 
     return True
 
@@ -75,7 +94,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_UPDATE_INTERVAL
         )
 
-    async def _async_update_data(self) -> DictToObj:
+    async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:
             # Device firmware uses synchronous code and doesn't respond to http queries
@@ -85,8 +104,6 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
                 data = await self.nam.async_update()
         except (ApiError, ClientConnectorError, InvalidSensorData) as error:
             raise UpdateFailed(error) from error
-
-        _LOGGER.debug(data)
 
         return data
 

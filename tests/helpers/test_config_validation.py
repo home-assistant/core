@@ -120,6 +120,25 @@ def test_url():
         assert schema(value)
 
 
+def test_url_no_path():
+    """Test URL."""
+    schema = vol.Schema(cv.url_no_path)
+
+    for value in (
+        "https://localhost/test/index.html",
+        "http://home-assistant.io/test/",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        "http://localhost",
+        "http://home-assistant.io",
+        "https://community.home-assistant.io/",
+    ):
+        assert schema(value)
+
+
 def test_platform_config():
     """Test platform config validation."""
     options = ({}, {"hello": "world"})
@@ -1024,7 +1043,7 @@ def test_key_value_schemas():
         schema(True)
         assert str(excinfo.value) == "Expected a dictionary"
 
-    for mode in None, "invalid":
+    for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
@@ -1084,4 +1103,19 @@ def test_whitespace():
             schema(value)
 
     for value in ("  ", "   "):
+        assert schema(value)
+
+
+def test_currency():
+    """Test currency validator."""
+    schema = vol.Schema(cv.currency)
+
+    for value in (
+        None,
+        "BTC",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("EUR", "USD"):
         assert schema(value)

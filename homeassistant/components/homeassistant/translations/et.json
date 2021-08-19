@@ -10,6 +10,7 @@
             "os_version": "Operatsioonis\u00fcsteemi versioon",
             "python_version": "Pythoni versioon",
             "timezone": "Ajav\u00f6\u00f6nd",
+            "user": "Kasutaja",
             "version": "Versioon",
             "virtualenv": "Virtuaalne keskkond"
         }
