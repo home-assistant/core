@@ -51,31 +51,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = controller
     await controller.connect()
 
-    # add the controller as a device
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        name=f"{entry.title}-interface",
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data[CONF_PORT])},
-        connections={(CONF_PORT, entry.data[CONF_PORT])},
-    )
-
-    # setup the platforms
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     if hass.services.has_service(DOMAIN, "scan"):
         return True
 
     async def get_entry_id(interface: str):
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(interface)
-        if device_entry is None:
-            _LOGGER.warning("Missing device: %s", device_id)
-            return None
         for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
+            if "port" in entry.data and entry.data["port"] == interface:
                 return entry.entry_id
-        _LOGGER.warning("Can not find the entry: %s", entry.entry_id)
+        _LOGGER.warning("Can not find the config entry for: %s", interface)
         return None
 
     async def scan(call):

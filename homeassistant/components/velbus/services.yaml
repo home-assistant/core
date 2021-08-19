@@ -4,11 +4,12 @@ sync_clock:
   fields:
     interface:
       name: Interface
-      description: The velbus interface to send the command to
+      description: The velbus interface to send the command to, this will be the same value as used during configuration
       required: true
+      example: "192.168.1.5:27015"
+      default: ''
       selector:
-        device:
-          integration: velbus
+        text:
 
 scan:
   name: Scan
@@ -16,11 +17,12 @@ scan:
   fields:
     interface:
       name: Interface
-      description: The velbus interface to send the command to
+      description: The velbus interface to send the command to, this will be the same value as used during configuration
       required: true
+      example: "192.168.1.5:27015"
+      default: ''
       selector:
-        device:
-          integration: velbus
+        text:
 
 set_memo_text:
   name: Set memo text
@@ -30,18 +32,22 @@ set_memo_text:
   fields:
     interface:
       name: Interface
-      description: The velbus interface to send the command to
+      description: The velbus interface to send the command to, this will be the same value as used during configuration
       required: true
+      example: "192.168.1.5:27015"
+      default: ''
       selector:
-        device:
-          integration: velbus
+        text:
     address:
-      name: Module
-      description: The module to send the memotext to
+      name: Address
+      description: >
+        The module address in decimal format.
+        The decimal addresses are displayed in front of the modules listed at the integration page.
       required: true
       selector:
-        device:
-          integration: velbus
+        number:
+          min: 1
+          max: 254
     memo_text:
       name: Memo text
       description: >
