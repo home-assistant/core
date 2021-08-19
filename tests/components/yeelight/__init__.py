@@ -139,12 +139,12 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     return listener
 
 
-def _patch_discovery(no_device=False):
+def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         return _patched_ssdp_listener(
-            None if no_device else CAPABILITIES,
+            None if no_device else capabilities or CAPABILITIES,
             *args,
             **kwargs,
         )
