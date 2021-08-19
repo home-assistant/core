@@ -11,5 +11,4 @@ from homeassistant.components.sensor import SensorEntityDescription
 class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
-    enabled_by_default: bool = False
     value: Callable = round

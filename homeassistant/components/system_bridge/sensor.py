@@ -42,7 +42,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="bios_version",
         name="BIOS Version",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=None,
@@ -52,7 +52,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
         name="CPU Speed",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
@@ -62,7 +62,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_temperature",
         name="CPU Temperature",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -72,7 +72,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_voltage",
         name="CPU Voltage",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
@@ -83,7 +83,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="kernel",
         name="Kernel",
         device_class=None,
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=None,
         icon="mdi:devices",
@@ -92,7 +92,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="memory_free",
         name="Memory Free",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
@@ -104,7 +104,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="memory_used_percentage",
         name="Memory Used %",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -116,7 +116,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="memory_used",
         name="Memory Used",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
@@ -128,7 +128,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="os",
         name="Operating System",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=None,
@@ -138,7 +138,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="processes_load",
         name="Load",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -150,7 +150,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="processes_load_idle",
         name="Idle Load",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -162,7 +162,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="processes_load_system",
         name="System Load",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -174,7 +174,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="processes_load_user",
         name="User Load",
-        enabled_by_default=False,
+        entity_registry_enabled_default=False,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -186,7 +186,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="version",
         name="Version",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=None,
@@ -196,7 +196,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="version_latest",
         name="Latest Version",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=None,
@@ -211,7 +211,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="battery",
         name="Battery",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -221,7 +221,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="battery_time_remaining",
         name="Battery Time Remaining",
-        enabled_by_default=True,
+        entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_TIMESTAMP,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=None,
@@ -253,7 +253,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"filesystem_{uid}",
                     name=f"{key} Space Used",
-                    enabled_by_default=True,
+                    entity_registry_enabled_default=True,
                     device_class=None,
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
@@ -285,7 +285,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_core_clock_speed",
                         name=f"{name} Clock Speed",
-                        enabled_by_default=False,
+                        entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
@@ -298,7 +298,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_memory_clock_speed",
                         name=f"{name} Memory Clock Speed",
-                        enabled_by_default=False,
+                        entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
@@ -313,7 +313,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_memory_free",
                         name=f"{name} Memory Free",
-                        enabled_by_default=True,
+                        entity_registry_enabled_default=True,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
@@ -330,7 +330,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_memory_used_percentage",
                         name=f"{name} Memory Used %",
-                        enabled_by_default=True,
+                        entity_registry_enabled_default=True,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
@@ -353,7 +353,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_memory_used",
                         name=f"{name} Memory Used",
-                        enabled_by_default=False,
+                        entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
@@ -370,7 +370,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_fan_speed",
                         name=f"{name} Fan Speed",
-                        enabled_by_default=False,
+                        entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
@@ -385,7 +385,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_power_usage",
                         name=f"{name} Power Usage",
-                        enabled_by_default=False,
+                        entity_registry_enabled_default=False,
                         device_class=DEVICE_CLASS_POWER,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=POWER_WATT,
@@ -400,7 +400,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_temperature",
                         name=f"{name} Temperature",
-                        enabled_by_default=False,
+                        entity_registry_enabled_default=False,
                         device_class=DEVICE_CLASS_TEMPERATURE,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=TEMP_CELSIUS,
@@ -417,7 +417,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{i}_usage_percentage",
                         name=f"{name} Usage %",
-                        enabled_by_default=True,
+                        entity_registry_enabled_default=True,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
@@ -439,7 +439,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"processes_load_cpu_{index}",
                     name=f"Load CPU {index}",
-                    enabled_by_default=False,
+                    entity_registry_enabled_default=False,
                     device_class=None,
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
@@ -456,7 +456,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"processes_load_cpu_{index}_idle",
                     name=f"Idle Load CPU {index}",
-                    enabled_by_default=False,
+                    entity_registry_enabled_default=False,
                     device_class=None,
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
@@ -473,7 +473,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"processes_load_cpu_{index}_system",
                     name=f"System Load CPU {index}",
-                    enabled_by_default=False,
+                    entity_registry_enabled_default=False,
                     device_class=None,
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
@@ -490,7 +490,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"processes_load_cpu_{index}_user",
                     name=f"User Load CPU {index}",
-                    enabled_by_default=False,
+                    entity_registry_enabled_default=False,
                     device_class=None,
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
@@ -524,7 +524,7 @@ class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
             description.key,
             description.name,
             description.icon,
-            description.enabled_by_default,
+            description.entity_registry_enabled_default,
         )
         self.entity_description = description
 
