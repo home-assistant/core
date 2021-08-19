@@ -23,7 +23,9 @@ jinja2==3.0.1
 paho-mqtt==1.5.1
 pillow==8.2.0
 pip>=8.0.3,<20.3
+pyserial==3.5
 python-slugify==4.0.1
+pyudev==0.22.0
 pyyaml==5.4.1
 requests==2.25.1
 ruamel.yaml==0.15.100

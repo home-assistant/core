@@ -99,6 +99,9 @@ aiodns==3.0.0
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
+# homeassistant.components.rainforest_eagle
+aioeagle==1.1.0
+
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
@@ -137,7 +140,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.8.2
+aiomusiccast==0.9.1
 
 # homeassistant.components.notion
 aionotion==3.0.2
@@ -1002,6 +1005,7 @@ pyruckus==0.12
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
+# homeassistant.components.usb
 # homeassistant.components.zha
 pyserial==3.5
 
@@ -1085,6 +1089,9 @@ pytraccar==0.9.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==7.0.6
+
+# homeassistant.components.usb
+pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.8.2
@@ -1276,6 +1283,9 @@ twilio==6.32.0
 
 # homeassistant.components.twinkly
 twinkly-client==0.0.2
+
+# homeassistant.components.rainforest_eagle
+uEagle==0.0.2
 
 # homeassistant.components.upb
 upb_lib==0.4.12

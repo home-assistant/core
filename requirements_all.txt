@@ -160,6 +160,9 @@ aiodns==3.0.0
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
+# homeassistant.components.rainforest_eagle
+aioeagle==1.1.0
+
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
@@ -213,7 +216,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.8.2
+aiomusiccast==0.9.1
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -542,9 +545,6 @@ dweepy==0.3.0
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
-
-# homeassistant.components.rainforest_eagle
-eagle200_reader==0.2.4
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.16
@@ -1749,6 +1749,7 @@ pysensibo==1.0.3
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
+# homeassistant.components.usb
 # homeassistant.components.zha
 pyserial==3.5
 
@@ -1950,6 +1951,9 @@ pytradfri[async]==7.0.6
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.1.6.2
+
+# homeassistant.components.usb
+pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.8.2

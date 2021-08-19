@@ -1,9 +1,16 @@
-"""Test the NEW_NAME config flow."""
+"""Test the Rainforest Eagle config flow."""
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.NEW_DOMAIN.const import DOMAIN
+from homeassistant.components.rainforest_eagle.const import (
+    CONF_CLOUD_ID,
+    CONF_HARDWARE_ADDRESS,
+    CONF_INSTALL_CODE,
+    DOMAIN,
+    TYPE_EAGLE_200,
+)
+from homeassistant.components.rainforest_eagle.data import CannotConnect, InvalidAuth
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -18,28 +25,25 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.rainforest_eagle.data.async_get_type",
+        return_value=(TYPE_EAGLE_200, "mock-hw"),
     ), patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry",
+        "homeassistant.components.rainforest_eagle.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {CONF_CLOUD_ID: "abcdef", CONF_INSTALL_CODE: "123456"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "abcdef"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_TYPE: TYPE_EAGLE_200,
+        CONF_CLOUD_ID: "abcdef",
+        CONF_INSTALL_CODE: "123456",
+        CONF_HARDWARE_ADDRESS: "mock-hw",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -51,16 +55,12 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.rainforest_eagle.data.Eagle100Reader.get_network_info",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {CONF_CLOUD_ID: "abcdef", CONF_INSTALL_CODE: "123456"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -74,16 +74,12 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.rainforest_eagle.data.Eagle100Reader.get_network_info",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {CONF_CLOUD_ID: "abcdef", CONF_INSTALL_CODE: "123456"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
