@@ -235,7 +235,7 @@ async def test_restore_state_cover(hass, mock_test_state, mock_modbus):
                 {
                     CONF_NAME: f"{TEST_ENTITY_NAME}2",
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                    CONF_ADDRESS: 1234,
+                    CONF_ADDRESS: 1235,
                     CONF_SCAN_INTERVAL: 0,
                 },
             ]
