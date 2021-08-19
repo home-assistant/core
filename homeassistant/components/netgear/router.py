@@ -108,6 +108,7 @@ class NetgearRouter:
 
         self.devices: Dict[str, any] = {}
 
+        self.listeners = []
         self._unsub_dispatcher = None
 
     def _setup(self) -> None:
