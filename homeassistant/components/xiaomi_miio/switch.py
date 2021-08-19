@@ -235,7 +235,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switch from a config entry."""
     model = config_entry.data[CONF_MODEL]
-    if model in MODELS_HUMIDIFIER or model in MODELS_FAN:
+    if model in (*MODELS_HUMIDIFIER, *MODELS_FAN):
         await async_setup_coordinated_entry(hass, config_entry, async_add_entities)
     else:
         await async_setup_other_entry(hass, config_entry, async_add_entities)
