@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -165,7 +165,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return f"{self.platform_name} {self._sensor_name}"
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of this Sensor Entity or None."""
         return self._sensor_data.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -180,12 +180,17 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_data.get(ATTR_DEVICE_CLASS)
 
     @property
+    def state_class(self) -> str | None:
+        """Return the class of the state of this device, from component STATE_CLASSES."""
+        return self._sensor_data.get(ATTR_STATE_CLASS)
+
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._sensor_data.get(ATTR_ENABLED_DEFAULT, False)
 
     @property
-    def state(self) -> Any | None:
+    def native_value(self) -> Any | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN

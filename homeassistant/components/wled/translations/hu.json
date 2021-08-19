@@ -20,5 +20,14 @@
                 "title": "Felfedezett WLED eszk\u00f6z"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Tartsa a f\u0151f\u00e9nyt, m\u00e9g 1 LED szegmenssel is."
+                }
+            }
+        }
     }
 }

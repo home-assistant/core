@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} non sta rilevando un problema",
             "is_no_smoke": "{entity_name} non sta rilevando il fumo",
             "is_no_sound": "{entity_name} non sta rilevando il suono",
+            "is_no_update": "{entity_name} \u00e8 aggiornato",
             "is_no_vibration": "{entity_name} non sta rilevando la vibrazione",
             "is_not_bat_low": "{entity_name} la batteria \u00e8 normale",
             "is_not_cold": "{entity_name} non \u00e8 freddo",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} sta rilevando il fumo",
             "is_sound": "{entity_name} sta rilevando il suono",
             "is_unsafe": "{entity_name} non \u00e8 sicuro",
+            "is_update": "{entity_name} ha un aggiornamento disponibile",
             "is_vibration": "{entity_name} sta rilevando la vibrazione"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} ha smesso di rilevare un problema",
             "no_smoke": "{entity_name} ha smesso la rilevazione di fumo",
             "no_sound": "{entity_name} ha smesso di rilevare il suono",
+            "no_update": "{entity_name} \u00e8 diventato aggiornato",
             "no_vibration": "{entity_name} ha smesso di rilevare le vibrazioni",
             "not_bat_low": "{entity_name} batteria normale",
             "not_cold": "{entity_name} non \u00e8 diventato freddo",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} disattivato",
             "turned_on": "{entity_name} attivato",
             "unsafe": "{entity_name} diventato non sicuro",
+            "update": "{entity_name} ha ottenuto un aggiornamento disponibile",
             "vibration": "{entity_name} iniziato a rilevare le vibrazioni"
         }
     },
@@ -177,6 +181,10 @@
         "sound": {
             "off": "Assente",
             "on": "Rilevato"
+        },
+        "update": {
+            "off": "Aggiornato",
+            "on": "Aggiornamento disponibile"
         },
         "vibration": {
             "off": "Assente",

@@ -65,6 +65,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         self.musiccast = client
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        self.entities: list[MusicCastDeviceEntity] = []
 
     async def _async_update_data(self) -> MusicCastData:
         """Update data via library."""

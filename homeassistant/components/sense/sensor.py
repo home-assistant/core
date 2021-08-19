@@ -1,11 +1,16 @@
 """Support for monitoring a Sense energy sensor."""
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    VOLT,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -96,8 +101,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for i in range(len(data.active_voltage)):
         devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
-    for type_id in TRENDS_SENSOR_TYPES:
-        typ = TRENDS_SENSOR_TYPES[type_id]
+    for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for var in SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type
@@ -122,7 +126,7 @@ class SenseActiveSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     _attr_icon = ICON
-    _attr_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = POWER_WATT
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_should_poll = False
     _attr_available = False
@@ -165,9 +169,9 @@ class SenseActiveSensor(SensorEntity):
             if self._is_production
             else self._data.active_power
         )
-        if self._attr_available and self._attr_state == new_state:
+        if self._attr_available and self._attr_native_value == new_state:
             return
-        self._attr_state = new_state
+        self._attr_native_value = new_state
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -175,7 +179,7 @@ class SenseActiveSensor(SensorEntity):
 class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
-    _attr_unit_of_measurement = VOLT
+    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
     _attr_should_poll = False
@@ -209,17 +213,19 @@ class SenseVoltageSensor(SensorEntity):
     def _async_update_from_data(self):
         """Update the sensor from the data. Must not do I/O."""
         new_state = round(self._data.active_voltage[self._voltage_index], 1)
-        if self._attr_available and self._attr_state == new_state:
+        if self._attr_available and self._attr_native_value == new_state:
             return
         self._attr_available = True
-        self._attr_state = new_state
+        self._attr_native_value = new_state
         self.async_write_ha_state()
 
 
 class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
     _attr_should_poll = False
@@ -244,7 +250,7 @@ class SenseTrendsSensor(SensorEntity):
         self._had_any_update = False
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return round(self._data.get_trend(self._sensor_type, self._is_production), 1)
 
@@ -276,7 +282,7 @@ class SenseEnergyDevice(SensorEntity):
 
     _attr_available = False
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = POWER_WATT
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_should_poll = False
@@ -308,8 +314,8 @@ class SenseEnergyDevice(SensorEntity):
             new_state = 0
         else:
             new_state = int(device_data["w"])
-        if self._attr_available and self._attr_state == new_state:
+        if self._attr_available and self._attr_native_value == new_state:
             return
-        self._attr_state = new_state
+        self._attr_native_value = new_state
         self._attr_available = True
         self.async_write_ha_state()

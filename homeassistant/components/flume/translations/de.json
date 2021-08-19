@@ -15,7 +15,7 @@
                     "password": "Passwort"
                 },
                 "description": "Das Passwort f\u00fcr {username} ist nicht mehr g\u00fcltig.",
-                "title": "Authentifizieren Sie Ihr Flume-Konto erneut"
+                "title": "Authentifiziere dein Flume-Konto erneut"
             },
             "user": {
                 "data": {
@@ -24,8 +24,8 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Um auf die Flume Personal API zugreifen zu k\u00f6nnen, m\u00fcssen Sie unter https://portal.flumetech.com/settings#token eine 'Client ID' und 'Client Secret' anfordern",
-                "title": "Stellen Sie eine Verbindung zu Ihrem Flume-Konto her"
+                "description": "Um auf die Flume Personal API zugreifen zu k\u00f6nnen, musst du unter https://portal.flumetech.com/settings#token eine 'Client ID' und 'Client Secret' anfordern",
+                "title": "Stelle eine Verbindung zu deinem Flume-Konto her"
             }
         }
     }

@@ -158,7 +158,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._cmds = commands
         self._attrs = {}
         for key, val in attributes.items():
-            attr = val.split("|", 1)
+            attr = list(map(str.strip, val.split("|", 1)))
             if len(attr) == 1:
                 attr.append(None)
             self._attrs[key] = attr
@@ -472,7 +472,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_MEDIA_PREVIOUS_TRACK in self._cmds:
             flags |= SUPPORT_PREVIOUS_TRACK
 
-        if any(cmd in self._cmds for cmd in [SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN]):
+        if any(cmd in self._cmds for cmd in (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN)):
             flags |= SUPPORT_VOLUME_STEP
         if SERVICE_VOLUME_SET in self._cmds:
             flags |= SUPPORT_VOLUME_SET
@@ -612,7 +612,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_toggle(self):
         """Toggle the power on the media player."""
-        await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
+        if SERVICE_TOGGLE in self._cmds:
+            await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
+        else:
+            # Delegate to turn_on or turn_off by default
+            await super().async_toggle()
 
     async def async_update(self):
         """Update state in HA."""

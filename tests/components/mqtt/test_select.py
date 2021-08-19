@@ -5,14 +5,17 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import select
-from homeassistant.components.mqtt.select import CONF_OPTIONS
+from homeassistant.components.mqtt.select import (
+    CONF_OPTIONS,
+    MQTT_SELECT_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -35,6 +38,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -117,6 +121,13 @@ async def test_value_template(hass, mqtt_mock):
 
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
+
+    async_fire_mqtt_message(hass, topic, '{"val": null}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_run_select_service_optimistic(hass, mqtt_mock):
@@ -227,6 +238,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG, MQTT_SELECT_ATTRIBUTES_BLOCKED
     )
 
 

@@ -37,6 +37,8 @@ from .helpers import async_get_blueprints
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
+PACKAGE_MERGE_HINT = "list"
+
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
@@ -75,10 +77,10 @@ async def async_validate_config_item(hass, config, full_config=None):
 
     if CONF_CONDITION in config:
         config[CONF_CONDITION] = await asyncio.gather(
-            *[
+            *(
                 async_validate_condition_config(hass, cond)
                 for cond in config[CONF_CONDITION]
-            ]
+            )
         )
 
     config[CONF_ACTION] = await script.async_validate_actions_config(

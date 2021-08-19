@@ -5,9 +5,9 @@ from collections.abc import Iterator
 import logging
 from typing import Any
 
-from pysonos import SoCo
-from pysonos.alarms import Alarm, get_alarms
-from pysonos.exceptions import SoCoException
+from soco import SoCo
+from soco.alarms import Alarm, get_alarms
+from soco.exceptions import SoCoException
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 

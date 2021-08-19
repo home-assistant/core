@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
+            "connection_error": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "start_config": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    }
+}

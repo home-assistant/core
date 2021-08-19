@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Az \u00fajhiteles\u00edt\u00e9s sikeres volt",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
@@ -11,6 +12,12 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API token",
+                    "description": "Hiteles\u00edtse \u00fajra Cloudflare-fi\u00f3kj\u00e1val."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Rekordok"
@@ -21,6 +28,7 @@
                 "data": {
                     "api_token": "API Token"
                 },
+                "description": "Ehhez az integr\u00e1ci\u00f3hoz a Z\u00f3na: Z\u00f3na: Olvas\u00e1s \u00e9s Z\u00f3na: DNS: L\u00e9trehozott API-token sz\u00fcks\u00e9ges. A fi\u00f3k \u00f6sszes z\u00f3n\u00e1j\u00e1nak enged\u00e9lyeinek szerkeszt\u00e9se.",
                 "title": "Csatlakoz\u00e1s a Cloudflare szolg\u00e1ltat\u00e1shoz"
             },
             "zone": {

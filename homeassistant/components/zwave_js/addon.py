@@ -8,7 +8,7 @@ from functools import partial
 from typing import Any, Callable, TypeVar, cast
 
 from homeassistant.components.hassio import (
-    async_create_snapshot,
+    async_create_backup,
     async_get_addon_discovery_info,
     async_get_addon_info,
     async_install_addon,
@@ -202,7 +202,7 @@ class AddonManager:
         if not addon_info.update_available:
             return
 
-        await self.async_create_snapshot()
+        await self.async_create_backup()
         await async_update_addon(self._hass, ADDON_SLUG)
 
     @callback
@@ -289,14 +289,14 @@ class AddonManager:
             )
         return self._start_task
 
-    @api_error("Failed to create a snapshot of the Z-Wave JS add-on.")
-    async def async_create_snapshot(self) -> None:
-        """Create a partial snapshot of the Z-Wave JS add-on."""
+    @api_error("Failed to create a backup of the Z-Wave JS add-on.")
+    async def async_create_backup(self) -> None:
+        """Create a partial backup of the Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
         name = f"addon_{ADDON_SLUG}_{addon_info.version}"
 
-        LOGGER.debug("Creating snapshot: %s", name)
-        await async_create_snapshot(
+        LOGGER.debug("Creating backup: %s", name)
+        await async_create_backup(
             self._hass,
             {"name": name, "addons": [ADDON_SLUG]},
             partial=True,

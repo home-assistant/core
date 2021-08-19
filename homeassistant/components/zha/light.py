@@ -167,6 +167,7 @@ class BaseLight(LogMixin, light.LightEntity):
         """Return the warmest color_temp that this light supports."""
         return self._max_mireds
 
+    @callback
     def set_level(self, value):
         """Set the brightness of this light between 0..254.
 
@@ -419,7 +420,7 @@ class Light(BaseLight, ZhaEntity):
             self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
-        refresh_interval = random.randint(*[x * 60 for x in self._REFRESH_INTERVAL])
+        refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
@@ -522,7 +523,7 @@ class Light(BaseLight, ZhaEntity):
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
-    manufacturers="Philips",
+    manufacturers={"Philips", "Signify Netherlands B.V."},
 )
 class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""

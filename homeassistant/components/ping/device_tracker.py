@@ -102,14 +102,14 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             """Update all the hosts on every interval time."""
             results = await gather_with_concurrency(
                 CONCURRENT_PING_LIMIT,
-                *[hass.async_add_executor_job(host.update) for host in hosts],
+                *(hass.async_add_executor_job(host.update) for host in hosts),
             )
             await asyncio.gather(
-                *[
+                *(
                     async_see(dev_id=host.dev_id, source_type=SOURCE_TYPE_ROUTER)
                     for idx, host in enumerate(hosts)
                     if results[idx]
-                ]
+                )
             )
 
     else:
@@ -124,11 +124,11 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             )
             _LOGGER.debug("Multiping responses: %s", responses)
             await asyncio.gather(
-                *[
+                *(
                     async_see(dev_id=dev_id, source_type=SOURCE_TYPE_ROUTER)
                     for idx, dev_id in enumerate(ip_to_dev_id.values())
                     if responses[idx].is_alive
-                ]
+                )
             )
 
     async def _async_update_interval(now):

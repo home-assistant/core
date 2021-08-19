@@ -1,7 +1,10 @@
 """The Netio switch component."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pynetio import Netio
 import voluptuous as vol
@@ -29,8 +32,8 @@ CONF_OUTLETS = "outlets"
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = "admin"
-Device = namedtuple("device", ["netio", "entities"])
-DEVICES = {}
+Device = namedtuple("Device", ["netio", "entities"])
+DEVICES: dict[str, Any] = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -97,12 +100,12 @@ class NetioApiView(HomeAssistantView):
 
         for i in range(1, 5):
             out = "output%d" % i
-            states.append(data.get("%s_state" % out) == STATE_ON)
-            consumptions.append(float(data.get("%s_consumption" % out, 0)))
+            states.append(data.get(f"{out}_state") == STATE_ON)
+            consumptions.append(float(data.get(f"{out}_consumption", 0)))
             cumulated_consumptions.append(
-                float(data.get("%s_cumulatedConsumption" % out, 0)) / 1000
+                float(data.get(f"{out}_cumulatedConsumption", 0)) / 1000
             )
-            start_dates.append(data.get("%s_consumptionStart" % out, ""))
+            start_dates.append(data.get(f"{out}_consumptionStart", ""))
 
         _LOGGER.debug(
             "%s: %s, %s, %s since %s",

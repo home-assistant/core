@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from motioneye_client.const import DEFAULT_PORT
 
 from homeassistant.components.motioneye.const import DOMAIN
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
@@ -132,6 +133,10 @@ TEST_CAMERA = {
 }
 TEST_CAMERAS = {"cameras": [TEST_CAMERA]}
 TEST_SURVEILLANCE_USERNAME = "surveillance_username"
+TEST_SWITCH_ENTITY_ID_BASE = "switch.test_camera"
+TEST_SWITCH_MOTION_DETECTION_ENTITY_ID = (
+    f"{TEST_SWITCH_ENTITY_ID_BASE}_motion_detection"
+)
 
 
 def create_mock_motioneye_client() -> AsyncMock:
@@ -151,14 +156,14 @@ def create_mock_motioneye_config_entry(
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
-    config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
+    config_entry: MockConfigEntry = MockConfigEntry(
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
         data=data or {CONF_URL: TEST_URL},
         title=f"{TEST_URL}",
         options=options or {},
     )
-    config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
+    config_entry.add_to_hass(hass)
     return config_entry
 
 
@@ -167,7 +172,13 @@ async def setup_mock_motioneye_config_entry(
     config_entry: ConfigEntry | None = None,
     client: Mock | None = None,
 ) -> ConfigEntry:
-    """Add a mock MotionEye config entry to hass."""
+    """Create and setup a mock motionEye config entry."""
+
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
+
     config_entry = config_entry or create_mock_motioneye_config_entry(hass)
     client = client or create_mock_motioneye_client()
 

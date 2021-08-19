@@ -1,11 +1,21 @@
 {
     "config": {
+        "abort": {
+            "reauth_successful": "Az \u00fajhiteles\u00edt\u00e9s sikeres volt"
+        },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "token": "Hozz\u00e1f\u00e9r\u00e9si token"
+                },
+                "description": "A Nuki integr\u00e1ci\u00f3nak \u00fajb\u00f3l hiteles\u00edtenie kell a h\u00edddal.",
+                "title": "Az integr\u00e1ci\u00f3 \u00fajb\u00f3li azonos\u00edt\u00e1sa"
+            },
             "user": {
                 "data": {
                     "host": "Hoszt",

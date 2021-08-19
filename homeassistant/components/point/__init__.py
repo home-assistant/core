@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from httpx import ConnectTimeout
 from pypoint import PointSession
 import voluptuous as vol
 
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -92,6 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await session.ensure_active_token()
+    except ConnectTimeout as err:
+        _LOGGER.debug("Connection Timeout")
+        raise ConfigEntryNotReady from err
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Authentication Error")
         return False

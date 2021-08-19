@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry):
             raise UpdateFailed from err
 
     init_data_update_tasks = []
-    for sensor_type, api_coro in [
+    for sensor_type, api_coro in (
         (TYPE_ALLERGY_FORECAST, client.allergens.extended),
         (TYPE_ALLERGY_INDEX, client.allergens.current),
         (TYPE_ALLERGY_OUTLOOK, client.allergens.outlook),
@@ -67,7 +67,7 @@ async def async_setup_entry(hass, entry):
         (TYPE_ASTHMA_INDEX, client.asthma.current),
         (TYPE_DISEASE_FORECAST, client.disease.extended),
         (TYPE_DISEASE_INDEX, client.disease.current),
-    ]:
+    ):
         coordinator = coordinators[sensor_type] = DataUpdateCoordinator(
             hass,
             LOGGER,
@@ -104,42 +104,14 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, entry, sensor_type, name, icon):
         """Initialize."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_icon = icon
+        self._attr_name = name
+        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{sensor_type}"
+        self._attr_native_unit_of_measurement = "index"
         self._entry = entry
-        self._icon = icon
-        self._name = name
-        self._state = None
         self._type = sensor_type
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._entry.data[CONF_ZIP_CODE]}_{self._type}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return "index"
 
     @callback
     def _handle_coordinator_update(self) -> None:

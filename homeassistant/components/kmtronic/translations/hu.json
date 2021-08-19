@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "Ford\u00edtott kapcsol\u00f3 logika (NC haszn\u00e1lata)"
+                }
+            }
+        }
     }
 }

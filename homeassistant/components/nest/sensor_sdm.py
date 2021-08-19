@@ -17,9 +17,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_SUBSCRIBER, DOMAIN
-from .device_info import DeviceInfo
+from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +35,7 @@ DEVICE_TYPE_MAP = {
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
 
@@ -44,7 +46,7 @@ async def async_setup_sdm_entry(
         _LOGGER.warning("Failed to get devices: %s", err)
         raise PlatformNotReady from err
 
-    entities = []
+    entities: list[SensorEntity] = []
     for device in device_manager.devices.values():
         if TemperatureTrait.NAME in device.traits:
             entities.append(TemperatureSensor(device))
@@ -59,7 +61,7 @@ class SensorBase(SensorEntity):
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
         self._device = device
-        self._device_info = DeviceInfo(device)
+        self._device_info = NestDeviceInfo(device)
 
     @property
     def should_poll(self) -> bool:
@@ -73,11 +75,11 @@ class SensorBase(SensorEntity):
         return f"{self._device.name}-{self.device_class}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return self._device_info.device_info
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
@@ -88,23 +90,23 @@ class TemperatureSensor(SensorBase):
     """Representation of a Temperature Sensor."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._device_info.device_name} Temperature"
 
     @property
-    def state(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
-        trait = self._device.traits[TemperatureTrait.NAME]
+        trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
         return trait.ambient_temperature_celsius
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device."""
         return DEVICE_CLASS_TEMPERATURE
 
@@ -119,22 +121,22 @@ class HumiditySensor(SensorBase):
         return f"{self._device.name}-humidity"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._device_info.device_name} Humidity"
 
     @property
-    def state(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
-        trait = self._device.traits[HumidityTrait.NAME]
+        trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
         return trait.ambient_humidity_percent
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return PERCENTAGE
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device."""
         return DEVICE_CLASS_HUMIDITY

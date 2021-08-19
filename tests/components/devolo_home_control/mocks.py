@@ -1,91 +1,119 @@
 """Mocks for tests."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
+from devolo_home_control_api.properties.binary_sensor_property import (
+    BinarySensorProperty,
+)
+from devolo_home_control_api.properties.settings_property import SettingsProperty
 from devolo_home_control_api.publisher.publisher import Publisher
 
 
-class BinarySensorPropertyMock:
+class BinarySensorPropertyMock(BinarySensorProperty):
     """devolo Home Control binary sensor mock."""
 
-    element_uid = "Test"
-    key_count = 1
-    sensor_type = "door"
-    sub_type = ""
-    state = False
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self._logger = MagicMock()
+        self.element_uid = "Test"
+        self.key_count = 1
+        self.sensor_type = "door"
+        self.sub_type = ""
+        self.state = False
 
 
-class SettingsMock:
+class SettingsMock(SettingsProperty):
     """devolo Home Control settings mock."""
 
-    name = "Test"
-    zone = "Test"
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self._logger = MagicMock()
+        self.name = "Test"
+        self.zone = "Test"
 
 
-class DeviceMock:
+class DeviceMock(Zwave):
     """devolo Home Control device mock."""
 
-    available = True
-    brand = "devolo"
-    name = "Test Device"
-    uid = "Test"
-    settings_property = {"general_device_settings": SettingsMock()}
-
-    def is_online(self):
-        """Mock online state of the device."""
-        return DeviceMock.available
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        self.status = 0
+        self.brand = "devolo"
+        self.name = "Test Device"
+        self.uid = "Test"
+        self.settings_property = {"general_device_settings": SettingsMock()}
 
 
 class BinarySensorMock(DeviceMock):
     """devolo Home Control binary sensor device mock."""
 
-    binary_sensor_property = {"Test": BinarySensorPropertyMock()}
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.binary_sensor_property = {"Test": BinarySensorPropertyMock()}
 
 
 class RemoteControlMock(DeviceMock):
     """devolo Home Control remote control device mock."""
 
-    remote_control_property = {"Test": BinarySensorPropertyMock()}
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.remote_control_property = {"Test": BinarySensorPropertyMock()}
 
 
 class DisabledBinarySensorMock(DeviceMock):
     """devolo Home Control disabled binary sensor device mock."""
 
-    binary_sensor_property = {"devolo.WarningBinaryFI:Test": BinarySensorPropertyMock()}
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.binary_sensor_property = {
+            "devolo.WarningBinaryFI:Test": BinarySensorPropertyMock()
+        }
 
 
-class HomeControlMock:
+class HomeControlMock(HomeControl):
     """devolo Home Control gateway mock."""
 
-    binary_sensor_devices = []
-    binary_switch_devices = []
-    multi_level_sensor_devices = []
-    multi_level_switch_devices = []
-    devices = {}
-    publisher = MagicMock()
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self.devices = {}
+        self.publisher = MagicMock()
 
-    def websocket_disconnect(self):
+    def websocket_disconnect(self, event: str):
         """Mock disconnect of the websocket."""
-        pass
 
 
 class HomeControlMockBinarySensor(HomeControlMock):
     """devolo Home Control gateway mock with binary sensor device."""
 
-    binary_sensor_devices = [BinarySensorMock()]
-    devices = {"Test": BinarySensorMock()}
-    publisher = Publisher(devices.keys())
-    publisher.unregister = MagicMock()
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {"Test": BinarySensorMock()}
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
 
 
 class HomeControlMockRemoteControl(HomeControlMock):
     """devolo Home Control gateway mock with remote control device."""
 
-    devices = {"Test": RemoteControlMock()}
-    publisher = Publisher(devices.keys())
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {"Test": RemoteControlMock()}
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
 
 
 class HomeControlMockDisabledBinarySensor(HomeControlMock):
     """devolo Home Control gateway mock with disabled device."""
 
-    binary_sensor_devices = [DisabledBinarySensorMock()]
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {"Test": DisabledBinarySensorMock()}
