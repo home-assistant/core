@@ -309,13 +309,13 @@ async def test_form_multiple_services_duplicate(hass: HomeAssistant) -> None:
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
+    result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch("aussiebb.AussieBB.__init__", side_effect=AuthenticationException()):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            result1["flow_id"],
             {
                 "username": "test-username",
                 "password": "test-password",
@@ -323,4 +323,4 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_credentials"}
+    assert result2["errors"] == {"base": "invalid_auth"}
