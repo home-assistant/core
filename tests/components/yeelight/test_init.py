@@ -284,7 +284,10 @@ async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
 async def test_async_setup_with_missing_id(hass: HomeAssistant):
     """Test that setting adds the missing CONF_ID from unique_id."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=ID, data={CONF_HOST: "127.0.0.1"}
+        domain=DOMAIN,
+        unique_id=ID,
+        data={CONF_HOST: "127.0.0.1"},
+        options={CONF_NAME: "Test name"},
     )
     config_entry.add_to_hass(hass)
 
