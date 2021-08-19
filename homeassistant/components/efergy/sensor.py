@@ -50,14 +50,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=CONF_INSTANT,
         name="Energy Usage",
         device_class=DEVICE_CLASS_POWER,
-        native_unit_of_measurement=POWER_WATT,
+        unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=CONF_AMOUNT,
         name="Energy Consumed",
         device_class=DEVICE_CLASS_ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
@@ -72,12 +72,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=CONF_CURRENT_VALUES,
         name="Per-Device Usage",
         device_class=DEVICE_CLASS_POWER,
-        native_unit_of_measurement=POWER_WATT,
+        unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
-TYPES_SCHEMA = vol.In(SENSOR_TYPES)
+TYPES = {}
+for description in SENSOR_TYPES:
+    TYPES[description.key] = description.name
+
+TYPES_SCHEMA = vol.In(TYPES)
 
 SENSORS_SCHEMA = vol.Schema(
     {
@@ -100,7 +104,7 @@ def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    discovery_info: DiscoveryInfoType = None,
 ) -> None:
     """Set up the Efergy sensor."""
     app_token = config.get(CONF_APPTOKEN)
@@ -110,10 +114,7 @@ def setup_platform(
     for variable in config[CONF_MONITORED_VARIABLES]:
         for description in SENSOR_TYPES:
             if variable[CONF_TYPE] == description.key:
-                if (
-                    description.key == CONF_CURRENT_VALUES
-                    and description.key in config[CONF_MONITORED_VARIABLES]
-                ):
+                if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
                     url_string = f"{_RESOURCE}getCurrentValuesSummary?token={app_token}"
                     response = requests.get(url_string, timeout=10)
                     for sensor in response.json():
@@ -125,7 +126,7 @@ def setup_platform(
                                 variable[CONF_PERIOD],
                                 variable[CONF_CURRENCY],
                                 description,
-                                sid,
+                                sid=sid,
                             )
                         )
                 dev.append(
@@ -154,8 +155,8 @@ class EfergySensor(SensorEntity):
         sid: str = None,
     ) -> None:
         """Initialize the sensor."""
-        self.sid = sid
         self.entity_description = description
+        self.sid = sid
         if sid:
             self._attr_name = f"efergy_{sid}"
         self.app_token = app_token
