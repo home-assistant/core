@@ -5,12 +5,13 @@ DOMAIN = "netgear"
 
 PLATFORMS = ["device_tracker"]
 
-CONF_METHOD_VERSION = "method_version"
 CONF_CONSIDER_HOME = "consider_home"
 CONF_TRACKED_LIST = "tracked_list"
 
-DEFAULT_METHOD_VERSION = 1
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
+
+# update method V2 models
+MODELS_V2 = ["Orbi"]
 
 # Icons
 DEVICE_ICONS = {

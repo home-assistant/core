@@ -19,10 +19,8 @@ from homeassistant.core import callback
 
 from .const import (  # pylint: disable=unused-import
     CONF_CONSIDER_HOME,
-    CONF_METHOD_VERSION,
     CONF_TRACKED_LIST,
     DEFAULT_CONSIDER_HOME,
-    DEFAULT_METHOD_VERSION,
     DOMAIN,
 )
 from .errors import CannotLoginException
@@ -65,12 +63,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         settings_schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_METHOD_VERSION,
-                    default=self.config_entry.options.get(
-                        CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION
-                    ),
-                ): vol.In([1, 2]),
                 vol.Optional(
                     CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(

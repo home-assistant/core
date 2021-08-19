@@ -23,11 +23,10 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CONSIDER_HOME,
-    CONF_METHOD_VERSION,
     CONF_TRACKED_LIST,
     DEFAULT_CONSIDER_HOME,
-    DEFAULT_METHOD_VERSION,
     DOMAIN,
+    MODELS_V2,
 )
 from .errors import CannotLoginException
 
@@ -91,9 +90,7 @@ class NetgearRouter:
         self.device_name = None
         self.firmware_version = None
 
-        self._method_version = entry.options.get(
-            CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION
-        )
+        self._method_version = 1
         consider_home_int = entry.options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
@@ -125,6 +122,9 @@ class NetgearRouter:
         self.device_name = self._info["DeviceName"]
         self.model = self._info["ModelName"]
         self.firmware_version = self._info["Firmwareversion"]
+        
+        if self.model in MODELS_V2:
+            self._method_version = 2
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
