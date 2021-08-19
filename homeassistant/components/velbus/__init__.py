@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -99,10 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def set_memo_text(call):
         """Handle Memo Text service call."""
-        cntrl_id = await get_entry_id(call.data["interface"])
-        if not cntrl_id:
+        entry_id = await get_entry_id(call.data["interface"])
+        if not entry_id:
             return
-        memo_text = service.data[CONF_MEMO_TEXT]
+        memo_text = call.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
         await hass.data[DOMAIN][entry_id].get_module(
             call.data[CONF_ADDRESS]
