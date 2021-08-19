@@ -263,8 +263,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryNotReady from ex
             # Otherwise fall through to discovery
         else:
-            # Since device is passed this cannot throw
-            # an exception
+            # Since device is passed this cannot throw an exception anymore
             await _async_initialize(hass, entry, entry.data[CONF_HOST], device=device)
             return True
 
