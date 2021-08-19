@@ -49,7 +49,6 @@ _LOGGER = logging.getLogger(__name__)
 def _is_file(value):
     """Validate that the value is an existing file."""
     file_in = os.path.expanduser(str(value))
-
     return os.path.isfile(file_in) and os.access(file_in, os.R_OK)
 
 
