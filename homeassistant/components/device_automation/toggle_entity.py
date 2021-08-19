@@ -167,7 +167,10 @@ async def async_attach_trigger(
 
 
 async def _async_get_automations(
-    hass: HomeAssistant, device_id: str, automation_templates: list[dict], domain: str
+    hass: HomeAssistant,
+    device_id: str,
+    automation_templates: list[dict[str, str]],
+    domain: str,
 ) -> list[dict[str, str]]:
     """List device automations."""
     automations: list[dict[str, str]] = []
