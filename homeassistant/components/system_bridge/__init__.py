@@ -232,14 +232,12 @@ class SystemBridgeEntity(CoordinatorEntity):
         coordinator: SystemBridgeDataUpdateCoordinator,
         key: str,
         name: str | None,
-        icon: str | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
         bridge: Bridge = coordinator.data
         self._key = f"{bridge.information.host}_{key}"
         self._name = f"{bridge.information.host} {name}"
-        self._icon = icon
         self._hostname = bridge.information.host
         self._mac = bridge.information.mac
         self._manufacturer = bridge.system.system.manufacturer
@@ -255,11 +253,6 @@ class SystemBridgeEntity(CoordinatorEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def icon(self) -> str | None:
-        """Return the mdi icon of the entity."""
-        return self._icon
 
 
 class SystemBridgeDeviceEntity(SystemBridgeEntity):

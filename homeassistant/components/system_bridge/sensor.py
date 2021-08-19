@@ -523,7 +523,6 @@ class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
             coordinator,
             description.key,
             description.name,
-            description.icon,
         )
         self.entity_description = description
 
