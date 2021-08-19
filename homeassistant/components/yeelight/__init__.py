@@ -250,7 +250,7 @@ def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> No
                 ),
             },
         )
-    if entry.unique_id and not entry.data.get(CONF_ID):
+    elif entry.unique_id and not entry.data.get(CONF_ID):
         hass.config_entries.async_update_entry(
             entry,
             data={CONF_HOST: entry.data.get(CONF_HOST), CONF_ID: entry.unique_id},

@@ -279,3 +279,22 @@ async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_with_missing_id(hass: HomeAssistant):
+    """Test that setting adds the missing CONF_ID from unique_id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ID,
+        data={CONF_HOST: "127.0.0.1"},
+        options={CONF_NAME: "Test name"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_ID] == ID
