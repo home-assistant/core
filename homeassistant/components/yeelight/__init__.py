@@ -321,15 +321,15 @@ def async_format_model(model: str) -> str:
 
 
 @callback
-def async_format_id(id: str) -> str:
+def async_format_id(id_: str) -> str:
     """Generate a more human readable id."""
-    return str(hex(int(id, 16))) if id else "None"
+    return str(hex(int(id_, 16))) if id_ else "None"
 
 
 @callback
-def async_format_model_id(model: str, id: str) -> str:
+def async_format_model_id(model: str, id_: str) -> str:
     """Generate a more human readable name."""
-    return f"{async_format_model(model)} {async_format_id(id)}"
+    return f"{async_format_model(model)} {async_format_id(id_)}"
 
 
 @callback
