@@ -6,7 +6,7 @@ from typing import Any
 from aussiebb import AussieBB, AuthenticationException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow as ConfigFlowBase
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
@@ -20,7 +20,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
+class ConfigFlow(ConfigFlowBase, domain=DOMAIN):
     """Handle a config flow for Aussie Broadband."""
 
     VERSION = 1

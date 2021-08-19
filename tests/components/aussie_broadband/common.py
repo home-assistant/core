@@ -1,12 +1,11 @@
 """Aussie Broadband common helpers for tests."""
 from unittest.mock import patch
 
-from homeassistant.components.aussie_broadband import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
+from homeassistant.components.aussie_broadband.const import (
+    CONF_SERVICE_ID,
     DOMAIN as AUSSIE_BROADBAND_DOMAIN,
 )
-from homeassistant.components.aussie_broadband.const import CONF_SERVICE_ID
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
