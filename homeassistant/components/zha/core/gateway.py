@@ -217,20 +217,20 @@ class ZHAGateway:
 
         _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=True)
                 for dev in self.devices.values()
                 if not dev.is_mains_powered
-            ]
+            )
         )
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=False)
                 for dev in self.devices.values()
                 if dev.is_mains_powered
-            ]
+            )
         )
 
     def device_joined(self, device):
@@ -616,13 +616,15 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: list[GroupMember]
+        self, name: str, members: list[GroupMember], group_id: int = None
     ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with two to fill any gaps from a user removing existing groups
-        group_id = 2
-        while group_id in self.groups:
-            group_id += 1
+
+        if group_id is None:
+            group_id = 2
+            while group_id in self.groups:
+                group_id += 1
 
         # guard against group already existing
         if self.async_get_group_by_name(name) is None:

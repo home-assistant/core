@@ -9,7 +9,7 @@ from elkm1_lib.util import pretty_const, username
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import VOLT
+from homeassistant.const import ELECTRIC_POTENTIAL_VOLT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 
@@ -77,7 +77,7 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
         self._state = None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -127,7 +127,7 @@ class ElkKeypad(ElkSensor):
         return self._temperature_unit
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._temperature_unit
 
@@ -250,12 +250,12 @@ class ElkZone(ElkSensor):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self._element.definition == ZoneType.TEMPERATURE.value:
             return self._temperature_unit
         if self._element.definition == ZoneType.ANALOG_ZONE.value:
-            return VOLT
+            return ELECTRIC_POTENTIAL_VOLT
         return None
 
     def _element_changed(self, element, changeset):

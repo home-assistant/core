@@ -6,6 +6,7 @@ PYSMA_COORDINATOR = "coordinator"
 PYSMA_OBJECT = "pysma"
 PYSMA_REMOVE_LISTENER = "remove_listener"
 PYSMA_SENSORS = "pysma_sensors"
+PYSMA_DEVICE_INFO = "device_info"
 
 PLATFORMS = ["sensor"]
 
@@ -14,7 +15,6 @@ CONF_FACTOR = "factor"
 CONF_GROUP = "group"
 CONF_KEY = "key"
 CONF_UNIT = "unit"
-DEVICE_INFO = "device_info"
 
 DEFAULT_SCAN_INTERVAL = 5
 

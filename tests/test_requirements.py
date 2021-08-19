@@ -38,6 +38,7 @@ async def test_requirement_installed_in_venv(hass):
         assert mock_install.call_args == call(
             "package==0.0.1",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=False,
         )
 
@@ -59,6 +60,7 @@ async def test_requirement_installed_in_deps(hass):
             "package==0.0.1",
             target=hass.config.path("deps"),
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=False,
         )
 
@@ -304,6 +306,7 @@ async def test_install_with_wheels_index(hass):
             "hello==1.0.0",
             find_links="https://wheels.hass.io/test",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=True,
         )
 
@@ -327,6 +330,7 @@ async def test_install_on_docker(hass):
         assert mock_inst.call_args == call(
             "hello==1.0.0",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            timeout=60,
             no_cache_dir=True,
         )
 

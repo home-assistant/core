@@ -186,6 +186,11 @@ ZEROCONF = {
             "name": "brother*"
         }
     ],
+    "_sonos._tcp.local.": [
+        {
+            "domain": "sonos"
+        }
+    ],
     "_spotify-connect._tcp.local.": [
         {
             "domain": "spotify"
@@ -257,7 +262,7 @@ HOMEKIT = {
     "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
-    "YLDP*": "yeelight",
+    "YLD*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

@@ -340,6 +340,32 @@ async def test_update_unhandled_response(hass, remote, mock_now):
         assert state.state == STATE_ON
 
 
+async def test_connection_closed_during_update_can_recover(hass, remote, mock_now):
+    """Testing update tv connection closed exception can recover."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[exceptions.ConnectionClosed(), DEFAULT_MOCK],
+    ):
+
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
+
+        next_update = mock_now + timedelta(minutes=10)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ON
+
+
 async def test_send_key(hass, remote):
     """Test for send key."""
     await setup_samsungtv(hass, MOCK_CONFIG)

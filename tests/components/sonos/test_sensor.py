@@ -1,5 +1,5 @@
 """Tests for the Sonos battery sensor platform."""
-from pysonos.exceptions import NotSupportedException
+from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
@@ -103,3 +103,23 @@ async def test_device_payload_without_battery(
     await hass.async_block_till_done()
 
     assert bad_payload in caplog.text
+
+
+async def test_device_payload_without_battery_and_ignored_keys(
+    hass, config_entry, config, soco, battery_event, caplog
+):
+    """Test device properties event update without battery info and ignored keys."""
+    soco.get_battery_info.return_value = None
+
+    await setup_platform(hass, config_entry, config)
+
+    subscription = soco.deviceProperties.subscribe.return_value
+    sub_callback = subscription.callback
+
+    ignored_payload = "SPID:InCeiling,TargetRoomName:Bouncy House"
+    battery_event.variables["more_info"] = ignored_payload
+
+    sub_callback(battery_event)
+    await hass.async_block_till_done()
+
+    assert ignored_payload not in caplog.text

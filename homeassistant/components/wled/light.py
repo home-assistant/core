@@ -29,12 +29,12 @@ from .const import (
     ATTR_INTENSITY,
     ATTR_ON,
     ATTR_PALETTE,
-    ATTR_PLAYLIST,
     ATTR_PRESET,
     ATTR_REVERSE,
     ATTR_SEGMENT_ID,
     ATTR_SPEED,
     DOMAIN,
+    LOGGER,
     SERVICE_EFFECT,
     SERVICE_PRESET,
 )
@@ -86,9 +86,8 @@ async def async_setup_entry(
 
     update_segments = partial(
         async_update_segments,
-        entry,
         coordinator,
-        {},
+        set(),
         async_add_entities,
     )
 
@@ -164,6 +163,13 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
         preset: int,
     ) -> None:
         """Set a WLED light to a saved preset."""
+        # The WLED preset service is replaced by a preset select entity
+        # and marked deprecated as of Home Assistant 2021.8
+        LOGGER.warning(
+            "The 'wled.preset' service is deprecated and replaced by a "
+            "dedicated preset select entity; Please use that entity to "
+            "change presets instead"
+        )
         await self.coordinator.wled.preset(preset=preset)
 
 
@@ -213,15 +219,10 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
-        playlist: int | None = self.coordinator.data.state.playlist
-        if playlist == -1:
-            playlist = None
-
         segment = self.coordinator.data.state.segments[self._segment]
         return {
             ATTR_INTENSITY: segment.intensity,
             ATTR_PALETTE: segment.palette.name,
-            ATTR_PLAYLIST: playlist,
             ATTR_REVERSE: segment.reverse,
             ATTR_SPEED: segment.speed,
         }
@@ -363,30 +364,24 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
 @callback
 def async_update_segments(
-    entry: ConfigEntry,
     coordinator: WLEDDataUpdateCoordinator,
-    current: dict[int, WLEDSegmentLight | WLEDMasterLight],
+    current_ids: set[int],
     async_add_entities,
 ) -> None:
     """Update segments."""
     segment_ids = {light.segment_id for light in coordinator.data.state.segments}
-    current_ids = set(current)
-    new_entities = []
-
-    # Discard master (if present)
-    current_ids.discard(-1)
-
-    # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
-        current[segment_id] = WLEDSegmentLight(coordinator, segment_id)
-        new_entities.append(current[segment_id])
+    new_entities: list[WLEDMasterLight | WLEDSegmentLight] = []
 
     # More than 1 segment now? No master? Add master controls
     if not coordinator.keep_master_light and (
         len(current_ids) < 2 and len(segment_ids) > 1
     ):
-        current[-1] = WLEDMasterLight(coordinator)
-        new_entities.append(current[-1])
+        new_entities.append(WLEDMasterLight(coordinator))
+
+    # Process new segments, add them to Home Assistant
+    for segment_id in segment_ids - current_ids:
+        current_ids.add(segment_id)
+        new_entities.append(WLEDSegmentLight(coordinator, segment_id))
 
     if new_entities:
         async_add_entities(new_entities)

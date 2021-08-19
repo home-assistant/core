@@ -43,7 +43,7 @@ MIN_UPDATE_SOURCES = timedelta(seconds=1)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HEOS component."""
     if DOMAIN not in config:
         return True

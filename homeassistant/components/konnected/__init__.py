@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import (  # Loading the config flow file will register the flow
     CONF_DEFAULT_OPTIONS,
@@ -220,7 +221,7 @@ YAML_CONFIGS = "yaml_configs"
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Konnected platform."""
     cfg = config.get(DOMAIN)
     if cfg is None:
@@ -368,7 +369,7 @@ class KonnectedView(HomeAssistantView):
 
         zone_data["device_id"] = device_id
 
-        for attr in ["state", "temp", "humi", "addr"]:
+        for attr in ("state", "temp", "humi", "addr"):
             value = payload.get(attr)
             handler = HANDLERS.get(attr)
             if value is not None and handler:

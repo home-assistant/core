@@ -7,10 +7,13 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -33,6 +36,17 @@ async def test_sensor(hass, aioclient_mock):
     await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
+    state = hass.states.get("sensor.home_caqi")
+    assert state
+    assert state.state == "23"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AQI
+
+    entry = registry.async_get("sensor.home_caqi")
+    assert entry
+    assert entry.unique_id == "123-456-caqi"
+
     state = hass.states.get("sensor.home_humidity")
     assert state
     assert state.state == "92.8"
@@ -53,12 +67,42 @@ async def test_sensor(hass, aioclient_mock):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM1
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
     entry = registry.async_get("sensor.home_pm1")
     assert entry
     assert entry.unique_id == "123-456-pm1"
+
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == "14"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM25
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+
+    entry = registry.async_get("sensor.home_pm2_5")
+    assert entry
+    assert entry.unique_id == "123-456-pm25"
+
+    state = hass.states.get("sensor.home_pm10")
+    assert state
+    assert state.state == "19"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM10
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+
+    entry = registry.async_get("sensor.home_pm10")
+    assert entry
+    assert entry.unique_id == "123-456-pm10"
 
     state = hass.states.get("sensor.home_pressure")
     assert state

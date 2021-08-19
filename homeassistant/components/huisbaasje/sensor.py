@@ -65,7 +65,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return self._name
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 
@@ -75,7 +75,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data[self._source_type][self._sensor_type] is not None:
             return round(
@@ -85,7 +85,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

@@ -271,7 +271,6 @@ async def test_climate_cannot_set_thermostat_temp_range_in_wrong_mode(hass, utcn
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
-            "hvac_mode": HVAC_MODE_HEAT_COOL,
             "temperature": 22,
             "target_temp_low": 20,
             "target_temp_high": 24,
@@ -375,12 +374,42 @@ async def test_climate_set_thermostat_temp_on_sspa_device(hass, utcnow):
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
+            "temperature": 22,
+        },
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 22
+
+
+async def test_climate_set_mode_via_temp(hass, utcnow):
+    """Test setting temperature and mode at same tims."""
+    helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice",
+            "temperature": 21,
+            "hvac_mode": HVAC_MODE_HEAT,
+        },
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 21
+    assert helper.characteristics[HEATING_COOLING_TARGET].value == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice",
             "hvac_mode": HVAC_MODE_HEAT_COOL,
             "temperature": 22,
         },
         blocking=True,
     )
     assert helper.characteristics[TEMPERATURE_TARGET].value == 22
+    assert helper.characteristics[HEATING_COOLING_TARGET].value == 3
 
 
 async def test_climate_change_thermostat_humidity(hass, utcnow):

@@ -209,8 +209,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         except AccessDenied:
             LOGGER.debug("Working but denied config: %s", config)
             return RESULT_AUTH_MISSING
-        except UnhandledResponse:
-            LOGGER.debug("Working but unsupported config: %s", config)
+        except UnhandledResponse as err:
+            LOGGER.debug("Working but unsupported config: %s, error: %s", config, err)
             return RESULT_NOT_SUPPORTED
         except (ConnectionClosed, OSError) as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
@@ -234,6 +234,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             except AccessDenied:
                 self._notify_callback()
                 raise
+            except (ConnectionClosed, OSError):
+                pass
         return self._remote
 
     def _send_key(self, key):
@@ -287,8 +289,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         config[CONF_TOKEN] = "*****"
                 LOGGER.debug("Working config: %s", config)
                 return RESULT_SUCCESS
-            except WebSocketException:
-                LOGGER.debug("Working but unsupported config: %s", config)
+            except WebSocketException as err:
+                LOGGER.debug(
+                    "Working but unsupported config: %s, error: %s", config, err
+                )
                 result = RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)

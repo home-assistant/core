@@ -1,7 +1,7 @@
 """The Panasonic Viera integration."""
 from functools import partial
 import logging
-from urllib.request import URLError
+from urllib.error import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
@@ -247,11 +247,13 @@ class Remote:
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
             self.available = False
-        except (SOAPError):
+        except (SOAPError, HTTPError) as err:
+            _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = True
             await self.async_create_remote_control()
-        except (URLError, OSError):
+        except (URLError, OSError) as err:
+            _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()

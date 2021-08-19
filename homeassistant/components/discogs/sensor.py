@@ -105,7 +105,7 @@ class DiscogsSensor(SensorEntity):
         return f"{self._name} {SENSORS[self._type]['name']}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -115,7 +115,7 @@ class DiscogsSensor(SensorEntity):
         return SENSORS[self._type]["icon"]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return SENSORS[self._type]["unit_of_measurement"]
 

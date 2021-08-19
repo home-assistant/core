@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_communicate": "Kon niet verbinden.",
             "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_communicate": "Kon niet verbinden.",
             "cannot_connect": "Kan geen verbinding maken",
             "one": "Leeg",
             "other": "Leeg"

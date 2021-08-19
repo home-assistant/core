@@ -1,14 +1,15 @@
 """Config flow for Met Office integration."""
 import logging
 
+import datapoint
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.metoffice.helpers import fetch_site
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
-from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,12 +23,16 @@ async def validate_input(hass: core.HomeAssistant, data):
     longitude = data[CONF_LONGITUDE]
     api_key = data[CONF_API_KEY]
 
-    metoffice_data = MetOfficeData(hass, api_key, latitude, longitude)
-    await metoffice_data.async_update_site()
-    if metoffice_data.site_name is None:
+    connection = datapoint.connection(api_key=api_key)
+
+    site = await hass.async_add_executor_job(
+        fetch_site, connection, latitude, longitude
+    )
+
+    if site is None:
         raise CannotConnect()
 
-    return {"site_name": metoffice_data.site_name}
+    return {"site_name": site.name}
 
 
 class MetOfficeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

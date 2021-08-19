@@ -9,9 +9,10 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_POTENTIAL_VOLT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -24,22 +25,22 @@ CONF_USE_LEDS = "use_leds"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    "light": ["light", " ", "mdi:weather-sunny"],
-    "light_red": ["light_red", " ", "mdi:invert-colors"],
-    "light_green": ["light_green", " ", "mdi:invert-colors"],
-    "light_blue": ["light_blue", " ", "mdi:invert-colors"],
-    "accelerometer_x": ["accelerometer_x", "G", "mdi:earth"],
-    "accelerometer_y": ["accelerometer_y", "G", "mdi:earth"],
-    "accelerometer_z": ["accelerometer_z", "G", "mdi:earth"],
-    "magnetometer_x": ["magnetometer_x", " ", "mdi:magnet"],
-    "magnetometer_y": ["magnetometer_y", " ", "mdi:magnet"],
-    "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet"],
-    "temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge"],
-    "voltage_0": ["voltage_0", VOLT, "mdi:flash"],
-    "voltage_1": ["voltage_1", VOLT, "mdi:flash"],
-    "voltage_2": ["voltage_2", VOLT, "mdi:flash"],
-    "voltage_3": ["voltage_3", VOLT, "mdi:flash"],
+    "light": ["light", " ", "mdi:weather-sunny", None],
+    "light_red": ["light_red", " ", "mdi:invert-colors", None],
+    "light_green": ["light_green", " ", "mdi:invert-colors", None],
+    "light_blue": ["light_blue", " ", "mdi:invert-colors", None],
+    "accelerometer_x": ["accelerometer_x", "G", "mdi:earth", None],
+    "accelerometer_y": ["accelerometer_y", "G", "mdi:earth", None],
+    "accelerometer_z": ["accelerometer_z", "G", "mdi:earth", None],
+    "magnetometer_x": ["magnetometer_x", " ", "mdi:magnet", None],
+    "magnetometer_y": ["magnetometer_y", " ", "mdi:magnet", None],
+    "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet", None],
+    "temperature": ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge", None],
+    "voltage_0": ["voltage_0", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_1": ["voltage_1", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_2": ["voltage_2", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_3": ["voltage_3", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -87,9 +88,14 @@ class EnvirophatSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SENSOR_TYPES[self.type][3]
 
     @property
     def icon(self):
@@ -97,7 +103,7 @@ class EnvirophatSensor(SensorEntity):
         return SENSOR_TYPES[self.type][2]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 

@@ -6,7 +6,12 @@ import logging
 from omnilogic import OmniLogic, OmniLogicException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -14,13 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    ALL_ITEM_KINDS,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    DOMAIN,
-)
+from .const import ALL_ITEM_KINDS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

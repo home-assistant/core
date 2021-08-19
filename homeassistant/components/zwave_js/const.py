@@ -13,7 +13,6 @@ CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
-DATA_UNSUBSCRIBE = "unsubs"
 DATA_PLATFORM_SETUP = "platform_setup"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
@@ -44,26 +43,30 @@ ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
+ATTR_OPTIONS = "options"
+
+ATTR_NODE = "node"
+ATTR_ZWAVE_VALUE = "zwave_value"
 
 # service constants
-ATTR_NODES = "nodes"
-
+SERVICE_SET_VALUE = "set_value"
+SERVICE_RESET_METER = "reset_meter"
+SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
+SERVICE_PING = "ping"
+SERVICE_REFRESH_VALUE = "refresh_value"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 
+ATTR_NODES = "nodes"
+# config parameter
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
-
-SERVICE_REFRESH_VALUE = "refresh_value"
-
+# refresh value
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
-
-SERVICE_SET_VALUE = "set_value"
-SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
-
+# multicast
 ATTR_BROADCAST = "broadcast"
-
-SERVICE_PING = "ping"
+# meter reset
+ATTR_METER_TYPE = "meter_type"
 
 ADDON_SLUG = "core_zwave_js"

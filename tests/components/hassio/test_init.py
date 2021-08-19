@@ -303,11 +303,13 @@ async def test_service_register(hassio_env, hass):
     assert hass.services.has_service("hassio", "host_reboot")
     assert hass.services.has_service("hassio", "snapshot_full")
     assert hass.services.has_service("hassio", "snapshot_partial")
+    assert hass.services.has_service("hassio", "backup_full")
+    assert hass.services.has_service("hassio", "backup_partial")
     assert hass.services.has_service("hassio", "restore_full")
     assert hass.services.has_service("hassio", "restore_partial")
 
 
-async def test_service_calls(hassio_env, hass, aioclient_mock):
+async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     """Call service and check the API calls behind that."""
     assert await async_setup_component(hass, "hassio", {})
 
@@ -318,13 +320,13 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
     aioclient_mock.post("http://127.0.0.1/addons/test/stdin", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/host/shutdown", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/host/reboot", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/snapshots/new/full", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/snapshots/new/partial", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/backups/new/full", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/backups/new/partial", json={"result": "ok"})
     aioclient_mock.post(
-        "http://127.0.0.1/snapshots/test/restore/full", json={"result": "ok"}
+        "http://127.0.0.1/backups/test/restore/full", json={"result": "ok"}
     )
     aioclient_mock.post(
-        "http://127.0.0.1/snapshots/test/restore/partial", json={"result": "ok"}
+        "http://127.0.0.1/backups/test/restore/partial", json={"result": "ok"}
     )
 
     await hass.services.async_call("hassio", "addon_start", {"addon": "test"})
@@ -345,27 +347,48 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 10
 
+    await hass.services.async_call("hassio", "backup_full", {})
+    await hass.services.async_call(
+        "hassio",
+        "backup_partial",
+        {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
+    )
     await hass.services.async_call("hassio", "snapshot_full", {})
     await hass.services.async_call(
         "hassio",
         "snapshot_partial",
-        {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
+        {"addons": ["test"], "folders": ["ssl"]},
     )
     await hass.async_block_till_done()
+    assert (
+        "The service 'snapshot_full' is deprecated and will be removed in Home Assistant 2021.11, use 'backup_full' instead"
+        in caplog.text
+    )
+    assert (
+        "The service 'snapshot_partial' is deprecated and will be removed in Home Assistant 2021.11, use 'backup_partial' instead"
+        in caplog.text
+    )
 
-    assert aioclient_mock.call_count == 12
-    assert aioclient_mock.mock_calls[-1][2] == {
+    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.mock_calls[-3][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
         "password": "123456",
     }
 
+    await hass.services.async_call("hassio", "restore_full", {"slug": "test"})
     await hass.services.async_call("hassio", "restore_full", {"snapshot": "test"})
+    await hass.async_block_till_done()
+    assert (
+        "Using 'snapshot' is deprecated and will be removed in Home Assistant 2021.11, use 'slug' instead"
+        in caplog.text
+    )
+
     await hass.services.async_call(
         "hassio",
         "restore_partial",
         {
-            "snapshot": "test",
+            "slug": "test",
             "homeassistant": False,
             "addons": ["test"],
             "folders": ["ssl"],
@@ -374,7 +397,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.call_count == 17
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],

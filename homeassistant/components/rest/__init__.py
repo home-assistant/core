@@ -31,6 +31,7 @@ from homeassistant.helpers.entity_component import (
     EntityComponent,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
@@ -43,7 +44,7 @@ PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the rest platforms."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     _async_setup_shared_data(hass)
