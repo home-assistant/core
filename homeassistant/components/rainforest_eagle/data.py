@@ -1,19 +1,32 @@
 """Rainforest data."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
-from eagle200_reader import EagleReader
+import aioeagle
+import aiohttp
+import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
-from uEagle import Eagle as LegacyReader
+from uEagle import Eagle as Eagle100Reader
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TYPE
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import TYPE_EAGLE_200, TYPE_LEGACY
+from .const import (
+    CONF_CLOUD_ID,
+    CONF_HARDWARE_ADDRESS,
+    CONF_INSTALL_CODE,
+    TYPE_EAGLE_100,
+    TYPE_EAGLE_200,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_ERRORS = (ConnectError, HTTPError, Timeout, ValueError)
+UPDATE_100_ERRORS = (ConnectError, HTTPError, Timeout, ValueError)
 
 
 class RainforestError(HomeAssistantError):
@@ -28,13 +41,13 @@ class InvalidAuth(RainforestError):
     """Error to indicate bad auth."""
 
 
-def get_type(cloud_id, install_code):
-    """Try API call 'get_network_info' to see if target device is Legacy or Eagle-200."""
-    reader = FixedLegacyReader(cloud_id, install_code)
+async def async_get_type(hass, cloud_id, install_code):
+    """Try API call 'get_network_info' to see if target device is Eagle-100 or Eagle-200."""
+    reader = Eagle100Reader(cloud_id, install_code)
 
     try:
-        response = reader.get_network_info()
-    except UPDATE_ERRORS as error:
+        response = await hass.async_add_executor_job(reader.get_network_info)
+    except UPDATE_100_ERRORS as error:
         _LOGGER.error("Failed to connect during setup: %s", error)
         raise CannotConnect from error
 
@@ -43,77 +56,124 @@ def get_type(cloud_id, install_code):
         "NetworkInfo" in response
         and response["NetworkInfo"].get("ModelId") == "Z109-EAGLE"
     ):
-        return TYPE_LEGACY
+        return TYPE_EAGLE_100, None
 
-    # Branch to test if target is Eagle-200 Model
+    # Branch to test if target is not an Eagle-200 Model
     if (
-        "Response" in response
-        and response["Response"].get("Command") == "get_network_info"
+        "Response" not in response
+        or response["Response"].get("Command") != "get_network_info"
     ):
-        return TYPE_EAGLE_200
+        # We don't support this
+        return None, None
 
-    # Catch-all if hardware ID tests fail
-    return None
+    # For EAGLE-200, fetch the hardware address of the meter too.
+    hub = aioeagle.EagleHub(
+        aiohttp_client.async_get_clientsession(hass), cloud_id, install_code
+    )
 
+    try:
+        meters = await hub.get_device_list()
+    except aioeagle.BadAuth as err:
+        raise InvalidAuth from err
+    except aiohttp.ClientError as err:
+        raise CannotConnect from err
 
-class FixedLegacyReader(LegacyReader):
-    """Wraps uEagle to make it behave like eagle_reader, offering update()."""
+    if meters:
+        hardware_address = meters[0].hardware_address
+    else:
+        hardware_address = None
 
-    def update(self):
-        """Fetch and return the four sensor values in a dict."""
-        out = {}
-
-        resp = self.get_instantaneous_demand()["InstantaneousDemand"]
-        out["instantanous_demand"] = resp["Demand"]
-
-        resp = self.get_current_summation()["CurrentSummation"]
-        out["summation_delivered"] = resp["SummationDelivered"]
-        out["summation_received"] = resp["SummationReceived"]
-        out["summation_total"] = out["summation_delivered"] - out["summation_received"]
-
-        return out
-
-
-class FixedEagleReader(EagleReader):
-    """Wraps EagleReader to avoid updating in constructor."""
-
-    # pylint: disable=super-init-not-called
-    def __init__(self, ip_addr, cloud_id, install_code):
-        """Initialize eagle reader.
-
-        We don't call super() because it fetches data.
-        """
-        self.ip_addr = ip_addr
-        self.cloud_id = cloud_id
-        self.install_code = install_code
-
-        self.instantanous_demand_value = 0.0
-        self.summation_delivered_value = 0.0
-        self.summation_received_value = 0.0
-        self.summation_total_value = 0.0
+    return TYPE_EAGLE_200, hardware_address
 
 
 class EagleDataCoordinator(DataUpdateCoordinator):
     """Get the latest data from the Eagle-200 device."""
 
-    def __init__(self, hass, reader_type, cloud_id, install_code):
+    eagle100_reader: Eagle100Reader | None = None
+    eagle200_meter: aioeagle.ElectricMeter | None = None
+
+    def __init__(self, hass, entry: ConfigEntry):
         """Initialize the data object."""
-        super().__init__(
-            hass, _LOGGER, name=cloud_id, update_interval=timedelta(seconds=30)
-        )
-        self.cloud_id = cloud_id
-        if reader_type == TYPE_LEGACY:
-            self._eagle_reader = FixedLegacyReader(cloud_id, install_code)
+        self.entry = entry
+        if self.type == TYPE_EAGLE_100:
+            self.model = "EAGLE-100"
+            update_method = self._async_update_data_100
         else:
-            self._eagle_reader = FixedEagleReader(
-                f"eagle-{cloud_id}.local", cloud_id, install_code
+            self.model = "EAGLE-200"
+            update_method = self._async_update_data_200
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=entry.data[CONF_CLOUD_ID],
+            update_interval=timedelta(seconds=30),
+            update_method=update_method,
+        )
+
+    @property
+    def cloud_id(self):
+        """Return the cloud ID."""
+        return self.entry.data[CONF_CLOUD_ID]
+
+    @property
+    def type(self):
+        """Return entry type."""
+        return self.entry.data[CONF_TYPE]
+
+    @property
+    def hardware_address(self):
+        """Return hardware address of meter."""
+        return self.entry.data[CONF_HARDWARE_ADDRESS]
+
+    async def _async_update_data_200(self):
+        """Get the latest data from the Eagle-200 device."""
+        if self.eagle200_meter is None:
+            hub = aioeagle.EagleHub(
+                aiohttp_client.async_get_clientsession(self.hass),
+                self.cloud_id,
+                self.entry.data[CONF_INSTALL_CODE],
+            )
+            self.eagle200_meter = aioeagle.ElectricMeter.create_instance(
+                hub, self.hardware_address
             )
 
-    async def _async_update_data(self):
-        """Get the latest data from the Eagle-200 device."""
         try:
-            data = await self.hass.async_add_executor_job(self._eagle_reader.update)
-            _LOGGER.debug("API data: %s", data)
-            return data
-        except UPDATE_ERRORS as error:
+            async with async_timeout.timeout(30):
+                data = await self.eagle200_meter.get_device_query(
+                    self.eagle200_meter.ENERGY_AND_POWER_VARIABLES
+                )
+        except aioeagle.BadAuth as error:
+            raise ConfigEntryAuthFailed from error
+
+        _LOGGER.debug("API data: %s", data)
+        return {var["Name"]: var["Value"] for var in data.values()}
+
+    async def _async_update_data_100(self):
+        """Get the latest data from the Eagle-200 device."""
+        if self.eagle100_reader is None:
+            self.eagle100_reader = Eagle100Reader(
+                self.cloud_id, self.entry.data[CONF_INSTALL_CODE]
+            )
+
+        def update():
+            """Fetch and return the four sensor values in a dict."""
+            out = {}
+
+            resp = self.eagle100_reader.get_instantaneous_demand()[
+                "InstantaneousDemand"
+            ]
+            out["zigbee:InstantaneousDemand"] = resp["Demand"]
+
+            resp = self.eagle100_reader.get_current_summation()["CurrentSummation"]
+            out["zigbee:CurrentSummationDelivered"] = resp["SummationDelivered"]
+            out["zigbee:CurrentSummationReceived"] = resp["SummationReceived"]
+
+            return out
+
+        try:
+            data = await self.hass.async_add_executor_job(update)
+        except UPDATE_100_ERRORS as error:
             raise UpdateFailed from error
+
+        _LOGGER.debug("API data: %s", data)
+        return data

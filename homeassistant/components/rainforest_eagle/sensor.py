@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
+    POWER_KILO_WATT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -33,36 +33,26 @@ from .data import EagleDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-POWER_KILO_WATT = "kW"
-
 SENSORS = (
     SensorEntityDescription(
-        key="instantanous_demand",
+        key="zigbee:InstantaneousDemand",
         name="Meter Power Demand",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
     SensorEntityDescription(
-        key="summation_delivered",
+        key="zigbee:CurrentSummationDelivered",
         name="Total Meter Energy Delivered",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key="summation_received",
+        key="zigbee:CurrentSummationReceived",
         name="Total Meter Energy Received",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-    ),
-    SensorEntityDescription(
-        key="summation_total",
-        name="Net Meter Energy (Delivered minus Received)",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        entity_registry_enabled_default=False,
     ),
 )
 
@@ -132,8 +122,8 @@ class EagleSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo | None:
         """Return device info."""
         return {
-            "name": "EAGLE-200",
+            "name": self.coordinator.model,
             "identifiers": {(DOMAIN, self.coordinator.cloud_id)},
             "manufacturer": "Rainforest Automation",
-            "model": "EAGLE-200",
+            "model": self.coordinator.model,
         }

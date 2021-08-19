@@ -99,6 +99,9 @@ aiodns==3.0.0
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
+# homeassistant.components.rainforest_eagle
+aioeagle==1.1.0
+
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
@@ -310,9 +313,6 @@ dsmr_parser==0.29
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
-
-# homeassistant.components.rainforest_eagle
-eagle200_reader==0.2.4
 
 # homeassistant.components.elgato
 elgato==2.1.1

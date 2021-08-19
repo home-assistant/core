@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries, setup
 from homeassistant.components.rainforest_eagle.const import (
     CONF_CLOUD_ID,
+    CONF_HARDWARE_ADDRESS,
     CONF_INSTALL_CODE,
     DOMAIN,
     TYPE_EAGLE_200,
@@ -28,8 +29,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.rainforest_eagle.data.get_type",
-        return_value=TYPE_EAGLE_200,
+        "homeassistant.components.rainforest_eagle.data.async_get_type",
+        return_value=(TYPE_EAGLE_200, "mock-hw"),
     ), patch(
         "homeassistant.components.rainforest_eagle.async_setup_entry",
         return_value=True,
@@ -46,6 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_TYPE: TYPE_EAGLE_200,
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",
+        CONF_HARDWARE_ADDRESS: "mock-hw",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -57,7 +59,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.rainforest_eagle.data.get_type",
+        "homeassistant.components.rainforest_eagle.data.Eagle100Reader.get_network_info",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -76,7 +78,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.rainforest_eagle.data.get_type",
+        "homeassistant.components.rainforest_eagle.data.Eagle100Reader.get_network_info",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -93,8 +95,8 @@ async def test_import(hass: HomeAssistant) -> None:
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.rainforest_eagle.data.get_type",
-        return_value=TYPE_EAGLE_200,
+        "homeassistant.components.rainforest_eagle.data.async_get_type",
+        return_value=(TYPE_EAGLE_200, "mock-hw"),
     ), patch(
         "homeassistant.components.rainforest_eagle.async_setup_entry",
         return_value=True,
@@ -112,6 +114,7 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_TYPE: TYPE_EAGLE_200,
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",
+        CONF_HARDWARE_ADDRESS: "mock-hw",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -11,7 +11,7 @@ from homeassistant.const import CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 
 from . import data
-from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, DOMAIN
+from .const import CONF_CLOUD_ID, CONF_HARDWARE_ADDRESS, CONF_INSTALL_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +37,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
+        await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
         errors = {}
 
         try:
-            eagle_type = await self.hass.async_add_executor_job(
-                data.get_type, user_input[CONF_CLOUD_ID], user_input[CONF_INSTALL_CODE]
+            eagle_type, hardware_address = await data.async_get_type(
+                self.hass, user_input[CONF_CLOUD_ID], user_input[CONF_INSTALL_CODE]
             )
         except data.CannotConnect:
             errors["base"] = "cannot_connect"
@@ -51,8 +52,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
             user_input[CONF_TYPE] = eagle_type
+            user_input[CONF_HARDWARE_ADDRESS] = hardware_address
             return self.async_create_entry(
                 title=user_input[CONF_CLOUD_ID], data=user_input
             )
