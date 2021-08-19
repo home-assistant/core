@@ -32,9 +32,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
         manufacturer="Netgear",
-        name=entry.title,
+        name=router.device_name,
         model=router.model,
-        sw_version=f"{router.hardware_version}-{router.firmware_version}-{router.firewall_version}",
+        sw_version=router.firmware_version,
     )
 
     for platform in PLATFORMS:

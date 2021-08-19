@@ -88,9 +88,8 @@ class NetgearRouter:
         
         self._info = None
         self.model = None
+        self.device_name = None
         self.firmware_version = None
-        self.hardware_version = None
-        self.firewall_version = None
 
         self._method_version = entry.options.get(
             CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION
@@ -121,12 +120,11 @@ class NetgearRouter:
             self._ssl,
             self._url,
         )
-        
+
         self._info = self._api.get_info()
+        self.device_name = self._info["DeviceName"]
         self.model = self._info["ModelName"]
         self.firmware_version = self._info["Firmwareversion"]
-        self.hardware_version = self._info["Hardwareversion"]
-        self.firewall_version = self._info["FirewallVersion"]
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
