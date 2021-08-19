@@ -250,8 +250,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"5L"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL,
@@ -259,8 +258,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"5S"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,

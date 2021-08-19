@@ -588,15 +588,17 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     assert power_tariff.state == "123.456"
     assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert power_tariff.attributes.get(ATTR_ICON) is None
-    assert power_tariff.attributes.get(ATTR_LAST_RESET) is not None
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert (
         power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
 
     power_tariff = hass.states.get("sensor.energy_production_total")
     assert power_tariff.state == "654.321"
-    assert power_tariff.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert (
+        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    )
 
 
 async def test_tcp(hass, dsmr_connection_fixture):
