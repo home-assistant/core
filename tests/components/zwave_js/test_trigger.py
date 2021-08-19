@@ -1,10 +1,14 @@
 """The tests for Z-Wave JS automation triggers."""
+from unittest.mock import AsyncMock, patch
+
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
+from homeassistant.components.zwave_js.trigger import async_validate_trigger_config
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
@@ -257,3 +261,18 @@ async def test_if_notification_notification_fires(
     assert len(different_value) == 1
 
     clear_events()
+
+    with patch("homeassistant.config.load_yaml", return_value={}):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+
+async def test_async_validate_trigger_config(hass):
+    """Test async_validate_trigger_config."""
+    mock_platform = AsyncMock()
+    with patch(
+        "homeassistant.components.zwave_js.trigger._get_trigger_platform",
+        return_value=mock_platform,
+    ):
+        mock_platform.async_validate_trigger_config.return_value = {}
+        await async_validate_trigger_config(hass, {})
+        mock_platform.async_validate_trigger_config.assert_awaited()
