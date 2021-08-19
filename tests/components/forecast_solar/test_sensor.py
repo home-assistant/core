@@ -149,8 +149,8 @@ async def test_sensors(
 @pytest.mark.parametrize(
     "entity_id",
     (
-        "sensor.power_production_next_12hours",
-        "sensor.power_production_next_24hours",
+        "sensor.power_production_in_12hours",
+        "sensor.power_production_in_24hours",
         "sensor.power_production_next_hour",
     ),
 )
