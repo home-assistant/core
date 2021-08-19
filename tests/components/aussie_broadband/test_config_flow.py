@@ -308,7 +308,7 @@ async def test_form_multiple_services_duplicate(hass: HomeAssistant) -> None:
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+    """Test invalid auth is handled."""
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -324,3 +324,54 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauth is handled."""
+    # Setup a config entry
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    fake_services = [
+        {"service_id": "12345678", "description": "Fake ABB Service"},
+    ]
+
+    with patch("aussiebb.AussieBB.__init__", return_value=None), patch(
+        "aussiebb.AussieBB.get_services", return_value=fake_services
+    ), patch(
+        "homeassistant.components.aussie_broadband.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+
+    # Trigger the reauth
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    )
+    assert result3["step_id"] == "user"
+
+    with patch("aussiebb.AussieBB.__init__", return_value=None), patch(
+        "aussiebb.AussieBB.get_services", return_value=fake_services
+    ):
+
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-newpassword",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result4["type"] == "abort"
+        assert result4["reason"] == "reauth_successful"
