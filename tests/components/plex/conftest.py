@@ -54,6 +54,12 @@ def children_300_fixture():
     return load_fixture("plex/children_300.xml")
 
 
+@pytest.fixture(name="library_ondeck", scope="session")
+def library_ondeck():
+    """Load library section for ondeck payload and return it."""
+    return load_fixture("plex/library_ondeck.xml")
+
+
 @pytest.fixture(name="empty_library", scope="session")
 def empty_library_fixture():
     """Load an empty library payload and return it."""
@@ -148,6 +154,12 @@ def library_sections_fixture():
 def media_1_fixture():
     """Load media payload for item 1 and return it."""
     return load_fixture("plex/media_1.xml")
+
+
+@pytest.fixture(name="media_20", scope="session")
+def media_20_fixture():
+    """Load media payload for item 20 and return it."""
+    return load_fixture("plex/media_20.xml")
 
 
 @pytest.fixture(name="media_30", scope="session")
@@ -351,6 +363,7 @@ def mock_plex_calls(
     grandchildren_300,
     library,
     library_sections,
+    library_ondeck,
     library_movies_all,
     library_movies_sort,
     library_music_all,
@@ -358,6 +371,7 @@ def mock_plex_calls(
     library_tvshows_all,
     library_tvshows_sort,
     media_1,
+    media_20,
     media_30,
     media_100,
     media_200,
@@ -387,7 +401,7 @@ def mock_plex_calls(
     requests_mock.get(f"{url}/library", text=library)
     requests_mock.get(f"{url}/library/sections", text=library_sections)
 
-    requests_mock.get(f"{url}/library/onDeck", text=empty_library)
+    requests_mock.get(f"{url}/library/onDeck", text=library_ondeck)
     requests_mock.get(f"{url}/library/sections/1/sorts", text=library_movies_sort)
     requests_mock.get(f"{url}/library/sections/2/sorts", text=library_tvshows_sort)
     requests_mock.get(f"{url}/library/sections/3/sorts", text=library_music_sort)
@@ -401,12 +415,14 @@ def mock_plex_calls(
     requests_mock.get(f"{url}/library/metadata/300/allLeaves", text=grandchildren_300)
 
     requests_mock.get(f"{url}/library/metadata/1", text=media_1)
+    requests_mock.get(f"{url}/library/metadata/20", text=media_20)
     requests_mock.get(f"{url}/library/metadata/30", text=media_30)
     requests_mock.get(f"{url}/library/metadata/100", text=media_100)
     requests_mock.get(f"{url}/library/metadata/200", text=media_200)
 
     requests_mock.get(f"{url}/library/metadata/20/children", text=children_20)
     requests_mock.get(f"{url}/library/metadata/30/children", text=children_30)
+    requests_mock.get(f"{url}/library/metadata/30/allLeaves", text=children_20)
 
     requests_mock.get(f"{url}/playlists", text=playlists)
     requests_mock.get(f"{url}/playlists/500/items", text=playlist_500)
