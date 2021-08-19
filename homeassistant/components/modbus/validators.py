@@ -226,6 +226,8 @@ def duplicate_entity_validator(config: dict) -> dict:
 
             for i in reversed(errors):
                 del config[hub_index][conf_key][i]
+    return config
+
 
 def duplicate_modbus_validator(config: list) -> list:
     """Control modbus connection for duplicates."""
