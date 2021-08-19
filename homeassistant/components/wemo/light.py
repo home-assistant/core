@@ -21,7 +21,7 @@ import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoEntity
-from .wemo_device import DeviceWrapper
+from .wemo_device import DeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ WEMO_OFF = 0
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo lights."""
 
-    async def _discovered_wemo(device: DeviceWrapper):
+    async def _discovered_wemo(device: DeviceCoordinator):
         """Handle a discovered Wemo device."""
         if isinstance(device.wemo, bridge.Bridge):
             async_setup_bridge(hass, config_entry, async_add_entities, device)
@@ -72,15 +72,13 @@ def async_setup_bridge(hass, config_entry, async_add_entities, device):
             async_add_entities(new_lights)
 
     async_update_lights()
-    config_entry.async_on_unload(
-        device.coordinator.async_add_listener(async_update_lights)
-    )
+    config_entry.async_on_unload(device.async_add_listener(async_update_lights))
 
 
 class WemoLight(WemoEntity, LightEntity):
     """Representation of a WeMo light."""
 
-    def __init__(self, device: DeviceWrapper, light: bridge.Light) -> None:
+    def __init__(self, device: DeviceCoordinator, light: bridge.Light) -> None:
         """Initialize the WeMo light."""
         super().__init__(device)
         self.light = light

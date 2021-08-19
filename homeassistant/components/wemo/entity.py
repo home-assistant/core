@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .wemo_device import DeviceWrapper
+from .wemo_device import DeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 class WemoEntity(CoordinatorEntity):
     """Common methods for Wemo entities."""
 
-    def __init__(self, device: DeviceWrapper) -> None:
+    def __init__(self, device: DeviceCoordinator) -> None:
         """Initialize the WeMo device."""
-        super().__init__(device.coordinator)
+        super().__init__(device)
         self.wemo = device.wemo
         self._device_info = device.device_info
         self._available = True

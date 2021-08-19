@@ -24,23 +24,23 @@ from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceWrapper:
+class DeviceCoordinator(DataUpdateCoordinator):
     """Home Assistant wrapper for a pyWeMo device."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        wemo: WeMoDevice,
-        device_id: str,
-        coordinator: DataUpdateCoordinator,
-    ) -> None:
-        """Initialize DeviceWrapper."""
+    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice, device_id: str) -> None:
+        """Initialize DeviceCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=wemo.name,
+            update_interval=timedelta(seconds=30),
+            update_method=self.async_update_data,
+        )
         self.hass = hass
         self.wemo = wemo
         self.device_id = device_id
         self.device_info = _device_info(wemo)
         self.supports_long_press = wemo.supports_long_press()
-        self.coordinator = coordinator
         self.update_lock = asyncio.Lock()
 
     def subscription_callback(
@@ -71,24 +71,22 @@ class DeviceWrapper:
         try:
             await self._async_locked_update(not updated)
         except UpdateFailed as err:
-            self.coordinator.last_exception = err
-            if self.coordinator.last_update_success:
+            self.last_exception = err
+            if self.last_update_success:
                 _LOGGER.exception("Subscription callback failed")
-                self.coordinator.last_update_success = False
+                self.last_update_success = False
         except Exception as err:  # pylint: disable=broad-except
-            self.coordinator.last_exception = err
-            self.coordinator.last_update_success = False
-            _LOGGER.exception(
-                "Unexpected error fetching %s data: %s", self.coordinator.name, err
-            )
+            self.last_exception = err
+            self.last_update_success = False
+            _LOGGER.exception("Unexpected error fetching %s data: %s", self.name, err)
         else:
-            self.coordinator.async_set_updated_data(None)
+            self.async_set_updated_data(None)
 
     async def async_update_data(self) -> None:
         """Update WeMo state."""
         # No need to poll if the device will push updates.
         registry = self.hass.data[DOMAIN]["registry"]
-        if registry.is_subscribed(self.wemo) and self.coordinator.last_update_success:
+        if registry.is_subscribed(self.wemo) and self.last_update_success:
             return
 
         # If an update is in progress, we don't do anything.
@@ -119,7 +117,7 @@ def _device_info(wemo: WeMoDevice):
 
 async def async_register_device(
     hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
-) -> DeviceWrapper:
+) -> DeviceCoordinator:
     """Register a device with home assistant and enable pywemo event callbacks."""
     # Ensure proper communication with the device and get the initial state.
     await hass.async_add_executor_job(wemo.get_state, True)
@@ -129,18 +127,11 @@ async def async_register_device(
         config_entry_id=config_entry.entry_id, **_device_info(wemo)
     )
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=wemo.name,
-        update_interval=timedelta(seconds=30),
-    )
-    device = DeviceWrapper(hass, wemo, entry.id, coordinator)
+    device = DeviceCoordinator(hass, wemo, entry.id)
     hass.data[DOMAIN].setdefault("devices", {})[entry.id] = device
     registry = hass.data[DOMAIN]["registry"]
     registry.on(wemo, None, device.subscription_callback)
     await hass.async_add_executor_job(registry.register, wemo)
-    coordinator.update_method = device.async_update_data
 
     if device.supports_long_press:
         try:
@@ -157,6 +148,6 @@ async def async_register_device(
 
 
 @callback
-def async_get_device(hass: HomeAssistant, device_id: str) -> DeviceWrapper:
-    """Return DeviceWrapper for device_id."""
+def async_get_device(hass: HomeAssistant, device_id: str) -> DeviceCoordinator:
+    """Return DeviceCoordinator for device_id."""
     return hass.data[DOMAIN]["devices"][device_id]

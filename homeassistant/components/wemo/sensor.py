@@ -19,13 +19,13 @@ from homeassistant.util import convert
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoEntity
-from .wemo_device import DeviceWrapper
+from .wemo_device import DeviceCoordinator
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo sensors."""
 
-    async def _discovered_wemo(device: DeviceWrapper):
+    async def _discovered_wemo(device: DeviceCoordinator):
         """Handle a discovered Wemo device."""
         async_add_entities([InsightCurrentPower(device), InsightTodayEnergy(device)])
 
