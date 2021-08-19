@@ -32,6 +32,7 @@ from . import (
     ENTITY_BINARY_SENSOR_TEMPLATE,
     ENTITY_LIGHT,
     ENTITY_NIGHTLIGHT,
+    FAIL_TO_BIND_IP,
     ID,
     IP_ADDRESS,
     MODULE,
@@ -174,6 +175,62 @@ async def test_setup_discovery_with_manually_configured_network_adapter(
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_BINARY_SENSOR) is None
     assert hass.states.get(ENTITY_LIGHT) is None
+
+
+_ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING = [
+    {
+        "auto": True,
+        "index": 1,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": FAIL_TO_BIND_IP, "network_prefix": 23}],
+        "ipv6": [],
+        "name": "eth0",
+    },
+    {
+        "auto": True,
+        "index": 2,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+        "ipv6": [],
+        "name": "eth1",
+    },
+]
+
+
+async def test_setup_discovery_with_manually_configured_network_adapter_one_fails(
+    hass: HomeAssistant, caplog
+):
+    """Test setting up Yeelight by discovery with a manually configured network adapter with one that fails to bind."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ), patch(
+        "homeassistant.components.zeroconf.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is not None
+    assert hass.states.get(ENTITY_LIGHT) is not None
+
+    # Unload
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get(ENTITY_BINARY_SENSOR).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+    # Remove
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is None
+    assert hass.states.get(ENTITY_LIGHT) is None
+
+    assert f"Failed to setup listener for {FAIL_TO_BIND_IP}" in caplog.text
 
 
 async def test_setup_import(hass: HomeAssistant):
