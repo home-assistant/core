@@ -42,7 +42,7 @@ async def test_smartmeter(
     entry = entity_registry.async_get("sensor.monitor_power_consumption")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_power_consumption"
+    assert entry.unique_id == f"{entry_id}_smartmeter_power_consumption"
     assert state.state == "877"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumption"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -54,7 +54,7 @@ async def test_smartmeter(
     entry = entity_registry.async_get("sensor.monitor_energy_consumption_high")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_energy_consumption_high"
+    assert entry.unique_id == f"{entry_id}_smartmeter_energy_consumption_high"
     assert state.state == "2770.133"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - High Tariff"
@@ -68,7 +68,7 @@ async def test_smartmeter(
     entry = entity_registry.async_get("sensor.monitor_energy_tariff_period")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_energy_tariff_period"
+    assert entry.unique_id == f"{entry_id}_smartmeter_energy_tariff_period"
     assert state.state == "high"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Tariff Period"
     assert state.attributes.get(ATTR_ICON) == "mdi:calendar-clock"
@@ -99,7 +99,7 @@ async def test_phases(
     entry = entity_registry.async_get("sensor.monitor_voltage_phase_l1")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_voltage_phase_l1"
+    assert entry.unique_id == f"{entry_id}_phases_voltage_phase_l1"
     assert state.state == "233.6"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Voltage Phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -111,7 +111,7 @@ async def test_phases(
     entry = entity_registry.async_get("sensor.monitor_current_phase_l1")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_current_phase_l1"
+    assert entry.unique_id == f"{entry_id}_phases_current_phase_l1"
     assert state.state == "1.6"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Current Phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -123,7 +123,7 @@ async def test_phases(
     entry = entity_registry.async_get("sensor.monitor_power_consumed_phase_l1")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_power_consumed_phase_l1"
+    assert entry.unique_id == f"{entry_id}_phases_power_consumed_phase_l1"
     assert state.state == "315"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumed Phase L1"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -155,7 +155,7 @@ async def test_settings(
     entry = entity_registry.async_get("sensor.monitor_energy_consumption_low_tariff")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_energy_consumption_low_tariff"
+    assert entry.unique_id == f"{entry_id}_settings_energy_consumption_low_tariff"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - Low Tariff"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
@@ -165,7 +165,7 @@ async def test_settings(
     entry = entity_registry.async_get("sensor.monitor_energy_production_low_tariff")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_monitor_energy_production_low_tariff"
+    assert entry.unique_id == f"{entry_id}_settings_energy_production_low_tariff"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production - Low Tariff"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY

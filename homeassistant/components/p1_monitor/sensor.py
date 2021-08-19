@@ -261,7 +261,7 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
 
         self.entity_id = f"{SENSOR_DOMAIN}.{name}_{description.key}"
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{name}_{description.key}"
+        self._attr_unique_id = f"{entry_id}_{service_key}_{description.key}"
 
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, f"{entry_id}_{service_key}")},
