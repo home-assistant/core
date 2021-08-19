@@ -60,19 +60,16 @@ def _normalize_ips_and_network(hosts_str):
             continue
 
         try:
-            ip_addr = ip_address(host)
+            normalized_hosts.append(str(ip_address(host)))
         except ValueError:
             pass
         else:
-            normalized_hosts.append(str(ip_addr))
             continue
 
         try:
-            network = ip_network(host)
+            normalized_hosts.append(str(ip_network(host)))
         except ValueError:
             return None
-        else:
-            normalized_hosts.append(str(network))
 
     return normalized_hosts
 

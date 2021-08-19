@@ -141,6 +141,7 @@ class SensorEntity(Entity):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType = None
     _attr_state_class: str | None
+    _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _last_reset_reported = False
     _temperature_conversion_reported = False
 
@@ -176,8 +177,7 @@ class SensorEntity(Entity):
         """Return state attributes."""
         if last_reset := self.last_reset:
             if (
-                last_reset is not None
-                and self.state_class == STATE_CLASS_MEASUREMENT
+                self.state_class == STATE_CLASS_MEASUREMENT
                 and not self._last_reset_reported
             ):
                 self._last_reset_reported = True
@@ -211,6 +211,7 @@ class SensorEntity(Entity):
             return self.entity_description.native_unit_of_measurement
         return None
 
+    @final
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
@@ -232,13 +233,10 @@ class SensorEntity(Entity):
 
         return native_unit_of_measurement
 
+    @final
     @property
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
-        # Test if _attr_state has been set in this instance
-        if "_attr_state" in self.__dict__:
-            return self._attr_state
-
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
 
