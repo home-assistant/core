@@ -4,9 +4,9 @@ from unittest.mock import patch
 from aiohttp import ClientConnectionError, ClientResponseError
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.nightscout.const import DOMAIN
+from homeassistant.components.nightscout.const import DOMAIN, MG_DL, MMOL_L
 from homeassistant.components.nightscout.utils import hash_from_url
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_URL
 
 from tests.common import MockConfigEntry
 from tests.components.nightscout import (
@@ -113,6 +113,54 @@ async def test_user_form_duplicate(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_option_flow_default(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG,
+        options=None,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_UNIT_OF_MEASUREMENT: MG_DL,
+    }
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG,
+        options={CONF_UNIT_OF_MEASUREMENT: MG_DL},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_UNIT_OF_MEASUREMENT: MMOL_L},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        CONF_UNIT_OF_MEASUREMENT: MMOL_L,
+    }
 
 
 def _patch_async_setup_entry():

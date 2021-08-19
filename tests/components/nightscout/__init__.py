@@ -5,8 +5,13 @@ from unittest.mock import patch
 from aiohttp import ClientConnectionError
 from py_nightscout.models import SGV, ServerStatus
 
-from homeassistant.components.nightscout.const import DOMAIN
-from homeassistant.const import CONF_URL
+from homeassistant.components.nightscout.const import (
+    ATTR_DELTA,
+    ATTR_SGV,
+    DOMAIN,
+    MG_DL,
+)
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_URL
 
 from tests.common import MockConfigEntry
 
@@ -17,6 +22,9 @@ GLUCOSE_READINGS = [
         )
     )
 ]
+
+CONVERTED_MMOL_VALUES = {ATTR_SGV: 9.4, ATTR_DELTA: -0.3}
+
 SERVER_STATUS = ServerStatus.new_from_json_dict(
     json.loads(
         '{"status":"ok","name":"nightscout","version":"13.0.1","serverTime":"2020-08-05T18:14:02.032Z","serverTimeEpoch":1596651242032,"apiEnabled":true,"careportalEnabled":true,"boluscalcEnabled":true,"settings":{},"extendedSettings":{},"authorized":null}'
@@ -29,11 +37,16 @@ SERVER_STATUS_STATUS_ONLY = ServerStatus.new_from_json_dict(
 )
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass, unit_of_measurement=MG_DL) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
+    options = {}
+    if unit_of_measurement:
+        options[CONF_UNIT_OF_MEASUREMENT] = unit_of_measurement
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "https://some.url:1234"},
+        options=options,
     )
     with patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",

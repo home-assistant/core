@@ -19,5 +19,14 @@
                 "title": "Enter your Nightscout server information."
             }
         }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "data": {
+            "unit_of_measurement": "Unit of measurement"
+          }
+        }
+      }
     }
 }

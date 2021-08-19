@@ -10,17 +10,18 @@ from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE
+from homeassistant.const import ATTR_DATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN, MMOL_L
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Blood Glucose"
+MMOL_CONVERSION_FACTOR = 18
 
 
 async def async_setup_entry(
@@ -30,20 +31,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
+    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry)], True)
 
 
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name, unique_id):
+    def __init__(self, api: NightscoutAPI, name, entry):
         """Initialize the Nightscout sensor."""
         self.api = api
-        self._unique_id = unique_id
+        self._unique_id = entry.unique_id
         self._name = name
         self._state = None
         self._attributes = None
-        self._unit_of_measurement = "mg/dL"
+        self._unit_of_measurement = entry.options[CONF_UNIT_OF_MEASUREMENT]
         self._icon = "mdi:cloud-question"
         self._available = False
 
@@ -70,7 +71,7 @@ class NightscoutSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        return self._state
+        return self._get_bgl(self._state)
 
     @property
     def icon(self):
@@ -94,7 +95,7 @@ class NightscoutSensor(SensorEntity):
             self._attributes = {
                 ATTR_DEVICE: value.device,
                 ATTR_DATE: value.date,
-                ATTR_DELTA: value.delta,
+                ATTR_DELTA: self._get_bgl(value.delta),
                 ATTR_DIRECTION: value.direction,
             }
             self._state = value.sgv
@@ -102,6 +103,11 @@ class NightscoutSensor(SensorEntity):
         else:
             self._available = False
             _LOGGER.warning("Empty reply found when expecting JSON data")
+
+    def _get_bgl(self, value) -> float:
+        if self._unit_of_measurement == MMOL_L:
+            return round((value / MMOL_CONVERSION_FACTOR), 1)
+        return value
 
     def _parse_icon(self) -> str:
         """Update the icon based on the direction attribute."""
