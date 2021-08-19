@@ -54,9 +54,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class P1MonitorData(TypedDict):
     """Class for defining data in dict."""
 
-    SERVICE_SMARTMETER: SmartMeter
-    SERVICE_PHASES: Phases
-    SERVICE_SETTINGS: Settings
+    smartmeter: SmartMeter
+    phases: Phases
+    settings: Settings
 
 
 class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
