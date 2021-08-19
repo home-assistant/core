@@ -17,6 +17,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.setup import async_setup_component
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -101,16 +102,26 @@ async def test_import(hass: HomeAssistant) -> None:
         "homeassistant.components.rainforest_eagle.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            data={CONF_CLOUD_ID: "abcdef", CONF_INSTALL_CODE: "123456"},
-            context={"source": config_entries.SOURCE_IMPORT},
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": DOMAIN,
+                    "ip_address": "192.168.1.55",
+                    CONF_CLOUD_ID: "abcdef",
+                    CONF_INSTALL_CODE: "123456",
+                }
+            },
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "abcdef"
-    assert result["data"] == {
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    assert entry.title == "abcdef"
+    assert entry.data == {
         CONF_TYPE: TYPE_EAGLE_200,
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",

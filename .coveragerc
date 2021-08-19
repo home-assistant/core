@@ -838,9 +838,7 @@ omit =
     homeassistant/components/rainmachine/binary_sensor.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
-    homeassistant/components/rainforest_eagle/__init__.py
     homeassistant/components/rainforest_eagle/data.py
-    homeassistant/components/rainforest_eagle/sensor.py
     homeassistant/components/raspihats/*
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py

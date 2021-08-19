@@ -8,7 +8,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_MONETARY,
     PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -39,6 +41,7 @@ SENSORS = (
         name="Meter Power Demand",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationDelivered",
@@ -95,7 +98,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(EagleSensor(coordinator, description) for description in SENSORS)
+    entities = [EagleSensor(coordinator, description) for description in SENSORS]
+
+    if coordinator.data.get("zigbee:Price") not in (None, "invalid"):
+        entities.append(
+            EagleSensor(
+                coordinator,
+                SensorEntityDescription(
+                    key="zigbee:Price",
+                    name="Meter Price",
+                    native_unit_of_measurement=f"{ENERGY_KILO_WATT_HOUR}/{coordinator.data['zigbee:PriceCurrency']}",
+                    device_class=DEVICE_CLASS_MONETARY,
+                    state_class=STATE_CLASS_MEASUREMENT,
+                ),
+            )
+        )
+
+    async_add_entities(entities)
 
 
 class EagleSensor(CoordinatorEntity, SensorEntity):
@@ -111,7 +130,7 @@ class EagleSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return unique ID of entity."""
-        return f"{self.coordinator.cloud_id}-{self.entity_description.key}"
+        return f"{self.coordinator.cloud_id}-${self.coordinator.hardware_address}-{self.entity_description.key}"
 
     @property
     def native_value(self) -> StateType:
