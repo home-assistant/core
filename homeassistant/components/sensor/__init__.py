@@ -49,6 +49,8 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
+from .const import CONF_STATE_CLASS  # noqa: F401
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
@@ -89,7 +91,6 @@ DEVICE_CLASSES: Final[list[str]] = [
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
-CONF_STATE_CLASS: Final = "state_class"
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
 # The state represents a monotonically increasing total, e.g. an amount of consumed gas
