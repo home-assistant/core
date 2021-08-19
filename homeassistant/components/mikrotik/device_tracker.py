@@ -81,14 +81,13 @@ class MikrotikClientTracker(CoordinatorEntity, ScannerEntity):
     coordinator: MikrotikHub
 
     def __init__(
-        self, mac: str, hub: MikrotikHub, all_clients: dict[str, MikrotikClient]
+        self, mac: str, coordinator: MikrotikHub, all_clients: dict[str, MikrotikClient]
     ) -> None:
         """Initialize the tracked device."""
-        super().__init__(hub)
+        super().__init__(coordinator)
         self.mac = mac
         self.all_clients = all_clients
         self.host: str | None = all_clients[mac].host
-        self.hub = hub
         self.this_device: DeviceEntry | None = None
         self._attr_name = self.all_clients[self.mac].name
         self._attr_unique_id = self.mac
@@ -98,7 +97,9 @@ class MikrotikClientTracker(CoordinatorEntity, ScannerEntity):
         """Return true if the client is connected to the network."""
         last_seen = self.all_clients[self.mac].last_seen
         if last_seen is not None:
-            return (dt_util.utcnow() - last_seen) < self.hub.option_detection_time
+            return (
+                dt_util.utcnow() - last_seen
+            ) < self.coordinator.option_detection_time
         return False
 
     @property
