@@ -42,6 +42,7 @@
             "is_smoke": "{entity_name} detecteert rook",
             "is_sound": "{entity_name} detecteert geluid",
             "is_unsafe": "{entity_name} is onveilig",
+            "is_update": "{entity_name} heeft een update beschikbaar",
             "is_vibration": "{entity_name} detecteert trillingen"
         },
         "trigger_type": {
@@ -86,6 +87,7 @@
             "turned_off": "{entity_name} uitgeschakeld",
             "turned_on": "{entity_name} ingeschakeld",
             "unsafe": "{entity_name} werd onveilig",
+            "update": "{entity_name} kreeg een update beschikbaar",
             "vibration": "{entity_name} begon trillingen te detecteren"
         }
     },
@@ -177,6 +179,9 @@
         "sound": {
             "off": "Niet gedetecteerd",
             "on": "Gedetecteerd"
+        },
+        "update": {
+            "on": "Update beschikbaar"
         },
         "vibration": {
             "off": "Niet gedetecteerd",
