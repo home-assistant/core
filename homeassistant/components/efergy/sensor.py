@@ -50,14 +50,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=CONF_INSTANT,
         name="Energy Usage",
         device_class=DEVICE_CLASS_POWER,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=CONF_AMOUNT,
         name="Energy Consumed",
         device_class=DEVICE_CLASS_ENERGY,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
@@ -72,7 +72,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=CONF_CURRENT_VALUES,
         name="Per-Device Usage",
         device_class=DEVICE_CLASS_POWER,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
