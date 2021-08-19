@@ -877,7 +877,6 @@ async def test_async_detect_interfaces_explicitly_set_ipv6(hass, mock_async_zero
 async def test_no_name(hass, mock_async_zeroconf):
     """Test fallback to Home for mDNS announcement if the name is missing."""
     hass.config.location_name = ""
-    """Test interfaces are explicitly set when IPv6 is present."""
     with patch("homeassistant.components.zeroconf.HaZeroconf"):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
