@@ -180,7 +180,7 @@ class DeviceInfo(TypedDict, total=False):
 
 
 @dataclass
-class EntityDescription:
+class BaseEntityDescription:
     """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
@@ -191,6 +191,12 @@ class EntityDescription:
     force_update: bool = False
     icon: str | None = None
     name: str | None = None
+
+
+@dataclass
+class EntityDescription(BaseEntityDescription):
+    """A class that describes Home Assistant entities."""
+
     unit_of_measurement: str | None = None
 
 
@@ -211,7 +217,7 @@ class Entity(ABC):
     platform: EntityPlatform | None = None
 
     # Entity description instance for this Entity
-    entity_description: EntityDescription
+    entity_description: BaseEntityDescription
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -345,7 +351,9 @@ class Entity(ABC):
         """Return the unit of measurement of this entity, if any."""
         if hasattr(self, "_attr_unit_of_measurement"):
             return self._attr_unit_of_measurement
-        if hasattr(self, "entity_description"):
+        if hasattr(self, "entity_description") and isinstance(
+            self.entity_description, EntityDescription
+        ):
             return self.entity_description.unit_of_measurement
         return None
 

@@ -45,7 +45,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import BaseEntityDescription, Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -125,7 +125,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @dataclass
-class SensorEntityDescription(EntityDescription):
+class SensorEntityDescription(BaseEntityDescription):
     """A class that describes sensor entities."""
 
     state_class: str | None = None
@@ -219,11 +219,6 @@ class SensorEntity(Entity):
             and self._attr_unit_of_measurement is not None
         ):
             return self._attr_unit_of_measurement
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.unit_of_measurement is not None
-        ):
-            return self.entity_description.unit_of_measurement
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
