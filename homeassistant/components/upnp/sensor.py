@@ -146,6 +146,7 @@ async def async_setup_entry(
             sensor_entity=sensor_entity,
         )
         for sensor_entity in SENSOR_ENTITY_DESCRIPTIONS[RAW_SENSOR]
+        if coordinator.data.get(sensor_entity.key) or False
     )
 
     entities.append(
@@ -154,6 +155,7 @@ async def async_setup_entry(
             sensor_entity=sensor_entity,
         )
         for sensor_entity in SENSOR_ENTITY_DESCRIPTIONS[DERIVED_SENSOR]
+        if coordinator.data.get(sensor_entity.key) or False
     )
 
     async_add_entities(entities)

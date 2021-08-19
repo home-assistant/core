@@ -235,9 +235,6 @@ class UpnpEntity(CoordinatorEntity):
         self._attr_name = f"{coordinator.device.name} {sensor_entity.name}"
         self._attr_unique_id = f"{coordinator.device.udn}_{sensor_entity.key}"
         self._attr_icon = sensor_entity.icon
-        self._attr_entity_registry_enabled_default = (
-            coordinator.data.get(sensor_entity.key) or False
-        )
         self._attr_device_info = {
             "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},
             "name": coordinator.device.name,
