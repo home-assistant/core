@@ -1,7 +1,6 @@
 """Represent the Netgear router and its devices."""
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pynetgear import Netgear
 
@@ -100,9 +99,9 @@ class NetgearRouter:
         self._consider_home = timedelta(seconds=consider_home_int)
 
         self._api: Netgear = None
-        self._attrs: Dict[str, any] = {}
+        self._attrs = {}
 
-        self.devices: Dict[str, any] = {}
+        self.devices = {}
 
         self.listeners = []
         self._unsub_dispatcher = None
