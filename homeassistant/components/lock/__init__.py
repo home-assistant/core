@@ -89,6 +89,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class LockEntityDescription(EntityDescription):
     """A class that describes lock entities."""
 
+    entity_class: LockEntity | None = None
+
 
 class LockEntity(Entity):
     """Base class for lock entities."""

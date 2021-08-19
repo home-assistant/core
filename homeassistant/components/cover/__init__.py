@@ -175,6 +175,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class CoverEntityDescription(EntityDescription):
     """A class that describes cover entities."""
 
+    entity_class: CoverEntity | None = None
+
 
 class CoverEntity(Entity):
     """Base class for cover entities."""

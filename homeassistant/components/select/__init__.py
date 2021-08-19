@@ -70,6 +70,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SelectEntityDescription(EntityDescription):
     """A class that describes select entities."""
 
+    entity_class: SelectEntity | None = None
+
 
 class SelectEntity(Entity):
     """Representation of a Select entity."""

@@ -125,6 +125,8 @@ SCHEMA_WS_CAMERA_THUMBNAIL: Final = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.ex
 class CameraEntityDescription(EntityDescription):
     """A class that describes camera entities."""
 
+    entity_class: Camera | None = None
+
 
 @attr.s
 class Image:

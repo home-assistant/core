@@ -376,6 +376,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MediaPlayerEntityDescription(EntityDescription):
     """A class that describes media player entities."""
 
+    entity_class: MediaPlayerEntity | None = None
+
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""

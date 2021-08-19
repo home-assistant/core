@@ -81,6 +81,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
+    entity_class: NumberEntity | None = None
+
 
 class NumberEntity(Entity):
     """Representation of a Number entity."""

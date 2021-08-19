@@ -131,6 +131,7 @@ class SensorEntityDescription(EntityDescription):
     state_class: str | None = None
     last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
+    entity_class: SensorEntity | None = None
 
 
 class SensorEntity(Entity):

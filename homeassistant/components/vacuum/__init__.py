@@ -1,4 +1,6 @@
 """Support for vacuum cleaner robots (botvacs)."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
@@ -354,6 +356,8 @@ class VacuumDevice(VacuumEntity):
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):
     """A class that describes vacuum entities."""
+
+    entity_class: StateVacuumEntity | None = None
 
 
 class StateVacuumEntity(_BaseVacuum):

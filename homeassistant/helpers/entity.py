@@ -192,6 +192,7 @@ class EntityDescription:
     icon: str | None = None
     name: str | None = None
     unit_of_measurement: str | None = None
+    entity_class: Entity | None = None
 
 
 class Entity(ABC):
@@ -867,6 +868,8 @@ class Entity(ABC):
 @dataclass
 class ToggleEntityDescription(EntityDescription):
     """A class that describes toggle entities."""
+
+    entity_class: ToggleEntity | None = None
 
 
 class ToggleEntity(Entity):

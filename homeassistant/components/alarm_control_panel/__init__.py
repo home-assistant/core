@@ -122,6 +122,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AlarmControlPanelEntityDescription(EntityDescription):
     """A class that describes alarm control panel entities."""
 
+    entity_class: AlarmControlPanelEntity | None = None
+
 
 class AlarmControlPanelEntity(Entity):
     """An abstract class for alarm control entities."""
