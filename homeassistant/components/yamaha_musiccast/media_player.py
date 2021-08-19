@@ -45,7 +45,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,7 +62,6 @@ from .const import (
     MC_REPEAT_MODE_TO_HA_MAPPING,
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
-    SERVICE_STORE_NETUSB_PRESET,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,16 +132,6 @@ async def async_setup_entry(
         )
 
     async_add_entities(media_players)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_STORE_NETUSB_PRESET,
-        {
-            vol.Required("preset"): int,
-        },
-        "store_netusb_preset",
-    )
 
 
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
@@ -422,10 +410,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def recall_netusb_preset(self, preset):
         """Play the selected preset."""
         await self.coordinator.musiccast.recall_netusb_preset(self._zone_id, preset)
-
-    async def store_netusb_preset(self, preset):
-        """Play the selected preset."""
-        await self.coordinator.musiccast.store_netusb_preset(preset)
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
