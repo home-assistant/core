@@ -12,7 +12,8 @@ from uEagle import Eagle as Eagle100Reader
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -92,7 +93,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
     eagle100_reader: Eagle100Reader | None = None
     eagle200_meter: aioeagle.ElectricMeter | None = None
 
-    def __init__(self, hass: HomeAssistant , entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the data object."""
         self.entry = entry
         if self.type == TYPE_EAGLE_100:
@@ -137,41 +138,36 @@ class EagleDataCoordinator(DataUpdateCoordinator):
                 hub, self.hardware_address
             )
 
-        try:
-            async with async_timeout.timeout(30):
-                data = await self.eagle200_meter.get_device_query()
-        except aioeagle.BadAuth as error:
-            raise ConfigEntryAuthFailed from error
+        async with async_timeout.timeout(30):
+            data = await self.eagle200_meter.get_device_query()
 
         _LOGGER.debug("API data: %s", data)
         return {var["Name"]: var["Value"] for var in data.values()}
 
     async def _async_update_data_100(self):
         """Get the latest data from the Eagle-200 device."""
-        if self.eagle100_reader is None:
-            self.eagle100_reader = Eagle100Reader(
-                self.cloud_id, self.entry.data[CONF_INSTALL_CODE]
-            )
-
-        def update():
-            """Fetch and return the four sensor values in a dict."""
-            out = {}
-
-            resp = self.eagle100_reader.get_instantaneous_demand()[
-                "InstantaneousDemand"
-            ]
-            out["zigbee:InstantaneousDemand"] = resp["Demand"]
-
-            resp = self.eagle100_reader.get_current_summation()["CurrentSummation"]
-            out["zigbee:CurrentSummationDelivered"] = resp["SummationDelivered"]
-            out["zigbee:CurrentSummationReceived"] = resp["SummationReceived"]
-
-            return out
-
         try:
-            data = await self.hass.async_add_executor_job(update)
+            data = await self.hass.async_add_executor_job(self._fetch_data)
         except UPDATE_100_ERRORS as error:
             raise UpdateFailed from error
 
         _LOGGER.debug("API data: %s", data)
         return data
+
+    def _fetch_data(self):
+        """Fetch and return the four sensor values in a dict."""
+        if self.eagle100_reader is None:
+            self.eagle100_reader = Eagle100Reader(
+                self.cloud_id, self.entry.data[CONF_INSTALL_CODE]
+            )
+
+        out = {}
+
+        resp = self.eagle100_reader.get_instantaneous_demand()["InstantaneousDemand"]
+        out["zigbee:InstantaneousDemand"] = resp["Demand"]
+
+        resp = self.eagle100_reader.get_current_summation()["CurrentSummation"]
+        out["zigbee:CurrentSummationDelivered"] = resp["SummationDelivered"]
+        out["zigbee:CurrentSummationReceived"] = resp["SummationReceived"]
+
+        return out
