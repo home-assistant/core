@@ -3,10 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-
-from pyudev import Context, Monitor, MonitorObserver
-from serial.tools.list_ports import comports
-from serial.tools.list_ports_common import ListPortInfo
+import sys
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -48,6 +45,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @callback
 def _async_start_scanner(hass: HomeAssistant) -> None:
     """Perodic scan with pyserial."""
+    from serial.tools.list_ports import comports
+    from serial.tools.list_ports_common import ListPortInfo
+
+    def _usb_device_from_port(port: ListPortInfo) -> USBDevice:
+        return {
+            "device": port.device,
+            "vid": port.vid,
+            "pid": port.pid,
+            "serial_number": port.serial_number,
+        }
 
     @callback
     def _async_process_ports(ports):
@@ -68,6 +75,10 @@ def _async_start_scanner(hass: HomeAssistant) -> None:
 
 async def _async_start_monitor(hass: HomeAssistant) -> bool:
     """Start monitoring hardware with pyudev."""
+    if not sys.platform.startswith("linux"):
+        return False
+    from pyudev import Context, Monitor, MonitorObserver
+
     try:
         context = Context()
     except ImportError:
@@ -90,15 +101,6 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_observer)
 
     return True
-
-
-def _usb_device_from_port(port: ListPortInfo) -> USBDevice:
-    return {
-        "device": port.device,
-        "vid": port.vid,
-        "pid": port.pid,
-        "serial_number": port.serial_number,
-    }
 
 
 def _usb_device_tuple(usb_device: USBDevice) -> tuple[str, int, int, str]:
