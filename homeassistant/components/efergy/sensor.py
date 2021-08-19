@@ -78,8 +78,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 TYPES = {}
-for description in SENSOR_TYPES:
-    TYPES[description.key] = description.name
+for desc in SENSOR_TYPES:
+    TYPES[desc.key] = desc.name
 
 TYPES_SCHEMA = vol.In(TYPES)
 
