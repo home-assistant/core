@@ -9,11 +9,11 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class TuyaHaDevice(Entity):
+class TuyaHaEntity(Entity):
     """Tuya base device."""
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
-        """Init TuyaHaDevice."""
+        """Init TuyaHaEntity."""
         super().__init__()
 
         self.tuya_device = device
@@ -59,6 +59,4 @@ class TuyaHaDevice(Entity):
         return self.tuya_device.online
 
     def _send_command(self, commands) -> None:
-        self.hass.async_add_executor_job(
-            self.tuya_device_manager.send_commands, self.tuya_device.id, commands
-        )
+        self.tuya_device_manager.send_commands(self.tuya_device.id, commands)

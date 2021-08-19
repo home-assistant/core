@@ -4,7 +4,6 @@
 import itertools
 import json
 import logging
-from typing import Any
 
 from tuya_iot import (
     ProjectType,
@@ -18,9 +17,8 @@ from tuya_iot import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import UnknownFlow, UnknownStep
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -175,7 +173,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ):
                 ha_tuya_map = hass.data[DOMAIN][TUYA_HA_TUYA_MAP]
 
-                remove_hass_device(hass, device.id)
+                hass.add_job(async_remove_hass_device, hass, device.id)
 
                 for key, tuya_list in ha_tuya_map.items():
                     if device.category in tuya_list:
@@ -195,7 +193,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         def remove_device(self, device_id: str):
             _LOGGER.debug("tuya remove device:%s", device_id)
-            remove_hass_device(hass, device_id)
+            hass.add_job(async_remove_hass_device, hass, device_id)
 
     __listener = DeviceListener()
     hass.data[DOMAIN][TUYA_MQTT_LISTENER] = __listener
@@ -230,11 +228,11 @@ async def cleanup_device_registry(hass: HomeAssistant):
                 break
 
 
-def remove_hass_device(hass: HomeAssistant, device_id: str):
+@callback
+def async_remove_hass_device(hass: HomeAssistant, device_id: str):
     """Remove device from hass cache."""
     __device_registry = device_registry.async_get(hass)
     for entity in list(__device_registry.devices.values()):
-        print(f"inde->>{entity.identifiers}")
         if device_id in list(entity.identifiers)[0]:
             __device_registry.async_remove_device(entity.id)
 
@@ -242,26 +240,6 @@ def remove_hass_device(hass: HomeAssistant, device_id: str):
 async def async_setup(hass, config):
     """Set up the Tuya integration."""
     tuya_logger.setLevel(_LOGGER.level)
-    conf = config.get(DOMAIN)
-
-    _LOGGER.debug("Tuya async setup conf %s", conf)
-    if conf is not None:
-
-        async def flow_init() -> Any:
-            try:
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-                )
-            except UnknownFlow as flow:
-                _LOGGER.error(flow.args)
-            except UnknownStep as step:
-                _LOGGER.error(step.args)
-            except ValueError as err:
-                _LOGGER.error(err.args)
-            _LOGGER.debug("Tuya async setup flow_init")
-            return result
-
-        hass.async_create_task(flow_init())
 
     return True
 
@@ -286,8 +264,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Async setup hass config entry."""
     _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
 
-    hass.data[DOMAIN] = {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: []}
-    hass.data[DOMAIN][TUYA_SETUP_PLATFORM] = set()
+    hass.data[DOMAIN] = {
+        TUYA_HA_TUYA_MAP: {},
+        TUYA_HA_DEVICES: [],
+        TUYA_SETUP_PLATFORM: set(),
+    }
 
     success = await _init_tuya_sdk(hass, entry)
     if not success:
