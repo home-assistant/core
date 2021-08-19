@@ -106,24 +106,34 @@ def test_compile_hourly_statistics(
 @pytest.mark.parametrize("attributes", [TEMPERATURE_SENSOR_ATTRIBUTES])
 def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes):
     """Test compiling hourly statistics for unsupported sensor."""
-    attributes = dict(attributes)
     zero = dt_util.utcnow()
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     four, states = record_states(hass, zero, "sensor.test1", attributes)
-    if "unit_of_measurement" in attributes:
-        attributes["unit_of_measurement"] = "invalid"
-        _, _states = record_states(hass, zero, "sensor.test2", attributes)
-        states = {**states, **_states}
-        attributes.pop("unit_of_measurement")
-        _, _states = record_states(hass, zero, "sensor.test3", attributes)
-        states = {**states, **_states}
-    attributes["state_class"] = "invalid"
-    _, _states = record_states(hass, zero, "sensor.test4", attributes)
+
+    attributes_tmp = dict(attributes)
+    attributes_tmp["unit_of_measurement"] = "invalid"
+    _, _states = record_states(hass, zero, "sensor.test2", attributes_tmp)
     states = {**states, **_states}
-    attributes.pop("state_class")
-    _, _states = record_states(hass, zero, "sensor.test5", attributes)
+    attributes_tmp.pop("unit_of_measurement")
+    _, _states = record_states(hass, zero, "sensor.test3", attributes_tmp)
+    states = {**states, **_states}
+
+    attributes_tmp = dict(attributes)
+    attributes_tmp["state_class"] = "invalid"
+    _, _states = record_states(hass, zero, "sensor.test4", attributes_tmp)
+    states = {**states, **_states}
+    attributes_tmp.pop("state_class")
+    _, _states = record_states(hass, zero, "sensor.test5", attributes_tmp)
+    states = {**states, **_states}
+
+    attributes_tmp = dict(attributes)
+    attributes_tmp["device_class"] = "invalid"
+    _, _states = record_states(hass, zero, "sensor.test6", attributes_tmp)
+    states = {**states, **_states}
+    attributes_tmp.pop("device_class")
+    _, _states = record_states(hass, zero, "sensor.test7", attributes_tmp)
     states = {**states, **_states}
 
     hist = history.get_significant_states(hass, zero, four)
@@ -133,7 +143,9 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": "°C"}
+        {"statistic_id": "sensor.test1", "unit_of_measurement": "°C"},
+        {"statistic_id": "sensor.test6", "unit_of_measurement": "°C"},
+        {"statistic_id": "sensor.test7", "unit_of_measurement": "°C"},
     ]
     stats = statistics_during_period(hass, zero)
     assert stats == {
@@ -147,7 +159,29 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "state": None,
                 "sum": None,
             }
-        ]
+        ],
+        "sensor.test6": [
+            {
+                "statistic_id": "sensor.test6",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(16.440677966101696),
+                "min": approx(10.0),
+                "max": approx(30.0),
+                "state": None,
+                "sum": None,
+            }
+        ],
+        "sensor.test7": [
+            {
+                "statistic_id": "sensor.test7",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(16.440677966101696),
+                "min": approx(10.0),
+                "max": approx(30.0),
+                "state": None,
+                "sum": None,
+            }
+        ],
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
 
