@@ -56,46 +56,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def detection_callback(
         ble_device: BLEDevice, advertisement_data: AdvertisementData
-    ):
-        if device_filter(ble_device, advertisement_data):
-            _LOGGER.debug(
-                "Detection: %s %s - %s", ble_device.name, ble_device, advertisement_data
+    ) -> None:
+        if not device_filter(ble_device, advertisement_data):
+            return
+
+        _LOGGER.debug(
+            "Detection: %s %s - %s", ble_device.name, ble_device, advertisement_data
+        )
+
+        data = state.devices.get(ble_device.address)
+
+        if data:
+            data.device.detection_callback(ble_device, advertisement_data)
+            data.coordinator.async_set_updated_data(data.device.state)
+        else:
+
+            device = Device(ble_device)
+            device.detection_callback(ble_device, advertisement_data)
+
+            async def async_update_data():
+                """Handle an explicit update request."""
+                await device.update()
+                return device.state
+
+            coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
+                hass,
+                logger=_LOGGER,
+                name="Fjaraskupan Updater",
+                update_interval=timedelta(seconds=120),
+                update_method=async_update_data,
             )
+            coordinator.async_set_updated_data(device.state)
 
-            data = state.devices.get(ble_device.address)
-
-            if data:
-                data.device.detection_callback(ble_device, advertisement_data)
-                data.coordinator.async_set_updated_data(data.device.state)
-            else:
-
-                device = Device(ble_device)
-                device.detection_callback(ble_device, advertisement_data)
-
-                async def async_update_data():
-                    """Handle an explicit update request."""
-                    await device.update()
-                    return device.state
-
-                coordinator = DataUpdateCoordinator[State](
-                    hass,
-                    logger=_LOGGER,
-                    name="Fjäråskupan Updater",
-                    update_interval=timedelta(seconds=120),
-                    update_method=async_update_data,
-                )
-                coordinator.async_set_updated_data(device.state)
-
-                device_info: DeviceInfo = {
-                    "identifiers": {(DOMAIN, ble_device.address)},
-                    "manufacturer": "Fjäråskupan",
-                    "name": "Fjäråskupan",
-                }
-                data = DeviceState(device, coordinator, device_info)
-                state.devices[ble_device.address] = data
-                async_dispatcher_send(
-                    hass, DISPATCH_DETECTION, entry.entry_id, ble_device.address
-                )
+            device_info: DeviceInfo = {
+                "identifiers": {(DOMAIN, ble_device.address)},
+                "manufacturer": "Fjäråskupan",
+                "name": "Fjäråskupan",
+            }
+            data = DeviceState(device, coordinator, device_info)
+            state.devices[ble_device.address] = data
+            async_dispatcher_send(
+                hass, DISPATCH_DETECTION, entry.entry_id, ble_device.address
+            )
 
     scanner.register_detection_callback(detection_callback)
     await scanner.start()
@@ -122,7 +124,7 @@ async def async_setup_entry_platform(
     )
 
     @callback
-    def _detection(entry_id: str, address: str):
+    def _detection(entry_id: str, address: str) -> None:
         if entry_id != entry.entry_id:
             return
         devicestate = entrystate.devices[address]

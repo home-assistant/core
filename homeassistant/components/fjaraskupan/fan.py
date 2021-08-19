@@ -35,6 +35,11 @@ ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 PRESET_MODE_NORMAL = "normal"
 PRESET_MODE_AFTER_COOKING_MANUAL = "after_cooking_manual"
 PRESET_MODE_AFTER_COOKING_AUTO = "after_cooking_auto"
+PRESET_MODES = [
+    PRESET_MODE_NORMAL,
+    PRESET_MODE_AFTER_COOKING_AUTO,
+    PRESET_MODE_AFTER_COOKING_MANUAL,
+]
 
 
 async def async_setup_entry(
@@ -163,31 +168,28 @@ class Fan(CoordinatorEntity[State], FanEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        return [
-            PRESET_MODE_NORMAL,
-            PRESET_MODE_AFTER_COOKING_AUTO,
-            PRESET_MODE_AFTER_COOKING_MANUAL,
-        ]
+        return PRESET_MODES
 
     def _update_from_device_data(self, data: State | None) -> None:
         """Handle data update."""
-        if data:
-            if data.fan_speed:
-                self._percentage = ordered_list_item_to_percentage(
-                    ORDERED_NAMED_FAN_SPEEDS, str(data.fan_speed)
-                )
-            else:
-                self._percentage = 0
+        if not data:
+            self._percentage = 0
+            return
 
-            if data.after_cooking_on:
-                if data.after_cooking_fan_speed:
-                    self._preset_mode = PRESET_MODE_AFTER_COOKING_MANUAL
-                else:
-                    self._preset_mode = PRESET_MODE_AFTER_COOKING_AUTO
-            else:
-                self._preset_mode = PRESET_MODE_NORMAL
+        if data.fan_speed:
+            self._percentage = ordered_list_item_to_percentage(
+                ORDERED_NAMED_FAN_SPEEDS, str(data.fan_speed)
+            )
         else:
             self._percentage = 0
+
+        if data.after_cooking_on:
+            if data.after_cooking_fan_speed:
+                self._preset_mode = PRESET_MODE_AFTER_COOKING_MANUAL
+            else:
+                self._preset_mode = PRESET_MODE_AFTER_COOKING_AUTO
+        else:
+            self._preset_mode = PRESET_MODE_NORMAL
 
     @callback
     def _handle_coordinator_update(self) -> None:

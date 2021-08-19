@@ -4,15 +4,8 @@
             "already_configured": "Device is already configured",
             "no_devices_found": "No devices found on the network"
         },
-        "error": {
-            "unknown": "Unexpected error"
-        },
         "step": {
-            "user": {
-                "data": {
-                    "address": "Device Address"
-                }
-            }
+            "user": {}
         }
     },
     "title": "Fj\u00e4r\u00e5skupan"
