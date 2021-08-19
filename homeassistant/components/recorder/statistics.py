@@ -222,10 +222,13 @@ def get_metadata(
     hass: HomeAssistant,
     statistic_id: str,
 ) -> dict[str, str] | None:
-    """Return the last number_of_stats statistics for a statistic_id."""
+    """Return metadata for a statistic_id."""
     statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
-        return _get_metadata(hass, session, statistic_ids, None).get(statistic_id)
+        metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
+        if not metadata_ids:
+            return None
+        return _get_metadata(hass, session, statistic_ids, None).get(metadata_ids[0])
 
 
 def _configured_unit(unit: str, units: UnitSystem) -> str:

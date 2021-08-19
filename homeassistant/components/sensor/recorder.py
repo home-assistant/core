@@ -262,7 +262,10 @@ def compile_statistics(
         if old_metadata := statistics.get_metadata(hass, entity_id):
             if old_metadata["unit_of_measurement"] != unit:
                 if entity_id not in WARN_UNSTABLE_UNIT:
-                    _LOGGER.warning("The unit of %s is not stable", entity_id)
+                    _LOGGER.warning(
+                        "The unit of %s does not match the unit of statistics",
+                        entity_id,
+                    )
                     WARN_UNSTABLE_UNIT.add(entity_id)
                 continue
 
@@ -362,7 +365,11 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         ):
             continue
 
-        native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        metadata = statistics.get_metadata(hass, entity_id)
+        if metadata:
+            native_unit: str | None = metadata["unit_of_measurement"]
+        else:
+            native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class not in UNIT_CONVERSIONS:
             statistic_ids[entity_id] = native_unit
