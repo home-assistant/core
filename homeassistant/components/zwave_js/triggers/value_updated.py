@@ -1,4 +1,4 @@
-"""Offer Z-Wave JS value update listening automation rules."""
+"""Offer Z-Wave JS value updated listening automation rules."""
 from __future__ import annotations
 
 import logging
@@ -17,6 +17,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_PREVIOUS_VALUE,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
+    DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_from_device_id,
@@ -30,7 +31,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_TYPE = "zwave_js.value_update"
+PLATFORM_TYPE = f"{DOMAIN}.value_updated"
 ATTR_FROM = "from"
 ATTR_TO = "to"
 
@@ -45,7 +46,7 @@ VALUE_SCHEMA = vol.Any(
 TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_PLATFORM): "zwave_js.value_update",
+            vol.Required(CONF_PLATFORM): PLATFORM_TYPE,
             vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Required(ATTR_COMMAND_CLASS): vol.In(

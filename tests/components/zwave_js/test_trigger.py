@@ -20,7 +20,7 @@ async def test_if_notification_notification_fires(
     hass, client, lock_schlage_be469, integration
 ):
     """Test for event.notification.notification trigger firing."""
-    trigger_type = f"{DOMAIN}.value_update"
+    trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
