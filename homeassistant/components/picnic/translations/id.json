@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Kode Negara",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    },
+    "title": "Picnic"
+}

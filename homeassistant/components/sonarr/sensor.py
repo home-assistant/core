@@ -85,7 +85,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         self._attr_name = name
         self._attr_icon = icon
         self._attr_unique_id = f"{entry_id}_{key}"
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_entity_registry_enabled_default = enabled_default
         self.last_update_success = False
 
@@ -134,7 +134,7 @@ class SonarrCommandsSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._commands)
 
@@ -162,7 +162,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         """Update entity."""
         app = await self.sonarr.update()
         self._disks = app.disks
-        self._total_free = sum([disk.free for disk in self._disks])
+        self._total_free = sum(disk.free for disk in self._disks)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -181,7 +181,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         free = self._total_free / 1024 ** 3
         return f"{free:.2f}"
@@ -223,7 +223,7 @@ class SonarrQueueSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._queue)
 
@@ -261,7 +261,7 @@ class SonarrSeriesSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._items)
 
@@ -304,7 +304,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._upcoming)
 
@@ -347,6 +347,6 @@ class SonarrWantedSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._total

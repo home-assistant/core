@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Der Accesspoint ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "connection_aborted": "Verbindung fehlgeschlagen",
             "unknown": "Unerwarteter Fehler"
         },

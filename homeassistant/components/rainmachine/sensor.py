@@ -5,7 +5,11 @@ from regenmaschine.controller import Controller
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -62,7 +66,7 @@ SENSORS = {
         "Freeze Protect Temperature",
         "mdi:thermometer",
         TEMP_CELSIUS,
-        "temperature",
+        DEVICE_CLASS_TEMPERATURE,
         True,
         DATA_RESTRICTIONS_UNIVERSAL,
     ),
@@ -124,39 +128,13 @@ class RainMachineSensor(RainMachineEntity, SensorEntity):
         enabled_by_default: bool,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, controller)
-        self._device_class = device_class
-        self._enabled_by_default = enabled_by_default
-        self._icon = icon
-        self._name = name
-        self._sensor_type = sensor_type
-        self._state = None
-        self._unit = unit
+        super().__init__(coordinator, controller, sensor_type)
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Determine whether an entity is enabled by default."""
-        return self._enabled_by_default
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def state(self) -> str:
-        """Return the name of the entity."""
-        return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._unique_id}_{self._sensor_type}"
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        return self._unit
+        self._attr_device_class = device_class
+        self._attr_entity_registry_enabled_default = enabled_by_default
+        self._attr_icon = icon
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
 
 
 class ProvisionSettingsSensor(RainMachineSensor):
@@ -165,24 +143,26 @@ class ProvisionSettingsSensor(RainMachineSensor):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self._sensor_type == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._state = self.coordinator.data["system"].get(
+        if self._entity_type == TYPE_FLOW_SENSOR_CLICK_M3:
+            self._attr_native_value = self.coordinator.data["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
-        elif self._sensor_type == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
+        elif self._entity_type == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
             clicks = self.coordinator.data["system"].get("flowSensorWateringClicks")
             clicks_per_m3 = self.coordinator.data["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
 
             if clicks and clicks_per_m3:
-                self._state = (clicks * 1000) / clicks_per_m3
+                self._attr_native_value = (clicks * 1000) / clicks_per_m3
             else:
-                self._state = None
-        elif self._sensor_type == TYPE_FLOW_SENSOR_START_INDEX:
-            self._state = self.coordinator.data["system"].get("flowSensorStartIndex")
-        elif self._sensor_type == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._state = self.coordinator.data["system"].get(
+                self._attr_native_value = None
+        elif self._entity_type == TYPE_FLOW_SENSOR_START_INDEX:
+            self._attr_native_value = self.coordinator.data["system"].get(
+                "flowSensorStartIndex"
+            )
+        elif self._entity_type == TYPE_FLOW_SENSOR_WATERING_CLICKS:
+            self._attr_native_value = self.coordinator.data["system"].get(
                 "flowSensorWateringClicks"
             )
 
@@ -193,5 +173,5 @@ class UniversalRestrictionsSensor(RainMachineSensor):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self._sensor_type == TYPE_FREEZE_TEMP:
-            self._state = self.coordinator.data["freezeProtectTemp"]
+        if self._entity_type == TYPE_FREEZE_TEMP:
+            self._attr_native_value = self.coordinator.data["freezeProtectTemp"]

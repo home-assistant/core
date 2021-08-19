@@ -446,6 +446,9 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
 
+    mock_bridge.api.sensors["7"].last_event = {"type": "button"}
+    mock_bridge.api.sensors["8"].last_event = {"type": "button"}
+
     new_sensor_response = dict(SENSOR_RESPONSE)
     new_sensor_response["7"]["state"] = {
         "buttonevent": 18,

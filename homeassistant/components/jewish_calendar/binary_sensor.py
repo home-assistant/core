@@ -29,40 +29,22 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     def __init__(self, data, sensor, sensor_info):
         """Initialize the binary sensor."""
-        self._location = data["location"]
         self._type = sensor
-        self._name = f"{data['name']} {sensor_info[0]}"
-        self._icon = sensor_info[1]
+        self._prefix = data["prefix"]
+        self._attr_name = f"{data['name']} {sensor_info[0]}"
+        self._attr_unique_id = f"{self._prefix}_{self._type}"
+        self._attr_icon = sensor_info[1]
+        self._attr_should_poll = False
+        self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
-        self._prefix = data["prefix"]
         self._update_unsub = None
-
-    @property
-    def icon(self):
-        """Return the icon of the entity."""
-        return self._icon
-
-    @property
-    def unique_id(self) -> str:
-        """Generate a unique id."""
-        return f"{self._prefix}_{self._type}"
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def is_on(self):
         """Return true if sensor is on."""
         return self._get_zmanim().issur_melacha_in_effect
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     def _get_zmanim(self):
         """Return the Zmanim object for now()."""

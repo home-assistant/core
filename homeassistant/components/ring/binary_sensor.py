@@ -30,8 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
 
     for device_type in ("doorbots", "authorized_doorbots", "stickup_cams"):
-        for sensor_type in SENSOR_TYPES:
-            if device_type not in SENSOR_TYPES[sensor_type][1]:
+        for sensor_type, sensor in SENSOR_TYPES.items():
+            if device_type not in sensor[1]:
                 continue
 
             for device in devices[device_type]:

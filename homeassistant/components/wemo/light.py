@@ -50,10 +50,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
 
     await asyncio.gather(
-        *[
+        *(
             _discovered_wemo(device)
             for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
-        ]
+        )
     )
 
 
@@ -229,14 +229,13 @@ class WemoDimmer(WemoSubscriptionEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = int((brightness / 255) * 100)
-        else:
-            brightness = 255
-
-        with self._wemo_exception_handler("turn on"):
-            if self.wemo.on():
+            with self._wemo_exception_handler("set brightness"):
+                self.wemo.set_brightness(brightness)
                 self._state = WEMO_ON
-
-            self.wemo.set_brightness(brightness)
+        else:
+            with self._wemo_exception_handler("turn on"):
+                self.wemo.on()
+                self._state = WEMO_ON
 
         self.schedule_update_ha_state()
 

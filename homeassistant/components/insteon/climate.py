@@ -224,7 +224,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         """Register INSTEON update events."""
         await super().async_added_to_hass()
         await self._insteon_device.async_read_op_flags()
-        for group in [
+        for group in (
             COOLING,
             HEATING,
             DEHUMIDIFYING,
@@ -236,5 +236,5 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
             HUMIDITY,
             HUMIDITY_HIGH,
             HUMIDITY_LOW,
-        ]:
+        ):
             self._insteon_device.groups[group].subscribe(self.async_entity_update)

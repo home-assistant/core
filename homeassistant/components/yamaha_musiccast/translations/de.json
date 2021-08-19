@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "yxc_control_url_missing": "Die Steuer-URL ist in der ssdp-Beschreibung nicht angegeben."
         },
         "error": {
@@ -10,11 +10,11 @@
         "flow_title": "MusicCast: {name}",
         "step": {
             "confirm": {
-                "description": "[%key::common::config_flow::description::confirm_setup%]"
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
             },
             "user": {
                 "data": {
-                    "host": "[%key::common::config_flow::data::host%]"
+                    "host": "Host"
                 },
                 "description": "Einrichten von MusicCast zur Integration mit Home Assistant."
             }

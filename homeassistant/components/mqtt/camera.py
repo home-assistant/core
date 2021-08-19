@@ -1,4 +1,6 @@
 """Camera that loads a picture from an MQTT topic."""
+from __future__ import annotations
+
 import functools
 
 import voluptuous as vol
@@ -18,6 +20,15 @@ from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_hel
 
 CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Camera"
+
+MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        "access_token",
+        "brand",
+        "model_name",
+        "motion_detection",
+    }
+)
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
@@ -53,6 +64,8 @@ async def _async_setup_entity(
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
+    _attributes_extra_blocked = MQTT_CAMERA_ATTRIBUTES_BLOCKED
+
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""
         self._last_image = None
@@ -87,6 +100,8 @@ class MqttCamera(MqttEntity, Camera):
             },
         )
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         return self._last_image

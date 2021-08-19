@@ -23,8 +23,8 @@
                     "ssh_key": "Pfad zu deiner SSH-Schl\u00fcsseldatei (anstelle des Passworts)",
                     "username": "Benutzername"
                 },
-                "description": "Einstellen der erforderlichen Parameter f\u00fcr die Verbindung mit Ihrem Router.",
-                "title": ""
+                "description": "Einstellen der erforderlichen Parameter f\u00fcr die Verbindung mit deinem Router.",
+                "title": "AsusWRT"
             }
         }
     },

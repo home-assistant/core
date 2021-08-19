@@ -36,6 +36,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
@@ -57,8 +58,9 @@ DEFAULT_NAME = "Cover Group"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -70,7 +72,13 @@ async def async_setup_platform(
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the Group Cover platform."""
-    async_add_entities([CoverGroup(config[CONF_NAME], config[CONF_ENTITIES])])
+    async_add_entities(
+        [
+            CoverGroup(
+                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
+            )
+        ]
+    )
 
 
 class CoverGroup(GroupEntity, CoverEntity):
@@ -82,7 +90,7 @@ class CoverGroup(GroupEntity, CoverEntity):
     _attr_current_cover_position: int | None = 100
     _attr_assumed_state: bool = True
 
-    def __init__(self, name: str, entities: list[str]) -> None:
+    def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a CoverGroup entity."""
         self._entities = entities
         self._covers: dict[str, set[str]] = {
@@ -98,6 +106,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
+        self._attr_unique_id = unique_id
 
     async def _update_supported_features_event(self, event: Event) -> None:
         self.async_set_context(event.context)

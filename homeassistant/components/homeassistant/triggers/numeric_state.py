@@ -79,7 +79,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
-    _variables = {}
+    _variables: dict = {}
     if automation_info:
         _variables = automation_info.get("variables") or {}
 

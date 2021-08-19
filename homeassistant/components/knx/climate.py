@@ -28,6 +28,7 @@ from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DOMAIN, PRESET_MODES
 from .knx_entity import KnxEntity
 from .schema import ClimateSchema
 
+ATTR_COMMAND_VALUE = "command_value"
 CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
 PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
@@ -46,11 +47,9 @@ async def async_setup_platform(
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     _async_migrate_unique_id(hass, platform_config)
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXClimate(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXClimate(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 @callback
@@ -158,32 +157,36 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
         temperature_step=config[ClimateSchema.CONF_TEMPERATURE_STEP],
         group_address_on_off=config.get(ClimateSchema.CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(ClimateSchema.CONF_ON_OFF_STATE_ADDRESS),
+        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
+        group_address_active_state=config.get(ClimateSchema.CONF_ACTIVE_STATE_ADDRESS),
+        group_address_command_value_state=config.get(
+            ClimateSchema.CONF_COMMAND_VALUE_STATE_ADDRESS
+        ),
         min_temp=config.get(ClimateSchema.CONF_MIN_TEMP),
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
-        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
     )
 
 
 class KNXClimate(KnxEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
+    _device: XknxClimate
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
-        self._device: XknxClimate
         super().__init__(_create_climate(xknx, config))
-        self._unique_id = (
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        if self.preset_modes:
+            self._attr_supported_features |= SUPPORT_PRESET_MODE
+        self._attr_target_temperature_step = self._device.temperature_step
+        self._attr_unique_id = (
             f"{self._device.temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
+            f"{self._device._setpoint_shift.group_address}"
         )
-        self._unit_of_measurement = TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
@@ -192,19 +195,9 @@ class KNXClimate(KnxEntity, ClimateEntity):
             await self._device.mode.sync()
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.temperature.value
-
-    @property
-    def target_temperature_step(self) -> float:
-        """Return the supported step of target temperature."""
-        return self._device.temperature_step
 
     @property
     def target_temperature(self) -> float | None:
@@ -270,6 +263,8 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """
         if self._device.supports_on_off and not self._device.is_on:
             return CURRENT_HVAC_OFF
+        if self._device.is_active is False:
+            return CURRENT_HVAC_IDLE
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             return CURRENT_HVAC_ACTIONS.get(
                 self._device.mode.controller_mode.value, CURRENT_HVAC_IDLE
@@ -324,6 +319,15 @@ class KNXClimate(KnxEntity, ClimateEntity):
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self._device.mode.set_operation_mode(knx_operation_mode)
             self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return device specific state attributes."""
+        attr: dict[str, Any] = {}
+
+        if self._device.command_value.initialized:
+            attr[ATTR_COMMAND_VALUE] = self._device.command_value.value
+        return attr
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""

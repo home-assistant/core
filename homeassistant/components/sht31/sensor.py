@@ -11,6 +11,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
@@ -107,7 +108,7 @@ class SHTSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -119,8 +120,10 @@ class SHTSensor(SensorEntity):
 class SHTSensorTemperature(SHTSensor):
     """Representation of a temperature sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.hass.config.units.temperature_unit
 
@@ -138,7 +141,7 @@ class SHTSensorHumidity(SHTSensor):
     """Representation of a humidity sensor."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 

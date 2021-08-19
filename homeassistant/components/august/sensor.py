@@ -125,24 +125,12 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         super().__init__(data, device)
         self._data = data
         self._device = device
-        self._state = None
         self._operated_remote = None
         self._operated_keypad = None
         self._operated_autorelock = None
         self._operated_time = None
-        self._available = False
         self._entity_picture = None
         self._update_from_data()
-
-    @property
-    def available(self):
-        """Return the availability of this sensor."""
-        return self._available
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
 
     @property
     def name(self):
@@ -156,9 +144,9 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
             self._device_id, {ActivityType.LOCK_OPERATION}
         )
 
-        self._available = True
+        self._attr_available = True
         if lock_activity is not None:
-            self._state = lock_activity.operated_by
+            self._attr_native_value = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
             self._operated_autorelock = lock_activity.operated_autorelock
@@ -195,7 +183,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         if not last_state or last_state.state == STATE_UNAVAILABLE:
             return
 
-        self._state = last_state.state
+        self._attr_state = last_state.state
         if ATTR_ENTITY_PICTURE in last_state.attributes:
             self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_state.attributes:
@@ -219,54 +207,24 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
 class AugustBatterySensor(AugustEntityMixin, SensorEntity):
     """Representation of an August sensor."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(self, data, sensor_type, device, old_device):
         """Initialize the sensor."""
         super().__init__(data, device)
-        self._data = data
         self._sensor_type = sensor_type
-        self._device = device
         self._old_device = old_device
-        self._state = None
-        self._available = False
+        self._attr_name = f"{device.device_name} Battery"
+        self._attr_unique_id = f"{self._device_id}_{sensor_type}"
         self._update_from_data()
-
-    @property
-    def available(self):
-        """Return the availability of this sensor."""
-        return self._available
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        device_name = self._device.device_name
-        return f"{device_name} Battery"
 
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_BATTERY[self._sensor_type]["state_provider"]
-        self._state = state_provider(self._detail)
-        self._available = self._state is not None
-
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id of the device sensor."""
-        return f"{self._device_id}_{self._sensor_type}"
+        self._attr_native_value = state_provider(self._detail)
+        self._attr_available = self._attr_native_value is not None
 
     @property
     def old_unique_id(self) -> str:

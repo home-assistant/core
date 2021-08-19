@@ -56,6 +56,8 @@ MOCK_SSDP_DATA = {
     ATTR_UPNP_UDN: "uuid:only-a-test",
 }
 
+MOCK_REQUEST = b'<?xml version="1.0" encoding="utf-8"?><SessionInfo><SID>xxxxxxxxxxxxxxxx</SID><Challenge>xxxxxxxx</Challenge><BlockTime>0</BlockTime><Rights><Name>Dial</Name><Access>2</Access><Name>App</Name><Access>2</Access><Name>HomeAuto</Name><Access>2</Access><Name>BoxAdmin</Name><Access>2</Access><Name>Phone</Name><Access>2</Access><Name>NAS</Name><Access>2</Access></Rights><Users><User last="1">FakeFritzUser</User></Users></SessionInfo>\n'
+
 
 @pytest.fixture()
 def fc_class_mock():
@@ -72,7 +74,16 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -106,7 +117,16 @@ async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -202,7 +222,16 @@ async def test_reauth_successful(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -355,7 +384,16 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -411,7 +449,16 @@ async def test_import(hass: HomeAssistant, fc_class_mock):
         side_effect=fc_class_mock,
     ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
         "homeassistant.components.fritz.async_setup_entry"
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "requests.get"
+    ) as mock_request_get, patch(
+        "requests.post"
+    ) as mock_request_post:
+
+        mock_request_get.return_value.status_code = 200
+        mock_request_get.return_value.content = MOCK_REQUEST
+        mock_request_post.return_value.status_code = 200
+        mock_request_post.return_value.text = MOCK_REQUEST
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG
