@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import get_upnp_desc
-from .const import DOMAIN
+from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a MusicCast config flow."""
 
-    VERSION = 2
+    VERSION = 1
 
     serial_number: str | None = None
     host: str
@@ -66,8 +66,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=host,
                 data={
                     CONF_HOST: host,
-                    "serial": serial_number,
-                    "upnp_description": await get_upnp_desc(self.hass, host),
+                    CONF_SERIAL: serial_number,
+                    CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
                 },
             )
 
@@ -97,7 +97,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             {
                 CONF_HOST: self.host,
-                "upnp_description": self.upnp_description,
+                CONF_UPNP_DESC: self.upnp_description,
             }
         )
         self.context.update(
@@ -117,8 +117,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=self.host,
                 data={
                     CONF_HOST: self.host,
-                    "serial": self.serial_number,
-                    "upnp_description": self.upnp_description,
+                    CONF_SERIAL: self.serial_number,
+                    CONF_UPNP_DESC: self.upnp_description,
                 },
             )
 

@@ -20,37 +20,12 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import BRAND, DOMAIN
+from .const import BRAND, CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
 
 PLATFORMS = ["media_player"]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Migrate an old config entry."""
-    version = config_entry.version
-
-    _LOGGER.debug("Migrating from version %s", version)
-
-    if version == 1:
-        version = config_entry.version = 2
-
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={
-                CONF_HOST: config_entry.data[CONF_HOST],
-                "serial": config_entry.data["serial"],
-                "upnp_description": await get_upnp_desc(
-                    hass, config_entry.data[CONF_HOST]
-                ),
-            },
-        )
-
-    _LOGGER.info("Migration to version %s successful", version)
-
-    return True
 
 
 async def get_upnp_desc(hass: HomeAssistant, host: str):
@@ -74,10 +49,20 @@ async def get_upnp_desc(hass: HomeAssistant, host: str):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MusicCast from a config entry."""
 
+    if entry.data.get(CONF_UPNP_DESC) is None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_HOST: entry.data[CONF_HOST],
+                CONF_SERIAL: entry.data["serial"],
+                CONF_UPNP_DESC: await get_upnp_desc(hass, entry.data[CONF_HOST]),
+            },
+        )
+
     client = MusicCastDevice(
         entry.data[CONF_HOST],
         async_get_clientsession(hass),
-        entry.data["upnp_description"],
+        entry.data[CONF_UPNP_DESC],
     )
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()

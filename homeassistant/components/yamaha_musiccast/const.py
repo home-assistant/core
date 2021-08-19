@@ -19,6 +19,9 @@ ATTR_MC_LINK = "mc_link"
 ATTR_MAIN_SYNC = "main_sync"
 ATTR_MC_LINK_SOURCES = [ATTR_MC_LINK, ATTR_MAIN_SYNC]
 
+CONF_UPNP_DESC = "upnp_description"
+CONF_SERIAL = "serial"
+
 DEFAULT_ZONE = "main"
 HA_REPEAT_MODE_TO_MC_MAPPING = {
     REPEAT_MODE_OFF: "off",
@@ -37,5 +40,5 @@ MC_REPEAT_MODE_TO_HA_MAPPING = {
 MEDIA_CLASS_MAPPING = {
     "track": MEDIA_CLASS_TRACK,
     "directory": MEDIA_CLASS_DIRECTORY,
-    "categories": "categories",
+    "categories": MEDIA_CLASS_DIRECTORY,
 }

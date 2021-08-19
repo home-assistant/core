@@ -365,29 +365,32 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 "The device has to be turned on to be able to browse media."
             )
 
-        media_content_provider = MusicCastMediaContent(
-            self.coordinator.musiccast, self._zone_id
-        )
-
-        if media_content_id and media_content_type != "categories":
+        if media_content_id:
             media_content_path = media_content_id.split(":")
             media_content_provider = await MusicCastMediaContent.browse_media(
                 self.coordinator.musiccast, self._zone_id, media_content_path, 24
             )
 
         else:
+            media_content_provider = MusicCastMediaContent(
+                self.coordinator.musiccast, self._zone_id
+            )
+
             media_content_provider = media_content_provider.categories(
                 self.coordinator.musiccast, self._zone_id
             )
+
+        def get_content_type(item):
+            if item.can_play:
+                return MEDIA_CLASS_TRACK
+            return MEDIA_CLASS_DIRECTORY
 
         children = [
             BrowseMedia(
                 title=child.title,
                 media_class=MEDIA_CLASS_MAPPING.get(child.content_type),
                 media_content_id=child.content_id,
-                media_content_type=MEDIA_CLASS_TRACK
-                if child.can_play
-                else MEDIA_CLASS_DIRECTORY,
+                media_content_type=get_content_type(child),
                 can_play=child.can_play,
                 can_expand=child.can_browse,
                 thumbnail=child.thumbnail,
@@ -399,9 +402,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             title=media_content_provider.title,
             media_class=MEDIA_CLASS_MAPPING.get(media_content_provider.content_type),
             media_content_id=media_content_provider.content_id,
-            media_content_type=MEDIA_CLASS_TRACK
-            if media_content_provider.can_play
-            else MEDIA_CLASS_DIRECTORY,
+            media_content_type=get_content_type(media_content_provider),
             can_play=False,
             can_expand=media_content_provider.can_browse,
             children=children,
