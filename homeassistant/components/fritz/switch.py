@@ -546,15 +546,15 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._attr_is_on = self.dict_of_deflection["Enable"] == "1"
         self._is_available = True
 
-        self._attributes["Type"] = self.dict_of_deflection["Type"]
-        self._attributes["Number"] = self.dict_of_deflection["Number"]
-        self._attributes["DeflectionToNumber"] = self.dict_of_deflection[
+        self._attributes["type"] = self.dict_of_deflection["Type"]
+        self._attributes["number"] = self.dict_of_deflection["Number"]
+        self._attributes["deflection_to_number"] = self.dict_of_deflection[
             "DeflectionToNumber"
         ]
         # Return mode sample: "eImmediately"
-        self._attributes["Mode"] = self.dict_of_deflection["Mode"][1:]
-        self._attributes["Outgoing"] = self.dict_of_deflection["Outgoing"]
-        self._attributes["PhonebookID"] = self.dict_of_deflection["PhonebookID"]
+        self._attributes["mode"] = self.dict_of_deflection["Mode"][1:]
+        self._attributes["outgoing"] = self.dict_of_deflection["Outgoing"]
+        self._attributes["phonebook_id"] = self.dict_of_deflection["PhonebookID"]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle deflection switch."""
@@ -673,7 +673,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         std = wifi_info["NewStandard"]
         self._attributes["standard"] = std if std else None
-        self._attributes["BSSID"] = wifi_info["NewBSSID"]
+        self._attributes["bssid"] = wifi_info["NewBSSID"]
         self._attributes["mac_address_control"] = wifi_info[
             "NewMACAddressControlEnabled"
         ]
