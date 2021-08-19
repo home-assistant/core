@@ -126,6 +126,7 @@ class SensorEntity(Entity):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType = None
     _attr_state_class: str | None
+    _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _last_reset_reported = False
     _temperature_conversion_reported = False
 
@@ -218,6 +219,7 @@ class SensorEntity(Entity):
 
         return native_unit_of_measurement
 
+    @final
     @property
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
