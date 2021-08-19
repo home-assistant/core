@@ -5,19 +5,13 @@ from aussiebb import AussieBB, AuthenticationException
 import requests
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from ...exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from .const import DOMAIN
 
 PLATFORMS = ["sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Aussie Broadband component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -34,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) as exc:
             raise ConfigEntryNotReady() from exc
 
-    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(create_client)
+    hass.data.setdefault(DOMAIN, {})[
+        entry.entry_id
+    ] = await hass.async_add_executor_job(create_client)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

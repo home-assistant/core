@@ -1,32 +1,29 @@
 """Config flow for Aussie Broadband integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aussiebb import AussieBB, AuthenticationException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_PASSWORD, CONF_SERVICE_ID, CONF_USERNAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_SERVICE_ID, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aussie Broadband."""
 
     VERSION = 1
-    _reauth = False
 
     def __init__(self):
         """Initialize the config flow."""
@@ -97,7 +94,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle reauth."""
-        self._reauth = True
         return await self.async_step_user(user_input)
 
     async def create_entry(self, service):
@@ -105,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_SERVICE_ID] = service["service_id"]
 
         entry = await self.async_set_unique_id(self.data[CONF_SERVICE_ID])
-        if self._reauth:
+        if self.source == SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(
                 entry, title=service["description"], data=self.data
             )

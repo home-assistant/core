@@ -4,18 +4,17 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_MEGABYTES
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import DOMAIN
-from ...const import DATA_MEGABYTES
-from ...core import HomeAssistant
-from ..sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
-from .const import CONF_SERVICE_ID
+from .const import CONF_SERVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
