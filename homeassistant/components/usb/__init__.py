@@ -96,11 +96,11 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     monitor = Monitor.from_netlink(context)
     monitor.filter_by(subsystem="tty")
 
-    def _device_discovered(action, device):
+    def _device_discovered(device):
         _LOGGER.debug(
-            "%s: Discovered Device at path: %s, trigger scan",
-            action,
+            "Discovered Device at path: %s, trigger scan: %s",
             device.device_path,
+            device.action,
         )
         scan_serial(hass)
 
