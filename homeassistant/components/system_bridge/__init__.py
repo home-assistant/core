@@ -231,7 +231,7 @@ class SystemBridgeEntity(CoordinatorEntity):
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
         key: str,
-        name: str,
+        name: str | None,
         icon: str | None,
         enabled_by_default: bool,
     ) -> None:

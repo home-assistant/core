@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Final, cast
 
 from systembridge import Bridge
 
@@ -23,17 +23,209 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import StateType
 
 from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
+from .model import SystemBridgeSensorEntityDescription
 
-ATTR_AVAILABLE = "available"
-ATTR_FILESYSTEM = "filesystem"
-ATTR_MOUNT = "mount"
-ATTR_SIZE = "size"
-ATTR_TYPE = "type"
-ATTR_USED = "used"
+ATTR_AVAILABLE: Final = "available"
+ATTR_FILESYSTEM: Final = "filesystem"
+ATTR_MOUNT: Final = "mount"
+ATTR_SIZE: Final = "size"
+ATTR_TYPE: Final = "type"
+ATTR_USED: Final = "used"
+
+
+BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
+    SystemBridgeSensorEntityDescription(
+        key="bios_version",
+        name="BIOS Version",
+        enabled_by_default=False,
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:chip",
+        value=lambda bridge: bridge.system.bios.version,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="cpu_speed",
+        name="CPU Speed",
+        enabled_by_default=True,
+        device_class=None,
+        native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
+        icon="mdi:speedometer",
+        value=lambda bridge: bridge.cpu.currentSpeed.avg,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="cpu_temperature",
+        name="CPU Temperature",
+        enabled_by_default=False,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon=None,
+        value=lambda bridge: bridge.cpu.temperature.main,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="cpu_voltage",
+        name="CPU Voltage",
+        enabled_by_default=False,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon=None,
+        value=lambda bridge: bridge.cpu.cpu.voltage,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="kernel",
+        name="Kernel",
+        device_class=None,
+        enabled_by_default=True,
+        native_unit_of_measurement=None,
+        icon="mdi:devices",
+        value=lambda bridge: bridge.os.kernel,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="memory_free",
+        name="Memory Free",
+        enabled_by_default=True,
+        device_class=None,
+        native_unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:memory",
+        value=lambda bridge: round(bridge.memory.free / 1000 ** 3, 2)
+        if bridge.memory.free is not None
+        else None,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="memory_used_percentage",
+        name="Memory Used %",
+        enabled_by_default=True,
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        value=lambda bridge: round((bridge.memory.used / bridge.memory.total) * 100, 2)
+        if bridge.memory.used is not None and bridge.memory.total is not None
+        else None,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="memory_used",
+        name="Memory Used",
+        enabled_by_default=False,
+        device_class=None,
+        native_unit_of_measurement=DATA_GIGABYTES,
+        icon="mdi:memory",
+        value=lambda bridge: round(bridge.memory.used / 1000 ** 3, 2)
+        if bridge.memory.used is not None
+        else None,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="os",
+        name="Operating System",
+        enabled_by_default=True,
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:devices",
+        value=lambda bridge: f"{bridge.os.distro} {bridge.os.release}",
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="processes_load",
+        name="Load",
+        enabled_by_default=True,
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+        value=lambda bridge: round(bridge.processes.load.currentLoad, 2)
+        if bridge.processes.load.currentLoad is not None
+        else None,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="processes_load_idle",
+        name="Idle Load",
+        enabled_by_default=False,
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+        value=lambda bridge: round(bridge.processes.load.currentLoadIdle, 2)
+        if bridge.processes.load.currentLoadIdle is not None
+        else None,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="processes_load_system",
+        name="System Load",
+        enabled_by_default=False,
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+        value=lambda bridge: round(bridge.processes.load.currentLoadSystem, 2)
+        if bridge.processes.load.currentLoadSystem is not None
+        else None,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="processes_load_user",
+        name="User Load",
+        enabled_by_default=False,
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:percent",
+        value=lambda bridge: round(bridge.processes.load.currentLoadUser, 2)
+        if bridge.processes.load.currentLoadUser is not None
+        else None,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="version",
+        name="Version",
+        enabled_by_default=True,
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:counter",
+        value=lambda bridge: bridge.information.version,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="version_latest",
+        name="Latest Version",
+        enabled_by_default=True,
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:counter",
+        value=lambda bridge: bridge.information.updates.version.new
+        if bridge.information.updates is not None
+        else None,
+    ),
+)
+
+BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
+    SystemBridgeSensorEntityDescription(
+        key="battery",
+        name="Battery",
+        enabled_by_default=True,
+        device_class=DEVICE_CLASS_BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        icon=None,
+        value=lambda bridge: bridge.battery.percent,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="battery_time_remaining",
+        name="Battery Time Remaining",
+        enabled_by_default=True,
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        native_unit_of_measurement=None,
+        icon=None,
+        value=lambda bridge: str(
+            datetime.now() + timedelta(minutes=bridge.battery.timeRemaining)
+        )
+        if bridge.battery.timeRemaining is not None
+        else None,
+    ),
+)
+
+# SystemBridgeSensorEntityDescription(
+#     key="",
+#     name="",
+#     enabled_by_default=True,
+#     device_class=None,
+#     native_unit_of_measurement=None,
+#     icon=None,
+#     value=lambda bridge: bridge.system.bios.version,
+# ),
 
 
 async def async_setup_entry(
@@ -42,33 +234,32 @@ async def async_setup_entry(
     """Set up System Bridge sensor based on a config entry."""
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        SystemBridgeBiosVersionSensor(coordinator),
-        SystemBridgeCpuSpeedSensor(coordinator),
-        SystemBridgeCpuTemperatureSensor(coordinator),
-        SystemBridgeCpuVoltageSensor(coordinator),
-        *(
-            SystemBridgeFilesystemSensor(coordinator, key)
-            for key, _ in coordinator.data.filesystem.fsSize.items()
-        ),
-        SystemBridgeKernelSensor(coordinator),
-        SystemBridgeMemoryFreeSensor(coordinator),
-        SystemBridgeMemoryUsedPercentageSensor(coordinator),
-        SystemBridgeMemoryUsedSensor(coordinator),
-        SystemBridgeOsSensor(coordinator),
-        SystemBridgeProcessesLoadSensor(coordinator),
-        SystemBridgeProcessesUserLoadSensor(coordinator),
-        SystemBridgeProcessesSystemLoadSensor(coordinator),
-        SystemBridgeProcessesIdleLoadSensor(coordinator),
-        SystemBridgeVersionSensor(coordinator),
-    ]
+    entities = []
+    for description in BASE_SENSOR_TYPES:
+        entities.append(SystemBridgeSensor(coordinator, description))
+
+    for key, _ in coordinator.data.filesystem.fsSize.items():
+        uid = key.replace(":", "")
+        entities.append(
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"filesystem_{uid}",
+                    name=f"{key} Space Used",
+                    enabled_by_default=True,
+                    device_class=None,
+                    native_unit_of_measurement=PERCENTAGE,
+                    icon="mdi:harddisk",
+                    value=lambda bridge: round(bridge.filesystem.fsSize[key]["use"], 2)
+                    if bridge.filesystem.fsSize[key]["use"] is not None
+                    else None,
+                ),
+            )
+        )
 
     if coordinator.data.battery.hasBattery:
-        entities = [
-            *entities,
-            SystemBridgeBatterySensor(coordinator),
-            SystemBridgeBatteryTimeRemainingSensor(coordinator),
-        ]
+        for description in BATTERY_SENSOR_TYPES:
+            entities.append(SystemBridgeSensor(coordinator, description))
 
     for index, _ in enumerate(coordinator.data.graphics.controllers):
         if coordinator.data.graphics.controllers[index].name is not None:
@@ -80,861 +271,251 @@ async def async_setup_entry(
             )
             entities = [
                 *entities,
-                SystemBridgeGpuCoreClockSpeedSensor(coordinator, index, name),
-                SystemBridgeGpuFanSpeedSensor(coordinator, index, name),
-                SystemBridgeGpuMemoryClockSpeedSensor(coordinator, index, name),
-                SystemBridgeGpuMemoryFreeSensor(coordinator, index, name),
-                SystemBridgeGpuMemoryUsedPercentageSensor(coordinator, index, name),
-                SystemBridgeGpuMemoryUsedSensor(coordinator, index, name),
-                SystemBridgeGpuPowerUsageSensor(coordinator, index, name),
-                SystemBridgeGpuTemperatureSensor(coordinator, index, name),
-                SystemBridgeGpuUsagePercentageSensor(coordinator, index, name),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_core_clock_speed",
+                        name=f"{name} Clock Speed",
+                        enabled_by_default=False,
+                        device_class=None,
+                        native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
+                        icon="mdi:speedometer",
+                        value=lambda bridge: bridge.graphics.controllers[
+                            index
+                        ].clockCore
+                        if bridge.graphics.controllers[index].clockCore is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_memory_clock_speed",
+                        name=f"{name} Memory Clock Speed",
+                        enabled_by_default=False,
+                        device_class=None,
+                        native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
+                        icon="mdi:speedometer",
+                        value=lambda bridge: bridge.graphics.controllers[
+                            index
+                        ].clockMemory
+                        if bridge.graphics.controllers[index].clockMemory is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_memory_free",
+                        name=f"{name} Memory Free",
+                        enabled_by_default=True,
+                        device_class=None,
+                        native_unit_of_measurement=DATA_GIGABYTES,
+                        icon="mdi:memory",
+                        value=lambda bridge: round(
+                            bridge.graphics.controllers[index].memoryFree / 10 ** 3, 2
+                        )
+                        if bridge.graphics.controllers[index].memoryFree is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_memory_used_percentage",
+                        name=f"{name} Memory Used %",
+                        enabled_by_default=True,
+                        device_class=None,
+                        native_unit_of_measurement=DATA_GIGABYTES,
+                        icon="mdi:memory",
+                        value=lambda bridge: round(
+                            (
+                                bridge.graphics.controllers[index].memoryUsed
+                                / bridge.graphics.controllers[index].memoryTotal
+                            )
+                            * 100,
+                            2,
+                        )
+                        if bridge.graphics.controllers[index].memoryUsed is not None
+                        and bridge.graphics.controllers[index].memoryTotal is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_memory_used",
+                        name=f"{name} Memory Used",
+                        enabled_by_default=False,
+                        device_class=None,
+                        native_unit_of_measurement=DATA_GIGABYTES,
+                        icon="mdi:memory",
+                        value=lambda bridge: round(
+                            bridge.graphics.controllers[index].memoryUsed / 10 ** 3, 2
+                        )
+                        if bridge.graphics.controllers[index].memoryUsed is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_fan_speed",
+                        name=f"{name} Fan Speed",
+                        enabled_by_default=False,
+                        device_class=None,
+                        native_unit_of_measurement=PERCENTAGE,
+                        icon="mdi:fan",
+                        value=lambda bridge: bridge.graphics.controllers[index].fanSpeed
+                        if bridge.graphics.controllers[index].fanSpeed is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_power_usage",
+                        name=f"{name} Power Usage",
+                        enabled_by_default=False,
+                        device_class=DEVICE_CLASS_POWER,
+                        native_unit_of_measurement=POWER_WATT,
+                        icon=None,
+                        value=lambda bridge: bridge.graphics.controllers[
+                            index
+                        ].powerDraw
+                        if bridge.graphics.controllers[index].powerDraw is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_temperature",
+                        name=f"{name} Temperature",
+                        enabled_by_default=False,
+                        device_class=DEVICE_CLASS_TEMPERATURE,
+                        native_unit_of_measurement=TEMP_CELSIUS,
+                        icon=None,
+                        value=lambda bridge: bridge.graphics.controllers[
+                            index
+                        ].temperatureGpu
+                        if bridge.graphics.controllers[index].temperatureGpu is not None
+                        else None,
+                    ),
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{index}_usage_percentage",
+                        name=f"{name} Usage %",
+                        enabled_by_default=True,
+                        device_class=None,
+                        native_unit_of_measurement=PERCENTAGE,
+                        icon="mdi:percent",
+                        value=lambda bridge: bridge.graphics.controllers[
+                            index
+                        ].utilizationGpu
+                        if bridge.graphics.controllers[index].utilizationGpu is not None
+                        else None,
+                    ),
+                ),
             ]
 
     for index, _ in enumerate(coordinator.data.processes.load.cpus):
         entities = [
             *entities,
-            SystemBridgeProcessesCpuLoadSensor(coordinator, index),
-            SystemBridgeProcessesCpuUserLoadSensor(coordinator, index),
-            SystemBridgeProcessesCpuSystemLoadSensor(coordinator, index),
-            SystemBridgeProcessesCpuIdleLoadSensor(coordinator, index),
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"processes_load_cpu_{index}",
+                    name=f"Load CPU {index}",
+                    enabled_by_default=False,
+                    device_class=None,
+                    native_unit_of_measurement=PERCENTAGE,
+                    icon="mdi:percent",
+                    value=lambda bridge: round(
+                        bridge.processes.load.cpus[index].load, 2
+                    )
+                    if bridge.processes.load.cpus[index].load is not None
+                    else None,
+                ),
+            ),
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"processes_load_cpu_{index}_idle",
+                    name=f"Idle Load CPU {index}",
+                    enabled_by_default=False,
+                    device_class=None,
+                    native_unit_of_measurement=PERCENTAGE,
+                    icon="mdi:percent",
+                    value=lambda bridge: round(
+                        bridge.processes.load.cpus[index].loadIdle, 2
+                    )
+                    if bridge.processes.load.cpus[index].loadIdle is not None
+                    else None,
+                ),
+            ),
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"processes_load_cpu_{index}_system",
+                    name=f"System Load CPU {index}",
+                    enabled_by_default=False,
+                    device_class=None,
+                    native_unit_of_measurement=PERCENTAGE,
+                    icon="mdi:percent",
+                    value=lambda bridge: round(
+                        bridge.processes.load.cpus[index].loadSystem, 2
+                    )
+                    if bridge.processes.load.cpus[index].loadSystem is not None
+                    else None,
+                ),
+            ),
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"processes_load_cpu_{index}_user",
+                    name=f"User Load CPU {index}",
+                    enabled_by_default=False,
+                    device_class=None,
+                    native_unit_of_measurement=PERCENTAGE,
+                    icon="mdi:percent",
+                    value=lambda bridge: round(
+                        bridge.processes.load.cpus[index].loadUser, 2
+                    )
+                    if bridge.processes.load.cpus[index].loadUser is not None
+                    else None,
+                ),
+            ),
         ]
 
     async_add_entities(entities)
 
 
 class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
-    """Defines a System Bridge sensor."""
+    """Define a System Bridge sensor."""
 
-    _attr_state_class = "measurement"
+    coordinator: SystemBridgeDataUpdateCoordinator
+    entity_description: SystemBridgeSensorEntityDescription
 
     def __init__(
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
-        key: str,
-        name: str,
-        icon: str | None,
-        device_class: str | None,
-        unit_of_measurement: str | None,
-        enabled_by_default: bool,
+        description: SystemBridgeSensorEntityDescription,
     ) -> None:
-        """Initialize System Bridge sensor."""
-        self._attr_device_class = device_class
-        self._unit_of_measurement = unit_of_measurement
-
-        super().__init__(coordinator, key, name, icon, enabled_by_default)
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-
-class SystemBridgeBatterySensor(SystemBridgeSensor):
-    """Defines a Battery sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
+        """Initialize."""
         super().__init__(
             coordinator,
-            "battery",
-            "Battery",
-            None,
-            DEVICE_CLASS_BATTERY,
-            PERCENTAGE,
-            True,
+            description.key,
+            description.name,
+            description.icon,
+            description.enabled_by_default,
         )
+        self.entity_description = description
 
     @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
+    def native_value(self) -> StateType:
+        """Return the state."""
         bridge: Bridge = self.coordinator.data
-        return bridge.battery.percent
-
-
-class SystemBridgeBatteryTimeRemainingSensor(SystemBridgeSensor):
-    """Defines the Battery Time Remaining sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "battery_time_remaining",
-            "Battery Time Remaining",
-            None,
-            DEVICE_CLASS_TIMESTAMP,
-            None,
-            True,
-        )
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        if bridge.battery.timeRemaining is None:
-            return None
-        return str(datetime.now() + timedelta(minutes=bridge.battery.timeRemaining))
-
-
-class SystemBridgeCpuSpeedSensor(SystemBridgeSensor):
-    """Defines a CPU speed sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "cpu_speed",
-            "CPU Speed",
-            "mdi:speedometer",
-            None,
-            FREQUENCY_GIGAHERTZ,
-            True,
-        )
-
-    @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return bridge.cpu.currentSpeed.avg
-
-
-class SystemBridgeCpuTemperatureSensor(SystemBridgeSensor):
-    """Defines a CPU temperature sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "cpu_temperature",
-            "CPU Temperature",
-            None,
-            DEVICE_CLASS_TEMPERATURE,
-            TEMP_CELSIUS,
-            False,
-        )
-
-    @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return bridge.cpu.temperature.main
-
-
-class SystemBridgeCpuVoltageSensor(SystemBridgeSensor):
-    """Defines a CPU voltage sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "cpu_voltage",
-            "CPU Voltage",
-            None,
-            DEVICE_CLASS_VOLTAGE,
-            ELECTRIC_POTENTIAL_VOLT,
-            False,
-        )
-
-    @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return bridge.cpu.cpu.voltage
-
-
-class SystemBridgeFilesystemSensor(SystemBridgeSensor):
-    """Defines a filesystem sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, key: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        uid_key = key.replace(":", "")
-        super().__init__(
-            coordinator,
-            f"filesystem_{uid_key}",
-            f"{key} Space Used",
-            "mdi:harddisk",
-            None,
-            PERCENTAGE,
-            True,
-        )
-        self._fs_key = key
-
-    @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.filesystem.fsSize[self._fs_key]["use"], 2)
-            if bridge.filesystem.fsSize[self._fs_key]["use"] is not None
-            else None
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the entity."""
-        bridge: Bridge = self.coordinator.data
-        return {
-            ATTR_AVAILABLE: bridge.filesystem.fsSize[self._fs_key]["available"],
-            ATTR_FILESYSTEM: bridge.filesystem.fsSize[self._fs_key]["fs"],
-            ATTR_MOUNT: bridge.filesystem.fsSize[self._fs_key]["mount"],
-            ATTR_SIZE: bridge.filesystem.fsSize[self._fs_key]["size"],
-            ATTR_TYPE: bridge.filesystem.fsSize[self._fs_key]["type"],
-            ATTR_USED: bridge.filesystem.fsSize[self._fs_key]["used"],
-        }
-
-
-class SystemBridgeGpuMemoryFreeSensor(SystemBridgeSensor):
-    """Defines a GPU memory free sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_memory_free",
-            f"{name} Memory Free",
-            "mdi:memory",
-            None,
-            DATA_GIGABYTES,
-            True,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.graphics.controllers[self._index].memoryFree / 10 ** 3, 2)
-            if bridge.graphics.controllers[self._index].memoryFree is not None
-            else None
-        )
-
-
-class SystemBridgeGpuMemoryUsedSensor(SystemBridgeSensor):
-    """Defines a GPU memory used sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_memory_used",
-            f"{name} Memory Used",
-            "mdi:memory",
-            None,
-            DATA_GIGABYTES,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.graphics.controllers[self._index].memoryUsed / 10 ** 3, 2)
-            if bridge.graphics.controllers[self._index].memoryUsed is not None
-            else None
-        )
-
-
-class SystemBridgeGpuMemoryUsedPercentageSensor(SystemBridgeSensor):
-    """Defines a GPU memory used percentage sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_memory_used_percentage",
-            f"{name} Memory Used %",
-            "mdi:memory",
-            None,
-            PERCENTAGE,
-            True,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        if (
-            bridge.graphics.controllers[self._index].memoryUsed is not None
-            and bridge.graphics.controllers[self._index].memoryTotal is not None
-        ):
-            return round(
-                (
-                    bridge.graphics.controllers[self._index].memoryUsed
-                    / bridge.graphics.controllers[self._index].memoryTotal
-                )
-                * 100,
-                2,
-            )
-        return None
-
-
-class SystemBridgeGpuUsagePercentageSensor(SystemBridgeSensor):
-    """Defines a GPU usage percentage sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_usage_percentage",
-            f"{name} Usage %",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            True,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            bridge.graphics.controllers[self._index].utilizationGpu
-            if bridge.graphics.controllers[self._index].utilizationGpu is not None
-            else None
-        )
-
-
-class SystemBridgeGpuCoreClockSpeedSensor(SystemBridgeSensor):
-    """Defines a GPU core clock speed sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_core_clock_speed",
-            f"{name} Clock Speed",
-            "mdi:speedometer",
-            None,
-            FREQUENCY_MEGAHERTZ,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            bridge.graphics.controllers[self._index].clockCore
-            if bridge.graphics.controllers[self._index].clockCore is not None
-            else None
-        )
-
-
-class SystemBridgeGpuMemoryClockSpeedSensor(SystemBridgeSensor):
-    """Defines a GPU memory clock speed sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_memory_clock_speed",
-            f"{name} Memory Clock Speed",
-            "mdi:speedometer",
-            None,
-            FREQUENCY_MEGAHERTZ,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            bridge.graphics.controllers[self._index].clockMemory
-            if bridge.graphics.controllers[self._index].clockMemory is not None
-            else None
-        )
-
-
-class SystemBridgeGpuTemperatureSensor(SystemBridgeSensor):
-    """Defines a GPU temperature sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_temperature",
-            f"{name} Temperature",
-            None,
-            DEVICE_CLASS_TEMPERATURE,
-            TEMP_CELSIUS,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            bridge.graphics.controllers[self._index].temperatureGpu
-            if bridge.graphics.controllers[self._index].temperatureGpu is not None
-            else None
-        )
-
-
-class SystemBridgeGpuFanSpeedSensor(SystemBridgeSensor):
-    """Defines a GPU fan speed sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_fan_speed",
-            f"{name} Fan Speed",
-            "mdi:fan",
-            None,
-            PERCENTAGE,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            bridge.graphics.controllers[self._index].fanSpeed
-            if bridge.graphics.controllers[self._index].fanSpeed is not None
-            else None
-        )
-
-
-class SystemBridgeGpuPowerUsageSensor(SystemBridgeSensor):
-    """Defines a GPU power usage sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int, name: str
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"gpu_{index}_power_usage",
-            f"{name} Power Usage",
-            None,
-            DEVICE_CLASS_POWER,
-            POWER_WATT,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            bridge.graphics.controllers[self._index].powerDraw
-            if bridge.graphics.controllers[self._index].powerDraw is not None
-            else None
-        )
-
-
-class SystemBridgeMemoryFreeSensor(SystemBridgeSensor):
-    """Defines a memory free sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "memory_free",
-            "Memory Free",
-            "mdi:memory",
-            None,
-            DATA_GIGABYTES,
-            True,
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.memory.free / 1000 ** 3, 2)
-            if bridge.memory.free is not None
-            else None
-        )
-
-
-class SystemBridgeMemoryUsedSensor(SystemBridgeSensor):
-    """Defines a memory used sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "memory_used",
-            "Memory Used",
-            "mdi:memory",
-            None,
-            DATA_GIGABYTES,
-            False,
-        )
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.memory.used / 1000 ** 3, 2)
-            if bridge.memory.used is not None
-            else None
-        )
-
-
-class SystemBridgeMemoryUsedPercentageSensor(SystemBridgeSensor):
-    """Defines a memory used percentage sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "memory_used_percentage",
-            "Memory Used %",
-            "mdi:memory",
-            None,
-            PERCENTAGE,
-            True,
-        )
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round((bridge.memory.used / bridge.memory.total) * 100, 2)
-            if bridge.memory.used is not None and bridge.memory.total is not None
-            else None
-        )
-
-
-class SystemBridgeKernelSensor(SystemBridgeSensor):
-    """Defines a kernel sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "kernel",
-            "Kernel",
-            "mdi:devices",
-            None,
-            None,
-            True,
-        )
-
-    @property
-    def native_value(self) -> str:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return bridge.os.kernel
-
-
-class SystemBridgeOsSensor(SystemBridgeSensor):
-    """Defines an OS sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "os",
-            "Operating System",
-            "mdi:devices",
-            None,
-            None,
-            True,
-        )
-
-    @property
-    def native_value(self) -> str:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return f"{bridge.os.distro} {bridge.os.release}"
-
-
-class SystemBridgeProcessesLoadSensor(SystemBridgeSensor):
-    """Defines a Processes Load sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "processes_load",
-            "Load",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            True,
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.currentLoad, 2)
-            if bridge.processes.load.currentLoad is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesUserLoadSensor(SystemBridgeSensor):
-    """Defines a Processes User Load sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "processes_load_user",
-            "User Load",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.currentLoadUser, 2)
-            if bridge.processes.load.currentLoadUser is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesSystemLoadSensor(SystemBridgeSensor):
-    """Defines a Processes System Load sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "processes_load_system",
-            "System Load",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.currentLoadSystem, 2)
-            if bridge.processes.load.currentLoadSystem is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesIdleLoadSensor(SystemBridgeSensor):
-    """Defines a Processes Idle Load sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "processes_load_idle",
-            "Idle Load",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.currentLoadIdle, 2)
-            if bridge.processes.load.currentLoadIdle is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesCpuLoadSensor(SystemBridgeSensor):
-    """Defines a Processes CPU Load sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"processes_load_cpu_{index}",
-            f"Load CPU {index}",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.cpus[self._index].load, 2)
-            if bridge.processes.load.cpus[self._index].load is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesCpuUserLoadSensor(SystemBridgeSensor):
-    """Defines a Processes CPU User Load sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"processes_load_cpu_{index}_user",
-            f"User Load CPU {index}",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.cpus[self._index].loadUser, 2)
-            if bridge.processes.load.cpus[self._index].loadUser is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesCpuSystemLoadSensor(SystemBridgeSensor):
-    """Defines a Processes CPU System Load sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"processes_load_cpu_{index}_system",
-            f"System Load CPU {index}",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.cpus[self._index].loadSystem, 2)
-            if bridge.processes.load.cpus[self._index].loadSystem is not None
-            else None
-        )
-
-
-class SystemBridgeProcessesCpuIdleLoadSensor(SystemBridgeSensor):
-    """Defines a Processes CPU Idle Load sensor."""
-
-    def __init__(
-        self, coordinator: SystemBridgeDataUpdateCoordinator, index: int
-    ) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            f"processes_load_cpu_{index}_idle",
-            f"Idle Load CPU {index}",
-            "mdi:percent",
-            None,
-            PERCENTAGE,
-            False,
-        )
-        self._index = index
-
-    @property
-    def state(self) -> float | None:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return (
-            round(bridge.processes.load.cpus[self._index].loadIdle, 2)
-            if bridge.processes.load.cpus[self._index].loadIdle is not None
-            else None
-        )
-
-
-class SystemBridgeBiosVersionSensor(SystemBridgeSensor):
-    """Defines a bios version sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "bios_version",
-            "BIOS Version",
-            "mdi:chip",
-            None,
-            None,
-            False,
-        )
-
-    @property
-    def native_value(self) -> str:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return bridge.system.bios.version
-
-
-class SystemBridgeVersionSensor(SystemBridgeSensor):
-    """Defines a version sensor."""
-
-    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
-        """Initialize System Bridge sensor."""
-        super().__init__(
-            coordinator,
-            "version",
-            "Version",
-            "mdi:counter",
-            None,
-            None,
-            True,
-        )
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        bridge: Bridge = self.coordinator.data
-        return bridge.information.version
+        return cast(StateType, self.entity_description.value(bridge))
