@@ -8,10 +8,7 @@ from huisbaasje.const import (
     SOURCE_TYPE_GAS,
 )
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
@@ -116,7 +113,6 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "state_class": STATE_CLASS_TOTAL,
         "precision": 1,
     },
     {
@@ -125,7 +121,6 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
-        "state_class": STATE_CLASS_TOTAL,
         "precision": 1,
     },
     {
@@ -134,7 +129,6 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
-        "state_class": STATE_CLASS_TOTAL,
         "precision": 1,
     },
     {
@@ -143,7 +137,6 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
-        "state_class": STATE_CLASS_TOTAL,
         "precision": 1,
     },
     {

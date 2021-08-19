@@ -1,19 +1,11 @@
 """Test cases for the sensors of the Huisbaasje integration."""
 from unittest.mock import patch
 
-from huisbaasje.const import SOURCE_TYPE_ELECTRICITY
-
 from homeassistant.components import huisbaasje
-from homeassistant.components.huisbaasje.const import (
-    FLOW_CUBIC_METERS_PER_HOUR,
-    SENSOR_TYPE_THIS_DAY,
-)
-from homeassistant.components.huisbaasje.sensor import HuisbaasjeSensor
+from homeassistant.components.huisbaasje.const import FLOW_CUBIC_METERS_PER_HOUR
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.const import (
@@ -31,7 +23,6 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
 
 from tests.common import MockConfigEntry
 from tests.components.huisbaasje.test_data import (
@@ -73,7 +64,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert current_power.state == "1012.0"
         assert current_power.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
         assert current_power.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert current_power.attributes.get(ATTR_LAST_RESET) is None
         assert current_power.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
         assert current_power.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
 
@@ -81,7 +71,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert current_power_in.state == "1012.0"
         assert current_power_in.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
         assert current_power_in.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert current_power_in.attributes.get(ATTR_LAST_RESET) is None
         assert (
             current_power_in.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
         )
@@ -95,7 +84,6 @@ async def test_setup_entry(hass: HomeAssistant):
             current_power_in_low.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
         )
         assert current_power_in_low.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert current_power_in_low.attributes.get(ATTR_LAST_RESET) is None
         assert (
             current_power_in_low.attributes.get(ATTR_STATE_CLASS)
             == STATE_CLASS_MEASUREMENT
@@ -108,7 +96,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert current_power_out.state == "unknown"
         assert current_power_out.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
         assert current_power_out.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert current_power_out.attributes.get(ATTR_LAST_RESET) is None
         assert (
             current_power_out.attributes.get(ATTR_STATE_CLASS)
             == STATE_CLASS_MEASUREMENT
@@ -124,7 +111,6 @@ async def test_setup_entry(hass: HomeAssistant):
             == DEVICE_CLASS_POWER
         )
         assert current_power_out_low.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert current_power_out_low.attributes.get(ATTR_LAST_RESET) is None
         assert (
             current_power_out_low.attributes.get(ATTR_STATE_CLASS)
             == STATE_CLASS_MEASUREMENT
@@ -145,7 +131,6 @@ async def test_setup_entry(hass: HomeAssistant):
             energy_consumption_peak_today.attributes.get(ATTR_ICON)
             == "mdi:lightning-bolt"
         )
-        assert energy_consumption_peak_today.attributes.get(ATTR_LAST_RESET) is None
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_STATE_CLASS)
             is STATE_CLASS_TOTAL_INCREASING
@@ -167,7 +152,6 @@ async def test_setup_entry(hass: HomeAssistant):
             energy_consumption_off_peak_today.attributes.get(ATTR_ICON)
             == "mdi:lightning-bolt"
         )
-        assert energy_consumption_off_peak_today.attributes.get(ATTR_LAST_RESET) is None
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_STATE_CLASS)
             is STATE_CLASS_TOTAL_INCREASING
@@ -189,7 +173,6 @@ async def test_setup_entry(hass: HomeAssistant):
             energy_production_peak_today.attributes.get(ATTR_ICON)
             == "mdi:lightning-bolt"
         )
-        assert energy_production_peak_today.attributes.get(ATTR_LAST_RESET) is None
         assert (
             energy_production_peak_today.attributes.get(ATTR_STATE_CLASS)
             is STATE_CLASS_TOTAL_INCREASING
@@ -211,7 +194,6 @@ async def test_setup_entry(hass: HomeAssistant):
             energy_production_off_peak_today.attributes.get(ATTR_ICON)
             == "mdi:lightning-bolt"
         )
-        assert energy_production_off_peak_today.attributes.get(ATTR_LAST_RESET) is None
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_STATE_CLASS)
             is STATE_CLASS_TOTAL_INCREASING
@@ -225,8 +207,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_today.state == "3.3"
         assert energy_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         assert energy_today.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_today.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_today.attributes.get(ATTR_STATE_CLASS) is STATE_CLASS_TOTAL
+        assert energy_today.attributes.get(ATTR_STATE_CLASS) is STATE_CLASS_MEASUREMENT
         assert (
             energy_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -236,8 +217,9 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_this_week.state == "17.5"
         assert energy_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_week.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_this_week.attributes.get(ATTR_STATE_CLASS) is STATE_CLASS_TOTAL
+        assert (
+            energy_this_week.attributes.get(ATTR_STATE_CLASS) is STATE_CLASS_MEASUREMENT
+        )
         assert (
             energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -249,8 +231,10 @@ async def test_setup_entry(hass: HomeAssistant):
             energy_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         )
         assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_month.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_this_month.attributes.get(ATTR_STATE_CLASS) is STATE_CLASS_TOTAL
+        assert (
+            energy_this_month.attributes.get(ATTR_STATE_CLASS)
+            is STATE_CLASS_MEASUREMENT
+        )
         assert (
             energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -260,8 +244,9 @@ async def test_setup_entry(hass: HomeAssistant):
         assert energy_this_year.state == "673.0"
         assert energy_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
         assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert energy_this_year.attributes.get(ATTR_LAST_RESET) is not None
-        assert energy_this_year.attributes.get(ATTR_STATE_CLASS) is STATE_CLASS_TOTAL
+        assert (
+            energy_this_year.attributes.get(ATTR_STATE_CLASS) is STATE_CLASS_MEASUREMENT
+        )
         assert (
             energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == ENERGY_KILO_WATT_HOUR
@@ -271,7 +256,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert current_gas.state == "0.0"
         assert current_gas.attributes.get(ATTR_DEVICE_CLASS) is None
         assert current_gas.attributes.get(ATTR_ICON) == "mdi:fire"
-        assert current_gas.attributes.get(ATTR_LAST_RESET) is None
         assert current_gas.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
         assert (
             current_gas.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -282,7 +266,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert gas_today.state == "1.1"
         assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_today.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_today.attributes.get(ATTR_LAST_RESET) is None
         assert (
             gas_today.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
         )
@@ -292,7 +275,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert gas_this_week.state == "5.6"
         assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_week.attributes.get(ATTR_LAST_RESET) is None
         assert (
             gas_this_week.attributes.get(ATTR_STATE_CLASS)
             is STATE_CLASS_TOTAL_INCREASING
@@ -306,7 +288,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert gas_this_month.state == "39.1"
         assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_month.attributes.get(ATTR_LAST_RESET) is None
         assert (
             gas_this_month.attributes.get(ATTR_STATE_CLASS)
             is STATE_CLASS_TOTAL_INCREASING
@@ -320,7 +301,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert gas_this_year.state == "116.7"
         assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
         assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
-        assert gas_this_year.attributes.get(ATTR_LAST_RESET) is None
         assert (
             gas_this_year.attributes.get(ATTR_STATE_CLASS)
             is STATE_CLASS_TOTAL_INCREASING
@@ -406,36 +386,3 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant):
         assert len(mock_authenticate.mock_calls) == 1
         assert len(mock_is_authenticated.mock_calls) == 1
         assert len(mock_current_measurements.mock_calls) == 1
-
-
-async def test_sensor_last_reset(hass: HomeAssistant):
-    """Test for setting the last_reset attribute when the value resets to 0."""
-    with patch(
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator"
-    ) as coordinatorMock:
-        coordinator = coordinatorMock.return_value
-        sensor = HuisbaasjeSensor(
-            user_id="userId",
-            name="test",
-            coordinator=coordinator,
-            state_class=STATE_CLASS_TOTAL,
-            source_type=SOURCE_TYPE_ELECTRICITY,
-            sensor_type=SENSOR_TYPE_THIS_DAY,
-        )
-        sensor.hass = hass
-
-        coordinator.data = {SOURCE_TYPE_ELECTRICITY: {SENSOR_TYPE_THIS_DAY: 123.0}}
-        assert sensor.state == 123.0
-        assert sensor.last_reset == dt.utc_from_timestamp(0)
-
-        coordinator.data = {SOURCE_TYPE_ELECTRICITY: {SENSOR_TYPE_THIS_DAY: 0.0}}
-        assert sensor.state == 0.0
-        last_reset = sensor.last_reset
-        assert (dt.now() - last_reset).total_seconds() <= 10
-
-        assert sensor.state == 0.0
-        assert sensor.last_reset == last_reset
-
-        coordinator.data = {SOURCE_TYPE_ELECTRICITY: {SENSOR_TYPE_THIS_DAY: 1.0}}
-        assert sensor.state == 1.0
-        assert sensor.last_reset == last_reset

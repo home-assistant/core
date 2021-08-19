@@ -3,11 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    SensorEntity,
-)
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -15,7 +11,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import dt
 
 from .const import DATA_COORDINATOR, DOMAIN, SENSOR_TYPE_RATE, SENSORS_INFO
 
@@ -62,9 +57,6 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         self._icon = icon
         self._precision = precision
         self._attr_state_class = state_class
-        self._last_value = None
-        if state_class == STATE_CLASS_TOTAL:
-            self._attr_last_reset = dt.utc_from_timestamp(0)
 
     @property
     def unique_id(self) -> str:
@@ -90,23 +82,10 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data[self._source_type][self._sensor_type] is not None:
-            current_value = round(
+            return round(
                 self.coordinator.data[self._source_type][self._sensor_type],
                 self._precision,
             )
-
-            # Some sensors reset by setting the values to 0
-            if (
-                current_value is not None
-                and self._attr_state_class == STATE_CLASS_TOTAL
-            ):
-                if current_value == 0 and self._last_value and self._last_value != 0:
-                    self._attr_last_reset = dt.utcnow()
-                    _LOGGER.info("Energy reset detected for entity %s", self.name)
-
-                self._last_value = current_value
-
-            return current_value
         return None
 
     @property
