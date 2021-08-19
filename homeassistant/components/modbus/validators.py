@@ -196,12 +196,12 @@ def scan_interval_validator(config: dict) -> dict:
 def duplicate_entity_validator(config: dict) -> dict:
     """Control scan_interval."""
     for hub_index, hub in enumerate(config):
-        addresses = []
+        addresses: set[str] = set()
         for component, conf_key in PLATFORMS:
             if conf_key not in hub:
                 continue
-            names = []
-            errors = []
+            names: set[str] = set()
+            errors: list[int] = []
             for index, entry in enumerate(hub[conf_key]):
                 name = entry[CONF_NAME]
                 addr = str(entry[CONF_ADDRESS])
@@ -216,8 +216,8 @@ def duplicate_entity_validator(config: dict) -> dict:
                     _LOGGER.warning(err)
                     errors.append(index)
                 else:
-                    names.append(name)
-                    addresses.append(addr)
+                    names.add(name)
+                    addresses.add(addr)
 
             for i in reversed(errors):
                 del config[hub_index][conf_key][i]
