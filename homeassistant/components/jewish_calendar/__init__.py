@@ -8,17 +8,16 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-from .const import (
-    CANDLE_LIGHT_DEFAULT,
-    CONF_CANDLE_LIGHT_MINUTES,
-    CONF_DIASPORA,
-    CONF_HAVDALAH_OFFSET_MINUTES,
-    CONF_LANGUAGE,
-)
-
 DOMAIN = "jewish_calendar"
 
 DEFAULT_NAME = "Jewish Calendar"
+
+CONF_DIASPORA = "diaspora"
+CONF_LANGUAGE = "language"
+CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
+CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
+
+CANDLE_LIGHT_DEFAULT = 18
 
 CONFIG_SCHEMA = vol.Schema(
     {
