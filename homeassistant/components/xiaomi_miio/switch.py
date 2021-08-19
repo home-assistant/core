@@ -35,6 +35,7 @@ from .const import (
     CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
+    FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRHUMIDIFIER,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -45,13 +46,16 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_SET_AUTO_DETECT,
     FEATURE_SET_BUZZER,
     FEATURE_SET_CHILD_LOCK,
     FEATURE_SET_CLEAN,
     FEATURE_SET_DRY,
+    FEATURE_SET_LEARN_MODE,
     FEATURE_SET_LED,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -112,10 +116,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+ATTR_AUTO_DETECT = "auto_detect"
 ATTR_BUZZER = "buzzer"
 ATTR_CHILD_LOCK = "child_lock"
 ATTR_CLEAN = "clean_mode"
 ATTR_DRY = "dry"
+ATTR_LEARN_MODE = "learn_mode"
 ATTR_LED = "led"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
@@ -160,6 +166,18 @@ SERVICE_TO_METHOD = {
         "method": "async_set_power_price",
         "schema": SERVICE_SCHEMA_POWER_PRICE,
     },
+}
+
+MODEL_TO_FEATURES_MAP = {
+    MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
+    MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
+    MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
+    MODEL_AIRPURIFIER_2H: FEATURE_FLAGS_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_2S: FEATURE_FLAGS_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_PRO: FEATURE_FLAGS_AIRPURIFIER_PRO,
+    MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
 }
 
 
@@ -215,6 +233,21 @@ SWITCH_TYPES = (
         method_on="async_set_led_on",
         method_off="async_set_led_off",
     ),
+    XiaomiMiioSwitchDescription(
+        key=ATTR_LEARN_MODE,
+        feature=FEATURE_SET_LEARN_MODE,
+        name="Learn Mode",
+        icon="mdi:school-outline",
+        method_on="async_set_learn_mode_on",
+        method_off="async_set_learn_mode_off",
+    ),
+    XiaomiMiioSwitchDescription(
+        key=ATTR_AUTO_DETECT,
+        feature=FEATURE_SET_AUTO_DETECT,
+        name="Auto Detect",
+        method_on="async_set_auto_detect_on",
+        method_off="async_set_auto_detect_off",
+    ),
 )
 
 
@@ -254,22 +287,12 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
 
     device_features = 0
 
-    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
-        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
+    if model in MODEL_TO_FEATURES_MAP:
+        device_features = MODEL_TO_FEATURES_MAP[model]
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ
     elif model in MODELS_HUMIDIFIER:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-    elif model == MODEL_AIRPURIFIER_PRO:
-        device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
-    elif model == MODEL_AIRPURIFIER_PRO_V7:
-        device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
-    elif model == MODEL_AIRPURIFIER_V3:
-        device_features = FEATURE_FLAGS_AIRPURIFIER_V3
-    elif model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
-        device_features = FEATURE_FLAGS_AIRPURIFIER_2S
     elif model in MODELS_PURIFIER_MIIO:
         device_features = FEATURE_FLAGS_AIRPURIFIER_MIIO
     elif model in MODELS_PURIFIER_MIOT:
@@ -543,6 +566,38 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         return await self._try_command(
             "Turning the led of the miio device off failed.",
             self._device.set_led,
+            False,
+        )
+
+    async def async_set_learn_mode_on(self) -> bool:
+        """Turn the learn mode on."""
+        return await self._try_command(
+            "Turning the learn mode of the miio device on failed.",
+            self._device.set_learn_mode,
+            True,
+        )
+
+    async def async_set_learn_mode_off(self) -> bool:
+        """Turn the learn mode off."""
+        return await self._try_command(
+            "Turning the learn mode of the miio device off failed.",
+            self._device.set_learn_mode,
+            False,
+        )
+
+    async def async_set_auto_detect_on(self) -> bool:
+        """Turn auto detect on."""
+        return await self._try_command(
+            "Turning auto detect of the miio device on failed.",
+            self._device.set_auto_detect,
+            True,
+        )
+
+    async def async_set_auto_detect_off(self) -> bool:
+        """Turn auto detect off."""
+        return await self._try_command(
+            "Turning auto detect of the miio device off failed.",
+            self._device.set_auto_detect,
             False,
         )
 

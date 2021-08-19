@@ -156,10 +156,6 @@ MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 # Fan/Humidifier Services
 SERVICE_SET_FAVORITE_LEVEL = "fan_set_favorite_level"
 SERVICE_SET_FAN_LEVEL = "fan_set_fan_level"
-SERVICE_SET_AUTO_DETECT_ON = "fan_set_auto_detect_on"
-SERVICE_SET_AUTO_DETECT_OFF = "fan_set_auto_detect_off"
-SERVICE_SET_LEARN_MODE_ON = "fan_set_learn_mode_on"
-SERVICE_SET_LEARN_MODE_OFF = "fan_set_learn_mode_off"
 SERVICE_SET_VOLUME = "fan_set_volume"
 SERVICE_RESET_FILTER = "fan_reset_filter"
 SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"

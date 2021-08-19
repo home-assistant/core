@@ -35,50 +35,6 @@ fan_set_fan_level:
           min: 1
           max: 3
 
-fan_set_auto_detect_on:
-  name: Fan set auto detect on
-  description: Turn the auto detect on.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
-
-fan_set_auto_detect_off:
-  name: Fan set auto detect off
-  description: Turn the auto detect off.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
-
-fan_set_learn_mode_on:
-  name: Fan set learn mode on
-  description: Turn the learn mode on.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
-
-fan_set_learn_mode_off:
-  name: Fan set learn mode off
-  description: Turn the learn mode off.
-  fields:
-    entity_id:
-      description: Name of the xiaomi miio entity.
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
-
 fan_set_volume:
   name: Fan set volume
   description: Set the sound volume.

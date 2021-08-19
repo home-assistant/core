@@ -42,11 +42,9 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_RESET_FILTER,
-    FEATURE_SET_AUTO_DETECT,
     FEATURE_SET_EXTRA_FEATURES,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
-    FEATURE_SET_LEARN_MODE,
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -58,13 +56,9 @@ from .const import (
     MODELS_FAN,
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
-    SERVICE_SET_AUTO_DETECT_OFF,
-    SERVICE_SET_AUTO_DETECT_ON,
     SERVICE_SET_EXTRA_FEATURES,
     SERVICE_SET_FAN_LEVEL,
     SERVICE_SET_FAVORITE_LEVEL,
-    SERVICE_SET_LEARN_MODE_OFF,
-    SERVICE_SET_LEARN_MODE_ON,
     SERVICE_SET_VOLUME,
 )
 from .device import XiaomiCoordinatedMiioEntity
@@ -94,13 +88,11 @@ ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_LEVEL = "level"
 ATTR_FAN_LEVEL = "fan_level"
-ATTR_LEARN_MODE = "learn_mode"
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_SLEEP_LEARN_COUNT = "sleep_mode_learn_count"
 ATTR_EXTRA_FEATURES = "extra_features"
 ATTR_FEATURES = "features"
 ATTR_TURBO_MODE_SUPPORTED = "turbo_mode_supported"
-ATTR_AUTO_DETECT = "auto_detect"
 ATTR_SLEEP_MODE = "sleep_mode"
 ATTR_VOLUME = "volume"
 ATTR_USE_TIME = "use_time"
@@ -110,7 +102,6 @@ ATTR_BUTTON_PRESSED = "button_pressed"
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
     ATTR_MODE: "mode",
     ATTR_FAVORITE_LEVEL: "favorite_level",
-    ATTR_LEARN_MODE: "learn_mode",
     ATTR_EXTRA_FEATURES: "extra_features",
     ATTR_TURBO_MODE_SUPPORTED: "turbo_mode_supported",
     ATTR_BUTTON_PRESSED: "button_pressed",
@@ -120,7 +111,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
-    ATTR_AUTO_DETECT: "auto_detect",
     ATTR_USE_TIME: "use_time",
     ATTR_SLEEP_MODE: "sleep_mode",
 }
@@ -129,7 +119,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_USE_TIME: "use_time",
     ATTR_VOLUME: "volume",
-    ATTR_AUTO_DETECT: "auto_detect",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
 }
@@ -150,11 +139,9 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
     ATTR_MODE: "mode",
     ATTR_VOLUME: "volume",
-    ATTR_LEARN_MODE: "learn_mode",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
     ATTR_EXTRA_FEATURES: "extra_features",
-    ATTR_AUTO_DETECT: "auto_detect",
     ATTR_USE_TIME: "use_time",
     ATTR_BUTTON_PRESSED: "button_pressed",
 }
@@ -214,10 +201,6 @@ SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_AUTO_DETECT_ON: {"method": "async_set_auto_detect_on"},
-    SERVICE_SET_AUTO_DETECT_OFF: {"method": "async_set_auto_detect_off"},
-    SERVICE_SET_LEARN_MODE_ON: {"method": "async_set_learn_mode_on"},
-    SERVICE_SET_LEARN_MODE_OFF: {"method": "async_set_learn_mode_off"},
     SERVICE_RESET_FILTER: {"method": "async_reset_filter"},
     SERVICE_SET_FAVORITE_LEVEL: {
         "method": "async_set_favorite_level",
@@ -585,50 +568,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             "Setting the fan level of the miio device failed.",
             self._device.set_fan_level,
             level,
-        )
-
-    async def async_set_auto_detect_on(self):
-        """Turn the auto detect on."""
-        if self._device_features & FEATURE_SET_AUTO_DETECT == 0:
-            return
-
-        await self._try_command(
-            "Turning the auto detect of the miio device on failed.",
-            self._device.set_auto_detect,
-            True,
-        )
-
-    async def async_set_auto_detect_off(self):
-        """Turn the auto detect off."""
-        if self._device_features & FEATURE_SET_AUTO_DETECT == 0:
-            return
-
-        await self._try_command(
-            "Turning the auto detect of the miio device off failed.",
-            self._device.set_auto_detect,
-            False,
-        )
-
-    async def async_set_learn_mode_on(self):
-        """Turn the learn mode on."""
-        if self._device_features & FEATURE_SET_LEARN_MODE == 0:
-            return
-
-        await self._try_command(
-            "Turning the learn mode of the miio device on failed.",
-            self._device.set_learn_mode,
-            True,
-        )
-
-    async def async_set_learn_mode_off(self):
-        """Turn the learn mode off."""
-        if self._device_features & FEATURE_SET_LEARN_MODE == 0:
-            return
-
-        await self._try_command(
-            "Turning the learn mode of the miio device off failed.",
-            self._device.set_learn_mode,
-            False,
         )
 
     async def async_set_volume(self, volume: int = 50):
