@@ -29,11 +29,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import P1MonitorDataUpdateCoordinator
 from .const import (
     ATTR_ENTRY_TYPE,
     DOMAIN,
@@ -231,7 +229,6 @@ async def async_setup_entry(
     async_add_entities(
         P1MonitorSensorEntity(
             coordinator=hass.data[DOMAIN][entry.entry_id],
-            entry_id=entry.entry_id,
             description=description,
             service_key=service_key,
             name=entry.title,
@@ -245,11 +242,12 @@ async def async_setup_entry(
 class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
     """Defines an P1 Monitor sensor."""
 
+    coordinator: P1MonitorDataUpdateCoordinator
+
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
-        entry_id: str,
+        coordinator: P1MonitorDataUpdateCoordinator,
         description: SensorEntityDescription,
         service_key: str,
         name: str,
@@ -261,10 +259,14 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
 
         self.entity_id = f"{SENSOR_DOMAIN}.{name}_{description.key}"
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{service_key}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{service_key}_{description.key}"
+        )
 
         self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, f"{entry_id}_{service_key}")},
+            ATTR_IDENTIFIERS: {
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
+            },
             ATTR_NAME: service,
             ATTR_MANUFACTURER: "P1 Monitor",
             ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,

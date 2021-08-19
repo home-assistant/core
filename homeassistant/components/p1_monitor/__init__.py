@@ -28,7 +28,7 @@ PLATFORMS = (SENSOR_DOMAIN,)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up P1 Monitor from a config entry."""
 
-    coordinator = P1MonitorDataUpdateCoordinator(hass, entry=entry)
+    coordinator = P1MonitorDataUpdateCoordinator(hass)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
@@ -62,29 +62,30 @@ class P1MonitorData(TypedDict):
 class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
     """Class to manage fetching P1 Monitor data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize global P1 Monitor data updater."""
-        self.p1monitor = P1Monitor(
-            entry.data[CONF_HOST], session=async_get_clientsession(hass)
-        )
-
         super().__init__(
             hass,
             LOGGER,
-            name=f"{DOMAIN}",
+            name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+        )
+
+        self.p1monitor = P1Monitor(
+            self.config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
         )
 
     async def _async_update_data(self) -> P1MonitorData:
         """Fetch data from P1 Monitor."""
-        data: P1Monitor = {}
-        data[SERVICE_SMARTMETER] = await self.p1monitor.smartmeter()
-        data[SERVICE_PHASES] = await self.p1monitor.phases()
-        data[SERVICE_SETTINGS] = await self.p1monitor.settings()
+        data: P1MonitorData = {
+            SERVICE_SMARTMETER: await self.p1monitor.smartmeter(),
+            SERVICE_PHASES: await self.p1monitor.phases(),
+            SERVICE_SETTINGS: await self.p1monitor.settings(),
+        }
 
         return data
