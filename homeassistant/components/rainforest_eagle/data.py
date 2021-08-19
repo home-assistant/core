@@ -147,14 +147,14 @@ class EagleDataCoordinator(DataUpdateCoordinator):
     async def _async_update_data_100(self):
         """Get the latest data from the Eagle-100 device."""
         try:
-            data = await self.hass.async_add_executor_job(self._fetch_data)
+            data = await self.hass.async_add_executor_job(self._fetch_data_100)
         except UPDATE_100_ERRORS as error:
             raise UpdateFailed from error
 
         _LOGGER.debug("API data: %s", data)
         return data
 
-    def _fetch_data(self):
+    def _fetch_data_100(self):
         """Fetch and return the four sensor values in a dict."""
         if self.eagle100_reader is None:
             self.eagle100_reader = Eagle100Reader(
