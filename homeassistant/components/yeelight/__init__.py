@@ -319,7 +319,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def async_format_model(model: str) -> str:
     """Generate a more human readable model."""
-    return str(model).replace("_", " ").title()
+    return model.replace("_", " ").title()
 
 
 @callback
