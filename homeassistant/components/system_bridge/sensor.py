@@ -258,8 +258,10 @@ async def async_setup_entry(
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:harddisk",
-                    value=lambda bridge: round(bridge.filesystem.fsSize[key]["use"], 2)
-                    if bridge.filesystem.fsSize[key]["use"] is not None
+                    value=lambda bridge, i=key: round(
+                        bridge.filesystem.fsSize[i]["use"], 2
+                    )
+                    if bridge.filesystem.fsSize[i]["use"] is not None
                     else None,
                 ),
             )
@@ -270,12 +272,11 @@ async def async_setup_entry(
             entities.append(SystemBridgeSensor(coordinator, description))
 
     for index, _ in enumerate(coordinator.data.graphics.controllers):
-        i = index
-        if coordinator.data.graphics.controllers[i].name is not None:
+        if coordinator.data.graphics.controllers[index].name is not None:
             # Remove vendor from name
             name = (
-                coordinator.data.graphics.controllers[i]
-                .name.replace(coordinator.data.graphics.controllers[i].vendor, "")
+                coordinator.data.graphics.controllers[index]
+                .name.replace(coordinator.data.graphics.controllers[index].vendor, "")
                 .strip()
             )
             entities = [
@@ -283,27 +284,31 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_core_clock_speed",
+                        key=f"gpu_{index}_core_clock_speed",
                         name=f"{name} Clock Speed",
                         entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                         icon="mdi:speedometer",
-                        value=lambda bridge: bridge.graphics.controllers[i].clockCore,
+                        value=lambda bridge, i=index: bridge.graphics.controllers[
+                            i
+                        ].clockCore,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_memory_clock_speed",
+                        key=f"gpu_{index}_memory_clock_speed",
                         name=f"{name} Memory Clock Speed",
                         entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                         icon="mdi:speedometer",
-                        value=lambda bridge: bridge.graphics.controllers[i].clockMemory
+                        value=lambda bridge, i=index: bridge.graphics.controllers[
+                            i
+                        ].clockMemory
                         if bridge.graphics.controllers[i].clockMemory is not None
                         else None,
                     ),
@@ -311,14 +316,14 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_memory_free",
+                        key=f"gpu_{index}_memory_free",
                         name=f"{name} Memory Free",
                         entity_registry_enabled_default=True,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
-                        value=lambda bridge: round(
+                        value=lambda bridge, i=index: round(
                             bridge.graphics.controllers[i].memoryFree / 10 ** 3, 2
                         )
                         if bridge.graphics.controllers[i].memoryFree is not None
@@ -328,14 +333,14 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_memory_used_percentage",
+                        key=f"gpu_{index}_memory_used_percentage",
                         name=f"{name} Memory Used %",
                         entity_registry_enabled_default=True,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
-                        value=lambda bridge: round(
+                        value=lambda bridge, i=index: round(
                             (
                                 bridge.graphics.controllers[i].memoryUsed
                                 / bridge.graphics.controllers[i].memoryTotal
@@ -351,14 +356,14 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_memory_used",
+                        key=f"gpu_{index}_memory_used",
                         name=f"{name} Memory Used",
                         entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
-                        value=lambda bridge: round(
+                        value=lambda bridge, i=index: round(
                             bridge.graphics.controllers[i].memoryUsed / 10 ** 3, 2
                         )
                         if bridge.graphics.controllers[i].memoryUsed is not None
@@ -368,14 +373,16 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_fan_speed",
+                        key=f"gpu_{index}_fan_speed",
                         name=f"{name} Fan Speed",
                         entity_registry_enabled_default=False,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:fan",
-                        value=lambda bridge: bridge.graphics.controllers[i].fanSpeed
+                        value=lambda bridge, i=index: bridge.graphics.controllers[
+                            i
+                        ].fanSpeed
                         if bridge.graphics.controllers[i].fanSpeed is not None
                         else None,
                     ),
@@ -383,14 +390,16 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_power_usage",
+                        key=f"gpu_{index}_power_usage",
                         name=f"{name} Power Usage",
                         entity_registry_enabled_default=False,
                         device_class=DEVICE_CLASS_POWER,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=POWER_WATT,
                         icon=None,
-                        value=lambda bridge: bridge.graphics.controllers[i].powerDraw
+                        value=lambda bridge, i=index: bridge.graphics.controllers[
+                            i
+                        ].powerDraw
                         if bridge.graphics.controllers[i].powerDraw is not None
                         else None,
                     ),
@@ -398,14 +407,14 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_temperature",
+                        key=f"gpu_{index}_temperature",
                         name=f"{name} Temperature",
                         entity_registry_enabled_default=False,
                         device_class=DEVICE_CLASS_TEMPERATURE,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=TEMP_CELSIUS,
                         icon=None,
-                        value=lambda bridge: bridge.graphics.controllers[
+                        value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
                         ].temperatureGpu
                         if bridge.graphics.controllers[i].temperatureGpu is not None
@@ -415,14 +424,14 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{i}_usage_percentage",
+                        key=f"gpu_{index}_usage_percentage",
                         name=f"{name} Usage %",
                         entity_registry_enabled_default=True,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:percent",
-                        value=lambda bridge: bridge.graphics.controllers[
+                        value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
                         ].utilizationGpu
                         if bridge.graphics.controllers[i].utilizationGpu is not None
