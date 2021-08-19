@@ -1,5 +1,5 @@
 """Tests for rainforest eagle sensors."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -18,23 +18,36 @@ from tests.common import MockConfigEntry
 
 MOCK_CLOUD_ID = "12345"
 MOCK_200_RESPONSE_WITH_PRICE = {
-    "zigbee:InstantaneousDemand": "1.152000",
-    "zigbee:CurrentSummationDelivered": "45251.285000",
-    "zigbee:CurrentSummationReceived": "232.232000",
-    "zigbee:Price": "0.053990",
-    "zigbee:PriceCurrency": "USD",
+    "zigbee:InstantaneousDemand": {
+        "Name": "zigbee:InstantaneousDemand",
+        "Value": "1.152000",
+    },
+    "zigbee:CurrentSummationDelivered": {
+        "Name": "zigbee:CurrentSummationDelivered",
+        "Value": "45251.285000",
+    },
+    "zigbee:CurrentSummationReceived": {
+        "Name": "zigbee:CurrentSummationReceived",
+        "Value": "232.232000",
+    },
+    "zigbee:Price": {"Name": "zigbee:Price", "Value": "0.053990"},
+    "zigbee:PriceCurrency": {"Name": "zigbee:PriceCurrency", "Value": "USD"},
 }
 MOCK_200_RESPONSE_WITHOUT_PRICE = {
-    "zigbee:InstantaneousDemand": "1.152000",
-    "zigbee:CurrentSummationDelivered": "45251.285000",
-    "zigbee:CurrentSummationReceived": "232.232000",
-    "zigbee:Price": "invalid",
-    "zigbee:PriceCurrency": "USD",
-}
-MOCK_100_RESPONSE = {
-    "zigbee:InstantaneousDemand": "1.152000",
-    "zigbee:CurrentSummationDelivered": "45251.285000",
-    "zigbee:CurrentSummationReceived": "232.232000",
+    "zigbee:InstantaneousDemand": {
+        "Name": "zigbee:InstantaneousDemand",
+        "Value": "1.152000",
+    },
+    "zigbee:CurrentSummationDelivered": {
+        "Name": "zigbee:CurrentSummationDelivered",
+        "Value": "45251.285000",
+    },
+    "zigbee:CurrentSummationReceived": {
+        "Name": "zigbee:CurrentSummationReceived",
+        "Value": "232.232000",
+    },
+    "zigbee:Price": {"Name": "zigbee:Price", "Value": "invalid"},
+    "zigbee:PriceCurrency": {"Name": "zigbee:PriceCurrency", "Value": "USD"},
 }
 
 
@@ -51,7 +64,7 @@ async def setup_rainforest_200(hass):
         },
     ).add_to_hass(hass)
     with patch(
-        "homeassistant.components.rainforest_eagle.data.EagleDataCoordinator._async_update_data_200",
+        "aioeagle.ElectricMeter.get_device_query",
         return_value=MOCK_200_RESPONSE_WITHOUT_PRICE,
     ) as mock_update:
         assert await async_setup_component(hass, DOMAIN, {})
@@ -72,8 +85,20 @@ async def setup_rainforest_100(hass):
         },
     ).add_to_hass(hass)
     with patch(
-        "homeassistant.components.rainforest_eagle.data.EagleDataCoordinator._fetch_data_100",
-        return_value=MOCK_100_RESPONSE,
+        "homeassistant.components.rainforest_eagle.data.Eagle100Reader",
+        return_value=Mock(
+            get_instantaneous_demand=Mock(
+                return_value={"InstantaneousDemand": {"Demand": "1.152000"}}
+            ),
+            get_current_summation=Mock(
+                return_value={
+                    "CurrentSummation": {
+                        "SummationDelivered": "45251.285000",
+                        "SummationReceived": "232.232000",
+                    }
+                }
+            ),
+        ),
     ) as mock_update:
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()

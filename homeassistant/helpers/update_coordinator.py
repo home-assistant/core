@@ -242,10 +242,9 @@ class DataUpdateCoordinator(Generic[T]):
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            if log_failures:
-                self.logger.exception(
-                    "Unexpected error fetching %s data: %s", self.name, err
-                )
+            self.logger.exception(
+                "Unexpected error fetching %s data: %s", self.name, err
+            )
 
         else:
             if not self.last_update_success:

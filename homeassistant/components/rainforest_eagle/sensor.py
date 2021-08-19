@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -108,7 +107,6 @@ async def async_setup_entry(
                     key="zigbee:Price",
                     name="Meter Price",
                     native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{ENERGY_KILO_WATT_HOUR}",
-                    device_class=DEVICE_CLASS_MONETARY,
                     state_class=STATE_CLASS_MEASUREMENT,
                 ),
             )
