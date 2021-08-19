@@ -102,11 +102,6 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
             ]
 
     @property
-    def available(self) -> bool:
-        """Return if lightbulb is available."""
-        return self.device.present  # type: ignore [no-any-return]
-
-    @property
     def is_on(self) -> bool:
         """If the light is currently on or off."""
         return self.device.state  # type: ignore [no-any-return]
