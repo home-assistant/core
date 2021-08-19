@@ -128,7 +128,7 @@ class ConnectXiaomiGateway:
             except MiCloudAccessDenied as error:
                 raise ConfigEntryAuthFailed(
                     "Could not login to Xiaomi Miio Cloud, check the credentials"
-                )
+                ) from error
             except DeviceException as error:
                 _LOGGER.error(
                     "DeviceException during setup of xiaomi gateway with host %s: %s",
