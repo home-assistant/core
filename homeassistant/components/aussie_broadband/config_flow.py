@@ -98,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle reauth."""
         self._reauth = True
-        return await self.async_step_user()
+        return await self.async_step_user(user_input)
 
     async def create_entry(self, service):
         """Create entry for a service."""
@@ -106,7 +106,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(self.data[CONF_SERVICE_ID])
         if self._reauth:
-            self.hass.config_entries.async_update_entry(entry, data=self.data)
+            self.hass.config_entries.async_update_entry(
+                entry, title=service["description"], data=self.data
+            )
             return self.async_abort(reason="reauth_successful")
 
         self._abort_if_unique_id_configured()
