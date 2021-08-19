@@ -372,11 +372,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             )
 
         else:
-            media_content_provider = MusicCastMediaContent(
-                self.coordinator.musiccast, self._zone_id
-            )
-
-            media_content_provider = media_content_provider.categories(
+            media_content_provider = MusicCastMediaContent.categories(
                 self.coordinator.musiccast, self._zone_id
             )
 
