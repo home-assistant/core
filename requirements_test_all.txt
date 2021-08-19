@@ -487,7 +487,6 @@ iaqualink==0.3.90
 icmplib==3.0
 
 # homeassistant.components.network
-# homeassistant.components.nmap_tracker
 ifaddr==0.1.7
 
 # homeassistant.components.influxdb

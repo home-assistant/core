@@ -841,7 +841,6 @@ ibmiotf==0.3.4
 icmplib==3.0
 
 # homeassistant.components.network
-# homeassistant.components.nmap_tracker
 ifaddr==0.1.7
 
 # homeassistant.components.iglo
