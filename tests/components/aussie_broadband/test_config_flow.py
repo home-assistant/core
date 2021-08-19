@@ -97,6 +97,7 @@ async def test_no_services(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "no_services_found"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -152,30 +153,6 @@ async def test_form_duplicate_service(hass: HomeAssistant) -> None:
 
     assert result4["type"] == RESULT_TYPE_ABORT
     assert result4["reason"] == "already_configured"
-
-
-async def test_form_no_services(hass: HomeAssistant) -> None:
-    """Test the config flow with no services."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
-
-    with patch("aussiebb.AussieBB.__init__", return_value=None), patch(
-        "aussiebb.AussieBB.get_services", return_value=[]
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == RESULT_TYPE_ABORT
-    assert result2["reason"] == "no_services_found"
 
 
 async def test_form_multiple_services(hass: HomeAssistant) -> None:
