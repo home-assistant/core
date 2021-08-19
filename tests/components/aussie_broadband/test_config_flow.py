@@ -101,7 +101,7 @@ async def test_no_services(hass: HomeAssistant) -> None:
 
 
 async def test_form_duplicate_service(hass: HomeAssistant) -> None:
-    """Test form fails if adding a service twice"""
+    """Test form fails if adding a service twice."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -175,7 +175,7 @@ async def test_form_no_services(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
-    assert result2["reason"] == "no_devices_found"
+    assert result2["reason"] == "no_services_found"
 
 
 async def test_form_multiple_services(hass: HomeAssistant) -> None:
