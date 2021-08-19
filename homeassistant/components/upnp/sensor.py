@@ -70,6 +70,7 @@ SENSOR_TYPES = {
         "name": "IP",
         "unit": None,
         "unique_id": ROUTER_IP,
+        "format": "s",
     },
     ROUTER_UPTIME: {
         "device_value_key": ROUTER_UPTIME,
@@ -83,6 +84,7 @@ SENSOR_TYPES = {
         "name": "wan status",
         "unit": None,
         "unique_id": "wan_status",
+        "format": "s",
     },
 }
 
@@ -113,14 +115,16 @@ async def async_setup_entry(
         RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
         RawUpnpSensor(coordinator, SENSOR_TYPES[ROUTER_IP]),
         RawUpnpSensor(coordinator, SENSOR_TYPES[WAN_STATUS]),
+        RawUpnpSensor(
+            coordinator,
+            SENSOR_TYPES[ROUTER_UPTIME],
+            coordinator.data.get(SENSOR_TYPES[ROUTER_UPTIME]["device_value_key"]),
+        ),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
         DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
     ]
-
-    if coordinator.data.get(SENSOR_TYPES[ROUTER_UPTIME]["device_value_key"]):
-        sensors.append(RawUpnpSensor(coordinator, SENSOR_TYPES[ROUTER_UPTIME]))
 
     async_add_entities(sensors)
 
@@ -132,12 +136,14 @@ class UpnpSensor(UpnpEntity, SensorEntity):
         self,
         coordinator: UpnpDataUpdateCoordinator,
         sensor_type: dict[str, str],
+        enabled: bool = True,
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
         self._sensor_type = sensor_type
         self._attr_name = f"{coordinator.device.name} {sensor_type['name']}"
         self._attr_unique_id = f"{coordinator.device.udn}_{sensor_type['unique_id']}"
+        self._attr_entity_registry_enabled_default = enabled
 
     @property
     def icon(self) -> str:
@@ -167,11 +173,7 @@ class RawUpnpSensor(UpnpSensor):
         value = self.coordinator.data[device_value_key]
         if value is None:
             return None
-        return (
-            format(value, self._sensor_type["format"])
-            if self._sensor_type.get("format")
-            else value
-        )
+        return format(value, self._sensor_type["format"])
 
 
 class DerivedUpnpSensor(UpnpSensor):
