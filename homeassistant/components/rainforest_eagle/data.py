@@ -41,14 +41,14 @@ def get_type(cloud_id, install_code):
     # Branch to test if target is Legacy Model
     if (
         "NetworkInfo" in response
-        and response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE"
+        and response["NetworkInfo"].get("ModelId") == "Z109-EAGLE"
     ):
         return TYPE_LEGACY
 
     # Branch to test if target is Eagle-200 Model
     if (
         "Response" in response
-        and response["Response"].get("Command", None) == "get_network_info"
+        and response["Response"].get("Command") == "get_network_info"
     ):
         return TYPE_EAGLE_200
 
