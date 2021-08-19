@@ -501,6 +501,7 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_fuel.json",
             "location": "location.json",
         },
+        BINARY_SENSOR_DOMAIN: [],
         DEVICE_TRACKER_DOMAIN: [
             {
                 "entity_id": "device_tracker.location",
@@ -508,7 +509,6 @@ MOCK_VEHICLES = {
                 "result": STATE_NOT_HOME,
             }
         ],
-        BINARY_SENSOR_DOMAIN: [],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.fuel_autonomy",
