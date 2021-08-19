@@ -338,7 +338,7 @@ async def async_setup_entry(
                         entity_registry_enabled_default=True,
                         device_class=None,
                         state_class=STATE_CLASS_MEASUREMENT,
-                        native_unit_of_measurement=DATA_GIGABYTES,
+                        native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
                             (
