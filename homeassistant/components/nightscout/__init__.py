@@ -5,14 +5,14 @@ from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_UNIT_OF_MEASUREMENT, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
-from .const import DOMAIN
+from .const import DOMAIN, MG_DL
 
 PLATFORMS = ["sensor"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
@@ -28,6 +28,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         status = await api.get_server_status()
     except (ClientError, AsyncIOTimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
+
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_UNIT_OF_MEASUREMENT: MG_DL}
+        )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api

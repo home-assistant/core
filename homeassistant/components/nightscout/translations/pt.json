@@ -16,5 +16,14 @@
                 }
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "data": {
+              "unit_of_measurement": "Unidade de medida"
+            }
+          }
+        }
+      }
 }

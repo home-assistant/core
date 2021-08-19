@@ -18,5 +18,14 @@
         "abort": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
         }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "data": {
+            "unit_of_measurement": "Unit of measurement"
+          }
+        }
+      }
     }
 }
