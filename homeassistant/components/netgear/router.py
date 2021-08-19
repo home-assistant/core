@@ -1,7 +1,7 @@
 """Represent the Netgear router and its devices."""
 from datetime import timedelta
-from typing import Dict
 import logging
+from typing import Dict
 
 from pynetgear import Netgear
 
@@ -84,7 +84,7 @@ class NetgearRouter:
         self._ssl = entry.data.get(CONF_SSL)
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
-        
+
         self._info = None
         self.model = None
         self.device_name = None
@@ -122,7 +122,7 @@ class NetgearRouter:
         self.device_name = self._info["DeviceName"]
         self.model = self._info["ModelName"]
         self.firmware_version = self._info["Firmwareversion"]
-        
+
         if self.model in MODELS_V2:
             self._method_version = 2
 
