@@ -38,12 +38,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if await _async_start_monitor(hass):
         return True
-    _async_start_scanner(hass)
+    await _async_start_scanner(hass)
     return True
 
 
-@callback
-def _async_start_scanner(hass: HomeAssistant) -> None:
+async def _async_start_scanner(hass: HomeAssistant) -> None:
     """Perodic scan with pyserial."""
     from serial.tools.list_ports import comports
     from serial.tools.list_ports_common import ListPortInfo
@@ -71,6 +70,7 @@ def _async_start_scanner(hass: HomeAssistant) -> None:
         stop_track()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scanner)
+    await hass.async_add_executor_job(_scan_serial)
 
 
 async def _async_start_monitor(hass: HomeAssistant) -> bool:
