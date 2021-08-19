@@ -92,7 +92,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
     eagle100_reader: Eagle100Reader | None = None
     eagle200_meter: aioeagle.ElectricMeter | None = None
 
-    def __init__(self, hass, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant , entry: ConfigEntry) -> None:
         """Initialize the data object."""
         self.entry = entry
         if self.type == TYPE_EAGLE_100:
