@@ -46,7 +46,7 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.coordinator.data[WAN_STATUS]
+        return super().available and (self.coordinator.data[WAN_STATUS] or False)
 
     @property
     def is_on(self) -> bool:

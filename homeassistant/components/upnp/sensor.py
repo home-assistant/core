@@ -153,8 +153,8 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.coordinator.data.get(
-            self._sensor_type["device_value_key"]
+        return super().available and (
+            self.coordinator.data.get(self._sensor_type["device_value_key"]) or False
         )
 
     @property
