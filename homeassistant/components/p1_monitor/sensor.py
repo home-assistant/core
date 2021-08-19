@@ -1,6 +1,8 @@
 """Support for P1 Monitor sensors."""
 from __future__ import annotations
 
+from typing import Literal
+
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
@@ -42,7 +44,9 @@ from .const import (
     SERVICES,
 )
 
-SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
+SENSORS: dict[
+    Literal["smartmeter", "phases", "settings"], tuple[SensorEntityDescription, ...]
+] = {
     SERVICE_SMARTMETER: (
         SensorEntityDescription(
             key="gas_consumption",
@@ -249,7 +253,7 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
         *,
         coordinator: P1MonitorDataUpdateCoordinator,
         description: SensorEntityDescription,
-        service_key: str,
+        service_key: Literal["smartmeter", "phases", "settings"],
         name: str,
         service: str,
     ) -> None:
