@@ -91,7 +91,7 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     monitor.filter_by(subsystem="tty")
 
     def _device_discovered(device):
-        _LOGGER.debug("Discovered Device: %s", device)
+        _LOGGER.warning("Discovered Device: %s", device)
 
     observer = MonitorObserver(
         monitor, callback=_device_discovered, name="usb-observer"
