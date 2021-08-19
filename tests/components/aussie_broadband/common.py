@@ -11,7 +11,7 @@ from homeassistant.components.aussie_broadband.const import CONF_SERVICE_ID
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass, platform):
+async def setup_platform(hass, platform, side_effect=None):
     """Set up the Aussie Broadband platform."""
     mock_entry = MockConfigEntry(
         domain=AUSSIE_BROADBAND_DOMAIN,
@@ -25,7 +25,7 @@ async def setup_platform(hass, platform):
 
     with patch(
         "homeassistant.components.aussie_broadband.PLATFORMS", [platform]
-    ), patch("aussiebb.AussieBB.__init__", return_value=None):
+    ), patch("aussiebb.AussieBB.__init__", return_value=None, side_effect=side_effect):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
