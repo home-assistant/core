@@ -60,9 +60,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the USB Discovery integration."""
     hass.data[DOMAIN] = {SEEN: set()}
 
-    if await _async_start_monitor(hass):
-        return True
-    await _async_start_scanner(hass)
+    if not await _async_start_monitor(hass):
+        await _async_start_scanner(hass)
+
+    await hass.async_add_executor_job(scan_serial, hass)
     return True
 
 
@@ -79,7 +80,6 @@ async def _async_start_scanner(hass: HomeAssistant) -> None:
         stop_track()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scanner)
-    await hass.async_add_executor_job(scan_serial, hass)
 
 
 async def _async_start_monitor(hass: HomeAssistant) -> bool:
