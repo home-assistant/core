@@ -1,0 +1,1 @@
+"""The enasolar component."""

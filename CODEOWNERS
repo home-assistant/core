@@ -141,6 +141,7 @@ homeassistant/components/emby/* @mezz64
 homeassistant/components/emoncms/* @borpin
 homeassistant/components/emonitor/* @bdraco
 homeassistant/components/emulated_kasa/* @kbickar
+homeassistant/components/enasolar/* @geustace
 homeassistant/components/energy/* @home-assistant/core
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
