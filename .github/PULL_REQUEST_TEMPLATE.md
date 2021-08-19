@@ -71,6 +71,7 @@ If the code communicates with devices, web services, or third-party tools:
       Updated and included derived files by running: `python3 -m script.hassfest`.
 - [ ] New or updated dependencies have been added to `requirements_all.txt`.  
       Updated by running `python3 -m script.gen_requirements_all`.
+- [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
 - [ ] Untested files have been added to `.coveragerc`.
 
 The integration reached or maintains the following [Integration Quality Scale][quality-scale]:

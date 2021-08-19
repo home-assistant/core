@@ -1021,8 +1021,7 @@ async def test_multicast_set_value_options(
             ],
             ATTR_COMMAND_CLASS: 51,
             ATTR_PROPERTY: "targetColor",
-            ATTR_PROPERTY_KEY: 2,
-            ATTR_VALUE: 2,
+            ATTR_VALUE: '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }',
             ATTR_OPTIONS: {"transitionDuration": 1},
         },
         blocking=True,
@@ -1038,9 +1037,11 @@ async def test_multicast_set_value_options(
     assert args["valueId"] == {
         "commandClass": 51,
         "property": "targetColor",
-        "propertyKey": 2,
     }
-    assert args["value"] == 2
+    assert (
+        args["value"]
+        == '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }'
+    )
     assert args["options"] == {"transitionDuration": 1}
 
     client.async_send_command.reset_mock()

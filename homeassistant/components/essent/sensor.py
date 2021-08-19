@@ -104,12 +104,12 @@ class EssentMeter(SensorEntity):
         return f"Essent {self._type} ({self._tariff})"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self._unit.lower() == "kwh":
             return ENERGY_KILO_WATT_HOUR

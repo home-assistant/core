@@ -104,6 +104,11 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                 "stat_energy_from": "my_solar_production",
                 "config_entry_solar_forecast": ["predicted_config_entry"],
             },
+            {
+                "type": "battery",
+                "stat_energy_from": "my_battery_draining",
+                "stat_energy_to": "my_battery_charging",
+            },
         ],
         "device_consumption": [{"stat_consumption": "some_device_usage"}],
     }
@@ -211,3 +216,19 @@ async def test_handle_duplicate_from_stat(hass, hass_ws_client) -> None:
     assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_validate(hass, hass_ws_client) -> None:
+    """Test we can validate the preferences."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "energy/validate"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == {
+        "energy_sources": [],
+        "device_consumption": [],
+    }

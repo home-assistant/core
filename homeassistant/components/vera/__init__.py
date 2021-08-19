@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -63,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up for Vera controllers."""
     hass.data[DOMAIN] = {}
 
