@@ -5,8 +5,9 @@ from requests.exceptions import ConnectTimeout
 from skybellpy import exceptions
 
 from homeassistant.components.skybell.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -147,3 +148,38 @@ async def test_flow_import(hass):
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_step_reauth(hass: HomeAssistant):
+    """Test the reauth flow."""
+    conf = {CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password"}
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="user@email.com", data=conf, entry_id="test"
+    )
+
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.skybell.config_flow.Skybell"), patch(
+        "skybellpy.UTILS"
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data=entry.data,
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+        with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password2"},
+            )
+
+            assert result["type"] == RESULT_TYPE_ABORT
+            assert result["reason"] == "reauth_successful"
+
+        assert len(hass.config_entries.async_entries()) == 1

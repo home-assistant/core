@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -11,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SkybellDevice
 from .const import (
@@ -27,14 +29,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(
-            cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]
-        ),
-        vol.Optional(CONF_ACTIVITY_NAME): cv.string,
-        vol.Optional(CONF_AVATAR_NAME): cv.string,
-    }
+# Deprecated in Home Assistant 2021.9
+PLATFORM_SCHEMA = cv.deprecated(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Optional(
+                    CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]
+                ): vol.All(cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]),
+                vol.Optional(CONF_ACTIVITY_NAME): cv.string,
+                vol.Optional(CONF_AVATAR_NAME): cv.string,
+            }
+        )
+    )
 )
 
 
@@ -42,14 +49,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up Skybell switch."""
-    skybell_data = hass.data[DOMAIN][entry.entry_id]
+    skybell = hass.data[DOMAIN][entry.entry_id]
 
     cameras = []
     for camera in CAMERA_TYPES:
-        for device in skybell_data[DATA_DEVICES]:
+        for device in skybell[DATA_DEVICES]:
             cameras.append(
                 SkybellCamera(
-                    skybell_data[DATA_COORDINATOR],
+                    skybell[DATA_COORDINATOR],
                     device,
                     camera,
                     entry.entry_id,
@@ -64,36 +71,27 @@ class SkybellCamera(SkybellDevice, Camera):
 
     def __init__(
         self,
-        coordinator,
-        device,
-        camera,
-        server_unique_id,
-    ):
+        coordinator: DataUpdateCoordinator,
+        device: Any,
+        camera: str,
+        server_unique_id: str,
+    ) -> None:
         """Initialize a camera for a Skybell device."""
         super().__init__(coordinator, device, camera, server_unique_id)
         Camera.__init__(self)
         if CAMERA_TYPES[camera] is not None:
-            self._name = f"{device.name} {CAMERA_TYPES[camera]}"
+            self._attr_name = f"{device.name} {CAMERA_TYPES[camera]}"
         else:
-            self._name = device.name
+            self._attr_name = device.name
+        self._attr_unique_id = f"{server_unique_id}/{camera}"
 
         self._camera = camera
         self._device = device
-        self._url = None
+        self._url = ""
         self._response = None
 
     @property
-    def name(self):
-        """Return the name of the camera."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the camera."""
-        return f"{self._server_unique_id}/{self._camera}"
-
-    @property
-    def image_url(self):
+    def image_url(self) -> str:
         """Get the camera image url based on type."""
         if self._camera == IMAGE_ACTIVITY:
             return self._device.activity_image
@@ -107,7 +105,10 @@ class SkybellCamera(SkybellDevice, Camera):
             self._url = self.image_url
 
             try:
-                self._response = requests.get(self._url, stream=True, timeout=10)
+                self._response = requests.get(
+                    self._url, stream=True, timeout=10
+                )  # type: ignore
+
             except requests.HTTPError as err:
                 _LOGGER.warning("Failed to get camera image: %s", err)
                 self._response = None

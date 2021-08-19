@@ -1,17 +1,37 @@
 """Switch support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SkybellDevice
-from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN, SWITCH_TYPES
+from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN
 
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="do_not_disturb",
+        name="Do Not Disturb",
+    ),
+    SwitchEntityDescription(
+        key="motion_sensor",
+        name="Motion Sensor",
+    ),
+)
+
+# Deprecated in Home Assistant 2021.9
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
@@ -27,23 +47,29 @@ PLATFORM_SCHEMA = cv.deprecated(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the SkyBell switch."""
-    skybell_data = hass.data[DOMAIN][entry.entry_id]
+    skybell = hass.data[DOMAIN][entry.entry_id]
     switches = []
     for switch in SWITCH_TYPES:
-        for device in skybell_data[DATA_DEVICES]:
+        for device in skybell[DATA_DEVICES]:
             switches.append(
                 SkybellSwitch(
-                    skybell_data[DATA_COORDINATOR],
+                    skybell[DATA_COORDINATOR],
                     device,
                     switch,
                     entry.entry_id,
                 )
             )
 
-    async_add_entities(switches)
+    switches = [
+        SkybellSwitch(skybell[DATA_COORDINATOR], device, description, entry.entry_id)
+        for device in skybell[DATA_DEVICES]
+        for description in SWITCH_TYPES
+    ]
+
+    async_add_entities(switches, True)
 
 
 class SkybellSwitch(SkybellDevice, SwitchEntity):
@@ -51,37 +77,26 @@ class SkybellSwitch(SkybellDevice, SwitchEntity):
 
     def __init__(
         self,
-        coordinator,
-        device,
-        switch,
-        server_unique_id,
-    ):
-        """Initialize a SkyBell switch."""
-        super().__init__(coordinator, device, switch, server_unique_id)
-        self._name = f"{device.name} {SWITCH_TYPES[switch]}"
+        coordinator: DataUpdateCoordinator,
+        device: Any,
+        description: SwitchEntityDescription,
+        server_unique_id: str,
+    ) -> None:
+        """Initialize a light for a Skybell device."""
+        super().__init__(coordinator, device, description, server_unique_id)
+        self.entity_description = description
+        self._attr_name = f"{device.name} {description.name}"
+        self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
-        self._switch = switch
-        self._device = device
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the switch."""
-        return f"{self._server_unique_id}/{self._switch}"
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Turn on the switch."""
-        setattr(self._device, self._switch, True)
+        setattr(self._device, self.entity_description.key, True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Turn off the switch."""
-        setattr(self._device, self._switch, False)
+        setattr(self._device, self.entity_description.key, False)
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return getattr(self._device, self._switch)
+    def is_on(self) -> bool:
+        """Return true if entity is on."""
+        return getattr(self._device, self.entity_description.key)

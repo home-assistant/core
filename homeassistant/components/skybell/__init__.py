@@ -1,20 +1,34 @@
 """Support for the Skybell HD Doorbell."""
 from logging import getLogger
+from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell
 from skybellpy.exceptions import SkybellAuthenticationException
 import voluptuous as vol
+from voluptuous.schema_builder import Object
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.camera import DOMAIN as CAMERA
+from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -34,11 +48,11 @@ from .const import (
 
 _LOGGER = getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "camera", "light", "sensor", "switch"]
+PLATFORMS = [BINARY_SENSOR, CAMERA, LIGHT, SENSOR, SWITCH]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2021.7
+        # Deprecated in Home Assistant 2021.9
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
@@ -53,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SkyBell component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -81,24 +95,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     api = Skybell(
-        None,
-        None,
-        False,
-        False,
-        hass.config.path(DEFAULT_CACHEDB),
-        True,
-        AGENT_IDENTIFIER,
-        False,
+        cache_path=hass.config.path(DEFAULT_CACHEDB),
+        agent_identifier=AGENT_IDENTIFIER,
     )
     try:
         await hass.async_add_executor_job(api.login, email, password, False)
         devices = await hass.async_add_executor_job(api.get_devices)
-    except (ConnectTimeout, HTTPError) as err:
-        _LOGGER.error("Unable to connect to Skybell service: %s", str(err))
-    except SkybellAuthenticationException:
-        _LOGGER.error("Authentication Error: please check credentials")
+    except (ConnectTimeout, HTTPError) as ex:
+        raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
+    except SkybellAuthenticationException as ex:
+        raise ConfigEntryAuthFailed(
+            f"Authentication Error: please check credentials: {ex}"
+        ) from ex
 
-    async def async_update_data():
+    async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
             for device in devices:
@@ -123,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -134,16 +144,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SkybellDevice(CoordinatorEntity):
     """An HA implementation for Skybell devices."""
 
-    def __init__(self, coordinator, device, _, server_unique_id):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        device: Object,
+        _: Any,
+        server_unique_id: str,
+    ) -> None:
         """Initialize a SkyBell entity."""
         super().__init__(coordinator)
-        self._server_unique_id = server_unique_id
         self._device = device
-        self._name = device.name
-        self._device_class = None
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {
+                (DOMAIN, f"{server_unique_id}-{device._info_json.get('serialNo')}")
+            },
+            "connections": {(dr.CONNECTION_NETWORK_MAC, device._info_json.get("mac"))},
+            ATTR_MANUFACTURER: DEFAULT_NAME,
+            ATTR_MODEL: device.type,
+            ATTR_NAME: device.name,
+            ATTR_SW_VERSION: device._info_json.get("firmwareVersion"),
+        }
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -158,17 +181,6 @@ class SkybellDevice(CoordinatorEntity):
         }
 
     @property
-    def device_info(self):
-        """Return the device information of the entity."""
-        info = {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "manufacturer": DEFAULT_NAME,
-            "name": self._name,
-            "model": self._device.type,
-        }
-        return info
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class
+    def available(self) -> bool:
+        """Return True if device is available."""
+        return self._device.wifi_status != "offline"

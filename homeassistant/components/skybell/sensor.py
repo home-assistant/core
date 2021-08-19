@@ -1,14 +1,37 @@
 """Sensor support for Skybell Doorbells."""
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.components.skybell.const import DATA_COORDINATOR, DATA_DEVICES
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SkybellDevice
-from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN, SENSOR_TYPES
+from . import DOMAIN, SkybellDevice
 
+SCAN_INTERVAL = timedelta(seconds=30)
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="chime_level",
+        name="Chime Level",
+        icon="mdi:bell-ring",
+    ),
+)
+
+# Deprecated in Home Assistant 2021.9
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
@@ -23,21 +46,17 @@ PLATFORM_SCHEMA = cv.deprecated(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Skybell sensor."""
-    skybell_data = hass.data[DOMAIN][entry.entry_id]
+    skybell = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
-    for sensor in SENSOR_TYPES:
-        for device in skybell_data[DATA_DEVICES]:
-            sensors.append(
-                SkybellSensor(
-                    skybell_data[DATA_COORDINATOR],
-                    device,
-                    sensor,
-                    entry.entry_id,
-                )
-            )
+    sensors = [
+        SkybellSensor(skybell[DATA_COORDINATOR], device, description, entry.entry_id)
+        for device in skybell[DATA_DEVICES]
+        for description in SENSOR_TYPES
+    ]
 
     async_add_entities(sensors)
 
@@ -47,39 +66,18 @@ class SkybellSensor(SkybellDevice, SensorEntity):
 
     def __init__(
         self,
-        coordinator,
-        device,
-        sensor_type,
-        server_unique_id,
-    ):
-        """Initialize sensor for Skybell device."""
-        super().__init__(coordinator, device, sensor_type, server_unique_id)
-        self._name = f"{device.name} {SENSOR_TYPES[sensor_type][0]}"
-
-        self._type = sensor_type
-        self._icon = SENSOR_TYPES[self._type][1]
-        self._device = device
-        self._state = None
+        coordinator: DataUpdateCoordinator,
+        device: Any,
+        description: SensorEntityDescription,
+        server_unique_id: str,
+    ) -> None:
+        """Initialize a sensor for a Skybell device."""
+        super().__init__(coordinator, device, description, server_unique_id)
+        self.entity_description = description
+        self._attr_name = f"{device.name} {description.name}"
+        self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"{self._server_unique_id}/{self._type}"
-
-    @property
-    def state(self):
+    def native_value(self) -> int:
         """Return the state of the sensor."""
-        if self._type == "chime_level":
-            self._state = self._device.outdoor_chime_level
-            return self._state
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
+        return self._device.outdoor_chime_level
