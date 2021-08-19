@@ -109,6 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(
                 entry, title=service["description"], data=self.data
             )
+            await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         self._abort_if_unique_id_configured()
