@@ -4,7 +4,7 @@ from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorMetadata
+from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorEntityDescription
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -14,42 +14,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config_entry.data[CONF_NAME]
     dev = []
 
-    for sensor_type, metadata in SENSOR_TYPES.items():
-        if metadata.type not in client.api.data:
-            continue
-        if metadata.type == "fs":
+    for description in SENSOR_TYPES:
+        if description.type == "fs":
             # fs will provide a list of disks attached
-            for disk in client.api.data[metadata.type]:
+            for disk in client.api.data[description.type]:
                 dev.append(
                     GlancesSensor(
                         client,
                         name,
                         disk["mnt_point"],
-                        sensor_type,
-                        metadata,
+                        description,
                     )
                 )
-        elif metadata.type == "sensors":
+        elif description.type == "sensors":
             # sensors will provide temp for different devices
-            for sensor in client.api.data[metadata.type]:
-                if sensor["type"] == sensor_type:
+            for sensor in client.api.data[description.type]:
+                if sensor["type"] == description.key:
                     dev.append(
                         GlancesSensor(
                             client,
                             name,
                             sensor["label"],
-                            sensor_type,
-                            metadata,
+                            description,
                         )
                     )
-        elif client.api.data[metadata.type]:
+        elif client.api.data[description.type]:
             dev.append(
                 GlancesSensor(
                     client,
                     name,
                     "",
-                    sensor_type,
-                    metadata,
+                    description,
                 )
             )
 
@@ -59,26 +54,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class GlancesSensor(SensorEntity):
     """Implementation of a Glances sensor."""
 
+    entity_description: GlancesSensorEntityDescription
+
     def __init__(
         self,
         glances_data,
         name,
         sensor_name_prefix,
-        sensor_type,
-        metadata: GlancesSensorMetadata,
+        description: GlancesSensorEntityDescription,
     ):
         """Initialize the sensor."""
         self.glances_data = glances_data
         self._sensor_name_prefix = sensor_name_prefix
-        self.type = sensor_type
         self._state = None
-        self._metadata = metadata
         self.unsub_update = None
 
-        self._attr_name = f"{name} {sensor_name_prefix} {metadata.name_suffix}"
-        self._attr_icon = metadata.icon
-        self._attr_unit_of_measurement = metadata.unit_of_measurement
-        self._attr_device_class = metadata.device_class
+        self.entity_description = description
+        self._attr_name = f"{name} {sensor_name_prefix} {description.name_suffix}"
 
     @property
     def unique_id(self):
@@ -91,7 +83,7 @@ class GlancesSensor(SensorEntity):
         return self.glances_data.available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the resources."""
         return self._state
 
@@ -122,12 +114,12 @@ class GlancesSensor(SensorEntity):
         if value is None:
             return
 
-        if self._metadata.type == "fs":
+        if self.entity_description.type == "fs":
             for var in value["fs"]:
                 if var["mnt_point"] == self._sensor_name_prefix:
                     disk = var
                     break
-            if self.type == "disk_free":
+            if self.entity_description.key == "disk_free":
                 try:
                     self._state = round(disk["free"] / 1024 ** 3, 1)
                 except KeyError:
@@ -135,67 +127,67 @@ class GlancesSensor(SensorEntity):
                         (disk["size"] - disk["used"]) / 1024 ** 3,
                         1,
                     )
-            elif self.type == "disk_use":
+            elif self.entity_description.key == "disk_use":
                 self._state = round(disk["used"] / 1024 ** 3, 1)
-            elif self.type == "disk_use_percent":
+            elif self.entity_description.key == "disk_use_percent":
                 self._state = disk["percent"]
-        elif self.type == "battery":
+        elif self.entity_description.key == "battery":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "battery"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
                     self._state = sensor["value"]
-        elif self.type == "fan_speed":
+        elif self.entity_description.key == "fan_speed":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "fan_speed"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
                     self._state = sensor["value"]
-        elif self.type == "temperature_core":
+        elif self.entity_description.key == "temperature_core":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "temperature_core"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
                     self._state = sensor["value"]
-        elif self.type == "temperature_hdd":
+        elif self.entity_description.key == "temperature_hdd":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "temperature_hdd"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
                     self._state = sensor["value"]
-        elif self.type == "memory_use_percent":
+        elif self.entity_description.key == "memory_use_percent":
             self._state = value["mem"]["percent"]
-        elif self.type == "memory_use":
+        elif self.entity_description.key == "memory_use":
             self._state = round(value["mem"]["used"] / 1024 ** 2, 1)
-        elif self.type == "memory_free":
+        elif self.entity_description.key == "memory_free":
             self._state = round(value["mem"]["free"] / 1024 ** 2, 1)
-        elif self.type == "swap_use_percent":
+        elif self.entity_description.key == "swap_use_percent":
             self._state = value["memswap"]["percent"]
-        elif self.type == "swap_use":
+        elif self.entity_description.key == "swap_use":
             self._state = round(value["memswap"]["used"] / 1024 ** 3, 1)
-        elif self.type == "swap_free":
+        elif self.entity_description.key == "swap_free":
             self._state = round(value["memswap"]["free"] / 1024 ** 3, 1)
-        elif self.type == "processor_load":
+        elif self.entity_description.key == "processor_load":
             # Windows systems don't provide load details
             try:
                 self._state = value["load"]["min15"]
             except KeyError:
                 self._state = value["cpu"]["total"]
-        elif self.type == "process_running":
+        elif self.entity_description.key == "process_running":
             self._state = value["processcount"]["running"]
-        elif self.type == "process_total":
+        elif self.entity_description.key == "process_total":
             self._state = value["processcount"]["total"]
-        elif self.type == "process_thread":
+        elif self.entity_description.key == "process_thread":
             self._state = value["processcount"]["thread"]
-        elif self.type == "process_sleeping":
+        elif self.entity_description.key == "process_sleeping":
             self._state = value["processcount"]["sleeping"]
-        elif self.type == "cpu_use_percent":
+        elif self.entity_description.key == "cpu_use_percent":
             self._state = value["quicklook"]["cpu"]
-        elif self.type == "docker_active":
+        elif self.entity_description.key == "docker_active":
             count = 0
             try:
                 for container in value["docker"]["containers"]:
@@ -204,7 +196,7 @@ class GlancesSensor(SensorEntity):
                 self._state = count
             except KeyError:
                 self._state = count
-        elif self.type == "docker_cpu_use":
+        elif self.entity_description.key == "docker_cpu_use":
             cpu_use = 0.0
             try:
                 for container in value["docker"]["containers"]:
@@ -213,7 +205,7 @@ class GlancesSensor(SensorEntity):
                     self._state = round(cpu_use, 1)
             except KeyError:
                 self._state = STATE_UNAVAILABLE
-        elif self.type == "docker_memory_use":
+        elif self.entity_description.key == "docker_memory_use":
             mem_use = 0.0
             try:
                 for container in value["docker"]["containers"]:

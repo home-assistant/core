@@ -15,9 +15,10 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN, PLATFORMS
 from .helpers import (
@@ -32,7 +33,7 @@ from .services import SERVICES
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
     if DOMAIN not in config:
         return True
@@ -53,7 +54,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up a connection to PCHK host from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -116,7 +117,7 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms

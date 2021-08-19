@@ -178,18 +178,11 @@ class GarageDoorOpener(HomeAccessory):
             obstruction_detected = (
                 new_state.attributes[ATTR_OBSTRUCTION_DETECTED] is True
             )
-            if self.char_obstruction_detected.value != obstruction_detected:
-                self.char_obstruction_detected.set_value(obstruction_detected)
+            self.char_obstruction_detected.set_value(obstruction_detected)
 
-        if (
-            target_door_state is not None
-            and self.char_target_state.value != target_door_state
-        ):
+        if target_door_state is not None:
             self.char_target_state.set_value(target_door_state)
-        if (
-            current_door_state is not None
-            and self.char_current_state.value != current_door_state
-        ):
+        if current_door_state is not None:
             self.char_current_state.set_value(current_door_state)
 
 
@@ -260,10 +253,8 @@ class OpeningDeviceBase(HomeAccessory):
             # We'll have to normalize to [0,100]
             current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
             current_tilt = int(current_tilt)
-            if self.char_current_tilt.value != current_tilt:
-                self.char_current_tilt.set_value(current_tilt)
-            if self.char_target_tilt.value != current_tilt:
-                self.char_target_tilt.set_value(current_tilt)
+            self.char_current_tilt.set_value(current_tilt)
+            self.char_target_tilt.set_value(current_tilt)
 
 
 class OpeningDevice(OpeningDeviceBase, HomeAccessory):
@@ -312,14 +303,11 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
-            if self.char_current_position.value != current_position:
-                self.char_current_position.set_value(current_position)
-            if self.char_target_position.value != current_position:
-                self.char_target_position.set_value(current_position)
+            self.char_current_position.set_value(current_position)
+            self.char_target_position.set_value(current_position)
 
         position_state = _hass_state_to_position_start(new_state.state)
-        if self.char_position_state.value != position_state:
-            self.char_position_state.set_value(position_state)
+        self.char_position_state.set_value(position_state)
 
         super().async_update_state(new_state)
 

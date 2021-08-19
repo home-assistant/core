@@ -1,20 +1,21 @@
 """Sensor platform for the Flipr's pool_sensor."""
 from datetime import datetime
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import FliprEntity
 from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
 
 SENSORS = {
     "chlorine": {
-        "unit": "mV",
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
         "icon": "mdi:pool",
         "name": "Chlorine",
         "device_class": None,
@@ -33,7 +34,7 @@ SENSORS = {
         "device_class": DEVICE_CLASS_TIMESTAMP,
     },
     "red_ox": {
-        "unit": "mV",
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
         "icon": "mdi:pool",
         "name": "Red OX",
         "device_class": None,
@@ -53,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors_list, True)
 
 
-class FliprSensor(FliprEntity, Entity):
+class FliprSensor(FliprEntity, SensorEntity):
     """Sensor representing FliprSensor data."""
 
     @property
@@ -62,7 +63,7 @@ class FliprSensor(FliprEntity, Entity):
         return f"Flipr {self.flipr_id} {SENSORS[self.info_type]['name']}"
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         state = self.coordinator.data[self.info_type]
         if isinstance(state, datetime):
@@ -80,7 +81,7 @@ class FliprSensor(FliprEntity, Entity):
         return SENSORS[self.info_type]["icon"]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement."""
         return SENSORS[self.info_type]["unit"]
 

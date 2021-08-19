@@ -50,7 +50,7 @@ class AdsSensor(AdsEntity, SensorEntity):
     def __init__(self, ads_hub, ads_var, ads_type, name, unit_of_measurement, factor):
         """Initialize AdsSensor entity."""
         super().__init__(ads_hub, name, ads_var)
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._ads_type = ads_type
         self._factor = factor
 
@@ -64,6 +64,6 @@ class AdsSensor(AdsEntity, SensorEntity):
         )
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._state_dict[STATE_KEY_STATE]

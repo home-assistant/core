@@ -24,6 +24,7 @@ import homeassistant.util.dt as dt_util
 from . import (
     TEST_CAMERA,
     TEST_CAMERA_ID,
+    TEST_CAMERAS,
     TEST_SWITCH_ENTITY_ID_BASE,
     TEST_SWITCH_MOTION_DETECTION_ENTITY_ID,
     create_mock_motioneye_client,
@@ -38,7 +39,7 @@ async def test_switch_turn_on_off(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
 
-    # Verify switch is on (as per TEST_COMPONENTS above).
+    # Verify switch is on.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "on"
@@ -91,6 +92,29 @@ async def test_switch_turn_on_off(hass: HomeAssistant) -> None:
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "on"
+
+
+async def test_switch_state_update_from_coordinator(hass: HomeAssistant) -> None:
+    """Test that coordinator data impacts state."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    # Verify switch is on.
+    entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
+    assert entity_state
+    assert entity_state.state == "on"
+
+    updated_cameras = copy.deepcopy(TEST_CAMERAS)
+    updated_cameras["cameras"][0][KEY_MOTION_DETECTION] = False
+    client.async_get_cameras = AsyncMock(return_value=updated_cameras)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    # Verify the switch turns off.
+    entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
+    assert entity_state
+    assert entity_state.state == "off"
 
 
 async def test_switch_has_correct_entities(hass: HomeAssistant) -> None:

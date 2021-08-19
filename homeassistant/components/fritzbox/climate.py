@@ -94,11 +94,6 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         return SUPPORT_FLAGS
 
     @property
-    def available(self) -> bool:
-        """Return if thermostat is available."""
-        return self.device.present  # type: ignore [no-any-return]
-
-    @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement that is used."""
         return TEMP_CELSIUS

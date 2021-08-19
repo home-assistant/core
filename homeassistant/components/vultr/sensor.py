@@ -92,12 +92,12 @@ class VultrSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement to present the value in."""
         return self._units
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of this given sensor type."""
         try:
             return round(float(self.data.get(self._condition)), 2)

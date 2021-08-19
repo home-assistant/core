@@ -26,9 +26,7 @@ async def test_speedtestdotnet_sensors(
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
-    for sensor_type in SENSOR_TYPES:
-        sensor = hass.states.get(
-            f"sensor.{DEFAULT_NAME}_{SENSOR_TYPES[sensor_type][0]}"
-        )
+    for description in SENSOR_TYPES:
+        sensor = hass.states.get(f"sensor.{DEFAULT_NAME}_{description.name}")
         assert sensor
-        assert sensor.state == MOCK_STATES[sensor_type]
+        assert sensor.state == MOCK_STATES[description.key]

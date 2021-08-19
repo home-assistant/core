@@ -25,6 +25,9 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
@@ -41,6 +44,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import (  # noqa: F401
@@ -61,9 +65,6 @@ from .accessories import HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
@@ -187,7 +188,7 @@ def _async_get_entries_by_name(current_entries):
     return {entry.data.get(CONF_NAME, BRIDGE_NAME): entry for entry in current_entries}
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -557,6 +558,7 @@ class HomeKit:
             return
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
+            self.hass.async_add_job(new_acc.run)
             await self.async_config_changed()
 
     async def async_reset_accessories_in_bridge_mode(self, entity_ids):
@@ -586,7 +588,9 @@ class HomeKit:
         await self.async_config_changed()
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         for state in new:
-            self.add_bridge_accessory(state)
+            acc = self.add_bridge_accessory(state)
+            if acc:
+                self.hass.async_add_job(acc.run)
         await self.async_config_changed()
 
     async def async_config_changed(self):
@@ -625,10 +629,12 @@ class HomeKit:
             acc = get_accessory(self.hass, self.driver, state, aid, conf)
             if acc is not None:
                 self.bridge.add_accessory(acc)
+                return acc
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
+        return None
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
@@ -881,7 +887,7 @@ class HomeKit:
                 if dev_reg_ent.model:
                     ent_cfg[ATTR_MODEL] = dev_reg_ent.model
                 if dev_reg_ent.sw_version:
-                    ent_cfg[ATTR_SOFTWARE_VERSION] = dev_reg_ent.sw_version
+                    ent_cfg[ATTR_SW_VERSION] = dev_reg_ent.sw_version
         if ATTR_MANUFACTURER not in ent_cfg:
             try:
                 integration = await async_get_integration(

@@ -47,12 +47,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -144,12 +145,21 @@ def listen_for_new_cameras(
 
 
 @callback
-def async_generate_motioneye_webhook(hass: HomeAssistant, webhook_id: str) -> str:
+def async_generate_motioneye_webhook(
+    hass: HomeAssistant, webhook_id: str
+) -> str | None:
     """Generate the full local URL for a webhook_id."""
-    return "{}{}".format(
-        get_url(hass, allow_cloud=False),
-        async_generate_path(webhook_id),
-    )
+    try:
+        return "{}{}".format(
+            get_url(hass, allow_cloud=False),
+            async_generate_path(webhook_id),
+        )
+    except NoURLAvailableError:
+        _LOGGER.warning(
+            "Unable to get Home Assistant URL. Have you set the internal and/or "
+            "external URLs in Configuration -> General?"
+        )
+        return None
 
 
 @callback
@@ -227,30 +237,34 @@ def _add_camera(
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
         url = async_generate_motioneye_webhook(hass, entry.data[CONF_WEBHOOK_ID])
 
-        if _set_webhook(
-            _build_url(
-                device,
-                url,
-                EVENT_MOTION_DETECTED,
-                EVENT_MOTION_DETECTED_KEYS,
-            ),
-            KEY_WEB_HOOK_NOTIFICATIONS_URL,
-            KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
-            KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
-            camera,
-        ) | _set_webhook(
-            _build_url(
-                device,
-                url,
-                EVENT_FILE_STORED,
-                EVENT_FILE_STORED_KEYS,
-            ),
-            KEY_WEB_HOOK_STORAGE_URL,
-            KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
-            KEY_WEB_HOOK_STORAGE_ENABLED,
-            camera,
-        ):
-            hass.async_create_task(client.async_set_camera(camera_id, camera))
+        if url:
+            set_motion_event = _set_webhook(
+                _build_url(
+                    device,
+                    url,
+                    EVENT_MOTION_DETECTED,
+                    EVENT_MOTION_DETECTED_KEYS,
+                ),
+                KEY_WEB_HOOK_NOTIFICATIONS_URL,
+                KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
+                KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
+                camera,
+            )
+
+            set_storage_event = _set_webhook(
+                _build_url(
+                    device,
+                    url,
+                    EVENT_FILE_STORED,
+                    EVENT_FILE_STORED_KEYS,
+                ),
+                KEY_WEB_HOOK_STORAGE_URL,
+                KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
+                KEY_WEB_HOOK_STORAGE_ENABLED,
+                camera,
+            )
+            if set_motion_event or set_storage_event:
+                hass.async_create_task(client.async_set_camera(camera_id, camera))
 
     async_dispatcher_send(
         hass,
@@ -274,6 +288,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         admin_password=entry.data.get(CONF_ADMIN_PASSWORD),
         surveillance_username=entry.data.get(CONF_SURVEILLANCE_USERNAME),
         surveillance_password=entry.data.get(CONF_SURVEILLANCE_PASSWORD),
+        session=async_get_clientsession(hass),
     )
 
     try:
@@ -440,7 +455,7 @@ class MotionEyeEntity(CoordinatorEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, Any],
-        enabled_by_default: bool = True,
+        entity_description: EntityDescription = None,
     ) -> None:
         """Initialize a motionEye entity."""
         self._camera_id = camera[KEY_ID]
@@ -455,13 +470,9 @@ class MotionEyeEntity(CoordinatorEntity):
         self._client = client
         self._camera: dict[str, Any] | None = camera
         self._options = options
-        self._enabled_by_default = enabled_by_default
+        if entity_description is not None:
+            self.entity_description = entity_description
         super().__init__(coordinator)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Whether or not the entity is enabled by default."""
-        return self._enabled_by_default
 
     @property
     def unique_id(self) -> str:

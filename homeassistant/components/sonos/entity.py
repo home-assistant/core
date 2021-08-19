@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import logging
 
+import soco.config as soco_config
 from soco.core import SoCo
 from soco.exceptions import SoCoException
 
@@ -65,10 +66,14 @@ class SonosEntity(Entity):
     async def async_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
+            if soco_config.EVENT_ADVERTISE_IP:
+                listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
+            else:
+                listener_msg = self.speaker.subscription_address
             _LOGGER.warning(
-                "%s cannot reach [%s], falling back to polling, functionality may be limited",
+                "%s cannot reach %s, falling back to polling, functionality may be limited",
                 self.speaker.zone_name,
-                self.speaker.subscription_address,
+                listener_msg,
             )
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()

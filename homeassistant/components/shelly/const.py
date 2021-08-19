@@ -1,6 +1,7 @@
 """Constants for the Shelly integration."""
 from __future__ import annotations
 
+import re
 from typing import Final
 
 COAP: Final = "coap"
@@ -11,6 +12,22 @@ REST: Final = "rest"
 
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
+FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
+
+# Firmware 1.11.0 release date, this firmware supports light transition
+LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
+
+# max light transition time in milliseconds
+MAX_TRANSITION_TIME: Final = 5000
+
+MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
+    "SHBDUO-1",
+    "SHCB-1",
+    "SHDM-1",
+    "SHDM-2",
+    "SHRGBW2",
+    "SHVIN-1",
+)
 
 # Used in "_async_update_data" as timeout for polling data from devices.
 POLLING_TIMEOUT_SEC: Final = 18

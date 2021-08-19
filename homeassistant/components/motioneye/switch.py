@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import (
@@ -15,27 +15,46 @@ from motioneye_client.const import (
     KEY_VIDEO_STREAMING,
 )
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MotionEyeEntity, listen_for_new_cameras
+from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
 
 MOTIONEYE_SWITCHES = [
-    (KEY_MOTION_DETECTION, "Motion Detection", True),
-    (KEY_TEXT_OVERLAY, "Text Overlay", False),
-    (KEY_VIDEO_STREAMING, "Video Streaming", False),
-    (KEY_STILL_IMAGES, "Still Images", True),
-    (KEY_MOVIES, "Movies", True),
-    (KEY_UPLOAD_ENABLED, "Upload Enabled", False),
+    SwitchEntityDescription(
+        key=KEY_MOTION_DETECTION,
+        name="Motion Detection",
+        entity_registry_enabled_default=True,
+    ),
+    SwitchEntityDescription(
+        key=KEY_TEXT_OVERLAY, name="Text Overlay", entity_registry_enabled_default=False
+    ),
+    SwitchEntityDescription(
+        key=KEY_VIDEO_STREAMING,
+        name="Video Streaming",
+        entity_registry_enabled_default=False,
+    ),
+    SwitchEntityDescription(
+        key=KEY_STILL_IMAGES, name="Still Images", entity_registry_enabled_default=True
+    ),
+    SwitchEntityDescription(
+        key=KEY_MOVIES, name="Movies", entity_registry_enabled_default=True
+    ),
+    SwitchEntityDescription(
+        key=KEY_UPLOAD_ENABLED,
+        name="Upload Enabled",
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
-) -> bool:
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
@@ -47,19 +66,16 @@ async def async_setup_entry(
                 MotionEyeSwitch(
                     entry.entry_id,
                     camera,
-                    switch_key,
-                    switch_key_friendly_name,
                     entry_data[CONF_CLIENT],
                     entry_data[CONF_COORDINATOR],
                     entry.options,
-                    enabled,
+                    entity_description,
                 )
-                for switch_key, switch_key_friendly_name, enabled in MOTIONEYE_SWITCHES
+                for entity_description in MOTIONEYE_SWITCHES
             ]
         )
 
     listen_for_new_cameras(hass, entry, camera_add)
-    return True
 
 
 class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
@@ -69,37 +85,34 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         self,
         config_entry_id: str,
         camera: dict[str, Any],
-        switch_key: str,
-        switch_key_friendly_name: str,
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, str],
-        enabled_by_default: bool,
+        entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialize the switch."""
-        self._switch_key = switch_key
-        self._switch_key_friendly_name = switch_key_friendly_name
-        MotionEyeEntity.__init__(
-            self,
+        super().__init__(
             config_entry_id,
-            f"{TYPE_MOTIONEYE_SWITCH_BASE}_{switch_key}",
+            f"{TYPE_MOTIONEYE_SWITCH_BASE}_{entity_description.key}",
             camera,
             client,
             coordinator,
             options,
-            enabled_by_default,
+            entity_description,
         )
 
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        camera_name = self._camera[KEY_NAME] if self._camera else ""
-        return f"{camera_name} {self._switch_key_friendly_name}"
+        camera_prepend = f"{self._camera[KEY_NAME]} " if self._camera else ""
+        return f"{camera_prepend}{self.entity_description.name}"
 
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return bool(self._camera and self._camera.get(self._switch_key, False))
+        return bool(
+            self._camera and self._camera.get(self.entity_description.key, False)
+        )
 
     async def _async_send_set_camera(self, value: bool) -> None:
         """Set a switch value."""
@@ -108,7 +121,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         # stale configuration.
         camera = await self._client.async_get_camera(self._camera_id)
         if camera:
-            camera[self._switch_key] = value
+            camera[self.entity_description.key] = value
             await self._client.async_set_camera(self._camera_id, camera)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -118,3 +131,9 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_send_set_camera(False)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
+        super()._handle_coordinator_update()

@@ -2,57 +2,59 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import NamedTuple
 
 from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="black",
+        name="Ink level Black",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="photoblack",
+        name="Ink level Photoblack",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="magenta",
+        name="Ink level Magenta",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="cyan",
+        name="Ink level Cyan",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="yellow",
+        name="Ink level Yellow",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="clean",
+        name="Cleaning level",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+)
+MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-class MonitoredConditionsMetadata(NamedTuple):
-    """Metadata for an individual montiored condition."""
-
-    name: str
-    icon: str
-    unit_of_measurement: str
-
-
-MONITORED_CONDITIONS: dict[str, MonitoredConditionsMetadata] = {
-    "black": MonitoredConditionsMetadata(
-        "Ink level Black",
-        icon="mdi:water",
-        unit_of_measurement=PERCENTAGE,
-    ),
-    "photoblack": MonitoredConditionsMetadata(
-        "Ink level Photoblack",
-        icon="mdi:water",
-        unit_of_measurement=PERCENTAGE,
-    ),
-    "magenta": MonitoredConditionsMetadata(
-        "Ink level Magenta",
-        icon="mdi:water",
-        unit_of_measurement=PERCENTAGE,
-    ),
-    "cyan": MonitoredConditionsMetadata(
-        "Ink level Cyan",
-        icon="mdi:water",
-        unit_of_measurement=PERCENTAGE,
-    ),
-    "yellow": MonitoredConditionsMetadata(
-        "Ink level Yellow",
-        icon="mdi:water",
-        unit_of_measurement=PERCENTAGE,
-    ),
-    "clean": MonitoredConditionsMetadata(
-        "Cleaning level",
-        icon="mdi:water",
-        unit_of_measurement=PERCENTAGE,
-    ),
-}
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -73,8 +75,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         raise PlatformNotReady()
 
     sensors = [
-        EpsonPrinterCartridge(api, condition)
-        for condition in config[CONF_MONITORED_CONDITIONS]
+        EpsonPrinterCartridge(api, description)
+        for description in SENSOR_TYPES
+        if description.key in config[CONF_MONITORED_CONDITIONS]
     ]
 
     add_devices(sensors, True)
@@ -83,20 +86,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EpsonPrinterCartridge(SensorEntity):
     """Representation of a cartridge sensor."""
 
-    def __init__(self, api, cartridgeidx):
+    def __init__(self, api, description: SensorEntityDescription):
         """Initialize a cartridge sensor."""
         self._api = api
-
-        self._id = cartridgeidx
-        metadata = MONITORED_CONDITIONS[self._id]
-        self._attr_name = metadata.name
-        self._attr_icon = metadata.icon
-        self._attr_unit_of_measurement = metadata.unit_of_measurement
+        self.entity_description = description
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
-        return self._api.getSensorValue(self._id)
+        return self._api.getSensorValue(self.entity_description.key)
 
     @property
     def available(self):

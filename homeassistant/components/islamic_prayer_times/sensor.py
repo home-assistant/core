@@ -43,7 +43,7 @@ class IslamicPrayerTimeSensor(SensorEntity):
         return self.sensor_type
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return (
             self.client.prayer_times_info.get(self.sensor_type)

@@ -111,28 +111,28 @@ SENSORS: Final = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("emeter", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("emeter", "energyReturned"): BlockAttributeDescription(
         name="Energy Returned",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
         default_enabled=False,
     ),
     ("relay", "energy"): BlockAttributeDescription(
@@ -140,14 +140,14 @@ SENSORS: Final = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
@@ -248,7 +248,7 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
@@ -258,7 +258,7 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)
 
@@ -267,7 +267,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
@@ -277,7 +277,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return self.description.unit
 
@@ -286,7 +286,7 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
             return self.attribute_value
@@ -299,6 +299,6 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)

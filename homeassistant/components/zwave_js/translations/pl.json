@@ -56,6 +56,14 @@
             "config_parameter": "Warto\u015b\u0107 parametru jest {subtype}",
             "node_status": "Stan w\u0119z\u0142a",
             "value": "Aktualna warto\u015b\u0107 warto\u015bci Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Wys\u0142ano powiadomienie kontroli wpisu",
+            "event.notification.notification": "Wys\u0142ano powiadomienie",
+            "event.value_notification.basic": "Podstawowe wydarzenie CC na {subtype}",
+            "event.value_notification.central_scene": "Akcja sceny centralnej na {subtype}",
+            "event.value_notification.scene_activation": "Aktywacja sceny na {subtype}",
+            "state.node_status": "Zmieni\u0142 si\u0119 stan w\u0119z\u0142a"
         }
     },
     "options": {

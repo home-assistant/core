@@ -58,6 +58,8 @@ async def async_setup_entry(
 class PiHoleSwitch(PiHoleEntity, SwitchEntity):
     """Representation of a Pi-hole switch."""
 
+    _attr_icon = "mdi:pi-hole"
+
     @property
     def name(self) -> str:
         """Return the name of the switch."""
@@ -67,11 +69,6 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
     def unique_id(self) -> str:
         """Return the unique id of the switch."""
         return f"{self._server_unique_id}/Switch"
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:pi-hole"
 
     @property
     def is_on(self) -> bool:

@@ -1,10 +1,10 @@
 """The airvisual component."""
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
-from typing import Any, Dict, cast
+from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -216,8 +216,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 )
 
             try:
-                data = await api_coro
-                return cast(Dict[str, Any], data)
+                return await api_coro
             except (InvalidKeyError, KeyExpiredError) as ex:
                 raise ConfigEntryAuthFailed from ex
             except AirVisualError as err:
@@ -261,8 +260,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 async with NodeSamba(
                     config_entry.data[CONF_IP_ADDRESS], config_entry.data[CONF_PASSWORD]
                 ) as node:
-                    data = await node.async_get_latest_measurements()
-                    return cast(Dict[str, Any], data)
+                    return await node.async_get_latest_measurements()
             except NodeProError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
@@ -364,9 +362,7 @@ class AirVisualEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

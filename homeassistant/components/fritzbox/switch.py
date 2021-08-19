@@ -10,10 +10,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,15 +19,10 @@ from . import FritzBoxEntity
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
-    ATTR_TEMPERATURE_UNIT,
-    ATTR_TOTAL_CONSUMPTION,
-    ATTR_TOTAL_CONSUMPTION_UNIT,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
 from .model import SwitchExtraAttributes
-
-ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
 
 async def async_setup_entry(
@@ -65,11 +57,6 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
     """The switch class for FRITZ!SmartHome switches."""
 
     @property
-    def available(self) -> bool:
-        """Return if switch is available."""
-        return self.device.present  # type: ignore [no-any-return]
-
-    @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.device.switch_state  # type: ignore [no-any-return]
@@ -91,22 +78,4 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
             ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
             ATTR_STATE_LOCKED: self.device.lock,
         }
-
-        if self.device.has_powermeter:
-            attrs[
-                ATTR_TOTAL_CONSUMPTION
-            ] = f"{((self.device.energy or 0.0) / 1000):.3f}"
-            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = ATTR_TOTAL_CONSUMPTION_UNIT_VALUE
-        if self.device.has_temperature_sensor:
-            attrs[ATTR_TEMPERATURE] = str(
-                self.hass.config.units.temperature(
-                    self.device.temperature, TEMP_CELSIUS
-                )
-            )
-            attrs[ATTR_TEMPERATURE_UNIT] = self.hass.config.units.temperature_unit
         return attrs
-
-    @property
-    def current_power_w(self) -> float:
-        """Return the current power usage in W."""
-        return self.device.power / 1000  # type: ignore [no-any-return]

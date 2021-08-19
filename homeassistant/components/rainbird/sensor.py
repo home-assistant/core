@@ -3,7 +3,7 @@ import logging
 
 from pyrainbird import RainbirdController
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 
 from . import (
     DATA_RAINBIRD,
@@ -11,7 +11,6 @@ from . import (
     SENSOR_TYPE_RAINDELAY,
     SENSOR_TYPE_RAINSENSOR,
     SENSOR_TYPES,
-    RainBirdSensorMetadata,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,10 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     controller = hass.data[DATA_RAINBIRD][discovery_info[RAINBIRD_CONTROLLER]]
     add_entities(
-        [
-            RainBirdSensor(controller, sensor_type, metadata)
-            for sensor_type, metadata in SENSOR_TYPES.items()
-        ],
+        [RainBirdSensor(controller, description) for description in SENSOR_TYPES],
         True,
     )
 
@@ -39,27 +35,16 @@ class RainBirdSensor(SensorEntity):
     def __init__(
         self,
         controller: RainbirdController,
-        sensor_type,
-        metadata: RainBirdSensorMetadata,
-    ):
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the Rain Bird sensor."""
-        self._sensor_type = sensor_type
+        self.entity_description = description
         self._controller = controller
 
-        self._attr_name = metadata.name
-        self._attr_icon = metadata.icon
-        self._attr_unit_of_measurement = metadata.unit_of_measurement
-        self._state = None
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self.name)
-        if self._sensor_type == SENSOR_TYPE_RAINSENSOR:
-            self._state = self._controller.get_rain_sensor_state()
-        elif self._sensor_type == SENSOR_TYPE_RAINDELAY:
-            self._state = self._controller.get_rain_delay()
+        if self.entity_description.key == SENSOR_TYPE_RAINSENSOR:
+            self._attr_native_value = self._controller.get_rain_sensor_state()
+        elif self.entity_description.key == SENSOR_TYPE_RAINDELAY:
+            self._attr_native_value = self._controller.get_rain_delay()

@@ -9,13 +9,19 @@ Unwetterwarnungen (Stufe 3)
 Warnungen vor markantem Wetter (Stufe 2)
 Wetterwarnungen (Stufe 1)
 """
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -48,18 +54,21 @@ ADVANCE_WARNING_SENSOR = "advance_warning_level"
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
-MONITORED_CONDITIONS = {
-    CURRENT_WARNING_SENSOR: [
-        "Current Warning Level",
-        None,
-        "mdi:close-octagon-outline",
-    ],
-    ADVANCE_WARNING_SENSOR: [
-        "Advance Warning Level",
-        None,
-        "mdi:close-octagon-outline",
-    ],
-}
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=CURRENT_WARNING_SENSOR,
+        name="Current Warning Level",
+        icon="mdi:close-octagon-outline",
+    ),
+    SensorEntityDescription(
+        key=ADVANCE_WARNING_SENSOR,
+        name="Advance Warning Level",
+        icon="mdi:close-octagon-outline",
+    ),
+)
+MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -79,9 +88,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     api = WrappedDwDWWAPI(DwdWeatherWarningsAPI(region_name))
 
-    sensors = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(DwdWeatherWarningsSensor(api, name, sensor_type))
+    sensors = [
+        DwdWeatherWarningsSensor(api, name, description)
+        for description in SENSOR_TYPES
+        if description.key in config[CONF_MONITORED_CONDITIONS]
+    ]
 
     add_entities(sensors, True)
 
@@ -89,31 +100,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DwdWeatherWarningsSensor(SensorEntity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
-    def __init__(self, api, name, sensor_type):
+    def __init__(
+        self,
+        api,
+        name,
+        description: SensorEntityDescription,
+    ):
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
-        self._name = name
-        self._sensor_type = sensor_type
+        self.entity_description = description
+        self._attr_name = f"{name} {description.name}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {MONITORED_CONDITIONS[self._sensor_type][0]}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return MONITORED_CONDITIONS[self._sensor_type][2]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return MONITORED_CONDITIONS[self._sensor_type][1]
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
-        if self._sensor_type == CURRENT_WARNING_SENSOR:
+        if self.entity_description.key == CURRENT_WARNING_SENSOR:
             return self._api.api.current_warning_level
         return self._api.api.expected_warning_level
 
@@ -127,7 +128,7 @@ class DwdWeatherWarningsSensor(SensorEntity):
             ATTR_LAST_UPDATE: self._api.api.last_update,
         }
 
-        if self._sensor_type == CURRENT_WARNING_SENSOR:
+        if self.entity_description.key == CURRENT_WARNING_SENSOR:
             searched_warnings = self._api.api.current_warnings
         else:
             searched_warnings = self._api.api.expected_warnings
@@ -165,7 +166,7 @@ class DwdWeatherWarningsSensor(SensorEntity):
             "Update requested for %s (%s) by %s",
             self._api.api.warncell_name,
             self._api.api.warncell_id,
-            self._sensor_type,
+            self.entity_description.key,
         )
         self._api.update()
 

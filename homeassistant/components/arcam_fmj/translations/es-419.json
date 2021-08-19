@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "\u00bfDesea agregar Arcam FMJ en `{host}` a Home Assistant?"
+            },
+            "user": {
+                "description": "Ingrese el nombre de host o la direcci\u00f3n IP del dispositivo."
+            }
+        }
+    }
+}
