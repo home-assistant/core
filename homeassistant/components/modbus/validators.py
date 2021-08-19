@@ -23,7 +23,6 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
-    CONF_SERIAL,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
@@ -44,6 +43,7 @@ from .const import (
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     PLATFORMS,
+    SERIAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -229,12 +229,12 @@ def duplicate_entity_validator(config: dict) -> dict:
 
 def duplicate_modbus_validator(config: list) -> list:
     """Control modbus connection for duplicates."""
-    hosts = []
-    names = []
+    hosts: set[str] = set()
+    names: set[str] = set()
     errors = []
     for index, hub in enumerate(config):
         name = hub.get(CONF_NAME, DEFAULT_HUB)
-        host = hub[CONF_PORT] if hub[CONF_TYPE] == CONF_SERIAL else hub[CONF_HOST]
+        host = hub[CONF_PORT] if hub[CONF_TYPE] == SERIAL else hub[CONF_HOST]
         if host in hosts:
             err = f"Modbus {name}  contains duplicate host/port {host}, not loaded!"
             _LOGGER.warning(err)
@@ -244,8 +244,8 @@ def duplicate_modbus_validator(config: list) -> list:
             _LOGGER.warning(err)
             errors.append(index)
         else:
-            hosts.append(host)
-            names.append(name)
+            hosts.add(host)
+            names.add(name)
 
     for i in reversed(errors):
         del config[i]
