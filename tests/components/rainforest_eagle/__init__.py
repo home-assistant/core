@@ -1,1 +1,1 @@
-"""Tests for the Rainforest Eagle-200 integration."""
+"""Tests for the Rainforest Eagle integration."""

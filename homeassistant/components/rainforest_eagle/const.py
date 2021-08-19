@@ -1,4 +1,4 @@
-"""Constants for the Rainforest Eagle-200 integration."""
+"""Constants for the Rainforest Eagle integration."""
 
 DOMAIN = "rainforest_eagle"
 CONF_CLOUD_ID = "cloud_id"

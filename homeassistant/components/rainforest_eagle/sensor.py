@@ -1,4 +1,4 @@
-"""Support for the Rainforest Eagle-200 energy monitor."""
+"""Support for the Rainforest Eagle energy monitor."""
 from __future__ import annotations
 
 import logging
@@ -73,8 +73,8 @@ async def async_setup_platform(
 ):
     """Import config as config entry."""
     _LOGGER.warning(
-        "Configuration of the EAGLE-200 platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2021.11; Your existing configuration "
+        "Configuration of the rainforest_eagle platform in YAML is deprecated "
+        "and will be removed in Home Assistant 2021.11; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
@@ -99,7 +99,7 @@ async def async_setup_entry(
 
 
 class EagleSensor(CoordinatorEntity, SensorEntity):
-    """Implementation of the Rainforest Eagle-200 sensor."""
+    """Implementation of the Rainforest Eagle sensor."""
 
     coordinator: EagleDataCoordinator
 

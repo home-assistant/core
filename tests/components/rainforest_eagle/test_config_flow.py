@@ -1,4 +1,4 @@
-"""Test the Rainforest Eagle-200 config flow."""
+"""Test the Rainforest Eagle config flow."""
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup

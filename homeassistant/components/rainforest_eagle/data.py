@@ -88,7 +88,7 @@ async def async_get_type(hass, cloud_id, install_code):
 
 
 class EagleDataCoordinator(DataUpdateCoordinator):
-    """Get the latest data from the Eagle-200 device."""
+    """Get the latest data from the Eagle device."""
 
     eagle100_reader: Eagle100Reader | None = None
     eagle200_meter: aioeagle.ElectricMeter | None = None
@@ -145,7 +145,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         return {var["Name"]: var["Value"] for var in data.values()}
 
     async def _async_update_data_100(self):
-        """Get the latest data from the Eagle-200 device."""
+        """Get the latest data from the Eagle-100 device."""
         try:
             data = await self.hass.async_add_executor_job(self._fetch_data)
         except UPDATE_100_ERRORS as error:

@@ -1,4 +1,4 @@
-"""Config flow for Rainforest Eagle-200 integration."""
+"""Config flow for Rainforest Eagle integration."""
 from __future__ import annotations
 
 import logging
@@ -24,7 +24,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Rainforest Eagle-200."""
+    """Handle a config flow for Rainforest Eagle."""
 
     VERSION = 1
 
