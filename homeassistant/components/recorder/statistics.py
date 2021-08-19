@@ -181,7 +181,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                     instance.hass, session, entity_id, stat["meta"]
                 )
                 session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
-            session.add(StatisticsRuns(start=start))
+        session.add(StatisticsRuns(start=start))
 
     return True
 

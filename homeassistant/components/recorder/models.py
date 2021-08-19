@@ -39,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 18
+SCHEMA_VERSION = 19
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self, validate_entity_id=True):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
             user_id=self.context_user_id,
@@ -377,10 +377,6 @@ class StatisticsRuns(Base):  # type: ignore
             f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f")>"
         )
-
-    def to_native(self, validate_entity_id=True):
-        """Return self, native format is this model."""
-        return self
 
 
 def process_timestamp(ts):

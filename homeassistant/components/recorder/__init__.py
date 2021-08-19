@@ -11,7 +11,7 @@ import threading
 import time
 from typing import Any, Callable, NamedTuple
 
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -50,7 +50,14 @@ import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
-from .models import Base, Events, RecorderRuns, States, StatisticsRuns
+from .models import (
+    Base,
+    Events,
+    RecorderRuns,
+    States,
+    StatisticsRuns,
+    process_timestamp,
+)
 from .pool import RecorderPool
 from .util import (
     dburl_to_path,
@@ -564,18 +571,26 @@ class Recorder(threading.Thread):
 
         # Add tasks for missing statistics runs
         now = dt_util.utcnow()
+        last_hour = now.replace(minute=0, second=0, microsecond=0)
         start = now - timedelta(days=self.keep_days)
         start = start.replace(minute=0, second=0, microsecond=0)
+
         if not self.get_session:
             # Home Assistant is shutting down
             return
+
+        # Find the newest statistics run, if any
         with session_scope(session=self.get_session()) as session:
-            while start < now:
-                if not session.query(StatisticsRuns).filter_by(start=start):
-                    end = start + timedelta(hours=1)
-                    _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
-                    self.queue.put(StatisticsTask(start))
-                start = start + timedelta(hours=1)
+            last_run = session.query(func.max(StatisticsRuns.start)).scalar()
+        if last_run:
+            start = max(start, process_timestamp(last_run) + timedelta(hours=1))
+
+        # Add tasks
+        while start < last_hour:
+            end = start + timedelta(hours=1)
+            _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
+            self.queue.put(StatisticsTask(start))
+            start = start + timedelta(hours=1)
 
     def run(self):
         """Start processing events to save."""
@@ -611,7 +626,7 @@ class Recorder(threading.Thread):
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
                 if not self._event_listener:
-                    # If the schema migration takes so longer that the end
+                    # If the schema migration takes so long that the end
                     # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
                     # is reached, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
