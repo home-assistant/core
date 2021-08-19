@@ -99,6 +99,9 @@ aiodns==3.0.0
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
+# homeassistant.components.rainforest_eagle
+aioeagle==1.1.0
+
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
@@ -1277,6 +1280,9 @@ twilio==6.32.0
 
 # homeassistant.components.twinkly
 twinkly-client==0.0.2
+
+# homeassistant.components.rainforest_eagle
+uEagle==0.0.2
 
 # homeassistant.components.upb
 upb_lib==0.4.12
