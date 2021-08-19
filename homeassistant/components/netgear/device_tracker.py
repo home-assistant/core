@@ -180,6 +180,7 @@ class NetgearDeviceEntity(ScannerEntity):
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "name": self.name,
             "manufacturer": self._device["device_model"],
+            "via_device": (DOMAIN, self._router.unique_id),
         }
 
     @property

@@ -78,6 +78,7 @@ class NetgearRouter:
         """Initialize a Netgear router."""
         self.hass = hass
         self.entry_id = entry.entry_id
+        self.unique_id = entry.unique_id
         self._url = entry.data.get(CONF_URL)
         self._host = entry.data.get(CONF_HOST)
         self._port = entry.data.get(CONF_PORT)
@@ -87,6 +88,9 @@ class NetgearRouter:
         
         self._info = None
         self.model = None
+        self.firmware_version = None
+        self.hardware_version = None
+        self.firewall_version = None
 
         self._method_version = entry.options.get(
             CONF_METHOD_VERSION, DEFAULT_METHOD_VERSION
@@ -119,6 +123,9 @@ class NetgearRouter:
         
         self._info = self._api.get_info()
         self.model = self._info["ModelName"]
+        self.firmware_version = self._info["Firmwareversion"]
+        self.hardware_version = self._info["Hardwareversion"]
+        self.firewall_version = self._info["FirewallVersion"]
 
     async def async_setup(self) -> None:
         """Set up a Netgear router."""

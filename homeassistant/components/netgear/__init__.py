@@ -27,6 +27,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer="Netgear",
+        name=entry.title,
+        model=router.model,
+        sw_version=f"{router.hardware_version}-{router.firmware_version}-{router.firewall_version}",
+    )
+
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
@@ -53,7 +63,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         device_registry = dr.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         for device_entry in devices:
-            if dict(device_entry.connections)["mac"] not in tracked_list:
+            device_mac = dict(device_entry.connections).get("mac")
+            if device_mac and device_mac not in tracked_list:
                 device_registry.async_update_device(
                     device_entry.id, remove_config_entry_id=entry.entry_id
                 )
