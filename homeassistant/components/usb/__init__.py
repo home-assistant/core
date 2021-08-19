@@ -5,7 +5,8 @@ import datetime
 import logging
 
 from pyudev import Context, Monitor, MonitorObserver
-from serial.tools.list_ports import ListPortInfo, comports
+from serial.tools.list_ports import comports
+from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
