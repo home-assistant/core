@@ -110,7 +110,7 @@ async def test_sensors_200(hass, setup_rainforest_200):
     price = hass.states.get("sensor.meter_price")
     assert price is not None
     assert price.state == "0.053990"
-    assert price.attributes["unit_of_measurement"] == "kWh/USD"
+    assert price.attributes["unit_of_measurement"] == "USD/kWh"
 
 
 async def test_sensors_100(hass, setup_rainforest_100):
