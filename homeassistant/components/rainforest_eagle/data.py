@@ -139,9 +139,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
 
         try:
             async with async_timeout.timeout(30):
-                data = await self.eagle200_meter.get_device_query(
-                    self.eagle200_meter.ENERGY_AND_POWER_VARIABLES
-                )
+                data = await self.eagle200_meter.get_device_query()
         except aioeagle.BadAuth as error:
             raise ConfigEntryAuthFailed from error
 
