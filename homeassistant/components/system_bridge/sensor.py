@@ -217,16 +217,6 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     ),
 )
 
-# SystemBridgeSensorEntityDescription(
-#     key="",
-#     name="",
-#     enabled_by_default=True,
-#     device_class=None,
-#     native_unit_of_measurement=None,
-#     icon=None,
-#     value=lambda bridge: bridge.system.bios.version,
-# ),
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
@@ -262,11 +252,12 @@ async def async_setup_entry(
             entities.append(SystemBridgeSensor(coordinator, description))
 
     for index, _ in enumerate(coordinator.data.graphics.controllers):
-        if coordinator.data.graphics.controllers[index].name is not None:
+        i = index
+        if coordinator.data.graphics.controllers[i].name is not None:
             # Remove vendor from name
             name = (
-                coordinator.data.graphics.controllers[index]
-                .name.replace(coordinator.data.graphics.controllers[index].vendor, "")
+                coordinator.data.graphics.controllers[i]
+                .name.replace(coordinator.data.graphics.controllers[i].vendor, "")
                 .strip()
             )
             entities = [
@@ -274,55 +265,49 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_core_clock_speed",
+                        key=f"gpu_{i}_core_clock_speed",
                         name=f"{name} Clock Speed",
                         enabled_by_default=False,
                         device_class=None,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                         icon="mdi:speedometer",
-                        value=lambda bridge: bridge.graphics.controllers[
-                            index
-                        ].clockCore
-                        if bridge.graphics.controllers[index].clockCore is not None
-                        else None,
+                        value=lambda bridge: bridge.graphics.controllers[i].clockCore,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_memory_clock_speed",
+                        key=f"gpu_{i}_memory_clock_speed",
                         name=f"{name} Memory Clock Speed",
                         enabled_by_default=False,
                         device_class=None,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                         icon="mdi:speedometer",
-                        value=lambda bridge: bridge.graphics.controllers[
-                            index
-                        ].clockMemory
-                        if bridge.graphics.controllers[index].clockMemory is not None
+                        value=lambda bridge: bridge.graphics.controllers[i].clockMemory
+                        if bridge.graphics.controllers[i].clockMemory is not None
                         else None,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_memory_free",
+                        key=f"gpu_{i}_memory_free",
                         name=f"{name} Memory Free",
                         enabled_by_default=True,
                         device_class=None,
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
                         value=lambda bridge: round(
-                            bridge.graphics.controllers[index].memoryFree / 10 ** 3, 2
+                            bridge.graphics.controllers[i].memoryFree / 10 ** 3, 2
                         )
-                        if bridge.graphics.controllers[index].memoryFree is not None
+                        if bridge.graphics.controllers[i].memoryFree is not None
                         else None,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_memory_used_percentage",
+                        key=f"gpu_{i}_memory_used_percentage",
                         name=f"{name} Memory Used %",
                         enabled_by_default=True,
                         device_class=None,
@@ -330,92 +315,90 @@ async def async_setup_entry(
                         icon="mdi:memory",
                         value=lambda bridge: round(
                             (
-                                bridge.graphics.controllers[index].memoryUsed
-                                / bridge.graphics.controllers[index].memoryTotal
+                                bridge.graphics.controllers[i].memoryUsed
+                                / bridge.graphics.controllers[i].memoryTotal
                             )
                             * 100,
                             2,
                         )
-                        if bridge.graphics.controllers[index].memoryUsed is not None
-                        and bridge.graphics.controllers[index].memoryTotal is not None
+                        if bridge.graphics.controllers[i].memoryUsed is not None
+                        and bridge.graphics.controllers[i].memoryTotal is not None
                         else None,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_memory_used",
+                        key=f"gpu_{i}_memory_used",
                         name=f"{name} Memory Used",
                         enabled_by_default=False,
                         device_class=None,
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
                         value=lambda bridge: round(
-                            bridge.graphics.controllers[index].memoryUsed / 10 ** 3, 2
+                            bridge.graphics.controllers[i].memoryUsed / 10 ** 3, 2
                         )
-                        if bridge.graphics.controllers[index].memoryUsed is not None
+                        if bridge.graphics.controllers[i].memoryUsed is not None
                         else None,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_fan_speed",
+                        key=f"gpu_{i}_fan_speed",
                         name=f"{name} Fan Speed",
                         enabled_by_default=False,
                         device_class=None,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:fan",
-                        value=lambda bridge: bridge.graphics.controllers[index].fanSpeed
-                        if bridge.graphics.controllers[index].fanSpeed is not None
+                        value=lambda bridge: bridge.graphics.controllers[i].fanSpeed
+                        if bridge.graphics.controllers[i].fanSpeed is not None
                         else None,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_power_usage",
+                        key=f"gpu_{i}_power_usage",
                         name=f"{name} Power Usage",
                         enabled_by_default=False,
                         device_class=DEVICE_CLASS_POWER,
                         native_unit_of_measurement=POWER_WATT,
                         icon=None,
-                        value=lambda bridge: bridge.graphics.controllers[
-                            index
-                        ].powerDraw
-                        if bridge.graphics.controllers[index].powerDraw is not None
+                        value=lambda bridge: bridge.graphics.controllers[i].powerDraw
+                        if bridge.graphics.controllers[i].powerDraw is not None
                         else None,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_temperature",
+                        key=f"gpu_{i}_temperature",
                         name=f"{name} Temperature",
                         enabled_by_default=False,
                         device_class=DEVICE_CLASS_TEMPERATURE,
                         native_unit_of_measurement=TEMP_CELSIUS,
                         icon=None,
                         value=lambda bridge: bridge.graphics.controllers[
-                            index
+                            i
                         ].temperatureGpu
-                        if bridge.graphics.controllers[index].temperatureGpu is not None
+                        if bridge.graphics.controllers[i].temperatureGpu is not None
                         else None,
                     ),
                 ),
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{index}_usage_percentage",
+                        key=f"gpu_{i}_usage_percentage",
                         name=f"{name} Usage %",
                         enabled_by_default=True,
                         device_class=None,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:percent",
                         value=lambda bridge: bridge.graphics.controllers[
-                            index
+                            i
                         ].utilizationGpu
-                        if bridge.graphics.controllers[index].utilizationGpu is not None
+                        if bridge.graphics.controllers[i].utilizationGpu is not None
                         else None,
                     ),
                 ),
