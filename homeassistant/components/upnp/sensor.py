@@ -1,92 +1,22 @@
 """Support for UPnP/IGD Sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
+from homeassistant.const import DATA_BYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity
 from .const import (
-    BYTES_RECEIVED,
-    BYTES_SENT,
-    DATA_PACKETS,
-    DATA_RATE_PACKETS_PER_SECOND,
+    DERIVED_SENSOR,
     DOMAIN,
     KIBIBYTE,
     LOGGER,
-    PACKETS_RECEIVED,
-    PACKETS_SENT,
-    ROUTER_IP,
-    ROUTER_UPTIME,
+    RAW_SENSOR,
+    SENSOR_ENTITY_DESCRIPTIONS,
     TIMESTAMP,
-    WAN_STATUS,
 )
-
-SENSOR_TYPES = {
-    BYTES_RECEIVED: {
-        "device_value_key": BYTES_RECEIVED,
-        "name": f"{DATA_BYTES} received",
-        "unit": DATA_BYTES,
-        "unique_id": BYTES_RECEIVED,
-        "format": "d",
-        "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
-        "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
-        "derived_unique_id": "KiB/sec_received",
-    },
-    BYTES_SENT: {
-        "device_value_key": BYTES_SENT,
-        "name": f"{DATA_BYTES} sent",
-        "unit": DATA_BYTES,
-        "unique_id": BYTES_SENT,
-        "format": "d",
-        "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
-        "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
-        "derived_unique_id": "KiB/sec_sent",
-    },
-    PACKETS_RECEIVED: {
-        "device_value_key": PACKETS_RECEIVED,
-        "name": f"{DATA_PACKETS} received",
-        "unit": DATA_PACKETS,
-        "unique_id": PACKETS_RECEIVED,
-        "format": "d",
-        "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} received",
-        "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
-        "derived_unique_id": "packets/sec_received",
-    },
-    PACKETS_SENT: {
-        "device_value_key": PACKETS_SENT,
-        "name": f"{DATA_PACKETS} sent",
-        "unit": DATA_PACKETS,
-        "unique_id": PACKETS_SENT,
-        "format": "d",
-        "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} sent",
-        "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
-        "derived_unique_id": "packets/sec_sent",
-    },
-    ROUTER_IP: {
-        "device_value_key": ROUTER_IP,
-        "name": "IP",
-        "unit": None,
-        "unique_id": ROUTER_IP,
-        "format": "s",
-    },
-    ROUTER_UPTIME: {
-        "device_value_key": ROUTER_UPTIME,
-        "name": "Uptime",
-        "unit": TIME_SECONDS,
-        "unique_id": ROUTER_UPTIME,
-        "format": "d",
-    },
-    WAN_STATUS: {
-        "device_value_key": WAN_STATUS,
-        "name": "wan status",
-        "unit": None,
-        "unique_id": "wan_status",
-        "format": "s",
-    },
-}
 
 
 async def async_setup_platform(
@@ -108,25 +38,24 @@ async def async_setup_entry(
 
     LOGGER.debug("Adding sensors")
 
-    sensors = [
-        RawUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
-        RawUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
-        RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
-        RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
-        RawUpnpSensor(coordinator, SENSOR_TYPES[ROUTER_IP]),
-        RawUpnpSensor(coordinator, SENSOR_TYPES[WAN_STATUS]),
+    entities = []
+    entities.append(
         RawUpnpSensor(
-            coordinator,
-            SENSOR_TYPES[ROUTER_UPTIME],
-            coordinator.data.get(SENSOR_TYPES[ROUTER_UPTIME]["device_value_key"]),
-        ),
-        DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
-        DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
-        DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
-        DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
-    ]
+            coordinator=coordinator,
+            sensor_entity=sensor_entity,
+        )
+        for sensor_entity in SENSOR_ENTITY_DESCRIPTIONS[RAW_SENSOR]
+    )
 
-    async_add_entities(sensors)
+    entities.append(
+        DerivedUpnpSensor(
+            coordinator=coordinator,
+            sensor_entity=sensor_entity,
+        )
+        for sensor_entity in SENSOR_ENTITY_DESCRIPTIONS[DERIVED_SENSOR]
+    )
+
+    async_add_entities(entities)
 
 
 class UpnpSensor(UpnpEntity, SensorEntity):
@@ -135,32 +64,14 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
-        sensor_type: dict[str, str],
-        enabled: bool = True,
+        sensor_entity: tuple[SensorEntityDescription, str],
     ) -> None:
         """Initialize the base sensor."""
-        super().__init__(coordinator)
-        self._sensor_type = sensor_type
-        self._attr_name = f"{coordinator.device.name} {sensor_type['name']}"
-        self._attr_unique_id = f"{coordinator.device.udn}_{sensor_type['unique_id']}"
-        self._attr_entity_registry_enabled_default = enabled
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and (
-            self.coordinator.data.get(self._sensor_type["device_value_key"]) or False
-        )
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._sensor_type["unit"]
+        super().__init__(coordinator, sensor_entity[0])
+        self._attr_native_unit_of_measurement = sensor_entity[
+            0
+        ].native_unit_of_measurement
+        self._format = sensor_entity[1]
 
 
 class RawUpnpSensor(UpnpSensor):
@@ -169,30 +80,24 @@ class RawUpnpSensor(UpnpSensor):
     @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
-        device_value_key = self._sensor_type["device_value_key"]
-        value = self.coordinator.data[device_value_key]
+        value = self.coordinator.data[self._key]
         if value is None:
             return None
-        return format(value, self._sensor_type["format"])
+        return format(value, self._format)
 
 
 class DerivedUpnpSensor(UpnpSensor):
     """Representation of a UNIT Sent/Received per second sensor."""
 
-    def __init__(self, coordinator: UpnpDataUpdateCoordinator, sensor_type) -> None:
+    def __init__(
+        self,
+        coordinator: UpnpDataUpdateCoordinator,
+        sensor_entity: tuple[SensorEntityDescription, str],
+    ) -> None:
         """Initialize sensor."""
-        super().__init__(coordinator, sensor_type)
+        super().__init__(coordinator=coordinator, sensor_entity=sensor_entity)
         self._last_value = None
         self._last_timestamp = None
-        self._attr_name = f"{coordinator.device.name} {sensor_type['derived_name']}"
-        self._attr_unique_id = (
-            f"{coordinator.device.udn}_{sensor_type['derived_unique_id']}"
-        )
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._sensor_type["derived_unit"]
 
     def _has_overflowed(self, current_value) -> bool:
         """Check if value has overflowed."""
@@ -202,8 +107,7 @@ class DerivedUpnpSensor(UpnpSensor):
     def native_value(self) -> str | None:
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
-        device_value_key = self._sensor_type["device_value_key"]
-        current_value = self.coordinator.data[device_value_key]
+        current_value = self.coordinator.data[self._key]
         if current_value is None:
             return None
         current_timestamp = self.coordinator.data[TIMESTAMP]
@@ -214,7 +118,7 @@ class DerivedUpnpSensor(UpnpSensor):
 
         # Calculate derivative.
         delta_value = current_value - self._last_value
-        if self._sensor_type["unit"] == DATA_BYTES:
+        if self.native_unit_of_measurement == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
         if delta_time.total_seconds() == 0:
@@ -226,4 +130,4 @@ class DerivedUpnpSensor(UpnpSensor):
         self._last_value = current_value
         self._last_timestamp = current_timestamp
 
-        return format(derived, ".1f")
+        return format(derived, self._format)

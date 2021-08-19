@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -222,13 +223,29 @@ class UpnpEntity(CoordinatorEntity):
 
     coordinator: UpnpDataUpdateCoordinator
 
-    def __init__(self, coordinator: UpnpDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: UpnpDataUpdateCoordinator,
+        sensor_entity: EntityDescription,
+    ) -> None:
         """Initialize the base entities."""
         super().__init__(coordinator)
         self._device = coordinator.device
+        self._key = sensor_entity.key
+        self._attr_name = f"{coordinator.device.name} {sensor_entity.name}"
+        self._attr_unique_id = f"{coordinator.device.udn}_{sensor_entity.key}"
+        self._attr_icon = sensor_entity.icon
+        self._attr_entity_registry_enabled_default = (
+            coordinator.data.get(sensor_entity.key) or False
+        )
         self._attr_device_info = {
             "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},
             "name": coordinator.device.name,
             "manufacturer": coordinator.device.manufacturer,
             "model": coordinator.device.model_name,
         }
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and (self.coordinator.data.get(self._key) or False)

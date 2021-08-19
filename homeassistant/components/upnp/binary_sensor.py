@@ -4,13 +4,14 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity
-from .const import DOMAIN, LOGGER, WAN_STATUS
+from .const import BINARYSENSOR_ENTITY_DESCRIPTIONS, DOMAIN, LOGGER
 
 
 async def async_setup_entry(
@@ -23,10 +24,13 @@ async def async_setup_entry(
 
     LOGGER.debug("Adding binary sensor")
 
-    sensors = [
-        UpnpStatusBinarySensor(coordinator),
-    ]
-    async_add_entities(sensors)
+    async_add_entities(
+        UpnpStatusBinarySensor(
+            coordinator=coordinator,
+            sensor_entity=sensor_entity,
+        )
+        for sensor_entity in BINARYSENSOR_ENTITY_DESCRIPTIONS
+    )
 
 
 class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
@@ -37,18 +41,12 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
+        sensor_entity: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the base sensor."""
-        super().__init__(coordinator)
-        self._attr_name = f"{coordinator.device.name} wan status"
-        self._attr_unique_id = f"{coordinator.device.udn}_wanstatus"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and (self.coordinator.data[WAN_STATUS] or False)
+        super().__init__(coordinator=coordinator, sensor_entity=sensor_entity)
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[WAN_STATUS] == "Connected"
+        return self.coordinator.data[self._key] == "Connected"
