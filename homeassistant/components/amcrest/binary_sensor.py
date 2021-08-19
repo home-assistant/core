@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import suppress
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Callable, NamedTuple
+from typing import TYPE_CHECKING, Callable, TypedDict
 
 from amcrest import AmcrestError
 import voluptuous as vol
@@ -35,12 +35,12 @@ if TYPE_CHECKING:
     from . import AmcrestDevice
 
 
-class _SensorParamsType(NamedTuple):
-    """Parameters to define sensors."""
+class _BinarySensorsDict(TypedDict):
+    """Parameters to define sensor attributes."""
 
     name: str
     device_class: str
-    code: str | None
+    event_code: str | None
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,24 +60,25 @@ BINARY_POLLED_SENSORS = [
     BINARY_SENSOR_MOTION_DETECTED_POLLED,
     BINARY_SENSOR_ONLINE,
 ]
-_AUDIO_DETECTED_PARAMS = _SensorParamsType(
-    "Audio Detected", DEVICE_CLASS_SOUND, "AudioMutation"
+_AUDIO_DETECTED_PARAMS = ("Audio Detected", DEVICE_CLASS_SOUND, "AudioMutation")
+_MOTION_DETECTED_PARAMS = ("Motion Detected", DEVICE_CLASS_MOTION, "VideoMotion")
+_CROSSLINE_DETECTED_PARAMS = (
+    "CrossLine Detected",
+    DEVICE_CLASS_MOTION,
+    "CrossLineDetection",
 )
-_MOTION_DETECTED_PARAMS = _SensorParamsType(
-    "Motion Detected", DEVICE_CLASS_MOTION, "VideoMotion"
-)
-_CROSSLINE_DETECTED_PARAMS = _SensorParamsType(
-    "CrossLine Detected", DEVICE_CLASS_MOTION, "CrossLineDetection"
-)
-_ONLINE_PARAMS = _SensorParamsType("Online", DEVICE_CLASS_CONNECTIVITY, None)
-BINARY_SENSORS = {
+RAW_BINARY_SENSORS = {
     BINARY_SENSOR_AUDIO_DETECTED: _AUDIO_DETECTED_PARAMS,
     BINARY_SENSOR_AUDIO_DETECTED_POLLED: _AUDIO_DETECTED_PARAMS,
     BINARY_SENSOR_MOTION_DETECTED: _MOTION_DETECTED_PARAMS,
     BINARY_SENSOR_MOTION_DETECTED_POLLED: _MOTION_DETECTED_PARAMS,
     BINARY_SENSOR_CROSSLINE_DETECTED: _CROSSLINE_DETECTED_PARAMS,
     BINARY_SENSOR_CROSSLINE_DETECTED_POLLED: _CROSSLINE_DETECTED_PARAMS,
-    BINARY_SENSOR_ONLINE: _ONLINE_PARAMS,
+    BINARY_SENSOR_ONLINE: ("Online", DEVICE_CLASS_CONNECTIVITY, None),
+}
+BINARY_SENSORS = {
+    k: _BinarySensorsDict(name=name, device_class=device_class, event_code=event_code)
+    for k, (name, device_class, event_code) in RAW_BINARY_SENSORS.items()
 }
 _EXCLUSIVE_OPTIONS = [
     {BINARY_SENSOR_AUDIO_DETECTED, BINARY_SENSOR_AUDIO_DETECTED_POLLED},
@@ -124,13 +125,13 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     def __init__(self, name: str, device: AmcrestDevice, sensor_type: str) -> None:
         """Initialize entity."""
-        self._name = f"{name} {BINARY_SENSORS[sensor_type].name}"
+        self._name = f"{name} {BINARY_SENSORS[sensor_type]['name']}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
         self._state: bool | None = None
-        self._device_class = BINARY_SENSORS[sensor_type].device_class
-        self._event_code = BINARY_SENSORS[sensor_type].code
+        self._device_class = BINARY_SENSORS[sensor_type]["device_class"]
+        self._event_code = BINARY_SENSORS[sensor_type]["event_code"]
         self._unsub_dispatcher: list[Callable[[], None]] = []
 
     @property

@@ -15,5 +15,5 @@ SERVICE_EVENT = "event"
 SERVICE_UPDATE = "update"
 
 SENSOR_DEVICE_CLASS = "device_class"
-SENSOR_EVENT_CODE = "code"
+SENSOR_EVENT_CODE = "event_code"
 SENSOR_NAME = "name"

@@ -303,7 +303,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 config,
             )
             maybe_event_codes = [
-                BINARY_SENSORS[sensor_type].code
+                BINARY_SENSORS[sensor_type]["event_code"]
                 for sensor_type in binary_sensors
                 if sensor_type not in BINARY_POLLED_SENSORS
             ]
