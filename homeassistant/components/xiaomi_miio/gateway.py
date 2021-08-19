@@ -1,9 +1,9 @@
 """Code to handle a Xiaomi Gateway."""
 import logging
-import time
 
 from construct.core import ChecksumError
 from micloud import MiCloud
+from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
@@ -116,16 +116,19 @@ class ConnectXiaomiGateway:
 
             try:
                 miio_cloud = MiCloud(self._cloud_username, self._cloud_password)
-                for attempt in range(4):
-                    if miio_cloud.login():
-                        break
-                    if attempt >= 3:
-                        raise ConfigEntryAuthFailed(
-                            "Could not login to Xiaomi Miio Cloud, check the credentials"
-                        )
-                    time.sleep(30)
+                if not miio_cloud.login():
+                    _LOGGER.error(
+                        "Failed to login to Xiaomi Miio Cloud during setup of xiaomi"
+                        " gateway with host %s",
+                        self._host,
+                    )
+                    return False
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)
+            except MiCloudAccessDenied as error:
+                raise ConfigEntryAuthFailed(
+                    "Could not login to Xiaomi Miio Cloud, check the credentials"
+                )
             except DeviceException as error:
                 _LOGGER.error(
                     "DeviceException during setup of xiaomi gateway with host %s: %s",

@@ -35,6 +35,7 @@ from miio.gateway.gateway import GatewayException
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -363,7 +364,7 @@ async def async_setup_gateway_entry(
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
     if not await gateway.async_connect_gateway(host, token):
-        return False
+        raise ConfigEntryNotReady("Error during setup of xiaomi gateway")
     gateway_info = gateway.gateway_info
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
