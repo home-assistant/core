@@ -39,7 +39,7 @@ class Segment:
 
     sequence: int = attr.ib(default=0)
     # the init of the mp4 the segment is based on
-    init: bytes | None = attr.ib(default=None)
+    init: bytes = attr.ib(default=None)
     duration: float = attr.ib(default=0)
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
