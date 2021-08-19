@@ -770,6 +770,7 @@ def test_compile_missing_statistics(tmpdir):
         setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
         hass.start()
         wait_recording_done(hass)
+        wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
             statistics_runs = list(session.query(StatisticsRuns))
@@ -777,6 +778,7 @@ def test_compile_missing_statistics(tmpdir):
             last_run = process_timestamp(statistics_runs[0].start)
             assert last_run == now - timedelta(hours=1)
 
+        wait_recording_done(hass)
         wait_recording_done(hass)
         hass.stop()
 
@@ -789,6 +791,7 @@ def test_compile_missing_statistics(tmpdir):
         setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
         hass.start()
         wait_recording_done(hass)
+        wait_recording_done(hass)
 
         with session_scope(hass=hass) as session:
             statistics_runs = list(session.query(StatisticsRuns))
@@ -796,6 +799,7 @@ def test_compile_missing_statistics(tmpdir):
             last_run = process_timestamp(statistics_runs[1].start)
             assert last_run == now
 
+        wait_recording_done(hass)
         wait_recording_done(hass)
         hass.stop()
 
