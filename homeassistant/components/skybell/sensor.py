@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.skybell.const import DATA_COORDINATOR, DATA_DEVICES
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
@@ -20,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DOMAIN, SkybellDevice
+from .const import DATA_COORDINATOR, DATA_DEVICES
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
