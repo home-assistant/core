@@ -53,7 +53,6 @@ class BarryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
-            errors={},
         )
 
     async def async_step_metering_point(self, user_input=None):
@@ -86,5 +85,4 @@ class BarryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="metering_point",
             data_schema=data_schema,
-            errors={},
         )

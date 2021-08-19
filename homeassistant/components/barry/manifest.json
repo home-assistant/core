@@ -2,7 +2,6 @@
   "domain": "barry",
   "name": "Barry",
   "documentation": "https://www.home-assistant.io/integrations/barry/",
-  "dependencies": [],
   "codeowners": ["@YashYKhatri", "@ThomasBLarsen"],
   "requirements": ["pybarry==0.0.4"],
   "config_flow": true,

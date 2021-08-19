@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "Service is already configured"
+    },
     "error": {
       "invalid_access_token": "Invalid Access Token",
       "unknown": "Unexpected error"

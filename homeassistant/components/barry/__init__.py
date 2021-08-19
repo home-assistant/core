@@ -6,6 +6,8 @@ from pybarry import Barry
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN
 
+from ...config_entries import ConfigEntry
+from ...core import HomeAssistant
 from .const import DOMAIN
 
 PLATFORMS = ["sensor"]
@@ -43,8 +45,6 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
