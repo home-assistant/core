@@ -65,7 +65,7 @@ async def get_upnp_desc(hass: HomeAssistant, host: str):
 
     if not upnp_desc:
         _LOGGER.warning(
-            "The upnp_description was not found automatically, setting a default one."
+            "The upnp_description was not found automatically, setting a default one"
         )
         upnp_desc = f"http://{host}:49154/MediaRenderer/desc.xml"
     return upnp_desc
