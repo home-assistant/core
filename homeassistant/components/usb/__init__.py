@@ -97,8 +97,10 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     monitor.filter_by(subsystem="tty")
 
     def _device_discovered(device):
+        if device.action != "add":
+            return
         _LOGGER.debug(
-            "Discovered Device at path: %s, trigger scan: %s",
+            "Discovered Device at path: %s, trigger scan",
             device.device_path,
             device.action,
         )
