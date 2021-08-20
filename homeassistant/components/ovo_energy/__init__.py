@@ -99,10 +99,12 @@ class OVOEnergyEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         client: OVOEnergy,
+        key: str,
     ) -> None:
         """Initialize the OVO Energy entity."""
         super().__init__(coordinator)
         self._client = client
+        self._attr_unique_id = key
 
 
 class OVOEnergyDeviceEntity(OVOEnergyEntity):
