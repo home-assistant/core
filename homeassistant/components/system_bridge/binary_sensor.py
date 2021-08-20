@@ -30,8 +30,6 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
         name="New Version Available",
-        entity_registry_enabled_default=True,
-        device_class=None,
         icon="mdi:counter",
         value=lambda bridge: bridge.information.updates.available,
     ),
@@ -41,9 +39,7 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
         name="Battery Is Charging",
-        entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
-        icon=None,
         value=lambda bridge: bridge.information.updates.available,
     ),
 )
