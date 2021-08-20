@@ -4,21 +4,20 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
-    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpDataUpdateCoordinator, UpnpEntity
+from . import UpnpDataUpdateCoordinator, UpnpEntity, UpnpSensorEntityDescription
 from .const import DOMAIN, LOGGER, WAN_STATUS
 
-BINARYSENSOR_ENTITY_DESCRIPTIONS: list[BinarySensorEntityDescription] = [
-    BinarySensorEntityDescription(
+BINARYSENSOR_ENTITY_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
+    UpnpSensorEntityDescription(
         key=WAN_STATUS,
         name="wan status",
-    )
-]
+    ),
+)
 
 
 async def async_setup_entry(
@@ -34,10 +33,10 @@ async def async_setup_entry(
     async_add_entities(
         UpnpStatusBinarySensor(
             coordinator=coordinator,
-            sensor_entity=sensor_entity,
+            entity_description=entity_description,
         )
-        for sensor_entity in BINARYSENSOR_ENTITY_DESCRIPTIONS
-        if coordinator.data.get(sensor_entity.key) or False
+        for entity_description in BINARYSENSOR_ENTITY_DESCRIPTIONS
+        if coordinator.data.get(entity_description.key) or False
     )
 
 
@@ -49,12 +48,12 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
-        sensor_entity: BinarySensorEntityDescription,
+        entity_description: UpnpSensorEntityDescription,
     ) -> None:
         """Initialize the base sensor."""
-        super().__init__(coordinator=coordinator, sensor_entity=sensor_entity)
+        super().__init__(coordinator=coordinator, entity_description=entity_description)
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[self._key] == "Connected"
+        return self.coordinator.data[self.entity_description.key] == "Connected"
