@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 import logging
+import os
 from typing import Any
 
 import aiohttp
@@ -13,7 +14,7 @@ from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.hassio import is_hassio
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -64,6 +65,27 @@ ADDON_USER_INPUT_MAP = {
 }
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+
+
+def _format_port_human_readable(
+    device: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: str | None,
+    pid: str | None,
+) -> str:
+    if description:
+        return (
+            f"{description[:26]} - {device}, s/n: {serial_number or 'n/a'}"
+            + (f" - {manufacturer}" if manufacturer else "")
+            + (f" - {vid}:{pid}" if vid else "")
+        )
+    return (
+        f"{device}, s/n: {serial_number or 'n/a'}"
+        + (f" - {manufacturer}" if manufacturer else "")
+        + (f" - {vid}:{pid}" if vid else "")
+    )
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -286,6 +308,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
+        self._title: str | None = None
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -308,6 +331,44 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()
+
+    async def async_step_usb(self, discovery_info: dict[str, str]) -> FlowResult:
+        """Handle USB Discovery."""
+        if not is_hassio(self.hass):
+            return self.async_abort(reason="discovery_requires_supervisor")
+
+        vid = discovery_info["vid"]
+        pid = discovery_info["pid"]
+        serial_number = discovery_info["serial_number"]
+        device = discovery_info["device"]
+        manufacturer = discovery_info["manufacturer"]
+        description = discovery_info["description"]
+        # The Nortek sticks are a special case since they
+        # have a Z-Wave and a Zigbee radio. We need to reject
+        # the Zigbee radio.
+        if (
+            vid == "10C4"
+            and pid == "8A2A"
+            and "Z-Wave" not in discovery_info["description"]
+        ):
+            return self.async_abort(reason="not_zwave_device")
+
+        await self.async_set_unique_id(
+            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        )
+        self._abort_if_unique_id_configured()
+        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
+        self.usb_path = dev_path
+        self._title = _format_port_human_readable(
+            dev_path,
+            serial_number,
+            manufacturer,
+            description,
+            vid,
+            pid,
+        )
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -386,12 +447,14 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self.use_addon = True
+        if self._title:
+            self.context["title_placeholders"] = {CONF_NAME: self._title}
 
         addon_info = await self._async_get_addon_info()
 
         if addon_info.state == AddonState.RUNNING:
             addon_config = addon_info.options
-            self.usb_path = addon_config[CONF_ADDON_DEVICE]
+            self.usb_path = addon_config[CONF_ADDON_DEVICE] or self.usb_path
             self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
             return await self.async_step_finish_addon_setup()
 
@@ -422,7 +485,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_start_addon()
 
-        usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
+        usb_path = addon_config.get(CONF_ADDON_DEVICE) or self.usb_path or ""
         network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
 
         data_schema = vol.Schema(
@@ -723,3 +786,15 @@ class InvalidInput(exceptions.HomeAssistantError):
         """Initialize error."""
         super().__init__()
         self.error = error
+
+
+def get_serial_by_id(dev_path: str) -> str:
+    """Return a /dev/serial/by-id match for given device if available."""
+    by_id = "/dev/serial/by-id"
+    if not os.path.isdir(by_id):
+        return dev_path
+
+    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
+        if os.path.realpath(path) == dev_path:
+            return path
+    return dev_path
