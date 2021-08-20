@@ -338,6 +338,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         # a zwave stick to make sure it is actually
         # a zwave device. This means we can only add vid
         # and pids that are guaranteed to be zwave devices
+        # and dual zigbee/z-wave sticks like the Nortek one
+        # do not have a way to identify and reject the zigbee side
+        # yet
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
 
