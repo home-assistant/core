@@ -342,7 +342,7 @@ def async_enable_logging(
                 err_log_path, backupCount=1
             )
 
-        err_handler.rotate(err_log_path, f"{err_log_path}.previous")
+        err_handler.rotate(err_log_path, f"{err_log_path[:-4]}.previous.log")
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
