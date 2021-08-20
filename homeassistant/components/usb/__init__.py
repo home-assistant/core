@@ -10,7 +10,7 @@ from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
@@ -125,10 +125,10 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     )
     observer.start()
 
-    async def _async_shutdown_observer(*_):
-        await hass.async_add_executor_job(observer.stop)
+    def _shutdown_observer(event: Event):
+        observer.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_observer)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_observer)
 
     return True
 
